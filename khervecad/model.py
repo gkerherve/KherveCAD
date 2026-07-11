@@ -549,10 +549,13 @@ class DocumentModel(QObject):
     def __init__(self):
         super().__init__()
         self.root = CadNode("root")
-        self.undo_stack = QUndoStack()
+        self.undo_stack = QUndoStack(self)
         self._restoring = False
-        self._capture_scheduled = False
         self._last_state = self._serialize()
+        self._capture_timer = QTimer(self)
+        self._capture_timer.setSingleShot(True)
+        self._capture_timer.setInterval(0)
+        self._capture_timer.timeout.connect(self._capture)
         self.structure_changed.connect(self._schedule_capture)
         self.node_changed.connect(lambda _n: self._schedule_capture())
 
@@ -564,13 +567,10 @@ class DocumentModel(QObject):
     def _schedule_capture(self):
         """Capture one undo snapshot per event-loop cycle, so a
         multi-step operation (wrap + rename + ...) is one undo step."""
-        if self._restoring or self._capture_scheduled:
-            return
-        self._capture_scheduled = True
-        QTimer.singleShot(0, self._capture)
+        if not self._restoring and not self._capture_timer.isActive():
+            self._capture_timer.start()
 
     def _capture(self):
-        self._capture_scheduled = False
         if self._restoring:
             return
         state = self._serialize()
