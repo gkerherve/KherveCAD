@@ -82,22 +82,64 @@ class View3D(QWidget):
         self.update()
 
     def fit(self):
-        """Frame the whole mesh."""
+        """Frame the whole mesh: centre it in the pane and size it to
+        fill most of the view. Projects the bounding box in the current
+        camera orientation, then adjusts distance and recentres the
+        target so the model sits squarely in the middle (not low)."""
         if not self.mesh:
             return
-        xs = [v[0] for tri in self.mesh for v in tri]
-        ys = [v[1] for tri in self.mesh for v in tri]
-        zs = [v[2] for tri in self.mesh for v in tri]
-        self.target = [(min(xs) + max(xs)) / 2,
-                       (min(ys) + max(ys)) / 2,
-                       (min(zs) + max(zs)) / 2]
-        size = max(max(xs) - min(xs), max(ys) - min(ys),
-                   max(zs) - min(zs), 1.0)
-        self.distance = size * 2.2
+        verts = [v for tri in self.mesh for v in tri]
+        if len(verts) > 3000:                     # sample: fit is exact
+            verts = verts[::len(verts) // 3000]   # enough at this scale
+        xs = [v[0] for v in verts]
+        ys = [v[1] for v in verts]
+        zs = [v[2] for v in verts]
+        mn = (min(xs), min(ys), min(zs))
+        mx = (max(xs), max(ys), max(zs))
+        self.target = [(mn[i] + mx[i]) / 2 for i in range(3)]
+        right, up, forward = self._orientation()
+        size = max(mx[0] - mn[0], mx[1] - mn[1], mx[2] - mn[2], 1.0)
+        self.distance = size * 2.0
+        f = self._focal()
+        halfw = self.width() / 2 or 1.0
+        halfh = self.height() / 2 or 1.0
+        margin = 0.9
+        # a few passes converge the distance (depth changes the on-screen
+        # scale) and the recentre — perspective skews the projected
+        # outline, so we centre on the real vertices, not just the box.
+        for _ in range(4):
+            cam = []
+            for v in verts:
+                d = (v[0] - self.target[0], v[1] - self.target[1],
+                     v[2] - self.target[2])
+                cr = d[0] * right[0] + d[1] * right[1] + d[2] * right[2]
+                cu = d[0] * up[0] + d[1] * up[1] + d[2] * up[2]
+                cf = d[0] * forward[0] + d[1] * forward[1] \
+                    + d[2] * forward[2]
+                cam.append((cr, cu, cf))
+            need = 0.0
+            for cr, cu, cf in cam:
+                z = self.distance + cf
+                if z < 0.1:
+                    continue
+                need = max(need, abs(f * cr / z) / (halfw * margin),
+                           abs(f * cu / z) / (halfh * margin))
+            if need > 0:
+                self.distance *= need
+            sx = [f * cr / (self.distance + cf) for cr, _cu, cf in cam]
+            sy = [f * cu / (self.distance + cf) for _cr, cu, cf in cam]
+            ox = (min(sx) + max(sx)) / 2          # projected outline mid
+            oy = (min(sy) + max(sy)) / 2
+            self.target = [self.target[i]
+                           + right[i] * ox * self.distance / f
+                           + up[i] * oy * self.distance / f
+                           for i in range(3)]
         self.update()
 
     # -------------------------------------------------------- projection
-    def _camera(self):
+    def _orientation(self):
+        """Camera basis (right, up, forward) from yaw/pitch alone —
+        independent of target/distance, so fit() can use it."""
         yaw = math.radians(self.yaw)
         pitch = math.radians(self.pitch)
         # camera basis: forward points at the target.
@@ -110,10 +152,18 @@ class View3D(QWidget):
         ux = ry * fz - rz * fy
         uy = rz * fx - rx * fz
         uz = rx * fy - ry * fx
+        return (rx, ry, rz), (ux, uy, uz), (fx, fy, fz)
+
+    def _focal(self):
+        return 1.2 * min(self.width(), self.height())
+
+    def _camera(self):
+        right, up, forward = self._orientation()
+        fx, fy, fz = forward
         ex = self.target[0] - fx * self.distance
         ey = self.target[1] - fy * self.distance
         ez = self.target[2] - fz * self.distance
-        return (ex, ey, ez), (rx, ry, rz), (ux, uy, uz), (fx, fy, fz)
+        return (ex, ey, ez), right, up, forward
 
     def _project(self, eye, right, up, forward, v):
         dx, dy, dz = v[0] - eye[0], v[1] - eye[1], v[2] - eye[2]
@@ -122,7 +172,7 @@ class View3D(QWidget):
         cz = dx * forward[0] + dy * forward[1] + dz * forward[2]
         if cz < 0.1:
             return None
-        f = 1.2 * min(self.width(), self.height())
+        f = self._focal()
         return (self.width() / 2 + f * cx / cz,
                 self.height() / 2 - f * cy / cz, cz)
 
@@ -250,24 +300,27 @@ class View3D(QWidget):
         if style == "Wireframe":
             return None, None
         if style == "X-ray":
-            c = QColor.fromHsvF(hue, sat * 0.7,
-                                min(0.55 + 0.45 * shade, 1.0) * val)
-            c.setAlphaF(0.16)
+            # translucent glass — the form reads through overlapping faces
+            c = QColor.fromHsvF(hue, sat * 0.6,
+                                min(0.6 + 0.4 * shade, 1.0) * val)
+            c.setAlphaF(0.13)
             return c, None
         if style == "Matte":
-            c = QColor.fromHsvF(hue, sat,
-                                min((0.5 + 0.4 * shade) * val, 1.0))
+            # flat chalky plastic: desaturated, lighter, no highlight,
+            # low shade contrast — clearly distinct from glossy Shaded
+            c = QColor.fromHsvF(hue, sat * 0.5,
+                                min((0.62 + 0.3 * shade) * val, 1.0))
             return c, None
         if style == "Brushed metal":
-            # low saturation steel, strong specular highlight
-            highlight = spec ** 22
-            v = min((0.32 + 0.5 * shade) * val + 0.6 * highlight, 1.0)
-            s = sat * 0.35 * (1.0 - highlight)
+            # near-grey steel with a bright, tight specular streak
+            highlight = spec ** 16
+            v = min((0.28 + 0.45 * shade) * val + 0.7 * highlight, 1.0)
+            s = sat * 0.22 * (1.0 - highlight)
             return QColor.fromHsvF(hue, s, v), None
-        # Shaded (default)
-        gloss = spec ** 12
-        v = min((0.35 + 0.65 * shade) * val + 0.35 * gloss, 1.0)
-        return QColor.fromHsvF(hue, sat, v), None
+        # Shaded (default): rich, glossy — the reference look
+        gloss = spec ** 10
+        v = min((0.30 + 0.70 * shade) * val + 0.45 * gloss, 1.0)
+        return QColor.fromHsvF(hue, min(sat * 1.1, 1.0), v), None
 
     def _draw_ground(self, painter, t, eye, right, up, forward):
         pen = QPen(QColor(t["border"]))

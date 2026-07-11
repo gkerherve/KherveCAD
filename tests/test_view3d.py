@@ -52,3 +52,79 @@ def test_unknown_style_ignored(app):
     view.set_style("Shaded")
     view.set_style("Nonsense")
     assert view.style == "Shaded"
+
+
+def _cube(s=20.0):
+    pts = [(0, 0, 0), (s, 0, 0), (s, s, 0), (0, s, 0),
+           (0, 0, s), (s, 0, s), (s, s, s), (0, s, s)]
+    faces = [(0, 1, 2), (0, 2, 3), (4, 6, 5), (4, 7, 6),
+             (0, 4, 5), (0, 5, 1), (1, 5, 6), (1, 6, 2),
+             (2, 6, 7), (2, 7, 3), (3, 7, 4), (3, 4, 0)]
+    return [tuple(pts[i] for i in f) for f in faces]
+
+
+def _central_avg(view):
+    from PyQt5.QtCore import QSize
+    from PyQt5.QtGui import QImage, QPainter
+    w, h = view.width(), view.height()
+    img = QImage(QSize(w, h), QImage.Format_ARGB32)
+    img.fill(0)
+    painter = QPainter(img)
+    view.render(painter)
+    painter.end()
+    r = g = b = n = 0
+    for x in range(w // 3, 2 * w // 3, 4):
+        for y in range(h // 3, 2 * h // 3, 4):
+            c = img.pixelColor(x, y)
+            r += c.red(); g += c.green(); b += c.blue(); n += 1
+    return (r / n, g / n, b / n)
+
+
+def test_styles_render_distinctly(app):
+    """Each render style must produce a visibly different image — a
+    regression guard against styles collapsing into look-alikes."""
+    view = View3D()
+    view.resize(300, 300)
+    view.set_mesh(_cube(), "test")
+    view.fit()
+    avgs = {}
+    for style in RENDER_STYLES:
+        view.set_style(style)
+        avgs[style] = _central_avg(view)
+
+    def dist(a, b):
+        return sum(abs(x - y) for x, y in zip(a, b))
+
+    # every pair of styles differs by a clear margin
+    styles = list(RENDER_STYLES)
+    for i in range(len(styles)):
+        for j in range(i + 1, len(styles)):
+            d = dist(avgs[styles[i]], avgs[styles[j]])
+            assert d > 20, (styles[i], styles[j], d)
+    # Matte used to be nearly identical to Shaded — keep them apart
+    assert dist(avgs["Matte"], avgs["Shaded"]) > 60
+
+
+def test_fit_centers_the_model(app):
+    """fit() frames the mesh centred in the pane and filling most of
+    the height, so it never sits low with dead space above."""
+    view = View3D()
+    view.resize(400, 300)
+    mesh = _cube(30.0)
+    # offset the cube well away from the origin/target start
+    mesh = [tuple((x + 70, y - 40, z + 25) for x, y, z in tri)
+            for tri in mesh]
+    view.set_mesh(mesh, "test")
+    view.fit()
+    eye, right, up, forward = view._camera()
+    xs, ys = [], []
+    for tri in mesh:
+        for v in tri:
+            p = view._project(eye, right, up, forward, v)
+            if p:
+                xs.append(p[0]); ys.append(p[1])
+    cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+    assert abs(cx - view.width() / 2) < 12
+    assert abs(cy - view.height() / 2) < 12       # centred, not low
+    fill_h = (max(ys) - min(ys)) / view.height()
+    assert fill_h > 0.7                            # fills the pane
