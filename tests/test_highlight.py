@@ -134,6 +134,24 @@ def test_isolate_shows_only_selected(window):
     assert len(window.scene._part_items) == 2
 
 
+def test_selecting_profile_isolates_its_part(window):
+    """Clicking a 2D profile (or anything inside a part) shows the
+    nearest solid ancestor alone, not the whole assembly."""
+    m = window.model
+    cross = library.build_part("cf_cross",
+                               dict(library.CF_SIZES["CF40 (DN40)"],
+                                    port_length=50.0))
+    m.root.add(cross)
+    m.structure_changed.emit()
+    profile = next(n for n in cross.walk()
+                   if n.name == "Flange -X profile")
+    revolve = profile.parent
+    window.builder.tree.select_nodes([profile])
+    assert window.scene._isolating()
+    assert list(window.scene._part_items) == [revolve.id]
+    assert window.scene._items == {}          # no stray sketch shapes
+
+
 def test_isolate_silhouette_movable_only_for_top_level(window):
     m = window.model
     part = library.build_part("cf_nipple",

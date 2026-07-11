@@ -290,9 +290,9 @@ class ObjectTree(QTreeWidget):
     def keyPressEvent(self, event):
         key = event.key()
         if key == Qt.Key_Q:
-            self.step_selection(1)
+            self.step_selection(-1)           # Q: up / previous
         elif key == Qt.Key_A:
-            self.step_selection(-1)
+            self.step_selection(1)            # A: down / next
         elif event.matches(QKeySequence.Copy):
             self.copy_selection()
         elif event.matches(QKeySequence.Cut):

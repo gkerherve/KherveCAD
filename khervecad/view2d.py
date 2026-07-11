@@ -482,14 +482,17 @@ class SketchScene(QGraphicsScene):
         if self._isolating():
             # show only the selected object(s), as their true projected
             # shape in the current plane
+            seen = set()
             for node_id in self._highlight_ids:
                 node = self.model.find(node_id)
-                if node is None:
+                target = self._isolate_target(node) if node else None
+                if target is None or target.id in seen:
                     continue
-                item = self._make_silhouette(node)
+                seen.add(target.id)
+                item = self._make_silhouette(target)
                 if item is not None:
                     self.addItem(item)
-                    self._part_items[node_id] = item
+                    self._part_items[target.id] = item
                     item.setSelected(True)
             self.updating = False
             return
@@ -523,14 +526,27 @@ class SketchScene(QGraphicsScene):
         self._highlight_ids = {n.id for n in nodes}
         self.rebuild()
 
+    def _isolate_target(self, node):
+        """The object to show alone for *node*: the node itself if it
+        makes 3D geometry, else the nearest ancestor part that does
+        (so clicking a flange's profile or revolve shows the flange).
+        Returns None for a bare top-level 2D sketch shape."""
+        if node is None:
+            return None
+        if _produces_3d(node):
+            return node
+        probe = node.parent
+        while probe is not None and probe is not self.model.root:
+            if _produces_3d(probe):
+                return probe
+            probe = probe.parent
+        return None
+
     def _isolating(self) -> bool:
-        """True when the selection is a solid part we should show
-        alone (rather than editing 2D sketch shapes)."""
-        for node_id in self._highlight_ids:
-            node = self.model.find(node_id)
-            if node is not None and _produces_3d(node):
-                return True
-        return False
+        """True when the selection is (or lives inside) a solid part we
+        should show alone, rather than editing 2D sketch shapes."""
+        return any(self._isolate_target(self.model.find(nid))
+                   is not None for nid in self._highlight_ids)
 
     def _make_silhouette(self, node):
         """The selected node's real projected outline in the current
@@ -1000,9 +1016,9 @@ class SketchView(QGraphicsView):
         from PyQt5.QtGui import QKeySequence
         scene = self.scene()
         if event.key() == Qt.Key_Q:
-            self.step_object.emit(1)
+            self.step_object.emit(-1)         # Q: up / previous
         elif event.key() == Qt.Key_A:
-            self.step_object.emit(-1)
+            self.step_object.emit(1)          # A: down / next
         elif event.matches(QKeySequence.Copy):
             self.clipboard_op.emit("copy")
         elif event.matches(QKeySequence.Cut):
