@@ -1,0 +1,165 @@
+# KherveCAD — notes for Claude
+
+KherveCAD is an easy-to-use CAD GUI built on PyQt5 with **OpenSCAD as
+the engine** — a native desktop app in the Kherve family
+(KherveFitting, KherveSheet, KhervePDF, KherveDOC, KhervePlot,
+KherveDraw, KhervePaint, KherveBook). The document is a tree of
+objects (2D shapes, 3D primitives, extrusions, transforms, booleans)
+that maps 1:1 to an OpenSCAD program: every tool just creates or
+edits nodes, and the program shown in the Code tab is regenerated
+from the tree, so the two can never disagree.
+
+## Build / run
+
+- Python 3.11+ with PyQt5 (+ qtawesome for icons).
+- Run via `python KherveCAD.py` or `python -m khervecad`.
+- The **OpenSCAD binary is optional but recommended**: when found
+  (PATH, common install dirs, or Edit > Locate OpenSCAD) the 3D view
+  and STL export use exact OpenSCAD renders, booleans included.
+  Without it the built-in tessellator (`mesh.py`) previews
+  extrusions/primitives and approximates booleans (first operand).
+- Crash log: `%TEMP%/khervecad_crash.log`.
+- **Version string** is derived at runtime in `_version.py` from
+  `git rev-list --count HEAD` and `git rev-parse --short HEAD`,
+  cached with `lru_cache`. Falls back to `_FALLBACK = "0.1.0"`
+  outside a git checkout. Title bar reads `KherveCAD v0.1.N+sha`.
+  The version bumps automatically on every commit — never edit a
+  version constant by hand.
+
+## File size policy
+
+Every module in `khervecad/` should stay near **1500 lines**. If a
+change would push a file meaningfully past that, split the new code
+into a new module and import.
+
+## Project layout
+
+- `KherveCAD.py` — entry script.
+- `khervecad/` — package; `python -m khervecad` is the alternative entry.
+  - `__init__.py`    — `APP_NAME`, version import.
+  - `__main__.py`    — module entry point.
+  - `_version.py`    — git-based version string.
+  - `app.py`         — `main()`, crash log, Fusion style + theme.
+  - `style.py`       — token-driven QSS themes (same template family
+                       as KhervePaint; theme persists via QSettings).
+  - `icons.py`       — qtawesome MDI icon wrapper with fallback.
+  - `model.py`       — **the core**: `CadNode` tree, `NODE_TYPES`
+                       registry (params + property schema + icon per
+                       type), OpenSCAD codegen in `to_scad()`,
+                       `DocumentModel` with change signals and all
+                       editing operations (wrap/group/ungroup/move/
+                       duplicate).
+  - `document.py`    — `.kcad` JSON (de)serialisation, `.scad` export.
+  - `treepanel.py`   — `BuilderPanel`: Objects tree (context menu:
+                       hide/show, Apply operation, group/ungroup,
+                       rename, duplicate, delete; drag & drop
+                       reparent/reorder) + read-only Code tab with
+                       OpenSCAD syntax highlighting.
+  - `properties.py`  — bottom-left panel; editors generated from each
+                       node type's schema, polygon points table.
+  - `view2d.py`      — top-right sketch view: Y-up QGraphicsScene,
+                       draw tools (line/rect/circle/polygon/text),
+                       select/move, resize handles, grid + snap, zoom.
+  - `view3d.py`      — bottom-right preview: software-rendered shaded
+                       mesh viewer (orbit/pan/zoom, painter's algo,
+                       no OpenGL dependency).
+  - `mesh.py`        — pure-Python fallback tessellator (primitives,
+                       linear/rotate extrude with twist/scale/angle,
+                       transforms, ear-clipping triangulation).
+  - `engine.py`      — OpenSCAD integration: binary discovery,
+                       debounced background renders via QProcess,
+                       STL parse (binary + ASCII) and STL write.
+- `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
+- `requirements.txt`, `LICENSE` (GPL-3.0).
+
+## Architecture
+
+**The tree is the single source of truth.** Node categories:
+
+- 2D shapes (`line`, `rect`, `circle`, `polygon`, `text`) — `line`
+  compiles to `hull()` of two circles so it is a real extrudable
+  solid.
+- 3D primitives (`cube`, `sphere`, `cylinder`).
+- Operations wrap their children (`linear_extrude`,
+  `rotate_extrude`, `translate`, `rotate`, `scale`, `mirror`).
+- Booleans/grouping (`union` = group, `difference`,
+  `intersection`).
+
+Hidden objects are emitted with OpenSCAD's `*` disable modifier, so
+visibility round-trips through the generated program. New node types
+go into `model.NODE_TYPES` (params, schema, icon, codegen branch in
+`_statement()`, tessellation branch in `mesh.tessellate()`); the
+properties panel and tree pick them up automatically.
+
+**Selection** is coordinated by `MainWindow` (`_syncing` guard):
+tree <-> 2D view <-> properties always show the same objects.
+
+**Render pipeline**: any model change re-tessellates instantly
+(built-in preview) and schedules a debounced exact OpenSCAD render
+that replaces the preview when it lands.
+
+## Document format
+
+`.kcad` is JSON: `{"format": "kcad", "version": 1, "tree": {...}}`
+where each node dict has `"type"`, `"name"`, `"visible"`, `"params"`
+and nested `"children"`. When a node gains new persisted properties,
+bump `FORMAT_VERSION` in `document.py` and keep loading backward
+compatible.
+
+## UI conventions
+
+- Left column: Objects/Code tabs on top, Properties below. Right
+  column: 2D sketch view on top, 3D preview below.
+- Vertical toolbar = shape tools (exclusive checkable group) + 3D
+  primitives; horizontal toolbar = file ops, operations applied to
+  the selection, grid/snap, Render (F5), Fit 3D.
+- Status bar: cursor position in sketch coordinates + engine badge
+  (OpenSCAD found / built-in preview).
+- **Window style**: Fusion as default; themes shared with the family
+  (View > Theme).
+
+## Roadmap
+
+- **Chat box** (family assistant panel) — deliberately last, once
+  the program is nearly finished: it is far better equipped when it
+  can drive a complete tool set.
+- Undo/redo on a shared `QUndoStack` (node add/remove/move/param
+  changes), mirroring KherveSheet's `undo_commands.py`.
+- OpenSCAD `$fn`/`$fa`/`$fs` global settings panel; `offset()`,
+  `hull()`, `minkowski()` operation nodes.
+- Import `.scad` (parse a supported subset back into a tree),
+  import STL/DXF reference geometry.
+- Dimensions/constraints in the 2D sketch; edge snapping.
+- Per-object color/material; section view in the 3D preview.
+
+## Undo / redo policy
+
+**Every user-visible change should become undoable** as the app
+matures: node add/remove/move, param edits and 2D-view drags must
+move onto a shared QUndoStack.
+
+## Persistence policy
+
+**All node properties must round-trip through `.kcad`.** When adding
+a property, keep `node_to_dict()`/`node_from_dict()` in
+`document.py` symmetric and extend the round-trip test in `tests/`.
+
+## Commit / push policy
+
+**Every change must land as a commit and be pushed immediately.**
+No batching. No exceptions. No `Co-Authored-By:` trailer.
+
+Commit subjects under 70 chars; body explains *why*, not what.
+
+**Commit message prefix** — every subject line must start with one of:
+
+- `fix:` — bug fix
+- `feat:` — new feature or option
+- `refactor:` — code restructuring, no behavior change
+- `style:` — formatting, UI tweaks
+- `docs:` — documentation only
+- `perf:` — performance improvement
+
+## Licensing
+
+GPL-3.0. New source files must carry the short GPL notice at the top.
