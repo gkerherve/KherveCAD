@@ -230,6 +230,27 @@ def test_hemispherical_analyser_is_a_dome(model):
     assert min(zs) < -60.0                            # lens column + mount
 
 
+def test_manipulator_bellows_scales_with_z_travel(model):
+    def span(size):
+        node = library.build_part(
+            "manipulator", dict(library.MANIP_SIZES[size], _size=size))
+        assert not validate_root(node)
+        assert any(n.name == "Bellows" for n in node.walk())
+        assert any("Rotary" in n.name for n in node.walk())   # R1 drive
+        zs = [v[2] for t in mesh.tessellate(node) for v in t]
+        return max(zs) - min(zs)
+    short = span("Z25 (CF40)")
+    tall = span("Z300 (CF63)")
+    assert tall > short + 250.0                # a longer bellows is taller
+
+
+def validate_root(node):
+    from khervecad.model import CadNode, validate
+    root = CadNode("root")
+    root.add(node)
+    return validate(root)
+
+
 def test_part_categories_present():
     cats = {spec.get("category") for spec in library.PARTS.values()}
     assert "Vacuum" in cats and "Fasteners" in cats

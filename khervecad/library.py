@@ -607,6 +607,94 @@ def hemispherical_analyser(r_out=150.0, r_in=75.0,
     return part
 
 
+# -------------------------------------------------- XYZ(R1) manipulator
+
+def _lift(node, z):
+    t = CadNode("translate", "Lift", dict(x=0.0, y=0.0, z=z))
+    t.add(node)
+    return t
+
+
+def bellows(r_in, amp, length, convolutions, name="Bellows") -> CadNode:
+    """An edge-welded bellows as a revolved sawtooth ring (no boolean):
+    the outer surface ripples between a valley and a ridge radius over a
+    straight bore. *length* is the Z travel — the point of the size
+    table asking for different bellows lengths."""
+    r_out = r_in + amp
+    r_mid = r_in + amp * 0.12                 # deep valleys → clear ribs
+    convolutions = max(int(convolutions), 2)
+    step = length / convolutions
+    outer = []
+    for i in range(convolutions + 1):
+        outer.append((r_mid, i * step))
+        if i < convolutions:
+            outer.append((r_out, i * step + step / 2.0))
+    prof = outer + [(r_in, length), (r_in, 0.0)]
+    rev = CadNode("rotate_extrude", name, dict(angle=360.0, segments=96))
+    rev.add(CadNode("polygon", f"{name} profile", dict(
+        x=0.0, y=0.0,
+        points=[[round(r, 3), round(z, 3)] for r, z in prof])))
+    return rev
+
+
+def _micrometer(name, length, radius) -> CadNode:
+    """A micrometer drive along +X: barrel, thimble, ratchet cap."""
+    g = CadNode("rotate", f"{name} axis", dict(x=0.0, y=90.0, z=0.0))
+    g.add(_cyl("Barrel", radius, length * 0.6, segments=24))
+    g.add(_cyl("Thimble", radius * 1.3, length * 0.4, z=length * 0.6,
+               segments=24))
+    g.add(_cyl("Ratchet", radius * 0.7, length * 0.18, z=length,
+               segments=20))
+    return g
+
+
+def manipulator(z_travel=50.0, mount=None, xy_travel=25.0) -> CadNode:
+    """A UHV XYZ(R1) sample manipulator: a CF mount flange, an
+    edge-welded bellows of the chosen Z travel, an XY micrometer stage
+    on a top plate, a Z column with a rotary (R1) drive on top, and the
+    sample rod running down the centre through the bore."""
+    mount = mount or CF_SIZES["CF40 (DN40)"]
+    t = mount["thickness"]
+    bore_r = max(mount["bore"] / 2.0, 6.0)
+    flange_r = mount["flange_od"] / 2.0
+    part = CadNode("union", "XYZ manipulator")
+    part.add(cf_flange(mount, "Mount flange", tube_length=0.0))
+    # bellows (the Z travel) rising from the flange face
+    bel_r = bore_r + 3.0
+    part.add(_lift(bellows(bel_r, bel_r * 0.7, z_travel,
+                           max(z_travel / 10.0, 4)), t))
+    top_z = t + z_travel
+    plate_r = flange_r * 0.85
+    part.add(_lift(_cyl("Stage plate", plate_r, 14.0, segments=64),
+                   top_z))
+    stage_z = top_z + 14.0
+    block = 0.9 * plate_r
+    part.add(_lift(CadNode("cube", "XY stage", dict(
+        x=-block / 2.0, y=-block / 2.0, z=0.0, width=block, depth=block,
+        height=block * 0.7, center=False)), stage_z))
+    mlen = xy_travel + flange_r * 0.7
+    part.add(_lift(_micrometer("X drive", mlen, bel_r * 0.5),
+                   stage_z + block * 0.35))
+    ydrv = CadNode("rotate", "Y drive turn", dict(x=0.0, y=0.0, z=90.0))
+    ydrv.add(_micrometer("Y drive", mlen, bel_r * 0.5))
+    part.add(_lift(ydrv, stage_z + block * 0.35))
+    # Z column + rotary (R1) drive on top
+    z2 = stage_z + block * 0.7
+    col_h = z_travel * 0.5 + 40.0
+    part.add(_lift(_cyl("Z column", plate_r * 0.4, col_h, segments=32),
+                   z2))
+    z_top = z2 + col_h
+    part.add(_lift(_cyl("Rotary drive (R1)", plate_r * 0.7, 16.0,
+                        segments=48), z_top))
+    part.add(_lift(_cyl("Rotary knob", plate_r * 0.5, 24.0,
+                        r2=plate_r * 0.55, segments=32), z_top + 16.0))
+    # sample rod down the centre, through the bore into the chamber
+    rod_bottom = -(z_travel * 0.4 + 90.0)
+    part.add(_cyl("Sample rod", bore_r * 0.35, z2 - rod_bottom,
+                  z=rod_bottom, segments=24))
+    return part
+
+
 # ----------------------------------------------------------------- parts
 
 #: hemispherical analyser classes (mean radius / mount flange).
@@ -615,6 +703,20 @@ ANALYSER_SIZES = {
                                mount="CF160 (DN160)"),
     "R100 (CF100 mount)": dict(r_out=100.0, r_in=50.0,
                                mount="CF100 (DN100)"),
+}
+
+#: XYZ(R1) manipulator classes — the size is the bellows Z travel.
+MANIP_SIZES = {
+    "Z25 (CF40)": dict(z_travel=25.0, xy_travel=12.5,
+                       mount="CF40 (DN40)"),
+    "Z50 (CF40)": dict(z_travel=50.0, xy_travel=25.0,
+                       mount="CF40 (DN40)"),
+    "Z100 (CF63)": dict(z_travel=100.0, xy_travel=25.0,
+                        mount="CF63 (DN63)"),
+    "Z150 (CF63)": dict(z_travel=150.0, xy_travel=25.0,
+                        mount="CF63 (DN63)"),
+    "Z300 (CF63)": dict(z_travel=300.0, xy_travel=25.0,
+                        mount="CF63 (DN63)"),
 }
 
 #: editable dimensions per family.
@@ -679,6 +781,10 @@ PARTS = {
                          category=_VAC, sizes=ANALYSER_SIZES,
                          fields=[("r_out", "Outer radius"),
                                  ("r_in", "Inner radius")]),
+    "manipulator": dict(label="XYZ(R1) manipulator", category=_VAC,
+                        sizes=MANIP_SIZES,
+                        fields=[("z_travel", "Z travel (bellows)"),
+                                ("xy_travel", "XY travel")]),
     "bolt_hex": dict(label="Hex bolt, threaded (DIN 933)",
                      category=_FASTENERS, sizes=BOLT_SIZES,
                      fields=_BOLT_FIELDS),
@@ -743,6 +849,13 @@ def build_part(part_id: str, dims: dict) -> CadNode:
         return hemispherical_analyser(
             r_out=p.get("r_out", entry["r_out"]),
             r_in=p.get("r_in", entry["r_in"]),
+            mount=CF_SIZES[entry["mount"]])
+    if part_id == "manipulator":
+        entry = MANIP_SIZES.get(p.pop("_size", ""),
+                                MANIP_SIZES["Z50 (CF40)"])
+        return manipulator(
+            z_travel=p.get("z_travel", entry["z_travel"]),
+            xy_travel=p.get("xy_travel", entry["xy_travel"]),
             mount=CF_SIZES[entry["mount"]])
     if part_id == "valve_angle":
         return angle_valve(p, port_length=length)
