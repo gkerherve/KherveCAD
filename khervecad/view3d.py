@@ -54,6 +54,18 @@ class View3D(QWidget):
             QSettings(*_SETTINGS).setValue("render_style", style)
             self.update()
 
+    #: standard camera orientations (yaw, pitch) in degrees.
+    VIEWS = {
+        "Isometric": (35.0, 25.0), "Top": (-90.0, 89.0),
+        "Bottom": (-90.0, -89.0), "Front": (-90.0, 2.0),
+        "Back": (90.0, 2.0), "Right": (0.0, 2.0), "Left": (180.0, 2.0),
+    }
+
+    def set_view(self, name: str):
+        if name in self.VIEWS:
+            self.yaw, self.pitch = self.VIEWS[name]
+            self.fit()
+
     # ------------------------------------------------------------- API
     def set_mesh(self, mesh, source: str, colors=None):
         """*colors* is an optional per-face list of (colorstring,
@@ -93,9 +105,11 @@ class View3D(QWidget):
         fy = -math.cos(pitch) * math.sin(yaw)
         fz = -math.sin(pitch)
         rx, ry, rz = -math.sin(yaw), math.cos(yaw), 0.0
-        ux = fy * rz - fz * ry
-        uy = fz * rx - fx * rz
-        uz = fx * ry - fy * rx
+        # up = right x forward (so world +Z maps to screen up — the
+        # other order gives uz = -cos(pitch) and renders upside down)
+        ux = ry * fz - rz * fy
+        uy = rz * fx - rx * fz
+        uz = rx * fy - ry * fx
         ex = self.target[0] - fx * self.distance
         ey = self.target[1] - fy * self.distance
         ez = self.target[2] - fz * self.distance

@@ -43,13 +43,25 @@ AI_PROVIDERS = {
     "Claude": {
         "api_url": "https://api.anthropic.com/v1/messages",
         "models": [
-            "claude-sonnet-4-5-20250929",
-            "claude-haiku-4-5-20251001",
+            "claude-opus-4-5",
+            "claude-sonnet-4-5",
+            "claude-haiku-4-5",
         ],
         "requires_key": True,
         "key_env": "ANTHROPIC_API_KEY",
         "key_url": "https://console.anthropic.com/settings/keys",
         "header_format": "x-api-key",
+    },
+    "OpenAI": {
+        "api_url": "https://api.openai.com/v1/chat/completions",
+        "models": [
+            "gpt-5.1", "gpt-5", "gpt-4.1", "gpt-4o", "gpt-4o-mini",
+            "o3", "o4-mini",
+        ],
+        "requires_key": True,
+        "key_env": "OPENAI_API_KEY",
+        "key_url": "https://platform.openai.com/api-keys",
+        "header_format": "Bearer",
     },
     "Mistral": {
         "api_url": "https://api.mistral.ai/v1/chat/completions",
@@ -127,11 +139,19 @@ def build_request(provider: str, model: str, messages, system: str):
                 "messages": [{"role": "system", "content": system}]
                 + messages,
                 "options": {"temperature": TEMPERATURE}}
-    # Mistral (OpenAI-style)
-    return {"model": model,
+    # OpenAI / Mistral (OpenAI-style chat/completions)
+    body = {"model": model,
             "messages": [{"role": "system", "content": system}]
-            + messages,
-            "temperature": TEMPERATURE, "max_tokens": MAX_TOKENS}
+            + messages}
+    # OpenAI reasoning models (o-series, gpt-5) use a different token
+    # field and reject a custom temperature
+    if provider == "OpenAI" and model.startswith(("o1", "o3", "o4",
+                                                  "gpt-5")):
+        body["max_completion_tokens"] = MAX_TOKENS
+    else:
+        body["temperature"] = TEMPERATURE
+        body["max_tokens"] = MAX_TOKENS
+    return body
 
 
 def parse_reply(provider: str, payload: dict) -> str:
@@ -296,9 +316,9 @@ class ChatPanel(QWidget):
         layout.addLayout(input_row)
 
         self._append_note(
-            "Hi! I can answer questions and build geometry — my "
-            "<code>scad</code> replies can be applied straight to the "
-            "document. Type <b>/help</b> for app commands.")
+            "Hi! I can answer questions and build geometry — when I "
+            "design a part it is applied straight to the document "
+            "(Ctrl+Z to undo). Type <b>/help</b> for app commands.")
 
     # ------------------------------------------------------- transcript
     def _append(self, role, html_text):
@@ -422,7 +442,38 @@ class ChatPanel(QWidget):
         self.history.append({"role": "assistant", "content": text})
         if len(self.history) > 30:            # keep the context lean
             self.history = self.history[-30:]
-        self._append("assistant", self._render_markdownish(text))
+        blocks = _SCAD_BLOCK_RE.findall(text)
+        # show only the explanation, never the raw program — the code
+        # is applied to the document automatically
+        prose = _SCAD_BLOCK_RE.sub("", text).strip()
+        if prose:
+            self._append("assistant",
+                         html.escape(prose).replace("\n", "<br>"))
+        elif not blocks:
+            self._append("assistant",
+                         html.escape(text).replace("\n", "<br>"))
+        if blocks:
+            self._auto_apply(blocks[-1])
+
+    def _auto_apply(self, code):
+        """Parse the assistant's program straight into the object tree
+        (undoable with Ctrl+Z) instead of printing it in the chat."""
+        from .scadparse import parse_scad
+        try:
+            root, warnings = parse_scad(code)
+        except Exception as exc:
+            self._append_note("Couldn't apply that program: "
+                              + html.escape(str(exc)))
+            return
+        count = sum(1 for n in root.walk() if n.type != "root")
+        self.window.model.root = root
+        self.window.model.structure_changed.emit()
+        self.window.view3d.fit()
+        note = (f"✓ Built in the document — {count} object"
+                f"{'s' if count != 1 else ''}. Press Ctrl+Z to undo.")
+        if warnings:
+            note += " Skipped: " + "; ".join(warnings[:4])
+        self._append_note(html.escape(note))
 
     def _failed(self, message):
         self._append_note("Request failed: " + html.escape(message))

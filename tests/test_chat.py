@@ -51,6 +51,17 @@ def test_request_formats():
     assert ollama["messages"][0]["content"] == "sys"
 
 
+def test_openai_provider_and_reasoning_models():
+    assert "OpenAI" in chat.AI_PROVIDERS
+    messages = [{"role": "user", "content": "hi"}]
+    std = chat.build_request("OpenAI", "gpt-4o", messages, "sys")
+    assert std["temperature"] == chat.TEMPERATURE
+    assert "max_tokens" in std
+    reason = chat.build_request("OpenAI", "gpt-5.1", messages, "sys")
+    assert "max_completion_tokens" in reason
+    assert "temperature" not in reason        # rejected by o-series
+
+
 def test_reply_parsing():
     assert chat.parse_reply("Claude", {"content": [
         {"type": "text", "text": "a"}, {"type": "text", "text": "b"}
@@ -88,24 +99,29 @@ def test_slash_hide_show(window):
     assert node.visible is True
 
 
-def test_scad_block_apply_replaces_document(window, monkeypatch):
+def test_reply_auto_applies_program_not_shown_as_text(window):
     panel = window.chat
     window.model.add_node("cube")
-    from PyQt5.QtWidgets import QMessageBox
-    monkeypatch.setattr(QMessageBox, "question",
-                        staticmethod(lambda *a, **k: QMessageBox.Yes))
-    panel.apply_scad("sphere(r=9, $fn=16);")
+    reply = ("Here's a sphere for you.\n"
+             "```scad\nsphere(r=9, $fn=16);\n```")
+    panel._replied(reply)
+    # the program was applied straight to the tree...
     types = [n.type for n in window.model.root.children]
     assert types == ["sphere"]
     assert window.model.root.children[0].params["radius"] == 9.0
+    transcript = panel.transcript.toPlainText()
+    # ...the prose shows, but the raw program does not
+    assert "Here's a sphere for you." in transcript
+    assert "sphere(r=9" not in transcript
+    assert "Built in the document" in transcript
 
 
-def test_scad_block_detected_and_linked(window):
+def test_auto_apply_is_undoable(window):
     panel = window.chat
-    text = "Here you go:\n```scad\ncube(5);\n```\nDone."
-    rendered = panel._render_markdownish(text)
-    assert "apply:0" in rendered
-    assert panel._blocks == ["cube(5);\n"]
+    window.model.add_node("cube")
+    window.model.undo_stack.clear()
+    panel._replied("```scad\nsphere(r=5, $fn=12);\n```")
+    assert window.model.root.children[0].type == "sphere"
 
 
 def test_missing_key_warns_instead_of_sending(window, monkeypatch):

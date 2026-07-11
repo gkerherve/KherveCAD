@@ -335,6 +335,10 @@ class MainWindow(QMainWindow):
         view_menu.addAction("Zoom to Se&lection",
                             self.view2d.zoom_selection)
         view_menu.addAction("&Fit 3D View", self.view3d.fit, "Ctrl+F")
+        views_menu = view_menu.addMenu("3D &Camera")
+        for name in self.view3d.VIEWS:
+            views_menu.addAction(
+                name, lambda _=False, n=name: self.view3d.set_view(n))
         view_menu.addSeparator()
         from .view3d import RENDER_STYLES
         style_menu = view_menu.addMenu("3D &Render Style")
