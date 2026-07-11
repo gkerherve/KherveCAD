@@ -298,3 +298,54 @@ def test_points_editor_remove_keeps_minimum(app):
         editor.table.setCurrentCell(0, 0)
         editor._remove_row()
     assert editor.table.rowCount() == 3
+
+
+# ------------------------------------------------------ variables sheet
+
+def test_variables_sheet_lists_and_edits(window):
+    m = window.model
+    m.add_node("assign", dict(variable="width", value="100"))
+    m.add_node("assign", dict(variable="height", value="width/2"))
+    m.add_node("cube")
+    m.structure_changed.emit()
+    sheet = window.builder.variables
+    assert sheet.table.rowCount() == 2
+    assert sheet.table.item(0, 0).text() == "width"
+    assert sheet.table.item(1, 1).text() == "width/2"
+
+    sheet.table.item(0, 1).setText("250")          # edit a value
+    assert m.root.children[0].params["value"] == "250"
+    sheet.table.item(1, 0).setText("h")            # rename a variable
+    assert m.root.children[1].params["variable"] == "h"
+    assert m.root.children[1].name == "h ="
+
+
+def test_variables_sheet_add_keeps_vars_before_geometry(window):
+    m = window.model
+    m.add_node("assign", dict(variable="a", value="1"))
+    m.add_node("cube")
+    m.structure_changed.emit()
+    window.builder.variables._add()
+    kinds = [n.type for n in m.root.children]
+    assert kinds == ["assign", "assign", "cube"]    # new var before cube
+
+
+def test_variables_sheet_remove(window):
+    m = window.model
+    m.add_node("assign", dict(variable="a", value="1"))
+    m.add_node("assign", dict(variable="b", value="2"))
+    m.structure_changed.emit()
+    sheet = window.builder.variables
+    sheet.table.setCurrentCell(0, 0)
+    sheet._remove()
+    assert [n.params["variable"] for n in m.root.children] == ["b"]
+
+
+def test_assign_nodes_coloured_in_tree(window):
+    from khervecad.treepanel import VAR_COLOR, VAR_COLOR_DARK
+    m = window.model
+    node = m.add_node("assign", dict(variable="a", value="1"))
+    m.structure_changed.emit()
+    item = window.builder.tree._item_of(node)
+    assert item is not None
+    assert item.foreground(0).color().name() in (VAR_COLOR, VAR_COLOR_DARK)

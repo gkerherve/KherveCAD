@@ -22,16 +22,22 @@ from PyQt5.QtGui import (QBrush, QColor, QFont, QKeySequence,
                          QSyntaxHighlighter, QTextCharFormat)
 from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QCheckBox,
                              QHBoxLayout, QMenu, QPlainTextEdit,
-                             QSpinBox, QTabWidget, QTextEdit, QTreeWidget,
-                             QTreeWidgetItem, QVBoxLayout, QWidget)
+                             QPushButton, QSpinBox, QTableWidget,
+                             QTableWidgetItem, QTabWidget, QTextEdit,
+                             QTreeWidget, QTreeWidgetItem, QVBoxLayout,
+                             QWidget)
 
 from . import icons
 from .document import node_from_dict, node_to_dict
-from .model import NODE_TYPES, OPERATION, DocumentModel, validate
+from .model import (CadNode, NODE_TYPES, OPERATION, DocumentModel,
+                    validate)
 
 #: colour for objects whose code would be broken.
 ERROR_COLOR = "#c62828"
 ERROR_COLOR_DARK = "#ef6c6c"
+#: colour for variable (assign) nodes so they read as a group.
+VAR_COLOR = "#6f42c1"
+VAR_COLOR_DARK = "#c39bf0"
 
 CLIPBOARD_FORMAT = "kcad-clipboard"
 
@@ -127,6 +133,12 @@ class ObjectTree(QTreeWidget):
                 else ERROR_COLOR
             item.setForeground(0, QBrush(QColor(color)))
             item.setToolTip(0, f"⚠ {error}")
+        elif node.type == "assign":
+            from .style import tokens
+            color = VAR_COLOR_DARK if tokens().get("dark") else VAR_COLOR
+            item.setForeground(0, QBrush(QColor(color)))
+            item.setToolTip(0, "Variable — also editable in the "
+                               "Variables sheet")
         else:
             item.setData(0, Qt.ForegroundRole, None)
             item.setToolTip(0, NODE_TYPES[node.type]["label"])
@@ -551,8 +563,100 @@ class CodeView(QPlainTextEdit):
                 self.ensureCursorVisible()
 
 
+class VariablesSheet(QWidget):
+    """A spreadsheet of the document's variables (assign nodes), so all
+    the parameters live in one place instead of sprawling down the
+    object tree. Edits write straight back to the model, and it stays in
+    sync when variables are changed elsewhere."""
+
+    def __init__(self, model: DocumentModel, parent=None):
+        super().__init__(parent)
+        self.model = model
+        self._updating = False
+        self._rows = []
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(4, 4, 4, 4)
+        self.table = QTableWidget(0, 2)
+        self.table.setHorizontalHeaderLabels(["Name", "Value / expression"])
+        self.table.horizontalHeader().setStretchLastSection(True)
+        self.table.setColumnWidth(0, 170)
+        self.table.verticalHeader().setDefaultSectionSize(22)
+        self.table.itemChanged.connect(self._cell_edited)
+        layout.addWidget(self.table)
+
+        buttons = QHBoxLayout()
+        add = QPushButton(icons.icon("mdi.plus"), " Variable")
+        add.setToolTip("Add a variable")
+        add.clicked.connect(self._add)
+        remove = QPushButton(icons.icon("mdi.minus"), " Remove")
+        remove.setToolTip("Remove the selected variable")
+        remove.clicked.connect(self._remove)
+        buttons.addWidget(add)
+        buttons.addWidget(remove)
+        buttons.addStretch()
+        layout.addLayout(buttons)
+
+        model.structure_changed.connect(self.rebuild)
+        model.node_changed.connect(self._node_changed)
+        self.rebuild()
+
+    def _assigns(self):
+        return [n for n in self.model.root.walk() if n.type == "assign"]
+
+    def rebuild(self):
+        self._updating = True
+        self._rows = self._assigns()
+        self.table.setRowCount(len(self._rows))
+        for row, node in enumerate(self._rows):
+            self.table.setItem(row, 0, QTableWidgetItem(
+                str(node.params.get("variable", ""))))
+            self.table.setItem(row, 1, QTableWidgetItem(
+                str(node.params.get("value", ""))))
+        self._updating = False
+
+    def _node_changed(self, node):
+        if not self._updating and getattr(node, "type", None) == "assign":
+            self.rebuild()
+
+    def _cell_edited(self, item):
+        if self._updating or item.row() >= len(self._rows):
+            return
+        node = self._rows[item.row()]
+        if item.column() == 0:
+            name = item.text().strip()
+            if name:
+                node.params["variable"] = name
+                node.name = f"{name} ="
+        else:
+            node.params["value"] = item.text().strip()
+        self.model.node_changed.emit(node)
+
+    def _add(self):
+        assigns = self._assigns()
+        used = {n.params.get("variable") for n in assigns}
+        i = 1
+        while f"var{i}" in used:
+            i += 1
+        name = f"var{i}"
+        node = CadNode("assign", f"{name} =",
+                       dict(variable=name, value="0"))
+        # keep new variables in the variable block, ahead of geometry
+        if assigns:
+            last = assigns[-1]
+            last.parent.add(node, last.index() + 1)
+        else:
+            self.model.root.add(node, 0)
+        self.model.structure_changed.emit()
+
+    def _remove(self):
+        row = self.table.currentRow()
+        if 0 <= row < len(self._rows):
+            self.model.remove_node(self._rows[row])
+
+
 class BuilderPanel(QTabWidget):
-    """Objects tree + Code tabs, kept in sync with the model.
+    """Objects tree + Variables + Code tabs, kept in sync with the model.
 
     Also owns the error state: static validation runs on every change
     and OpenSCAD compiler errors are merged in by the main window;
@@ -591,7 +695,10 @@ class BuilderPanel(QTabWidget):
         box.addLayout(row)
         box.addWidget(self.tree)
 
+        self.variables = VariablesSheet(model)
+
         self.addTab(objects, icons.icon("mdi.file-tree"), "Objects")
+        self.addTab(self.variables, icons.icon("mdi.table"), "Variables")
         self.addTab(self.code, icons.icon("mdi.code-braces"), "Code")
         model.structure_changed.connect(self.refresh_code)
         model.structure_changed.connect(self._sync_fn_ui)
