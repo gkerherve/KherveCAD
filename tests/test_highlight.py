@@ -125,11 +125,18 @@ def test_primitive_dimension_handles_edit_params(window):
 
     rb = next(d for d in item._dims if d["role"] == "radius_bottom")
     ax, ay = rb["axis"]
-    target = QPointF(rb["anchor"].x() + ax * 12,
-                     rb["anchor"].y() + ay * 12)
-    item.handle_dragged("radius_bottom", target)
-    assert abs(cyl.params["radius_bottom"] - 12.0) < 0.5
-    assert cyl.params["radius_top"] == 5.0        # only bottom changed
+    grab = rb["tip"]                               # grab the handle
+    item.handle_pressed("radius_bottom", grab)
+    # drag 7 mm further out along the axis -> radius grows by 7
+    item.handle_dragged("radius_bottom",
+                        QPointF(grab.x() + ax * 7, grab.y() + ay * 7))
+    assert abs(cyl.params["radius_bottom"] - 12.0) < 0.01
+    assert cyl.params["radius_top"] == 5.0         # only bottom changed
+    # off-axis wobble must not move the value
+    item.handle_pressed("radius_bottom", grab)
+    item.handle_dragged("radius_bottom",
+                        QPointF(grab.x() - ay * 25, grab.y() + ax * 25))
+    assert abs(cyl.params["radius_bottom"] - 5.0) < 0.01  # no along-axis
 
 
 def test_cube_and_sphere_have_size_handles(window):

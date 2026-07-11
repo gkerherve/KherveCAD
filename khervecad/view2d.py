@@ -49,23 +49,32 @@ def _pen(color: str, width=_SHAPE_PEN_W) -> QPen:
 class HandleItem(QGraphicsRectItem):
     """Square resize handle, constant size on screen."""
 
-    def __init__(self, role: str, parent):
+    def __init__(self, role: str, parent, snap=True):
         size = HANDLE_SIZE
         super().__init__(-size / 2, -size / 2, size, size, parent)
         self.role = role
+        self._snap = snap                  # dimension handles opt out
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations, True)
         self.setBrush(QBrush(QColor("#ffffff")))
         self.setPen(_pen("#2176c7", 1.2))
         self.setCursor(Qt.SizeAllCursor)
         self.setAcceptedMouseButtons(Qt.LeftButton)
 
+    def _scene_pos(self, event):
+        return self.parentItem().mapToScene(
+            self.mapToParent(event.pos()))
+
     def mousePressEvent(self, event):
+        parent = self.parentItem()
+        if hasattr(parent, "handle_pressed"):
+            # record the grab point so the drag is measured as a delta
+            parent.handle_pressed(self.role, self._scene_pos(event))
         event.accept()
 
     def mouseMoveEvent(self, event):
-        scene = self.scene()
-        pos = scene.snap(self.parentItem().mapToScene(
-            self.mapToParent(event.pos())))
+        pos = self._scene_pos(event)
+        if self._snap:
+            pos = self.scene().snap(pos)
         self.parentItem().handle_dragged(self.role, pos)
 
     def mouseReleaseEvent(self, event):
@@ -410,30 +419,41 @@ class PartItem(QGraphicsPathItem):
         self.handles = []
         if self.isSelected() and self._dims:
             for spec in self._dims:
-                handle = HandleItem(spec["role"], self)
+                handle = HandleItem(spec["role"], self, snap=False)
                 handle.setPos(spec["tip"])
                 self.handles.append(handle)
 
+    def handle_pressed(self, role, scene_pos):
+        """Remember the grab point and starting value so the drag is a
+        stable delta rather than an absolute re-projection each frame."""
+        spec = next((d for d in self._dims if d["role"] == role), None)
+        if spec is not None:
+            spec["_grab"] = scene_pos
+            spec["_start"] = spec["value"]
+
     def handle_dragged(self, role, scene_pos):
         spec = next((d for d in self._dims if d["role"] == role), None)
-        if spec is None:
+        if spec is None or "_grab" not in spec:
             return
         ax, ay = spec["axis"]
         denom = ax * ax + ay * ay
         if denom < 1e-12:
             return
-        # project the cursor onto the handle's axis line -> local length
-        s = ((scene_pos.x() - spec["anchor"].x()) * ax
-             + (scene_pos.y() - spec["anchor"].y()) * ay) / denom
-        value = max(s * spec["factor"], spec["minval"])
+        # how far the cursor has moved *along the handle's axis* since
+        # the grab, in local mm — measured from a fixed reference so it
+        # never jitters, and unaffected by the handle itself moving
+        travel = ((scene_pos.x() - spec["_grab"].x()) * ax
+                  + (scene_pos.y() - spec["_grab"].y()) * ay) / denom
+        value = max(spec["_start"] + travel * spec["factor"],
+                    spec["minval"])
         self.node.params[spec["param"]] = round(value, 4)
         self._scene.model.node_changed.emit(self.node)
-        # keep the grabbed handle under the cursor for live feedback
-        new_s = value / spec["factor"]
+        # slide the grabbed handle to reflect the new size (feedback)
+        mag = value / spec["factor"]
         for handle in self.handles:
             if handle.role == role:
-                handle.setPos(QPointF(spec["anchor"].x() + new_s * ax,
-                                      spec["anchor"].y() + new_s * ay))
+                handle.setPos(QPointF(spec["anchor"].x() + mag * ax,
+                                      spec["anchor"].y() + mag * ay))
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
@@ -721,7 +741,7 @@ class SketchScene(QGraphicsScene):
             anchor = project(anchor3)
             out.append(dict(
                 role=role, param=param, anchor=anchor, axis=ax,
-                factor=factor, minval=0.1,
+                factor=factor, minval=0.1, value=mag * factor,
                 tip=QPointF(anchor.x() + ax[0] * mag,
                             anchor.y() + ax[1] * mag)))
 
@@ -744,12 +764,20 @@ class SketchScene(QGraphicsScene):
                 val("radius"), 1.0)
         else:                                       # cube
             w, d, hh = val("width"), val("depth"), val("height")
-            cx = px + (0.0 if center else w / 2)
-            cy = py + (0.0 if center else d / 2)
-            cz = pz + (0.0 if center else hh / 2)
-            add("width", "width", (cx, cy, cz), (1, 0, 0), w / 2, 2.0)
-            add("depth", "depth", (cx, cy, cz), (0, 1, 0), d / 2, 2.0)
-            add("height", "height", (cx, cy, cz), (0, 0, 1), hh / 2, 2.0)
+            if center:
+                # grows symmetrically about the centre: dragging a face
+                # by t changes the dimension by 2t
+                add("width", "width", (px, py, pz), (1, 0, 0), w / 2, 2.0)
+                add("depth", "depth", (px, py, pz), (0, 1, 0), d / 2, 2.0)
+                add("height", "height", (px, py, pz), (0, 0, 1),
+                    hh / 2, 2.0)
+            else:
+                # anchored at its min corner: drag the far face, the
+                # dimension is just the distance to it
+                cx, cy, cz = px + w / 2, py + d / 2, pz + hh / 2
+                add("width", "width", (px, cy, cz), (1, 0, 0), w, 1.0)
+                add("depth", "depth", (cx, py, cz), (0, 1, 0), d, 1.0)
+                add("height", "height", (cx, cy, pz), (0, 0, 1), hh, 1.0)
         return out
 
     def _make_part_item(self, node):
