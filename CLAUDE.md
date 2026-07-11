@@ -103,7 +103,10 @@ into a new module and import.
                        Selection. Middle-mouse drag pans; wheel zooms.
   - `view3d.py`      — bottom-right preview: software-rendered shaded
                        mesh viewer (orbit/pan/zoom, painter's algo,
-                       no OpenGL dependency).
+                       no OpenGL dependency); render styles (shaded,
+                       brushed metal with specular, matte, wireframe,
+                       x-ray) selectable in View > 3D Render Style and
+                       persisted via QSettings.
   - `mesh.py`        — pure-Python fallback tessellator (primitives,
                        linear/rotate extrude with twist/scale/angle,
                        transforms, ear-clipping triangulation).

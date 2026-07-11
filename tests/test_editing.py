@@ -231,3 +231,31 @@ def test_engine_error_maps_to_node(window):
     assert cube.id in window.builder._engine_errors
     window._engine_mesh([])                   # success clears them
     assert window.builder._engine_errors == {}
+
+
+def test_tab_q_steps_through_objects(window):
+    m = window.model
+    a = m.add_node("cube")
+    b = m.add_node("sphere")
+    c = m.add_node("cylinder")
+    tree = window.builder.tree
+    tree.step_selection(1)                     # from none -> first
+    assert tree.selected_nodes()[0] is a
+    tree.step_selection(1)
+    assert tree.selected_nodes()[0] is b
+    tree.step_selection(1)
+    assert tree.selected_nodes()[0] is c
+    tree.step_selection(1)                     # wraps to the start
+    assert tree.selected_nodes()[0] is a
+    tree.step_selection(-1)                    # wraps to the end
+    assert tree.selected_nodes()[0] is c
+
+
+def test_step_descends_into_children(window):
+    m = window.model
+    group = m.add_node("union")
+    inner = m.add_node("cube", parent=group)
+    tree = window.builder.tree
+    tree.select_nodes([group])
+    tree.step_selection(1)                     # next is the child
+    assert tree.selected_nodes()[0] is inner

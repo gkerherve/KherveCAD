@@ -55,9 +55,13 @@ Going further:
   is millimetres: scale bar, live size readout while drawing, zoom
   indicator, Fit Sketch / Zoom to Selection. Middle-mouse drag pans;
   the wheel zooms.
-- **Selection highlight** — select any object (even a sub-part deep
-  in an assembly) and its geometry lights up amber in both the 2D
-  and 3D views, so you always see exactly what you picked.
+- **Selection highlight & isolate** — select any object (even a
+  sub-part deep in an assembly) and its geometry lights up amber in
+  the 3D view; the 2D view shows *only* that object, as its true
+  projected shape in the current plane. Tab / Shift+Tab (or Q / A)
+  step through objects.
+- **Render styles** — View > 3D Render Style: shaded, brushed metal
+  (with specular highlights), matte, wireframe or x-ray.
 - **Undo/redo** (Ctrl+Z / Ctrl+Y) for every edit; drags collapse to
   a single step.
 - **Colors** — right-click > Color... wraps objects in OpenSCAD's

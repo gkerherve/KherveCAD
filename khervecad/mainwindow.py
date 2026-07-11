@@ -114,6 +114,8 @@ class MainWindow(QMainWindow):
                         "copy": self.builder.tree.copy_selection,
                         "paste": self.builder.tree.paste_clipboard
                         }[op]())
+        self.view2d.step_object.connect(
+            self.builder.tree.step_selection)
         self.model.structure_changed.connect(self._model_edited)
         self.model.node_changed.connect(lambda _n: self._model_edited())
         self.engine.mesh_ready.connect(self._engine_mesh)
@@ -171,6 +173,18 @@ class MainWindow(QMainWindow):
                       self.open_file)
         bar.addAction(icons.icon("mdi.content-save-outline"), "Save",
                       self.save_file)
+        bar.addSeparator()
+
+        undo_act = self.model.undo_stack.createUndoAction(self)
+        undo_act.setIcon(icons.icon("mdi.undo"))
+        undo_act.setText("Undo")
+        undo_act.setToolTip("Undo (Ctrl+Z)")
+        bar.addAction(undo_act)
+        redo_act = self.model.undo_stack.createRedoAction(self)
+        redo_act.setIcon(icons.icon("mdi.redo"))
+        redo_act.setText("Redo")
+        redo_act.setToolTip("Redo (Ctrl+Y)")
+        bar.addAction(redo_act)
         bar.addSeparator()
 
         for op in OPERATIONS:
@@ -321,6 +335,17 @@ class MainWindow(QMainWindow):
         view_menu.addAction("Zoom to Se&lection",
                             self.view2d.zoom_selection)
         view_menu.addAction("&Fit 3D View", self.view3d.fit, "Ctrl+F")
+        view_menu.addSeparator()
+        from .view3d import RENDER_STYLES
+        style_menu = view_menu.addMenu("3D &Render Style")
+        style_group = QActionGroup(self)
+        for name in RENDER_STYLES:
+            act = QAction(name, self, checkable=True)
+            act.setChecked(name == self.view3d.style)
+            act.triggered.connect(
+                lambda _, n=name: self.view3d.set_style(n))
+            style_group.addAction(act)
+            style_menu.addAction(act)
         view_menu.addSeparator()
         theme_menu = view_menu.addMenu("&Theme")
         theme_group = QActionGroup(self)

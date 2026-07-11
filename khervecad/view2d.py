@@ -808,6 +808,7 @@ class SketchView(QGraphicsView):
     cursor_moved = pyqtSignal(QPointF)
     clipboard_op = pyqtSignal(str)          # "cut" | "copy" | "paste"
     zoom_changed = pyqtSignal(float)        # pixels per mm
+    step_object = pyqtSignal(int)           # +1 next / -1 previous
 
     def __init__(self, scene: SketchScene, parent=None):
         super().__init__(scene, parent)
@@ -987,10 +988,22 @@ class SketchView(QGraphicsView):
             rect = rect.united(item.sceneBoundingRect())
         self._fit_rect(rect)
 
+    def event(self, e):
+        from PyQt5.QtCore import QEvent
+        if e.type() == QEvent.KeyPress and \
+                e.key() in (Qt.Key_Tab, Qt.Key_Backtab):
+            self.step_object.emit(1 if e.key() == Qt.Key_Tab else -1)
+            return True
+        return super().event(e)
+
     def keyPressEvent(self, event):
         from PyQt5.QtGui import QKeySequence
         scene = self.scene()
-        if event.matches(QKeySequence.Copy):
+        if event.key() == Qt.Key_Q:
+            self.step_object.emit(1)
+        elif event.key() == Qt.Key_A:
+            self.step_object.emit(-1)
+        elif event.matches(QKeySequence.Copy):
             self.clipboard_op.emit("copy")
         elif event.matches(QKeySequence.Cut):
             self.clipboard_op.emit("cut")

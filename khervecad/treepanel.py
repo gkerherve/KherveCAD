@@ -17,7 +17,7 @@ the Free Software Foundation, either version 3 of the License, or
 import json
 import re
 
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import QEvent, Qt, pyqtSignal
 from PyQt5.QtGui import (QBrush, QColor, QFont, QKeySequence,
                          QSyntaxHighlighter, QTextCharFormat)
 from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QMenu,
@@ -261,8 +261,39 @@ class ObjectTree(QTreeWidget):
             self.model.shift_node(node, delta)
         self.select_nodes(nodes)
 
+    def step_selection(self, delta: int):
+        """Move the selection to the next/previous object in tree order
+        (Tab / Shift+Tab, or Q / A) — wraps around the ends."""
+        order = [n for n in self.model.root.walk() if n.type != "root"]
+        if not order:
+            return
+        current = self.selected_nodes()
+        if current:
+            try:
+                index = order.index(current[-1])
+            except ValueError:
+                index = 0
+            index = (index + delta) % len(order)
+        else:
+            index = 0 if delta >= 0 else len(order) - 1
+        self.select_nodes([order[index]])
+
+    def event(self, e):
+        # Tab is normally consumed by focus traversal — grab it here so
+        # it steps through objects instead.
+        if e.type() == QEvent.KeyPress and \
+                e.key() in (Qt.Key_Tab, Qt.Key_Backtab):
+            self.step_selection(1 if e.key() == Qt.Key_Tab else -1)
+            return True
+        return super().event(e)
+
     def keyPressEvent(self, event):
-        if event.matches(QKeySequence.Copy):
+        key = event.key()
+        if key == Qt.Key_Q:
+            self.step_selection(1)
+        elif key == Qt.Key_A:
+            self.step_selection(-1)
+        elif event.matches(QKeySequence.Copy):
             self.copy_selection()
         elif event.matches(QKeySequence.Cut):
             self.cut_selection()

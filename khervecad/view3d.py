@@ -17,9 +17,15 @@ the Free Software Foundation, either version 3 of the License, or
 
 import math
 
-from PyQt5.QtCore import QPointF, Qt
+from PyQt5.QtCore import QPointF, QSettings, Qt
 from PyQt5.QtGui import QColor, QPainter, QPen, QPolygonF
 from PyQt5.QtWidgets import QWidget
+
+_SETTINGS = ("Kherve", "KherveCAD")
+
+#: 3D render styles: how each face's shade becomes a colour.
+RENDER_STYLES = ["Shaded", "Brushed metal", "Matte", "Wireframe",
+                 "X-ray"]
 
 
 class View3D(QWidget):
@@ -37,8 +43,16 @@ class View3D(QWidget):
         self.target = [0.0, 0.0, 10.0]
         self._last = None
         self._mode = None
+        saved = QSettings(*_SETTINGS).value("render_style", "Shaded")
+        self.style = saved if saved in RENDER_STYLES else "Shaded"
         self.setMinimumHeight(160)
         self.setMouseTracking(False)
+
+    def set_style(self, style: str):
+        if style in RENDER_STYLES:
+            self.style = style
+            QSettings(*_SETTINGS).setValue("render_style", style)
+            self.update()
 
     # ------------------------------------------------------------- API
     def set_mesh(self, mesh, source: str, colors=None):
@@ -113,6 +127,11 @@ class View3D(QWidget):
         light = (0.35, -0.5, 0.75)
         norm = math.sqrt(sum(c * c for c in light))
         light = tuple(c / norm for c in light)
+        to_eye = (-forward[0], -forward[1], -forward[2])
+        half = (light[0] + to_eye[0], light[1] + to_eye[1],
+                light[2] + to_eye[2])
+        hlen = math.sqrt(sum(c * c for c in half)) or 1.0
+        half = tuple(c / hlen for c in half)
 
         faces = []
         for index, tri in enumerate(self.mesh):
@@ -130,10 +149,11 @@ class View3D(QWidget):
             length = math.sqrt(nx * nx + ny * ny + nz * nz)
             if length < 1e-12:
                 continue
-            shade = abs(nx * light[0] + ny * light[1]
-                        + nz * light[2]) / length
+            nx, ny, nz = nx / length, ny / length, nz / length
+            shade = abs(nx * light[0] + ny * light[1] + nz * light[2])
+            spec = max(nx * half[0] + ny * half[1] + nz * half[2], 0.0)
             face_color = self.colors[index] if self.colors else None
-            faces.append((depth, pts, shade, face_color, False))
+            faces.append((depth, pts, shade, spec, face_color, False))
 
         # the selected object's faces, drawn glowing over the model
         # in a warm accent that contrasts with the blue base shading
@@ -153,48 +173,87 @@ class View3D(QWidget):
             length = math.sqrt(nx * nx + ny * ny + nz * nz)
             shade = abs(nx * light[0] + ny * light[1] + nz * light[2]) \
                 / length if length > 1e-12 else 0.6
-            faces.append((depth, pts, shade, None, True))
+            faces.append((depth, pts, shade, 0.0, None, True))
 
         faces.sort(key=lambda f: -f[0])
-        pen = QPen(QColor(0, 0, 0, 30))
-        pen.setWidthF(0.5)
+        style = self.style
+        edge = QColor(t["border"])
+        edge.setAlpha(60)
+        pen = QPen(edge)
+        pen.setWidthF(0.4)
+        wire = QColor(base.darker(115))
+        wire.setAlpha(70)
+        wire_pen = QPen(wire)
+        wire_pen.setWidthF(0.3)
         hi_pen = QPen(hi.lighter(120))
         hi_pen.setWidthF(1.4)
-        for _depth, pts, shade, face_color, highlight in faces:
-            value = 0.35 + 0.65 * shade
+        for _depth, pts, shade, spec, face_color, highlight in faces:
+            poly = QPolygonF([QPointF(p[0], p[1]) for p in pts])
             if highlight:
-                color = QColor.fromHsvF(
+                painter.setPen(hi_pen)
+                painter.setBrush(QColor.fromHsvF(
                     max(hi.hueF(), 0.0),
                     min(hi.saturationF() + 0.1, 1.0),
-                    min(0.55 + 0.45 * shade, 1.0))
-                painter.setPen(hi_pen)
-                painter.setBrush(color)
-                painter.drawPolygon(QPolygonF(
-                    [QPointF(p[0], p[1]) for p in pts]))
+                    min(0.55 + 0.45 * shade, 1.0)))
+                painter.drawPolygon(poly)
                 continue
-            if face_color is not None:
+            if face_color is not None and face_color[0]:
                 own = QColor(face_color[0])
-                if not own.isValid():
-                    own = base
-                color = QColor.fromHsvF(
-                    max(own.hueF(), 0.0), own.saturationF(),
-                    min(own.valueF() * (0.45 + 0.55 * shade), 1.0))
-                color.setAlphaF(max(min(face_color[1], 1.0), 0.15))
+                hue = max(own.hueF(), 0.0)
+                sat = own.saturationF()
+                val = own.valueF()
+                alpha = max(min(face_color[1], 1.0), 0.15)
             else:
-                color = QColor.fromHsvF(
-                    base.hueF() if base.hueF() >= 0 else 0.58,
-                    base.saturationF() * 0.75,
-                    min(value, 1.0))
-            painter.setPen(pen)
+                hue = base.hueF() if base.hueF() >= 0 else 0.58
+                sat = base.saturationF() * 0.75
+                val = 1.0
+                alpha = 1.0
+            color, use_pen = self._style_color(
+                style, hue, sat, val, shade, spec, base)
+            if color is None:                   # wireframe: edges only
+                painter.setPen(wire_pen)
+                painter.setBrush(Qt.NoBrush)
+                painter.drawPolygon(poly)
+                continue
+            if alpha < 1.0:
+                color.setAlphaF(alpha)
+            painter.setPen(use_pen if use_pen is not None else pen)
             painter.setBrush(color)
-            painter.drawPolygon(QPolygonF(
-                [QPointF(p[0], p[1]) for p in pts]))
+            painter.drawPolygon(poly)
 
         self._draw_axes(painter, t, eye, right, up, forward)
         painter.setPen(QColor(t["text"]))
         painter.drawText(8, self.height() - 8,
-                         f"{self.source} — {len(self.mesh)} triangles")
+                         f"{self.source} — {len(self.mesh)} triangles "
+                         f"· {self.style}")
         painter.end()
+
+    @staticmethod
+    def _style_color(style, hue, sat, val, shade, spec, base):
+        """Map a face's shade/specular to a fill colour for the chosen
+        render style. Returns (QColor|None, pen|None); None colour means
+        draw edges only (wireframe)."""
+        if style == "Wireframe":
+            return None, None
+        if style == "X-ray":
+            c = QColor.fromHsvF(hue, sat * 0.7,
+                                min(0.55 + 0.45 * shade, 1.0) * val)
+            c.setAlphaF(0.16)
+            return c, None
+        if style == "Matte":
+            c = QColor.fromHsvF(hue, sat,
+                                min((0.5 + 0.4 * shade) * val, 1.0))
+            return c, None
+        if style == "Brushed metal":
+            # low saturation steel, strong specular highlight
+            highlight = spec ** 22
+            v = min((0.32 + 0.5 * shade) * val + 0.6 * highlight, 1.0)
+            s = sat * 0.35 * (1.0 - highlight)
+            return QColor.fromHsvF(hue, s, v), None
+        # Shaded (default)
+        gloss = spec ** 12
+        v = min((0.35 + 0.65 * shade) * val + 0.35 * gloss, 1.0)
+        return QColor.fromHsvF(hue, sat, v), None
 
     def _draw_ground(self, painter, t, eye, right, up, forward):
         pen = QPen(QColor(t["border"]))
