@@ -637,8 +637,9 @@ def _tess(node, env, color, sel, selected):
         color = (str(node.params.get("color", "#4a90d9")),
                  rv(node.params.get("alpha", 1.0), env, 1.0))
         return _children_mesh(node, env, color, sel, selected)
-    if t in ("root", "union", "hull"):
-        # 3D hull is approximated as the union of its children.
+    if t in ("root", "union", "hull", "variables"):
+        # 3D hull is approximated as the union of its children;
+        # "variables" only holds assignments, so it adds no geometry.
         return _children_mesh(node, env, color, sel, selected)
     if t in ("difference", "intersection", "minkowski"):
         # Approximation: show the first operand; the OpenSCAD engine
@@ -714,6 +715,15 @@ def _children_mesh(node, env, color, sel, selected):
     for child in node.children:
         if child.type == "assign":
             _apply_assign(child, env)
+        elif child.type == "variables":
+            # transparent group: its assignments belong to this scope so
+            # sibling geometry can use them
+            for grandchild in child.children:
+                if grandchild.type == "assign":
+                    _apply_assign(grandchild, env)
+                else:
+                    mesh.extend(_tess(grandchild, env, color, sel,
+                                      selected))
         else:
             mesh.extend(_tess(child, env, color, sel, selected))
     return mesh

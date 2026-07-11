@@ -648,6 +648,7 @@ class ChatPanel(QWidget):
             for child in list(root.children):
                 root.remove(child)
                 model.root.add(child)
+        model.group_variables()
         model.structure_changed.emit()
         self.window.view3d.fit()
         note = "Program applied."
@@ -738,6 +739,7 @@ class ChatPanel(QWidget):
             return
         count = sum(1 for n in root.walk() if n.type != "root")
         self.window.model.root = root
+        self.window.model.group_variables()
         self.window.model.structure_changed.emit()
         self.window.view3d.fit()
         note = (f"✓ Built in the document — {count} object"

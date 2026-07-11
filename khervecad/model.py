@@ -208,6 +208,9 @@ NODE_TYPES = {
         params=dict(variable="size", value="10"),
         schema=[("variable", "Name", "str", None, None),
                 ("value", "Value / expression", "str", None, None)]),
+    "variables": dict(
+        label="Variables", category=CONTROL, icon="mdi.table",
+        params=dict(), schema=[]),
     # ----- external geometry ------------------------------------------
     "stl_import": dict(
         label="Import STL", category=SHAPE_3D,
@@ -385,7 +388,10 @@ class CadNode:
         pad = "    " * indent
         star = "" if self.visible else "*"
 
-        if self.type == "root":
+        if self.type in ("root", "variables"):
+            # "variables" is a purely organisational group: its children
+            # (assignments) are emitted at the same level, so the code
+            # and OpenSCAD scope are exactly as if they were loose.
             for child in self.children:
                 child.emit(lines, indent, spans)
         elif self.type == "if_else":
@@ -669,6 +675,28 @@ class DocumentModel(QObject):
                     best, best_size = nid, size
         return self.find(best) if best is not None else None
 
+    def group_variables(self):
+        """Collect the leading run of top-level variable assignments into
+        a single "Variables" container so they read as one item at the
+        top of the tree. Transparent in the code, and idempotent."""
+        kids = self.root.children
+        if any(c.type == "variables" for c in kids):
+            return
+        lead = []
+        for child in kids:
+            if child.type == "assign":
+                lead.append(child)
+            else:
+                break
+        if len(lead) < 2:
+            return
+        group = CadNode("variables", "Variables")
+        for node in lead:
+            self.root.remove(node)
+        for node in lead:
+            group.add(node)
+        self.root.add(group, 0)
+
     # -------------------------------------------------------- editing
     def add_node(self, type: str, params: dict = None,
                  parent: CadNode = None, name: str = "") -> CadNode:
@@ -858,16 +886,25 @@ def validate(root: CadNode) -> dict:
             values = node.loop_values(env)
             var = str(node.params.get("variable", "i")) or "i"
             scoped[var] = values[0] if values else 0.0
+
+        def define(assign):
+            var = str(assign.params.get("variable", "")).strip()
+            if var:
+                try:
+                    scoped[var] = expr.evaluate(
+                        assign.params.get("value", 0), scoped)
+                except expr.ExprError:
+                    pass
+
         for child in node.children:
             check(child, scoped)
             if child.type == "assign" and child.visible:
-                var = str(child.params.get("variable", "")).strip()
-                if var:
-                    try:
-                        scoped[var] = expr.evaluate(
-                            child.params.get("value", 0), scoped)
-                    except expr.ExprError:
-                        pass
+                define(child)
+            elif child.type == "variables" and child.visible:
+                # transparent group: its variables belong to this scope
+                for grandchild in child.children:
+                    if grandchild.type == "assign" and grandchild.visible:
+                        define(grandchild)
     check(root, {})
     return errors
 
@@ -943,7 +980,7 @@ def _check_node(node, env, errors):
                 if xs and min(xs) < -1e-6 and max(xs) > 1e-6:
                     return ("profile crosses the Z axis — keep it on "
                             "one side of x = 0")
-    elif node.is_container() and t != "if_else":
+    elif node.is_container() and t not in ("if_else", "variables"):
         if not any(c.type != "assign" for c in node.children):
             return "empty — add child objects"
     elif t == "if_else":

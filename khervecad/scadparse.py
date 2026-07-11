@@ -683,5 +683,6 @@ def import_scad(model, path: str):
         text = fh.read()
     root, warnings = parse_scad(text)
     model.root = root
+    model.group_variables()               # gather loose top-level vars
     model.structure_changed.emit()
     return warnings

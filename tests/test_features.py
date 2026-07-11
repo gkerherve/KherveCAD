@@ -255,3 +255,54 @@ def test_new_nodes_roundtrip_kcad(model, tmp_path):
     other = DocumentModel()
     document.load_kcad(other, str(path))
     assert other.to_scad() == model.to_scad()
+
+
+def test_group_variables_transparent_and_scoped(model):
+    import re
+    from khervecad import mesh
+    model.add_node("assign", dict(variable="w", value="100"))
+    model.add_node("assign", dict(variable="h", value="w/2"))
+    model.add_node("cube", dict(width="w", depth="w", height="h"))
+    model.group_variables()
+
+    # one "Variables" container holding the two assigns, ahead of geometry
+    assert [c.type for c in model.root.children] == ["variables", "cube"]
+    grp = model.root.children[0]
+    assert [c.params["variable"] for c in grp.children] == ["w", "h"]
+
+    # the group is transparent in the code (no wrapper, still top-level)
+    code = model.to_scad()
+    assert "variables" not in code
+    assert re.search(r"^w = 100;$", code, re.M)
+    # scope is preserved: the cube resolves h = w/2 = 50
+    zmax = max(v[2] for t in mesh.tessellate(model.root) for v in t)
+    assert zmax == 50.0
+    from khervecad.model import validate
+    assert validate(model.root) == {}
+
+
+def test_group_variables_idempotent_and_needs_two(model):
+    model.add_node("assign", dict(variable="a", value="1"))
+    model.add_node("cube")
+    model.group_variables()                    # only one var -> no group
+    assert [c.type for c in model.root.children] == ["assign", "cube"]
+
+    model.add_node("assign", dict(variable="b", value="2"),
+                   parent=model.root)
+    model.root.children.insert(1, model.root.children.pop())  # a,b,cube
+    model.group_variables()
+    assert model.root.children[0].type == "variables"
+    n = sum(1 for c in model.root.children if c.type == "variables")
+    model.group_variables()                    # idempotent
+    assert sum(1 for c in model.root.children
+               if c.type == "variables") == n
+
+
+def test_import_scad_groups_variables(model, tmp_path):
+    from khervecad import scadparse
+    path = tmp_path / "vars.scad"
+    path.write_text("w = 10;\nd = 20;\ncube([w, d, 5]);\n")
+    scadparse.import_scad(model, str(path))
+    assert model.root.children[0].type == "variables"
+    assert [c.params["variable"]
+            for c in model.root.children[0].children] == ["w", "d"]

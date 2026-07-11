@@ -58,6 +58,7 @@ def load_kcad(model: DocumentModel, path: str):
     # segment override (absent in v1 documents -> defaults preserved)
     model.global_fn = int(data.get("global_fn", model.global_fn))
     model.global_fn_on = bool(data.get("global_fn_on", False))
+    model.group_variables()               # gather loose top-level vars
     model.structure_changed.emit()
 
 
