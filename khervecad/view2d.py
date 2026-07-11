@@ -429,8 +429,12 @@ class SketchScene(QGraphicsScene):
                 self._draft.setRect(start.x() - radius,
                                     start.y() - radius,
                                     2 * radius, 2 * radius)
-        elif self.tool == POLYGON and self._poly_points:
+            event.accept()
+            return
+        if self.tool == POLYGON and self._poly_points:
             self._update_poly_draft(pos)
+            event.accept()
+            return
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
