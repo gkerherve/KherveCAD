@@ -64,8 +64,10 @@ class PointsEditor(QWidget):
         self.table = QTableWidget(len(points), 2)
         self.table.setHorizontalHeaderLabels(["X", "Y"])
         self.table.horizontalHeader().setStretchLastSection(True)
-        self.table.verticalHeader().setDefaultSectionSize(22)
-        self.table.setMaximumHeight(180)
+        row_h = 22
+        self.table.verticalHeader().setDefaultSectionSize(row_h)
+        # show up to ~15 point rows before the table scrolls
+        self.table.setMaximumHeight(row_h * 15 + 34)
         for row, (x, y) in enumerate(points):
             self.table.setItem(row, 0, QTableWidgetItem(f"{x:g}"))
             self.table.setItem(row, 1, QTableWidgetItem(f"{y:g}"))
