@@ -23,9 +23,9 @@ from pathlib import Path
 
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtWidgets import (QAction, QActionGroup, QApplication,
-                             QFileDialog, QLabel, QMainWindow,
-                             QMessageBox, QSpinBox, QSplitter,
-                             QToolBar)
+                             QDockWidget, QFileDialog, QLabel,
+                             QMainWindow, QMessageBox, QSpinBox,
+                             QSplitter, QToolBar)
 
 from . import APP_NAME, __version__, document, icons, mesh
 from .engine import ScadEngine, set_openscad_path
@@ -110,12 +110,22 @@ class MainWindow(QMainWindow):
         self.engine.render_failed.connect(self._engine_failed)
         self.engine.busy_changed.connect(self._engine_busy)
 
+        self._build_chat_dock()
         self._build_tool_bar()
         self._build_options_bar()
         self._build_menus()
         self._build_status_bar()
         self._update_title()
         self._refresh_preview()
+
+    def _build_chat_dock(self):
+        from .chat import ChatPanel
+        self.chat = ChatPanel(self)
+        self._chat_dock = QDockWidget("KherveAI", self)
+        self._chat_dock.setObjectName("chat_dock")
+        self._chat_dock.setWidget(self.chat)
+        self.addDockWidget(Qt.RightDockWidgetArea, self._chat_dock)
+        self._chat_dock.hide()               # opt-in via View or Ctrl+/
 
     # ------------------------------------------------------------ chrome
     def _build_tool_bar(self):
@@ -187,6 +197,13 @@ class MainWindow(QMainWindow):
                       self._render_now).setShortcut("F5")
         bar.addAction(icons.icon("mdi.arrow-expand-all"), "Fit 3D",
                       self.view3d.fit)
+        bar.addSeparator()
+        chat_btn = QAction(icons.icon("mdi.robot-outline"),
+                           "KherveAI chat (Ctrl+/)", self)
+        chat_btn.triggered.connect(
+            lambda: self._chat_dock.setVisible(
+                not self._chat_dock.isVisible()))
+        bar.addAction(chat_btn)
 
     def _build_menus(self):
         m = self.menuBar()
@@ -235,6 +252,12 @@ class MainWindow(QMainWindow):
                 lambda _=False, t=control: self._add_primitive(t))
 
         view_menu = m.addMenu("&View")
+        chat_act = self._chat_dock.toggleViewAction()
+        chat_act.setText("&Chat Assistant (KherveAI)")
+        chat_act.setIcon(icons.icon("mdi.robot-outline"))
+        chat_act.setShortcut("Ctrl+/")
+        view_menu.addAction(chat_act)
+        view_menu.addSeparator()
         view_menu.addAction(self._grid_act)
         view_menu.addAction(self._snap_act)
         view_menu.addSeparator()
