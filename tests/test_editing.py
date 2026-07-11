@@ -432,3 +432,21 @@ def test_code_tab_editable_and_apply(window):
     window.builder._apply_code()
     assert [n.type for n in m.root.children] == ["sphere", "cylinder"]
     assert m.root.children[0].params["radius"] == 6.0
+
+
+def test_selected_object_shows_size_and_cursor(window):
+    from PyQt5.QtCore import QPointF
+    m = window.model
+    m.add_node("cube", dict(width=8.0, depth=6.0, height=4.0))
+    m.structure_changed.emit()
+    window.builder.tree.select_nodes([m.root.children[0]])
+    text = window._dims_label.text()
+    assert "X 8" in text and "Y 6" in text and "Z 4" in text
+    window.builder.tree.select_nodes([])
+    assert window._dims_label.text() == ""
+
+    # cursor read-out uses the current plane's axes
+    window._set_plane("Top (XY)")
+    window._cursor_moved(QPointF(12.3, 45.6))
+    assert "12.3" in window._cursor_label.text()
+    assert "45.6" in window._cursor_label.text()

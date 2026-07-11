@@ -166,7 +166,17 @@ NODE_TYPES = {
     # ----- booleans / grouping ---------------------------------------
     "union": dict(
         label="Group (union)", category=BOOLEAN, icon="mdi.group",
-        params=dict(), schema=[]),
+        # a group is a part: it can be moved, rotated and coloured
+        params=dict(x=0.0, y=0.0, z=0.0, rx=0.0, ry=0.0, rz=0.0,
+                    color="", alpha=1.0),
+        schema=[("x", "Move X", "float", -1e6, 1e6),
+                ("y", "Move Y", "float", -1e6, 1e6),
+                ("z", "Move Z", "float", -1e6, 1e6),
+                ("rx", "Rotate X°", "float", -360.0, 360.0),
+                ("ry", "Rotate Y°", "float", -360.0, 360.0),
+                ("rz", "Rotate Z°", "float", -360.0, 360.0),
+                ("color", "Color", "color", None, None),
+                ("alpha", "Opacity (0-1)", "float", 0.0, 1.0)]),
     "difference": dict(
         label="Difference", category=BOOLEAN, icon="mdi.set-left",
         params=dict(), schema=[]),
@@ -254,6 +264,37 @@ def _fn(p) -> object:
     """Effective $fn for a round object: the document-wide common
     segment count when one is active, else the object's own value."""
     return _FN_OVERRIDE if _FN_OVERRIDE is not None else p["segments"]
+
+
+def _nonzero(p, keys) -> bool:
+    """True if any of *keys* holds a non-zero number or an expression."""
+    for key in keys:
+        value = p.get(key, 0)
+        if isinstance(value, str):
+            if value.strip() not in ("", "0", "0.0"):
+                return True
+        elif value:
+            return True
+    return False
+
+
+def _group_prefix(p) -> str:
+    """Transform / colour wrappers a Group carries as a part: emitted
+    only when set, so a plain group stays ``union()``."""
+    prefix = ""
+    col = str(p.get("color", "")).strip()
+    if col:
+        alpha = p.get("alpha", 1.0)
+        prefix += (f"color({scad_str(col)}) "
+                   if isinstance(alpha, float) and alpha >= 1.0
+                   else f"color({scad_str(col)}, {fmt(alpha)}) ")
+    if _nonzero(p, ("x", "y", "z")):
+        prefix += (f"translate([{fmt(p['x'])}, {fmt(p['y'])}, "
+                   f"{fmt(p['z'])}]) ")
+    if _nonzero(p, ("rx", "ry", "rz")):
+        prefix += (f"rotate([{fmt(p['rx'])}, {fmt(p['ry'])}, "
+                   f"{fmt(p['rz'])}]) ")
+    return prefix
 
 
 # ------------------------------------------------------------------ node
@@ -510,8 +551,9 @@ class CadNode:
         if t in ("translate", "rotate", "scale", "mirror"):
             return (f"{t}([{fmt(p['x'])}, {fmt(p['y'])}, "
                     f"{fmt(p['z'])}])")
-        if t in ("union", "difference", "intersection", "hull",
-                 "minkowski"):
+        if t == "union":
+            return _group_prefix(p) + "union()"
+        if t in ("difference", "intersection", "hull", "minkowski"):
             return f"{t}()"
         if t == "offset":
             if p["chamfer"]:

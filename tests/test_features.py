@@ -307,3 +307,38 @@ def test_import_scad_groups_variables(model, tmp_path):
     assert model.root.children[0].type == "variables"
     assert [c.params["variable"]
             for c in model.root.children[0].children] == ["w", "d"]
+
+
+def test_group_carries_transform_and_colour(model):
+    from khervecad import mesh
+    grp = model.add_node("union")
+    model.add_node("cube", dict(width=10.0, depth=10.0, height=10.0),
+                   parent=grp)
+    group_line = lambda c: next(l.strip() for l in c.splitlines()
+                                if l.strip().endswith("union() {"))
+    # a plain group's own line is just union()
+    assert group_line(model.to_scad()) == "union() {"
+
+    grp.params.update(x=50.0, rz=90.0, color="#ff0000")
+    code = model.to_scad()
+    line = group_line(code)
+    assert line == ('color("#ff0000") translate([50, 0, 0]) '
+                    'rotate([0, 0, 90]) union() {')
+    # geometry is actually moved/rotated in the preview mesh
+    xs = [v[0] for t in mesh.tessellate(model.root) for v in t]
+    assert max(xs) == 50.0 and 40.0 <= min(xs) <= 41.0
+
+
+def test_group_transform_roundtrips_kcad(model, tmp_path):
+    from khervecad import document
+    grp = model.add_node("union")
+    model.add_node("cube", parent=grp)
+    grp.params.update(y=12.0, ry=30.0, color="#00ff00", alpha=0.5)
+    path = tmp_path / "grp.kcad"
+    document.save_kcad(model, str(path))
+    other = DocumentModel()
+    document.load_kcad(other, str(path))
+    reloaded = other.root.children[0]
+    assert reloaded.params["y"] == 12.0
+    assert reloaded.params["ry"] == 30.0
+    assert reloaded.params["color"] == "#00ff00"

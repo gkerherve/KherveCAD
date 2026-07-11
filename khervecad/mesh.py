@@ -637,10 +637,30 @@ def _tess(node, env, color, sel, selected):
         color = (str(node.params.get("color", "#4a90d9")),
                  rv(node.params.get("alpha", 1.0), env, 1.0))
         return _children_mesh(node, env, color, sel, selected)
-    if t in ("root", "union", "hull", "variables"):
+    if t in ("root", "hull", "variables"):
         # 3D hull is approximated as the union of its children;
         # "variables" only holds assignments, so it adds no geometry.
         return _children_mesh(node, env, color, sel, selected)
+    if t == "union":
+        # a group is a part: apply its own colour, then its rotate and
+        # translate (matching the color()/translate()/rotate() codegen)
+        group_color = color
+        col = str(node.params.get("color", "")).strip()
+        if col:
+            group_color = (col, rv(node.params.get("alpha", 1.0), env,
+                                   1.0))
+        out = _children_mesh(node, env, group_color, sel, selected)
+        rx = rv(node.params.get("rx", 0), env, 0.0)
+        ry = rv(node.params.get("ry", 0), env, 0.0)
+        rz = rv(node.params.get("rz", 0), env, 0.0)
+        tx = rv(node.params.get("x", 0), env, 0.0)
+        ty = rv(node.params.get("y", 0), env, 0.0)
+        tz = rv(node.params.get("z", 0), env, 0.0)
+        if any((rx, ry, rz, tx, ty, tz)):
+            matrix = mat_mul(mat_translate(tx, ty, tz),
+                             mat_rotate(rx, ry, rz))
+            out = _transform_colored(matrix, out)
+        return out
     if t in ("difference", "intersection", "minkowski"):
         # Approximation: show the first operand; the OpenSCAD engine
         # renders the true CSG result.

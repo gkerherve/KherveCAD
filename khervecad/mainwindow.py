@@ -392,6 +392,8 @@ class MainWindow(QMainWindow):
         self.statusBar().addWidget(self._cursor_label)
         self._measure_label = QLabel("")
         self.statusBar().addWidget(self._measure_label)
+        self._dims_label = QLabel("")          # selected object's size
+        self.statusBar().addWidget(self._dims_label)
         self._zoom_label = QLabel(
             f"1 mm = {self.view2d.px_per_mm():.2f} px")
         self.statusBar().addPermanentWidget(self._zoom_label)
@@ -492,10 +494,26 @@ class MainWindow(QMainWindow):
         rect = self.scene.isolated_bounds()
         if rect is not None:
             self.view2d.frame_rect(rect)
-        self.view3d.set_highlight_mesh(
-            mesh.selected_world_tris(self.model.root, self._selected_ids,
-                                     fn=self.model.effective_fn())
-            if self._selected_ids else [])
+        tris = (mesh.selected_world_tris(self.model.root,
+                                         self._selected_ids,
+                                         fn=self.model.effective_fn())
+                if self._selected_ids else [])
+        self.view3d.set_highlight_mesh(tris)
+        self._show_dimensions(tris)
+
+    def _show_dimensions(self, tris):
+        """Status-bar read-out of the selected object's overall size
+        (its world bounding-box extents in X, Y and Z)."""
+        if not tris:
+            self._dims_label.setText("")
+            return
+        xs = [v[0] for t in tris for v in t]
+        ys = [v[1] for t in tris for v in t]
+        zs = [v[2] for t in tris for v in t]
+        dx, dy, dz = (max(xs) - min(xs), max(ys) - min(ys),
+                      max(zs) - min(zs))
+        self._dims_label.setText(
+            f"Size  X {dx:.1f} · Y {dy:.1f} · Z {dz:.1f} mm")
 
     def _node_created(self, node):
         self.builder.tree.select_nodes([node])
