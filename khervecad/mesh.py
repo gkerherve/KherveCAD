@@ -34,6 +34,14 @@ APPROXIMATED = {"difference", "intersection", "minkowski", "hull",
 
 _stl_cache = {}
 
+#: when set (int), primitive/revolve segment counts and extrude slices
+#: are capped to this — used for the fast, low-detail 2D silhouette.
+_DETAIL = None
+
+
+def _cap(n) -> int:
+    return min(int(n), _DETAIL) if _DETAIL else int(n)
+
 
 def rv(value, env=None, default=0.0) -> float:
     """Resolve a param that may be a number or an expression."""
@@ -378,7 +386,7 @@ def cube_mesh(p):
 
 def sphere_mesh(p):
     r = p["radius"]
-    n = max(int(p["segments"]), 4)
+    n = max(_cap(p["segments"]), 4)
     rings = max(n // 2, 3)
     cx, cy, cz = p["x"], p["y"], p["z"]
 
@@ -403,7 +411,7 @@ def sphere_mesh(p):
 
 
 def cylinder_mesh(p):
-    n = max(int(p["segments"]), 3)
+    n = max(_cap(p["segments"]), 3)
     h = p["height"]
     r1, r2 = p["radius_bottom"], p["radius_top"]
     cx, cy = p["x"], p["y"]
@@ -463,6 +471,8 @@ def linear_extrude_mesh(node: CadNode, env=None):
     # keep the instant preview light for heavy twists (threads);
     # the OpenSCAD engine renders the exact slice count.
     slices = min(slices, 120)
+    if _DETAIL:
+        slices = min(slices, _DETAIL)
     mesh = []
     for outline in collect_outlines(node, env):
         if len(outline) < 3:
@@ -510,7 +520,7 @@ def linear_extrude_mesh(node: CadNode, env=None):
 def rotate_extrude_mesh(node: CadNode, env=None):
     p = rp(node, env)
     angle = min(max(p.get("angle", 360.0), 0.01), 360.0)
-    n = max(int(p.get("segments", 96)), 3)
+    n = max(_cap(p.get("segments", 96)), 3)
     steps = max(int(n * angle / 360.0), 2)
     full = angle >= 360.0
     mesh = []
@@ -569,16 +579,22 @@ def tessellate_colored(node: CadNode, env=None):
             _tess(node, dict(env or {}), None, frozenset(), False)]
 
 
-def selected_world_tris(node: CadNode, sel_ids, env=None):
+def selected_world_tris(node: CadNode, sel_ids, env=None, detail=None):
     """World-space triangles belonging to any node whose id is in
     *sel_ids* — used to highlight the selected object in both views.
     Ancestor transforms are already applied, so the triangles land
-    where the object actually sits in the assembly."""
+    where the object actually sits in the assembly. *detail* caps
+    segment counts for the fast, low-resolution 2D silhouette."""
+    global _DETAIL
     sel = frozenset(sel_ids)
     if not sel:
         return []
-    return [t for t, _c, s in
-            _tess(node, dict(env or {}), None, sel, False) if s]
+    _DETAIL = detail
+    try:
+        return [t for t, _c, s in
+                _tess(node, dict(env or {}), None, sel, False) if s]
+    finally:
+        _DETAIL = None
 
 
 def _emit(tris, color, selected):

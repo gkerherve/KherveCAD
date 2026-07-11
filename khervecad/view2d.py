@@ -331,37 +331,51 @@ def _produces_3d(node) -> bool:
 
 
 class PartItem(QGraphicsPathItem):
-    """A whole part (top-level subtree) shown as its projected outline
-    in the chosen assembly plane. Drag it to position the part — on
-    release the move is committed into a translate node ("Position"),
-    so assemblies are ordinary, editable tree structure."""
+    """A part (a subtree) shown in the assembly plane. Two flavours:
 
-    def __init__(self, node, scene, outline, label):
+    - *outline* (dashed, theme accent): the assembly overview — one per
+      top-level part, draggable to position it (the move commits into a
+      translate node so assemblies are ordinary tree structure);
+    - *silhouette* (solid amber): the true projected shape of the
+      selected object, shown alone so you see exactly that part in its
+      real orientation.
+    """
+
+    def __init__(self, node, scene, path, label, movable=True,
+                 dashed=True):
         super().__init__()
         self.node = node
         self._scene = scene
+        self._movable = movable
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
-        self.setFlag(QGraphicsItem.ItemIsMovable, True)
+        if movable:
+            self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
-        from .style import tokens
-        color = QColor(tokens()["select"])
-        pen = QPen(color, 1.4, Qt.DashLine)
-        pen.setCosmetic(True)
+        if dashed:
+            from .style import tokens
+            color = QColor(tokens()["select"])
+            pen = QPen(color, 1.4, Qt.DashLine)
+            pen.setCosmetic(True)
+            fill_alpha = 26
+        else:
+            # solid filled silhouette — no pen, or the internal
+            # triangle edges would show as a wireframe
+            color = QColor("#ff8c1a")         # isolated-part accent
+            pen = QPen(Qt.NoPen)
+            fill_alpha = 150
         self.setPen(pen)
+        self._label_color = QColor(color)
         fill = QColor(color)
-        fill.setAlpha(26)
+        fill.setAlpha(fill_alpha)
         self.setBrush(QBrush(fill))
-        path = QPainterPath()
-        if outline:
-            path.moveTo(QPointF(*outline[0]))
-            for point in outline[1:]:
-                path.lineTo(QPointF(*point))
-            path.closeSubpath()
+        if not dashed:
+            # the silhouette is a heavy static path; cache its raster
+            # so panning/redraw stay smooth (re-rasters only on zoom)
+            self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
         self.setPath(path)
+        rect = path.boundingRect()
         self._label = label
-        self._label_pos = QPointF(
-            min(x for x, _ in outline),
-            max(y for _, y in outline)) if outline else QPointF()
+        self._label_pos = QPointF(rect.left(), rect.bottom())
 
     def paint(self, painter, option, widget=None):
         super().paint(painter, option, widget)
@@ -372,7 +386,7 @@ class PartItem(QGraphicsPathItem):
         size = max(self.path().boundingRect().height() * 0.09, 2.0)
         font.setPointSizeF(size)
         painter.setFont(font)
-        painter.setPen(self.pen().color())
+        painter.setPen(self._label_color)
         painter.drawText(QPointF(0, -size * 0.4), self._label)
         painter.restore()
 
@@ -387,9 +401,10 @@ class PartItem(QGraphicsPathItem):
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
-        # committing may rebuild the scene, so do it after our own
-        # mouse handling is completely finished
-        self._scene.commit_part_move(self.node, self.pos())
+        if self._movable:
+            # committing may rebuild the scene, so do it after our own
+            # mouse handling is completely finished
+            self._scene.commit_part_move(self.node, self.pos())
 
 
 # ------------------------------------------------------------------ scene
@@ -457,10 +472,28 @@ class SketchScene(QGraphicsScene):
         self.updating = True
         selected = {n.id for n in self.selected_nodes()}
         for item in list(self._items.values()) \
-                + list(self._part_items.values()):
+                + list(self._part_items.values()) \
+                + self._highlight_items:
             self.removeItem(item)
         self._items.clear()
         self._part_items.clear()
+        self._highlight_items = []
+
+        if self._isolating():
+            # show only the selected object(s), as their true projected
+            # shape in the current plane
+            for node_id in self._highlight_ids:
+                node = self.model.find(node_id)
+                if node is None:
+                    continue
+                item = self._make_silhouette(node)
+                if item is not None:
+                    self.addItem(item)
+                    self._part_items[node_id] = item
+                    item.setSelected(True)
+            self.updating = False
+            return
+
         if self.plane == "Top (XY)":
             # sketch mode: individual 2D shapes are editable
             for node in self.model.root.walk():
@@ -481,49 +514,53 @@ class SketchScene(QGraphicsScene):
                     if node.id in selected:
                         item.setSelected(True)
         self.updating = False
-        self._rebuild_highlight()
 
     # ------------------------------------------------------- highlight
     def set_highlight(self, nodes):
-        """Emphasise the selected objects' geometry in the current
-        plane (works at any tree depth, unlike the part outlines)."""
+        """Select these objects: a 3D part isolates in the 2D view
+        (only it is shown, in its real projected shape); 2D sketch
+        shapes just get selected in place."""
         self._highlight_ids = {n.id for n in nodes}
-        self._rebuild_highlight()
+        self.rebuild()
 
-    def _rebuild_highlight(self):
-        for item in self._highlight_items:
-            self.removeItem(item)
-        self._highlight_items = []
-        if not self._highlight_ids:
-            return
+    def _isolating(self) -> bool:
+        """True when the selection is a solid part we should show
+        alone (rather than editing 2D sketch shapes)."""
+        for node_id in self._highlight_ids:
+            node = self.model.find(node_id)
+            if node is not None and _produces_3d(node):
+                return True
+        return False
+
+    def _make_silhouette(self, node):
+        """The selected node's real projected outline in the current
+        plane — the union of its projected triangles, so concavities
+        and bores show and the shape is correctly oriented."""
         from . import mesh as mesh_mod
         (ai, bi), _keys = PLANES[self.plane]
-        accent = QColor("#ff8c1a")            # distinct selection accent
-        for node_id in self._highlight_ids:
-            tris = mesh_mod.selected_world_tris(
-                self.model.root, {node_id})
-            if not tris:
-                continue
-            points = [(v[ai], v[bi]) for tri in tris for v in tri]
-            outline = mesh_mod.convex_hull_2d(points)
-            if len(outline) < 2:
-                continue
-            path = QPainterPath()
-            path.moveTo(QPointF(*outline[0]))
-            for point in outline[1:]:
-                path.lineTo(QPointF(*point))
-            path.closeSubpath()
-            item = self.addPath(path)
-            pen = QPen(accent, 2.2)
-            pen.setCosmetic(True)
-            item.setPen(pen)
-            fill = QColor(accent)
-            fill.setAlpha(48)
-            item.setBrush(QBrush(fill))
-            item.setZValue(500)
-            item.setAcceptedMouseButtons(Qt.NoButton)
-            item.setFlag(QGraphicsItem.ItemIsSelectable, False)
-            self._highlight_items.append(item)
+        # a low-detail tessellation keeps the silhouette light; the
+        # winding-fill union of the projected triangles is the real
+        # filled shape (holes and concavities included), built
+        # instantly — no simplify() (it explodes on helical threads).
+        tris = mesh_mod.selected_world_tris(
+            self.model.root, {node.id}, detail=14)
+        if not tris:
+            return None
+        path = QPainterPath()
+        path.setFillRule(Qt.WindingFill)
+        for tri in tris:
+            p0, p1, p2 = ((v[ai], v[bi]) for v in tri)
+            # a closed solid's front and back faces project with
+            # opposite winding and would cancel under WindingFill, so
+            # force every projected triangle the same way (CCW) — then
+            # the union fills solidly into the true silhouette
+            area = ((p1[0] - p0[0]) * (p2[1] - p0[1])
+                    - (p2[0] - p0[0]) * (p1[1] - p0[1]))
+            pts = (p0, p1, p2) if area >= 0 else (p0, p2, p1)
+            path.addPolygon(QPolygonF([QPointF(x, y) for x, y in pts]))
+        movable = node.parent is self.model.root
+        return PartItem(node, self, path, node.name, movable=movable,
+                        dashed=False)
 
     def _make_part_item(self, node):
         from . import mesh as mesh_mod
@@ -535,7 +572,12 @@ class SketchScene(QGraphicsScene):
         outline = mesh_mod.convex_hull_2d(points)
         if len(outline) < 3:
             return None
-        return PartItem(node, self, outline, node.name)
+        path = QPainterPath()
+        path.moveTo(QPointF(*outline[0]))
+        for point in outline[1:]:
+            path.lineTo(QPointF(*point))
+        path.closeSubpath()
+        return PartItem(node, self, path, node.name)
 
     def commit_part_move(self, node, delta):
         """A part outline was dropped: bake the move into a translate

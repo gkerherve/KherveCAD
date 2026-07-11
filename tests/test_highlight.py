@@ -107,9 +107,45 @@ def test_window_highlights_selected_part_in_both_views(window):
     window.builder.tree.select_nodes([tube])
     # 3D: the selected object's faces are queued to glow
     assert window.view3d.highlight_mesh
-    # 2D: an accent outline overlay exists for the selection
+    # 2D: the selected node is isolated as its own silhouette
     assert window.scene._highlight_ids == {tube.id}
-    assert window.scene._highlight_items
+    assert tube.id in window.scene._part_items
+
+
+def test_isolate_shows_only_selected(window):
+    """Selecting a 3D part hides every other object in the 2D view."""
+    m = window.model
+    a = library.build_part("cf_flange",
+                           dict(library.CF_SIZES["CF40 (DN40)"]))
+    b = library.build_part("cf_flange",
+                           dict(library.CF_SIZES["CF63 (DN63)"]))
+    m.root.add(a)
+    m.root.add(b)
+    m.structure_changed.emit()
+    assert len(window.scene._part_items) == 2       # both outlines
+    revolve = next(n for n in a.walk()
+                   if n.type == "rotate_extrude")
+    window.builder.tree.select_nodes([revolve])
+    # only the selected object is shown now
+    assert list(window.scene._part_items) == [revolve.id]
+    assert window.scene._items == {}
+    # deselect returns to the overview with both parts
+    window.builder.tree.select_nodes([])
+    assert len(window.scene._part_items) == 2
+
+
+def test_isolate_silhouette_movable_only_for_top_level(window):
+    m = window.model
+    part = library.build_part("cf_nipple",
+                              dict(library.CF_SIZES["CF40 (DN40)"],
+                                   port_length=40.0))
+    m.root.add(part)
+    m.structure_changed.emit()
+    window.builder.tree.select_nodes([part])       # top-level
+    assert window.scene._part_items[part.id]._movable
+    deep = next(n for n in part.walk() if n.type == "rotate_extrude")
+    window.builder.tree.select_nodes([deep])       # nested
+    assert not window.scene._part_items[deep.id]._movable
 
 
 def test_highlight_clears_on_empty_selection(window):
@@ -119,7 +155,6 @@ def test_highlight_clears_on_empty_selection(window):
     assert window.view3d.highlight_mesh
     window.builder.tree.select_nodes([])
     assert window.view3d.highlight_mesh == []
-    assert window.scene._highlight_items == []
 
 
 def test_highlight_follows_plane_change(window):
@@ -132,4 +167,4 @@ def test_highlight_follows_plane_change(window):
     window.builder.tree.select_nodes([part])
     window._set_plane("Front (XZ)")
     assert window.scene.plane == "Front (XZ)"
-    assert window.scene._highlight_items       # rebuilt for new plane
+    assert part.id in window.scene._part_items    # rebuilt for plane
