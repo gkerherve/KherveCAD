@@ -93,6 +93,43 @@ def test_highlight_survives_boolean_first_operand(model):
     assert tris                                   # tube is in operand 1
 
 
+def test_selected_subtracted_tool_is_highlightable(model):
+    # a tool removed by a difference (e.g. a bore) still yields its own
+    # geometry when selected, so it can be shown in 2D and 3D
+    body = model.add_node("cube", dict(width=10.0, depth=10.0,
+                                       height=10.0))
+    diff = model.wrap_nodes([body], "difference")
+    tool = CadNode("cylinder", "Bore",
+                   dict(radius_bottom=2.0, radius_top=2.0, height=20.0,
+                        segments=8, z=-1.0))
+    diff.add(tool)                                # subtracted operand
+    assert mesh.selected_world_tris(model.root, {tool.id})  # was empty
+    # the plain preview still approximates the difference as operand 1
+    assert len(mesh.tessellate(model.root)) == 12          # just the cube
+
+
+def test_selecting_bore_shows_it_in_both_views(window):
+    m = window.model
+    tee = library.build_part("cf_tee",
+                             dict(library.CF_SIZES["CF40 (DN40)"],
+                                  port_length=50.0))
+    m.root.add(tee)
+    m.structure_changed.emit()
+    bore = next(n for n in tee.walk()
+                if n.name == "Bore" and n.type == "cylinder")
+    assert any(a.type == "difference" for a in _walk_ancestors(bore))
+    window.builder.tree.select_nodes([bore])
+    assert window.view3d.highlight_mesh           # 3D glow
+    assert bore.id in window.scene._part_items     # 2D silhouette
+
+
+def _walk_ancestors(node):
+    probe = node.parent
+    while probe is not None:
+        yield probe
+        probe = probe.parent
+
+
 # ---------------------------------------------------------- view wiring
 
 def test_window_highlights_selected_part_in_both_views(window):

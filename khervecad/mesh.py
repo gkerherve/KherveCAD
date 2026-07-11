@@ -616,10 +616,18 @@ def _tess(node, env, color, sel, selected):
     if t in ("difference", "intersection", "minkowski"):
         # Approximation: show the first operand; the OpenSCAD engine
         # renders the true CSG result.
-        for child in node.children:
-            if child.type != "assign":
-                return _tess(child, env, color, sel, selected)
-        return []
+        ops = [c for c in node.children if c.type != "assign"]
+        if not ops:
+            return []
+        mesh = _tess(ops[0], env, color, sel, selected)
+        # a selected object hiding in a subtracted / later operand (e.g.
+        # a bore removed from a body) still needs its own geometry so it
+        # can be shown and highlighted — include those operands too.
+        if sel:
+            for child in ops[1:]:
+                if selected or any(n.id in sel for n in child.walk()):
+                    mesh.extend(_tess(child, env, color, sel, selected))
+        return mesh
     if t in ("for_loop", "while_loop"):
         var = str(node.params.get("variable", "i")) or "i"
         mesh = []

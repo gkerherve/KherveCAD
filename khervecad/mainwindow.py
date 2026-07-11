@@ -364,6 +364,8 @@ class MainWindow(QMainWindow):
             theme_menu.addAction(act)
 
         help_menu = m.addMenu("&Help")
+        help_menu.addAction("&User Guide", self._user_guide, "F1")
+        help_menu.addSeparator()
         help_menu.addAction("&About", self._about)
 
     def _build_status_bar(self):
@@ -717,9 +719,57 @@ class MainWindow(QMainWindow):
         else:
             event.ignore()
 
+    def _user_guide(self):
+        from .userguide import show_user_guide
+        show_user_guide(self)
+
     def _about(self):
-        QMessageBox.about(
-            self, f"About {APP_NAME}",
-            f"<b>{APP_NAME}</b> v{__version__}<br>"
-            "Easy-to-use CAD GUI with OpenSCAD as the engine, in the "
-            "Kherve family.<br><br>GPL-3.0 — Gwilherm Kerherve")
+        import sys
+
+        from PyQt5.QtCore import PYQT_VERSION_STR, QT_VERSION_STR
+
+        def _ver(mod):
+            try:
+                return __import__(mod).__version__
+            except Exception:
+                return "—"
+
+        engine = getattr(self, "engine", None)
+        scad_path = getattr(engine, "binary", None) or getattr(
+            engine, "openscad_path", None)
+        engine_line = (f"OpenSCAD engine: <b>{scad_path}</b>"
+                       if scad_path else
+                       "OpenSCAD not found — using the built-in preview "
+                       "tessellator")
+
+        box = QMessageBox(self)
+        box.setWindowTitle(f"About {APP_NAME}")
+        box.setIconPixmap(icons.app_icon().pixmap(64, 64))
+        box.setTextFormat(Qt.RichText)
+        box.setText(
+            f"<h2 style='margin-bottom:0'>"
+            f"<span style='color:#3776ab'>Kherve</span>"
+            f"<span style='color:#e07b39'>CAD</span></h2>"
+            f"<p style='color:gray;margin-top:2px'>version {__version__}</p>"
+            f"<p>An easy-to-use CAD program with <b>OpenSCAD as the "
+            f"engine</b>: the model is a tree of objects &mdash; 2D shapes, "
+            f"3D primitives, extrusions, transforms and booleans &mdash; that "
+            f"maps one-to-one to an OpenSCAD program.</p>"
+            f"<p style='color:gray'>{engine_line}.</p>"
+            f"<hr>"
+            f"<p><b>Created by Gwilherm Kerherve</b><br>"
+            f"Imperial College London<br>"
+            f"<a href='https://github.com/gkerherve'>github.com/gkerherve</a>"
+            f"</p>"
+            f"<p>Part of the <b>Kherve</b> family of native scientific "
+            f"apps &mdash; KherveFitting (XPS curve fitting), KherveSheet "
+            f"(spreadsheets), KherveBook (notebooks), KhervePDF, KherveDOC "
+            f"and KhervePaint.</p>"
+            f"<hr>"
+            f"<p style='color:gray'><b>Built with</b> "
+            f"Python {sys.version.split()[0]}, Qt {QT_VERSION_STR}, "
+            f"PyQt5 {PYQT_VERSION_STR}, qtawesome {_ver('qtawesome')}.</p>"
+            f"<p>Copyright &copy; 2026 Gwilherm Kerherve — licensed under "
+            f"the <a href='https://www.gnu.org/licenses/gpl-3.0.html'>"
+            f"GNU GPL v3.0</a>.</p>")
+        box.exec_()
