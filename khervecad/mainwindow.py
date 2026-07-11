@@ -250,6 +250,9 @@ class MainWindow(QMainWindow):
         file_menu = m.addMenu("&File")
         file_menu.addAction("&New", self.new_document, "Ctrl+N")
         file_menu.addAction("&Open...", self.open_file, "Ctrl+O")
+        self.recent_menu = file_menu.addMenu("Open &Recent")
+        self.recent_menu.aboutToShow.connect(self._rebuild_recent_menu)
+        self._rebuild_recent_menu()
         file_menu.addAction("&Save", self.save_file, "Ctrl+S")
         file_menu.addAction("Save &As...", self.save_file_as,
                             "Ctrl+Shift+S")
@@ -560,6 +563,68 @@ class MainWindow(QMainWindow):
         self._refresh_engine_label()
         self._refresh_preview()
 
+    # ---------------------------------------------------- recent files
+    _MAX_RECENT = 12
+
+    def _recent_files(self) -> list:
+        from PyQt5.QtCore import QSettings
+        val = QSettings("Kherve", "KherveCAD").value("recent_files", [])
+        if isinstance(val, str):            # a one-item list comes back as str
+            val = [val]
+        return [str(x) for x in (val or [])]
+
+    def _set_recent_files(self, files):
+        from PyQt5.QtCore import QSettings
+        QSettings("Kherve", "KherveCAD").setValue("recent_files", files)
+
+    def _add_recent(self, path):
+        if not path:
+            return
+        path = str(Path(path))
+        files = [f for f in self._recent_files() if f != path]
+        files.insert(0, path)
+        del files[self._MAX_RECENT:]
+        self._set_recent_files(files)
+
+    def _forget_recent(self, path):
+        path = str(Path(path))
+        self._set_recent_files(
+            [f for f in self._recent_files() if str(Path(f)) != path])
+
+    def _short_path(self, path) -> str:
+        p = Path(path)
+        parent = str(p.parent)
+        home = str(Path.home())
+        if parent.startswith(home):
+            parent = "~" + parent[len(home):]
+        parent = parent.replace("\\", "/")
+        if len(parent) > 40:
+            parent = parent[:18] + "…" + parent[-20:]
+        return f"{p.name}    {parent}"
+
+    def _rebuild_recent_menu(self):
+        self.recent_menu.clear()
+        files = self._recent_files()
+        if not files:
+            none = self.recent_menu.addAction("(no recent files)")
+            none.setEnabled(False)
+            return
+        for i, path in enumerate(files):
+            accel = f"&{i + 1}" if i < 9 else f"{i + 1}"
+            shown = self._short_path(path).replace("&", "&&")
+            act = self.recent_menu.addAction(f"{accel}  {shown}")
+            act.setToolTip(path)
+            act.setEnabled(Path(path).exists())
+            act.triggered.connect(
+                lambda _=False, p=path: self._open_path(p))
+        self.recent_menu.addSeparator()
+        self.recent_menu.addAction("&Clear Recent Files",
+                                   self._clear_recent)
+
+    def _clear_recent(self):
+        self._set_recent_files([])
+        self._rebuild_recent_menu()
+
     # ------------------------------------------------------------ files
     def new_document(self):
         if not self._confirm_discard():
@@ -573,9 +638,22 @@ class MainWindow(QMainWindow):
     def open_file(self):
         if not self._confirm_discard():
             return
+        recent = self._recent_files()
+        start = str(Path(recent[0]).parent) if recent else ""
         path, _ = QFileDialog.getOpenFileName(
-            self, "Open", "", "KherveCAD document (*.kcad)")
+            self, "Open", start, "KherveCAD document (*.kcad)")
         if not path:
+            return
+        self._open_path(path, confirm=False)
+
+    def _open_path(self, path, confirm=True):
+        """Load *path* into the model (shared by Open... and Recent)."""
+        if confirm and not self._confirm_discard():
+            return
+        if not Path(path).exists():
+            QMessageBox.warning(
+                self, APP_NAME, f"File no longer exists:\n{path}")
+            self._forget_recent(path)
             return
         try:
             document.load_kcad(self.model, path)
@@ -585,6 +663,7 @@ class MainWindow(QMainWindow):
         self._path = path
         self._dirty = False
         self._fitted = False
+        self._add_recent(path)
         self.view3d.fit()
         self._update_title()
 
@@ -598,11 +677,14 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, APP_NAME, f"Could not save:\n{exc}")
             return
         self._dirty = False
+        self._add_recent(self._path)
         self._update_title()
 
     def save_file_as(self):
+        recent = self._recent_files()
+        start = str(Path(recent[0]).parent) if recent else ""
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save As", "", "KherveCAD document (*.kcad)")
+            self, "Save As", start, "KherveCAD document (*.kcad)")
         if not path:
             return
         if not path.lower().endswith(".kcad"):
