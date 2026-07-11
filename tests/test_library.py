@@ -277,6 +277,43 @@ def test_chemistry_parts_registered_with_category(model):
         assert library.PARTS[pid]["category"] == "Chemistry"
 
 
+# ---------------------------------------------------------- room/furniture
+
+from khervecad import library_room             # noqa: E402
+
+
+@pytest.mark.parametrize("part_id", list(library_room.PARTS))
+def test_every_room_part_builds(model, part_id):
+    spec = library_room.PARTS[part_id]
+    size = next(iter(spec["sizes"]))
+    dims = dict(spec["sizes"][size])
+    dims["_size"] = size
+    node = library.build_part(part_id, dims)
+    model.root.add(node)
+    assert not validate(model.root)
+    assert len(mesh.tessellate(node)) > 0
+
+
+def test_carpet_takes_its_colour_from_the_size(model):
+    for name, hexcol in (("Red", "#b23b3b"), ("Blue", "#3b5fb2")):
+        node = library.build_part(
+            "room_carpet",
+            dict(library_room.CARPET_SIZES[name], _size=name))
+        assert f'color("{hexcol}")' in node.to_scad()
+
+
+def test_furniture_keeps_per_component_colours(model):
+    # a table is a multi-colour union of boxes, no booleans, so both the
+    # wood top and darker legs keep their own colour in the preview.
+    node = library.build_part(
+        "room_table", dict(library_room.TABLE_SIZES["Desk (1200×600)"],
+                           _size="Desk (1200×600)"))
+    model.root.add(node)
+    colours = {c[0] for _t, c in mesh.tessellate_colored(model.root)
+               if c is not None}
+    assert len(colours) >= 2                      # top + legs differ
+
+
 # -------------------------------------------------------------- fasteners
 
 def test_thread_profile_radii():

@@ -75,9 +75,29 @@ into a new module and import.
                        extrude; nuts subtract the thread with
                        clearance), VAT-style **gate valves** and
                        right-angle valves, and turbo pump shells in
-                       three inlet classes (DN63/DN100/DN160 CF).
-                       Parts are ordinary node subtrees; bolt
-                       circles are for-loops.
+                       three inlet classes (DN63/DN100/DN160 CF); plus
+                       CF/KF elbows, KF nipples/tees (`kf_fitting`),
+                       CF/KF electrical feedthroughs and a
+                       hemispherical electron energy analyser (twin
+                       revolved dome shells). Parts are ordinary node
+                       subtrees; bolt circles are for-loops. The
+                       dialog groups parts by **category**; other
+                       modules register parts by adding a `build`
+                       callable to `PARTS`, which `build_part`
+                       dispatches to.
+  - `library_chem.py`— **Chemistry** parts: beaker, graduated
+                       cylinder, test tube, Erlenmeyer / round-bottom
+                       flasks, funnel, burette, Petri dish, watch
+                       glass, test-tube rack, retort stand. Glassware
+                       is a **revolved thin-wall profile** so it is
+                       hollow without a boolean (renders in the
+                       built-in preview), tinted glass via `color`.
+  - `library_room.py`— **Room & furniture**: table, lab workbench,
+                       chair, stool, monitor, TV, door (with frame),
+                       wall panel, and coloured **carpet** squares
+                       (colour chosen from the size list). Multi-colour
+                       unions with no booleans, so each component keeps
+                       its colour in the preview.
   - `chat.py`        — **KherveAI chat box** (family assistant):
                        Claude/Mistral/Ollama Cloud via urllib, keys
                        in QSettings or env vars, slash commands, and

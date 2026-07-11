@@ -692,8 +692,9 @@ PARTS = {
 
 # parts contributed by sibling modules (chemistry, room & furniture);
 # each entry carries its own `build` callable, dispatched by build_part.
-from . import library_chem                    # noqa: E402
+from . import library_chem, library_room       # noqa: E402
 PARTS.update(library_chem.PARTS)
+PARTS.update(library_room.PARTS)
 
 
 def build_part(part_id: str, dims: dict) -> CadNode:
