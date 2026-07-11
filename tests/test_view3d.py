@@ -169,3 +169,21 @@ def test_orbit_pitch_is_not_clamped(app):
 
     view.mouseMoveEvent(_Evt(0, 20))               # drag down past the top
     assert view.pitch > 90.0                        # not clamped at 89
+
+
+def test_orbiting_marks_user_moved(app):
+    from PyQt5.QtCore import QPoint
+    view = View3D()
+    assert view.user_moved is False
+    view._mode = "orbit"
+    view._last = QPoint(0, 0)
+
+    class _Evt:
+        def __init__(self, x, y):
+            self._p = QPoint(x, y)
+
+        def pos(self):
+            return self._p
+
+    view.mouseMoveEvent(_Evt(10, 0))
+    assert view.user_moved is True             # app stops auto-refitting

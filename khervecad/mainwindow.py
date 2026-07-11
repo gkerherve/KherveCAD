@@ -522,7 +522,7 @@ class MainWindow(QMainWindow):
         if selected:
             self.view3d.set_highlight_mesh(
                 mesh.selected_world_tris(self.model.root, selected, fn=fn))
-        if tris and not self._fitted:
+        if tris and not self._fitted and not self.view3d.user_moved:
             self.view3d.fit()
             self._fitted = True
         if self.engine.available and self.model.root.children:
@@ -651,6 +651,7 @@ class MainWindow(QMainWindow):
         self._path = None
         self._dirty = False
         self._fitted = False
+        self.view3d.user_moved = False        # fresh document, frame it
         self._update_title()
 
     def open_file(self):
@@ -681,6 +682,7 @@ class MainWindow(QMainWindow):
         self._path = path
         self._dirty = False
         self._fitted = False
+        self.view3d.user_moved = False        # fresh document, frame it
         self._add_recent(path)
         self.view3d.fit()
         self._update_title()
@@ -723,7 +725,8 @@ class MainWindow(QMainWindow):
 
     def _part_inserted(self, node):
         self.builder.tree.select_nodes([node])
-        self.view3d.fit()
+        if not self.view3d.user_moved:        # don't jump a view you set
+            self.view3d.fit()
 
     def import_scad(self):
         if not self._confirm_discard():
@@ -742,6 +745,7 @@ class MainWindow(QMainWindow):
         self._path = None                     # imported = new document
         self._dirty = True
         self._fitted = False
+        self.view3d.user_moved = False        # fresh document, frame it
         self._update_title()
         if warnings:
             QMessageBox.information(
@@ -758,7 +762,8 @@ class MainWindow(QMainWindow):
         node = self.model.add_node("stl_import", dict(path=path),
                                    name=Path(path).stem)
         self.builder.tree.select_nodes([node])
-        self.view3d.fit()
+        if not self.view3d.user_moved:
+            self.view3d.fit()
 
     def export_scad(self):
         suggestion = str(Path(self._path).with_suffix(".scad")) \

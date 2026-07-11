@@ -43,6 +43,9 @@ class View3D(QWidget):
         self.target = [0.0, 0.0, 10.0]
         self._last = None
         self._mode = None
+        #: set once the user orbits/pans/zooms, so the app stops
+        #: auto-refitting their view out from under them.
+        self.user_moved = False
         saved = QSettings(*_SETTINGS).value("render_style", "Shaded")
         self.style = saved if saved in RENDER_STYLES else "Shaded"
         self.setMinimumHeight(160)
@@ -384,6 +387,7 @@ class View3D(QWidget):
             return
         delta = event.pos() - self._last
         self._last = event.pos()
+        self.user_moved = True                # you own the view now
         if self._mode == "orbit":
             self.yaw = (self.yaw - delta.x() * 0.5) % 360.0
             # free vertical orbit — wrap instead of clamping at the poles
@@ -399,6 +403,7 @@ class View3D(QWidget):
         self.update()
 
     def wheelEvent(self, event):
+        self.user_moved = True
         factor = 0.87 if event.angleDelta().y() > 0 else 1.15
         self.distance = max(2.0, min(5000.0, self.distance * factor))
         self.update()
