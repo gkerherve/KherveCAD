@@ -14,16 +14,25 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
+import json
 import re
 
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import (QColor, QFont, QSyntaxHighlighter,
-                         QTextCharFormat)
-from PyQt5.QtWidgets import (QAbstractItemView, QMenu, QPlainTextEdit,
-                             QTabWidget, QTreeWidget, QTreeWidgetItem)
+from PyQt5.QtGui import (QBrush, QColor, QFont, QKeySequence,
+                         QSyntaxHighlighter, QTextCharFormat)
+from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QMenu,
+                             QPlainTextEdit, QTabWidget, QTextEdit,
+                             QTreeWidget, QTreeWidgetItem)
 
 from . import icons
-from .model import NODE_TYPES, OPERATION, DocumentModel
+from .document import node_from_dict, node_to_dict
+from .model import NODE_TYPES, OPERATION, DocumentModel, validate
+
+#: colour for objects whose code would be broken.
+ERROR_COLOR = "#c62828"
+ERROR_COLOR_DARK = "#ef6c6c"
+
+CLIPBOARD_FORMAT = "kcad-clipboard"
 
 #: operations offered by the "Apply" context submenu.
 APPLY_OPS = ["linear_extrude", "rotate_extrude", "offset", "translate",
@@ -40,6 +49,7 @@ class ObjectTree(QTreeWidget):
         super().__init__(parent)
         self.model = model
         self._updating = False
+        self.errors = {}                      # node id -> message
         self.setHeaderLabels(["Object"])
         self.setHeaderHidden(True)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
@@ -109,7 +119,26 @@ class ObjectTree(QTreeWidget):
         item.setText(0, node.name)
         item.setIcon(0, icons.icon(NODE_TYPES[node.type]["icon"]))
         item.setCheckState(0, Qt.Checked if node.visible else Qt.Unchecked)
-        item.setToolTip(0, NODE_TYPES[node.type]["label"])
+        error = self.errors.get(node.id)
+        if error:
+            from .style import tokens
+            color = ERROR_COLOR_DARK if tokens().get("dark") \
+                else ERROR_COLOR
+            item.setForeground(0, QBrush(QColor(color)))
+            item.setToolTip(0, f"⚠ {error}")
+        else:
+            item.setData(0, Qt.ForegroundRole, None)
+            item.setToolTip(0, NODE_TYPES[node.type]["label"])
+
+    def set_errors(self, errors: dict):
+        """Paint nodes with problems red (tooltip = the message)."""
+        self.errors = errors or {}
+        self._updating = True
+        for item in self._all_items():
+            node = self.node_of(item)
+            if node is not None:
+                self._decorate(item, node)
+        self._updating = False
 
     def _all_items(self):
         result = []
@@ -155,6 +184,101 @@ class ObjectTree(QTreeWidget):
                 self.scrollToItem(item)
         self._updating = False
         self._emit_selection()
+
+    # -------------------------------------------------------- clipboard
+    def _top_level_selection(self):
+        """Selected nodes minus any whose ancestor is also selected."""
+        nodes = self.selected_nodes()
+        chosen = []
+        for node in nodes:
+            probe = node.parent
+            while probe is not None and probe not in nodes:
+                probe = probe.parent
+            if probe is None:
+                chosen.append(node)
+        return chosen
+
+    def copy_selection(self):
+        nodes = self._top_level_selection()
+        if not nodes:
+            return
+        payload = {"format": CLIPBOARD_FORMAT,
+                   "nodes": [node_to_dict(n) for n in nodes]}
+        QApplication.clipboard().setText(json.dumps(payload))
+
+    def cut_selection(self):
+        nodes = self._top_level_selection()
+        if not nodes:
+            return
+        self.copy_selection()
+        for node in nodes:
+            self.model.remove_node(node)
+
+    def paste_clipboard(self):
+        """Paste into the selected container, after the selected
+        object, or at the end of the document."""
+        try:
+            payload = json.loads(QApplication.clipboard().text())
+        except (ValueError, TypeError):
+            return
+        if not isinstance(payload, dict) or \
+                payload.get("format") != CLIPBOARD_FORMAT:
+            return
+        try:
+            nodes = [node_from_dict(d) for d in payload.get("nodes", [])]
+        except (ValueError, KeyError, TypeError):
+            return
+        if not nodes:
+            return
+        selected = self._top_level_selection()
+        parent, index = self.model.root, None
+        if len(selected) == 1:
+            if selected[0].is_container():
+                parent = selected[0]
+            elif selected[0].parent is not None:
+                parent = selected[0].parent
+                index = selected[0].index() + 1
+        for offset, node in enumerate(nodes):
+            node.name = self._pasted_name(node.name)
+            parent.add(node, None if index is None else index + offset)
+        self.model.structure_changed.emit()
+        self.select_nodes(nodes)
+
+    def _pasted_name(self, name):
+        taken = {n.name for n in self.model.root.walk()}
+        if name not in taken:
+            return name
+        base = re.sub(r" \(copy( \d+)?\)$", "", name)
+        for i in range(1, 1000):
+            suffix = " (copy)" if i == 1 else f" (copy {i})"
+            if base + suffix not in taken:
+                return base + suffix
+        return name
+
+    def shift_selection(self, delta: int):
+        nodes = self._top_level_selection()
+        for node in (nodes if delta < 0 else reversed(nodes)):
+            self.model.shift_node(node, delta)
+        self.select_nodes(nodes)
+
+    def keyPressEvent(self, event):
+        if event.matches(QKeySequence.Copy):
+            self.copy_selection()
+        elif event.matches(QKeySequence.Cut):
+            self.cut_selection()
+        elif event.matches(QKeySequence.Paste):
+            self.paste_clipboard()
+        elif event.matches(QKeySequence.Delete):
+            for node in self._top_level_selection():
+                self.model.remove_node(node)
+        elif event.key() == Qt.Key_Up and \
+                event.modifiers() & Qt.ControlModifier:
+            self.shift_selection(-1)
+        elif event.key() == Qt.Key_Down and \
+                event.modifiers() & Qt.ControlModifier:
+            self.shift_selection(1)
+        else:
+            super().keyPressEvent(event)
 
     # ----------------------------------------------------- drag & drop
     def dropEvent(self, event):
@@ -207,17 +331,27 @@ class ObjectTree(QTreeWidget):
                     icons.icon("mdi.ungroup"), "Ungroup\tCtrl+Shift+G",
                     lambda: [self.model.ungroup(n) for n in containers])
             menu.addSeparator()
+            menu.addAction(icons.icon("mdi.content-cut"),
+                           "Cut\tCtrl+X", self.cut_selection)
+            menu.addAction(icons.icon("mdi.content-copy"),
+                           "Copy\tCtrl+C", self.copy_selection)
+            menu.addAction(icons.icon("mdi.content-paste"),
+                           "Paste\tCtrl+V", self.paste_clipboard)
+            menu.addSeparator()
             if len(nodes) == 1:
                 menu.addAction(icons.icon("mdi.rename-box"), "Rename",
                                lambda: self.editItem(
                                    self.selectedItems()[0], 0))
-            menu.addAction(icons.icon("mdi.content-copy"), "Duplicate",
-                           lambda: [self.model.duplicate(n)
-                                    for n in nodes])
+            menu.addAction(icons.icon("mdi.content-duplicate"),
+                           "Duplicate", lambda: [self.model.duplicate(n)
+                                                 for n in nodes])
             menu.addSeparator()
             menu.addAction(icons.icon("mdi.delete-outline"), "Delete",
                            lambda: [self.model.remove_node(n)
                                     for n in nodes])
+        else:
+            menu.addAction(icons.icon("mdi.content-paste"),
+                           "Paste\tCtrl+V", self.paste_clipboard)
         if menu.actions():
             menu.exec_(self.viewport().mapToGlobal(pos))
 
@@ -225,47 +359,74 @@ class ObjectTree(QTreeWidget):
 # ------------------------------------------------------------- code tab
 
 class ScadHighlighter(QSyntaxHighlighter):
-    """Minimal OpenSCAD syntax highlighting for the Code tab."""
+    """OpenSCAD syntax highlighting: each family of constructs gets
+    its own colour so the program structure is readable at a glance —
+    2D/3D shapes, transforms, booleans, control flow, numbers,
+    strings, special variables, comments and the `*` disable
+    modifier."""
 
-    KEYWORDS = ("module|function|if|else|for|let|union|difference|"
-                "intersection|hull|minkowski|translate|rotate|scale|"
-                "mirror|resize|color|linear_extrude|rotate_extrude|"
-                "circle|square|polygon|text|cube|sphere|cylinder|"
-                "polyhedron|import|surface|projection|offset|true|false")
+    SHAPES = (r"circle|square|polygon|text|cube|sphere|cylinder|"
+              r"polyhedron|import|surface")
+    TRANSFORMS = (r"translate|rotate|scale|mirror|resize|"
+                  r"linear_extrude|rotate_extrude|offset|projection|"
+                  r"color")
+    BOOLEANS = r"union|difference|intersection|hull|minkowski"
+    CONTROL = r"module|function|if|else|for|let|each|echo|assert"
 
     def __init__(self, doc, tokens: dict):
         super().__init__(doc)
-        def fmt(color, bold=False):
+
+        def fmt(color, bold=False, italic=False):
             f = QTextCharFormat()
             f.setForeground(QColor(color))
             if bold:
                 f.setFontWeight(QFont.Bold)
+            if italic:
+                f.setFontItalic(True)
             return f
         dark = tokens.get("dark")
+
+        def pick(dark_color, light_color):
+            return dark_color if dark else light_color
         self.rules = [
-            (re.compile(r"\b(%s)\b" % self.KEYWORDS),
-             fmt("#6ab0f3" if dark else "#1565c0", bold=True)),
+            # assigned variable names (start of line: name = ...)
+            (re.compile(r"^\s*(\$?[A-Za-z_]\w*)(?=\s*=[^=])"),
+             fmt(pick("#e5c07b", "#8d6e00"))),
+            (re.compile(r"\b(%s)\b(?=\s*\()" % self.SHAPES),
+             fmt(pick("#4ec9b0", "#0f7c5a"), bold=True)),
+            (re.compile(r"\b(%s)\b(?=\s*\()" % self.TRANSFORMS),
+             fmt(pick("#6ab0f3", "#1565c0"), bold=True)),
+            (re.compile(r"\b(%s)\b(?=\s*\()" % self.BOOLEANS),
+             fmt(pick("#c586c0", "#7b1fa2"), bold=True)),
+            (re.compile(r"\b(%s)\b" % self.CONTROL),
+             fmt(pick("#e06c75", "#b3541e"), bold=True)),
+            (re.compile(r"\b(true|false|undef|PI)\b"),
+             fmt(pick("#d19a66", "#986801"), bold=True)),
             (re.compile(r"\$\w+"),
-             fmt("#c586c0" if dark else "#7b1fa2")),
-            (re.compile(r"\b\d+(\.\d+)?\b"),
-             fmt("#b5cea8" if dark else "#0f7c5a")),
+             fmt(pick("#c586c0", "#7b1fa2"), italic=True)),
+            (re.compile(r"\b\d+\.?\d*([eE][-+]?\d+)?\b|\.\d+"),
+             fmt(pick("#b5cea8", "#0b8043"))),
             (re.compile(r'"(\\.|[^"\\])*"'),
-             fmt("#ce9178" if dark else "#b3541e")),
-            (re.compile(r"^\s*\*"),
-             fmt("#e06c75" if dark else "#c62828", bold=True)),
+             fmt(pick("#ce9178", "#b3541e"))),
+            (re.compile(r"^\s*\*[^\n]*"),
+             fmt(pick("#7f848e", "#9aa0a6"), italic=True)),
             (re.compile(r"//[^\n]*"),
-             fmt("#7f848e" if dark else "#8a919c")),
+             fmt(pick("#7f848e", "#8a919c"), italic=True)),
         ]
 
     def highlightBlock(self, text):
         for pattern, fmt in self.rules:
             for match in pattern.finditer(text):
-                self.setFormat(match.start(),
-                               match.end() - match.start(), fmt)
+                start = match.start(1) if match.groups() else \
+                    match.start()
+                end = match.end(1) if match.groups() else match.end()
+                self.setFormat(start, end - start, fmt)
 
 
 class CodeView(QPlainTextEdit):
-    """Read-only view of the generated OpenSCAD program."""
+    """Read-only view of the generated OpenSCAD program with line
+    highlights: the selected object's lines glow in the theme accent,
+    broken lines are tinted red."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -275,24 +436,79 @@ class CodeView(QPlainTextEdit):
         font.setPointSize(10)
         self.setFont(font)
         self.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self._selected_ranges = []
+        self._error_ranges = []
+        self.refresh_theme()
+
+    def refresh_theme(self):
         from .style import tokens
         self._highlighter = ScadHighlighter(self.document(), tokens())
+        self._apply_marks()
 
     def set_code(self, code: str):
         bar = self.verticalScrollBar()
         pos = bar.value()
         self.setPlainText(code)
         bar.setValue(min(pos, bar.maximum()))
+        self._apply_marks()
+
+    def set_marks(self, selected_ranges, error_ranges):
+        """Line ranges (start, end_exclusive) to tint."""
+        self._selected_ranges = list(selected_ranges)
+        self._error_ranges = list(error_ranges)
+        self._apply_marks()
+
+    def _apply_marks(self):
+        from .style import tokens
+        t = tokens()
+        select = QColor(t["select"])
+        select.setAlpha(45)
+        error = QColor(ERROR_COLOR_DARK if t.get("dark")
+                       else ERROR_COLOR)
+        error.setAlpha(55)
+        extras = []
+        for ranges, color in ((self._selected_ranges, select),
+                              (self._error_ranges, error)):
+            for start, end in ranges:
+                for line in range(start, end):
+                    block = self.document().findBlockByNumber(line)
+                    if not block.isValid():
+                        continue
+                    selection = QTextEdit.ExtraSelection()
+                    selection.format.setBackground(color)
+                    selection.format.setProperty(
+                        QTextCharFormat.FullWidthSelection, True)
+                    from PyQt5.QtGui import QTextCursor
+                    selection.cursor = QTextCursor(block)
+                    extras.append(selection)
+        self.setExtraSelections(extras)
+        # scroll the first selected span into view
+        if self._selected_ranges:
+            first = self._selected_ranges[0][0]
+            block = self.document().findBlockByNumber(first)
+            if block.isValid():
+                from PyQt5.QtGui import QTextCursor
+                cursor = QTextCursor(block)
+                self.setTextCursor(cursor)
+                self.ensureCursorVisible()
 
 
 class BuilderPanel(QTabWidget):
-    """Objects tree + Code tabs, kept in sync with the model."""
+    """Objects tree + Code tabs, kept in sync with the model.
+
+    Also owns the error state: static validation runs on every change
+    and OpenSCAD compiler errors are merged in by the main window;
+    broken nodes turn red in the tree and their lines red in the
+    code."""
 
     def __init__(self, model: DocumentModel, parent=None):
         super().__init__(parent)
         self.model = model
         self.tree = ObjectTree(model)
         self.code = CodeView()
+        self._spans = {}
+        self._engine_errors = {}
+        self._selected_ids = []
         self.addTab(self.tree, icons.icon("mdi.file-tree"), "Objects")
         self.addTab(self.code, icons.icon("mdi.code-braces"), "Code")
         model.structure_changed.connect(self.refresh_code)
@@ -300,4 +516,39 @@ class BuilderPanel(QTabWidget):
         self.refresh_code()
 
     def refresh_code(self):
-        self.code.set_code(self.model.to_scad())
+        code, self._spans = self.model.to_scad_map()
+        self.code.set_code(code)
+        self._refresh_errors()
+
+    def set_engine_errors(self, errors: dict):
+        """OpenSCAD compiler errors mapped to nodes ({id: message})."""
+        self._engine_errors = errors or {}
+        self._refresh_errors()
+
+    def highlight_nodes(self, nodes):
+        """Mark the selected objects' lines in the code tab."""
+        self._selected_ids = [n.id for n in nodes]
+        self._apply_marks()
+
+    def errors(self) -> dict:
+        combined = dict(validate(self.model.root))
+        combined.update(self._engine_errors)
+        return combined
+
+    def _refresh_errors(self):
+        errors = self.errors()
+        self.tree.set_errors(errors)
+        self._error_ids = list(errors)
+        self._apply_marks()
+
+    def _apply_marks(self):
+        selected = [self._spans[i] for i in self._selected_ids
+                    if i in self._spans]
+        errored = [self._spans[i] for i in
+                   getattr(self, "_error_ids", [])
+                   if i in self._spans]
+        self.code.set_marks(selected, errored)
+
+    def refresh_theme(self):
+        self.code.refresh_theme()
+        self.tree.set_errors(self.tree.errors)

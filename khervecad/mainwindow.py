@@ -104,6 +104,11 @@ class MainWindow(QMainWindow):
         self.view2d.cursor_moved.connect(
             lambda p: self._cursor_label.setText(
                 f"x: {p.x():.1f}  y: {p.y():.1f}"))
+        self.view2d.clipboard_op.connect(
+            lambda op: {"cut": self.builder.tree.cut_selection,
+                        "copy": self.builder.tree.copy_selection,
+                        "paste": self.builder.tree.paste_clipboard
+                        }[op]())
         self.model.structure_changed.connect(self._model_edited)
         self.model.node_changed.connect(lambda _n: self._model_edited())
         self.engine.mesh_ready.connect(self._engine_mesh)
@@ -228,6 +233,21 @@ class MainWindow(QMainWindow):
         file_menu.addAction("E&xit", self.close, "Ctrl+Q")
 
         edit_menu = m.addMenu("&Edit")
+        edit_menu.addAction(icons.icon("mdi.content-cut"),
+                            "Cu&t\tCtrl+X",
+                            self.builder.tree.cut_selection)
+        edit_menu.addAction(icons.icon("mdi.content-copy"),
+                            "&Copy\tCtrl+C",
+                            self.builder.tree.copy_selection)
+        edit_menu.addAction(icons.icon("mdi.content-paste"),
+                            "&Paste\tCtrl+V",
+                            self.builder.tree.paste_clipboard)
+        edit_menu.addSeparator()
+        edit_menu.addAction("Move &Up\tCtrl+Up",
+                            lambda: self.builder.tree.shift_selection(-1))
+        edit_menu.addAction("Move Dow&n\tCtrl+Down",
+                            lambda: self.builder.tree.shift_selection(1))
+        edit_menu.addSeparator()
         edit_menu.addAction("&Delete", self._delete_selection, "Delete")
         edit_menu.addAction("D&uplicate", self._duplicate_selection,
                             "Ctrl+D")
@@ -275,7 +295,9 @@ class MainWindow(QMainWindow):
             act = QAction(name, self, checkable=True)
             act.setChecked(name == current_theme())
             act.triggered.connect(
-                lambda _, n=name: apply_style(QApplication.instance(), n))
+                lambda _, n=name: (apply_style(QApplication.instance(),
+                                               n),
+                                   self.builder.refresh_theme()))
             theme_group.addAction(act)
             theme_menu.addAction(act)
 
@@ -346,6 +368,7 @@ class MainWindow(QMainWindow):
         self._syncing = True
         self.properties.set_node(nodes[0] if len(nodes) == 1 else None)
         self.scene.select_nodes(nodes)
+        self.builder.highlight_nodes(nodes)
         self._syncing = False
 
     def _scene_selected(self, nodes):
@@ -354,6 +377,7 @@ class MainWindow(QMainWindow):
         self._syncing = True
         self.builder.tree.select_nodes(nodes)
         self.properties.set_node(nodes[0] if len(nodes) == 1 else None)
+        self.builder.highlight_nodes(nodes)
         self._syncing = False
 
     def _node_created(self, node):
@@ -390,9 +414,29 @@ class MainWindow(QMainWindow):
 
     def _engine_mesh(self, tris):
         self.view3d.set_mesh(tris, "OpenSCAD")
+        self.builder.set_engine_errors({})
 
-    def _engine_failed(self, message):
-        self.statusBar().showMessage(f"OpenSCAD: {message}", 6000)
+    def _engine_failed(self, stderr):
+        """Map OpenSCAD compiler errors back to the offending nodes
+        (they turn red in the tree and the code tab)."""
+        import re
+        errors = {}
+        for line in stderr.splitlines():
+            if "ERROR" not in line and "WARNING" not in line.upper():
+                continue
+            match = re.search(r"line (\d+)", line)
+            if match is None:
+                continue
+            node = self.model.node_at_line(int(match.group(1)) - 1)
+            if node is not None and node.parent is not None:
+                errors.setdefault(
+                    node.id,
+                    "OpenSCAD: " + line.split("ERROR:")[-1]
+                    .split("WARNING:")[-1].strip())
+        self.builder.set_engine_errors(errors)
+        first = next((l for l in stderr.splitlines() if "ERROR" in l),
+                     stderr.splitlines()[-1] if stderr else "failed")
+        self.statusBar().showMessage(f"OpenSCAD: {first}", 6000)
 
     def _engine_busy(self, busy):
         self._refresh_engine_label(busy)

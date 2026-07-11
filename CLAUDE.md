@@ -121,7 +121,21 @@ go into `model.NODE_TYPES` (params, schema, icon, codegen branch in
 properties panel and tree pick them up automatically.
 
 **Selection** is coordinated by `MainWindow` (`_syncing` guard):
-tree <-> 2D view <-> properties always show the same objects.
+tree <-> 2D view <-> properties always show the same objects, and
+the Code tab highlights the selected object's lines (codegen emits
+per-node line spans via `CadNode.emit()` / `to_scad_map()`).
+
+**Errors turn red.** `model.validate()` runs on every change (bad
+expressions, empty extrusions, 3D inside extrude, axis-crossing
+revolve, non-terminating while, missing STL, ...) and OpenSCAD
+compiler errors are mapped back to nodes through the line spans;
+broken nodes are painted red in the tree (tooltip = message) and
+their lines tinted red in the code.
+
+**Clipboard**: Ctrl+X/C/V on the tree (and the 2D view) cut/copy/
+paste subtrees as JSON via the system clipboard — works across app
+instances. Ctrl+Up/Down reorders within the parent; arrow keys walk
+the tree.
 
 **Render pipeline**: any model change re-tessellates instantly
 (built-in preview) and schedules a debounced exact OpenSCAD render

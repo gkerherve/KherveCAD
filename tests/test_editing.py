@@ -1,0 +1,233 @@
+"""Tests for clipboard, reordering, validation and code line spans.
+
+Copyright (C) 2026 Gwilherm Kerherve
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+"""
+
+import json
+import os
+import sys
+from pathlib import Path
+
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import pytest
+from PyQt5.QtWidgets import QApplication
+
+from khervecad.model import DocumentModel, validate
+
+
+@pytest.fixture(scope="session")
+def app():
+    return QApplication.instance() or QApplication([])
+
+
+@pytest.fixture
+def model(app):
+    return DocumentModel()
+
+
+@pytest.fixture
+def window(app):
+    from khervecad.mainwindow import MainWindow
+    return MainWindow()
+
+
+# ------------------------------------------------------------ line spans
+
+def test_spans_cover_nodes(model):
+    circle = model.add_node("circle")
+    ext = model.wrap_nodes([circle], "linear_extrude")
+    cube = model.add_node("cube")
+    code, spans = model.to_scad_map()
+    lines = code.splitlines()
+    s, e = spans[ext.id]
+    assert lines[s].startswith("linear_extrude")
+    assert lines[e - 1] == "}"
+    cs, ce = spans[circle.id]
+    assert "circle" in lines[cs]
+    assert s < cs < e
+    ks, _ = spans[cube.id]
+    assert "cube" in lines[ks]
+
+
+def test_node_at_line_finds_deepest(model):
+    circle = model.add_node("circle")
+    ext = model.wrap_nodes([circle], "linear_extrude")
+    _code, spans = model.to_scad_map()
+    inner_line = spans[circle.id][0]
+    assert model.node_at_line(inner_line) is circle
+    assert model.node_at_line(spans[ext.id][0]) is ext
+
+
+def test_if_else_spans_and_code(model):
+    cond = model.add_node("if_else", dict(condition="a > 1"))
+    model.add_node("cube", parent=cond)
+    model.add_node("sphere", parent=cond.children[0])
+    code, spans = model.to_scad_map()
+    s, e = spans[cond.id]
+    lines = code.splitlines()
+    assert lines[s].startswith("if (a > 1) {")
+    assert lines[e - 1] == "}"
+
+
+# ------------------------------------------------------------ validation
+
+def test_validate_ok_document(model):
+    c = model.add_node("circle")
+    model.wrap_nodes([c], "linear_extrude")
+    model.add_node("cube")
+    assert validate(model.root) == {}
+
+
+def test_validate_bad_expression(model):
+    node = model.add_node("circle", dict(radius="nonsense + 2"))
+    errors = validate(model.root)
+    assert node.id in errors
+    assert "nonsense" in errors[node.id]
+
+
+def test_validate_expression_ok_inside_loop(model):
+    loop = model.add_node("for_loop", dict(variable="i"))
+    node = model.add_node("circle", dict(radius="i + 1"), parent=loop)
+    errors = validate(model.root)
+    assert node.id not in errors
+
+
+def test_validate_assign_makes_variable_known(model):
+    model.add_node("assign", dict(variable="bore", value="38"))
+    node = model.add_node("circle", dict(radius="bore / 2"))
+    assert node.id not in validate(model.root)
+
+
+def test_validate_empty_extrusion(model):
+    ext = model.add_node("linear_extrude")
+    errors = validate(model.root)
+    assert "2D" in errors[ext.id]
+
+
+def test_validate_3d_inside_extrusion(model):
+    cube = model.add_node("cube")
+    ext = model.wrap_nodes([cube], "linear_extrude")
+    errors = validate(model.root)
+    assert ext.id in errors
+    assert "3D" in errors[ext.id]
+
+
+def test_validate_rotate_extrude_axis_crossing(model):
+    circle = model.add_node("circle", dict(x=0.0, radius=10.0))
+    rev = model.wrap_nodes([circle], "rotate_extrude")
+    errors = validate(model.root)
+    assert rev.id in errors and "axis" in errors[rev.id]
+    circle.params["x"] = 20.0
+    assert rev.id not in validate(model.root)
+
+
+def test_validate_nonterminating_while(model):
+    loop = model.add_node("while_loop", dict(
+        variable="x", start=0.0, condition="x < 10", update="x"))
+    model.add_node("cube", parent=loop)
+    errors = validate(model.root)
+    assert "terminate" in errors[loop.id]
+
+
+def test_validate_missing_stl(model):
+    node = model.add_node("stl_import", dict(path="/nope/missing.stl"))
+    assert "not found" in validate(model.root)[node.id]
+
+
+def test_validate_bad_variable_name(model):
+    node = model.add_node("assign", dict(variable="2bad", value="1"))
+    assert "variable" in validate(model.root)[node.id]
+
+
+# ------------------------------------------------------------- clipboard
+
+def test_copy_paste_roundtrip(window):
+    model = window.model
+    circle = model.add_node("circle", dict(radius=7.0))
+    ext = model.wrap_nodes([circle], "linear_extrude")
+    tree = window.builder.tree
+    tree.select_nodes([ext])
+    tree.copy_selection()
+
+    payload = json.loads(QApplication.clipboard().text())
+    assert payload["format"] == "kcad-clipboard"
+
+    tree.select_nodes([])
+    tree.paste_clipboard()
+    assert len(model.root.children) == 2
+    pasted = model.root.children[1]
+    assert pasted.type == "linear_extrude"
+    assert pasted.children[0].params["radius"] == 7.0
+    assert pasted.name != ext.name            # renamed "(copy)"
+
+
+def test_cut_removes_and_paste_restores(window):
+    model = window.model
+    cube = model.add_node("cube")
+    tree = window.builder.tree
+    tree.select_nodes([cube])
+    tree.cut_selection()
+    assert model.root.children == []
+    tree.paste_clipboard()
+    assert model.root.children[0].type == "cube"
+
+
+def test_paste_into_selected_container(window):
+    model = window.model
+    group = model.add_node("union")
+    sphere = model.add_node("sphere")
+    tree = window.builder.tree
+    tree.select_nodes([sphere])
+    tree.copy_selection()
+    tree.select_nodes([group])
+    tree.paste_clipboard()
+    assert group.children[0].type == "sphere"
+
+
+def test_copy_excludes_nested_selection(window):
+    model = window.model
+    group = model.add_node("union")
+    inner = model.add_node("cube", parent=group)
+    tree = window.builder.tree
+    tree.select_nodes([group, inner])
+    tree.copy_selection()
+    payload = json.loads(QApplication.clipboard().text())
+    assert len(payload["nodes"]) == 1         # only the group
+
+
+def test_shift_selection_reorders(window):
+    model = window.model
+    a = model.add_node("cube")
+    b = model.add_node("sphere")
+    tree = window.builder.tree
+    tree.select_nodes([b])
+    tree.shift_selection(-1)
+    assert [n.type for n in model.root.children] == ["sphere", "cube"]
+    tree.shift_selection(-1)                  # already first: no-op
+    assert [n.type for n in model.root.children] == ["sphere", "cube"]
+
+
+def test_error_nodes_marked_in_tree(window):
+    model = window.model
+    bad = model.add_node("circle", dict(radius="oops"))
+    tree = window.builder.tree
+    item = tree._item_of(bad)
+    assert "oops" in item.toolTip(0) or "⚠" in item.toolTip(0)
+
+
+def test_engine_error_maps_to_node(window):
+    model = window.model
+    cube = model.add_node("cube")
+    _code, spans = model.to_scad_map()
+    line = spans[cube.id][0] + 1              # OpenSCAD lines are 1-based
+    window._engine_failed(f"ERROR: something bad in file x, line {line}")
+    assert cube.id in window.builder._engine_errors
+    window._engine_mesh([])                   # success clears them
+    assert window.builder._engine_errors == {}

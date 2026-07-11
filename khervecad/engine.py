@@ -187,8 +187,7 @@ class ScadEngine(QObject):
         else:
             stderr = bytes(process.readAllStandardError()) \
                 .decode(errors="replace").strip()
-            self.render_failed.emit(stderr.splitlines()[-1]
-                                    if stderr else "render failed")
+            self.render_failed.emit(stderr or "render failed")
         if self._pending_code is not None:
             self._timer.start()
 

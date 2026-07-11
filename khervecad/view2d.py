@@ -552,6 +552,7 @@ class SketchView(QGraphicsView):
     """Y-up graphics view with grid, pan and zoom."""
 
     cursor_moved = pyqtSignal(QPointF)
+    clipboard_op = pyqtSignal(str)          # "cut" | "copy" | "paste"
 
     def __init__(self, scene: SketchScene, parent=None):
         super().__init__(scene, parent)
@@ -625,8 +626,15 @@ class SketchView(QGraphicsView):
         super().mouseMoveEvent(event)
 
     def keyPressEvent(self, event):
+        from PyQt5.QtGui import QKeySequence
         scene = self.scene()
-        if event.key() == Qt.Key_Escape:
+        if event.matches(QKeySequence.Copy):
+            self.clipboard_op.emit("copy")
+        elif event.matches(QKeySequence.Cut):
+            self.clipboard_op.emit("cut")
+        elif event.matches(QKeySequence.Paste):
+            self.clipboard_op.emit("paste")
+        elif event.key() == Qt.Key_Escape:
             scene.cancel_tool()
         elif event.key() in (Qt.Key_Return, Qt.Key_Enter) and \
                 scene.tool == POLYGON:
