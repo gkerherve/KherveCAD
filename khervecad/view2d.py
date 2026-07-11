@@ -22,6 +22,7 @@ from PyQt5.QtWidgets import (QGraphicsEllipseItem, QGraphicsItem,
                              QGraphicsPolygonItem, QGraphicsRectItem,
                              QGraphicsScene, QGraphicsView)
 
+from . import expr
 from .model import SHAPE_2D, DocumentModel
 
 SELECT, LINE, RECT, CIRCLE, POLYGON, TEXT = (
@@ -73,6 +74,12 @@ class ShapeItem:
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
         self.handles = []
+
+    def rv(self, key, default=0.0) -> float:
+        """Param as a number — expressions preview with loop start
+        values (editing writes plain numbers back)."""
+        return expr.resolve(self.node.params.get(key),
+                            self._scene.env_for(self.node), default)
 
     def itemChange(self, change, value):
         if change == QGraphicsItem.ItemPositionChange and \
@@ -126,10 +133,10 @@ class LineShapeItem(ShapeItem, QGraphicsLineItem):
         self.apply_node()
 
     def apply_node(self):
-        p = self.node.params
-        self.setPos(p["x1"], p["y1"])
-        self.setLine(0, 0, p["x2"] - p["x1"], p["y2"] - p["y1"])
-        pen = _pen("#2e3440", max(p["width"], 0.5))
+        x1, y1 = self.rv("x1"), self.rv("y1")
+        self.setPos(x1, y1)
+        self.setLine(0, 0, self.rv("x2") - x1, self.rv("y2") - y1)
+        pen = _pen("#2e3440", max(self.rv("width", 1.0), 0.5))
         pen.setCosmetic(False)
         pen.setCapStyle(Qt.RoundCap)
         self.setPen(pen)
@@ -165,9 +172,9 @@ class RectShapeItem(ShapeItem, QGraphicsRectItem):
         self.apply_node()
 
     def apply_node(self):
-        p = self.node.params
-        self.setPos(p["x"], p["y"])
-        self.setRect(0, 0, p["width"], p["height"])
+        self.setPos(self.rv("x"), self.rv("y"))
+        self.setRect(0, 0, self.rv("width", 1.0),
+                     self.rv("height", 1.0))
         self.reposition_handles()
 
     def push_pos(self):
@@ -182,8 +189,9 @@ class RectShapeItem(ShapeItem, QGraphicsRectItem):
 
     def handle_dragged(self, role, scene_pos):
         p = self.node.params
-        left, bottom = p["x"], p["y"]
-        right, top = left + p["width"], bottom + p["height"]
+        left, bottom = self.rv("x"), self.rv("y")
+        right = left + self.rv("width", 1.0)
+        top = bottom + self.rv("height", 1.0)
         if "r" in role:
             right = scene_pos.x()
         else:
@@ -208,10 +216,18 @@ class CircleShapeItem(ShapeItem, QGraphicsEllipseItem):
         self.apply_node()
 
     def apply_node(self):
-        p = self.node.params
-        r = p["radius"]
-        self.setPos(p["x"], p["y"])
+        r = self.rv("radius", 1.0)
+        self.setPos(self.rv("x"), self.rv("y"))
         self.setRect(-r, -r, 2 * r, 2 * r)
+        angle = self.rv("angle", 360.0)
+        if angle < 360.0:
+            # Qt draws a pie when the span is partial; angles match
+            # world CCW because the whole view is Y-flipped.
+            self.setStartAngle(int(self.rv("start_angle") * 16))
+            self.setSpanAngle(int(angle * 16))
+        else:
+            self.setStartAngle(0)
+            self.setSpanAngle(360 * 16)
         self.reposition_handles()
 
     def push_pos(self):
@@ -220,7 +236,7 @@ class CircleShapeItem(ShapeItem, QGraphicsEllipseItem):
         self._scene.model.node_changed.emit(self.node)
 
     def handle_spec(self):
-        return [("radius", QPointF(self.node.params["radius"], 0))]
+        return [("radius", QPointF(self.rv("radius", 1.0), 0))]
 
     def handle_dragged(self, role, scene_pos):
         p = self.node.params
@@ -241,9 +257,11 @@ class PolygonShapeItem(ShapeItem, QGraphicsPolygonItem):
 
     def apply_node(self):
         p = self.node.params
-        self.setPos(p["x"], p["y"])
-        self.setPolygon(QPolygonF([QPointF(x, y)
-                                   for x, y in p["points"]]))
+        env = self._scene.env_for(self.node)
+        self.setPos(self.rv("x"), self.rv("y"))
+        self.setPolygon(QPolygonF(
+            [QPointF(expr.resolve(x, env), expr.resolve(y, env))
+             for x, y in p["points"]]))
         self.reposition_handles()
 
     def push_pos(self):
@@ -272,9 +290,9 @@ class TextShapeItem(ShapeItem, QGraphicsPathItem):
 
     def apply_node(self):
         p = self.node.params
-        self.setPos(p["x"], p["y"])
+        self.setPos(self.rv("x"), self.rv("y"))
         font = QFont("DejaVu Sans")
-        font.setPointSizeF(max(p["size"], 0.5))
+        font.setPointSizeF(max(self.rv("size", 10.0), 0.5))
         path = QPainterPath()
         path.addText(0, 0, font, str(p["text"]))
         # The view is Y-flipped; flip the glyphs back upright.
@@ -322,6 +340,25 @@ class SketchScene(QGraphicsScene):
         self.rebuild()
 
     # ------------------------------------------------------------ sync
+    def env_for(self, node) -> dict:
+        """Variables visible to *node* for preview purposes: document
+        assigns plus ancestor loop variables at their first value."""
+        env = {}
+        for n in self.model.root.walk():
+            if n.type == "assign" and n.visible:
+                var = str(n.params.get("variable", "")).strip()
+                if var:
+                    env[var] = expr.resolve(n.params.get("value", 0),
+                                            env, 0.0)
+        ancestor = node.parent
+        while ancestor is not None:
+            if ancestor.type in ("for_loop", "while_loop"):
+                values = ancestor.loop_values(env)
+                var = str(ancestor.params.get("variable", "i")) or "i"
+                env.setdefault(var, values[0] if values else 0.0)
+            ancestor = ancestor.parent
+        return env
+
     def snap(self, pos: QPointF) -> QPointF:
         if not self.snap_enabled:
             return pos

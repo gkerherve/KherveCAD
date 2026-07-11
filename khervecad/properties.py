@@ -22,7 +22,35 @@ from PyQt5.QtWidgets import (QCheckBox, QDoubleSpinBox, QFormLayout,
                              QWidget)
 
 from . import icons
-from .model import NODE_TYPES, DocumentModel
+from .model import NODE_TYPES, DocumentModel, fmt
+
+
+class ExprEdit(QLineEdit):
+    """Editor for numeric params that also accepts expressions.
+
+    "12.5" stores a float; "i * 10 + 2" stores the expression string
+    (evaluated by codegen/preview with the loop variables in scope).
+    """
+
+    def __init__(self, on_commit, parent=None):
+        super().__init__(parent)
+        self._on_commit = on_commit
+        self.setPlaceholderText("number or expression")
+        self.editingFinished.connect(self._commit)
+
+    def set_value(self, value):
+        self.setText(fmt(value) if not isinstance(value, str)
+                     else value)
+
+    def _commit(self):
+        text = self.text().strip()
+        if not text:
+            return
+        try:
+            value = float(text)
+        except ValueError:
+            value = text
+        self._on_commit(value)
 
 
 class PointsEditor(QWidget):
@@ -136,13 +164,7 @@ class PropertiesPanel(QScrollArea):
 
     def _make_editor(self, key, kind, minimum, maximum):
         if kind == "float":
-            box = QDoubleSpinBox()
-            box.setRange(minimum, maximum)
-            box.setDecimals(3)
-            box.setSingleStep(1.0)
-            box.valueChanged.connect(
-                lambda v, k=key: self._set_param(k, float(v)))
-            return box
+            return ExprEdit(lambda v, k=key: self._set_param(k, v))
         if kind == "int":
             box = QSpinBox()
             box.setRange(int(minimum), int(maximum))
@@ -169,7 +191,9 @@ class PropertiesPanel(QScrollArea):
         self._updating = True
         for key, editor in self._editors.items():
             value = self.node.params.get(key)
-            if isinstance(editor, QDoubleSpinBox):
+            if isinstance(editor, ExprEdit):
+                editor.set_value(value)
+            elif isinstance(editor, QDoubleSpinBox):
                 editor.setValue(float(value))
             elif isinstance(editor, QSpinBox):
                 editor.setValue(int(value))

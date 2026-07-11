@@ -3,8 +3,10 @@
 OpenSCAD is the real engine: when its binary is available the 3D view
 shows the exact mesh OpenSCAD renders. This module is the fallback
 (and the instant preview): it turns the object tree into triangles in
-pure Python. Booleans are approximated (difference/intersection show
-their first operand) — the OpenSCAD engine renders them exactly.
+pure Python, evaluating expressions and unrolling loops/conditionals
+like OpenSCAD would. CSG-heavy ops are approximated (difference/
+intersection/minkowski show their first operand, 3D hull unions) —
+the OpenSCAD engine renders them exactly.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -15,10 +17,42 @@ the Free Software Foundation, either version 3 of the License, or
 """
 
 import math
+from pathlib import Path
 
-from .model import SHAPE_2D, SHAPE_3D, CadNode
+from . import expr
+from .model import SHAPE_2D, CadNode
 
 #: a mesh is a list of triangles; a triangle is 3 (x, y, z) tuples.
+
+#: params that stay strings (never resolved to numbers).
+_TEXT_PARAMS = {"text", "path", "variable", "condition", "update",
+                "values", "value"}
+
+#: ops the fallback can only approximate (engine renders exactly).
+APPROXIMATED = {"difference", "intersection", "minkowski", "hull",
+                "offset"}
+
+_stl_cache = {}
+
+
+def rv(value, env=None, default=0.0) -> float:
+    """Resolve a param that may be a number or an expression."""
+    return expr.resolve(value, env, default)
+
+
+def rp(node: CadNode, env=None) -> dict:
+    """Node params with every numeric/expression value resolved."""
+    out = {}
+    for key, value in node.params.items():
+        if key in _TEXT_PARAMS:
+            out[key] = value
+        elif isinstance(value, bool):
+            out[key] = value
+        elif isinstance(value, list):
+            out[key] = [[rv(x, env), rv(y, env)] for x, y in value]
+        else:
+            out[key] = rv(value, env)
+    return out
 
 
 # ------------------------------------------------------------- matrices
@@ -147,17 +181,70 @@ def _point_in_tri(p, a, b, c):
     return not (has_neg and has_pos)
 
 
-def node_outlines(node: CadNode):
+def convex_hull_2d(points):
+    """Andrew's monotone chain — hull of 2D points, CCW."""
+    pts = sorted(set((round(x, 9), round(y, 9)) for x, y in points))
+    if len(pts) <= 2:
+        return list(pts)
+
+    def cross(o, a, b):
+        return ((a[0] - o[0]) * (b[1] - o[1])
+                - (a[1] - o[1]) * (b[0] - o[0]))
+    lower, upper = [], []
+    for p in pts:
+        while len(lower) >= 2 and cross(lower[-2], lower[-1], p) <= 0:
+            lower.pop()
+        lower.append(p)
+    for p in reversed(pts):
+        while len(upper) >= 2 and cross(upper[-2], upper[-1], p) <= 0:
+            upper.pop()
+        upper.append(p)
+    return lower[:-1] + upper[:-1]
+
+
+def offset_outline(points, r):
+    """Naive polygon offset for the preview: push each vertex along
+    its angle-bisector normal. OpenSCAD's offset() is exact."""
+    pts = ensure_ccw(points)
+    n = len(pts)
+    if n < 3 or not r:
+        return list(pts)
+    out = []
+    for i in range(n):
+        px, py = pts[i - 1]
+        cx, cy = pts[i]
+        nx_, ny_ = pts[(i + 1) % n]
+        # edge normals (outward for CCW)
+        e1 = (cy - py, px - cx)
+        e2 = (ny_ - cy, cx - nx_)
+        l1 = math.hypot(*e1) or 1.0
+        l2 = math.hypot(*e2) or 1.0
+        bx = e1[0] / l1 + e2[0] / l2
+        by = e1[1] / l1 + e2[1] / l2
+        lb = math.hypot(bx, by)
+        if lb < 1e-9:
+            out.append((cx, cy))
+            continue
+        # scale so edges shift by exactly r
+        dot = (e1[0] / l1 * bx + e1[1] / l1 * by) / lb
+        scale = r / max(dot, 0.1)
+        out.append((cx + bx / lb * scale, cy + by / lb * scale))
+    return out
+
+
+def node_outlines(node: CadNode, env=None):
     """Closed CCW outlines (lists of (x, y)) for a 2D shape node."""
-    p = node.params
+    p = rp(node, env)
     if node.type == "rect":
         x, y, w, h = p["x"], p["y"], p["width"], p["height"]
         return [[(x, y), (x + w, y), (x + w, y + h), (x, y + h)]]
     if node.type == "circle":
-        n = max(int(p["segments"]), 3)
-        return [[(p["x"] + p["radius"] * math.cos(2 * math.pi * i / n),
-                  p["y"] + p["radius"] * math.sin(2 * math.pi * i / n))
-                 for i in range(n)]]
+        angle = p.get("angle", 360.0)
+        arc = [(p["x"] + ax, p["y"] + ay)
+               for ax, ay in node.arc_points(env)]
+        if angle >= 360.0:
+            return [arc[:-1]]                # closed ring, drop repeat
+        return [[(p["x"], p["y"])] + arc]    # pie slice with centre
     if node.type == "polygon":
         return [[(p["x"] + x, p["y"] + y) for x, y in p["points"]]]
     if node.type == "line":
@@ -200,16 +287,73 @@ def _text_outlines(p):
     return outlines
 
 
-def collect_outlines(node: CadNode):
-    """All outlines of the visible 2D shapes in *node*'s subtree."""
+def collect_outlines(node: CadNode, env=None):
+    """All outlines of the visible 2D content in *node*'s subtree,
+    with loops unrolled, conditionals evaluated and offset/hull
+    applied (approximately)."""
+    env = dict(env or {})
     outlines = []
     if not node.visible:
         return outlines
     if node.category == SHAPE_2D:
-        outlines.extend(node_outlines(node))
-    for child in node.children:
-        outlines.extend(collect_outlines(child))
+        outlines.extend(node_outlines(node, env))
+    if node.type == "offset":
+        child_outlines = _children_outlines(node, env)
+        r = rv(node.params["radius"], env)
+        return [offset_outline(o, r) for o in child_outlines]
+    if node.type == "hull":
+        pts = [pt for o in _children_outlines(node, env) for pt in o]
+        hull = convex_hull_2d(pts)
+        return [hull] if len(hull) >= 3 else []
+    if node.type in ("for_loop", "while_loop"):
+        var = str(node.params.get("variable", "i")) or "i"
+        for value in node.loop_values(env):
+            scoped = dict(env)
+            scoped[var] = value
+            outlines.extend(_children_outlines(node, scoped))
+        return outlines
+    if node.type == "if_else":
+        branch = _if_branch(node, env)
+        for child in branch:
+            outlines.extend(collect_outlines(child, env))
+        return outlines
+    outlines.extend(_children_outlines(node, env))
     return outlines
+
+
+def _children_outlines(node, env):
+    outlines = []
+    env = dict(env)
+    for child in node.children:
+        if child.type == "assign":
+            _apply_assign(child, env)
+        else:
+            outlines.extend(collect_outlines(child, env))
+    return outlines
+
+
+def _apply_assign(node, env):
+    var = str(node.params.get("variable", "")).strip()
+    if var:
+        try:
+            env[var] = expr.evaluate(node.params.get("value", 0), env)
+        except expr.ExprError:
+            pass
+
+
+def _if_branch(node, env):
+    """Children of the branch an if/else takes under *env*."""
+    else_node = next((c for c in node.children
+                      if c.type == "union"
+                      and c.name.lower().startswith("else")), None)
+    then_nodes = [c for c in node.children if c is not else_node]
+    try:
+        take_then = bool(expr.evaluate(node.params["condition"], env))
+    except expr.ExprError:
+        take_then = True
+    if take_then:
+        return then_nodes
+    return list(else_node.children) if else_node is not None else []
 
 
 # ----------------------------------------------------------- primitives
@@ -287,10 +431,28 @@ def cylinder_mesh(p):
     return mesh
 
 
+def stl_mesh(p):
+    """Triangles of an imported STL, cached by path + mtime."""
+    path = str(p.get("path", "")).strip()
+    if not path or not Path(path).exists():
+        return []
+    try:
+        key = (path, Path(path).stat().st_mtime)
+        if key not in _stl_cache:
+            from .engine import parse_stl
+            _stl_cache.clear()               # keep only the latest
+            _stl_cache[key] = parse_stl(path)
+        mesh = _stl_cache[key]
+    except Exception:
+        return []
+    m = mat_translate(p["x"], p["y"], p["z"])
+    return transform_mesh(m, mesh)
+
+
 # ----------------------------------------------------------- extrusions
 
-def linear_extrude_mesh(node: CadNode):
-    p = node.params
+def linear_extrude_mesh(node: CadNode, env=None):
+    p = rp(node, env)
     height = p["height"]
     twist = p.get("twist", 0.0)
     scale_top = p.get("scale", 1.0)
@@ -299,7 +461,9 @@ def linear_extrude_mesh(node: CadNode):
     if twist and slices == 1:
         slices = max(int(abs(twist) / 6), 8)
     mesh = []
-    for outline in collect_outlines(node):
+    for outline in collect_outlines(node, env):
+        if len(outline) < 3:
+            continue
         outline = ensure_ccw(outline)
         cx = sum(x for x, _ in outline) / len(outline)
         cy = sum(y for _, y in outline) / len(outline)
@@ -340,14 +504,16 @@ def linear_extrude_mesh(node: CadNode):
     return mesh
 
 
-def rotate_extrude_mesh(node: CadNode):
-    p = node.params
+def rotate_extrude_mesh(node: CadNode, env=None):
+    p = rp(node, env)
     angle = min(max(p.get("angle", 360.0), 0.01), 360.0)
     n = max(int(p.get("segments", 96)), 3)
     steps = max(int(n * angle / 360.0), 2)
     full = angle >= 360.0
     mesh = []
-    for outline in collect_outlines(node):
+    for outline in collect_outlines(node, env):
+        if len(outline) < 3:
+            continue
         profile = [(max(x, 0.0), y) for x, y in ensure_ccw(outline)]
 
         def ring(step):
@@ -375,10 +541,10 @@ def rotate_extrude_mesh(node: CadNode):
     return mesh
 
 
-def flat_mesh(node: CadNode):
+def flat_mesh(node: CadNode, env=None):
     """Un-extruded 2D shape shown as a flat face at z = 0."""
     mesh = []
-    for outline in node_outlines(node):
+    for outline in node_outlines(node, env):
         mesh.extend((
             (a[0], a[1], 0.0), (b[0], b[1], 0.0), (c[0], c[1], 0.0))
             for a, b, c in triangulate(outline))
@@ -387,60 +553,91 @@ def flat_mesh(node: CadNode):
 
 # ----------------------------------------------------------- tree walk
 
-def tessellate(node: CadNode):
+def tessellate(node: CadNode, env=None):
     """Triangle mesh for *node*'s subtree (fallback semantics)."""
+    env = dict(env or {})
     if not node.visible:
         return []
     t = node.type
-    if t == "root" or t == "union":
-        mesh = []
-        for child in node.children:
-            mesh.extend(tessellate(child))
-        return mesh
-    if t in ("difference", "intersection"):
+    if t in ("root", "union", "hull"):
+        # 3D hull is approximated as the union of its children.
+        return _children_mesh(node, env)
+    if t in ("difference", "intersection", "minkowski"):
         # Approximation: show the first operand; the OpenSCAD engine
-        # renders the true boolean.
-        return tessellate(node.children[0]) if node.children else []
+        # renders the true CSG result.
+        for child in node.children:
+            if child.type != "assign":
+                return tessellate(child, env)
+        return []
+    if t in ("for_loop", "while_loop"):
+        var = str(node.params.get("variable", "i")) or "i"
+        mesh = []
+        for value in node.loop_values(env):
+            scoped = dict(env)
+            scoped[var] = value
+            mesh.extend(_children_mesh(node, scoped))
+        return mesh
+    if t == "if_else":
+        mesh = []
+        for child in _if_branch(node, env):
+            mesh.extend(tessellate(child, env))
+        return mesh
+    if t == "assign":
+        return []
     if t == "linear_extrude":
-        return linear_extrude_mesh(node)
+        return linear_extrude_mesh(node, env)
     if t == "rotate_extrude":
-        return rotate_extrude_mesh(node)
+        return rotate_extrude_mesh(node, env)
     if t == "translate":
-        m = mat_translate(node.params["x"], node.params["y"],
-                          node.params["z"])
-        return transform_mesh(m, _children_mesh(node))
+        p = rp(node, env)
+        return transform_mesh(mat_translate(p["x"], p["y"], p["z"]),
+                              _children_mesh(node, env))
     if t == "rotate":
-        m = mat_rotate(node.params["x"], node.params["y"],
-                       node.params["z"])
-        return transform_mesh(m, _children_mesh(node))
+        p = rp(node, env)
+        return transform_mesh(mat_rotate(p["x"], p["y"], p["z"]),
+                              _children_mesh(node, env))
     if t == "scale":
-        m = mat_scale(node.params["x"], node.params["y"],
-                      node.params["z"])
-        return transform_mesh(m, _children_mesh(node))
+        p = rp(node, env)
+        return transform_mesh(mat_scale(p["x"], p["y"], p["z"]),
+                              _children_mesh(node, env))
     if t == "mirror":
-        m = mat_mirror(node.params["x"], node.params["y"],
-                       node.params["z"])
-        return transform_mesh(m, _children_mesh(node))
+        p = rp(node, env)
+        return transform_mesh(mat_mirror(p["x"], p["y"], p["z"]),
+                              _children_mesh(node, env))
+    if t == "offset":
+        # 2D-only op: preview its (offset) outlines flat at z = 0.
+        mesh = []
+        for outline in collect_outlines(node, env):
+            mesh.extend((
+                (a[0], a[1], 0.0), (b[0], b[1], 0.0),
+                (c[0], c[1], 0.0)) for a, b, c in triangulate(outline))
+        return mesh
     if t == "cube":
-        return cube_mesh(node.params)
+        return cube_mesh(rp(node, env))
     if t == "sphere":
-        return sphere_mesh(node.params)
+        return sphere_mesh(rp(node, env))
     if t == "cylinder":
-        return cylinder_mesh(node.params)
+        return cylinder_mesh(rp(node, env))
+    if t == "stl_import":
+        return stl_mesh(rp(node, env))
     if node.category == SHAPE_2D:
-        return flat_mesh(node)
+        return flat_mesh(node, env)
     return []                                 # pragma: no cover
 
 
-def _children_mesh(node):
+def _children_mesh(node, env):
     mesh = []
+    env = dict(env)
     for child in node.children:
-        mesh.extend(tessellate(child))
+        if child.type == "assign":
+            _apply_assign(child, env)
+        else:
+            mesh.extend(tessellate(child, env))
     return mesh
 
 
 def uses_booleans(node: CadNode) -> bool:
-    """True if the subtree contains difference/intersection (the
-    fallback preview approximates those)."""
-    return any(n.type in ("difference", "intersection")
+    """True if the subtree contains ops the fallback preview can only
+    approximate (booleans, minkowski, hull, offset)."""
+    return any(n.type in APPROXIMATED
                for n in node.walk() if n.visible)
