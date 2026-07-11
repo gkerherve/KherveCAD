@@ -419,6 +419,7 @@ class MainWindow(QMainWindow):
         self.properties.set_node(nodes[0] if len(nodes) == 1 else None)
         self.scene.select_nodes(nodes)
         self.builder.highlight_nodes(nodes)
+        self._sync_highlight(nodes)
         self._syncing = False
 
     def _scene_selected(self, nodes):
@@ -428,7 +429,17 @@ class MainWindow(QMainWindow):
         self.builder.tree.select_nodes(nodes)
         self.properties.set_node(nodes[0] if len(nodes) == 1 else None)
         self.builder.highlight_nodes(nodes)
+        self._sync_highlight(nodes)
         self._syncing = False
+
+    def _sync_highlight(self, nodes):
+        """Draw the selected object's geometry highlighted in both
+        the 2D (projected outline) and 3D (glowing faces) views."""
+        self._selected_ids = {n.id for n in nodes}
+        self.scene.set_highlight(nodes)
+        self.view3d.set_highlight_mesh(
+            mesh.selected_world_tris(self.model.root, self._selected_ids)
+            if self._selected_ids else [])
 
     def _node_created(self, node):
         self.builder.tree.select_nodes([node])
@@ -450,6 +461,10 @@ class MainWindow(QMainWindow):
                       if not self.engine.available else "")
         self.view3d.set_mesh(tris, label,
                              colors if has_colors else None)
+        selected = getattr(self, "_selected_ids", set())
+        if selected:
+            self.view3d.set_highlight_mesh(
+                mesh.selected_world_tris(self.model.root, selected))
         if tris and not self._fitted:
             self.view3d.fit()
             self._fitted = True

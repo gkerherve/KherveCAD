@@ -53,7 +53,11 @@ Going further:
   outline; drop it to position it along the chosen axes and build
   whole systems (a chamber + gate valve + turbo, say). Everything
   is millimetres: scale bar, live size readout while drawing, zoom
-  indicator, Fit Sketch / Zoom to Selection.
+  indicator, Fit Sketch / Zoom to Selection. Middle-mouse drag pans;
+  the wheel zooms.
+- **Selection highlight** — select any object (even a sub-part deep
+  in an assembly) and its geometry lights up amber in both the 2D
+  and 3D views, so you always see exactly what you picked.
 - **Undo/redo** (Ctrl+Z / Ctrl+Y) for every edit; drags collapse to
   a single step.
 - **Colors** — right-click > Color... wraps objects in OpenSCAD's

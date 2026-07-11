@@ -29,6 +29,7 @@ class View3D(QWidget):
         super().__init__(parent)
         self.mesh = []                  # [(v0, v1, v2)] world space
         self.colors = None              # optional per-face colours
+        self.highlight_mesh = []        # selected object, world space
         self.source = "no model"
         self.yaw = 35.0                 # degrees around Z
         self.pitch = 22.0               # degrees above the XY plane
@@ -47,6 +48,11 @@ class View3D(QWidget):
         self.colors = colors if colors and len(colors) == len(self.mesh) \
             else None
         self.source = source
+        self.update()
+
+    def set_highlight_mesh(self, tris):
+        """Triangles of the selected object, drawn glowing on top."""
+        self.highlight_mesh = tris or []
         self.update()
 
     def fit(self):
@@ -127,13 +133,45 @@ class View3D(QWidget):
             shade = abs(nx * light[0] + ny * light[1]
                         + nz * light[2]) / length
             face_color = self.colors[index] if self.colors else None
-            faces.append((depth, pts, shade, face_color))
+            faces.append((depth, pts, shade, face_color, False))
+
+        # the selected object's faces, drawn glowing over the model
+        # in a warm accent that contrasts with the blue base shading
+        hi = QColor("#ff8c1a")
+        for tri in self.highlight_mesh:
+            pts = [self._project(eye, right, up, forward, v)
+                   for v in tri]
+            if any(p is None for p in pts):
+                continue
+            depth = (pts[0][2] + pts[1][2] + pts[2][2]) / 3 - 0.02
+            ux, uy, uz = (tri[1][0] - tri[0][0], tri[1][1] - tri[0][1],
+                          tri[1][2] - tri[0][2])
+            vx, vy, vz = (tri[2][0] - tri[0][0], tri[2][1] - tri[0][1],
+                          tri[2][2] - tri[0][2])
+            nx, ny, nz = (uy * vz - uz * vy, uz * vx - ux * vz,
+                          ux * vy - uy * vx)
+            length = math.sqrt(nx * nx + ny * ny + nz * nz)
+            shade = abs(nx * light[0] + ny * light[1] + nz * light[2]) \
+                / length if length > 1e-12 else 0.6
+            faces.append((depth, pts, shade, None, True))
 
         faces.sort(key=lambda f: -f[0])
         pen = QPen(QColor(0, 0, 0, 30))
         pen.setWidthF(0.5)
-        for _depth, pts, shade, face_color in faces:
+        hi_pen = QPen(hi.lighter(120))
+        hi_pen.setWidthF(1.4)
+        for _depth, pts, shade, face_color, highlight in faces:
             value = 0.35 + 0.65 * shade
+            if highlight:
+                color = QColor.fromHsvF(
+                    max(hi.hueF(), 0.0),
+                    min(hi.saturationF() + 0.1, 1.0),
+                    min(0.55 + 0.45 * shade, 1.0))
+                painter.setPen(hi_pen)
+                painter.setBrush(color)
+                painter.drawPolygon(QPolygonF(
+                    [QPointF(p[0], p[1]) for p in pts]))
+                continue
             if face_color is not None:
                 own = QColor(face_color[0])
                 if not own.isValid():

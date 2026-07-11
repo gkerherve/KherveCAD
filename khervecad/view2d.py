@@ -416,6 +416,8 @@ class SketchScene(QGraphicsScene):
         self._draft_start = None
         self._poly_points = []
         self._part_dirty = False
+        self._highlight_ids = set()            # selected nodes
+        self._highlight_items = []
         model.structure_changed.connect(self.rebuild)
         model.node_changed.connect(self._node_changed)
         self.rebuild()
@@ -479,6 +481,49 @@ class SketchScene(QGraphicsScene):
                     if node.id in selected:
                         item.setSelected(True)
         self.updating = False
+        self._rebuild_highlight()
+
+    # ------------------------------------------------------- highlight
+    def set_highlight(self, nodes):
+        """Emphasise the selected objects' geometry in the current
+        plane (works at any tree depth, unlike the part outlines)."""
+        self._highlight_ids = {n.id for n in nodes}
+        self._rebuild_highlight()
+
+    def _rebuild_highlight(self):
+        for item in self._highlight_items:
+            self.removeItem(item)
+        self._highlight_items = []
+        if not self._highlight_ids:
+            return
+        from . import mesh as mesh_mod
+        (ai, bi), _keys = PLANES[self.plane]
+        accent = QColor("#ff8c1a")            # distinct selection accent
+        for node_id in self._highlight_ids:
+            tris = mesh_mod.selected_world_tris(
+                self.model.root, {node_id})
+            if not tris:
+                continue
+            points = [(v[ai], v[bi]) for tri in tris for v in tri]
+            outline = mesh_mod.convex_hull_2d(points)
+            if len(outline) < 2:
+                continue
+            path = QPainterPath()
+            path.moveTo(QPointF(*outline[0]))
+            for point in outline[1:]:
+                path.lineTo(QPointF(*point))
+            path.closeSubpath()
+            item = self.addPath(path)
+            pen = QPen(accent, 2.2)
+            pen.setCosmetic(True)
+            item.setPen(pen)
+            fill = QColor(accent)
+            fill.setAlpha(48)
+            item.setBrush(QBrush(fill))
+            item.setZValue(500)
+            item.setAcceptedMouseButtons(Qt.NoButton)
+            item.setFlag(QGraphicsItem.ItemIsSelectable, False)
+            self._highlight_items.append(item)
 
     def _make_part_item(self, node):
         from . import mesh as mesh_mod
@@ -734,6 +779,38 @@ class SketchView(QGraphicsView):
     def px_per_mm(self) -> float:
         return abs(self.transform().m11())
 
+    # ------------------------------------------------ middle-button pan
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MiddleButton:
+            self._pan_last = event.pos()
+            self.setCursor(Qt.ClosedHandCursor)
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if getattr(self, "_pan_last", None) is not None:
+            delta = event.pos() - self._pan_last
+            self._pan_last = event.pos()
+            h = self.horizontalScrollBar()
+            v = self.verticalScrollBar()
+            h.setValue(h.value() - delta.x())
+            v.setValue(v.value() - delta.y())
+            event.accept()
+            return
+        self.cursor_moved.emit(self.mapToScene(event.pos()))
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.MiddleButton and \
+                getattr(self, "_pan_last", None) is not None:
+            self._pan_last = None
+            self.setCursor(Qt.CrossCursor if self.scene().tool != SELECT
+                           else Qt.ArrowCursor)
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
+
     def set_tool(self, tool):
         self.scene().tool = tool
         if tool == SELECT:
@@ -867,10 +944,6 @@ class SketchView(QGraphicsView):
         for item in items[1:]:
             rect = rect.united(item.sceneBoundingRect())
         self._fit_rect(rect)
-
-    def mouseMoveEvent(self, event):
-        self.cursor_moved.emit(self.mapToScene(event.pos()))
-        super().mouseMoveEvent(event)
 
     def keyPressEvent(self, event):
         from PyQt5.QtGui import QKeySequence

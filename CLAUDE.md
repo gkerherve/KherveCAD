@@ -100,7 +100,7 @@ into a new module and import.
                        translate node ("Position (...)"). Everything
                        reads in mm: scale bar, live size while
                        drawing, zoom indicator, Fit Sketch / Zoom to
-                       Selection.
+                       Selection. Middle-mouse drag pans; wheel zooms.
   - `view3d.py`      — bottom-right preview: software-rendered shaded
                        mesh viewer (orbit/pan/zoom, painter's algo,
                        no OpenGL dependency).
@@ -141,9 +141,14 @@ go into `model.NODE_TYPES` (params, schema, icon, codegen branch in
 properties panel and tree pick them up automatically.
 
 **Selection** is coordinated by `MainWindow` (`_syncing` guard):
-tree <-> 2D view <-> properties always show the same objects, and
-the Code tab highlights the selected object's lines (codegen emits
-per-node line spans via `CadNode.emit()` / `to_scad_map()`).
+tree <-> 2D view <-> properties always show the same objects, the
+Code tab highlights the selected object's lines (codegen emits
+per-node line spans via `CadNode.emit()` / `to_scad_map()`), and the
+selected object's **geometry** is highlighted in amber in both
+viewers — `mesh.selected_world_tris()` tags the selected subtree's
+world-space triangles (ancestor transforms applied), which the 3D
+view draws glowing over the model and the 2D view projects to an
+accent outline in the current plane (works at any tree depth).
 
 **Errors turn red.** `model.validate()` runs on every change (bad
 expressions, empty extrusions, 3D inside extrude, axis-crossing
