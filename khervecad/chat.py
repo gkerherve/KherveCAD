@@ -98,8 +98,21 @@ _CHARS_PER_TOKEN = 4
 #: Keep as much of the conversation as fits in this many tokens of
 #: history, so the assistant remembers the whole session — only the
 #: oldest turns are dropped, and only once it would overflow a large
-#: model's context window.
-HISTORY_TOKEN_BUDGET = 180000
+#: model's context window. (The true ceiling is whatever context window
+#: the chosen model supports — e.g. ~200k tokens for Claude — so this
+#: is generous headroom rather than a hard limit you will normally hit.)
+HISTORY_TOKEN_BUDGET = 400000
+
+#: The conversation is also saved between runs so the assistant picks up
+#: where you left off. Persist at most this many characters (most recent
+#: first) to keep the settings store small.
+_PERSIST_CHARS = 200000
+
+
+def _persist_enabled() -> bool:
+    """Skip disk persistence under the offscreen test platform so the
+    suite never reads or writes the user's real chat history."""
+    return os.environ.get("QT_QPA_PLATFORM", "") != "offscreen"
 
 SYSTEM_PROMPT = """\
 You are KherveAI, the assistant inside KherveCAD — an easy-to-use CAD
@@ -429,6 +442,16 @@ class ChatInput(QLineEdit):
         self._index = len(self._history)
         self._draft = ""
 
+    def load_history(self, lines):
+        """Seed the Up/Down history from a previous run."""
+        self._history = list(lines)
+        self._index = len(self._history)
+        self._draft = ""
+
+    def recent_history(self, limit):
+        """The most recent typed lines, for persistence."""
+        return self._history[-limit:]
+
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Up:
             self._browse(-1)
@@ -494,10 +517,66 @@ class ChatPanel(QWidget):
         layout.addWidget(self.transcript, 1)
         layout.addLayout(input_row)
 
+        if _persist_enabled():
+            self._load_state()
+        else:
+            self._welcome()
+
+    # -------------------------------------------------------- persistence
+    def _welcome(self):
         self._append_note(
             "Hi! I can answer questions and build geometry — when I "
             "design a part it is applied straight to the document "
             "(Ctrl+Z to undo). Type <b>/help</b> for app commands.")
+
+    def _load_state(self):
+        """Restore the previous conversation and the Up/Down input
+        history saved on the last run."""
+        settings = QSettings(*_SETTINGS)
+        try:
+            saved = json.loads(settings.value("chat/history", "") or "[]")
+        except Exception:
+            saved = []
+        try:
+            typed = json.loads(
+                settings.value("chat/input_history", "") or "[]")
+        except Exception:
+            typed = []
+        self.input.load_history([str(t) for t in typed if t])
+        self.history = [m for m in saved if isinstance(m, dict)
+                        and m.get("role") and "content" in m]
+        if self.history:
+            self._replay_transcript()
+            self._append_note(
+                "↺ Restored your previous conversation — I still "
+                "remember it. Type <b>/clear</b> to start fresh.")
+        else:
+            self._welcome()
+
+    def _save_state(self):
+        if not _persist_enabled():
+            return
+        # keep the most recent messages within the persistence budget
+        kept, total = [], 0
+        for message in reversed(self.history):
+            total += len(message.get("content", ""))
+            if total > _PERSIST_CHARS and kept:
+                break
+            kept.insert(0, message)
+        settings = QSettings(*_SETTINGS)
+        settings.setValue("chat/history", json.dumps(kept))
+        settings.setValue("chat/input_history",
+                          json.dumps(self.input.recent_history(200)))
+
+    def _replay_transcript(self):
+        """Redraw the restored conversation in the transcript."""
+        for message in self.history:
+            if message["role"] == "user":
+                self._append("user", html.escape(message["content"]))
+            elif message["role"] == "assistant":
+                prose = _SCAD_BLOCK_RE.sub("", message["content"]).strip()
+                self._append("assistant", html.escape(
+                    prose or message["content"]).replace("\n", "<br>"))
 
     # ------------------------------------------------------- transcript
     def _append(self, role, html_text):
@@ -586,8 +665,9 @@ class ChatPanel(QWidget):
         self._append("user", html.escape(text))
         if text.startswith("/"):
             self.handle_command(text)
-            return
-        self._ask(text)
+        else:
+            self._ask(text)
+        self._save_state()                    # remember across restarts
 
     def _ask(self, text):
         settings = QSettings(*_SETTINGS)
@@ -632,6 +712,7 @@ class ChatPanel(QWidget):
     def _replied(self, text):
         self.history.append({"role": "assistant", "content": text})
         self._trim_history()
+        self._save_state()                    # remember across restarts
         blocks = _SCAD_BLOCK_RE.findall(text)
         # show only the explanation, never the raw program — the code
         # is applied to the document automatically

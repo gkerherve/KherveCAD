@@ -166,6 +166,38 @@ def test_slash_hide_show(window):
     assert node.visible is True
 
 
+def test_conversation_persists_across_restarts(window, monkeypatch,
+                                               tmp_path):
+    from PyQt5.QtCore import QSettings
+    ini = str(tmp_path / "kcad.ini")
+    monkeypatch.setattr(chat, "_persist_enabled", lambda: True)
+    monkeypatch.setattr(
+        chat, "QSettings",
+        lambda *a, **k: QSettings(ini, QSettings.IniFormat))
+
+    panel = window.chat
+    panel.history = [
+        {"role": "user", "content": "make a bracket"},
+        {"role": "assistant", "content": "Sure.\n```scad\ncube(5);\n```"}]
+    panel.input.remember("make a bracket")
+    panel._save_state()
+
+    from khervecad.chat import ChatPanel
+    reopened = ChatPanel(window)                # simulate a fresh launch
+    try:
+        # the model still remembers the conversation
+        assert [m["content"] for m in reopened.history] == \
+            ["make a bracket", "Sure.\n```scad\ncube(5);\n```"]
+        # and it is shown again in the transcript (prose only)
+        text = reopened.transcript.toPlainText()
+        assert "make a bracket" in text and "Sure." in text
+        assert "cube(5)" not in text            # program block hidden
+        # Up/Down recalls the previously typed line
+        assert reopened.input.recent_history(10) == ["make a bracket"]
+    finally:
+        reopened.deleteLater()
+
+
 def test_reply_auto_applies_program_not_shown_as_text(window):
     panel = window.chat
     window.model.add_node("cube")
