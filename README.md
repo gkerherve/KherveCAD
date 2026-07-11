@@ -22,6 +22,28 @@ with booleans — while KherveCAD writes the OpenSCAD program for you:
   the [OpenSCAD](https://openscad.org) binary installed you see the
   exact rendered mesh (booleans included); without it a built-in
   tessellator previews extrusions and primitives.
+- **KherveAI chat box** (Ctrl+/) — the family assistant panel:
+  Claude, Mistral or Ollama Cloud behind one chat. It sees the live
+  OpenSCAD program, answers questions, runs slash commands
+  (`/part cf40 tee`, `/code`, `/render`, …) and its `scad` replies
+  apply straight into the object tree.
+
+Going further:
+
+- **Control flow** — for loops, while loops (unrolled to valid
+  OpenSCAD), if/else and variables; any numeric field accepts
+  expressions like `i * 10 + 2`.
+- **Rounding** — `offset()` rounds 2D corners before extrusion;
+  Apply > Round edges wraps a solid in `minkowski()` + sphere for
+  post-extrusion edge rounding. Circles take an angle for quarter
+  and semi circles.
+- **Import/export** — full `.scad` import (lossless round-trip of
+  everything KherveCAD generates; graceful warnings elsewhere) and
+  export; STL import as tree nodes and STL export.
+- **Parts library** (Ctrl+L) — parametric CF16-CF160 and KF16-KF50
+  flanges, blanks, nipples, tees and crosses in conventional sizes
+  (every dimension editable, so any size), plus a simplified turbo
+  pump shell.
 
 Documents save as `.kcad` (JSON object tree) and export as `.scad`
 programs or `.stl` meshes.

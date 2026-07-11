@@ -48,8 +48,29 @@ into a new module and import.
                        type), OpenSCAD codegen in `to_scad()`,
                        `DocumentModel` with change signals and all
                        editing operations (wrap/group/ungroup/move/
-                       duplicate).
+                       duplicate/round_edges).
+  - `expr.py`        — safe evaluator for OpenSCAD-style expressions
+                       (whitelisted AST, trig in degrees); numeric
+                       params may hold expression strings like
+                       `i * 10` so loop variables work everywhere.
   - `document.py`    — `.kcad` JSON (de)serialisation, `.scad` export.
+  - `scadparse.py`   — **.scad import**: tokenizer + recursive-descent
+                       parser for the generated subset plus common
+                       variations (d= diameters, scalar rotate/scale,
+                       positional args, modifiers, for/if/assigns).
+                       Unknown constructs are skipped with warnings.
+                       Round-trip (export -> import -> export) is
+                       lossless and tested.
+  - `library.py`     — parametric vacuum parts (CF16-CF160 and
+                       KF16-KF50 flanges, blank/nipple/tee/cross,
+                       simplified turbo pump shell) + the Insert >
+                       Part Library dialog. Parts are ordinary node
+                       subtrees; bolt circles are for-loops.
+  - `chat.py`        — **KherveAI chat box** (family assistant):
+                       Claude/Mistral/Ollama Cloud via urllib, keys
+                       in QSettings or env vars, slash commands, and
+                       `scad` reply blocks applied to the tree via
+                       scadparse.
   - `treepanel.py`   — `BuilderPanel`: Objects tree (context menu:
                        hide/show, Apply operation, group/ungroup,
                        rename, duplicate, delete; drag & drop
@@ -78,12 +99,20 @@ into a new module and import.
 
 - 2D shapes (`line`, `rect`, `circle`, `polygon`, `text`) — `line`
   compiles to `hull()` of two circles so it is a real extrudable
-  solid.
-- 3D primitives (`cube`, `sphere`, `cylinder`).
+  solid; `circle` has an `angle` param (90 = quarter, 180 = semi)
+  that compiles to a polygon fan when partial.
+- 3D primitives (`cube`, `sphere`, `cylinder`) and `stl_import`.
 - Operations wrap their children (`linear_extrude`,
-  `rotate_extrude`, `translate`, `rotate`, `scale`, `mirror`).
-- Booleans/grouping (`union` = group, `difference`,
-  `intersection`).
+  `rotate_extrude`, `translate`, `rotate`, `scale`, `mirror`,
+  `offset` for corner rounding).
+- Booleans/grouping (`union` = group, `difference`, `intersection`,
+  `hull`, `minkowski`; `round_edges()` = minkowski + small sphere,
+  the post-extrusion rounding idiom).
+- Control flow (`for_loop`, `while_loop`, `if_else`, `assign`).
+  `while` has no OpenSCAD equivalent, so codegen unrolls it into a
+  value-list `for` (capped at 1000 iterations); it re-imports as a
+  list-form for loop. `if_else` keeps its else branch in a child
+  union named "Else" (auto-created).
 
 Hidden objects are emitted with OpenSCAD's `*` disable modifier, so
 visibility round-trips through the generated program. New node types
@@ -120,17 +149,14 @@ compatible.
 
 ## Roadmap
 
-- **Chat box** (family assistant panel) — deliberately last, once
-  the program is nearly finished: it is far better equipped when it
-  can drive a complete tool set.
 - Undo/redo on a shared `QUndoStack` (node add/remove/move/param
   changes), mirroring KherveSheet's `undo_commands.py`.
-- OpenSCAD `$fn`/`$fa`/`$fs` global settings panel; `offset()`,
-  `hull()`, `minkowski()` operation nodes.
-- Import `.scad` (parse a supported subset back into a tree),
-  import STL/DXF reference geometry.
+- OpenSCAD `$fn`/`$fa`/`$fs` global settings panel.
+- DXF reference geometry import; STEP export via external tools.
 - Dimensions/constraints in the 2D sketch; edge snapping.
 - Per-object color/material; section view in the 3D preview.
+- Chat: streaming responses, image input (screenshot the 3D view),
+  more library parts on request (gate valves, viewports, bellows).
 
 ## Undo / redo policy
 
