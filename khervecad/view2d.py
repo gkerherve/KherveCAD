@@ -681,10 +681,28 @@ class SketchScene(QGraphicsScene):
                 item.setSelected(True)
         self.updating = False
 
+    def _isolated_item_at(self, scene_pos):
+        """The isolated part silhouette under *scene_pos*, or None. Uses
+        each item's filled path so a click inside its bounding box but
+        outside the real shape counts as empty space."""
+        for item in self._part_items.values():
+            if item.contains(item.mapFromScene(scene_pos)):
+                return item
+        return None
+
     # ------------------------------------------------------------ tools
     def mousePressEvent(self, event):
         pos = self.snap(event.scenePos())
         if event.button() != Qt.LeftButton or self.tool == SELECT:
+            if (self.tool == SELECT and event.button() == Qt.LeftButton
+                    and self._isolating()
+                    and self._isolated_item_at(event.scenePos()) is None):
+                # while a part is isolated, empty-space clicks must not
+                # clear the selection — you deselect from the object
+                # tree only. Clicks on the part itself still fall
+                # through to super() so it stays draggable.
+                event.accept()
+                return
             super().mousePressEvent(event)
             return
         if self.tool == LINE:

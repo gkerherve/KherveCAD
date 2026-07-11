@@ -186,3 +186,79 @@ def test_highlight_follows_plane_change(window):
     window._set_plane("Front (XZ)")
     assert window.scene.plane == "Front (XZ)"
     assert part.id in window.scene._part_items    # rebuilt for plane
+
+
+# -------------------------------------------- isolation click behaviour
+
+def _empty_viewport_px(view):
+    """A viewport pixel that maps to empty scene space (no item)."""
+    from PyQt5.QtCore import QPoint
+    scene = view.scene()
+    vp = view.viewport()
+    for x in range(2, vp.width(), 7):
+        for y in range(2, vp.height(), 7):
+            p = QPoint(x, y)
+            sp = view.mapToScene(p)
+            if scene.itemAt(sp, view.transform()) is None:
+                return p
+    return None
+
+
+def test_isolated_empty_click_keeps_selection(window):
+    """While a part is isolated, clicking empty 2D space must NOT
+    deselect it — deselection happens from the object tree only."""
+    from PyQt5.QtCore import Qt
+    from PyQt5.QtTest import QTest
+    m = window.model
+    part = library.build_part("cf_tee",
+                              dict(library.CF_SIZES["CF40 (DN40)"],
+                                   port_length=50.0))
+    m.root.add(part)
+    m.structure_changed.emit()
+    window._set_plane("Front (XZ)")
+    profile = next(n for n in part.walk()
+                   if n.name == "Flange -X profile")
+    window.builder.tree.select_nodes([profile])
+    assert window.scene._isolating()
+
+    view = window.view2d
+    view.resize(600, 400)
+    view.show()
+    view.fitInView(window.scene.itemsBoundingRect().adjusted(-20, -20,
+                                                             20, 20),
+                   Qt.KeepAspectRatio)
+    empty = _empty_viewport_px(view)
+    assert empty is not None
+
+    QTest.mouseClick(view.viewport(), Qt.LeftButton, Qt.NoModifier, empty)
+    # selection survives the empty click
+    assert window.scene._isolating()
+    assert window.scene._highlight_ids == {profile.id}
+    assert [n.name for n in window.builder.tree.selected_nodes()] \
+        == ["Flange -X profile"]
+    # the tree still deselects it
+    window.builder.tree.select_nodes([])
+    assert not window.scene._isolating()
+
+
+def test_empty_click_still_deselects_sketch_shape(window):
+    """Outside isolation (a plain 2D sketch shape in Top view), an
+    empty click clears the selection as before."""
+    from PyQt5.QtCore import Qt
+    from PyQt5.QtTest import QTest
+    m = window.model
+    rect = m.add_node("rect", dict(x=5.0, y=5.0, width=10.0, height=8.0))
+    window._set_plane("Top (XY)")
+    window.builder.tree.select_nodes([rect])
+    assert rect.id in {n.id for n in window.scene.selected_nodes()}
+
+    view = window.view2d
+    view.resize(600, 400)
+    view.show()
+    view.fitInView(window.scene.itemsBoundingRect().adjusted(-40, -40,
+                                                             40, 40),
+                   Qt.KeepAspectRatio)
+    empty = _empty_viewport_px(view)
+    assert empty is not None
+    QTest.mouseClick(view.viewport(), Qt.LeftButton, Qt.NoModifier, empty)
+    assert window.scene.selected_nodes() == []
