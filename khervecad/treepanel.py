@@ -321,7 +321,7 @@ class ObjectTree(QTreeWidget):
                     lambda _=False, o=op: self.model.wrap_nodes(nodes, o))
             apply_menu.addSeparator()
             apply_menu.addAction(
-                icons.icon("mdi.circle-opacity"), "Round edges (3D)",
+                icons.icon("mdi.blur"), "Round edges (3D)",
                 lambda: self.model.round_edges(nodes))
             menu.addAction(icons.icon("mdi.group"), "Group\tCtrl+G",
                            lambda: self.model.group_nodes(nodes))

@@ -31,7 +31,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 import math
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import (QComboBox, QDialog, QDialogButtonBox,
                              QDoubleSpinBox, QFormLayout, QHBoxLayout,
                              QLabel, QListWidget, QSpinBox, QVBoxLayout)
@@ -481,12 +481,16 @@ def build_part(part_id: str, dims: dict) -> CadNode:
 
 class PartLibraryDialog(QDialog):
     """Insert > Part Library: pick a part, a standard size, tweak the
-    dimensions, insert into the document."""
+    dimensions, insert into the document. Non-modal — it stays open
+    while you keep working in the main window."""
+
+    part_inserted = pyqtSignal(object)        # the inserted CadNode
 
     def __init__(self, model: DocumentModel, parent=None):
         super().__init__(parent)
         self.model = model
         self.setWindowTitle("Part library")
+        self.setModal(False)
         self.resize(560, 420)
 
         self._parts = QListWidget()
@@ -507,11 +511,13 @@ class PartLibraryDialog(QDialog):
         right.addLayout(self._form)
         right.addStretch()
 
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok
-                                   | QDialogButtonBox.Cancel)
-        buttons.button(QDialogButtonBox.Ok).setText("Insert")
-        buttons.accepted.connect(self._insert)
-        buttons.rejected.connect(self.reject)
+        buttons = QDialogButtonBox(QDialogButtonBox.Apply
+                                   | QDialogButtonBox.Close)
+        buttons.button(QDialogButtonBox.Apply).setText("Insert")
+        buttons.button(QDialogButtonBox.Apply).setDefault(True)
+        buttons.button(QDialogButtonBox.Apply).clicked.connect(
+            self._insert)
+        buttons.rejected.connect(self.close)
         right.addWidget(buttons)
 
         layout = QHBoxLayout(self)
@@ -590,4 +596,4 @@ class PartLibraryDialog(QDialog):
         self.model.root.add(node)
         self.model.structure_changed.emit()
         self.inserted = node
-        self.accept()
+        self.part_inserted.emit(node)

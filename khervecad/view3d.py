@@ -161,9 +161,13 @@ class View3D(QWidget):
         origin = self._project(eye, right, up, forward, (0, 0, 0))
         if origin is None:
             return
-        for axis, color in (((18, 0, 0), "#d64545"),
-                            ((0, 18, 0), "#3f9e4d"),
-                            ((0, 0, 18), "#3a6fd8")):
+        scale = self.distance / 8.0
+        font = painter.font()
+        font.setBold(True)
+        painter.setFont(font)
+        for axis, label, color in (((scale, 0, 0), "X", "#d64545"),
+                                   ((0, scale, 0), "Y", "#3f9e4d"),
+                                   ((0, 0, scale), "Z", "#3a6fd8")):
             tip = self._project(eye, right, up, forward, axis)
             if tip:
                 pen = QPen(QColor(color))
@@ -171,6 +175,8 @@ class View3D(QWidget):
                 painter.setPen(pen)
                 painter.drawLine(QPointF(origin[0], origin[1]),
                                  QPointF(tip[0], tip[1]))
+                painter.drawText(QPointF(tip[0] + 3, tip[1] - 3),
+                                 label)
 
     # ------------------------------------------------------------- mouse
     def mousePressEvent(self, event):

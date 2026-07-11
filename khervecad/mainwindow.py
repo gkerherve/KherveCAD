@@ -23,9 +23,9 @@ from pathlib import Path
 
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtWidgets import (QAction, QActionGroup, QApplication,
-                             QDockWidget, QFileDialog, QLabel,
-                             QMainWindow, QMessageBox, QSpinBox,
-                             QSplitter, QToolBar)
+                             QComboBox, QDockWidget, QFileDialog,
+                             QLabel, QMainWindow, QMessageBox,
+                             QSpinBox, QSplitter, QToolBar)
 
 from . import APP_NAME, __version__, document, icons, mesh
 from .engine import ScadEngine, set_openscad_path
@@ -33,8 +33,8 @@ from .model import NODE_TYPES, DocumentModel
 from .properties import PropertiesPanel
 from .style import THEMES, apply_style, current_theme
 from .treepanel import BuilderPanel
-from .view2d import (CIRCLE, LINE, POLYGON, RECT, SELECT, TEXT,
-                     SketchScene, SketchView)
+from .view2d import (CIRCLE, LINE, PLANES, POLYGON, RECT, SELECT,
+                     TEXT, SketchScene, SketchView)
 from .view3d import View3D
 
 ICON_SIZE = QSize(28, 28)
@@ -52,9 +52,11 @@ TOOLS = [
 #: 3D primitives added with one click.
 PRIMITIVES = ["cube", "sphere", "cylinder"]
 
-#: operations in the horizontal toolbar (applied to the selection).
+#: operations in the horizontal toolbar (applied to the selection —
+#: control-flow tools insert standalone when nothing is selected).
 OPERATIONS = ["linear_extrude", "rotate_extrude", "translate", "rotate",
-              "scale", "mirror", "union", "difference", "intersection"]
+              "scale", "mirror", "union", "difference", "intersection",
+              "for_loop", "while_loop", "if_else"]
 
 
 class MainWindow(QMainWindow):
@@ -101,9 +103,12 @@ class MainWindow(QMainWindow):
         self.builder.tree.selection_changed.connect(self._tree_selected)
         self.scene.selection_changed.connect(self._scene_selected)
         self.scene.node_created.connect(self._node_created)
-        self.view2d.cursor_moved.connect(
-            lambda p: self._cursor_label.setText(
-                f"x: {p.x():.1f}  y: {p.y():.1f}"))
+        self.view2d.cursor_moved.connect(self._cursor_moved)
+        self.view2d.zoom_changed.connect(
+            lambda ppm: self._zoom_label.setText(
+                f"1 mm = {ppm:.2f} px"))
+        self.scene.measure_changed.connect(
+            lambda text: self._measure_label.setText(text))
         self.view2d.clipboard_op.connect(
             lambda op: {"cut": self.builder.tree.cut_selection,
                         "copy": self.builder.tree.copy_selection,
@@ -193,10 +198,25 @@ class MainWindow(QMainWindow):
         bar.addWidget(QLabel(" Grid "))
         self._grid_spin = QSpinBox()
         self._grid_spin.setRange(1, 100)
+        self._grid_spin.setSuffix(" mm")
         self._grid_spin.setValue(int(self.scene.grid_size))
         self._grid_spin.valueChanged.connect(self._set_grid_size)
         bar.addWidget(self._grid_spin)
         bar.addSeparator()
+
+        bar.addWidget(QLabel(" Plane "))
+        self._plane_combo = QComboBox()
+        self._plane_combo.addItems(list(PLANES))
+        self._plane_combo.setToolTip(
+            "Assembly view plane — drag part outlines to position "
+            "them along the chosen axes")
+        self._plane_combo.currentTextChanged.connect(self._set_plane)
+        bar.addWidget(self._plane_combo)
+        bar.addSeparator()
+
+        bar.addAction(icons.icon("mdi.fit-to-page-outline"),
+                      "Fit sketch (Ctrl+Shift+F)",
+                      self.view2d.fit_content)
 
         bar.addAction(icons.icon("mdi.play-outline"), "Render (F5)",
                       self._render_now).setShortcut("F5")
@@ -287,6 +307,10 @@ class MainWindow(QMainWindow):
                             lambda: self.view2d.zoom(1 / 1.25), "Ctrl+-")
         view_menu.addAction("&Reset 2D Zoom", self.view2d.zoom_reset,
                             "Ctrl+0")
+        view_menu.addAction("Fit &Sketch", self.view2d.fit_content,
+                            "Ctrl+Shift+F")
+        view_menu.addAction("Zoom to Se&lection",
+                            self.view2d.zoom_selection)
         view_menu.addAction("&Fit 3D View", self.view3d.fit, "Ctrl+F")
         view_menu.addSeparator()
         theme_menu = view_menu.addMenu("&Theme")
@@ -305,11 +329,25 @@ class MainWindow(QMainWindow):
         help_menu.addAction("&About", self._about)
 
     def _build_status_bar(self):
-        self._cursor_label = QLabel("x: 0.0  y: 0.0")
+        self._cursor_label = QLabel("x: 0.0 mm  y: 0.0 mm")
         self.statusBar().addWidget(self._cursor_label)
+        self._measure_label = QLabel("")
+        self.statusBar().addWidget(self._measure_label)
+        self._zoom_label = QLabel(
+            f"1 mm = {self.view2d.px_per_mm():.2f} px")
+        self.statusBar().addPermanentWidget(self._zoom_label)
         self._engine_label = QLabel()
         self.statusBar().addPermanentWidget(self._engine_label)
         self._refresh_engine_label()
+
+    def _cursor_moved(self, p):
+        _axes, (kx, ky) = PLANES[self.scene.plane]
+        self._cursor_label.setText(
+            f"{kx}: {p.x():.1f} mm  {ky}: {p.y():.1f} mm")
+
+    def _set_plane(self, plane):
+        self.scene.set_plane(plane)
+        self.view2d.viewport().update()
 
     def _refresh_engine_label(self, busy=False):
         if self.engine.available:
@@ -331,6 +369,9 @@ class MainWindow(QMainWindow):
     def _apply_operation(self, op: str):
         nodes = self.builder.tree.selected_nodes()
         if not nodes:
+            if op in ("for_loop", "while_loop", "if_else", "union"):
+                self._add_primitive(op)       # empty, fill it after
+                return
             self.statusBar().showMessage(
                 "Select objects in the tree first.", 3000)
             return
@@ -502,11 +543,19 @@ class MainWindow(QMainWindow):
         self.save_file()
 
     def open_library(self):
-        from .library import PartLibraryDialog
-        dialog = PartLibraryDialog(self.model, self)
-        if dialog.exec_() and getattr(dialog, "inserted", None):
-            self.builder.tree.select_nodes([dialog.inserted])
-            self.view3d.fit()
+        """Non-modal: the library stays open while you keep editing."""
+        if getattr(self, "_library_dialog", None) is None:
+            from .library import PartLibraryDialog
+            self._library_dialog = PartLibraryDialog(self.model, self)
+            self._library_dialog.part_inserted.connect(
+                self._part_inserted)
+        self._library_dialog.show()
+        self._library_dialog.raise_()
+        self._library_dialog.activateWindow()
+
+    def _part_inserted(self, node):
+        self.builder.tree.select_nodes([node])
+        self.view3d.fit()
 
     def import_scad(self):
         if not self._confirm_discard():

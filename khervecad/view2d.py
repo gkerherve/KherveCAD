@@ -23,10 +23,18 @@ from PyQt5.QtWidgets import (QGraphicsEllipseItem, QGraphicsItem,
                              QGraphicsScene, QGraphicsView)
 
 from . import expr
-from .model import SHAPE_2D, DocumentModel
+from .model import SHAPE_2D, SHAPE_3D, CadNode, DocumentModel
 
 SELECT, LINE, RECT, CIRCLE, POLYGON, TEXT = (
     "select", "line", "rect", "circle", "polygon", "text")
+
+#: assembly view planes: name -> (horizontal axis, vertical axis)
+#: as indices into (x, y, z) and the translate-param keys they map to.
+PLANES = {
+    "Top (XY)": ((0, 1), ("x", "y")),
+    "Front (XZ)": ((0, 2), ("x", "z")),
+    "Side (YZ)": ((1, 2), ("y", "z")),
+}
 
 _SHAPE_PEN_W = 1.6
 HANDLE_SIZE = 9.0
@@ -315,6 +323,75 @@ _ITEM_CLASSES = dict(line=LineShapeItem, rect=RectShapeItem,
                      text=TextShapeItem)
 
 
+def _produces_3d(node) -> bool:
+    """True if the subtree makes solid geometry (an assemblable part)."""
+    return any(n.category == SHAPE_3D
+               or n.type in ("linear_extrude", "rotate_extrude")
+               for n in node.walk())
+
+
+class PartItem(QGraphicsPathItem):
+    """A whole part (top-level subtree) shown as its projected outline
+    in the chosen assembly plane. Drag it to position the part — on
+    release the move is committed into a translate node ("Position"),
+    so assemblies are ordinary, editable tree structure."""
+
+    def __init__(self, node, scene, outline, label):
+        super().__init__()
+        self.node = node
+        self._scene = scene
+        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        self.setFlag(QGraphicsItem.ItemIsMovable, True)
+        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
+        from .style import tokens
+        color = QColor(tokens()["select"])
+        pen = QPen(color, 1.4, Qt.DashLine)
+        pen.setCosmetic(True)
+        self.setPen(pen)
+        fill = QColor(color)
+        fill.setAlpha(26)
+        self.setBrush(QBrush(fill))
+        path = QPainterPath()
+        if outline:
+            path.moveTo(QPointF(*outline[0]))
+            for point in outline[1:]:
+                path.lineTo(QPointF(*point))
+            path.closeSubpath()
+        self.setPath(path)
+        self._label = label
+        self._label_pos = QPointF(
+            min(x for x, _ in outline),
+            max(y for _, y in outline)) if outline else QPointF()
+
+    def paint(self, painter, option, widget=None):
+        super().paint(painter, option, widget)
+        painter.save()
+        painter.translate(self._label_pos)
+        painter.scale(1, -1)                  # the view is Y-flipped
+        font = painter.font()
+        size = max(self.path().boundingRect().height() * 0.09, 2.0)
+        font.setPointSizeF(size)
+        painter.setFont(font)
+        painter.setPen(self.pen().color())
+        painter.drawText(QPointF(0, -size * 0.4), self._label)
+        painter.restore()
+
+    def itemChange(self, change, value):
+        if change == QGraphicsItem.ItemPositionChange and \
+                not self._scene.updating:
+            return self._scene.snap(value)
+        if change == QGraphicsItem.ItemSelectedHasChanged and \
+                not self._scene.updating:
+            self._scene.emit_selection()
+        return super().itemChange(change, value)
+
+    def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
+        # committing may rebuild the scene, so do it after our own
+        # mouse handling is completely finished
+        self._scene.commit_part_move(self.node, self.pos())
+
+
 # ------------------------------------------------------------------ scene
 
 class SketchScene(QGraphicsScene):
@@ -322,22 +399,31 @@ class SketchScene(QGraphicsScene):
 
     selection_changed = pyqtSignal(list)      # list of CadNode
     node_created = pyqtSignal(object)         # CadNode
+    measure_changed = pyqtSignal(str)         # live mm readout
 
     def __init__(self, model: DocumentModel, parent=None):
         super().__init__(-2000, -2000, 4000, 4000, parent)
         self.model = model
         self.tool = SELECT
+        self.plane = "Top (XY)"                # assembly view plane
         self.grid_size = 5.0
         self.snap_enabled = True
         self.show_grid = True
         self.updating = False
-        self._items = {}                       # node id -> item
+        self._items = {}                       # node id -> shape item
+        self._part_items = {}                  # node id -> part item
         self._draft = None                     # item being drawn
         self._draft_start = None
         self._poly_points = []
+        self._part_dirty = False
         model.structure_changed.connect(self.rebuild)
         model.node_changed.connect(self._node_changed)
         self.rebuild()
+
+    def set_plane(self, plane: str):
+        if plane in PLANES and plane != self.plane:
+            self.plane = plane
+            self.rebuild()
 
     # ------------------------------------------------------------ sync
     def env_for(self, node) -> dict:
@@ -368,17 +454,68 @@ class SketchScene(QGraphicsScene):
     def rebuild(self):
         self.updating = True
         selected = {n.id for n in self.selected_nodes()}
-        for item in self._items.values():
+        for item in list(self._items.values()) \
+                + list(self._part_items.values()):
             self.removeItem(item)
         self._items.clear()
-        for node in self.model.root.walk():
-            if node.category == SHAPE_2D and self._branch_visible(node):
-                item = _ITEM_CLASSES[node.type](node, self)
-                self.addItem(item)
-                self._items[node.id] = item
-                if node.id in selected:
-                    item.setSelected(True)
+        self._part_items.clear()
+        if self.plane == "Top (XY)":
+            # sketch mode: individual 2D shapes are editable
+            for node in self.model.root.walk():
+                if node.category == SHAPE_2D and \
+                        self._branch_visible(node):
+                    item = _ITEM_CLASSES[node.type](node, self)
+                    self.addItem(item)
+                    self._items[node.id] = item
+                    if node.id in selected:
+                        item.setSelected(True)
+        # assembly mode: every top-level part gets a draggable outline
+        for node in self.model.root.children:
+            if node.visible and _produces_3d(node):
+                item = self._make_part_item(node)
+                if item is not None:
+                    self.addItem(item)
+                    self._part_items[node.id] = item
+                    if node.id in selected:
+                        item.setSelected(True)
         self.updating = False
+
+    def _make_part_item(self, node):
+        from . import mesh as mesh_mod
+        tris = mesh_mod.tessellate(node, self.env_for(node))
+        if not tris:
+            return None
+        (ai, bi), _keys = PLANES[self.plane]
+        points = [(v[ai], v[bi]) for tri in tris for v in tri]
+        outline = mesh_mod.convex_hull_2d(points)
+        if len(outline) < 3:
+            return None
+        return PartItem(node, self, outline, node.name)
+
+    def commit_part_move(self, node, delta):
+        """A part outline was dropped: bake the move into a translate
+        node so the assembly is plain, editable tree structure."""
+        if abs(delta.x()) < 1e-9 and abs(delta.y()) < 1e-9:
+            return
+        _axes, (kx, ky) = PLANES[self.plane]
+        if node.type == "translate":
+            env = self.env_for(node)
+            node.params[kx] = round(
+                expr.resolve(node.params.get(kx), env) + delta.x(), 4)
+            node.params[ky] = round(
+                expr.resolve(node.params.get(ky), env) + delta.y(), 4)
+            self.model.node_changed.emit(node)
+            return
+        parent, index = node.parent, node.index()
+        wrapper = CadNode("translate",
+                          self.model.unique_name("translate"),
+                          {kx: round(delta.x(), 4),
+                           ky: round(delta.y(), 4)})
+        wrapper.name = f"Position ({node.name})"
+        parent.remove(node)
+        wrapper.add(node)
+        parent.add(wrapper, index)
+        self.model.structure_changed.emit()
 
     @staticmethod
     def _branch_visible(node):
@@ -393,7 +530,14 @@ class SketchScene(QGraphicsScene):
             # A group's visibility change affects every descendant.
             self.rebuild()
             return
-        should_show = (node.category == SHAPE_2D
+        if self._in_part(node):
+            if self.mouseGrabberItem() is not None:
+                self._part_dirty = True        # refresh after the drag
+            else:
+                self.rebuild()                 # part outline changed
+            return
+        should_show = (self.plane == "Top (XY)"
+                       and node.category == SHAPE_2D
                        and self._branch_visible(node))
         item = self._items.get(node.id)
         if (item is not None) != should_show:
@@ -403,6 +547,14 @@ class SketchScene(QGraphicsScene):
             item.apply_node()
             self.updating = False
 
+    def _in_part(self, node) -> bool:
+        probe = node
+        while probe is not None:
+            if probe.id in self._part_items:
+                return True
+            probe = probe.parent
+        return False
+
     def push_move(self, item):
         self.updating = True
         item.push_pos()
@@ -411,7 +563,7 @@ class SketchScene(QGraphicsScene):
 
     def selected_nodes(self):
         return [item.node for item in self.selectedItems()
-                if isinstance(item, ShapeItem)]
+                if isinstance(item, (ShapeItem, PartItem))]
 
     def emit_selection(self):
         self.selection_changed.emit(self.selected_nodes())
@@ -420,7 +572,8 @@ class SketchScene(QGraphicsScene):
         self.updating = True
         self.clearSelection()
         for node in nodes:
-            item = self._items.get(node.id)
+            item = self._items.get(node.id) \
+                or self._part_items.get(node.id)
             if item:
                 item.setSelected(True)
         self.updating = False
@@ -458,14 +611,25 @@ class SketchScene(QGraphicsScene):
             if self.tool == LINE:
                 self._draft.setLine(start.x(), start.y(),
                                     pos.x(), pos.y())
+                length = ((pos.x() - start.x()) ** 2 +
+                          (pos.y() - start.y()) ** 2) ** 0.5
+                self.measure_changed.emit(
+                    f"length: {length:.1f} mm   "
+                    f"Δ {pos.x() - start.x():.1f}, "
+                    f"{pos.y() - start.y():.1f} mm")
             elif self.tool == RECT:
-                self._draft.setRect(QRectF(start, pos).normalized())
+                rect = QRectF(start, pos).normalized()
+                self._draft.setRect(rect)
+                self.measure_changed.emit(
+                    f"{rect.width():.1f} × {rect.height():.1f} mm")
             elif self.tool == CIRCLE:
                 radius = ((pos.x() - start.x()) ** 2 +
                           (pos.y() - start.y()) ** 2) ** 0.5
                 self._draft.setRect(start.x() - radius,
                                     start.y() - radius,
                                     2 * radius, 2 * radius)
+                self.measure_changed.emit(
+                    f"r = {radius:.1f} mm   Ø {2 * radius:.1f} mm")
             event.accept()
             return
         if self.tool == POLYGON and self._poly_points:
@@ -477,6 +641,9 @@ class SketchScene(QGraphicsScene):
     def mouseReleaseEvent(self, event):
         if self._draft is None or self._draft_start is None:
             super().mouseReleaseEvent(event)
+            if self._part_dirty and self.mouseGrabberItem() is None:
+                self._part_dirty = False
+                self.rebuild()
             return
         pos = self.snap(event.scenePos())
         start = self._draft_start
@@ -553,6 +720,7 @@ class SketchView(QGraphicsView):
 
     cursor_moved = pyqtSignal(QPointF)
     clipboard_op = pyqtSignal(str)          # "cut" | "copy" | "paste"
+    zoom_changed = pyqtSignal(float)        # pixels per mm
 
     def __init__(self, scene: SketchScene, parent=None):
         super().__init__(scene, parent)
@@ -562,6 +730,9 @@ class SketchView(QGraphicsView):
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.scale(4, -4)                     # Y up, sensible start zoom
         self.centerOn(30, 20)
+
+    def px_per_mm(self) -> float:
+        return abs(self.transform().m11())
 
     def set_tool(self, tool):
         self.scene().tool = tool
@@ -607,6 +778,51 @@ class SketchView(QGraphicsView):
         painter.drawLine(QPointF(0, rect.top()),
                          QPointF(0, rect.bottom()))
 
+    def drawForeground(self, painter, rect):
+        super().drawForeground(painter, rect)
+        from .style import tokens
+        t = tokens()
+        painter.save()
+        painter.resetTransform()
+        color = QColor(t["gutter"])
+        painter.setPen(QPen(color, 1.4))
+        font = painter.font()
+        font.setPointSize(9)
+        font.setBold(True)
+        painter.setFont(font)
+
+        # axis letters for the active plane (X/Y/Z)
+        (ai, bi), _keys = PLANES[self.scene().plane]
+        h_axis, v_axis = "XYZ"[ai], "XYZ"[bi]
+        w, h = self.viewport().width(), self.viewport().height()
+        painter.drawText(w - 46, h - 12, f"{h_axis} →")
+        painter.drawText(10, 34, f"{v_axis}")
+        painter.drawText(8, 46, "↑")
+
+        # scale bar (everything is millimetres)
+        ppm = self.px_per_mm()
+        bar_mm = None
+        for k in range(-3, 6):
+            for m in (1, 2, 5):
+                length = m * 10 ** k
+                if 60 <= length * ppm <= 170:
+                    bar_mm = length
+                    break
+            if bar_mm:
+                break
+        if bar_mm:
+            px = bar_mm * ppm
+            x0, y0 = 14, h - 16
+            painter.setPen(QPen(QColor(t["text"]), 1.6))
+            painter.drawLine(x0, y0, int(x0 + px), y0)
+            painter.drawLine(x0, y0 - 5, x0, y0 + 5)
+            painter.drawLine(int(x0 + px), y0 - 5, int(x0 + px),
+                             y0 + 5)
+            label = f"{bar_mm:g} mm"
+            painter.setFont(font)
+            painter.drawText(int(x0 + px / 2 - 20), y0 - 8, label)
+        painter.restore()
+
     def wheelEvent(self, event):
         factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15
         self.zoom(factor)
@@ -615,11 +831,42 @@ class SketchView(QGraphicsView):
         current = abs(self.transform().m11())
         if 0.05 < current * factor < 400:
             self.scale(factor, factor)
+        self.zoom_changed.emit(self.px_per_mm())
 
     def zoom_reset(self):
         self.resetTransform()
         self.scale(4, -4)
         self.centerOn(30, 20)
+        self.zoom_changed.emit(self.px_per_mm())
+
+    def _fit_rect(self, rect):
+        if rect.isNull() or rect.width() < 1e-6:
+            return
+        rect = rect.adjusted(-rect.width() * 0.08,
+                             -rect.height() * 0.08,
+                             rect.width() * 0.08,
+                             rect.height() * 0.08)
+        scale = min(self.viewport().width() / rect.width(),
+                    self.viewport().height() / rect.height())
+        scale = max(min(scale, 400.0), 0.05)
+        self.resetTransform()
+        self.scale(scale, -scale)
+        self.centerOn(rect.center())
+        self.zoom_changed.emit(self.px_per_mm())
+
+    def fit_content(self):
+        """Fit everything drawn in the sketch (Ctrl+Shift+F)."""
+        self._fit_rect(self.scene().itemsBoundingRect())
+
+    def zoom_selection(self):
+        """Fit the selected objects."""
+        items = self.scene().selectedItems()
+        if not items:
+            return
+        rect = items[0].sceneBoundingRect()
+        for item in items[1:]:
+            rect = rect.united(item.sceneBoundingRect())
+        self._fit_rect(rect)
 
     def mouseMoveEvent(self, event):
         self.cursor_moved.emit(self.mapToScene(event.pos()))

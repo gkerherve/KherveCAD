@@ -184,7 +184,7 @@ NODE_TYPES = {
                 ("values", "Values (overrides range)", "str",
                  None, None)]),
     "while_loop": dict(
-        label="While loop", category=CONTROL, icon="mdi.repeat-variant",
+        label="While loop", category=CONTROL, icon="mdi.sync",
         params=dict(variable="x", start=1.0, condition="x < 100",
                     update="x * 2"),
         schema=[("variable", "Variable", "str", None, None),
