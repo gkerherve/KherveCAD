@@ -183,6 +183,62 @@ def test_angle_valve_ports_at_90_degrees(model):
     assert "sphere(" in code                  # valve body
 
 
+def test_cf_elbow_two_ports_at_right_angle(model):
+    node = _insert(model, "cf_elbow", library.CF_SIZES, "CF40 (DN40)")
+    ports = [n for n in node.walk() if n.name.startswith("Port ")]
+    assert len(ports) == 2
+    tris = mesh.tessellate(model.root)
+    xs = [v[0] for t in tris for v in t]
+    zs = [v[2] for t in tris for v in t]
+    assert max(xs) == pytest.approx(60.0, abs=1.0)   # +X port
+    assert max(zs) == pytest.approx(60.0, abs=1.0)   # +Z port
+    # only two ports: no -X/-Z tube reaching -60 (flange discs reach ~-35)
+    assert min(xs) > -45.0 and min(zs) > -45.0
+
+
+def test_kf_fittings_build(model):
+    for pid, ports in (("kf_nipple", 2), ("kf_elbow", 2), ("kf_tee", 3)):
+        node = library.build_part(
+            pid, dict(library.KF_SIZES["KF25 (DN25)"], port_length=30.0))
+        assert len([n for n in node.walk()
+                    if n.name.startswith("Port ")]) == ports
+        assert mesh.tessellate(node)         # KF has no bolt holes
+        assert "for (" not in node.to_scad()
+
+
+def test_feedthrough_has_pins_through_flange(model):
+    node = library.build_part(
+        "cf_feedthrough", dict(library.CF_SIZES["CF40 (DN40)"]))
+    model.root.add(node)
+    assert any(n.name == "Pins" for n in node.walk())
+    tris = mesh.tessellate(model.root)
+    zs = [v[2] for t in tris for v in t]
+    assert max(zs) > 15.0 and min(zs) < -15.0        # pins protrude both
+
+
+def test_hemispherical_analyser_is_a_dome(model):
+    node = library.build_part(
+        "analyser_hsa",
+        dict(library.ANALYSER_SIZES["R150 (CF160 mount)"],
+             _size="R150 (CF160 mount)"))
+    model.root.add(node)
+    code = model.root.to_scad()
+    assert code.count("rotate_extrude") >= 2         # revolved domes
+    tris = mesh.tessellate(model.root)
+    zs = [v[2] for t in tris for v in t]
+    assert max(zs) > 150.0                            # dome (r_out) + detector
+    assert min(zs) < -60.0                            # lens column + mount
+
+
+def test_part_categories_present():
+    cats = {spec.get("category") for spec in library.PARTS.values()}
+    assert "Vacuum" in cats and "Fasteners" in cats
+    # the new vacuum parts are registered
+    for pid in ("cf_elbow", "kf_elbow", "cf_feedthrough",
+                "kf_feedthrough", "analyser_hsa"):
+        assert pid in library.PARTS
+
+
 # -------------------------------------------------------------- fasteners
 
 def test_thread_profile_radii():

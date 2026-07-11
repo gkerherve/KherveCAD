@@ -288,10 +288,10 @@ def cf_flange(p, name="CF flange", tube_length=0.0) -> CadNode:
     return part
 
 
-def kf_flange(p, name="KF flange", tube_length=20.0) -> CadNode:
-    """A KF flange: chamfered clamp disc + tube, bore subtracted."""
-    solid = CadNode("union", f"{name} solid")
-    # clamp profile: short cone into the disc (simplified)
+def _kf_flange_solid(p, name="KF flange") -> CadNode:
+    """The KF clamp head only (chamfered disc + taper to the tube OD),
+    z = 0 at the sealing face, no tube and no bore."""
+    solid = CadNode("union", name)
     solid.add(_cyl("Clamp face", p["flange_od"] / 2.0,
                    p["thickness"] * 0.6))
     solid.add(CadNode("cylinder", "Clamp taper", dict(
@@ -299,6 +299,12 @@ def kf_flange(p, name="KF flange", tube_length=20.0) -> CadNode:
         height=p["thickness"] * 0.4,
         radius_bottom=p["flange_od"] / 2.0,
         radius_top=p["tube_od"] / 2.0, segments=96, center=False)))
+    return solid
+
+
+def kf_flange(p, name="KF flange", tube_length=20.0) -> CadNode:
+    """A KF flange: chamfered clamp disc + tube, bore subtracted."""
+    solid = _kf_flange_solid(p, f"{name} solid")
     if tube_length > 0:
         solid.add(_cyl("Tube", p["tube_od"] / 2.0, tube_length,
                        z=p["thickness"]))
@@ -306,6 +312,30 @@ def kf_flange(p, name="KF flange", tube_length=20.0) -> CadNode:
     part.add(solid)
     part.add(_cyl("Bore", p["bore"] / 2.0,
                   p["thickness"] + tube_length + 2.0, z=-1.0))
+    return part
+
+
+def kf_fitting(p, ports, name="KF fitting", port_length=40.0) -> CadNode:
+    """A multi-port KF fitting (nipple / elbow / tee): one clamp-flanged
+    tube per port, all bores meeting at the centre. KF has no bolts."""
+    part = CadNode("difference", name)
+    solid = CadNode("union", f"{name} body")
+    part.add(solid)
+    for port in ports:
+        rx, ry, rz = _PORTS[port]
+        frame = CadNode("rotate", f"Port {port}", dict(x=rx, y=ry, z=rz))
+        frame.add(_cyl("Tube", p["tube_od"] / 2.0, port_length))
+        lift = CadNode("translate", "Flange position", dict(
+            x=0.0, y=0.0, z=port_length - p["thickness"]))
+        lift.add(_kf_flange_solid(p, f"Flange {port}"))
+        frame.add(lift)
+        solid.add(frame)
+    for port in ports:
+        rx, ry, rz = _PORTS[port]
+        frame = CadNode("rotate", f"Bore {port}", dict(x=rx, y=ry, z=rz))
+        frame.add(_cyl("Bore", p["bore"] / 2.0, port_length + 1.0,
+                       z=-1.0))
+        part.add(frame)
     return part
 
 
@@ -477,7 +507,115 @@ def turbo_pump(inlet=None, exhaust=None, body_height=110.0,
     return result
 
 
+# ------------------------------------------------------------ feedthrough
+
+def feedthrough(p, kind="cf", pins=4, pin_d=2.0, stub=18.0) -> CadNode:
+    """An electrical feedthrough: a blank CF/KF flange carrying a ring
+    of conductor pins that pass straight through, protruding *stub* mm
+    on each side. Monochrome so the CF bolt circle still cuts cleanly."""
+    t = p["thickness"]
+    part = CadNode("difference", f"{kind.upper()} feedthrough")
+    body = CadNode("union", "Feedthrough body")
+    part.add(body)
+    if kind == "cf":
+        body.add(cf_flange_solid(dict(p, bore=0.0), 0.0, "Flange"))
+        r_ring = max(p["gasket_od"] / 2.0 - 6.0, pin_d * 2.0)
+    else:
+        body.add(_kf_flange_solid(p, "Flange"))
+        r_ring = max(p["tube_od"] / 2.0 - 4.0, pin_d * 2.0)
+    # ceramic insulator boss on the sealing face
+    body.add(_cyl("Insulator boss", r_ring + pin_d * 1.6, t * 0.5, z=t))
+    # conductor pins on a ring, through the flange
+    pins = max(int(pins), 1)
+    step = 360.0 / pins
+    loop = CadNode("for_loop", "Pins", dict(
+        variable="a", start=0.0, end=360.0 - step / 2.0, step=step))
+    rot = CadNode("rotate", "Pin angle", dict(x=0.0, y=0.0, z="a"))
+    rot.add(_cyl("Pin", pin_d / 2.0, stub * 2.0 + t, z=-stub,
+                 x=r_ring, segments=20))
+    loop.add(rot)
+    body.add(loop)
+    if kind == "cf":
+        part.add(_bolt_holes(p, z=-1.0, height=t + 2.0))
+    return part
+
+
+# -------------------------------------------------- hemispherical analyser
+
+def _dome_profile(radius, wall=None, n=48):
+    """(r, z) cross-section of a hemispherical dome (z >= 0), revolved
+    360° to a real hemisphere solid — or a shell when *wall* is given.
+    Built from arcs, not a boolean, so the built-in preview shows it."""
+    arc = [(radius * math.cos(math.radians(90.0 * i / n)),
+            radius * math.sin(math.radians(90.0 * i / n)))
+           for i in range(n + 1)]                # (R,0) up to (0,R)
+    if not wall:
+        pts = [(0.0, 0.0)] + arc                 # solid quarter disc
+    else:
+        ri = max(radius - wall, 0.05)
+        inner = [(ri * math.cos(math.radians(90.0 * i / n)),
+                  ri * math.sin(math.radians(90.0 * i / n)))
+                 for i in range(n + 1)]
+        pts = arc + list(reversed(inner))        # shell between the arcs
+    return [[round(x, 4), round(z, 4)] for x, z in pts]
+
+
+def _hemisphere(name, radius, wall=None, segments=128) -> CadNode:
+    """A hemispherical dome (or shell) as a revolved arc profile."""
+    revolve = CadNode("rotate_extrude", name,
+                      dict(angle=360.0, segments=segments))
+    revolve.add(CadNode("polygon", f"{name} profile",
+                        dict(x=0.0, y=0.0,
+                             points=_dome_profile(radius, wall))))
+    return revolve
+
+
+def hemispherical_analyser(r_out=150.0, r_in=75.0,
+                           mount=None) -> CadNode:
+    """A stylised hemispherical electron energy analyser (HSA): two
+    concentric hemispherical dome shells over an entrance base plate,
+    a stepped electron-lens column below it ending in a CF mount, and
+    a detector housing at the top."""
+    mount = mount or CF_SIZES["CF160 (DN160)"]
+    part = CadNode("union", "Hemispherical analyser")
+    part.add(_hemisphere("Outer dome", r_out, wall=8.0))
+    part.add(_hemisphere("Inner dome", r_in, wall=6.0))
+    # entrance/exit base plate (annular slab under the domes)
+    base = CadNode("difference", "Base plate")
+    base.add(_cyl("Base disc", r_out * 1.02, 12.0, z=-12.0))
+    base.add(_cyl("Base slot", r_in * 0.6, 14.0, z=-13.0))
+    part.add(base)
+    # detector housing on top of the outer dome
+    part.add(_cyl("Detector housing", r_in * 0.5, r_in * 0.7,
+                  z=r_out - 4.0))
+    # electron lens column: a stack of narrowing cylinders below the base
+    column = CadNode("union", "Lens column")
+    seg_h = r_out * 0.16
+    for i in range(4):
+        rr = r_in * (0.55 - 0.07 * i)
+        column.add(_cyl(f"Lens {i + 1}", rr, seg_h * 0.85,
+                        z=-12.0 - seg_h * (i + 1)))
+    col_bottom = -12.0 - seg_h * 4
+    # CF mounting flange at the bottom of the column, facing down
+    flange = CadNode("translate", "Mount flange", dict(
+        x=0.0, y=0.0, z=col_bottom))
+    flip = CadNode("rotate", "Face down", dict(x=180.0, y=0.0, z=0.0))
+    flip.add(cf_flange(mount, "CF mount", tube_length=seg_h))
+    flange.add(flip)
+    column.add(flange)
+    part.add(column)
+    return part
+
+
 # ----------------------------------------------------------------- parts
+
+#: hemispherical analyser classes (mean radius / mount flange).
+ANALYSER_SIZES = {
+    "R150 (CF160 mount)": dict(r_out=150.0, r_in=75.0,
+                               mount="CF160 (DN160)"),
+    "R100 (CF100 mount)": dict(r_out=100.0, r_in=50.0,
+                               mount="CF100 (DN100)"),
+}
 
 #: editable dimensions per family.
 _CF_FIELDS = [("flange_od", "Flange OD"), ("thickness", "Thickness"),
@@ -496,39 +634,68 @@ _SCREW_FIELDS = [("d", "Thread Ø"), ("pitch", "Pitch"),
 _NUT_FIELDS = [("d", "Thread Ø"), ("pitch", "Pitch"),
                ("af", "Across flats"), ("nut_h", "Thickness")]
 
-#: part id -> label, size table, editable fields.
+_VAC = "Vacuum"
+_FASTENERS = "Fasteners"
+
+#: part id -> label, category, size table, editable fields (and an
+#: optional `build` callable(dims)->CadNode for parts from other
+#: modules). Ordering is the display order within each category.
 PARTS = {
     "cf_flange": dict(label="CF flange (knife edge, tube stub)",
-                      sizes=CF_SIZES, fields=_CF_FIELDS),
+                      category=_VAC, sizes=CF_SIZES, fields=_CF_FIELDS),
     "cf_blank": dict(label="CF blank flange (knife edge)",
-                     sizes=CF_SIZES, fields=_CF_FIELDS),
+                     category=_VAC, sizes=CF_SIZES, fields=_CF_FIELDS),
     "cf_nipple": dict(label="CF nipple (straight tube)",
-                      sizes=CF_SIZES, fields=_CF_FIELDS),
-    "cf_tee": dict(label="CF tee (3 ports)", sizes=CF_SIZES,
-                   fields=_CF_FIELDS),
-    "cf_cross": dict(label="CF cross (4 ports)", sizes=CF_SIZES,
-                     fields=_CF_FIELDS),
-    "kf_flange": dict(label="KF flange (with tube)", sizes=KF_SIZES,
-                      fields=_KF_FIELDS),
-    "valve_angle": dict(label="Right-angle valve (CF)",
+                      category=_VAC, sizes=CF_SIZES, fields=_CF_FIELDS),
+    "cf_elbow": dict(label="CF elbow (90°, 2 ports)",
+                     category=_VAC, sizes=CF_SIZES, fields=_CF_FIELDS),
+    "cf_tee": dict(label="CF tee (3 ports)", category=_VAC,
+                   sizes=CF_SIZES, fields=_CF_FIELDS),
+    "cf_cross": dict(label="CF cross (4 ports)", category=_VAC,
+                     sizes=CF_SIZES, fields=_CF_FIELDS),
+    "cf_feedthrough": dict(label="CF electrical feedthrough",
+                           category=_VAC, sizes=CF_SIZES,
+                           fields=_CF_FIELDS),
+    "kf_flange": dict(label="KF flange (with tube)", category=_VAC,
+                      sizes=KF_SIZES, fields=_KF_FIELDS),
+    "kf_nipple": dict(label="KF nipple (straight tube)", category=_VAC,
+                      sizes=KF_SIZES, fields=_KF_FIELDS),
+    "kf_elbow": dict(label="KF elbow (90°, 2 ports)", category=_VAC,
+                     sizes=KF_SIZES, fields=_KF_FIELDS),
+    "kf_tee": dict(label="KF tee (3 ports)", category=_VAC,
+                   sizes=KF_SIZES, fields=_KF_FIELDS),
+    "kf_feedthrough": dict(label="KF electrical feedthrough",
+                           category=_VAC, sizes=KF_SIZES,
+                           fields=_KF_FIELDS),
+    "valve_angle": dict(label="Right-angle valve (CF)", category=_VAC,
                         sizes=CF_SIZES, fields=_CF_FIELDS),
     "valve_gate": dict(label="Gate valve (CF, VAT style)",
-                       sizes=CF_SIZES, fields=_CF_FIELDS),
-    "bolt_hex": dict(label="Hex bolt, threaded (DIN 933)",
-                     sizes=BOLT_SIZES, fields=_BOLT_FIELDS),
-    "bolt_socket": dict(label="Socket head cap screw (DIN 912)",
-                        sizes=BOLT_SIZES, fields=_SCREW_FIELDS),
-    "nut_hex": dict(label="Hex nut, threaded (DIN 934)",
-                    sizes=BOLT_SIZES, fields=_NUT_FIELDS),
-    "turbo": dict(label="Turbo pump (simplified shell)",
+                       category=_VAC, sizes=CF_SIZES, fields=_CF_FIELDS),
+    "turbo": dict(label="Turbo pump (simplified shell)", category=_VAC,
                   sizes=TURBO_SIZES,
                   fields=[("body_od", "Body OD"),
                           ("body_height", "Body height")]),
+    "analyser_hsa": dict(label="Hemispherical analyser (HSA)",
+                         category=_VAC, sizes=ANALYSER_SIZES,
+                         fields=[("r_out", "Outer radius"),
+                                 ("r_in", "Inner radius")]),
+    "bolt_hex": dict(label="Hex bolt, threaded (DIN 933)",
+                     category=_FASTENERS, sizes=BOLT_SIZES,
+                     fields=_BOLT_FIELDS),
+    "bolt_socket": dict(label="Socket head cap screw (DIN 912)",
+                        category=_FASTENERS, sizes=BOLT_SIZES,
+                        fields=_SCREW_FIELDS),
+    "nut_hex": dict(label="Hex nut, threaded (DIN 934)",
+                    category=_FASTENERS, sizes=BOLT_SIZES,
+                    fields=_NUT_FIELDS),
 }
 
 
 def build_part(part_id: str, dims: dict) -> CadNode:
     """Build the requested part from (possibly customised) *dims*."""
+    spec = PARTS.get(part_id)
+    if spec and callable(spec.get("build")):     # parts from other modules
+        return spec["build"](dict(dims))
     p = dict(dims)
     length = p.pop("port_length", 60.0)
     if part_id in ("bolt_hex", "bolt_socket", "nut_hex"):
@@ -549,9 +716,28 @@ def build_part(part_id: str, dims: dict) -> CadNode:
     if part_id == "cf_cross":
         return cf_fitting(p, ["+X", "-X", "+Z", "-Z"], "CF cross",
                           length)
+    if part_id == "cf_elbow":
+        return cf_fitting(p, ["+Z", "+X"], "CF elbow", length)
+    if part_id == "cf_feedthrough":
+        return feedthrough(p, "cf")
     if part_id == "kf_flange":
         return kf_flange(p, tube_length=max(length - p["thickness"],
                                             0.0))
+    if part_id == "kf_nipple":
+        return kf_fitting(p, ["+Z", "-Z"], "KF nipple", length)
+    if part_id == "kf_elbow":
+        return kf_fitting(p, ["+Z", "+X"], "KF elbow", length)
+    if part_id == "kf_tee":
+        return kf_fitting(p, ["+X", "-X", "+Z"], "KF tee", length)
+    if part_id == "kf_feedthrough":
+        return feedthrough(p, "kf")
+    if part_id == "analyser_hsa":
+        entry = ANALYSER_SIZES.get(p.pop("_size", ""),
+                                   ANALYSER_SIZES["R150 (CF160 mount)"])
+        return hemispherical_analyser(
+            r_out=p.get("r_out", entry["r_out"]),
+            r_in=p.get("r_in", entry["r_in"]),
+            mount=CF_SIZES[entry["mount"]])
     if part_id == "valve_angle":
         return angle_valve(p, port_length=length)
     if part_id == "valve_gate":
@@ -589,10 +775,19 @@ class PartLibraryDialog(QDialog):
         self.setModal(False)
         self.resize(560, 420)
 
+        # category filter above the part list (keeps 30+ parts navigable)
+        self._category = QComboBox()
+        cats = []
+        for spec in PARTS.values():
+            cat = spec.get("category", "Other")
+            if cat not in cats:
+                cats.append(cat)
+        self._category.addItem("All")
+        self._category.addItems(cats)
+        self._category.currentTextChanged.connect(self._populate_parts)
+
         self._parts = QListWidget()
-        for part_id, spec in PARTS.items():
-            self._parts.addItem(spec["label"])
-        self._parts.setCurrentRow(0)
+        self._visible_ids = []
         self._parts.currentRowChanged.connect(self._part_changed)
 
         self._size = QComboBox()
@@ -600,6 +795,11 @@ class PartLibraryDialog(QDialog):
 
         self._form = QFormLayout()
         self._fields = {}
+
+        left = QVBoxLayout()
+        left.addWidget(QLabel("Category:"))
+        left.addWidget(self._category)
+        left.addWidget(self._parts, 1)
 
         right = QVBoxLayout()
         right.addWidget(QLabel("Standard size:"))
@@ -617,16 +817,35 @@ class PartLibraryDialog(QDialog):
         right.addWidget(buttons)
 
         layout = QHBoxLayout(self)
-        layout.addWidget(self._parts, 1)
+        layout.addLayout(left, 1)
         layout.addLayout(right, 1)
-        self._part_changed(0)
+        self._populate_parts()
 
     # ------------------------------------------------------------ state
+    def _populate_parts(self, _cat=None):
+        """Fill the part list with the entries in the chosen category."""
+        want = self._category.currentText()
+        self._visible_ids = [pid for pid, spec in PARTS.items()
+                             if want == "All"
+                             or spec.get("category", "Other") == want]
+        self._parts.blockSignals(True)
+        self._parts.clear()
+        for pid in self._visible_ids:
+            self._parts.addItem(PARTS[pid]["label"])
+        self._parts.blockSignals(False)
+        if self._visible_ids:
+            self._parts.setCurrentRow(0)      # fires _part_changed
+
     def _part_id(self):
-        return list(PARTS)[self._parts.currentRow()]
+        row = self._parts.currentRow()
+        if 0 <= row < len(self._visible_ids):
+            return self._visible_ids[row]
+        return self._visible_ids[0] if self._visible_ids else None
 
     def _part_changed(self, _row):
         part_id = self._part_id()
+        if part_id is None:
+            return
         sizes = PARTS[part_id]["sizes"]
         self._size.blockSignals(True)
         self._size.clear()
@@ -648,10 +867,11 @@ class PartLibraryDialog(QDialog):
                 item.widget().deleteLater()
         self._fields.clear()
         part_id = self._part_id()
+        if part_id is None:
+            return
         spec = PARTS[part_id]
         if not spec["sizes"]:
-            self._form.addRow(QLabel("Built-in dimensions "
-                                     "(CF100 inlet, KF25 exhaust)"))
+            self._form.addRow(QLabel("Built-in dimensions"))
             return
         for key, label in spec["fields"]:
             if key == "bolts":
@@ -668,6 +888,8 @@ class PartLibraryDialog(QDialog):
 
     def _load_size(self):
         part_id = self._part_id()
+        if part_id is None:
+            return
         sizes = PARTS[part_id]["sizes"]
         if not sizes or not self._fields:
             return
@@ -682,6 +904,8 @@ class PartLibraryDialog(QDialog):
     # ------------------------------------------------------------ insert
     def _insert(self):
         part_id = self._part_id()
+        if part_id is None:
+            return
         dims = {key: box.value() for key, box in self._fields.items()}
         if self._size.isEnabled():
             dims["_size"] = self._size.currentText()
