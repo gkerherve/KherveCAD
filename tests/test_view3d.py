@@ -105,6 +105,29 @@ def test_styles_render_distinctly(app):
     assert dist(avgs["Matte"], avgs["Shaded"]) > 60
 
 
+def test_backface_culling_keeps_the_solid_opaque(app):
+    """Culling back faces must not make a closed solid see-through:
+    the centre of a shaded cube stays a solid surface colour."""
+    from PyQt5.QtCore import QSize
+    from PyQt5.QtGui import QColor, QImage, QPainter
+    from khervecad.style import tokens
+    view = View3D()
+    view.resize(300, 300)
+    view.set_mesh(_cube(), "test")
+    view.fit()
+    view.set_style("Shaded")
+    img = QImage(QSize(300, 300), QImage.Format_ARGB32)
+    img.fill(0)
+    painter = QPainter(img)
+    view.render(painter)
+    painter.end()
+    bg = QColor(tokens()["editor"])
+    c = img.pixelColor(150, 150)
+    diff = (abs(c.red() - bg.red()) + abs(c.green() - bg.green())
+            + abs(c.blue() - bg.blue()))
+    assert diff > 20                          # a face is drawn, not the bg
+
+
 def test_fit_centers_the_model(app):
     """fit() frames the mesh centred in the pane and filling most of
     the height, so it never sits low with dead space above."""

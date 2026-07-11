@@ -155,6 +155,23 @@ def test_cube_and_sphere_have_size_handles(window):
     assert [d["role"] for d in dims] == ["radius"]
 
 
+def test_isolated_bounds_frames_selected_part(window):
+    """Selecting a part yields a scene rect the 2D view zooms to; with
+    nothing selected the whole assembly is shown and there is none."""
+    m = window.model
+    part = library.build_part("cf_nipple",
+                              dict(library.CF_SIZES["CF40 (DN40)"],
+                                   port_length=40.0))
+    m.root.add(part)
+    m.structure_changed.emit()
+    window.builder.tree.select_nodes([part])
+    rect = window.scene.isolated_bounds()
+    assert rect is not None
+    assert rect.width() > 0 and rect.height() > 0
+    window.builder.tree.select_nodes([])
+    assert window.scene.isolated_bounds() is None
+
+
 def test_revolve_part_has_no_size_handles(window):
     m = window.model
     part = library.build_part("cf_flange",

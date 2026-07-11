@@ -649,6 +649,19 @@ class SketchScene(QGraphicsScene):
             rect = box if rect is None else rect.united(box)
         return rect
 
+    def isolated_bounds(self):
+        """Scene bounds of the object shown alone — a 3D part silhouette
+        or an edited 2D profile — so the view can zoom to fit it on
+        selection. None when the whole assembly is on screen."""
+        if not (self._isolating() or self._focus_shapes()):
+            return None
+        rect = None
+        for item in list(self._part_items.values()) \
+                + list(self._items.values()):
+            box = item.sceneBoundingRect()
+            rect = box if rect is None else rect.united(box)
+        return rect
+
     def _make_silhouette(self, node):
         """The selected node's real projected outline in the current
         plane — the union of its projected triangles, so concavities

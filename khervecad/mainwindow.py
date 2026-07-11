@@ -478,9 +478,9 @@ class MainWindow(QMainWindow):
         the 2D (projected outline) and 3D (glowing faces) views."""
         self._selected_ids = {n.id for n in nodes}
         self.scene.set_highlight(nodes)
-        # when a 2D profile is opened for editing, frame it so it is
-        # visible even if it sits far from the current view centre
-        rect = self.scene.focus_shape_rect()
+        # zoom the 2D view to the selected object (a part silhouette or
+        # an edited profile) so it is framed and centred, not clipped
+        rect = self.scene.isolated_bounds()
         if rect is not None:
             self.view2d.frame_rect(rect)
         self.view3d.set_highlight_mesh(

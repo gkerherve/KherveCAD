@@ -181,7 +181,10 @@ class View3D(QWidget):
         from .style import tokens
         t = tokens()
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+        # antialiasing is the single biggest cost; skip it while the user
+        # is orbiting/panning for snappy feedback, then repaint crisp on
+        # release (see mouseReleaseEvent)
+        painter.setRenderHint(QPainter.Antialiasing, self._mode is None)
         painter.fillRect(self.rect(), QColor(t["editor"]))
 
         eye, right, up, forward = self._camera()
@@ -197,13 +200,16 @@ class View3D(QWidget):
         hlen = math.sqrt(sum(c * c for c in half)) or 1.0
         half = tuple(c / hlen for c in half)
 
+        # For an opaque closed solid the back-facing triangles are hidden
+        # behind the front ones, so skip them: this roughly halves the
+        # polygons projected, sorted and painted. Translucent / wireframe
+        # styles need every face, so culling is disabled for them.
+        style = self.style
+        cull = style not in ("Wireframe", "X-ray")
+        tex, tey, tez = to_eye
+
         faces = []
         for index, tri in enumerate(self.mesh):
-            pts = [self._project(eye, right, up, forward, v)
-                   for v in tri]
-            if any(p is None for p in pts):
-                continue
-            depth = (pts[0][2] + pts[1][2] + pts[2][2]) / 3
             ux, uy, uz = (tri[1][0] - tri[0][0], tri[1][1] - tri[0][1],
                           tri[1][2] - tri[0][2])
             vx, vy, vz = (tri[2][0] - tri[0][0], tri[2][1] - tri[0][1],
@@ -214,6 +220,13 @@ class View3D(QWidget):
             if length < 1e-12:
                 continue
             nx, ny, nz = nx / length, ny / length, nz / length
+            if cull and nx * tex + ny * tey + nz * tez < 0.0:
+                continue                       # back-facing: not visible
+            pts = [self._project(eye, right, up, forward, v)
+                   for v in tri]
+            if any(p is None for p in pts):
+                continue
+            depth = (pts[0][2] + pts[1][2] + pts[2][2]) / 3
             shade = abs(nx * light[0] + ny * light[1] + nz * light[2])
             spec = max(nx * half[0] + ny * half[1] + nz * half[2], 0.0)
             face_color = self.colors[index] if self.colors else None
@@ -240,7 +253,6 @@ class View3D(QWidget):
             faces.append((depth, pts, shade, 0.0, None, True))
 
         faces.sort(key=lambda f: -f[0])
-        style = self.style
         edge = QColor(t["border"])
         edge.setAlpha(60)
         pen = QPen(edge)
@@ -365,6 +377,7 @@ class View3D(QWidget):
     def mouseReleaseEvent(self, event):
         self._last = None
         self._mode = None
+        self.update()                     # repaint the final frame crisp
 
     def mouseMoveEvent(self, event):
         if self._last is None:
