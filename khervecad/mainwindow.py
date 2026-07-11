@@ -82,8 +82,11 @@ class MainWindow(QMainWindow):
         left = QSplitter(Qt.Vertical)
         left.addWidget(self.builder)
         left.addWidget(self.properties)
-        left.setStretchFactor(0, 3)
-        left.setStretchFactor(1, 2)
+        # give the Properties panel roughly the same height as the tree
+        # (it holds a tall form + point tables), and let both grow
+        left.setStretchFactor(0, 1)
+        left.setStretchFactor(1, 1)
+        left.setSizes([380, 470])
 
         right = QSplitter(Qt.Vertical)
         right.addWidget(self.view2d)
@@ -96,7 +99,9 @@ class MainWindow(QMainWindow):
         split.addWidget(right)
         split.setStretchFactor(0, 0)
         split.setStretchFactor(1, 1)
-        split.setSizes([340, 1060])
+        # a wider left column so property fields (often expressions like
+        # "seat_w - inset - leg_t") are readable
+        split.setSizes([430, 970])
         self.setCentralWidget(split)
 
         # ---- wiring
