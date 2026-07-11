@@ -91,8 +91,10 @@ class MainWindow(QMainWindow):
         right = QSplitter(Qt.Vertical)
         right.addWidget(self.view2d)
         right.addWidget(self.view3d)
-        right.setStretchFactor(0, 3)
-        right.setStretchFactor(1, 2)
+        # give the 3D preview the larger share of the right column
+        right.setStretchFactor(0, 2)
+        right.setStretchFactor(1, 3)
+        right.setSizes([360, 500])
 
         split = QSplitter(Qt.Horizontal)
         split.addWidget(left)
