@@ -450,3 +450,18 @@ def test_selected_object_shows_size_and_cursor(window):
     window._cursor_moved(QPointF(12.3, 45.6))
     assert "12.3" in window._cursor_label.text()
     assert "45.6" in window._cursor_label.text()
+
+
+def test_tree_keeps_collapsed_group_when_adding(window):
+    m = window.model
+    g = m.add_node("union")
+    m.add_node("cube", parent=g)
+    m.structure_changed.emit()
+    tree = window.builder.tree
+    assert tree._item_of(g).isExpanded()        # open by default
+    tree._item_of(g).setExpanded(False)         # user collapses it
+    m.add_node("sphere")                        # adding triggers a rebuild
+    assert not tree._item_of(g).isExpanded()    # stays collapsed
+    tree._item_of(g).setExpanded(True)
+    m.add_node("cylinder")
+    assert tree._item_of(g).isExpanded()        # re-expand persists too

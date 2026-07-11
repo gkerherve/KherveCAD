@@ -24,8 +24,8 @@ from PyQt5.QtWidgets import QWidget
 _SETTINGS = ("Kherve", "KherveCAD")
 
 #: 3D render styles: how each face's shade becomes a colour.
-RENDER_STYLES = ["Shaded", "Brushed metal", "Matte", "Wireframe",
-                 "X-ray"]
+RENDER_STYLES = ["Shaded", "Matte", "Clay", "Toon", "Brushed metal",
+                 "Gold", "Copper", "Wireframe", "X-ray"]
 
 
 class View3D(QWidget):
@@ -336,12 +336,33 @@ class View3D(QWidget):
             c = QColor.fromHsvF(hue, sat * 0.5,
                                 min((0.62 + 0.3 * shade) * val, 1.0))
             return c, None
+        if style == "Clay":
+            # neutral warm modelling clay — good for reading pure form
+            c = QColor.fromHsvF(0.07, 0.20,
+                                min((0.5 + 0.45 * shade) * val, 1.0))
+            return c, None
+        if style == "Toon":
+            # cel shading: quantise the light into a few flat bands
+            band = round(shade * 3.0) / 3.0
+            c = QColor.fromHsvF(hue, min(sat * 0.95, 1.0),
+                                min((0.45 + 0.55 * band) * val, 1.0))
+            return c, None
         if style == "Brushed metal":
             # near-grey steel with a bright, tight specular streak
             highlight = spec ** 16
             v = min((0.28 + 0.45 * shade) * val + 0.7 * highlight, 1.0)
             s = sat * 0.22 * (1.0 - highlight)
             return QColor.fromHsvF(hue, s, v), None
+        if style == "Gold":
+            highlight = spec ** 20
+            v = min((0.32 + 0.5 * shade) + 0.65 * highlight, 1.0)
+            return QColor.fromHsvF(0.125, 0.72 * (1.0 - highlight * 0.6),
+                                   v), None
+        if style == "Copper":
+            highlight = spec ** 20
+            v = min((0.30 + 0.5 * shade) + 0.65 * highlight, 1.0)
+            return QColor.fromHsvF(0.045, 0.68 * (1.0 - highlight * 0.6),
+                                   v), None
         # Shaded (default): rich, glossy — the reference look
         gloss = spec ** 10
         v = min((0.30 + 0.70 * shade) * val + 0.45 * gloss, 1.0)

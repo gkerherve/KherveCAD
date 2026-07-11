@@ -57,6 +57,10 @@ class ObjectTree(QTreeWidget):
         self.model = model
         self._updating = False
         self.errors = {}                      # node id -> message
+        #: {node id: expanded?} — the user's own expand/collapse, kept
+        #: across rebuilds so adding an object never re-opens a group
+        #: you collapsed.
+        self._expand_state = {}
         self.setHeaderLabels(["Object"])
         self.setHeaderHidden(True)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
@@ -67,6 +71,8 @@ class ObjectTree(QTreeWidget):
         self.customContextMenuRequested.connect(self._context_menu)
         self.itemChanged.connect(self._item_changed)
         self.itemSelectionChanged.connect(self._emit_selection)
+        self.itemExpanded.connect(self._remember_expanded)
+        self.itemCollapsed.connect(self._remember_collapsed)
         self.itemDoubleClicked.connect(
             lambda item, _col: self.editItem(item, 0))
         model.structure_changed.connect(self.rebuild)
@@ -93,19 +99,27 @@ class ObjectTree(QTreeWidget):
                 if n is not None]
 
     def rebuild(self):
-        expanded = {self.node_of(item).id
-                    for item in self._all_items()
-                    if item.isExpanded() and self.node_of(item)}
         selected = {n.id for n in self.selected_nodes()}
         self._updating = True
         self.clear()
         for child in self.model.root.children:
-            self._build_item(child, self.invisibleRootItem(),
-                             expanded, selected)
+            self._build_item(child, self.invisibleRootItem(), selected)
         self._updating = False
         self._emit_selection()
 
-    def _build_item(self, node, parent_item, expanded, selected):
+    def _remember_expanded(self, item):
+        if not self._updating:
+            node = self.node_of(item)
+            if node is not None:
+                self._expand_state[node.id] = True
+
+    def _remember_collapsed(self, item):
+        if not self._updating:
+            node = self.node_of(item)
+            if node is not None:
+                self._expand_state[node.id] = False
+
+    def _build_item(self, node, parent_item, selected):
         item = QTreeWidgetItem(parent_item)
         item.setData(0, Qt.UserRole, node.id)
         item.setFlags(item.flags() | Qt.ItemIsEditable
@@ -115,16 +129,17 @@ class ObjectTree(QTreeWidget):
         if not node.is_container():
             item.setFlags(item.flags() & ~Qt.ItemIsDropEnabled)
         self._decorate(item, node)
-        # containers open by default, except the Variables group which
-        # starts collapsed (it holds a long list); either way the user's
-        # own expand/collapse is remembered via *expanded*
-        if node.id in expanded or (node.is_container()
-                                   and node.type != "variables"):
-            item.setExpanded(True)
+        # honour the user's own expand/collapse (remembered across
+        # rebuilds); a brand-new container defaults to open, except the
+        # Variables group which starts collapsed
+        if node.is_container():
+            default_open = node.type != "variables"
+            if self._expand_state.get(node.id, default_open):
+                item.setExpanded(True)
         if node.id in selected:
             item.setSelected(True)
         for child in node.children:
-            self._build_item(child, item, expanded, selected)
+            self._build_item(child, item, selected)
 
     def _decorate(self, item, node):
         item.setText(0, node.name)
