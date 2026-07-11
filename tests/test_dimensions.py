@@ -85,3 +85,33 @@ def test_switching_tool_clears_measurement(window):
     sc._measure_b = QPointF(3.0, 4.0)
     window.view2d.set_tool(view2d.SELECT)
     assert sc._measure_a is None and sc._measure_b is None
+
+
+def test_fmt_mm_trims_trailing_zeros():
+    assert view2d._fmt_mm(30.0) == "30 mm"
+    assert view2d._fmt_mm(30.5) == "30.5 mm"
+    assert view2d._fmt_mm(36.056) == "36.06 mm"
+    assert view2d._fmt_mm(0.0) == "0 mm"
+
+
+def test_auto_dims_render_for_every_shape(window):
+    from PyQt5.QtGui import QPainter, QPixmap
+    m = window.model
+    rect = m.add_node("rect", dict(width=30.0, height=20.0))
+    circ = m.add_node("circle", dict(radius=8.0, x=50.0, y=10.0))
+    line = m.add_node("line", dict(x1=0.0, y1=40.0, x2=25.0, y2=55.0))
+    app = QApplication.instance()
+    app.processEvents()
+    sc = window.scene
+    assert sc.show_dims                    # on by default
+    for node in (rect, circ, line):
+        it = sc._items.get(node.id)
+        if it:
+            it.setSelected(True)
+    app.processEvents()
+    # rendering the overlay with every shape type selected must not raise
+    pm = QPixmap(500, 400)
+    pm.fill()
+    painter = QPainter(pm)
+    window.view2d.render(painter)
+    painter.end()

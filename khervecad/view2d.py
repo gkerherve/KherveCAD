@@ -51,6 +51,12 @@ def _pen(color: str, width=_SHAPE_PEN_W) -> QPen:
     return pen
 
 
+def _fmt_mm(value: float) -> str:
+    """A tidy millimetre label: no trailing zeros (30, 30.5, 36.06)."""
+    text = f"{value:.2f}".rstrip("0").rstrip(".")
+    return f"{text or '0'} mm"
+
+
 class HandleItem(QGraphicsRectItem):
     """Square resize handle, constant size on screen."""
 
@@ -505,6 +511,7 @@ class SketchScene(QGraphicsScene):
         self.grid_size = 0.5
         self.snap_enabled = True
         self.show_grid = True
+        self.show_dims = True                  # auto size on selection
         self.updating = False
         self._items = {}                       # node id -> shape item
         self._part_items = {}                  # node id -> part item
@@ -521,6 +528,8 @@ class SketchScene(QGraphicsScene):
         self._measure_cursor = None
         model.structure_changed.connect(self.rebuild)
         model.node_changed.connect(self._node_changed)
+        # repaint the overlay so auto size-on-selection follows the pick
+        self.selectionChanged.connect(self.update)
         self.rebuild()
 
     def set_plane(self, plane: str):
@@ -994,6 +1003,7 @@ class SketchScene(QGraphicsScene):
             self.updating = True
             item.apply_node()
             self.updating = False
+            self.update()                # auto dims track a live resize
 
     def _in_part(self, node) -> bool:
         probe = node
@@ -1352,52 +1362,56 @@ class SketchView(QGraphicsView):
             painter.drawText(int(x0 + px / 2 - 20), y0 - 8, label)
         # measurement + dimension annotations, drawn in view space so
         # text and arrows keep a constant size at any zoom
+        self._draw_auto_dims(painter)
         self._draw_measure(painter)
         painter.restore()
 
     # ----------------------------------------------------- dimensions
-    def _draw_dim(self, painter, a_scene, b_scene, *, color, bg,
-                  text=None):
-        """Draw a dimension line between two *scene* points: line with
-        arrowheads, snap dots and the measured value on a chip."""
+    def _dim_screen(self, painter, pa, pb, *, color, bg, text,
+                    offset=0.0, dots=True):
+        """Core dimension renderer in *view/pixel* space: an offset
+        dimension line with extension lines, arrowheads and a value
+        chip. ``pa``/``pb`` are the measured points (QPointF, px)."""
         from math import hypot
-        pa = QPointF(self.mapFromScene(a_scene))
-        pb = QPointF(self.mapFromScene(b_scene))
         vx, vy = pb.x() - pa.x(), pb.y() - pa.y()
         plen = hypot(vx, vy)
         if plen < 1e-6:
             return
-        ux, uy = vx / plen, vy / plen           # along the line (px)
-        nx, ny = -uy, ux                         # perpendicular (px)
-        line_pen = QPen(color, 1.5)
-        line_pen.setCosmetic(True)
-        painter.setPen(line_pen)
-        painter.drawLine(pa, pb)
-        # arrowheads
+        ux, uy = vx / plen, vy / plen           # along the line
+        nx, ny = -uy, ux                         # perpendicular
+        oa = QPointF(pa.x() + nx * offset, pa.y() + ny * offset)
+        ob = QPointF(pb.x() + nx * offset, pb.y() + ny * offset)
+        pen = QPen(color, 1.5)
+        pen.setCosmetic(True)
+        thin = QPen(color, 1.0)
+        thin.setCosmetic(True)
+        if abs(offset) > 0.5:                    # extension lines
+            gx, gy = nx * 3, ny * 3              # small gap off geometry
+            over = QPointF(nx * (offset + 4), ny * (offset + 4))
+            painter.setPen(thin)
+            painter.drawLine(QPointF(pa.x() + gx, pa.y() + gy),
+                             QPointF(pa.x() + over.x(), pa.y() + over.y()))
+            painter.drawLine(QPointF(pb.x() + gx, pb.y() + gy),
+                             QPointF(pb.x() + over.x(), pb.y() + over.y()))
+        painter.setPen(pen)
+        painter.drawLine(oa, ob)
         painter.setBrush(QBrush(color))
-        for tip, sgn in ((pa, 1.0), (pb, -1.0)):
+        for tip, sgn in ((oa, 1.0), (ob, -1.0)):
             base = QPointF(tip.x() + sgn * ux * 9, tip.y() + sgn * uy * 9)
             painter.drawPolygon(QPolygonF([
                 tip,
                 QPointF(base.x() + nx * 4, base.y() + ny * 4),
                 QPointF(base.x() - nx * 4, base.y() - ny * 4)]))
-        # snap dots at each end
-        painter.setBrush(QBrush(color))
-        for p in (pa, pb):
-            painter.drawEllipse(p, 2.6, 2.6)
-        # value chip at the midpoint, nudged clear of the line
-        if text is None:
-            dist = hypot(a_scene.x() - b_scene.x(),
-                         a_scene.y() - b_scene.y())
-            text = f"{dist:.2f} mm"
-        mid = QPointF((pa.x() + pb.x()) / 2 + nx * 13,
-                      (pa.y() + pb.y()) / 2 + ny * 13)
+        if dots:
+            for p in (pa, pb):
+                painter.drawEllipse(p, 2.6, 2.6)
+        mid = QPointF((oa.x() + ob.x()) / 2 + nx * 12,
+                      (oa.y() + ob.y()) / 2 + ny * 12)
         font = painter.font()
         font.setBold(True)
         painter.setFont(font)
         fm = painter.fontMetrics()
-        tw = fm.horizontalAdvance(text)
-        th = fm.height()
+        tw, th = fm.horizontalAdvance(text), fm.height()
         chip = QRectF(mid.x() - tw / 2 - 5, mid.y() - th / 2 - 2,
                       tw + 10, th + 4)
         painter.setPen(Qt.NoPen)
@@ -1406,6 +1420,20 @@ class SketchView(QGraphicsView):
         painter.setPen(QPen(color, 1.0))
         painter.setBrush(Qt.NoBrush)
         painter.drawText(chip, Qt.AlignCenter, text)
+
+    def _draw_dim(self, painter, a_scene, b_scene, *, color, bg,
+                  text=None, offset=0.0, dots=True):
+        """Dimension between two *scene* points (mm)."""
+        from math import hypot
+        if text is None:
+            dist = hypot(a_scene.x() - b_scene.x(),
+                         a_scene.y() - b_scene.y())
+            text = _fmt_mm(dist)
+        self._dim_screen(painter,
+                         QPointF(self.mapFromScene(a_scene)),
+                         QPointF(self.mapFromScene(b_scene)),
+                         color=color, bg=bg, text=text,
+                         offset=offset, dots=dots)
 
     def _draw_measure(self, painter):
         scene = self.scene()
@@ -1418,6 +1446,52 @@ class SketchView(QGraphicsView):
         t = tokens()
         self._draw_dim(painter, a, b,
                        color=QColor(t["select"]), bg=QColor(t["card"]))
+
+    # ---------------------------------------------- auto size on select
+    def _draw_auto_dims(self, painter):
+        """When shapes are selected, annotate each one's own size — the
+        way a part is dimensioned on a 2D drawing."""
+        scene = self.scene()
+        if not getattr(scene, "show_dims", True) or scene.tool != SELECT:
+            return
+        from .style import tokens
+        t = tokens()
+        color, bg = QColor(t["gutter"]), QColor(t["card"])
+        for item in scene.selectedItems():
+            if isinstance(item, (ShapeItem, PartItem)):
+                self._auto_dim_item(painter, item, color, bg)
+
+    def _auto_dim_item(self, painter, item, color, bg):
+        if isinstance(item, CircleShapeItem):        # ⌀ across the centre
+            c = item.mapToScene(item.rect().center())
+            r = abs(item.rect().width()) / 2.0
+            self._draw_dim(painter,
+                           QPointF(c.x() - r, c.y()),
+                           QPointF(c.x() + r, c.y()),
+                           color=color, bg=bg, dots=False,
+                           text="⌀ " + _fmt_mm(2 * r))
+            return
+        if isinstance(item, LineShapeItem):          # length beside it
+            ln = item.line()
+            self._draw_dim(painter, item.mapToScene(ln.p1()),
+                           item.mapToScene(ln.p2()),
+                           color=color, bg=bg, dots=False, offset=18)
+            return
+        r = item.sceneBoundingRect()                 # bounding W × H
+        if r.width() < 1e-6 or r.height() < 1e-6:
+            return
+        pts = [QPointF(self.mapFromScene(c)) for c in
+               (r.topLeft(), r.topRight(), r.bottomLeft(), r.bottomRight())]
+        xs = [p.x() for p in pts]
+        ys = [p.y() for p in pts]
+        sl, sr, stop, sbot = min(xs), max(xs), min(ys), max(ys)
+        # width below the box, height on the right (screen space)
+        self._dim_screen(painter, QPointF(sl, sbot), QPointF(sr, sbot),
+                         color=color, bg=bg, text=_fmt_mm(r.width()),
+                         offset=22, dots=False)
+        self._dim_screen(painter, QPointF(sr, sbot), QPointF(sr, stop),
+                         color=color, bg=bg, text=_fmt_mm(r.height()),
+                         offset=22, dots=False)
 
     def wheelEvent(self, event):
         factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15

@@ -356,6 +356,17 @@ class MainWindow(QMainWindow):
         view_menu.addSeparator()
         view_menu.addAction(self._grid_act)
         view_menu.addAction(self._snap_act)
+        from PyQt5.QtCore import QSettings
+        show_dims = QSettings("Kherve", "KherveCAD").value(
+            "show_dims", True, type=bool)
+        self.scene.show_dims = show_dims
+        self._dims_act = QAction(icons.icon("mdi.ruler-square"),
+                                 "Dimensions on selection", self)
+        self._dims_act.setCheckable(True)
+        self._dims_act.setChecked(show_dims)
+        self._dims_act.setToolTip("Show the size of selected shapes")
+        self._dims_act.toggled.connect(self._set_show_dims)
+        view_menu.addAction(self._dims_act)
         view_menu.addSeparator()
         view_menu.addAction("Zoom &In", lambda: self.view2d.zoom(1.25),
                             "Ctrl++")
@@ -478,6 +489,12 @@ class MainWindow(QMainWindow):
     def _set_show_grid(self, show):
         self.scene.show_grid = show
         self.view2d.viewport().update()
+
+    def _set_show_dims(self, show):
+        self.scene.show_dims = show
+        self.view2d.viewport().update()
+        from PyQt5.QtCore import QSettings
+        QSettings("Kherve", "KherveCAD").setValue("show_dims", show)
 
     def _set_snap(self, snap):
         self.scene.snap_enabled = snap
