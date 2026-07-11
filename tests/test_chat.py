@@ -72,6 +72,73 @@ def test_reply_parsing():
                                                {"content": "y"}}) == "y"
 
 
+def test_fetch_models_parses_and_filters(monkeypatch):
+    import io
+    import json
+    import urllib.request
+
+    payloads = {
+        "https://api.openai.com/v1/models": {"data": [
+            {"id": "gpt-5.2"}, {"id": "o4-mini"},
+            {"id": "text-embedding-3-large"}, {"id": "dall-e-3"}]},
+        "https://api.anthropic.com/v1/models": {"data": [
+            {"id": "claude-opus-4-8"}, {"id": "claude-haiku-4-5"}]},
+        "https://api.mistral.ai/v1/models": {"data": [
+            {"id": "mistral-large-latest"}, {"id": "mistral-embed"}]},
+        "https://ollama.com/api/tags": {"models": [
+            {"name": "gpt-oss:120b-cloud"},
+            {"model": "llama3.3:70b-cloud"}]},
+    }
+
+    class FakeResp(io.BytesIO):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def fake_urlopen(req, timeout=0):
+        return FakeResp(json.dumps(payloads[req.full_url]).encode())
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    # OpenAI keeps only chat models
+    assert chat.fetch_models("OpenAI", "k") == ["gpt-5.2", "o4-mini"]
+    # Mistral drops embedding models
+    assert chat.fetch_models("Mistral", "k") == ["mistral-large-latest"]
+    # Ollama reads name/model keys
+    assert chat.fetch_models("Ollama (Cloud)", "k") == \
+        ["gpt-oss:120b-cloud", "llama3.3:70b-cloud"]
+
+
+def test_get_set_models_round_trip():
+    from PyQt5.QtCore import QSettings
+    try:
+        assert chat.get_models("Claude") == \
+            chat.AI_PROVIDERS["Claude"]["models"]   # default when empty
+        chat.set_models("Claude", ["claude-x", "claude-y"])
+        assert chat.get_models("Claude") == ["claude-x", "claude-y"]
+        # a single cached entry still returns as a list
+        chat.set_models("Claude", ["claude-solo"])
+        assert chat.get_models("Claude") == ["claude-solo"]
+    finally:
+        QSettings("Kherve", "KherveCAD").remove("chat/models/Claude")
+
+
+def test_config_dialog_has_model_refresh(window):
+    from PyQt5.QtCore import QSettings
+    dlg = chat.ChatConfigDialog(window)          # parented: clean teardown
+    try:
+        assert dlg.refresh_btn.isEnabled()
+        dlg.provider.setCurrentText("OpenAI")
+        dlg._models_loaded(["gpt-9", "o9-mini"])
+        combo = [dlg.model.itemText(i)
+                 for i in range(dlg.model.count())]
+        assert combo == ["gpt-9", "o9-mini"]
+        assert "loaded" in dlg.status.text()
+    finally:
+        QSettings("Kherve", "KherveCAD").remove("chat/models/OpenAI")
+
+
 def test_slash_list_and_code(window):
     window.model.add_node("cube")
     panel = window.chat

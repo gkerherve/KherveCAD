@@ -128,6 +128,67 @@ def set_api_key(provider: str, key: str):
     QSettings(*_SETTINGS).setValue(f"chat/api_keys/{provider}", key)
 
 
+def get_models(provider: str) -> list:
+    """The model list for *provider*: a previously refreshed list from
+    settings, else the built-in defaults."""
+    cached = QSettings(*_SETTINGS).value(f"chat/models/{provider}", None)
+    if isinstance(cached, str):                # a lone entry round-trips
+        cached = [cached]                      # as a bare string
+    if cached:
+        return [str(m) for m in cached]
+    return list(AI_PROVIDERS.get(provider, {}).get("models", []))
+
+
+def set_models(provider: str, models: list):
+    QSettings(*_SETTINGS).setValue(f"chat/models/{provider}",
+                                   list(models))
+
+
+#: Where each provider lists its available models (GET, same auth as
+#: the chat endpoint).
+_MODELS_URLS = {
+    "Claude": "https://api.anthropic.com/v1/models",
+    "OpenAI": "https://api.openai.com/v1/models",
+    "Mistral": "https://api.mistral.ai/v1/models",
+    "Ollama (Cloud)": "https://ollama.com/api/tags",
+}
+
+
+def _keep_model(provider: str, model_id: str) -> bool:
+    """Drop non-chat models the list endpoints also return."""
+    lid = model_id.lower()
+    if provider == "OpenAI":
+        return lid.startswith(("gpt", "o1", "o3", "o4", "chatgpt"))
+    if provider == "Mistral":
+        return not any(bad in lid for bad in
+                       ("embed", "ocr", "moderation"))
+    return True
+
+
+def fetch_models(provider: str, key: str) -> list:
+    """Live model ids from the provider's list endpoint."""
+    url = _MODELS_URLS.get(provider)
+    if not url:
+        return []
+    config = AI_PROVIDERS[provider]
+    headers = {}
+    if config["header_format"] == "Bearer":
+        headers["Authorization"] = f"Bearer {key}"
+    elif config["header_format"] == "x-api-key":
+        headers["x-api-key"] = key
+        headers["anthropic-version"] = "2023-06-01"
+    request = urllib.request.Request(url, headers=headers, method="GET")
+    with urllib.request.urlopen(request, timeout=30) as reply:
+        payload = json.loads(reply.read().decode())
+    if provider == "Ollama (Cloud)":
+        items = payload.get("models", [])
+        ids = [m.get("name") or m.get("model") for m in items]
+    else:
+        items = payload.get("data", [])
+        ids = [m.get("id") for m in items]
+    return [i for i in ids if i and _keep_model(provider, i)]
+
+
 def build_request(provider: str, model: str, messages, system: str):
     """Request body per provider — same formats as KherveAI."""
     if provider == "Claude":
@@ -210,12 +271,38 @@ class ChatWorker(QThread):
             self.failed.emit("empty reply from provider")
 
 
+class ModelListWorker(QThread):
+    """Fetch a provider's model list off the GUI thread."""
+
+    loaded = pyqtSignal(list)
+    failed = pyqtSignal(str)
+
+    def __init__(self, provider, key, parent=None):
+        super().__init__(parent)
+        self.provider, self.key = provider, key
+
+    def run(self):
+        try:
+            models = fetch_models(self.provider, self.key)
+        except urllib.error.HTTPError as exc:
+            self.failed.emit(f"HTTP {exc.code}: {exc.reason}")
+            return
+        except Exception as exc:
+            self.failed.emit(str(exc))
+            return
+        if models:
+            self.loaded.emit(models)
+        else:
+            self.failed.emit("no models returned")
+
+
 class ChatConfigDialog(QDialog):
     """Provider / model / API key settings (persisted via QSettings)."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("KherveAI settings")
+        self._mworker = None
         settings = QSettings(*_SETTINGS)
 
         self.provider = QComboBox()
@@ -225,16 +312,29 @@ class ChatConfigDialog(QDialog):
         self.provider.currentTextChanged.connect(self._provider_changed)
 
         self.model = QComboBox()
+        self.refresh_btn = QToolButton()
+        self.refresh_btn.setIcon(icons.icon("mdi.refresh"))
+        self.refresh_btn.setToolTip(
+            "Refresh — fetch the latest models from the provider")
+        self.refresh_btn.clicked.connect(self._refresh_models)
+        model_row = QHBoxLayout()
+        model_row.setContentsMargins(0, 0, 0, 0)
+        model_row.addWidget(self.model, 1)
+        model_row.addWidget(self.refresh_btn)
+
         self.key = QLineEdit()
         self.key.setEchoMode(QLineEdit.Password)
         self.key_link = QLabel()
         self.key_link.setOpenExternalLinks(True)
+        self.status = QLabel()
+        self.status.setStyleSheet("color:#888888")
 
         form = QFormLayout(self)
         form.addRow("Provider", self.provider)
-        form.addRow("Model", self.model)
+        form.addRow("Model", model_row)
         form.addRow("API key", self.key)
         form.addRow("", self.key_link)
+        form.addRow("", self.status)
         buttons = QDialogButtonBox(QDialogButtonBox.Ok
                                    | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self._save)
@@ -250,12 +350,42 @@ class ChatConfigDialog(QDialog):
     def _provider_changed(self, provider):
         config = AI_PROVIDERS[provider]
         self.model.clear()
-        self.model.addItems(config["models"])
+        self.model.addItems(get_models(provider))
         self.key.setText(get_api_key(provider))
         self.key.setPlaceholderText(
             f"or set {config['key_env']} in the environment")
         self.key_link.setText(
             f'<a href="{config["key_url"]}">Get a key</a>')
+        self.status.clear()
+
+    def _refresh_models(self):
+        provider = self.provider.currentText()
+        key = self.key.text().strip() or get_api_key(provider)
+        if AI_PROVIDERS[provider]["requires_key"] and not key:
+            self.status.setText("Enter the API key first, then refresh.")
+            return
+        self.refresh_btn.setEnabled(False)
+        self.status.setText(f"Fetching {provider} models…")
+        self._mworker = ModelListWorker(provider, key, self)
+        self._mworker.loaded.connect(self._models_loaded)
+        self._mworker.failed.connect(self._models_failed)
+        self._mworker.finished.connect(
+            lambda: self.refresh_btn.setEnabled(True))
+        self._mworker.start()
+
+    def _models_loaded(self, models):
+        provider = self.provider.currentText()
+        set_models(provider, models)
+        current = self.model.currentText()
+        self.model.clear()
+        self.model.addItems(models)
+        index = self.model.findText(current)
+        if index >= 0:
+            self.model.setCurrentIndex(index)
+        self.status.setText(f"{len(models)} models loaded.")
+
+    def _models_failed(self, message):
+        self.status.setText("Couldn't fetch models: " + message)
 
     def _save(self):
         settings = QSettings(*_SETTINGS)
@@ -415,9 +545,10 @@ class ChatPanel(QWidget):
         if provider not in AI_PROVIDERS:
             provider = "Claude"
         config = AI_PROVIDERS[provider]
-        model = settings.value("chat/model", config["models"][0])
-        if model not in config["models"]:
-            model = config["models"][0]
+        models = get_models(provider)
+        model = settings.value("chat/model", models[0])
+        if model not in models:
+            model = models[0]
         key = get_api_key(provider)
         if config["requires_key"] and not key:
             self._append_note(
