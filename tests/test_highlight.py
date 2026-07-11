@@ -170,6 +170,7 @@ def test_dimension_handle_drag_smooth_through_real_handlers(window):
     tube = next(n for n in part.walk()
                 if n.name == "Tube" and n.type == "cylinder")
     window.builder.tree.select_nodes([tube])
+    window.scene.snap_enabled = False             # test continuous drag
     item = window.scene._part_items[tube.id]
 
     spec = next(d for d in item._dims if d["role"] == "radius_bottom")
@@ -192,6 +193,40 @@ def test_dimension_handle_drag_smooth_through_real_handlers(window):
     assert all(b >= a - 1e-6 for a, b in zip(values, values[1:]))
     assert abs(values[-1] - (start + 12.0)) < 0.05
     assert tube.params["radius_top"] == start     # untouched
+
+
+def test_dimension_handle_snaps_radius_to_grid(window):
+    """With grid snap on, a radius drag lands on grid multiples; off,
+    it is continuous."""
+    from PyQt5.QtCore import QPointF
+    m = window.model
+    part = library.build_part("cf_nipple",
+                              dict(library.CF_SIZES["CF40 (DN40)"],
+                                   port_length=50.0))
+    m.root.add(part)
+    m.structure_changed.emit()
+    window._set_plane("Front (XZ)")
+    tube = next(n for n in part.walk()
+                if n.name == "Tube" and n.type == "cylinder")
+    window.builder.tree.select_nodes([tube])
+    item = window.scene._part_items[tube.id]
+    spec = next(d for d in item._dims if d["role"] == "radius_bottom")
+    handle = next(h for h in item.handles if h.role == "radius_bottom")
+    ax, ay = spec["axis"]
+    grab = QPointF(handle.pos())
+
+    window.scene.snap_enabled = True
+    window.scene.grid_size = 5.0
+    handle.mousePressEvent(_SceneEvt(grab))
+    handle.mouseMoveEvent(_SceneEvt(
+        QPointF(grab.x() + ax * 13.2, grab.y() + ay * 13.2)))
+    assert tube.params["radius_bottom"] % 5.0 == 0.0   # snapped to grid
+
+    window.scene.snap_enabled = False
+    handle.mousePressEvent(_SceneEvt(grab))
+    handle.mouseMoveEvent(_SceneEvt(
+        QPointF(grab.x() + ax * 13.2, grab.y() + ay * 13.2)))
+    assert tube.params["radius_bottom"] % 5.0 != 0.0   # continuous
 
 
 def test_cube_and_sphere_have_size_handles(window):

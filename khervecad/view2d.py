@@ -443,8 +443,14 @@ class PartItem(QGraphicsPathItem):
         # never jitters, and unaffected by the handle itself moving
         travel = ((scene_pos.x() - spec["_grab"].x()) * ax
                   + (scene_pos.y() - spec["_grab"].y()) * ay) / denom
-        value = max(spec["_start"] + travel * spec["factor"],
-                    spec["minval"])
+        value = spec["_start"] + travel * spec["factor"]
+        # snap the resulting dimension to the grid (not the cursor — that
+        # was what made the drag erratic); a plain round keeps radii on
+        # nice increments without any jitter
+        if self._scene.snap_enabled:
+            g = self._scene.grid_size
+            value = round(value / g) * g
+        value = max(value, spec["minval"])
         self.node.params[spec["param"]] = round(value, 4)
         self._scene.model.node_changed.emit(self.node)
         # slide the grabbed handle to reflect the new size (feedback)
