@@ -27,6 +27,17 @@ _SETTINGS = ("Kherve", "KherveCAD")
 RENDER_STYLES = ["Shaded", "Matte", "Clay", "Toon", "Brushed metal",
                  "Gold", "Copper", "Wireframe", "X-ray"]
 
+#: 3D viewport backgrounds. "Theme" tracks the app theme; the rest are
+#: explicit (top, bottom) pairs painted as a vertical gradient.
+BACKGROUNDS = {
+    "Theme": None,
+    "Studio": ("#f4f6f8", "#c9d2da"),
+    "Light": ("#fbfbfb", "#ededed"),
+    "Slate": ("#3a4048", "#22262b"),
+    "Dark": ("#2b2f33", "#16181b"),
+    "Blueprint": ("#123a6b", "#0a1f3d"),
+}
+
 
 class View3D(QWidget):
     """Orbiting shaded view of a triangle mesh."""
@@ -46,8 +57,11 @@ class View3D(QWidget):
         #: set once the user orbits/pans/zooms, so the app stops
         #: auto-refitting their view out from under them.
         self.user_moved = False
-        saved = QSettings(*_SETTINGS).value("render_style", "Shaded")
+        settings = QSettings(*_SETTINGS)
+        saved = settings.value("render_style", "Shaded")
         self.style = saved if saved in RENDER_STYLES else "Shaded"
+        bg = settings.value("render_bg", "Theme")
+        self.background = bg if bg in BACKGROUNDS else "Theme"
         self.setMinimumHeight(160)
         self.setMouseTracking(False)
 
@@ -56,6 +70,24 @@ class View3D(QWidget):
             self.style = style
             QSettings(*_SETTINGS).setValue("render_style", style)
             self.update()
+
+    def set_background(self, name: str):
+        if name in BACKGROUNDS:
+            self.background = name
+            QSettings(*_SETTINGS).setValue("render_bg", name)
+            self.update()
+
+    def _fill_background(self, painter, tokens):
+        pair = BACKGROUNDS.get(self.background)
+        if pair is None:                       # "Theme": follow the app
+            painter.fillRect(self.rect(), QColor(tokens["editor"]))
+            return
+        from PyQt5.QtGui import QLinearGradient
+        top, bottom = pair
+        grad = QLinearGradient(0, 0, 0, self.height())
+        grad.setColorAt(0.0, QColor(top))
+        grad.setColorAt(1.0, QColor(bottom))
+        painter.fillRect(self.rect(), grad)
 
     #: standard camera orientations (yaw, pitch) in degrees.
     VIEWS = {
@@ -188,7 +220,7 @@ class View3D(QWidget):
         # is orbiting/panning for snappy feedback, then repaint crisp on
         # release (see mouseReleaseEvent)
         painter.setRenderHint(QPainter.Antialiasing, self._mode is None)
-        painter.fillRect(self.rect(), QColor(t["editor"]))
+        self._fill_background(painter, t)
 
         eye, right, up, forward = self._camera()
         self._draw_ground(painter, t, eye, right, up, forward)
@@ -311,7 +343,12 @@ class View3D(QWidget):
             painter.drawPolygon(poly)
 
         self._draw_axes(painter, t, eye, right, up, forward)
-        painter.setPen(QColor(t["text"]))
+        pair = BACKGROUNDS.get(self.background)
+        if pair is None:
+            painter.setPen(QColor(t["text"]))
+        else:                                  # readable over the chosen bg
+            dark = QColor(pair[1]).lightnessF() < 0.5
+            painter.setPen(QColor("#e8e8e8") if dark else QColor("#333333"))
         painter.drawText(8, self.height() - 8,
                          f"{self.source} — {len(self.mesh)} triangles "
                          f"· {self.style}")

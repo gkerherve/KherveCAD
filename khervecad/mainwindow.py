@@ -359,7 +359,7 @@ class MainWindow(QMainWindow):
             views_menu.addAction(
                 name, lambda _=False, n=name: self.view3d.set_view(n))
         view_menu.addSeparator()
-        from .view3d import RENDER_STYLES
+        from .view3d import BACKGROUNDS, RENDER_STYLES
         style_menu = view_menu.addMenu("3D &Render Style")
         style_group = QActionGroup(self)
         for name in RENDER_STYLES:
@@ -369,6 +369,15 @@ class MainWindow(QMainWindow):
                 lambda _, n=name: self.view3d.set_style(n))
             style_group.addAction(act)
             style_menu.addAction(act)
+        bg_menu = view_menu.addMenu("3D &Background")
+        bg_group = QActionGroup(self)
+        for name in BACKGROUNDS:
+            act = QAction(name, self, checkable=True)
+            act.setChecked(name == self.view3d.background)
+            act.triggered.connect(
+                lambda _, n=name: self.view3d.set_background(n))
+            bg_group.addAction(act)
+            bg_menu.addAction(act)
         view_menu.addSeparator()
         theme_menu = view_menu.addMenu("&Theme")
         theme_group = QActionGroup(self)

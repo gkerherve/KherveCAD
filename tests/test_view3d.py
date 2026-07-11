@@ -187,3 +187,26 @@ def test_orbiting_marks_user_moved(app):
 
     view.mouseMoveEvent(_Evt(10, 0))
     assert view.user_moved is True             # app stops auto-refitting
+
+
+def test_backgrounds_paint_without_error(app):
+    from PyQt5.QtCore import QSize
+    from PyQt5.QtGui import QImage, QPainter
+    from khervecad.view3d import BACKGROUNDS
+    view = View3D()
+    view.resize(120, 120)
+    view.set_mesh([((0, 0, 0), (10, 0, 0), (0, 10, 0))], "test")
+    view.fit()
+    for name in BACKGROUNDS:
+        view.set_background(name)
+        assert view.background == name
+        view.grab()
+    # a gradient background differs top vs bottom
+    view.set_background("Dark")
+    img = QImage(QSize(120, 120), QImage.Format_ARGB32)
+    img.fill(0)
+    p = QPainter(img)
+    view.render(p)
+    p.end()
+    assert img.pixelColor(60, 3) != img.pixelColor(60, 117)
+    view.set_background("Theme")               # restore default
