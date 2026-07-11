@@ -224,7 +224,7 @@ def fmt(value) -> str:
         return "true" if value else "false"
     if isinstance(value, float):
         text = f"{value:.4f}".rstrip("0").rstrip(".")
-        return text if text not in ("", "-") else "0"
+        return text if text not in ("", "-", "-0") else "0"
     return str(value)
 
 

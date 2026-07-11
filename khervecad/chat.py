@@ -492,10 +492,21 @@ class ChatPanel(QWidget):
         from . import library
         model = self.window.model
         if not args:
-            self._append_note("usage: /part cf40 tee — or /part turbo")
+            self._append_note("usage: /part cf40 tee · /part m6 bolt "
+                              "· /part turbo")
             return
         if args[0].lower() == "turbo":
             node = library.build_part("turbo", {})
+        elif args[0].upper() in library.BOLT_SIZES:
+            dims = dict(library.BOLT_SIZES[args[0].upper()])
+            kind = args[1].lower() if len(args) > 1 else "bolt"
+            part_id = {"bolt": "bolt_hex", "screw": "bolt_socket",
+                       "nut": "nut_hex"}.get(kind)
+            if part_id is None:
+                self._append_note("kinds: bolt, screw, nut")
+                return
+            node = library.build_part(part_id, dims)
+            node.name = f"{args[0].upper()} {node.name}"
         else:
             size_key = next((k for k in library.CF_SIZES
                              if k.lower().startswith(args[0].lower())),

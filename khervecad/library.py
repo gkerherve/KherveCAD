@@ -1,15 +1,25 @@
 """Parts library — parametric vacuum hardware built from tree nodes.
 
 CF (ConFlat) and KF (Quick Flange) flanges, straight nipples, tees
-and crosses in the conventional sizes, plus a simplified turbo pump
-shell. Every part is generated as an ordinary node subtree (cylinders,
-booleans and a for-loop for the bolt circle), so inserted parts stay
-fully editable and the generated OpenSCAD reads like a human wrote
-it. Dimensions are editable before insertion — any size works, the
-tables only pre-fill the standard ones.
+and crosses in the conventional sizes, threaded fasteners (hex bolts,
+socket head cap screws and hex nuts with real helical ISO threads),
+plus a simplified turbo pump shell. Every part is generated as an
+ordinary node subtree, so inserted parts stay fully editable and the
+generated OpenSCAD reads like a human wrote it. Dimensions are
+editable before insertion — any size works, the tables only pre-fill
+the standard ones.
 
-Dimensions are simplified (no knife edges or o-ring grooves) but
-follow the conventional envelope sizes in millimetres.
+CF flanges are modelled from the manufacturer cross-section drawings
+(Kurt J. Lesker / VACGen style): the whole flange is one revolved
+profile with the recessed sealing face, the **knife edge** at the
+gasket seal diameter, the gasket seat wall and the edge chamfers —
+then the bolt circle is subtracted with a for-loop.
+
+Threads use the OpenSCAD twist-extrude idiom: a thread-form
+cross-section (root flat, 60° flanks, crest flat between the minor
+and major radii) extruded with ``twist = -360 * length / pitch``
+yields a true single-start helical V-thread. Nuts subtract the same
+solid with clearance, so nuts really thread onto their bolts.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -19,6 +29,8 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
+import math
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QComboBox, QDialog, QDialogButtonBox,
                              QDoubleSpinBox, QFormLayout, QHBoxLayout,
@@ -26,23 +38,47 @@ from PyQt5.QtWidgets import (QComboBox, QDialog, QDialogButtonBox,
 
 from .model import CadNode, DocumentModel
 
-#: CF (ConFlat) conventional sizes, mm.
+#: CF (ConFlat) conventional sizes, mm (gasket_od = copper gasket
+#: outer diameter, which locates the knife edge and the recess).
 CF_SIZES = {
     "CF16 (DN16)": dict(flange_od=34.0, thickness=7.5,
                         bolt_circle=27.0, bolts=6, bolt_hole=4.4,
-                        bore=16.0, tube_od=19.1),
+                        bore=16.0, tube_od=19.1, gasket_od=21.3),
     "CF40 (DN40)": dict(flange_od=69.9, thickness=12.7,
                         bolt_circle=58.7, bolts=6, bolt_hole=6.6,
-                        bore=35.0, tube_od=38.1),
+                        bore=35.0, tube_od=38.1, gasket_od=48.3),
     "CF63 (DN63)": dict(flange_od=114.3, thickness=17.5,
                         bolt_circle=92.1, bolts=8, bolt_hole=8.4,
-                        bore=60.0, tube_od=63.5),
+                        bore=60.0, tube_od=63.5, gasket_od=82.6),
     "CF100 (DN100)": dict(flange_od=152.4, thickness=20.0,
                           bolt_circle=130.3, bolts=16, bolt_hole=8.4,
-                          bore=97.0, tube_od=101.6),
+                          bore=97.0, tube_od=101.6, gasket_od=120.7),
     "CF160 (DN160)": dict(flange_od=203.2, thickness=22.3,
                           bolt_circle=181.0, bolts=20, bolt_hole=8.4,
-                          bore=147.0, tube_od=152.4),
+                          bore=147.0, tube_od=152.4, gasket_od=171.5),
+}
+
+#: ISO metric coarse fasteners, mm (DIN 933 hex head / DIN 912 socket
+#: head / DIN 934 nut). af = across flats, socket = hex key size.
+BOLT_SIZES = {
+    "M3": dict(d=3.0, pitch=0.5, af=5.5, head_h=2.0, socket=2.5,
+               nut_h=2.4, length=12.0),
+    "M4": dict(d=4.0, pitch=0.7, af=7.0, head_h=2.8, socket=3.0,
+               nut_h=3.2, length=16.0),
+    "M5": dict(d=5.0, pitch=0.8, af=8.0, head_h=3.5, socket=4.0,
+               nut_h=4.0, length=20.0),
+    "M6": dict(d=6.0, pitch=1.0, af=10.0, head_h=4.0, socket=5.0,
+               nut_h=5.0, length=20.0),
+    "M8": dict(d=8.0, pitch=1.25, af=13.0, head_h=5.3, socket=6.0,
+               nut_h=6.5, length=25.0),
+    "M10": dict(d=10.0, pitch=1.5, af=17.0, head_h=6.4, socket=8.0,
+                nut_h=8.0, length=30.0),
+    "M12": dict(d=12.0, pitch=1.75, af=19.0, head_h=7.5, socket=10.0,
+                nut_h=10.0, length=40.0),
+    "M16": dict(d=16.0, pitch=2.0, af=24.0, head_h=10.0, socket=14.0,
+                nut_h=13.0, length=50.0),
+    "M20": dict(d=20.0, pitch=2.5, af=30.0, head_h=12.5, socket=17.0,
+                nut_h=16.0, length=60.0),
 }
 
 #: KF (Quick Flange / QF) conventional sizes, mm.
@@ -86,21 +122,154 @@ def _bolt_holes(p, z, height):
     return loop
 
 
+# -------------------------------------------------------------- threads
+
+#: ISO 60-degree thread form as fractions of one pitch around the
+#: cross-section: root flat, rising flank, crest flat, falling flank.
+_THREAD_FORM = (0.25, 0.3125, 0.125, 0.3125)
+
+
+def thread_profile(d_major: float, pitch: float, n: int = 72):
+    """Cross-section polygon for a twist-extruded helical thread: a
+    circle whose radius traces the ISO thread form (minor radius at
+    the root, 60° flanks, flat crest at the major radius) once around.
+    Extruded with twist = -360*L/pitch this sweeps a true V-thread."""
+    depth = 0.6134 * pitch                    # ISO: 5H/8 engagement
+    r_minor = d_major / 2.0 - depth
+    root, rise, crest, fall = _THREAD_FORM
+
+    def radius(u):
+        if u < root:
+            return r_minor
+        u -= root
+        if u < rise:
+            return r_minor + depth * (u / rise)
+        u -= rise
+        if u < crest:
+            return d_major / 2.0
+        u -= crest
+        return d_major / 2.0 - depth * (u / fall)
+    return [[round(radius(i / n) * math.cos(2 * math.pi * i / n), 4),
+             round(radius(i / n) * math.sin(2 * math.pi * i / n), 4)]
+            for i in range(n)]
+
+
+def thread_solid(d: float, pitch: float, length: float,
+                 clearance: float = 0.0, name: str = "Thread") -> CadNode:
+    """A threaded cylinder: thread-form polygon + twisted extrusion.
+    *clearance* grows the major diameter (for the hole in a nut)."""
+    turns = length / pitch
+    ext = CadNode("linear_extrude", name, dict(
+        height=length, twist=round(-360.0 * turns, 2), scale=1.0,
+        center=False, segments=max(int(turns * 8), 16)))
+    ext.add(CadNode("polygon", f"{name} profile", dict(
+        x=0.0, y=0.0,
+        points=thread_profile(d + 2.0 * clearance, pitch))))
+    return ext
+
+
+def _hex(name, af, height, z=0.0):
+    """Hexagonal prism: a 6-segment cylinder with the circumradius
+    that gives *af* across flats."""
+    return _cyl(name, round(af / math.sqrt(3.0), 3), height, z=z,
+                segments=6)
+
+
+def hex_bolt(p, length: float) -> CadNode:
+    """DIN 933 style hex head bolt, fully threaded."""
+    part = CadNode("union", "Hex bolt")
+    part.add(thread_solid(p["d"], p["pitch"], length))
+    part.add(_hex("Hex head", p["af"], p["head_h"], z=length))
+    return part
+
+
+def socket_screw(p, length: float) -> CadNode:
+    """DIN 912 style socket head cap screw with hex socket."""
+    part = CadNode("difference", "Socket head screw")
+    solid = CadNode("union", "Screw body")
+    solid.add(thread_solid(p["d"], p["pitch"], length))
+    solid.add(_cyl("Cap head", 0.75 * p["d"], p["d"], z=length,
+                   segments=48))
+    part.add(solid)
+    part.add(_hex("Hex socket", p["socket"], 0.6 * p["d"] + 1.0,
+                  z=length + 0.4 * p["d"]))
+    return part
+
+
+def hex_nut(p) -> CadNode:
+    """DIN 934 style hex nut — the threaded hole is the bolt thread
+    subtracted with clearance, so it really mates."""
+    part = CadNode("difference", "Hex nut")
+    part.add(_hex("Nut body", p["af"], p["nut_h"]))
+    hole = CadNode("translate", "Thread hole", dict(x=0.0, y=0.0,
+                                                    z=-1.0))
+    hole.add(thread_solid(p["d"], p["pitch"], p["nut_h"] + 2.0,
+                          clearance=0.15, name="Internal thread"))
+    part.add(hole)
+    return part
+
+
 # ------------------------------------------------------------- flanges
 
+#: CF sealing face constants (from manufacturer drawings), mm.
+_CF_RECESS_DEPTH = 1.6       # sealing-face counterbore depth
+_CF_KNIFE_HEIGHT = 1.1       # knife edge rise above the recess floor
+_CF_KNIFE_SETBACK = 0.9      # knife tip radius inside the gasket OD
+_CF_SEAT_CLEARANCE = 0.3     # recess wall outside the gasket OD
+_CF_CHAMFER = 1.0            # outer edge chamfers
+
+
+def cf_profile(p, tube_length: float = 0.0):
+    """The revolved cross-section of a ConFlat flange, as (radius, z)
+    points — the same view a Lesker/VACGen drawing shows. z = 0 is
+    the flange back, z = thickness the sealing face; the tube extends
+    below z = 0. Features, from the bore outward: recess floor, the
+    knife edge (70° ridge at the gasket seal diameter), recess wall
+    (gasket seat) and chamfered outer edge."""
+    r_od = p["flange_od"] / 2.0
+    t = p["thickness"]
+    r_bore = max(p["bore"], 0.0) / 2.0
+    r_tube = p["tube_od"] / 2.0
+    r_seat = p["gasket_od"] / 2.0 + _CF_SEAT_CLEARANCE
+    r_knife = p["gasket_od"] / 2.0 - _CF_KNIFE_SETBACK
+    floor = t - _CF_RECESS_DEPTH
+    tip = floor + _CF_KNIFE_HEIGHT
+    half_base = _CF_KNIFE_HEIGHT * math.tan(math.radians(35.0))
+    cham = min(_CF_CHAMFER, t / 4.0)
+
+    points = [(r_bore, floor)]               # bore meets the recess
+    if tube_length > 0 and r_tube > r_bore:
+        points += [(r_bore, -tube_length), (r_tube, -tube_length),
+                   (r_tube, 0.0)]
+    else:
+        points += [(r_bore, 0.0)]
+    points += [
+        (r_od - cham, 0.0), (r_od, cham),     # back edge chamfer
+        (r_od, t - cham), (r_od - cham, t),   # face edge chamfer
+        (r_seat, t),                          # face in to the recess
+        (r_seat, floor),                      # gasket seat wall
+        (r_knife + half_base, floor),         # floor to the knife
+        (r_knife, tip),                       # knife edge tip
+        (r_knife - half_base, floor),         # back to the floor
+    ]
+    return [[round(x, 4), round(z, 4)] for x, z in points]
+
+
+def cf_flange_solid(p, tube_length: float = 0.0,
+                    name: str = "CF flange") -> CadNode:
+    """The revolved (knife-edged) flange body without bolt holes."""
+    revolve = CadNode("rotate_extrude", f"{name} revolve",
+                      dict(angle=360.0, segments=128))
+    revolve.add(CadNode("polygon", f"{name} profile", dict(
+        x=0.0, y=0.0, points=cf_profile(p, tube_length))))
+    return revolve
+
+
 def cf_flange(p, name="CF flange", tube_length=0.0) -> CadNode:
-    """A ConFlat flange: disc + optional tube stub, bore and bolt
-    circle subtracted."""
-    solid = CadNode("union", f"{name} solid")
-    solid.add(_cyl("Flange disc", p["flange_od"] / 2.0,
-                   p["thickness"]))
-    total = p["thickness"] + tube_length
-    if tube_length > 0:
-        solid.add(_cyl("Tube stub", p["tube_od"] / 2.0, tube_length,
-                       z=p["thickness"]))
+    """A ConFlat flange with the true sealing geometry — recessed
+    face, knife edge, gasket seat — and the bolt circle subtracted."""
     part = CadNode("difference", name)
-    part.add(solid)
-    part.add(_cyl("Bore", p["bore"] / 2.0, total + 2.0, z=-1.0))
+    part.add(cf_flange_solid(p, tube_length, name))
     part.add(_bolt_holes(p, z=-1.0, height=p["thickness"] + 2.0))
     return part
 
@@ -140,9 +309,10 @@ def cf_fitting(p, ports, name="CF fitting",
         frame = CadNode("rotate", f"Port {port}",
                         dict(x=rx, y=ry, z=rz))
         frame.add(_cyl("Tube", p["tube_od"] / 2.0, port_length))
-        frame.add(_cyl("Flange disc", p["flange_od"] / 2.0,
-                       p["thickness"],
-                       z=port_length - p["thickness"]))
+        lift = CadNode("translate", "Flange position", dict(
+            x=0.0, y=0.0, z=port_length - p["thickness"]))
+        lift.add(cf_flange_solid(p, 0.0, f"Flange {port}"))
+        frame.add(lift)
         solid.add(frame)
     for port in ports:
         rx, ry, rz = _PORTS[port]
@@ -229,44 +399,63 @@ def turbo_pump(inlet=None, exhaust=None, body_height=110.0,
 
 # ----------------------------------------------------------------- parts
 
-#: part id -> (label, size table or None, builder kwargs schema)
-PARTS = {
-    "cf_flange": ("CF flange (bored, with tube stub)", CF_SIZES),
-    "cf_blank": ("CF blank flange (no tube)", CF_SIZES),
-    "cf_nipple": ("CF nipple (straight tube)", CF_SIZES),
-    "cf_tee": ("CF tee (3 ports)", CF_SIZES),
-    "cf_cross": ("CF cross (4 ports)", CF_SIZES),
-    "kf_flange": ("KF flange (with tube)", KF_SIZES),
-    "turbo": ("Turbo pump shell (simplified)", None),
-}
-
-#: editable dimensions per size-table family.
+#: editable dimensions per family.
 _CF_FIELDS = [("flange_od", "Flange OD"), ("thickness", "Thickness"),
               ("bolt_circle", "Bolt circle Ø"), ("bolts", "Bolt count"),
               ("bolt_hole", "Bolt hole Ø"), ("bore", "Bore Ø"),
-              ("tube_od", "Tube OD"), ("port_length", "Port length")]
+              ("tube_od", "Tube OD"), ("gasket_od", "Gasket OD"),
+              ("port_length", "Port length")]
 _KF_FIELDS = [("flange_od", "Flange OD"), ("thickness", "Thickness"),
               ("bore", "Bore Ø"), ("tube_od", "Tube OD"),
               ("port_length", "Tube length")]
+_BOLT_FIELDS = [("d", "Thread Ø"), ("pitch", "Pitch"),
+                ("length", "Length"), ("af", "Across flats"),
+                ("head_h", "Head height")]
+_SCREW_FIELDS = [("d", "Thread Ø"), ("pitch", "Pitch"),
+                 ("length", "Length"), ("socket", "Hex key size")]
+_NUT_FIELDS = [("d", "Thread Ø"), ("pitch", "Pitch"),
+               ("af", "Across flats"), ("nut_h", "Thickness")]
+
+#: part id -> label, size table, editable fields.
+PARTS = {
+    "cf_flange": dict(label="CF flange (knife edge, tube stub)",
+                      sizes=CF_SIZES, fields=_CF_FIELDS),
+    "cf_blank": dict(label="CF blank flange (knife edge)",
+                     sizes=CF_SIZES, fields=_CF_FIELDS),
+    "cf_nipple": dict(label="CF nipple (straight tube)",
+                      sizes=CF_SIZES, fields=_CF_FIELDS),
+    "cf_tee": dict(label="CF tee (3 ports)", sizes=CF_SIZES,
+                   fields=_CF_FIELDS),
+    "cf_cross": dict(label="CF cross (4 ports)", sizes=CF_SIZES,
+                     fields=_CF_FIELDS),
+    "kf_flange": dict(label="KF flange (with tube)", sizes=KF_SIZES,
+                      fields=_KF_FIELDS),
+    "bolt_hex": dict(label="Hex bolt, threaded (DIN 933)",
+                     sizes=BOLT_SIZES, fields=_BOLT_FIELDS),
+    "bolt_socket": dict(label="Socket head cap screw (DIN 912)",
+                        sizes=BOLT_SIZES, fields=_SCREW_FIELDS),
+    "nut_hex": dict(label="Hex nut, threaded (DIN 934)",
+                    sizes=BOLT_SIZES, fields=_NUT_FIELDS),
+    "turbo": dict(label="Turbo pump shell (simplified)", sizes=None,
+                  fields=[]),
+}
 
 
 def build_part(part_id: str, dims: dict) -> CadNode:
     """Build the requested part from (possibly customised) *dims*."""
     p = dict(dims)
     length = p.pop("port_length", 60.0)
+    if part_id in ("bolt_hex", "bolt_socket", "nut_hex"):
+        defaults = dict(BOLT_SIZES["M6"])
+        defaults.update(p)
+        p = defaults
     if part_id == "cf_flange":
         return cf_flange(p, tube_length=max(length - p["thickness"],
                                             0.0))
     if part_id == "cf_blank":
         blank = dict(p)
         blank["bore"] = 0.0
-        part = CadNode("difference", "CF blank flange")
-        solid = CadNode("union", "Blank solid")
-        solid.add(_cyl("Flange disc", p["flange_od"] / 2.0,
-                       p["thickness"]))
-        part.add(solid)
-        part.add(_bolt_holes(p, z=-1.0, height=p["thickness"] + 2.0))
-        return part
+        return cf_flange(blank, "CF blank flange", tube_length=0.0)
     if part_id == "cf_nipple":
         return cf_fitting(p, ["+Z", "-Z"], "CF nipple", length)
     if part_id == "cf_tee":
@@ -277,6 +466,12 @@ def build_part(part_id: str, dims: dict) -> CadNode:
     if part_id == "kf_flange":
         return kf_flange(p, tube_length=max(length - p["thickness"],
                                             0.0))
+    if part_id == "bolt_hex":
+        return hex_bolt(p, p["length"])
+    if part_id == "bolt_socket":
+        return socket_screw(p, p["length"])
+    if part_id == "nut_hex":
+        return hex_nut(p)
     if part_id == "turbo":
         return turbo_pump()
     raise ValueError(f"unknown part: {part_id}")
@@ -295,8 +490,8 @@ class PartLibraryDialog(QDialog):
         self.resize(560, 420)
 
         self._parts = QListWidget()
-        for part_id, (label, _sizes) in PARTS.items():
-            self._parts.addItem(label)
+        for part_id, spec in PARTS.items():
+            self._parts.addItem(spec["label"])
         self._parts.setCurrentRow(0)
         self._parts.currentRowChanged.connect(self._part_changed)
 
@@ -330,7 +525,7 @@ class PartLibraryDialog(QDialog):
 
     def _part_changed(self, _row):
         part_id = self._part_id()
-        sizes = PARTS[part_id][1]
+        sizes = PARTS[part_id]["sizes"]
         self._size.blockSignals(True)
         self._size.clear()
         if sizes:
@@ -351,13 +546,12 @@ class PartLibraryDialog(QDialog):
                 item.widget().deleteLater()
         self._fields.clear()
         part_id = self._part_id()
-        sizes = PARTS[part_id][1]
-        if not sizes:
+        spec = PARTS[part_id]
+        if not spec["sizes"]:
             self._form.addRow(QLabel("Built-in dimensions "
                                      "(CF100 inlet, KF25 exhaust)"))
             return
-        fields = _CF_FIELDS if sizes is CF_SIZES else _KF_FIELDS
-        for key, label in fields:
+        for key, label in spec["fields"]:
             if key == "bolts":
                 box = QSpinBox()
                 box.setRange(1, 64)
@@ -372,7 +566,7 @@ class PartLibraryDialog(QDialog):
 
     def _load_size(self):
         part_id = self._part_id()
-        sizes = PARTS[part_id][1]
+        sizes = PARTS[part_id]["sizes"]
         if not sizes or not self._fields:
             return
         dims = dict(sizes.get(self._size.currentText(),

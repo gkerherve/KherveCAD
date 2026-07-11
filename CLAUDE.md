@@ -61,11 +61,19 @@ into a new module and import.
                        Unknown constructs are skipped with warnings.
                        Round-trip (export -> import -> export) is
                        lossless and tested.
-  - `library.py`     — parametric vacuum parts (CF16-CF160 and
-                       KF16-KF50 flanges, blank/nipple/tee/cross,
-                       simplified turbo pump shell) + the Insert >
-                       Part Library dialog. Parts are ordinary node
-                       subtrees; bolt circles are for-loops.
+  - `library.py`     — parametric vacuum parts + fasteners + the
+                       Insert > Part Library dialog. CF flanges
+                       (CF16-CF160) are one revolved cross-section
+                       per the Lesker/VACGen drawings: recessed
+                       sealing face, **knife edge** at the gasket
+                       seal diameter, seat wall, chamfers; also KF
+                       flanges, blank/nipple/tee/cross, a simplified
+                       turbo shell, and M3-M20 hex bolts / socket
+                       screws / hex nuts with **real helical ISO
+                       threads** (thread-form polygon + twist
+                       extrude; nuts subtract the thread with
+                       clearance). Parts are ordinary node subtrees;
+                       bolt circles are for-loops.
   - `chat.py`        — **KherveAI chat box** (family assistant):
                        Claude/Mistral/Ollama Cloud via urllib, keys
                        in QSettings or env vars, slash commands, and

@@ -40,10 +40,13 @@ Going further:
 - **Import/export** — full `.scad` import (lossless round-trip of
   everything KherveCAD generates; graceful warnings elsewhere) and
   export; STL import as tree nodes and STL export.
-- **Parts library** (Ctrl+L) — parametric CF16-CF160 and KF16-KF50
-  flanges, blanks, nipples, tees and crosses in conventional sizes
-  (every dimension editable, so any size), plus a simplified turbo
-  pump shell.
+- **Parts library** (Ctrl+L) — parametric CF16-CF160 flanges built
+  from the manufacturer cross-section drawings (recessed sealing
+  face, knife edge, gasket seat), KF16-KF50 flanges, blanks,
+  nipples, tees and crosses in conventional sizes (every dimension
+  editable, so any size), M3-M20 hex bolts, socket head cap screws
+  and hex nuts with real helical ISO threads, plus a simplified
+  turbo pump shell.
 
 Documents save as `.kcad` (JSON object tree) and export as `.scad`
 programs or `.stl` meshes.

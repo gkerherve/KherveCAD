@@ -46,11 +46,37 @@ def _insert(model, part_id, size_table, size, extra=None):
 def test_cf40_flange_dimensions(model):
     node = _insert(model, "cf_flange", library.CF_SIZES, "CF40 (DN40)")
     code = model.root.to_scad()
-    assert "r1=34.95" in code                 # flange OD 69.9 / 2
+    assert "rotate_extrude" in code           # revolved drawing profile
+    assert "[34.95," in code.replace(", ", ",")   # flange OD 69.9 / 2
+    assert "[17.5," in code.replace(", ", ",")    # bore 35 / 2
     assert "for (a = [0 : 60 : 330])" in code  # 6 bolts every 60 deg
-    assert "r1=17.5" in code                  # bore 35 / 2
     tris = mesh.tessellate(model.root)
     assert len(tris) > 100
+
+
+def test_cf40_knife_edge_profile():
+    p = dict(library.CF_SIZES["CF40 (DN40)"])
+    profile = library.cf_profile(p, tube_length=0.0)
+    rs = [r for r, _z in profile]
+    zs = [z for _r, z in profile]
+    knife_r = p["gasket_od"] / 2.0 - 0.9      # 23.25
+    floor = p["thickness"] - 1.6              # recess floor 11.1
+    tip = floor + 1.1                         # knife tip 12.2
+    assert [knife_r, tip] in profile          # the knife edge point
+    # the tip sits below the face but above the recess floor
+    assert floor < tip < p["thickness"]
+    # recess wall just outside the gasket
+    assert max(rs) == p["flange_od"] / 2.0
+    assert any(abs(r - (p["gasket_od"] / 2.0 + 0.3)) < 1e-6
+               for r in rs)
+
+
+def test_cf_flange_tube_extends_below(model):
+    _insert(model, "cf_flange", library.CF_SIZES, "CF40 (DN40)",
+            extra=dict(port_length=50.0))
+    zs = [v[2] for t in mesh.tessellate(model.root) for v in t]
+    assert min(zs) < -30.0                    # tube below the flange
+    assert max(zs) == pytest.approx(12.7, abs=0.1)
 
 
 def test_bolt_count_scales_with_size(model):
@@ -64,11 +90,11 @@ def test_bolt_count_scales_with_size(model):
 def test_custom_size_any_dimensions(model):
     dims = dict(flange_od=250.0, thickness=25.0, bolt_circle=220.0,
                 bolts=24, bolt_hole=9.0, bore=180.0, tube_od=200.0,
-                port_length=80.0)
+                gasket_od=210.0, port_length=80.0)
     library_node = library.build_part("cf_flange", dims)
     model.root.add(library_node)
     code = model.root.to_scad()
-    assert "r1=125" in code                   # custom OD works
+    assert "[125," in code.replace(", ", ",")  # custom OD works
     assert "for (a = [0 : 15 : 352.5])" in code
 
 
@@ -111,6 +137,60 @@ def test_turbo_pump_builds(model):
     zs = [v[2] for t in tris for v in t]
     assert max(zs) > 110.0                    # inlet flange on top
     assert min(zs) < -40.0                    # base collar below
+
+
+# -------------------------------------------------------------- fasteners
+
+def test_thread_profile_radii():
+    points = library.thread_profile(6.0, 1.0)
+    import math
+    radii = [math.hypot(x, y) for x, y in points]
+    assert max(radii) == pytest.approx(3.0, abs=0.01)      # major
+    assert min(radii) == pytest.approx(3.0 - 0.6134, abs=0.01)
+
+
+def test_hex_bolt_has_helical_thread(model):
+    dims = dict(library.BOLT_SIZES["M6"])
+    node = library.build_part("bolt_hex", dims)
+    model.root.add(node)
+    code = model.root.to_scad()
+    assert "twist=-7200" in code              # 20 mm / 1.0 pitch
+    assert "polygon(points=" in code
+    assert "$fn=6" in code                    # hex head
+    assert mesh.tessellate(model.root)
+
+
+def test_nut_thread_is_subtracted(model):
+    dims = dict(library.BOLT_SIZES["M8"])
+    node = library.build_part("nut_hex", dims)
+    model.root.add(node)
+    assert node.type == "difference"
+    code = model.root.to_scad()
+    assert "$fn=6" in code                    # hex body
+    assert "twist=" in code                   # internal thread
+    # clearance: hole profile major radius > bolt major radius
+    hole_profile = library.thread_profile(8.0 + 0.3, 1.25)
+    import math
+    assert max(math.hypot(x, y) for x, y in hole_profile) > 4.0
+
+
+def test_socket_screw_has_hex_socket(model):
+    dims = dict(library.BOLT_SIZES["M6"])
+    node = library.build_part("bolt_socket", dims)
+    model.root.add(node)
+    assert node.type == "difference"
+    zs = [v[2] for t in mesh.tessellate(model.root) for v in t]
+    assert max(zs) == pytest.approx(26.0, abs=0.2)   # 20 + head d
+
+
+def test_bolts_reimport_from_generated_code(model):
+    dims = dict(library.BOLT_SIZES["M4"])
+    model.root.add(library.build_part("bolt_hex", dims))
+    root, warnings = scadparse.parse_scad(model.to_scad())
+    assert not warnings
+    other = DocumentModel()
+    other.root = root
+    assert other.root.to_scad() == model.root.to_scad()
 
 
 def test_parts_reimport_from_generated_code(model, tmp_path):

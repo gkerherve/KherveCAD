@@ -460,6 +460,9 @@ def linear_extrude_mesh(node: CadNode, env=None):
     slices = max(int(p.get("segments") or 0), 1)
     if twist and slices == 1:
         slices = max(int(abs(twist) / 6), 8)
+    # keep the instant preview light for heavy twists (threads);
+    # the OpenSCAD engine renders the exact slice count.
+    slices = min(slices, 120)
     mesh = []
     for outline in collect_outlines(node, env):
         if len(outline) < 3:
