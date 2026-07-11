@@ -349,3 +349,44 @@ def test_assign_nodes_coloured_in_tree(window):
     item = window.builder.tree._item_of(node)
     assert item is not None
     assert item.foreground(0).color().name() in (VAR_COLOR, VAR_COLOR_DARK)
+
+
+# ----------------------------------------- variable-or-value editors
+
+def test_numeric_field_offers_variables_or_fixed_value(window):
+    from khervecad.properties import VarOrValueEdit
+    m = window.model
+    m.add_node("assign", dict(variable="deck_thickness", value="50"))
+    m.add_node("assign", dict(variable="leg_h", value="150"))
+    cube = m.add_node("cube", dict(width=100.0, height=100.0))
+    m.structure_changed.emit()
+
+    window.properties.set_node(cube)
+    editor = window.properties._editors["width"]
+    assert isinstance(editor, VarOrValueEdit) and editor.isEditable()
+
+    # the dropdown lists the document's variables
+    editor.showPopup()
+    assert [editor.itemText(i) for i in range(editor.count())] == \
+        ["deck_thickness", "leg_h"]
+
+    # picking a variable stores its name (an expression)
+    editor.setEditText("deck_thickness")
+    editor._commit()
+    assert cube.params["width"] == "deck_thickness"
+    # typing a number stores a fixed float
+    editor.setEditText("42.5")
+    editor._commit()
+    assert cube.params["width"] == 42.5
+
+
+def test_numeric_field_round_trips_a_variable(window):
+    from khervecad.properties import VarOrValueEdit
+    m = window.model
+    m.add_node("assign", dict(variable="leg_h", value="150"))
+    cube = m.add_node("cube", dict(height="leg_h"))
+    m.structure_changed.emit()
+    window.properties.set_node(cube)
+    editor = window.properties._editors["height"]
+    assert isinstance(editor, VarOrValueEdit)
+    assert editor.currentText() == "leg_h"
