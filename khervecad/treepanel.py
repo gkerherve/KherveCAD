@@ -115,7 +115,11 @@ class ObjectTree(QTreeWidget):
         if not node.is_container():
             item.setFlags(item.flags() & ~Qt.ItemIsDropEnabled)
         self._decorate(item, node)
-        if node.id in expanded or node.is_container():
+        # containers open by default, except the Variables group which
+        # starts collapsed (it holds a long list); either way the user's
+        # own expand/collapse is remembered via *expanded*
+        if node.id in expanded or (node.is_container()
+                                   and node.type != "variables"):
             item.setExpanded(True)
         if node.id in selected:
             item.setSelected(True)
