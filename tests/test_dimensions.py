@@ -87,6 +87,14 @@ def test_switching_tool_clears_measurement(window):
     assert sc._measure_a is None and sc._measure_b is None
 
 
+def test_view_repaints_fully_so_dim_labels_dont_ghost(window):
+    # viewport-fixed overlays (dimension text/arrows) move with the shape;
+    # anything but a full repaint smears them into ghost trails on a drag.
+    from PyQt5.QtWidgets import QGraphicsView
+    assert (window.view2d.viewportUpdateMode()
+            == QGraphicsView.FullViewportUpdate)
+
+
 def test_fmt_mm_trims_trailing_zeros():
     assert view2d._fmt_mm(30.0) == "30 mm"
     assert view2d._fmt_mm(30.5) == "30.5 mm"

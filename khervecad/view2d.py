@@ -1252,6 +1252,10 @@ class SketchView(QGraphicsView):
         self.setMouseTracking(True)
         self.setDragMode(QGraphicsView.RubberBandDrag)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        # dimension/measure overlays are drawn at viewport-fixed positions
+        # that move with the shape; repaint the whole viewport each change
+        # so old labels are erased rather than smeared into ghost trails.
+        self.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
         self.scale(4, -4)                     # Y up, sensible start zoom
         self.centerOn(30, 20)
 
