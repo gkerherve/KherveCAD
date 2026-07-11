@@ -552,11 +552,17 @@ class MainWindow(QMainWindow):
         if tris and not self._fitted and not self.view3d.user_moved:
             self.view3d.fit()
             self._fitted = True
+        # single overall colour (if any) to re-apply to an exact render,
+        # whose STL is geometry-only
+        distinct = {c[0] for c in colors if c is not None}
+        self._engine_color = (next(c for c in colors if c is not None)
+                              if len(distinct) == 1 else None)
         if self.engine.available and self.model.root.children:
-            # colours only exist in the preview: STL is geometry-only,
-            # so skip the engine swap while the document is coloured
-            # (F5 still forces an exact render).
-            if not has_colors:
+            # colours normally keep the built-in preview (an STL carries
+            # no colours), but that preview can only *approximate*
+            # booleans — so when the model cuts holes, run the exact
+            # render anyway and tint it if the model is one colour.
+            if not has_colors or mesh.uses_booleans(self.model.root):
                 self.engine.request_render(self.model.to_scad())
 
     def _render_now(self):
@@ -570,7 +576,9 @@ class MainWindow(QMainWindow):
                 "OpenSCAD not found — using built-in preview.", 4000)
 
     def _engine_mesh(self, tris):
-        self.view3d.set_mesh(tris, "OpenSCAD")
+        color = getattr(self, "_engine_color", None)
+        self.view3d.set_mesh(tris, "OpenSCAD",
+                             [color] * len(tris) if color else None)
         self.builder.set_engine_errors({})
 
     def _engine_failed(self, stderr):

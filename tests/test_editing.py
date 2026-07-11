@@ -465,3 +465,27 @@ def test_tree_keeps_collapsed_group_when_adding(window):
     tree._item_of(g).setExpanded(True)
     m.add_node("cylinder")
     assert tree._item_of(g).isExpanded()        # re-expand persists too
+
+
+def test_coloured_boolean_still_runs_exact_render(window, monkeypatch):
+    from khervecad.engine import ScadEngine
+    monkeypatch.setattr(ScadEngine, "available",
+                        property(lambda self: True))
+    m = window.model
+    body = m.add_node("cube", dict(width=20.0, depth=20.0, height=20.0))
+    diff = m.wrap_nodes([body], "difference")
+    m.add_node("cylinder", dict(radius_bottom=4.0, radius_top=4.0,
+                                height=30.0, segments=8, z=-5.0),
+               parent=diff)
+    grp = m.wrap_nodes([diff], "union")
+    grp.params["color"] = "#20e0c0"                # colour the group
+    reqs = []
+    monkeypatch.setattr(window.engine, "request_render",
+                        lambda code: reqs.append(code))
+    window._refresh_preview()
+    # a coloured model that cuts holes must still run the exact render
+    assert len(reqs) == 1
+    assert window._engine_color == ("#20e0c0", 1.0)
+    # the exact (holed) mesh is re-tinted with the single colour
+    window._engine_mesh([((0, 0, 0), (10, 0, 0), (0, 10, 0))])
+    assert window.view3d.colors == [("#20e0c0", 1.0)]
