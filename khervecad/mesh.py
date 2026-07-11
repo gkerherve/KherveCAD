@@ -54,6 +54,11 @@ def rv(value, env=None, default=0.0) -> float:
 _FN_TYPES = {"circle", "cylinder", "sphere", "rotate_extrude"}
 _FN_OVERRIDE = None
 
+#: {str(node id): node} for Linked-copy references + cycle-guard stack;
+#: set by the tessellate entry points.
+_REF_INDEX = None
+_REF_STACK = set()
+
 
 def rp(node: CadNode, env=None) -> dict:
     """Node params with every numeric/expression value resolved."""
@@ -580,15 +585,32 @@ def _set_fn(fn):
     _FN_OVERRIDE = int(fn) if fn else None
 
 
+def _set_refs(node):
+    """Index nodes by name so Linked copies can resolve their master."""
+    global _REF_INDEX
+    _REF_INDEX = {}
+    for n in node.walk():
+        _REF_INDEX.setdefault(n.name, n)
+    _REF_STACK.clear()
+
+
+def _clear_refs():
+    global _REF_INDEX
+    _REF_INDEX = None
+    _REF_STACK.clear()
+
+
 def tessellate(node: CadNode, env=None, fn=None):
     """Triangle mesh for *node*'s subtree (fallback semantics). *fn*
     overrides the segment count of every round object when given."""
     _set_fn(fn)
+    _set_refs(node)
     try:
         return [tri for tri, _c, _s in
                 _tess(node, dict(env or {}), None, frozenset(), False)]
     finally:
         _set_fn(None)
+        _clear_refs()
 
 
 def tessellate_colored(node: CadNode, env=None, fn=None):
@@ -596,11 +618,13 @@ def tessellate_colored(node: CadNode, env=None, fn=None):
     with per-face colours from color() nodes — the built-in preview
     shows them (STL from the engine is geometry-only)."""
     _set_fn(fn)
+    _set_refs(node)
     try:
         return [(t, c) for t, c, _s in
                 _tess(node, dict(env or {}), None, frozenset(), False)]
     finally:
         _set_fn(None)
+        _clear_refs()
 
 
 def selected_world_tris(node: CadNode, sel_ids, env=None, detail=None,
@@ -616,12 +640,14 @@ def selected_world_tris(node: CadNode, sel_ids, env=None, detail=None,
         return []
     _DETAIL = detail
     _set_fn(fn)
+    _set_refs(node)
     try:
         return [t for t, _c, s in
                 _tess(node, dict(env or {}), None, sel, False) if s]
     finally:
         _DETAIL = None
         _set_fn(None)
+        _clear_refs()
 
 
 def _emit(tris, color, selected):
@@ -641,6 +667,28 @@ def _tess(node, env, color, sel, selected):
         # 3D hull is approximated as the union of its children;
         # "variables" only holds assignments, so it adds no geometry.
         return _children_mesh(node, env, color, sel, selected)
+    if t == "reference":
+        # a Linked copy renders its master's geometry, moved/rotated
+        target = (_REF_INDEX or {}).get(
+            str(node.params.get("ref", "")).strip())
+        if target is None or node.id in _REF_STACK:
+            return []
+        _REF_STACK.add(node.id)
+        try:
+            out = _tess(target, env, color, sel, selected)
+        finally:
+            _REF_STACK.discard(node.id)
+        rx = rv(node.params.get("rx", 0), env, 0.0)
+        ry = rv(node.params.get("ry", 0), env, 0.0)
+        rz = rv(node.params.get("rz", 0), env, 0.0)
+        tx = rv(node.params.get("x", 0), env, 0.0)
+        ty = rv(node.params.get("y", 0), env, 0.0)
+        tz = rv(node.params.get("z", 0), env, 0.0)
+        if any((rx, ry, rz, tx, ty, tz)):
+            matrix = mat_mul(mat_translate(tx, ty, tz),
+                             mat_rotate(rx, ry, rz))
+            out = _transform_colored(matrix, out)
+        return out
     if t == "union":
         # a group is a part: apply its own colour, then its rotate and
         # translate (matching the color()/translate()/rotate() codegen)

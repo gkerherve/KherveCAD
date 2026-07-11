@@ -221,6 +221,20 @@ NODE_TYPES = {
     "variables": dict(
         label="Variables", category=CONTROL, icon="mdi.table",
         params=dict(), schema=[]),
+    "reference": dict(
+        # a linked instance of another object ("master"): it renders
+        # whatever the master contains, so editing the master updates
+        # every reference. Carries its own position/rotation.
+        label="Linked copy", category=CONTROL, icon="mdi.link-variant",
+        params=dict(ref="", x=0.0, y=0.0, z=0.0, rx=0.0, ry=0.0,
+                    rz=0.0),
+        schema=[("ref", "Master (object name)", "str", None, None),
+                ("x", "Move X", "float", -1e6, 1e6),
+                ("y", "Move Y", "float", -1e6, 1e6),
+                ("z", "Move Z", "float", -1e6, 1e6),
+                ("rx", "Rotate X°", "float", -360.0, 360.0),
+                ("ry", "Rotate Y°", "float", -360.0, 360.0),
+                ("rz", "Rotate Z°", "float", -360.0, 360.0)]),
     # ----- external geometry ------------------------------------------
     "stl_import": dict(
         label="Import STL", category=SHAPE_3D,
@@ -232,10 +246,10 @@ NODE_TYPES = {
                 ("z", "Z", "float", -1e6, 1e6)]),
 }
 
-#: types that accept children.
+#: types that accept children (assignments and Linked copies are leaves).
 CONTAINER_TYPES = {t for t, d in NODE_TYPES.items()
                    if d["category"] in (OPERATION, BOOLEAN, CONTROL)} \
-    - {"assign"}
+    - {"assign", "reference"}
 
 
 def fmt(value) -> str:
@@ -258,6 +272,12 @@ def scad_str(text: str) -> str:
 #: (None = each object keeps its own $fn). Set around codegen by
 #: DocumentModel.to_scad_map(); the mesh module has its own copy.
 _FN_OVERRIDE = None
+
+#: {str(node id): node} for resolving Linked-copy references, plus the
+#: set of references currently expanding (cycle guard). Set around
+#: codegen by DocumentModel.to_scad_map().
+_REF_INDEX = None
+_REF_STACK = set()
 
 
 def _fn(p) -> object:
@@ -435,6 +455,8 @@ class CadNode:
             # and OpenSCAD scope are exactly as if they were loose.
             for child in self.children:
                 child.emit(lines, indent, spans)
+        elif self.type == "reference":
+            self._emit_reference(lines, indent, spans)
         elif self.type == "if_else":
             self._emit_if_else(lines, indent, spans)
         else:
@@ -450,6 +472,25 @@ class CadNode:
                 lines.append((pad + "}", self))
         if spans is not None:
             spans[self.id] = (start, len(lines))
+
+    def _emit_reference(self, lines, indent: int, spans):
+        """A Linked copy inlines its master's geometry (moved/rotated by
+        its own transform), so the code fully describes the part."""
+        pad = "    " * indent
+        star = "" if self.visible else "*"
+        prefix = _group_prefix(self.params)             # move/rotate
+        target = (_REF_INDEX or {}).get(
+            str(self.params.get("ref", "")).strip())
+        if target is None or self.id in _REF_STACK:
+            lines.append((pad + star + prefix + "union() { }", self))
+            return
+        lines.append((pad + star + prefix + "union() {", self))
+        _REF_STACK.add(self.id)
+        try:
+            target.emit(lines, indent + 1, spans)
+        finally:
+            _REF_STACK.discard(self.id)
+        lines.append((pad + "}", self))
 
     def _emit_if_else(self, lines, indent: int, spans):
         """`if (cond) { then } else { else }` — the else branch is a
@@ -695,12 +736,18 @@ class DocumentModel(QObject):
                   f"// regenerated from the object tree.\n")
         offset = header.count("\n") + 1          # + the blank line
         lines, spans = [], {}
-        global _FN_OVERRIDE
+        global _FN_OVERRIDE, _REF_INDEX
         _FN_OVERRIDE = self.effective_fn()
+        _REF_INDEX = {}                          # by name: masters persist
+        for n in self.root.walk():
+            _REF_INDEX.setdefault(n.name, n)
+        _REF_STACK.clear()
         try:
             self.root.emit(lines, 0, spans)
         finally:
             _FN_OVERRIDE = None
+            _REF_INDEX = None
+            _REF_STACK.clear()
         body = "\n".join(text for text, _n in lines)
         code = header + "\n" + body + ("\n" if body else "")
         shifted = {nid: (s + offset, e + offset)
@@ -765,7 +812,14 @@ class DocumentModel(QObject):
         self.node_changed.emit(node)
 
     def rename(self, node: CadNode, name: str):
+        old = node.name
         node.name = name
+        # keep Linked copies pointing at a renamed master
+        if old and old != name:
+            for other in self.root.walk():
+                if other.type == "reference" \
+                        and other.params.get("ref") == old:
+                    other.params["ref"] = name
         self.node_changed.emit(node)
 
     def shift_node(self, node: CadNode, delta: int):
@@ -864,6 +918,20 @@ class DocumentModel(QObject):
         node.parent.add(clone, node.index() + 1)
         self.structure_changed.emit()
         return clone
+
+    def add_linked_copy(self, master: CadNode) -> CadNode:
+        """Insert a Linked copy that renders *master* — editing the
+        master then updates the copy. The master needs a unique name so
+        the link resolves reliably."""
+        names = [n.name for n in self.root.walk()]
+        if names.count(master.name) > 1:
+            master.name = self.unique_name(master.type)
+        ref = CadNode("reference", f"Copy of {master.name}",
+                      dict(ref=master.name))
+        parent = master.parent or self.root
+        parent.add(ref, master.index() + 1)
+        self.structure_changed.emit()
+        return ref
 
     def _clone(self, node: CadNode) -> CadNode:
         copy = CadNode(node.type, node.name, None)

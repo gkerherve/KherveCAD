@@ -345,9 +345,11 @@ _ITEM_CLASSES = dict(line=LineShapeItem, rect=RectShapeItem,
 
 
 def _produces_3d(node) -> bool:
-    """True if the subtree makes solid geometry (an assemblable part)."""
+    """True if the subtree makes solid geometry (an assemblable part).
+    A Linked copy renders its master, so it counts too."""
     return any(n.category == SHAPE_3D
-               or n.type in ("linear_extrude", "rotate_extrude")
+               or n.type in ("linear_extrude", "rotate_extrude",
+                             "reference")
                for n in node.walk())
 
 
@@ -854,8 +856,8 @@ class SketchScene(QGraphicsScene):
         if abs(delta.x()) < 1e-9 and abs(delta.y()) < 1e-9:
             return
         _axes, (kx, ky) = PLANES[self.plane]
-        # a Group is a part with its own move params — no wrapper needed
-        if node.type in ("translate", "union"):
+        # a Group or Linked copy is a part with its own move params
+        if node.type in ("translate", "union", "reference"):
             env = self.env_for(node)
             node.params[kx] = round(
                 expr.resolve(node.params.get(kx, 0.0), env, 0.0)

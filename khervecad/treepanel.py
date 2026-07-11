@@ -434,6 +434,11 @@ class ObjectTree(QTreeWidget):
             menu.addAction(icons.icon("mdi.content-duplicate"),
                            "Duplicate", lambda: [self.model.duplicate(n)
                                                  for n in nodes])
+            if len(nodes) == 1:
+                menu.addAction(
+                    icons.icon("mdi.link-variant"),
+                    "Linked copy (updates with master)",
+                    lambda: self.model.add_linked_copy(nodes[0]))
             menu.addSeparator()
             menu.addAction(icons.icon("mdi.delete-outline"), "Delete",
                            lambda: [self.model.remove_node(n)

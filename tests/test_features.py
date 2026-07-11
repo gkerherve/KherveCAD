@@ -342,3 +342,43 @@ def test_group_transform_roundtrips_kcad(model, tmp_path):
     assert reloaded.params["y"] == 12.0
     assert reloaded.params["ry"] == 30.0
     assert reloaded.params["color"] == "#00ff00"
+
+
+def test_linked_copy_renders_and_follows_master(model):
+    from khervecad import mesh
+    master = model.add_node("union", name="Flange")
+    model.add_node("cube", dict(width=10.0, depth=10.0, height=4.0),
+                   parent=master)
+    ref = model.add_linked_copy(master)
+    ref.params["x"] = 50.0
+    assert ref.type == "reference" and ref.params["ref"] == "Flange"
+    n = len(mesh.tessellate(master))
+    assert len(mesh.tessellate(model.root)) == 2 * n     # master + copy
+    # editing the master updates the copy
+    master.children[0].params["height"] = 30.0
+    zmax = max(v[2] for t in mesh.tessellate(model.root) for v in t)
+    assert zmax == 30.0
+    assert "translate([50, 0, 0])" in model.to_scad()    # copy's transform
+
+
+def test_linked_copy_rename_and_roundtrip(model, tmp_path):
+    from khervecad import document, mesh
+    master = model.add_node("union", name="Flange")
+    model.add_node("cube", parent=master)
+    ref = model.add_linked_copy(master)
+    model.rename(master, "MyFlange")
+    assert ref.params["ref"] == "MyFlange"              # link follows rename
+    path = tmp_path / "linked.kcad"
+    document.save_kcad(model, str(path))
+    other = DocumentModel()
+    document.load_kcad(other, str(path))
+    n = len(mesh.tessellate(master))
+    assert len(mesh.tessellate(other.root)) == 2 * n    # survived reload
+
+
+def test_linked_copy_cycle_is_safe(model):
+    from khervecad import mesh
+    ref = model.add_node("reference", dict(ref="Loop"))
+    ref.name = "Loop"                                   # points at itself
+    assert mesh.tessellate(model.root) == []            # no hang
+    assert model.to_scad()                               # no hang either
