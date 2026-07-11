@@ -477,7 +477,7 @@ class SketchScene(QGraphicsScene):
         self.model = model
         self.tool = SELECT
         self.plane = "Top (XY)"                # assembly view plane
-        self.grid_size = 5.0
+        self.grid_size = 0.5
         self.snap_enabled = True
         self.show_grid = True
         self.updating = False

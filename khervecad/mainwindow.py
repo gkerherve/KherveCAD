@@ -22,10 +22,11 @@ the Free Software Foundation, either version 3 of the License, or
 from pathlib import Path
 
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtWidgets import (QAction, QActionGroup, QApplication,
-                             QComboBox, QDockWidget, QFileDialog,
-                             QLabel, QMainWindow, QMessageBox,
-                             QSpinBox, QSplitter, QToolBar)
+from PyQt5.QtWidgets import (QAbstractSpinBox, QAction, QActionGroup,
+                             QApplication, QComboBox, QDockWidget,
+                             QDoubleSpinBox, QFileDialog, QLabel,
+                             QMainWindow, QMessageBox, QSplitter,
+                             QToolBar)
 
 from . import APP_NAME, __version__, document, icons, mesh
 from .engine import ScadEngine, set_openscad_path
@@ -217,10 +218,16 @@ class MainWindow(QMainWindow):
         bar.addAction(self._snap_act)
 
         bar.addWidget(QLabel(" Grid "))
-        self._grid_spin = QSpinBox()
-        self._grid_spin.setRange(1, 100)
+        self._grid_spin = QDoubleSpinBox()
+        self._grid_spin.setDecimals(2)                  # down to 0.01 mm
+        self._grid_spin.setRange(0.01, 1000.0)
+        self._grid_spin.setSingleStep(0.5)
+        # step in proportion to the value (0.6, 0.7… near 0.5; 6, 7…
+        # near 5) where the Qt build supports it
+        self._grid_spin.setStepType(
+            QAbstractSpinBox.AdaptiveDecimalStepType)
         self._grid_spin.setSuffix(" mm")
-        self._grid_spin.setValue(int(self.scene.grid_size))
+        self._grid_spin.setValue(self.scene.grid_size)
         self._grid_spin.valueChanged.connect(self._set_grid_size)
         bar.addWidget(self._grid_spin)
         bar.addSeparator()
