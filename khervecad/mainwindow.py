@@ -552,17 +552,20 @@ class MainWindow(QMainWindow):
         if tris and not self._fitted and not self.view3d.user_moved:
             self.view3d.fit()
             self._fitted = True
-        # single overall colour (if any) to re-apply to an exact render,
-        # whose STL is geometry-only
-        distinct = {c[0] for c in colors if c is not None}
-        self._engine_color = (next(c for c in colors if c is not None)
-                              if len(distinct) == 1 else None)
+        # An exact render is a single STL with no colour, so it can only
+        # carry one overall tint. Detect whether the *whole* model is one
+        # colour (every face the same, none left uncoloured) — only then
+        # may an exact render stand in for the built-in colour preview.
+        seen = set(colors)
+        uniform = len(seen) == 1 and None not in seen
+        self._engine_color = next(iter(seen)) if uniform else None
         if self.engine.available and self.model.root.children:
-            # colours normally keep the built-in preview (an STL carries
-            # no colours), but that preview can only *approximate*
-            # booleans — so when the model cuts holes, run the exact
-            # render anyway and tint it if the model is one colour.
-            if not has_colors or mesh.uses_booleans(self.model.root):
+            # No colours, or one overall colour: run the exact render (and
+            # tint it if uniform) so booleans cut real holes. A model with
+            # several colours keeps the built-in per-part colour preview,
+            # since an STL cannot carry them — tinting it all one colour
+            # would wrongly paint every part the same.
+            if not has_colors or uniform:
                 self.engine.request_render(self.model.to_scad())
 
     def _render_now(self):

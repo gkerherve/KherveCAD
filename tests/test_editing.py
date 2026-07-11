@@ -489,3 +489,26 @@ def test_coloured_boolean_still_runs_exact_render(window, monkeypatch):
     # the exact (holed) mesh is re-tinted with the single colour
     window._engine_mesh([((0, 0, 0), (10, 0, 0), (0, 10, 0))])
     assert window.view3d.colors == [("#20e0c0", 1.0)]
+
+
+def test_one_coloured_group_does_not_tint_the_whole_model(window, monkeypatch):
+    from khervecad.engine import ScadEngine
+    monkeypatch.setattr(ScadEngine, "available",
+                        property(lambda self: True))
+    m = window.model
+    # one coloured group beside a plain one — the plain part must keep its
+    # own look, not inherit the coloured group's tint.
+    g1 = m.add_node("union", name="Coloured")
+    g1.params["color"] = "#20e0c0"
+    m.add_node("cube", dict(width=10.0, depth=10.0, height=10.0), parent=g1)
+    g2 = m.add_node("union", name="Plain")
+    m.add_node("cube", dict(width=10.0, depth=10.0, height=10.0, x=30.0),
+               parent=g2)
+    reqs = []
+    monkeypatch.setattr(window.engine, "request_render",
+                        lambda code: reqs.append(code))
+    window._refresh_preview()
+    # a partly-coloured model keeps the built-in per-part colour preview
+    # (an STL cannot carry per-part colours); no overall tint, no exact run.
+    assert window._engine_color is None
+    assert reqs == []
