@@ -76,39 +76,65 @@ class PointsEditor(QWidget):
 
         buttons = QHBoxLayout()
         add = QPushButton(icons.icon("mdi.plus"), "")
-        add.setToolTip("Add point")
+        add.setToolTip("Insert a point after the selected one, on the "
+                       "midpoint of its edge (keeps the outline)")
         add.clicked.connect(self._add_row)
         remove = QPushButton(icons.icon("mdi.minus"), "")
-        remove.setToolTip("Remove selected point")
+        remove.setToolTip("Remove the selected point")
         remove.clicked.connect(self._remove_row)
         buttons.addWidget(add)
         buttons.addWidget(remove)
         buttons.addStretch()
         layout.addLayout(buttons)
 
-    def _add_row(self):
-        row = self.table.rowCount()
-        self.table.insertRow(row)
-        self.table.setItem(row, 0, QTableWidgetItem("0"))
-        self.table.setItem(row, 1, QTableWidgetItem("0"))
-        self._emit()
-
-    def _remove_row(self):
-        row = self.table.currentRow()
-        if row >= 0 and self.table.rowCount() > 3:
-            self.table.removeRow(row)
-            self._emit()
-
-    def _emit(self):
+    def _read_points(self):
+        """Current table contents as floats, or None if a cell is
+        blank/invalid (an edit still in progress)."""
         points = []
         for row in range(self.table.rowCount()):
             try:
                 x = float(self.table.item(row, 0).text())
                 y = float(self.table.item(row, 1).text())
             except (TypeError, ValueError, AttributeError):
-                return
+                return None
             points.append([x, y])
-        self._on_change(points)
+        return points
+
+    def _add_row(self):
+        # split the edge leaving the selected vertex: the new point sits
+        # at that edge's midpoint, so the polygon keeps its shape and you
+        # just get a fresh vertex to drag. With nothing selected, split
+        # the closing edge (last -> first) rather than spiking to origin.
+        pts = self._read_points()
+        if not pts:
+            return
+        count = len(pts)
+        cur = self.table.currentRow()
+        idx = cur if 0 <= cur < count else count - 1
+        nxt = (idx + 1) % count
+        mx = round((pts[idx][0] + pts[nxt][0]) / 2, 4)
+        my = round((pts[idx][1] + pts[nxt][1]) / 2, 4)
+        self.table.blockSignals(True)
+        self.table.insertRow(idx + 1)
+        self.table.setItem(idx + 1, 0, QTableWidgetItem(f"{mx:g}"))
+        self.table.setItem(idx + 1, 1, QTableWidgetItem(f"{my:g}"))
+        self.table.blockSignals(False)
+        self.table.setCurrentCell(idx + 1, 0)       # ready to edit
+        self._emit()
+
+    def _remove_row(self):
+        row = self.table.currentRow()
+        if row < 0:
+            row = self.table.rowCount() - 1
+        if row >= 0 and self.table.rowCount() > 3:
+            self.table.removeRow(row)
+            self.table.selectRow(min(row, self.table.rowCount() - 1))
+            self._emit()
+
+    def _emit(self):
+        points = self._read_points()
+        if points is not None:
+            self._on_change(points)
 
 
 class PropertiesPanel(QScrollArea):

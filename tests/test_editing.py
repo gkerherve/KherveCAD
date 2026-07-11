@@ -259,3 +259,42 @@ def test_step_descends_into_children(window):
     tree.select_nodes([group])
     tree.step_selection(1)                     # next is the child
     assert tree.selected_nodes()[0] is inner
+
+
+# ------------------------------------------------------ polygon points
+
+def test_points_editor_insert_splits_edge(app):
+    from khervecad.properties import PointsEditor
+    out = []
+    editor = PointsEditor([[0, 0], [10, 0], [10, 10], [0, 10]],
+                          out.append)
+    editor.table.setCurrentCell(0, 0)          # select vertex 0
+    editor._add_row()
+    # new vertex is the midpoint of edge 0->1, inserted between them
+    assert out[-1] == [[0.0, 0.0], [5.0, 0.0], [10.0, 0.0],
+                       [10.0, 10.0], [0.0, 10.0]]
+
+
+def test_points_editor_insert_no_selection_splits_closing_edge(app):
+    from khervecad.properties import PointsEditor
+    out = []
+    editor = PointsEditor([[0, 0], [10, 0], [0, 10]], out.append)
+    editor.table.clearSelection()
+    editor.table.setCurrentCell(-1, -1)
+    editor._add_row()
+    # midpoint of the closing edge (last -> first) appended at the end
+    assert out[-1][-1] == [0.0, 5.0]
+
+
+def test_points_editor_remove_keeps_minimum(app):
+    from khervecad.properties import PointsEditor
+    out = []
+    editor = PointsEditor([[0, 0], [10, 0], [10, 10], [0, 10]],
+                          out.append)
+    editor.table.setCurrentCell(0, 0)
+    editor._remove_row()
+    assert len(out[-1]) == 3
+    for _ in range(5):                          # never drops below 3
+        editor.table.setCurrentCell(0, 0)
+        editor._remove_row()
+    assert editor.table.rowCount() == 3
