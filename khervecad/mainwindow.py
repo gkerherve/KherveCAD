@@ -198,6 +198,11 @@ class MainWindow(QMainWindow):
         file_menu.addAction("Save &As...", self.save_file_as,
                             "Ctrl+Shift+S")
         file_menu.addSeparator()
+        file_menu.addAction("&Import OpenSCAD...", self.import_scad,
+                            "Ctrl+I")
+        file_menu.addAction("Import S&TL...", self.import_stl,
+                            "Ctrl+Shift+I")
+        file_menu.addSeparator()
         file_menu.addAction("Export Open&SCAD...", self.export_scad,
                             "Ctrl+E")
         file_menu.addAction("Export S&TL...", self.export_stl,
@@ -416,6 +421,41 @@ class MainWindow(QMainWindow):
             path += ".kcad"
         self._path = path
         self.save_file()
+
+    def import_scad(self):
+        if not self._confirm_discard():
+            return
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Import OpenSCAD", "", "OpenSCAD program (*.scad)")
+        if not path:
+            return
+        from . import scadparse
+        try:
+            warnings = scadparse.import_scad(self.model, path)
+        except Exception as exc:
+            QMessageBox.warning(self, APP_NAME,
+                                f"Could not import:\n{exc}")
+            return
+        self._path = None                     # imported = new document
+        self._dirty = True
+        self._fitted = False
+        self._update_title()
+        if warnings:
+            QMessageBox.information(
+                self, APP_NAME,
+                "Imported with limitations:\n- "
+                + "\n- ".join(warnings[:12])
+                + ("\n…" if len(warnings) > 12 else ""))
+
+    def import_stl(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Import STL", "", "STL mesh (*.stl)")
+        if not path:
+            return
+        node = self.model.add_node("stl_import", dict(path=path),
+                                   name=Path(path).stem)
+        self.builder.tree.select_nodes([node])
+        self.view3d.fit()
 
     def export_scad(self):
         suggestion = str(Path(self._path).with_suffix(".scad")) \

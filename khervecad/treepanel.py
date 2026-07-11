@@ -26,8 +26,9 @@ from . import icons
 from .model import NODE_TYPES, OPERATION, DocumentModel
 
 #: operations offered by the "Apply" context submenu.
-APPLY_OPS = ["linear_extrude", "rotate_extrude", "translate", "rotate",
-             "scale", "mirror", "difference", "intersection"]
+APPLY_OPS = ["linear_extrude", "rotate_extrude", "offset", "translate",
+             "rotate", "scale", "mirror", "difference", "intersection",
+             "hull", "minkowski", "for_loop", "while_loop", "if_else"]
 
 
 class ObjectTree(QTreeWidget):
@@ -194,6 +195,10 @@ class ObjectTree(QTreeWidget):
                     icons.icon(NODE_TYPES[op]["icon"]),
                     NODE_TYPES[op]["label"],
                     lambda _=False, o=op: self.model.wrap_nodes(nodes, o))
+            apply_menu.addSeparator()
+            apply_menu.addAction(
+                icons.icon("mdi.circle-opacity"), "Round edges (3D)",
+                lambda: self.model.round_edges(nodes))
             menu.addAction(icons.icon("mdi.group"), "Group\tCtrl+G",
                            lambda: self.model.group_nodes(nodes))
             containers = [n for n in nodes if n.is_container()]
