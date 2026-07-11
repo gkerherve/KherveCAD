@@ -53,6 +53,7 @@ TOOLS = [
 #: measure / annotation tools (grouped after a separator in the bar).
 MEASURE_TOOLS = [
     (MEASURE, "mdi.tape-measure", "Measure distance", "M"),
+    (DIMENSION, "mdi.ruler-square", "Add dimension", "D"),
 ]
 
 #: 3D primitives added with one click.
@@ -367,6 +368,8 @@ class MainWindow(QMainWindow):
         self._dims_act.setToolTip("Show the size of selected shapes")
         self._dims_act.toggled.connect(self._set_show_dims)
         view_menu.addAction(self._dims_act)
+        view_menu.addAction("Clear &Dimensions",
+                            self.model.clear_dimensions)
         view_menu.addSeparator()
         view_menu.addAction("Zoom &In", lambda: self.view2d.zoom(1.25),
                             "Ctrl++")

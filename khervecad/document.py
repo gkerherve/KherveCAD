@@ -17,7 +17,7 @@ import json
 
 from .model import NODE_TYPES, CadNode, DocumentModel
 
-FORMAT_VERSION = 2
+FORMAT_VERSION = 3
 
 
 def node_to_dict(node: CadNode) -> dict:
@@ -44,6 +44,7 @@ def save_kcad(model: DocumentModel, path: str):
     data = {"format": "kcad", "version": FORMAT_VERSION,
             "global_fn": int(model.global_fn),
             "global_fn_on": bool(model.global_fn_on),
+            "dimensions": model.dimensions,
             "tree": node_to_dict(model.root)}
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=1)
@@ -58,8 +59,10 @@ def load_kcad(model: DocumentModel, path: str):
     # segment override — default on at 45 when the file predates it
     model.global_fn = int(data.get("global_fn", 45))
     model.global_fn_on = bool(data.get("global_fn_on", True))
+    model.dimensions = [dict(d) for d in data.get("dimensions", [])]
     model.group_variables()               # gather loose top-level vars
     model.structure_changed.emit()
+    model.dimensions_changed.emit()
 
 
 def export_scad(model: DocumentModel, path: str):

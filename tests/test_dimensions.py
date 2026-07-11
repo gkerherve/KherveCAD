@@ -94,6 +94,54 @@ def test_fmt_mm_trims_trailing_zeros():
     assert view2d._fmt_mm(0.0) == "0 mm"
 
 
+def test_placed_dimension_saves_and_reloads(window, tmp_path):
+    from khervecad import document
+    from khervecad.mainwindow import MainWindow
+    m = window.model
+    m.add_dimension((0.0, 0.0), (30.0, 0.0), "Top (XY)")
+    m.add_dimension((0.0, 0.0), (0.0, 20.0), "Front (XZ)")
+    assert len(m.dimensions) == 2
+    path = tmp_path / "dims.kcad"
+    document.save_kcad(m, str(path))
+    m2 = MainWindow().model
+    document.load_kcad(m2, str(path))
+    assert m2.dimensions == m.dimensions
+
+
+def test_placed_dimension_is_undoable(window):
+    m = window.model
+    m.add_dimension((0.0, 0.0), (10.0, 0.0), "Top (XY)")
+    QApplication.instance().processEvents()          # let capture fire
+    assert len(m.dimensions) == 1
+    m.undo_stack.undo()
+    QApplication.instance().processEvents()
+    assert m.dimensions == []
+    m.undo_stack.redo()
+    QApplication.instance().processEvents()
+    assert len(m.dimensions) == 1
+
+
+def test_dimension_tool_hit_test_and_remove(window):
+    from PyQt5.QtCore import QPoint
+    m = window.model
+    m.add_dimension((0.0, 0.0), (30.0, 0.0), "Top (XY)")
+    v = window.view2d
+    vp = v.mapFromScene(QPointF(15.0, 0.0))          # midpoint of the line
+    assert v._dimension_at(vp) == 0
+    assert v._dimension_at(QPoint(vp.x() + 300, vp.y() + 300)) is None
+    m.remove_dimension(0)
+    assert m.dimensions == []
+
+
+def test_dimensions_only_show_in_their_plane(window):
+    m = window.model
+    m.add_dimension((0.0, 0.0), (30.0, 0.0), "Front (XZ)")
+    v = window.view2d
+    window.scene.plane = "Top (XY)"                  # different plane
+    vp = v.mapFromScene(QPointF(15.0, 0.0))
+    assert v._dimension_at(vp) is None               # not hit-testable here
+
+
 def test_auto_dims_render_for_every_shape(window):
     from PyQt5.QtGui import QPainter, QPixmap
     m = window.model

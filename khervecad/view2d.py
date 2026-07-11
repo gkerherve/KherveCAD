@@ -57,6 +57,17 @@ def _fmt_mm(value: float) -> str:
     return f"{text or '0'} mm"
 
 
+def _point_seg_dist(p: QPointF, a: QPointF, b: QPointF) -> float:
+    """Shortest distance from point *p* to segment *a*-*b*."""
+    vx, vy = b.x() - a.x(), b.y() - a.y()
+    wx, wy = p.x() - a.x(), p.y() - a.y()
+    seg2 = vx * vx + vy * vy
+    tval = 0.0 if seg2 < 1e-12 else (wx * vx + wy * vy) / seg2
+    tval = max(0.0, min(1.0, tval))
+    dx, dy = a.x() + tval * vx - p.x(), a.y() + tval * vy - p.y()
+    return (dx * dx + dy * dy) ** 0.5
+
+
 class HandleItem(QGraphicsRectItem):
     """Square resize handle, constant size on screen."""
 
@@ -528,6 +539,7 @@ class SketchScene(QGraphicsScene):
         self._measure_cursor = None
         model.structure_changed.connect(self.rebuild)
         model.node_changed.connect(self._node_changed)
+        model.dimensions_changed.connect(self.update)
         # repaint the overlay so auto size-on-selection follows the pick
         self.selectionChanged.connect(self.update)
         self.rebuild()
@@ -1053,7 +1065,8 @@ class SketchScene(QGraphicsScene):
 
     # ------------------------------------------------------------ tools
     def mousePressEvent(self, event):
-        if self.tool == MEASURE and event.button() == Qt.LeftButton:
+        if self.tool in (MEASURE, DIMENSION) \
+                and event.button() == Qt.LeftButton:
             pt, _ = self.snap_feature(event.scenePos())
             if self._measure_a is None or self._measure_b is not None:
                 self._measure_a = self._measure_cursor = pt   # (re)start
@@ -1061,6 +1074,13 @@ class SketchScene(QGraphicsScene):
             else:
                 self._measure_b = pt                          # finish
                 self._emit_measure(self._measure_a, self._measure_b)
+                if self.tool == DIMENSION:                    # keep it
+                    self.model.add_dimension(
+                        (self._measure_a.x(), self._measure_a.y()),
+                        (self._measure_b.x(), self._measure_b.y()),
+                        self.plane)
+                    self._measure_a = self._measure_b = None
+                    self._measure_cursor = None
             self.update()
             event.accept()
             return
@@ -1099,7 +1119,7 @@ class SketchScene(QGraphicsScene):
         event.accept()
 
     def mouseMoveEvent(self, event):
-        if self.tool == MEASURE:
+        if self.tool in (MEASURE, DIMENSION):
             if self._measure_a is not None and self._measure_b is None:
                 pt, _ = self.snap_feature(event.scenePos())
                 self._measure_cursor = pt
@@ -1272,7 +1292,7 @@ class SketchView(QGraphicsView):
 
     def set_tool(self, tool):
         scene = self.scene()
-        if tool != MEASURE:
+        if tool not in (MEASURE, DIMENSION):
             scene.clear_measure()
         scene.tool = tool
         if tool == SELECT:
@@ -1362,6 +1382,7 @@ class SketchView(QGraphicsView):
             painter.drawText(int(x0 + px / 2 - 20), y0 - 8, label)
         # measurement + dimension annotations, drawn in view space so
         # text and arrows keep a constant size at any zoom
+        self._draw_placed_dims(painter)
         self._draw_auto_dims(painter)
         self._draw_measure(painter)
         painter.restore()
@@ -1446,6 +1467,55 @@ class SketchView(QGraphicsView):
         t = tokens()
         self._draw_dim(painter, a, b,
                        color=QColor(t["select"]), bg=QColor(t["card"]))
+
+    # ------------------------------------------------- placed dimensions
+    def _draw_placed_dims(self, painter):
+        """Saved dimension annotations for the current plane."""
+        scene = self.scene()
+        dims = getattr(scene.model, "dimensions", [])
+        if not dims:
+            return
+        from .style import tokens
+        t = tokens()
+        color, bg = QColor(t["gutter"]), QColor(t["card"])
+        for d in dims:
+            if d.get("plane") != scene.plane:
+                continue
+            self._draw_dim(painter,
+                           QPointF(d["a"][0], d["a"][1]),
+                           QPointF(d["b"][0], d["b"][1]),
+                           color=color, bg=bg, dots=True)
+
+    def _dimension_at(self, view_pos):
+        """Index of the placed dimension whose line lies under *view_pos*
+        (a viewport QPoint), or None."""
+        scene = self.scene()
+        p = QPointF(view_pos)
+        best, best_d = None, FEATURE_SNAP_PX
+        for i, d in enumerate(getattr(scene.model, "dimensions", [])):
+            if d.get("plane") != scene.plane:
+                continue
+            pa = QPointF(self.mapFromScene(QPointF(d["a"][0], d["a"][1])))
+            pb = QPointF(self.mapFromScene(QPointF(d["b"][0], d["b"][1])))
+            dist = _point_seg_dist(p, pa, pb)
+            if dist < best_d:
+                best, best_d = i, dist
+        return best
+
+    def contextMenuEvent(self, event):
+        model = self.scene().model
+        dims = getattr(model, "dimensions", [])
+        if not dims:
+            super().contextMenuEvent(event)
+            return
+        from PyQt5.QtWidgets import QMenu
+        menu = QMenu(self)
+        idx = self._dimension_at(event.pos())
+        if idx is not None:
+            menu.addAction("Delete dimension",
+                           lambda: model.remove_dimension(idx))
+        menu.addAction("Clear all dimensions", model.clear_dimensions)
+        menu.exec_(event.globalPos())
 
     # ---------------------------------------------- auto size on select
     def _draw_auto_dims(self, painter):

@@ -642,6 +642,8 @@ class DocumentModel(QObject):
     structure_changed = pyqtSignal()
     #: a single node's params / name / visibility changed.
     node_changed = pyqtSignal(object)
+    #: the drawing's dimension annotations were added/removed.
+    dimensions_changed = pyqtSignal()
 
     #: consecutive edits inside this window merge into one undo step
     #: (a 2D drag or spinbox scrub stays a single Ctrl+Z).
@@ -654,6 +656,9 @@ class DocumentModel(QObject):
         # at 45 so previews and exports are smooth out of the box
         self.global_fn = 45
         self.global_fn_on = True
+        #: engineering-drawing dimension annotations, each a dict
+        #: {"a": [x, y], "b": [x, y], "plane": <2D view plane>}.
+        self.dimensions = []
         self.undo_stack = QUndoStack(self)
         self._restoring = False
         self._last_state = self._serialize()
@@ -663,11 +668,13 @@ class DocumentModel(QObject):
         self._capture_timer.timeout.connect(self._capture)
         self.structure_changed.connect(self._schedule_capture)
         self.node_changed.connect(lambda _n: self._schedule_capture())
+        self.dimensions_changed.connect(self._schedule_capture)
 
     # ------------------------------------------------------ undo/redo
     def _serialize(self) -> str:
         from .document import node_to_dict
-        return json.dumps(node_to_dict(self.root))
+        return json.dumps({"tree": node_to_dict(self.root),
+                           "dimensions": self.dimensions})
 
     def _schedule_capture(self):
         """Capture one undo snapshot per event-loop cycle, so a
@@ -689,11 +696,31 @@ class DocumentModel(QObject):
         from .document import node_from_dict
         self._restoring = True
         try:
-            self.root = node_from_dict(json.loads(state))
+            data = json.loads(state)
+            self.root = node_from_dict(data["tree"])
+            self.dimensions = [dict(d) for d in data.get("dimensions", [])]
             self._last_state = state
             self.structure_changed.emit()
         finally:
             self._restoring = False
+
+    # ---------------------------------------------------- dimensions
+    def add_dimension(self, a, b, plane: str):
+        """Add a persistent dimension between two plane points (mm)."""
+        self.dimensions.append({"a": [float(a[0]), float(a[1])],
+                                "b": [float(b[0]), float(b[1])],
+                                "plane": plane})
+        self.dimensions_changed.emit()
+
+    def remove_dimension(self, index: int):
+        if 0 <= index < len(self.dimensions):
+            del self.dimensions[index]
+            self.dimensions_changed.emit()
+
+    def clear_dimensions(self):
+        if self.dimensions:
+            self.dimensions = []
+            self.dimensions_changed.emit()
 
     # -------------------------------------------------------- queries
     def find(self, node_id: int):
