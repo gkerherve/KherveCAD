@@ -16,8 +16,11 @@ the Free Software Foundation, either version 3 of the License, or
 """
 
 import itertools
+import json
+import time
 
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, QTimer, pyqtSignal
+from PyQt5.QtWidgets import QUndoCommand, QUndoStack
 
 from . import expr
 
@@ -155,6 +158,11 @@ NODE_TYPES = {
         params=dict(radius=2.0, chamfer=False),
         schema=[("radius", "Radius (+out/-in)", "float", -1e4, 1e4),
                 ("chamfer", "Chamfer (no rounding)", "bool", None, None)]),
+    "color": dict(
+        label="Color", category=OPERATION, icon="mdi.palette-outline",
+        params=dict(color="#4a90d9", alpha=1.0),
+        schema=[("color", "Color", "color", None, None),
+                ("alpha", "Opacity (0-1)", "float", 0.0, 1.0)]),
     # ----- booleans / grouping ---------------------------------------
     "union": dict(
         label="Group (union)", category=BOOLEAN, icon="mdi.group",
@@ -492,6 +500,11 @@ class CadNode:
                 return (f"offset(delta={fmt(p['radius'])}, "
                         f"chamfer=true)")
             return f"offset(r={fmt(p['radius'])})"
+        if t == "color":
+            alpha = p.get("alpha", 1.0)
+            if isinstance(alpha, float) and alpha >= 1.0:
+                return f"color({scad_str(p['color'])})"
+            return f"color({scad_str(p['color'])}, {fmt(alpha)})"
         if t == "for_loop":
             var = str(p.get("variable", "i")) or "i"
             if str(p.get("values", "")).strip():
@@ -529,9 +542,53 @@ class DocumentModel(QObject):
     #: a single node's params / name / visibility changed.
     node_changed = pyqtSignal(object)
 
+    #: consecutive edits inside this window merge into one undo step
+    #: (a 2D drag or spinbox scrub stays a single Ctrl+Z).
+    UNDO_MERGE_S = 0.4
+
     def __init__(self):
         super().__init__()
         self.root = CadNode("root")
+        self.undo_stack = QUndoStack()
+        self._restoring = False
+        self._capture_scheduled = False
+        self._last_state = self._serialize()
+        self.structure_changed.connect(self._schedule_capture)
+        self.node_changed.connect(lambda _n: self._schedule_capture())
+
+    # ------------------------------------------------------ undo/redo
+    def _serialize(self) -> str:
+        from .document import node_to_dict
+        return json.dumps(node_to_dict(self.root))
+
+    def _schedule_capture(self):
+        """Capture one undo snapshot per event-loop cycle, so a
+        multi-step operation (wrap + rename + ...) is one undo step."""
+        if self._restoring or self._capture_scheduled:
+            return
+        self._capture_scheduled = True
+        QTimer.singleShot(0, self._capture)
+
+    def _capture(self):
+        self._capture_scheduled = False
+        if self._restoring:
+            return
+        state = self._serialize()
+        if state == self._last_state:
+            return
+        self.undo_stack.push(
+            _SnapshotCommand(self, self._last_state, state))
+        self._last_state = state
+
+    def restore_state(self, state: str):
+        from .document import node_from_dict
+        self._restoring = True
+        try:
+            self.root = node_from_dict(json.loads(state))
+            self._last_state = state
+            self.structure_changed.emit()
+        finally:
+            self._restoring = False
 
     # -------------------------------------------------------- queries
     def find(self, node_id: int):
@@ -652,6 +709,25 @@ class DocumentModel(QObject):
         self.structure_changed.emit()
         return wrapper
 
+    def set_color(self, nodes, color: str, alpha: float = 1.0):
+        """Colour *nodes*: reuse an existing color wrapper (the node
+        itself or its parent) or wrap in a new one."""
+        wrappers = []
+        for node in nodes:
+            if node.type == "color":
+                wrapper = node
+            elif node.parent is not None and \
+                    node.parent.type == "color":
+                wrapper = node.parent
+            else:
+                wrapper = self.wrap_nodes([node], "color")
+            if wrapper is not None:
+                wrapper.params["color"] = color
+                wrapper.params["alpha"] = alpha
+                wrappers.append(wrapper)
+                self.node_changed.emit(wrapper)
+        return wrappers
+
     def round_edges(self, nodes, radius: float = 1.0) -> CadNode:
         """Round the edges of *nodes* after extrusion: wrap them in
         minkowski() with a small sphere — the OpenSCAD idiom."""
@@ -697,6 +773,39 @@ class DocumentModel(QObject):
     def clear(self):
         self.root = CadNode("root")
         self.structure_changed.emit()
+
+
+class _SnapshotCommand(QUndoCommand):
+    """Whole-document snapshot: simple, correct for every operation,
+    and cheap at .kcad document sizes. Commands pushed in rapid
+    succession merge, so drags stay one undo step."""
+
+    def __init__(self, model, old_state, new_state):
+        super().__init__("edit")
+        self.model = model
+        self.old_state = old_state
+        self.new_state = new_state
+        self.stamp = time.monotonic()
+        self._first_redo = True
+
+    def id(self):
+        return 1
+
+    def mergeWith(self, other):
+        if time.monotonic() - self.stamp > self.model.UNDO_MERGE_S:
+            return False
+        self.new_state = other.new_state
+        self.stamp = other.stamp
+        return True
+
+    def redo(self):
+        if self._first_redo:                 # push() applies nothing:
+            self._first_redo = False         # the state is already live
+            return
+        self.model.restore_state(self.new_state)
+
+    def undo(self):
+        self.model.restore_state(self.old_state)
 
 
 # ------------------------------------------------------------ validation

@@ -28,6 +28,7 @@ class View3D(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.mesh = []                  # [(v0, v1, v2)] world space
+        self.colors = None              # optional per-face colours
         self.source = "no model"
         self.yaw = 35.0                 # degrees around Z
         self.pitch = 22.0               # degrees above the XY plane
@@ -39,8 +40,12 @@ class View3D(QWidget):
         self.setMouseTracking(False)
 
     # ------------------------------------------------------------- API
-    def set_mesh(self, mesh, source: str):
+    def set_mesh(self, mesh, source: str, colors=None):
+        """*colors* is an optional per-face list of (colorstring,
+        alpha) — colours from color() nodes shown by the preview."""
         self.mesh = mesh or []
+        self.colors = colors if colors and len(colors) == len(self.mesh) \
+            else None
         self.source = source
         self.update()
 
@@ -104,7 +109,7 @@ class View3D(QWidget):
         light = tuple(c / norm for c in light)
 
         faces = []
-        for tri in self.mesh:
+        for index, tri in enumerate(self.mesh):
             pts = [self._project(eye, right, up, forward, v)
                    for v in tri]
             if any(p is None for p in pts):
@@ -121,17 +126,27 @@ class View3D(QWidget):
                 continue
             shade = abs(nx * light[0] + ny * light[1]
                         + nz * light[2]) / length
-            faces.append((depth, pts, shade))
+            face_color = self.colors[index] if self.colors else None
+            faces.append((depth, pts, shade, face_color))
 
         faces.sort(key=lambda f: -f[0])
         pen = QPen(QColor(0, 0, 0, 30))
         pen.setWidthF(0.5)
-        for _depth, pts, shade in faces:
+        for _depth, pts, shade, face_color in faces:
             value = 0.35 + 0.65 * shade
-            color = QColor.fromHsvF(
-                base.hueF() if base.hueF() >= 0 else 0.58,
-                base.saturationF() * 0.75,
-                min(value, 1.0))
+            if face_color is not None:
+                own = QColor(face_color[0])
+                if not own.isValid():
+                    own = base
+                color = QColor.fromHsvF(
+                    max(own.hueF(), 0.0), own.saturationF(),
+                    min(own.valueF() * (0.45 + 0.55 * shade), 1.0))
+                color.setAlphaF(max(min(face_color[1], 1.0), 0.15))
+            else:
+                color = QColor.fromHsvF(
+                    base.hueF() if base.hueF() >= 0 else 0.58,
+                    base.saturationF() * 0.75,
+                    min(value, 1.0))
             painter.setPen(pen)
             painter.setBrush(color)
             painter.drawPolygon(QPolygonF(

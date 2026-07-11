@@ -558,19 +558,36 @@ def flat_mesh(node: CadNode, env=None):
 
 def tessellate(node: CadNode, env=None):
     """Triangle mesh for *node*'s subtree (fallback semantics)."""
-    env = dict(env or {})
+    return [tri for tri, _color in _tess(node, dict(env or {}), None)]
+
+def tessellate_colored(node: CadNode, env=None):
+    """Like tessellate but returns [(triangle, (color, alpha) | None)]
+    with per-face colours from color() nodes — the built-in preview
+    shows them (STL from the engine is geometry-only)."""
+    return _tess(node, dict(env or {}), None)
+
+
+def _paint(tris, color):
+    return [(tri, color) for tri in tris]
+
+
+def _tess(node, env, color):
     if not node.visible:
         return []
     t = node.type
+    if t == "color":
+        color = (str(node.params.get("color", "#4a90d9")),
+                 rv(node.params.get("alpha", 1.0), env, 1.0))
+        return _children_mesh(node, env, color)
     if t in ("root", "union", "hull"):
         # 3D hull is approximated as the union of its children.
-        return _children_mesh(node, env)
+        return _children_mesh(node, env, color)
     if t in ("difference", "intersection", "minkowski"):
         # Approximation: show the first operand; the OpenSCAD engine
         # renders the true CSG result.
         for child in node.children:
             if child.type != "assign":
-                return tessellate(child, env)
+                return _tess(child, env, color)
         return []
     if t in ("for_loop", "while_loop"):
         var = str(node.params.get("variable", "i")) or "i"
@@ -578,35 +595,26 @@ def tessellate(node: CadNode, env=None):
         for value in node.loop_values(env):
             scoped = dict(env)
             scoped[var] = value
-            mesh.extend(_children_mesh(node, scoped))
+            mesh.extend(_children_mesh(node, scoped, color))
         return mesh
     if t == "if_else":
         mesh = []
         for child in _if_branch(node, env):
-            mesh.extend(tessellate(child, env))
+            mesh.extend(_tess(child, env, color))
         return mesh
     if t == "assign":
         return []
     if t == "linear_extrude":
-        return linear_extrude_mesh(node, env)
+        return _paint(linear_extrude_mesh(node, env), color)
     if t == "rotate_extrude":
-        return rotate_extrude_mesh(node, env)
-    if t == "translate":
+        return _paint(rotate_extrude_mesh(node, env), color)
+    if t in ("translate", "rotate", "scale", "mirror"):
         p = rp(node, env)
-        return transform_mesh(mat_translate(p["x"], p["y"], p["z"]),
-                              _children_mesh(node, env))
-    if t == "rotate":
-        p = rp(node, env)
-        return transform_mesh(mat_rotate(p["x"], p["y"], p["z"]),
-                              _children_mesh(node, env))
-    if t == "scale":
-        p = rp(node, env)
-        return transform_mesh(mat_scale(p["x"], p["y"], p["z"]),
-                              _children_mesh(node, env))
-    if t == "mirror":
-        p = rp(node, env)
-        return transform_mesh(mat_mirror(p["x"], p["y"], p["z"]),
-                              _children_mesh(node, env))
+        matrix = dict(translate=mat_translate, rotate=mat_rotate,
+                      scale=mat_scale,
+                      mirror=mat_mirror)[t](p["x"], p["y"], p["z"])
+        return _transform_colored(matrix,
+                                  _children_mesh(node, env, color))
     if t == "offset":
         # 2D-only op: preview its (offset) outlines flat at z = 0.
         mesh = []
@@ -614,28 +622,33 @@ def tessellate(node: CadNode, env=None):
             mesh.extend((
                 (a[0], a[1], 0.0), (b[0], b[1], 0.0),
                 (c[0], c[1], 0.0)) for a, b, c in triangulate(outline))
-        return mesh
+        return _paint(mesh, color)
     if t == "cube":
-        return cube_mesh(rp(node, env))
+        return _paint(cube_mesh(rp(node, env)), color)
     if t == "sphere":
-        return sphere_mesh(rp(node, env))
+        return _paint(sphere_mesh(rp(node, env)), color)
     if t == "cylinder":
-        return cylinder_mesh(rp(node, env))
+        return _paint(cylinder_mesh(rp(node, env)), color)
     if t == "stl_import":
-        return stl_mesh(rp(node, env))
+        return _paint(stl_mesh(rp(node, env)), color)
     if node.category == SHAPE_2D:
-        return flat_mesh(node, env)
+        return _paint(flat_mesh(node, env), color)
     return []                                 # pragma: no cover
 
 
-def _children_mesh(node, env):
+def _transform_colored(matrix, colored):
+    plain = transform_mesh(matrix, [tri for tri, _c in colored])
+    return list(zip(plain, (c for _t, c in colored)))
+
+
+def _children_mesh(node, env, color):
     mesh = []
     env = dict(env)
     for child in node.children:
         if child.type == "assign":
             _apply_assign(child, env)
         else:
-            mesh.extend(tessellate(child, env))
+            mesh.extend(_tess(child, env, color))
     return mesh
 
 

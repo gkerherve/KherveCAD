@@ -587,6 +587,21 @@ def _b_import(parser, positional, named):
                    dict(path=str(path), x=0.0, y=0.0, z=0.0))
 
 
+def _b_color(parser, positional, named):
+    value = _get(positional, named, 0, "c", default="#4a90d9")
+    alpha = _num(_get(positional, named, 1, "alpha", default=1.0), 1.0)
+    if isinstance(value, list):
+        rgb = [max(0.0, min(1.0, _num(v, 0.0))) for v in value[:3]]
+        while len(rgb) < 3:
+            rgb.append(0.0)
+        if len(value) > 3:
+            alpha = _num(value[3], 1.0)
+        value = "#%02x%02x%02x" % tuple(int(round(c * 255))
+                                        for c in rgb)
+    return CadNode("color", "Color",
+                   dict(color=str(value), alpha=alpha))
+
+
 def _simple(type_, label):
     return lambda parser, positional, named: CadNode(type_, label)
 
@@ -599,7 +614,7 @@ _BUILDERS = {
     "scale": _b_scale, "mirror": _b_mirror,
     "linear_extrude": _b_linear_extrude,
     "rotate_extrude": _b_rotate_extrude,
-    "offset": _b_offset, "import": _b_import,
+    "offset": _b_offset, "import": _b_import, "color": _b_color,
     "union": _simple("union", "Group"),
     "difference": _simple("difference", "Difference"),
     "intersection": _simple("intersection", "Intersection"),

@@ -185,7 +185,29 @@ class PropertiesPanel(QScrollArea):
         if kind == "points":
             return PointsEditor(self.node.params[key],
                                 lambda pts, k=key: self._set_param(k, pts))
+        if kind == "color":
+            button = QPushButton()
+            button.clicked.connect(lambda _=False, k=key, b=button:
+                                   self._pick_color(k, b))
+            return button
         return None
+
+    def _pick_color(self, key, button):
+        from PyQt5.QtGui import QColor
+        from PyQt5.QtWidgets import QColorDialog
+        current = QColor(str(self.node.params.get(key, "#4a90d9")))
+        chosen = QColorDialog.getColor(
+            current if current.isValid() else QColor("#4a90d9"),
+            self, "Colour")
+        if chosen.isValid():
+            self._set_param(key, chosen.name())
+            self._swatch(button, chosen.name())
+
+    @staticmethod
+    def _swatch(button, color):
+        button.setText(color)
+        button.setStyleSheet(
+            f"QPushButton {{ background: {color}; }}")
 
     def _load_values(self):
         self._updating = True
@@ -199,6 +221,8 @@ class PropertiesPanel(QScrollArea):
                 editor.setValue(int(value))
             elif isinstance(editor, QCheckBox):
                 editor.setChecked(bool(value))
+            elif isinstance(editor, QPushButton):
+                self._swatch(editor, str(value))
             elif isinstance(editor, QLineEdit):
                 editor.setText(str(value))
         self._updating = False

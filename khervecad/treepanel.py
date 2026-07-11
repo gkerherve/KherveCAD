@@ -280,6 +280,30 @@ class ObjectTree(QTreeWidget):
         else:
             super().keyPressEvent(event)
 
+    def _pick_color(self, nodes):
+        """Colour the selected objects with OpenSCAD's color()."""
+        from PyQt5.QtWidgets import QColorDialog
+        current = "#4a90d9"
+        alpha = 1.0
+        for node in nodes:
+            probe = node if node.type == "color" else \
+                (node.parent if node.parent is not None
+                 and node.parent.type == "color" else None)
+            if probe is not None:
+                current = str(probe.params.get("color", current))
+                alpha = float(probe.params.get("alpha", 1.0))
+                break
+        initial = QColor(current)
+        if initial.isValid():
+            initial.setAlphaF(alpha)
+        chosen = QColorDialog.getColor(
+            initial if initial.isValid() else QColor("#4a90d9"),
+            self, "Object colour",
+            QColorDialog.ShowAlphaChannel)
+        if chosen.isValid():
+            self.model.set_color(nodes, chosen.name(),
+                                 round(chosen.alphaF(), 3))
+
     # ----------------------------------------------------- drag & drop
     def dropEvent(self, event):
         moving = self.selected_nodes()
@@ -323,6 +347,8 @@ class ObjectTree(QTreeWidget):
             apply_menu.addAction(
                 icons.icon("mdi.blur"), "Round edges (3D)",
                 lambda: self.model.round_edges(nodes))
+            menu.addAction(icons.icon("mdi.palette-outline"),
+                           "Color...", lambda: self._pick_color(nodes))
             menu.addAction(icons.icon("mdi.group"), "Group\tCtrl+G",
                            lambda: self.model.group_nodes(nodes))
             containers = [n for n in nodes if n.is_container()]

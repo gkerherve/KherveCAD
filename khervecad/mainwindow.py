@@ -253,6 +253,15 @@ class MainWindow(QMainWindow):
         file_menu.addAction("E&xit", self.close, "Ctrl+Q")
 
         edit_menu = m.addMenu("&Edit")
+        undo_act = self.model.undo_stack.createUndoAction(self, "&Undo")
+        undo_act.setIcon(icons.icon("mdi.undo"))
+        undo_act.setShortcut("Ctrl+Z")
+        edit_menu.addAction(undo_act)
+        redo_act = self.model.undo_stack.createRedoAction(self, "&Redo")
+        redo_act.setIcon(icons.icon("mdi.redo"))
+        redo_act.setShortcuts(["Ctrl+Y", "Ctrl+Shift+Z"])
+        edit_menu.addAction(redo_act)
+        edit_menu.addSeparator()
         edit_menu.addAction(icons.icon("mdi.content-cut"),
                             "Cu&t\tCtrl+X",
                             self.builder.tree.cut_selection)
@@ -431,17 +440,25 @@ class MainWindow(QMainWindow):
         self._refresh_preview()
 
     def _refresh_preview(self):
-        tris = mesh.tessellate(self.model.root)
+        colored = mesh.tessellate_colored(self.model.root)
+        tris = [t for t, _c in colored]
+        colors = [c for _t, c in colored]
+        has_colors = any(c is not None for c in colors)
         label = "built-in preview"
         if mesh.uses_booleans(self.model.root):
             label += (" (booleans approximated)"
                       if not self.engine.available else "")
-        self.view3d.set_mesh(tris, label)
+        self.view3d.set_mesh(tris, label,
+                             colors if has_colors else None)
         if tris and not self._fitted:
             self.view3d.fit()
             self._fitted = True
         if self.engine.available:
-            self.engine.request_render(self.model.to_scad())
+            # colours only exist in the preview: STL is geometry-only,
+            # so skip the engine swap while the document is coloured
+            # (F5 still forces an exact render).
+            if not has_colors:
+                self.engine.request_render(self.model.to_scad())
 
     def _render_now(self):
         if self.engine.available:
