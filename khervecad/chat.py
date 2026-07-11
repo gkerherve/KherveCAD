@@ -86,8 +86,20 @@ AI_PROVIDERS = {
     },
 }
 
-MAX_TOKENS = 3000
+#: Upper bound on the reply length we ask the model for. Set high so
+#: long programs and explanations are never truncated; providers clamp
+#: it to whatever the chosen model actually supports.
+MAX_TOKENS = 8000
 TEMPERATURE = 0.7
+
+#: Rough English chars-per-token, used only to keep the running
+#: conversation inside a model's context window.
+_CHARS_PER_TOKEN = 4
+#: Keep as much of the conversation as fits in this many tokens of
+#: history, so the assistant remembers the whole session — only the
+#: oldest turns are dropped, and only once it would overflow a large
+#: model's context window.
+HISTORY_TOKEN_BUDGET = 180000
 
 SYSTEM_PROMPT = """\
 You are KherveAI, the assistant inside KherveCAD — an easy-to-use CAD
@@ -556,6 +568,7 @@ class ChatPanel(QWidget):
                 f"icon) or set {config['key_env']}.")
             return
         self.history.append({"role": "user", "content": text})
+        self._trim_history()
         system = (SYSTEM_PROMPT
                   + "\n\nCurrent document program:\n```scad\n"
                   + self.window.model.to_scad() + "\n```")
@@ -569,10 +582,18 @@ class ChatPanel(QWidget):
             lambda: self.send_btn.setEnabled(True))
         self._worker.start()
 
+    def _trim_history(self):
+        """Keep the whole conversation, dropping only the oldest turns
+        once it would overflow the context budget — so the assistant
+        remembers as much of the session as safely fits."""
+        budget = HISTORY_TOKEN_BUDGET * _CHARS_PER_TOKEN     # in chars
+        total = sum(len(m["content"]) for m in self.history)
+        while len(self.history) > 2 and total > budget:
+            total -= len(self.history.pop(0)["content"])
+
     def _replied(self, text):
         self.history.append({"role": "assistant", "content": text})
-        if len(self.history) > 30:            # keep the context lean
-            self.history = self.history[-30:]
+        self._trim_history()
         blocks = _SCAD_BLOCK_RE.findall(text)
         # show only the explanation, never the raw program — the code
         # is applied to the document automatically

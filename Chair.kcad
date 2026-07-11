@@ -1,0 +1,176 @@
+{
+ "format": "kcad",
+ "version": 1,
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "seat_w =",
+    "visible": true,
+    "params": {
+     "variable": "seat_w",
+     "value": 400.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "seat_d =",
+    "visible": true,
+    "params": {
+     "variable": "seat_d",
+     "value": 400.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "seat_t =",
+    "visible": true,
+    "params": {
+     "variable": "seat_t",
+     "value": 20.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "leg_t =",
+    "visible": true,
+    "params": {
+     "variable": "leg_t",
+     "value": 30.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "leg_h =",
+    "visible": true,
+    "params": {
+     "variable": "leg_h",
+     "value": 420.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "back_h =",
+    "visible": true,
+    "params": {
+     "variable": "back_h",
+     "value": 400.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "back_t =",
+    "visible": true,
+    "params": {
+     "variable": "back_t",
+     "value": 20.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "inset =",
+    "visible": true,
+    "params": {
+     "variable": "inset",
+     "value": "leg_t / 2"
+    }
+   },
+   {
+    "type": "union",
+    "name": "Group",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "cube",
+      "name": "Cube",
+      "visible": true,
+      "params": {
+       "x": "inset",
+       "y": "inset",
+       "z": 0.0,
+       "width": "leg_t",
+       "depth": "leg_t",
+       "height": "leg_h",
+       "center": false
+      }
+     },
+     {
+      "type": "cube",
+      "name": "Cube",
+      "visible": true,
+      "params": {
+       "x": "seat_w - inset - leg_t",
+       "y": "inset",
+       "z": 0.0,
+       "width": "leg_t",
+       "depth": "leg_t",
+       "height": "leg_h",
+       "center": false
+      }
+     },
+     {
+      "type": "cube",
+      "name": "Cube",
+      "visible": true,
+      "params": {
+       "x": "inset",
+       "y": "seat_d - inset - leg_t",
+       "z": 0.0,
+       "width": "leg_t",
+       "depth": "leg_t",
+       "height": "leg_h",
+       "center": false
+      }
+     },
+     {
+      "type": "cube",
+      "name": "Cube",
+      "visible": true,
+      "params": {
+       "x": "seat_w - inset - leg_t",
+       "y": "seat_d - inset - leg_t",
+       "z": 0.0,
+       "width": "leg_t",
+       "depth": "leg_t",
+       "height": "leg_h",
+       "center": false
+      }
+     },
+     {
+      "type": "cube",
+      "name": "Cube",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": "leg_h",
+       "width": "seat_w",
+       "depth": "seat_d",
+       "height": "seat_t",
+       "center": false
+      }
+     },
+     {
+      "type": "cube",
+      "name": "Cube",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": "seat_d - back_t",
+       "z": "leg_h + seat_t",
+       "width": "seat_w",
+       "depth": "back_t",
+       "height": "back_h",
+       "center": false
+      }
+     }
+    ]
+   }
+  ]
+ }
+}

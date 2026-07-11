@@ -191,6 +191,30 @@ def test_auto_apply_is_undoable(window):
     assert window.model.root.children[0].type == "sphere"
 
 
+def test_history_keeps_long_conversation(window):
+    panel = window.chat
+    panel.history = []
+    for i in range(100):                       # old cap dropped past 30
+        panel.history.append({"role": "user", "content": f"m{i}"})
+    panel._trim_history()
+    assert len(panel.history) == 100           # tiny — nothing dropped
+    assert panel.history[0]["content"] == "m0"
+
+
+def test_history_trims_only_when_over_budget(window):
+    panel = window.chat
+    panel.history = []
+    chunk = "x" * (chat._CHARS_PER_TOKEN * 1000)   # ~1000 tokens each
+    count = (chat.HISTORY_TOKEN_BUDGET // 1000) + 50
+    for _ in range(count):
+        panel.history.append({"role": "user", "content": chunk})
+    panel._trim_history()
+    total = sum(len(m["content"]) for m in panel.history)
+    assert total <= chat.HISTORY_TOKEN_BUDGET * chat._CHARS_PER_TOKEN
+    assert len(panel.history) < count          # oldest turns dropped
+    assert len(panel.history) >= 2             # but never wiped out
+
+
 def test_missing_key_warns_instead_of_sending(window, monkeypatch):
     panel = window.chat
     monkeypatch.setattr(chat, "get_api_key", lambda p: "")
