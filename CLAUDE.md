@@ -77,10 +77,13 @@ into a new module and import.
                        right-angle valves, and turbo pump shells in
                        three inlet classes (DN63/DN100/DN160 CF); plus
                        CF/KF elbows, KF nipples/tees (`kf_fitting`),
-                       CF/KF electrical feedthroughs and a
-                       hemispherical electron energy analyser (twin
-                       revolved dome shells). Parts are ordinary node
-                       subtrees; bolt circles are for-loops. The
+                       CF/KF electrical feedthroughs, a hemispherical
+                       electron energy analyser (twin revolved dome
+                       shells), an **XYZ(R1) manipulator** (edge-welded
+                       `bellows` whose length is the Z-travel size),
+                       and **rotary vane / dry scroll backing pumps**.
+                       Parts are ordinary node subtrees; bolt circles
+                       are for-loops. The
                        dialog groups parts by **category**; other
                        modules register parts by adding a `build`
                        callable to `PARTS`, which `build_part`

@@ -251,12 +251,30 @@ def validate_root(node):
     return validate(root)
 
 
+def test_backing_pumps_build_multicolour(model):
+    for pid, size in (("pump_rotary", "Medium (KF25)"),
+                      ("pump_scroll", "Medium (KF40)")):
+        node = library.build_part(
+            pid, dict(library.PARTS[pid]["sizes"][size], _size=size))
+        model.root.add(node)
+        assert not validate_root(node)
+        colours = {c[0] for _t, c in mesh.tessellate_colored(node)
+                   if c is not None}
+        assert len(colours) >= 3               # body/motor/trim differ
+    # the scroll pump's dry-pump signature: cooling fins
+    scroll = library.build_part(
+        "pump_scroll", dict(library.SCROLL_SIZES["Medium (KF40)"],
+                            _size="Medium (KF40)"))
+    assert any(n.name == "Cooling fins" for n in scroll.walk())
+
+
 def test_part_categories_present():
     cats = {spec.get("category") for spec in library.PARTS.values()}
     assert "Vacuum" in cats and "Fasteners" in cats
     # the new vacuum parts are registered
     for pid in ("cf_elbow", "kf_elbow", "cf_feedthrough",
-                "kf_feedthrough", "analyser_hsa"):
+                "kf_feedthrough", "analyser_hsa", "manipulator",
+                "pump_rotary", "pump_scroll"):
         assert pid in library.PARTS
 
 

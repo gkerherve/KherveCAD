@@ -695,6 +695,128 @@ def manipulator(z_travel=50.0, mount=None, xy_travel=25.0) -> CadNode:
     return part
 
 
+# ----------------------------------------------------- backing pumps
+
+_PUMP_BODY = "#8a9099"       # cast body
+_PUMP_MOTOR = "#3a3f45"      # motor housing
+_PUMP_OIL = "#d9a441"        # oil sight glass
+_PUMP_TRIM = "#5f646c"
+
+
+def _colour(node, hexcol, name="Colour"):
+    c = CadNode("color", name, dict(color=hexcol, alpha=1.0))
+    c.add(node)
+    return c
+
+
+def _horiz_cyl(name, radius, length, x=0.0, z=0.0, r2=None,
+               segments=64, color=None):
+    """A cylinder lying along +X, its -X end at *x*, axis at height *z*."""
+    lift = CadNode("translate", f"{name} pos", dict(x=x, y=0.0, z=z))
+    rot = CadNode("rotate", f"{name} axis", dict(x=0.0, y=90.0, z=0.0))
+    rot.add(CadNode("cylinder", name, dict(
+        x=0.0, y=0.0, z=0.0, height=length, radius_bottom=radius,
+        radius_top=radius if r2 is None else r2, segments=segments,
+        center=False)))
+    lift.add(rot)
+    return _colour(lift, color, name) if color else lift
+
+
+def _kf_port(inlet, x, z, length, color=None):
+    """A KF hose port pointing +Z: a tube capped by a clamp disc."""
+    grp = CadNode("union", "KF port")
+    grp.add(_cyl("Port tube", inlet["tube_od"] / 2.0, length, x=x, z=z,
+                 segments=32))
+    grp.add(_cyl("Port flange", inlet["flange_od"] / 2.0,
+                 inlet["thickness"], x=x, z=z + length, segments=48))
+    return _colour(grp, color, "KF port") if color else grp
+
+
+def rotary_pump(inlet=None, body_l=200.0, body_d=100.0,
+                motor_l=150.0, motor_d=115.0) -> CadNode:
+    """A two-stage oil-sealed rotary vane (roughing) pump: motor,
+    oil-box body, sight glass, KF inlet on top, oil-mist-filter exhaust
+    and a carry handle, on feet."""
+    foot_h = 18.0
+    zc = foot_h + body_d / 2.0                # body axis height
+    part = CadNode("union", "Rotary vane pump")
+    # base rails + feet
+    part.add(_colour(CadNode("cube", "Base", dict(
+        x=-motor_l - 10.0, y=-body_d / 2.0 - 6.0, z=0.0,
+        width=motor_l + body_l + 30.0, depth=body_d + 12.0,
+        height=foot_h, center=False)), _PUMP_TRIM, "Base"))
+    # motor (with fan cowl) then the oil-box body
+    part.add(_horiz_cyl("Motor", motor_d / 2.0, motor_l, x=-motor_l,
+                        z=zc, color=_PUMP_MOTOR))
+    part.add(_horiz_cyl("Fan cowl", motor_d / 2.0 + 6.0, 16.0,
+                        x=-motor_l - 16.0, z=zc, color=_PUMP_TRIM))
+    part.add(_horiz_cyl("Oil-box body", body_d / 2.0, body_l, x=0.0,
+                        z=zc, color=_PUMP_BODY))
+    part.add(_horiz_cyl("End cap", body_d / 2.0 + 4.0, 10.0,
+                        x=body_l - 10.0, z=zc, color=_PUMP_TRIM))
+    # oil sight glass: a short amber window on the +Y face
+    sight = CadNode("rotate", "Sight axis", dict(x=-90.0, y=0.0, z=0.0))
+    sight.add(_cyl("Sight glass", body_d * 0.14, 16.0, segments=24))
+    part.add(_colour(_lift_xy(sight, body_l * 0.55, body_d / 2.0 - 8.0,
+                              zc), _PUMP_OIL, "Sight glass"))
+    # KF inlet up near the motor end; oil-mist exhaust canister at far end
+    part.add(_kf_port(inlet or KF_SIZES["KF25 (DN25)"], body_l * 0.28,
+                      zc + body_d / 2.0, body_d * 0.35, _PUMP_BODY))
+    part.add(_colour(_cyl("Mist filter", body_d * 0.24, body_d * 0.9,
+                          x=body_l * 0.8, z=zc + body_d / 2.0,
+                          segments=32), _PUMP_TRIM, "Mist filter"))
+    # carry handle (inverted U) over the top
+    hz = zc + body_d / 2.0 + body_d * 0.5
+    part.add(_colour(_horiz_cyl("Handle bar", 8.0, body_l * 0.6,
+                                x=body_l * 0.2, z=hz, segments=20),
+                     _PUMP_MOTOR, "Handle"))
+    for hx in (body_l * 0.2, body_l * 0.8):
+        part.add(_colour(_cyl("Handle post", 8.0, body_d * 0.5,
+                              x=hx, z=zc + body_d / 2.0, segments=16),
+                         _PUMP_MOTOR, "Handle post"))
+    return part
+
+
+def scroll_pump(inlet=None, body_l=200.0, body_d=130.0,
+                motor_l=160.0) -> CadNode:
+    """A dry scroll (backing) pump: finned scroll housing + motor with
+    a fan cowl, KF inlet on top and a side exhaust — no oil box."""
+    foot_h = 18.0
+    zc = foot_h + body_d / 2.0
+    part = CadNode("union", "Scroll pump")
+    part.add(_colour(CadNode("cube", "Base", dict(
+        x=-motor_l - 10.0, y=-body_d / 2.0 - 6.0, z=0.0,
+        width=motor_l + body_l + 30.0, depth=body_d + 12.0,
+        height=foot_h, center=False)), _PUMP_TRIM, "Base"))
+    part.add(_horiz_cyl("Motor", body_d * 0.42, motor_l, x=-motor_l,
+                        z=zc, color=_PUMP_MOTOR))
+    part.add(_horiz_cyl("Fan cowl", body_d * 0.42 + 6.0, 16.0,
+                        x=-motor_l - 16.0, z=zc, color=_PUMP_TRIM))
+    part.add(_horiz_cyl("Scroll housing", body_d / 2.0, body_l, x=0.0,
+                        z=zc, color=_PUMP_BODY))
+    # cooling fins around the housing (the dry-pump signature)
+    nfins = max(int(body_l / 14.0), 3)
+    fins = CadNode("for_loop", "Cooling fins", dict(
+        variable="i", start=0.0, end=float(nfins - 1), step=1.0))
+    fins.add(_horiz_cyl("Fin", body_d / 2.0 + 7.0, 3.0,
+                        x=f"6 + i*{body_l / nfins}", z=zc, segments=48))
+    part.add(_colour(fins, _PUMP_TRIM, "Cooling fins"))
+    part.add(_horiz_cyl("End cap", body_d / 2.0 + 4.0, 10.0,
+                        x=body_l - 10.0, z=zc, color=_PUMP_TRIM))
+    # KF inlet up, exhaust out the far end
+    part.add(_kf_port(inlet or KF_SIZES["KF40 (DN40)"], body_l * 0.35,
+                      zc + body_d / 2.0, body_d * 0.3, _PUMP_BODY))
+    part.add(_horiz_cyl("Exhaust", body_d * 0.12, body_d * 0.5,
+                        x=body_l, z=zc, color=_PUMP_TRIM))
+    return part
+
+
+def _lift_xy(node, x, y, z):
+    t = CadNode("translate", "Place", dict(x=x, y=y, z=z))
+    t.add(node)
+    return t
+
+
 # ----------------------------------------------------------------- parts
 
 #: hemispherical analyser classes (mean radius / mount flange).
@@ -703,6 +825,21 @@ ANALYSER_SIZES = {
                                mount="CF160 (DN160)"),
     "R100 (CF100 mount)": dict(r_out=100.0, r_in=50.0,
                                mount="CF100 (DN100)"),
+}
+
+#: rotary vane (roughing) pump classes.
+ROTARY_SIZES = {
+    "Small (KF16)": dict(inlet="KF16 (DN16)", body_l=160.0,
+                         body_d=80.0, motor_l=120.0, motor_d=95.0),
+    "Medium (KF25)": dict(inlet="KF25 (DN25)", body_l=200.0,
+                          body_d=100.0, motor_l=150.0, motor_d=115.0),
+}
+#: dry scroll (backing) pump classes.
+SCROLL_SIZES = {
+    "Small (KF25)": dict(inlet="KF25 (DN25)", body_l=180.0,
+                         body_d=110.0, motor_l=140.0),
+    "Medium (KF40)": dict(inlet="KF40 (DN40)", body_l=230.0,
+                          body_d=140.0, motor_l=170.0),
 }
 
 #: XYZ(R1) manipulator classes — the size is the bellows Z travel.
@@ -777,6 +914,17 @@ PARTS = {
                   sizes=TURBO_SIZES,
                   fields=[("body_od", "Body OD"),
                           ("body_height", "Body height")]),
+    "pump_rotary": dict(label="Rotary vane pump (roughing)",
+                        category=_VAC, sizes=ROTARY_SIZES,
+                        fields=[("body_l", "Body length"),
+                                ("body_d", "Body Ø"),
+                                ("motor_l", "Motor length"),
+                                ("motor_d", "Motor Ø")]),
+    "pump_scroll": dict(label="Scroll pump (dry backing)",
+                        category=_VAC, sizes=SCROLL_SIZES,
+                        fields=[("body_l", "Body length"),
+                                ("body_d", "Body Ø"),
+                                ("motor_l", "Motor length")]),
     "analyser_hsa": dict(label="Hemispherical analyser (HSA)",
                          category=_VAC, sizes=ANALYSER_SIZES,
                          fields=[("r_out", "Outer radius"),
@@ -857,6 +1005,23 @@ def build_part(part_id: str, dims: dict) -> CadNode:
             z_travel=p.get("z_travel", entry["z_travel"]),
             xy_travel=p.get("xy_travel", entry["xy_travel"]),
             mount=CF_SIZES[entry["mount"]])
+    if part_id == "pump_rotary":
+        entry = ROTARY_SIZES.get(p.pop("_size", ""),
+                                 ROTARY_SIZES["Medium (KF25)"])
+        return rotary_pump(
+            inlet=KF_SIZES[entry["inlet"]],
+            body_l=p.get("body_l", entry["body_l"]),
+            body_d=p.get("body_d", entry["body_d"]),
+            motor_l=p.get("motor_l", entry["motor_l"]),
+            motor_d=p.get("motor_d", entry["motor_d"]))
+    if part_id == "pump_scroll":
+        entry = SCROLL_SIZES.get(p.pop("_size", ""),
+                                 SCROLL_SIZES["Medium (KF40)"])
+        return scroll_pump(
+            inlet=KF_SIZES[entry["inlet"]],
+            body_l=p.get("body_l", entry["body_l"]),
+            body_d=p.get("body_d", entry["body_d"]),
+            motor_l=p.get("motor_l", entry["motor_l"]))
     if part_id == "valve_angle":
         return angle_valve(p, port_length=length)
     if part_id == "valve_gate":
