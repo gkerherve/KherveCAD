@@ -479,6 +479,24 @@ class SketchScene(QGraphicsScene):
         self._part_items.clear()
         self._highlight_items = []
 
+        focus = self._focus_shapes()
+        if focus:
+            # profile-edit mode: the selected 2D profile is shown alone
+            # and fully editable (drag points to resize, drag the shape
+            # to move) in its own sketch coordinates, at any plane — so
+            # a profile buried in a part can be reshaped from the 2D
+            # view without opening the Top plane.
+            for node in focus:
+                cls = _ITEM_CLASSES.get(node.type)
+                if cls is None:
+                    continue
+                item = cls(node, self)
+                self.addItem(item)
+                self._items[node.id] = item
+                item.setSelected(True)
+            self.updating = False
+            return
+
         if self._isolating():
             # show only the selected object(s), as their true projected
             # shape in the current plane
@@ -547,6 +565,33 @@ class SketchScene(QGraphicsScene):
         should show alone, rather than editing 2D sketch shapes."""
         return any(self._isolate_target(self.model.find(nid))
                    is not None for nid in self._highlight_ids)
+
+    def _focus_shapes(self):
+        """Selected 2D profiles that live *inside* a solid part — shown
+        alone and directly editable in the sketch view, at any plane.
+        Takes priority over isolating the 3D part they belong to. Bare
+        top-level sketch shapes are left to normal sketch mode."""
+        out, seen = [], set()
+        for nid in self._highlight_ids:
+            node = self.model.find(nid)
+            if node is not None and node.category == SHAPE_2D \
+                    and node.id not in seen \
+                    and self._isolate_target(node) is not None:
+                seen.add(node.id)
+                out.append(node)
+        return out
+
+    def focus_shape_rect(self):
+        """Scene bounds of the profile(s) in profile-edit mode, so the
+        view can frame them; None when not editing a profile."""
+        rect = None
+        for node in self._focus_shapes():
+            item = self._items.get(node.id)
+            if item is None:
+                continue
+            box = item.sceneBoundingRect()
+            rect = box if rect is None else rect.united(box)
+        return rect
 
     def _make_silhouette(self, node):
         """The selected node's real projected outline in the current
@@ -633,6 +678,17 @@ class SketchScene(QGraphicsScene):
             # A group's visibility change affects every descendant.
             self.rebuild()
             return
+        item = self._items.get(node.id)
+        if node.id in {n.id for n in self._focus_shapes()}:
+            # editing the isolated profile: update it in place so an
+            # in-progress point drag is never torn down by a rebuild
+            if item is not None:
+                self.updating = True
+                item.apply_node()
+                self.updating = False
+            else:
+                self.rebuild()
+            return
         if self._in_part(node):
             if self.mouseGrabberItem() is not None:
                 self._part_dirty = True        # refresh after the drag
@@ -642,7 +698,6 @@ class SketchScene(QGraphicsScene):
         should_show = (self.plane == "Top (XY)"
                        and node.category == SHAPE_2D
                        and self._branch_visible(node))
-        item = self._items.get(node.id)
         if (item is not None) != should_show:
             self.rebuild()
         elif item is not None:
@@ -681,26 +736,33 @@ class SketchScene(QGraphicsScene):
                 item.setSelected(True)
         self.updating = False
 
-    def _isolated_item_at(self, scene_pos):
-        """The isolated part silhouette under *scene_pos*, or None. Uses
-        each item's filled path so a click inside its bounding box but
-        outside the real shape counts as empty space."""
-        for item in self._part_items.values():
-            if item.contains(item.mapFromScene(scene_pos)):
-                return item
-        return None
+    def _item_under(self, scene_pos):
+        """Top-most item under *scene_pos* (handles included), or None
+        for genuinely empty space. Uses the view transform so
+        constant-size handles hit-test correctly."""
+        views = self.views()
+        if views:
+            return self.itemAt(scene_pos, views[0].transform())
+        hits = self.items(scene_pos)
+        return hits[0] if hits else None
+
+    def _isolated(self) -> bool:
+        """True while a single object is shown alone — a 3D part
+        silhouette or a 2D profile in edit mode."""
+        return self._isolating() or bool(self._focus_shapes())
 
     # ------------------------------------------------------------ tools
     def mousePressEvent(self, event):
         pos = self.snap(event.scenePos())
         if event.button() != Qt.LeftButton or self.tool == SELECT:
             if (self.tool == SELECT and event.button() == Qt.LeftButton
-                    and self._isolating()
-                    and self._isolated_item_at(event.scenePos()) is None):
-                # while a part is isolated, empty-space clicks must not
-                # clear the selection — you deselect from the object
-                # tree only. Clicks on the part itself still fall
-                # through to super() so it stays draggable.
+                    and self._isolated()
+                    and self._item_under(event.scenePos()) is None):
+                # while a part or profile is isolated, empty-space clicks
+                # must not clear the selection — you deselect from the
+                # object tree only. Clicks on the shape (or its resize
+                # handles) still fall through to super() so it stays
+                # editable and draggable.
                 event.accept()
                 return
             super().mousePressEvent(event)
@@ -1007,6 +1069,11 @@ class SketchView(QGraphicsView):
         self.scale(scale, -scale)
         self.centerOn(rect.center())
         self.zoom_changed.emit(self.px_per_mm())
+
+    def frame_rect(self, rect):
+        """Fit a specific scene rectangle (used when a profile opens
+        for editing)."""
+        self._fit_rect(rect)
 
     def fit_content(self):
         """Fit everything drawn in the sketch (Ctrl+Shift+F)."""

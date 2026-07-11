@@ -134,9 +134,28 @@ def test_isolate_shows_only_selected(window):
     assert len(window.scene._part_items) == 2
 
 
-def test_selecting_profile_isolates_its_part(window):
-    """Clicking a 2D profile (or anything inside a part) shows the
-    nearest solid ancestor alone, not the whole assembly."""
+def test_selecting_profile_opens_it_for_editing(window):
+    """Selecting a 2D profile shows that profile itself, editable, in
+    the 2D view — not the revolved solid's silhouette — at any plane."""
+    m = window.model
+    cross = library.build_part("cf_cross",
+                               dict(library.CF_SIZES["CF40 (DN40)"],
+                                    port_length=50.0))
+    m.root.add(cross)
+    m.structure_changed.emit()
+    window._set_plane("Front (XZ)")
+    profile = next(n for n in cross.walk()
+                   if n.name == "Flange -X profile")
+    window.builder.tree.select_nodes([profile])
+    # the profile is drawn as an editable sketch item, alone
+    assert list(window.scene._items) == [profile.id]
+    assert window.scene._part_items == {}
+    assert window.scene.focus_shape_rect() is not None
+
+
+def test_profile_edit_point_drag_updates_in_place(window):
+    """Reshaping a profile from the 2D view writes back to its points
+    and does not tear the item down mid-edit."""
     m = window.model
     cross = library.build_part("cf_cross",
                                dict(library.CF_SIZES["CF40 (DN40)"],
@@ -145,11 +164,13 @@ def test_selecting_profile_isolates_its_part(window):
     m.structure_changed.emit()
     profile = next(n for n in cross.walk()
                    if n.name == "Flange -X profile")
-    revolve = profile.parent
     window.builder.tree.select_nodes([profile])
-    assert window.scene._isolating()
-    assert list(window.scene._part_items) == [revolve.id]
-    assert window.scene._items == {}          # no stray sketch shapes
+    item = window.scene._items[profile.id]
+    profile.params["points"][0] = [99.0, 42.0]
+    m.node_changed.emit(profile)
+    # same item object, updated in place (not rebuilt)
+    assert window.scene._items[profile.id] is item
+    assert profile.params["points"][0] == [99.0, 42.0]
 
 
 def test_isolate_silhouette_movable_only_for_top_level(window):
