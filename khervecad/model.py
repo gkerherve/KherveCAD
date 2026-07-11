@@ -567,9 +567,10 @@ class DocumentModel(QObject):
     def __init__(self):
         super().__init__()
         self.root = CadNode("root")
-        # optional document-wide segment count for round objects
-        self.global_fn = 32
-        self.global_fn_on = False
+        # document-wide segment count for round objects — on by default
+        # at 45 so previews and exports are smooth out of the box
+        self.global_fn = 45
+        self.global_fn_on = True
         self.undo_stack = QUndoStack(self)
         self._restoring = False
         self._last_state = self._serialize()

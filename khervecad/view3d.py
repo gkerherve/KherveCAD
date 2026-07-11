@@ -296,7 +296,17 @@ class View3D(QWidget):
                 continue
             if alpha < 1.0:
                 color.setAlphaF(alpha)
-            painter.setPen(use_pen if use_pen is not None else pen)
+            if use_pen is not None:
+                face_pen = use_pen
+            elif color.alphaF() >= 0.99:
+                # opaque: outline each facet in its own fill colour, so
+                # there are no facet lines and no anti-aliasing gaps
+                # between neighbouring triangles — a smooth surface
+                face_pen = QPen(color)
+                face_pen.setWidthF(0.8)
+            else:
+                face_pen = pen              # translucent: faint edges help
+            painter.setPen(face_pen)
             painter.setBrush(color)
             painter.drawPolygon(poly)
 

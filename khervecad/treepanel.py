@@ -21,11 +21,11 @@ from PyQt5.QtCore import QEvent, Qt, pyqtSignal
 from PyQt5.QtGui import (QBrush, QColor, QFont, QKeySequence,
                          QSyntaxHighlighter, QTextCharFormat)
 from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QCheckBox,
-                             QHBoxLayout, QMenu, QPlainTextEdit,
-                             QPushButton, QSpinBox, QTableWidget,
-                             QTableWidgetItem, QTabWidget, QTextEdit,
-                             QTreeWidget, QTreeWidgetItem, QVBoxLayout,
-                             QWidget)
+                             QHBoxLayout, QMenu, QMessageBox,
+                             QPlainTextEdit, QPushButton, QSpinBox,
+                             QTableWidget, QTableWidgetItem, QTabWidget,
+                             QTextEdit, QTreeWidget, QTreeWidgetItem,
+                             QVBoxLayout, QWidget)
 
 from . import icons
 from .document import node_from_dict, node_to_dict
@@ -494,13 +494,13 @@ class ScadHighlighter(QSyntaxHighlighter):
 
 
 class CodeView(QPlainTextEdit):
-    """Read-only view of the generated OpenSCAD program with line
-    highlights: the selected object's lines glow in the theme accent,
-    broken lines are tinted red."""
+    """Editable view of the OpenSCAD program with line highlights: the
+    selected object's lines glow in the theme accent, broken lines are
+    tinted red. Edits take effect only when "Apply code" re-parses the
+    text back into the object tree."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setReadOnly(True)
         font = QFont("Consolas")
         font.setStyleHint(QFont.Monospace)
         font.setPointSize(10)
@@ -697,9 +697,28 @@ class BuilderPanel(QTabWidget):
 
         self.variables = VariablesSheet(model)
 
+        # Code tab: the editable program + an Apply button that parses it
+        # back into the object tree
+        code_tab = QWidget()
+        cbox = QVBoxLayout(code_tab)
+        cbox.setContentsMargins(0, 0, 0, 0)
+        cbox.setSpacing(4)
+        cbox.addWidget(self.code)
+        crow = QHBoxLayout()
+        crow.setContentsMargins(4, 0, 4, 4)
+        crow.addStretch()
+        self.apply_btn = QPushButton(icons.icon("mdi.check"),
+                                     " Apply code")
+        self.apply_btn.setToolTip(
+            "Parse the edited program back into the object tree "
+            "(replaces the document; Ctrl+Z to undo)")
+        self.apply_btn.clicked.connect(self._apply_code)
+        crow.addWidget(self.apply_btn)
+        cbox.addLayout(crow)
+
         self.addTab(objects, icons.icon("mdi.file-tree"), "Objects")
         self.addTab(self.variables, icons.icon("mdi.table"), "Variables")
-        self.addTab(self.code, icons.icon("mdi.code-braces"), "Code")
+        self.addTab(code_tab, icons.icon("mdi.code-braces"), "Code")
         model.structure_changed.connect(self.refresh_code)
         model.structure_changed.connect(self._sync_fn_ui)
         model.node_changed.connect(lambda _n: self.refresh_code())
@@ -731,6 +750,27 @@ class BuilderPanel(QTabWidget):
         code, self._spans = self.model.to_scad_map()
         self.code.set_code(code)
         self._refresh_errors()
+
+    def _apply_code(self):
+        """Parse the edited program back into the object tree. Only the
+        supported subset survives (no modules/functions); anything else
+        is reported and skipped."""
+        from .scadparse import parse_scad
+        try:
+            root, warnings = parse_scad(self.code.toPlainText())
+        except Exception as exc:
+            QMessageBox.warning(self, "Apply code",
+                                f"Could not parse the program:\n{exc}")
+            return
+        self.model.root = root
+        self.model.group_variables()
+        self.model.structure_changed.emit()       # regenerates + undoable
+        if warnings:
+            QMessageBox.information(
+                self, "Apply code",
+                "Applied, but some constructs were skipped:\n- "
+                + "\n- ".join(warnings[:12])
+                + ("\n…" if len(warnings) > 12 else ""))
 
     def set_engine_errors(self, errors: dict):
         """OpenSCAD compiler errors mapped to nodes ({id: message})."""

@@ -55,9 +55,9 @@ def load_kcad(model: DocumentModel, path: str):
     if data.get("format") != "kcad":
         raise ValueError("not a KherveCAD document")
     model.root = node_from_dict(data["tree"])
-    # segment override (absent in v1 documents -> defaults preserved)
-    model.global_fn = int(data.get("global_fn", model.global_fn))
-    model.global_fn_on = bool(data.get("global_fn_on", False))
+    # segment override — default on at 45 when the file predates it
+    model.global_fn = int(data.get("global_fn", 45))
+    model.global_fn_on = bool(data.get("global_fn_on", True))
     model.group_variables()               # gather loose top-level vars
     model.structure_changed.emit()
 

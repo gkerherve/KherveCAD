@@ -205,6 +205,7 @@ def test_stl_import_codegen(model):
 def test_common_fn_overrides_round_objects(model):
     import re
     from khervecad import mesh
+    model.global_fn_on = False                    # start from per-object
     model.add_node("cylinder", dict(radius_bottom=5.0, radius_top=5.0,
                                     height=10.0, segments=96))
     model.add_node("sphere", dict(radius=4.0, segments=48))

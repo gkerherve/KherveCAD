@@ -228,6 +228,7 @@ def test_socket_screw_has_hex_socket(model):
 
 
 def test_bolts_reimport_from_generated_code(model):
+    model.global_fn_on = False                 # test per-object $fn
     dims = dict(library.BOLT_SIZES["M4"])
     model.root.add(library.build_part("bolt_hex", dims))
     root, warnings = scadparse.parse_scad(model.to_scad())
@@ -238,6 +239,7 @@ def test_bolts_reimport_from_generated_code(model):
 
 
 def test_parts_reimport_from_generated_code(model, tmp_path):
+    model.global_fn_on = False                 # test per-object $fn
     _insert(model, "cf_flange", library.CF_SIZES, "CF16 (DN16)")
     code = model.to_scad()
     root, warnings = scadparse.parse_scad(code)

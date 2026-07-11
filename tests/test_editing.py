@@ -411,3 +411,24 @@ def test_points_editor_move_clamped_at_ends(app):
     editor.table.setCurrentCell(0, 0)
     editor._move_row(-1)                            # already first: no-op
     assert out == []
+
+
+# ---------------------------------------------- defaults & editable code
+
+def test_common_segments_on_by_default():
+    m = DocumentModel()
+    assert m.global_fn_on is True
+    assert m.global_fn == 45
+    assert m.effective_fn() == 45
+
+
+def test_code_tab_editable_and_apply(window):
+    m = window.model
+    m.add_node("cube")
+    m.structure_changed.emit()
+    assert not window.builder.code.isReadOnly()
+    window.builder.code.setPlainText(
+        "sphere(r=6, $fn=12);\ncylinder(h=4, r1=2, r2=2, $fn=8);")
+    window.builder._apply_code()
+    assert [n.type for n in m.root.children] == ["sphere", "cylinder"]
+    assert m.root.children[0].params["radius"] == 6.0
