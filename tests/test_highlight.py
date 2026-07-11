@@ -525,3 +525,30 @@ def test_points_table_sizes_to_rows_up_to_15(app):
     r = PointsEditor._ROW_H
     assert small.table.height() == header + 4 * r + 6      # all 4 rows
     assert big.table.height() == header + 15 * r + 6       # capped at 15
+
+
+def test_selecting_whole_difference_omits_subtracted_tools(model):
+    body = model.add_node("cube", dict(width=20.0, depth=20.0,
+                                       height=20.0))
+    diff = model.wrap_nodes([body], "difference")
+    tool = model.add_node("cylinder",
+                          dict(radius_bottom=3.0, radius_top=3.0,
+                               height=30.0, segments=8), parent=diff)
+    # selecting the whole difference highlights only the kept body,
+    # never the removed tool drawn as solid
+    assert len(mesh.selected_world_tris(model.root, {diff.id})) == \
+        len(mesh.tessellate(body))
+    # but selecting the tool alone still shows it
+    assert mesh.selected_world_tris(model.root, {tool.id})
+
+
+def test_dragging_group_edits_own_position(window):
+    from PyQt5.QtCore import QPointF
+    m = window.model
+    grp = m.add_node("union")
+    m.add_node("cube", parent=grp)
+    m.structure_changed.emit()
+    window._set_plane("Top (XY)")
+    window.scene.commit_part_move(grp, QPointF(30.0, 20.0))
+    assert [c.type for c in m.root.children] == ["union"]   # no wrapper
+    assert grp.params["x"] == 30.0 and grp.params["y"] == 20.0

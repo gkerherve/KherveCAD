@@ -670,10 +670,12 @@ def _tess(node, env, color, sel, selected):
         mesh = _tess(ops[0], env, color, sel, selected)
         # a selected object hiding in a subtracted / later operand (e.g.
         # a bore removed from a body) still needs its own geometry so it
-        # can be shown and highlighted — include those operands too.
+        # can be shown when *it* is picked — but selecting the whole
+        # difference must not draw the removed tools as solid, so only
+        # pull in an operand that actually contains a selected node.
         if sel:
             for child in ops[1:]:
-                if selected or any(n.id in sel for n in child.walk()):
+                if any(n.id in sel for n in child.walk()):
                     mesh.extend(_tess(child, env, color, sel, selected))
         return mesh
     if t in ("for_loop", "while_loop"):

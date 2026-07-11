@@ -848,17 +848,21 @@ class SketchScene(QGraphicsScene):
         return PartItem(node, self, path, node.name)
 
     def commit_part_move(self, node, delta):
-        """A part outline was dropped: bake the move into a translate
-        node so the assembly is plain, editable tree structure."""
+        """A part outline was dropped: bake the move into the object.
+        Translate nodes and Groups carry their own position, so those
+        are edited in place; anything else is wrapped in a translate."""
         if abs(delta.x()) < 1e-9 and abs(delta.y()) < 1e-9:
             return
         _axes, (kx, ky) = PLANES[self.plane]
-        if node.type == "translate":
+        # a Group is a part with its own move params — no wrapper needed
+        if node.type in ("translate", "union"):
             env = self.env_for(node)
             node.params[kx] = round(
-                expr.resolve(node.params.get(kx), env) + delta.x(), 4)
+                expr.resolve(node.params.get(kx, 0.0), env, 0.0)
+                + delta.x(), 4)
             node.params[ky] = round(
-                expr.resolve(node.params.get(ky), env) + delta.y(), 4)
+                expr.resolve(node.params.get(ky, 0.0), env, 0.0)
+                + delta.y(), 4)
             self.model.node_changed.emit(node)
             return
         parent, index = node.parent, node.index()
