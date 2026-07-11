@@ -492,11 +492,16 @@ class ChatPanel(QWidget):
         from . import library
         model = self.window.model
         if not args:
-            self._append_note("usage: /part cf40 tee · /part m6 bolt "
-                              "· /part turbo")
+            self._append_note("usage: /part cf40 tee|gate|angle · "
+                              "/part m6 bolt · /part turbo dn100")
             return
         if args[0].lower() == "turbo":
-            node = library.build_part("turbo", {})
+            wanted = args[1].lower() if len(args) > 1 else "dn100"
+            size = next((k for k in library.TURBO_SIZES
+                         if k.lower().startswith(wanted)),
+                        "DN100 CF (~300 l/s)")
+            node = library.build_part("turbo", {"_size": size})
+            node.name = f"Turbo {size.split(' ')[0]}"
         elif args[0].upper() in library.BOLT_SIZES:
             dims = dict(library.BOLT_SIZES[args[0].upper()])
             kind = args[1].lower() if len(args) > 1 else "bolt"
@@ -518,10 +523,13 @@ class ChatPanel(QWidget):
             kind = args[1].lower() if len(args) > 1 else "flange"
             part_id = {"flange": "cf_flange", "blank": "cf_blank",
                        "nipple": "cf_nipple", "tee": "cf_tee",
-                       "cross": "cf_cross"}.get(kind)
+                       "cross": "cf_cross", "gate": "valve_gate",
+                       "angle": "valve_angle",
+                       "valve": "valve_angle"}.get(kind)
             if part_id is None:
                 self._append_note(
-                    "kinds: flange, blank, nipple, tee, cross")
+                    "kinds: flange, blank, nipple, tee, cross, "
+                    "gate, angle")
                 return
             dims = dict(library.CF_SIZES[size_key])
             dims["port_length"] = 60.0

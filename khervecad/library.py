@@ -93,6 +93,20 @@ KF_SIZES = {
                         tube_od=57.0),
 }
 
+#: turbo pump classes by inlet flange (typical commercial sizes —
+#: the DN63 class is ~80 l/s, DN100 ~300 l/s, DN160 ~700 l/s).
+TURBO_SIZES = {
+    "DN63 CF (~80 l/s)": dict(inlet="CF63 (DN63)",
+                              exhaust="KF16 (DN16)",
+                              body_od=92.0, body_height=90.0),
+    "DN100 CF (~300 l/s)": dict(inlet="CF100 (DN100)",
+                                exhaust="KF25 (DN25)",
+                                body_od=120.0, body_height=110.0),
+    "DN160 CF (~700 l/s)": dict(inlet="CF160 (DN160)",
+                                exhaust="KF40 (DN40)",
+                                body_od=170.0, body_height=150.0),
+}
+
 #: port directions as rotate([x, y, z]) mapping +Z to the port axis.
 _PORTS = {
     "+X": (0.0, 90.0, 0.0), "-X": (0.0, -90.0, 0.0),
@@ -298,12 +312,16 @@ def kf_flange(p, name="KF flange", tube_length=20.0) -> CadNode:
 # ---------------------------------------------------------- fittings
 
 def cf_fitting(p, ports, name="CF fitting",
-               port_length=60.0) -> CadNode:
-    """A multi-port CF fitting (nipple / tee / cross): one flanged
-    tube per port direction, all bores meeting at the centre."""
+               port_length=60.0, extra_solids=()) -> CadNode:
+    """A multi-port CF fitting (nipple / tee / cross / valve body):
+    one flanged tube per port direction, all bores meeting at the
+    centre. *extra_solids* joins additional body parts (valve slabs,
+    bonnets, ...) into the union before the bores are subtracted."""
     part = CadNode("difference", name)
     solid = CadNode("union", f"{name} body")
     part.add(solid)
+    for extra in extra_solids:
+        solid.add(extra)
     for port in ports:
         rx, ry, rz = _PORTS[port]
         frame = CadNode("rotate", f"Port {port}",
@@ -329,6 +347,68 @@ def cf_fitting(p, ports, name="CF fitting",
                               height=p["thickness"] + 2.0))
         part.add(frame)
     return part
+
+
+# --------------------------------------------------------------- valves
+
+def _x_cylinder(name, radius, length, z=0.0, segments=96):
+    """A cylinder along the X axis, centred, lifted to height *z*."""
+    lift = CadNode("translate", f"{name} at height",
+                   dict(x=0.0, y=0.0, z=z))
+    frame = CadNode("rotate", f"{name} axis", dict(x=0.0, y=90.0,
+                                                   z=0.0))
+    frame.add(CadNode("cylinder", name, dict(
+        x=0.0, y=0.0, z=0.0, height=length, radius_bottom=radius,
+        radius_top=radius, segments=segments, center=True)))
+    lift.add(frame)
+    return lift
+
+
+def gate_valve(p, name="Gate valve") -> CadNode:
+    """A VAT-style gate valve: two knife-edge CF flanges on a thin
+    slab body (short face-to-face), the teardrop bonnet housing the
+    gate retracts into, and the actuator on top."""
+    t = p["thickness"]
+    half = max(1.6 * t, 14.0)                 # face-to-face = 2*half
+    slab_w = 2.0 * (half - t) + 2.0           # between the flanges
+    r_body = p["gasket_od"] / 2.0 + 6.0
+    travel = p["bore"] + 10.0                 # gate retract height
+
+    body = CadNode("hull", "Valve body (slab)")
+    body.add(_x_cylinder("Body lower", r_body, slab_w))
+    body.add(_x_cylinder("Bonnet housing", r_body * 0.5, slab_w,
+                         z=travel))
+    actuator = CadNode("union", "Actuator")
+    actuator.add(_cyl("Bonnet flange", r_body * 0.5,
+                      6.0, z=travel + r_body * 0.5 - 4.0))
+    actuator.add(_cyl("Actuator stem", r_body * 0.16,
+                      p["bore"] * 0.8, z=travel + r_body * 0.5))
+    actuator.add(_cyl("Handwheel", r_body * 0.45, 5.0,
+                      z=travel + r_body * 0.5 + p["bore"] * 0.8))
+    return cf_fitting(p, ["+X", "-X"], name, half,
+                      extra_solids=[body, actuator])
+
+
+def angle_valve(p, name="Right-angle valve",
+                port_length=None) -> CadNode:
+    """A right-angle (90°) CF valve: inlet below, outlet to the side,
+    spherical body, bonnet and handwheel on the vertical axis."""
+    r_tube = p["tube_od"] / 2.0
+    length = port_length or max(2.4 * p["thickness"],
+                                r_tube * 2.2, 40.0)
+    body = CadNode("sphere", "Valve body", dict(
+        x=0.0, y=0.0, z=0.0, radius=r_tube * 1.45, segments=64))
+    bonnet = CadNode("union", "Bonnet + handwheel")
+    bonnet.add(CadNode("cylinder", "Bonnet", dict(
+        x=0.0, y=0.0, z=r_tube * 0.6, height=r_tube * 2.0,
+        radius_bottom=r_tube * 1.15, radius_top=r_tube * 0.85,
+        segments=64, center=False)))
+    bonnet.add(_cyl("Stem", r_tube * 0.22, r_tube * 1.4,
+                    z=r_tube * 2.6))
+    bonnet.add(_cyl("Handwheel", r_tube * 1.3, r_tube * 0.35,
+                    z=r_tube * 4.0))
+    return cf_fitting(p, ["-Z", "+X"], name, length,
+                      extra_solids=[body, bonnet])
 
 
 # ------------------------------------------------------------ turbo pump
@@ -430,14 +510,20 @@ PARTS = {
                      fields=_CF_FIELDS),
     "kf_flange": dict(label="KF flange (with tube)", sizes=KF_SIZES,
                       fields=_KF_FIELDS),
+    "valve_angle": dict(label="Right-angle valve (CF)",
+                        sizes=CF_SIZES, fields=_CF_FIELDS),
+    "valve_gate": dict(label="Gate valve (CF, VAT style)",
+                       sizes=CF_SIZES, fields=_CF_FIELDS),
     "bolt_hex": dict(label="Hex bolt, threaded (DIN 933)",
                      sizes=BOLT_SIZES, fields=_BOLT_FIELDS),
     "bolt_socket": dict(label="Socket head cap screw (DIN 912)",
                         sizes=BOLT_SIZES, fields=_SCREW_FIELDS),
     "nut_hex": dict(label="Hex nut, threaded (DIN 934)",
                     sizes=BOLT_SIZES, fields=_NUT_FIELDS),
-    "turbo": dict(label="Turbo pump shell (simplified)", sizes=None,
-                  fields=[]),
+    "turbo": dict(label="Turbo pump (simplified shell)",
+                  sizes=TURBO_SIZES,
+                  fields=[("body_od", "Body OD"),
+                          ("body_height", "Body height")]),
 }
 
 
@@ -466,6 +552,10 @@ def build_part(part_id: str, dims: dict) -> CadNode:
     if part_id == "kf_flange":
         return kf_flange(p, tube_length=max(length - p["thickness"],
                                             0.0))
+    if part_id == "valve_angle":
+        return angle_valve(p, port_length=length)
+    if part_id == "valve_gate":
+        return gate_valve(p)
     if part_id == "bolt_hex":
         return hex_bolt(p, p["length"])
     if part_id == "bolt_socket":
@@ -473,7 +563,13 @@ def build_part(part_id: str, dims: dict) -> CadNode:
     if part_id == "nut_hex":
         return hex_nut(p)
     if part_id == "turbo":
-        return turbo_pump()
+        entry = TURBO_SIZES.get(p.pop("_size", ""),
+                                TURBO_SIZES["DN100 CF (~300 l/s)"])
+        return turbo_pump(
+            inlet=CF_SIZES[entry["inlet"]],
+            exhaust=KF_SIZES[entry["exhaust"]],
+            body_od=p.get("body_od", entry["body_od"]),
+            body_height=p.get("body_height", entry["body_height"]))
     raise ValueError(f"unknown part: {part_id}")
 
 
@@ -587,6 +683,8 @@ class PartLibraryDialog(QDialog):
     def _insert(self):
         part_id = self._part_id()
         dims = {key: box.value() for key, box in self._fields.items()}
+        if self._size.isEnabled():
+            dims["_size"] = self._size.currentText()
         node = build_part(part_id, dims)
         size = self._size.currentText().split(" ")[0] \
             if self._size.isEnabled() else ""

@@ -40,13 +40,24 @@ Going further:
 - **Import/export** — full `.scad` import (lossless round-trip of
   everything KherveCAD generates; graceful warnings elsewhere) and
   export; STL import as tree nodes and STL export.
-- **Parts library** (Ctrl+L) — parametric CF16-CF160 flanges built
-  from the manufacturer cross-section drawings (recessed sealing
-  face, knife edge, gasket seat), KF16-KF50 flanges, blanks,
-  nipples, tees and crosses in conventional sizes (every dimension
-  editable, so any size), M3-M20 hex bolts, socket head cap screws
-  and hex nuts with real helical ISO threads, plus a simplified
-  turbo pump shell.
+- **Parts library** (Ctrl+L, non-modal) — parametric CF16-CF160
+  flanges built from the manufacturer cross-section drawings
+  (recessed sealing face, knife edge, gasket seat), KF16-KF50
+  flanges, blanks, nipples, tees and crosses in conventional sizes
+  (every dimension editable, so any size), M3-M20 hex bolts, socket
+  head cap screws and hex nuts with real helical ISO threads,
+  VAT-style gate valves and right-angle valves, and turbo pump
+  shells in three inlet classes (DN63 / DN100 / DN160 CF).
+- **Assembly mode** — pick a view plane (Top XY / Front XZ /
+  Side YZ) in the 2D viewer: every part shows as a draggable
+  outline; drop it to position it along the chosen axes and build
+  whole systems (a chamber + gate valve + turbo, say). Everything
+  is millimetres: scale bar, live size readout while drawing, zoom
+  indicator, Fit Sketch / Zoom to Selection.
+- **Undo/redo** (Ctrl+Z / Ctrl+Y) for every edit; drags collapse to
+  a single step.
+- **Colors** — right-click > Color... wraps objects in OpenSCAD's
+  `color()`; the built-in preview shows per-face colours.
 
 Documents save as `.kcad` (JSON object tree) and export as `.scad`
 programs or `.stl` meshes.

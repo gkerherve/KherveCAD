@@ -16,6 +16,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
+import os
 import shutil
 import struct
 import tempfile
@@ -40,8 +41,12 @@ def find_openscad() -> str:
     """Path of the OpenSCAD binary, or '' when not installed.
 
     A custom location can be stored in QSettings key ``openscad_path``
-    (Edit > Locate OpenSCAD in the GUI).
+    (Edit > Locate OpenSCAD in the GUI). Setting the environment
+    variable ``KHERVECAD_DISABLE_ENGINE`` forces the built-in preview
+    (used by the test suite so no background renders are spawned).
     """
+    if os.environ.get("KHERVECAD_DISABLE_ENGINE"):
+        return ""
     custom = QSettings(*_SETTINGS).value("openscad_path", "")
     if custom and Path(custom).exists():
         return str(custom)

@@ -453,7 +453,7 @@ class MainWindow(QMainWindow):
         if tris and not self._fitted:
             self.view3d.fit()
             self._fitted = True
-        if self.engine.available:
+        if self.engine.available and self.model.root.children:
             # colours only exist in the preview: STL is geometry-only,
             # so skip the engine swap while the document is coloured
             # (F5 still forces an exact render).

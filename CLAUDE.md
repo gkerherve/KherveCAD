@@ -62,7 +62,8 @@ into a new module and import.
                        Round-trip (export -> import -> export) is
                        lossless and tested.
   - `library.py`     — parametric vacuum parts + fasteners + the
-                       Insert > Part Library dialog. CF flanges
+                       Insert > Part Library dialog (non-modal, so
+                       it stays open while editing). CF flanges
                        (CF16-CF160) are one revolved cross-section
                        per the Lesker/VACGen drawings: recessed
                        sealing face, **knife edge** at the gasket
@@ -72,8 +73,11 @@ into a new module and import.
                        screws / hex nuts with **real helical ISO
                        threads** (thread-form polygon + twist
                        extrude; nuts subtract the thread with
-                       clearance). Parts are ordinary node subtrees;
-                       bolt circles are for-loops.
+                       clearance), VAT-style **gate valves** and
+                       right-angle valves, and turbo pump shells in
+                       three inlet classes (DN63/DN100/DN160 CF).
+                       Parts are ordinary node subtrees; bolt
+                       circles are for-loops.
   - `chat.py`        — **KherveAI chat box** (family assistant):
                        Claude/Mistral/Ollama Cloud via urllib, keys
                        in QSettings or env vars, slash commands, and
@@ -89,6 +93,14 @@ into a new module and import.
   - `view2d.py`      — top-right sketch view: Y-up QGraphicsScene,
                        draw tools (line/rect/circle/polygon/text),
                        select/move, resize handles, grid + snap, zoom.
+                       Doubles as the **assembly view**: pick a plane
+                       (Top XY / Front XZ / Side YZ) and every
+                       top-level 3D part shows as a draggable
+                       projected outline; dropping commits into a
+                       translate node ("Position (...)"). Everything
+                       reads in mm: scale bar, live size while
+                       drawing, zoom indicator, Fit Sketch / Zoom to
+                       Selection.
   - `view3d.py`      — bottom-right preview: software-rendered shaded
                        mesh viewer (orbit/pan/zoom, painter's algo,
                        no OpenGL dependency).
@@ -180,11 +192,23 @@ compatible.
 - Chat: streaming responses, image input (screenshot the 3D view),
   more library parts on request (gate valves, viewports, bellows).
 
-## Undo / redo policy
+## Undo / redo
 
-**Every user-visible change should become undoable** as the app
-matures: node add/remove/move, param edits and 2D-view drags must
-move onto a shared QUndoStack.
+Undo is **whole-document snapshots** on `DocumentModel.undo_stack`
+(QUndoStack): every `structure_changed`/`node_changed` schedules a
+capture on a 0 ms owned timer (one step per event-loop cycle), and
+consecutive captures within `UNDO_MERGE_S` merge, so drags and
+spinbox scrubs stay one Ctrl+Z. Restores go through
+`restore_state()` with the `_restoring` guard. New mutations are
+automatically undoable — nothing to register.
+
+## Colors
+
+Per-object colour is OpenSCAD's own `color()` node (picker in the
+tree context menu and properties). The **built-in preview renders
+per-face colours** (`mesh.tessellate_colored`); engine STL is
+geometry-only, so the exact-render swap pauses while the document
+is coloured (F5 still forces it).
 
 ## Persistence policy
 

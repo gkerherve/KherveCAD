@@ -139,6 +139,50 @@ def test_turbo_pump_builds(model):
     assert min(zs) < -40.0                    # base collar below
 
 
+def test_turbo_sizes(model):
+    small = library.build_part("turbo", {"_size": "DN63 CF (~80 l/s)"})
+    big = library.build_part("turbo", {"_size": "DN160 CF (~700 l/s)"})
+    model.root.add(small)
+    model.root.add(big)
+    code = model.root.to_scad()
+    assert "r1=57.15" in code                 # CF63 inlet OD/2
+    assert "r1=101.6" in code                 # CF160 inlet OD/2
+    xs_small = [v[0] for t in mesh.tessellate(small) for v in t]
+    xs_big = [v[0] for t in mesh.tessellate(big) for v in t]
+    assert max(xs_big) > max(xs_small)        # bodies scale
+
+
+def test_gate_valve_vat_style(model):
+    dims = dict(library.CF_SIZES["CF63 (DN63)"])
+    node = library.build_part("valve_gate", dims)
+    model.root.add(node)
+    code = model.root.to_scad()
+    assert "hull()" in code                   # teardrop slab body
+    tris = mesh.tessellate(model.root)
+    xs = [v[0] for t in tris for v in t]
+    zs = [v[2] for t in tris for v in t]
+    face_to_face = max(xs) - min(xs)
+    assert face_to_face < 1.1 * dims["flange_od"]   # thin body
+    assert max(zs) > dims["bore"] + 20.0      # bonnet + actuator above
+    ports = [n for n in node.walk() if n.name.startswith("Port ")]
+    assert len(ports) == 2
+
+
+def test_angle_valve_ports_at_90_degrees(model):
+    dims = dict(library.CF_SIZES["CF40 (DN40)"])
+    node = library.build_part("valve_angle", dict(dims,
+                                                  port_length=50.0))
+    model.root.add(node)
+    tris = mesh.tessellate(model.root)
+    xs = [v[0] for t in tris for v in t]
+    zs = [v[2] for t in tris for v in t]
+    assert max(xs) == pytest.approx(50.0, abs=1.0)   # side port +X
+    assert min(zs) == pytest.approx(-50.0, abs=1.0)  # inlet -Z
+    assert max(zs) > 60.0                     # handwheel on top
+    code = model.root.to_scad()
+    assert "sphere(" in code                  # valve body
+
+
 # -------------------------------------------------------------- fasteners
 
 def test_thread_profile_radii():
