@@ -25,8 +25,13 @@ from PyQt5.QtWidgets import (QGraphicsEllipseItem, QGraphicsItem,
 from . import expr
 from .model import SHAPE_2D, SHAPE_3D, CadNode, DocumentModel
 
-SELECT, LINE, RECT, CIRCLE, POLYGON, TEXT = (
-    "select", "line", "rect", "circle", "polygon", "text")
+SELECT, LINE, RECT, CIRCLE, POLYGON, TEXT, MEASURE, DIMENSION = (
+    "select", "line", "rect", "circle", "polygon", "text",
+    "measure", "dimension")
+
+#: click within this many pixels of a shape feature (corner, centre,
+#: edge midpoint) to snap the measure/dimension tools onto it.
+FEATURE_SNAP_PX = 12.0
 
 #: assembly view planes: name -> (horizontal axis, vertical axis)
 #: as indices into (x, y, z) and the translate-param keys they map to.
@@ -510,6 +515,10 @@ class SketchScene(QGraphicsScene):
         self._highlight_ids = set()            # selected nodes
         self._highlight_items = []
         self._point_hl = (None, -1)            # (polygon id, vertex idx)
+        # measure/dimension tools: two scene points (mm) + the live end
+        self._measure_a = None
+        self._measure_b = None
+        self._measure_cursor = None
         model.structure_changed.connect(self.rebuild)
         model.node_changed.connect(self._node_changed)
         self.rebuild()
@@ -517,6 +526,7 @@ class SketchScene(QGraphicsScene):
     def set_plane(self, plane: str):
         if plane in PLANES and plane != self.plane:
             self.plane = plane
+            self.clear_measure()               # points belong to a plane
             self.rebuild()
 
     # ------------------------------------------------------------ sync
@@ -544,6 +554,73 @@ class SketchScene(QGraphicsScene):
             return pos
         g = self.grid_size
         return QPointF(round(pos.x() / g) * g, round(pos.y() / g) * g)
+
+    # -------------------------------------------------- feature snapping
+    def _item_feature_points(self, item):
+        """Snap targets for one shape/part item, in *scene* coords:
+        corners, centres and edge midpoints — the points you dimension
+        to on a drawing."""
+        pts = []
+        if isinstance(item, QGraphicsLineItem):
+            ln = item.line()
+            a, b = ln.p1(), ln.p2()
+            pts = [a, b, (a + b) / 2.0]
+        elif isinstance(item, QGraphicsEllipseItem):
+            r = item.rect()
+            c = r.center()
+            pts = [c, QPointF(c.x(), r.top()), QPointF(c.x(), r.bottom()),
+                   QPointF(r.left(), c.y()), QPointF(r.right(), c.y())]
+        elif isinstance(item, QGraphicsRectItem):
+            r = item.rect()
+            tl, tr = r.topLeft(), r.topRight()
+            bl, br = r.bottomLeft(), r.bottomRight()
+            pts = [tl, tr, bl, br, r.center(),
+                   (tl + tr) / 2.0, (bl + br) / 2.0,
+                   (tl + bl) / 2.0, (tr + br) / 2.0]
+        elif isinstance(item, QGraphicsPolygonItem):
+            pts = list(item.polygon())
+        elif isinstance(item, QGraphicsPathItem):
+            for poly in item.path().toSubpathPolygons():
+                pts += list(poly)
+            pts.append(item.boundingRect().center())
+        return [item.mapToScene(p) for p in pts]
+
+    def feature_points(self):
+        """Every snap target on every visible shape/part."""
+        pts = []
+        for item in self.items():
+            if isinstance(item, (ShapeItem, PartItem)):
+                pts += self._item_feature_points(item)
+        return pts
+
+    def snap_feature(self, scene_pos):
+        """Snap to the nearest shape feature within a few pixels; else
+        grid-snap. Returns ``(point, on_feature)``."""
+        views = self.views()
+        ppm = views[0].px_per_mm() if views else 4.0
+        tol = FEATURE_SNAP_PX / max(ppm, 1e-6)
+        best, best_d = None, tol
+        for p in self.feature_points():
+            d = ((p.x() - scene_pos.x()) ** 2 +
+                 (p.y() - scene_pos.y()) ** 2) ** 0.5
+            if d < best_d:
+                best, best_d = p, d
+        if best is not None:
+            return best, True
+        return self.snap(scene_pos), False
+
+    # ----------------------------------------------------- measure tool
+    def clear_measure(self):
+        if self._measure_a is not None or self._measure_b is not None:
+            self._measure_a = self._measure_b = self._measure_cursor = None
+            self.measure_changed.emit("")
+            self.update()
+
+    def _emit_measure(self, a, b):
+        dx, dy = b.x() - a.x(), b.y() - a.y()
+        dist = (dx * dx + dy * dy) ** 0.5
+        self.measure_changed.emit(
+            f"distance: {dist:.2f} mm    Δ {dx:.2f}, {dy:.2f} mm")
 
     def rebuild(self):
         self.updating = True
@@ -966,6 +1043,17 @@ class SketchScene(QGraphicsScene):
 
     # ------------------------------------------------------------ tools
     def mousePressEvent(self, event):
+        if self.tool == MEASURE and event.button() == Qt.LeftButton:
+            pt, _ = self.snap_feature(event.scenePos())
+            if self._measure_a is None or self._measure_b is not None:
+                self._measure_a = self._measure_cursor = pt   # (re)start
+                self._measure_b = None
+            else:
+                self._measure_b = pt                          # finish
+                self._emit_measure(self._measure_a, self._measure_b)
+            self.update()
+            event.accept()
+            return
         pos = self.snap(event.scenePos())
         if event.button() != Qt.LeftButton or self.tool == SELECT:
             if (self.tool == SELECT and event.button() == Qt.LeftButton
@@ -1001,6 +1089,14 @@ class SketchScene(QGraphicsScene):
         event.accept()
 
     def mouseMoveEvent(self, event):
+        if self.tool == MEASURE:
+            if self._measure_a is not None and self._measure_b is None:
+                pt, _ = self.snap_feature(event.scenePos())
+                self._measure_cursor = pt
+                self._emit_measure(self._measure_a, pt)
+                self.update()
+            event.accept()
+            return
         pos = self.snap(event.scenePos())
         if self._draft is not None and self._draft_start is not None:
             start = self._draft_start
@@ -1103,6 +1199,7 @@ class SketchScene(QGraphicsScene):
             self.removeItem(self._draft)
             self._draft = None
         self._draft_start = None
+        self.clear_measure()
 
     def delete_selection(self):
         for node in self.selected_nodes():
@@ -1164,7 +1261,10 @@ class SketchView(QGraphicsView):
         super().mouseReleaseEvent(event)
 
     def set_tool(self, tool):
-        self.scene().tool = tool
+        scene = self.scene()
+        if tool != MEASURE:
+            scene.clear_measure()
+        scene.tool = tool
         if tool == SELECT:
             self.setDragMode(QGraphicsView.RubberBandDrag)
             self.setCursor(Qt.ArrowCursor)
@@ -1250,7 +1350,74 @@ class SketchView(QGraphicsView):
             label = f"{bar_mm:g} mm"
             painter.setFont(font)
             painter.drawText(int(x0 + px / 2 - 20), y0 - 8, label)
+        # measurement + dimension annotations, drawn in view space so
+        # text and arrows keep a constant size at any zoom
+        self._draw_measure(painter)
         painter.restore()
+
+    # ----------------------------------------------------- dimensions
+    def _draw_dim(self, painter, a_scene, b_scene, *, color, bg,
+                  text=None):
+        """Draw a dimension line between two *scene* points: line with
+        arrowheads, snap dots and the measured value on a chip."""
+        from math import hypot
+        pa = QPointF(self.mapFromScene(a_scene))
+        pb = QPointF(self.mapFromScene(b_scene))
+        vx, vy = pb.x() - pa.x(), pb.y() - pa.y()
+        plen = hypot(vx, vy)
+        if plen < 1e-6:
+            return
+        ux, uy = vx / plen, vy / plen           # along the line (px)
+        nx, ny = -uy, ux                         # perpendicular (px)
+        line_pen = QPen(color, 1.5)
+        line_pen.setCosmetic(True)
+        painter.setPen(line_pen)
+        painter.drawLine(pa, pb)
+        # arrowheads
+        painter.setBrush(QBrush(color))
+        for tip, sgn in ((pa, 1.0), (pb, -1.0)):
+            base = QPointF(tip.x() + sgn * ux * 9, tip.y() + sgn * uy * 9)
+            painter.drawPolygon(QPolygonF([
+                tip,
+                QPointF(base.x() + nx * 4, base.y() + ny * 4),
+                QPointF(base.x() - nx * 4, base.y() - ny * 4)]))
+        # snap dots at each end
+        painter.setBrush(QBrush(color))
+        for p in (pa, pb):
+            painter.drawEllipse(p, 2.6, 2.6)
+        # value chip at the midpoint, nudged clear of the line
+        if text is None:
+            dist = hypot(a_scene.x() - b_scene.x(),
+                         a_scene.y() - b_scene.y())
+            text = f"{dist:.2f} mm"
+        mid = QPointF((pa.x() + pb.x()) / 2 + nx * 13,
+                      (pa.y() + pb.y()) / 2 + ny * 13)
+        font = painter.font()
+        font.setBold(True)
+        painter.setFont(font)
+        fm = painter.fontMetrics()
+        tw = fm.horizontalAdvance(text)
+        th = fm.height()
+        chip = QRectF(mid.x() - tw / 2 - 5, mid.y() - th / 2 - 2,
+                      tw + 10, th + 4)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QBrush(bg))
+        painter.drawRoundedRect(chip, 4, 4)
+        painter.setPen(QPen(color, 1.0))
+        painter.setBrush(Qt.NoBrush)
+        painter.drawText(chip, Qt.AlignCenter, text)
+
+    def _draw_measure(self, painter):
+        scene = self.scene()
+        a = getattr(scene, "_measure_a", None)
+        b = scene._measure_b if scene._measure_b is not None \
+            else scene._measure_cursor
+        if a is None or b is None:
+            return
+        from .style import tokens
+        t = tokens()
+        self._draw_dim(painter, a, b,
+                       color=QColor(t["select"]), bg=QColor(t["card"]))
 
     def wheelEvent(self, event):
         factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15

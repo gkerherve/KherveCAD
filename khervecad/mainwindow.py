@@ -34,8 +34,8 @@ from .model import NODE_TYPES, DocumentModel
 from .properties import PropertiesPanel
 from .style import THEMES, apply_style, current_theme
 from .treepanel import BuilderPanel
-from .view2d import (CIRCLE, LINE, PLANES, POLYGON, RECT, SELECT,
-                     TEXT, SketchScene, SketchView)
+from .view2d import (CIRCLE, DIMENSION, LINE, MEASURE, PLANES, POLYGON,
+                     RECT, SELECT, TEXT, SketchScene, SketchView)
 from .view3d import View3D
 
 ICON_SIZE = QSize(28, 28)
@@ -48,6 +48,11 @@ TOOLS = [
     (CIRCLE, "mdi.circle-outline", "Circle", "C"),
     (POLYGON, "mdi.vector-polygon", "Polygon", "P"),
     (TEXT, "mdi.format-text", "Text", "T"),
+]
+
+#: measure / annotation tools (grouped after a separator in the bar).
+MEASURE_TOOLS = [
+    (MEASURE, "mdi.tape-measure", "Measure distance", "M"),
 ]
 
 #: 3D primitives added with one click.
@@ -165,6 +170,15 @@ class MainWindow(QMainWindow):
             self._tool_group.addAction(act)
             bar.addAction(act)
         self._tool_group.actions()[0].setChecked(True)
+        bar.addSeparator()
+        for tool, glyph, label, shortcut in MEASURE_TOOLS:
+            act = QAction(icons.icon(glyph), label, self)
+            act.setCheckable(True)
+            act.setShortcut(shortcut)
+            act.setToolTip(f"{label} ({shortcut})")
+            act.triggered.connect(lambda _, t=tool: self._set_tool(t))
+            self._tool_group.addAction(act)
+            bar.addAction(act)
         bar.addSeparator()
         for prim in PRIMITIVES:
             spec = NODE_TYPES[prim]
