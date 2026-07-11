@@ -390,3 +390,24 @@ def test_numeric_field_round_trips_a_variable(window):
     editor = window.properties._editors["height"]
     assert isinstance(editor, VarOrValueEdit)
     assert editor.currentText() == "leg_h"
+
+
+def test_points_editor_move_interpolates_between_neighbours(app):
+    from khervecad.properties import PointsEditor
+    out = []
+    editor = PointsEditor([[0, 0], [10, 0], [10, 10], [0, 10]],
+                          out.append)
+    editor.table.setCurrentCell(0, 0)              # point (0,0)
+    editor._move_row(1)                            # move it one place down
+    # reordered, and the moved point sits midway between its neighbours
+    # ([10,0] and [10,10]) -> [10,5]
+    assert out[-1] == [[10.0, 0.0], [10.0, 5.0], [10.0, 10.0], [0.0, 10.0]]
+
+
+def test_points_editor_move_clamped_at_ends(app):
+    from khervecad.properties import PointsEditor
+    out = []
+    editor = PointsEditor([[0, 0], [10, 0], [10, 10]], out.append)
+    editor.table.setCurrentCell(0, 0)
+    editor._move_row(-1)                            # already first: no-op
+    assert out == []

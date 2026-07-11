@@ -385,9 +385,11 @@ class View3D(QWidget):
         delta = event.pos() - self._last
         self._last = event.pos()
         if self._mode == "orbit":
-            self.yaw -= delta.x() * 0.5
-            self.pitch = max(-89.0, min(89.0,
-                                        self.pitch + delta.y() * 0.5))
+            self.yaw = (self.yaw - delta.x() * 0.5) % 360.0
+            # free vertical orbit — wrap instead of clamping at the poles
+            # so you can tumble the model right over the top
+            self.pitch = (self.pitch + delta.y() * 0.5 + 180.0) \
+                % 360.0 - 180.0
         else:
             _eye, right, up, _fwd = self._camera()
             scale = self.distance / 600.0

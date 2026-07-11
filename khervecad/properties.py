@@ -105,8 +105,18 @@ class PointsEditor(QWidget):
         remove = QPushButton(icons.icon("mdi.minus"), "")
         remove.setToolTip("Remove the selected point")
         remove.clicked.connect(self._remove_row)
+        up = QPushButton(icons.icon("mdi.arrow-up"), "")
+        up.setToolTip("Move the point one place earlier — it lands "
+                      "midway between its new neighbours")
+        up.clicked.connect(lambda: self._move_row(-1))
+        down = QPushButton(icons.icon("mdi.arrow-down"), "")
+        down.setToolTip("Move the point one place later — it lands "
+                        "midway between its new neighbours")
+        down.clicked.connect(lambda: self._move_row(1))
         buttons.addWidget(add)
         buttons.addWidget(remove)
+        buttons.addWidget(up)
+        buttons.addWidget(down)
         buttons.addStretch()
         layout.addLayout(buttons)
 
@@ -129,6 +139,36 @@ class PointsEditor(QWidget):
                 return None
             points.append([x, y])
         return points
+
+    def _fill(self, points):
+        """Replace the whole table from a list of points."""
+        self.table.blockSignals(True)
+        self.table.setRowCount(len(points))
+        for row, (x, y) in enumerate(points):
+            self.table.setItem(row, 0, QTableWidgetItem(f"{x:g}"))
+            self.table.setItem(row, 1, QTableWidgetItem(f"{y:g}"))
+        self.table.blockSignals(False)
+        self._fit_height()
+
+    def _move_row(self, delta):
+        """Move the selected point one place up/down in the ring and
+        drop it midway between its two new neighbours."""
+        pts = self._read_points()
+        if not pts:
+            return
+        row = self.table.currentRow()
+        new = row + delta
+        if row < 0 or new < 0 or new >= len(pts):
+            return
+        pts.insert(new, pts.pop(row))          # reorder
+        count = len(pts)
+        prev = pts[(new - 1) % count]
+        nxt = pts[(new + 1) % count]
+        pts[new] = [round((prev[0] + nxt[0]) / 2, 4),
+                    round((prev[1] + nxt[1]) / 2, 4)]
+        self._fill(pts)
+        self.table.setCurrentCell(new, 0)
+        self._on_change(pts)
 
     def _add_row(self):
         # split the edge leaving the selected vertex: the new point sits

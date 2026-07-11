@@ -151,3 +151,21 @@ def test_fit_centers_the_model(app):
     assert abs(cy - view.height() / 2) < 12       # centred, not low
     fill_h = (max(ys) - min(ys)) / view.height()
     assert fill_h > 0.7                            # fills the pane
+
+
+def test_orbit_pitch_is_not_clamped(app):
+    from PyQt5.QtCore import QPoint
+    view = View3D()
+    view.pitch = 88.0
+    view._mode = "orbit"
+    view._last = QPoint(0, 0)
+
+    class _Evt:
+        def __init__(self, x, y):
+            self._p = QPoint(x, y)
+
+        def pos(self):
+            return self._p
+
+    view.mouseMoveEvent(_Evt(0, 20))               # drag down past the top
+    assert view.pitch > 90.0                        # not clamped at 89
