@@ -486,3 +486,42 @@ def test_empty_click_still_deselects_sketch_shape(window):
     assert empty is not None
     QTest.mouseClick(view.viewport(), Qt.LeftButton, Qt.NoModifier, empty)
     assert window.scene.selected_nodes() == []
+
+
+# --------------------------------------------- polygon point highlight
+
+def test_selecting_point_row_highlights_vertex_red(window):
+    m = window.model
+    part = library.build_part("cf_nipple",
+                              dict(library.CF_SIZES["CF40 (DN40)"],
+                                   port_length=50.0))
+    m.root.add(part)
+    m.structure_changed.emit()
+    window._set_plane("Front (XZ)")
+    profile = next(n for n in part.walk()
+                   if n.name == "Flange -Z profile")
+    window.builder.tree.select_nodes([profile])
+    window.properties.set_node(profile)
+    item = window.scene._items[profile.id]
+
+    editor = window.properties._editors["points"]
+    editor.table.setCurrentCell(4, 0)             # pick vertex 4
+    assert item._hot_vertex == 4
+    reds = [h.role for h in item.handles
+            if h.brush().color().name() == "#e53935"]
+    assert reds == ["v4"]
+
+    editor.table.setCurrentCell(1, 0)             # move to vertex 1
+    reds = [h.role for h in item.handles
+            if h.brush().color().name() == "#e53935"]
+    assert reds == ["v1"]
+
+
+def test_points_table_sizes_to_rows_up_to_15(app):
+    from khervecad.properties import PointsEditor
+    small = PointsEditor([[0, 0], [1, 0], [1, 1], [0, 1]], lambda p: None)
+    big = PointsEditor([[i, i] for i in range(30)], lambda p: None)
+    header = small.table.horizontalHeader().sizeHint().height()
+    r = PointsEditor._ROW_H
+    assert small.table.height() == header + 4 * r + 6      # all 4 rows
+    assert big.table.height() == header + 15 * r + 6       # capped at 15

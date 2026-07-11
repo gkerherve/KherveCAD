@@ -111,6 +111,8 @@ class MainWindow(QMainWindow):
         self.builder.tree.selection_changed.connect(self._tree_selected)
         self.scene.selection_changed.connect(self._scene_selected)
         self.scene.node_created.connect(self._node_created)
+        self.properties.point_selected.connect(
+            self.scene.set_point_highlight)
         self.view2d.cursor_moved.connect(self._cursor_moved)
         self.view2d.zoom_changed.connect(
             lambda ppm: self._zoom_label.setText(

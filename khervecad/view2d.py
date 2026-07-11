@@ -49,14 +49,18 @@ def _pen(color: str, width=_SHAPE_PEN_W) -> QPen:
 class HandleItem(QGraphicsRectItem):
     """Square resize handle, constant size on screen."""
 
-    def __init__(self, role: str, parent, snap=True):
+    def __init__(self, role: str, parent, snap=True, hot=False):
         size = HANDLE_SIZE
         super().__init__(-size / 2, -size / 2, size, size, parent)
         self.role = role
         self._snap = snap                  # dimension handles opt out
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations, True)
-        self.setBrush(QBrush(QColor("#ffffff")))
-        self.setPen(_pen("#2176c7", 1.2))
+        if hot:                            # the point picked in the table
+            self.setBrush(QBrush(QColor("#e53935")))
+            self.setPen(_pen("#b71c1c", 1.6))
+        else:
+            self.setBrush(QBrush(QColor("#ffffff")))
+            self.setPen(_pen("#2176c7", 1.2))
         self.setCursor(Qt.SizeAllCursor)
         self.setAcceptedMouseButtons(Qt.LeftButton)
 
@@ -90,6 +94,7 @@ class ShapeItem:
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
         self.handles = []
+        self._hot_vertex = -1              # point picked in the table
 
     def rv(self, key, default=0.0) -> float:
         """Param as a number — expressions preview with loop start
@@ -119,10 +124,18 @@ class ShapeItem:
             self._scene.removeItem(handle)
         self.handles = []
         if self.isSelected():
+            hot = f"v{self._hot_vertex}"
             for role, pos in self.handle_spec():
-                handle = HandleItem(role, self)
+                handle = HandleItem(role, self, hot=(role == hot))
                 handle.setPos(pos)
                 self.handles.append(handle)
+
+    def set_hot_vertex(self, index):
+        """Mark one polygon vertex (the point selected in the properties
+        table) so its handle stands out red in the sketch."""
+        if index != self._hot_vertex:
+            self._hot_vertex = index
+            self.refresh_handles()
 
     def reposition_handles(self):
         spec = dict(self.handle_spec())
@@ -494,6 +507,7 @@ class SketchScene(QGraphicsScene):
         self._part_dirty = False
         self._highlight_ids = set()            # selected nodes
         self._highlight_items = []
+        self._point_hl = (None, -1)            # (polygon id, vertex idx)
         model.structure_changed.connect(self.rebuild)
         model.node_changed.connect(self._node_changed)
         self.rebuild()
@@ -555,6 +569,7 @@ class SketchScene(QGraphicsScene):
                 self.addItem(item)
                 self._items[node.id] = item
                 item.setSelected(True)
+                self._apply_point_hl(item, node)
             self.updating = False
             return
 
@@ -586,6 +601,7 @@ class SketchScene(QGraphicsScene):
                     self._items[node.id] = item
                     if node.id in selected:
                         item.setSelected(True)
+                        self._apply_point_hl(item, node)
         # assembly mode: every top-level part gets a draggable outline
         for node in self.model.root.children:
             if node.visible and _produces_3d(node):
@@ -597,12 +613,26 @@ class SketchScene(QGraphicsScene):
                         item.setSelected(True)
         self.updating = False
 
+    def _apply_point_hl(self, item, node):
+        if self._point_hl[0] == node.id \
+                and hasattr(item, "set_hot_vertex"):
+            item.set_hot_vertex(self._point_hl[1])
+
+    def set_point_highlight(self, node, index):
+        """Highlight one polygon vertex in red — the point the user
+        picked in the properties Points table."""
+        self._point_hl = (node.id if node is not None else None, index)
+        item = self._items.get(node.id) if node is not None else None
+        if item is not None and hasattr(item, "set_hot_vertex"):
+            item.set_hot_vertex(index)
+
     # ------------------------------------------------------- highlight
     def set_highlight(self, nodes):
         """Select these objects: a 3D part isolates in the 2D view
         (only it is shown, in its real projected shape); 2D sketch
         shapes just get selected in place."""
         self._highlight_ids = {n.id for n in nodes}
+        self._point_hl = (None, -1)            # fresh selection, no point
         self.rebuild()
 
     def _isolate_target(self, node):

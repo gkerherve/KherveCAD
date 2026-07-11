@@ -14,7 +14,7 @@ option) any later version, as published by the Free Software
 Foundation, either version 3 of the License.
 """
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDoubleSpinBox,
                              QFormLayout, QHBoxLayout, QLabel, QLineEdit,
                              QPushButton, QScrollArea, QSpinBox,
@@ -74,6 +74,11 @@ class VarOrValueEdit(QComboBox):
 class PointsEditor(QWidget):
     """Small table editor for polygon points."""
 
+    #: the row (= vertex index) the user selected, -1 for none.
+    point_selected = pyqtSignal(int)
+
+    _ROW_H = 22
+
     def __init__(self, points, on_change, parent=None):
         super().__init__(parent)
         self._on_change = on_change
@@ -82,15 +87,15 @@ class PointsEditor(QWidget):
         self.table = QTableWidget(len(points), 2)
         self.table.setHorizontalHeaderLabels(["X", "Y"])
         self.table.horizontalHeader().setStretchLastSection(True)
-        row_h = 22
-        self.table.verticalHeader().setDefaultSectionSize(row_h)
-        # show up to ~15 point rows before the table scrolls
-        self.table.setMaximumHeight(row_h * 15 + 34)
+        self.table.verticalHeader().setDefaultSectionSize(self._ROW_H)
         for row, (x, y) in enumerate(points):
             self.table.setItem(row, 0, QTableWidgetItem(f"{x:g}"))
             self.table.setItem(row, 1, QTableWidgetItem(f"{y:g}"))
         self.table.itemChanged.connect(lambda _i: self._emit())
+        self.table.currentCellChanged.connect(
+            lambda cur, _c, _pr, _pc: self.point_selected.emit(cur))
         layout.addWidget(self.table)
+        self._fit_height()
 
         buttons = QHBoxLayout()
         add = QPushButton(icons.icon("mdi.plus"), "")
@@ -104,6 +109,13 @@ class PointsEditor(QWidget):
         buttons.addWidget(remove)
         buttons.addStretch()
         layout.addLayout(buttons)
+
+    def _fit_height(self):
+        """Size the table to its rows, up to 15, so it shows the points
+        without its own scrollbar (the panel scrolls if needed)."""
+        rows = min(max(self.table.rowCount(), 1), 15)
+        header = self.table.horizontalHeader().sizeHint().height()
+        self.table.setFixedHeight(header + rows * self._ROW_H + 6)
 
     def _read_points(self):
         """Current table contents as floats, or None if a cell is
@@ -137,6 +149,7 @@ class PointsEditor(QWidget):
         self.table.setItem(idx + 1, 0, QTableWidgetItem(f"{mx:g}"))
         self.table.setItem(idx + 1, 1, QTableWidgetItem(f"{my:g}"))
         self.table.blockSignals(False)
+        self._fit_height()
         self.table.setCurrentCell(idx + 1, 0)       # ready to edit
         self._emit()
 
@@ -146,6 +159,7 @@ class PointsEditor(QWidget):
             row = self.table.rowCount() - 1
         if row >= 0 and self.table.rowCount() > 3:
             self.table.removeRow(row)
+            self._fit_height()
             self.table.selectRow(min(row, self.table.rowCount() - 1))
             self._emit()
 
@@ -157,6 +171,10 @@ class PointsEditor(QWidget):
 
 class PropertiesPanel(QScrollArea):
     """Bottom-left panel: parameter editors for the selected node."""
+
+    #: (polygon node, vertex index) selected in a Points table, so the
+    #: 2D view can highlight that vertex.
+    point_selected = pyqtSignal(object, int)
 
     def __init__(self, model: DocumentModel, parent=None):
         super().__init__(parent)
@@ -241,8 +259,12 @@ class PropertiesPanel(QScrollArea):
                     k, self._editors[k].text()))
             return box
         if kind == "points":
-            return PointsEditor(self.node.params[key],
-                                lambda pts, k=key: self._set_param(k, pts))
+            editor = PointsEditor(
+                self.node.params[key],
+                lambda pts, k=key: self._set_param(k, pts))
+            editor.point_selected.connect(
+                lambda idx: self.point_selected.emit(self.node, idx))
+            return editor
         if kind == "color":
             button = QPushButton()
             button.clicked.connect(lambda _=False, k=key, b=button:
