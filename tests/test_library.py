@@ -206,6 +206,20 @@ def test_kf_fittings_build(model):
         assert "for (" not in node.to_scad()
 
 
+def test_kf_nipple_flanges_seal_outward(model):
+    # both KF clamp faces must point out (flat flange_od disc at the very
+    # ends), not tuck the taper outward as they did before the fix.
+    p = dict(library.KF_SIZES["KF40 (DN40)"], port_length=30.0)
+    node = library.build_part("kf_nipple", p)
+    r_flange = p["flange_od"] / 2.0
+    tris = mesh.tessellate(node)
+    for zc, label in ((30.0, "+Z"), (-30.0, "-Z")):
+        # widest radius among vertices at the outer end == the flat face
+        rmax = max((v[0] ** 2 + v[1] ** 2) ** 0.5
+                   for t in tris for v in t if abs(v[2] - zc) < 0.5)
+        assert rmax == pytest.approx(r_flange, abs=0.5), label
+
+
 def test_feedthrough_has_pins_through_flange(model):
     node = library.build_part(
         "cf_feedthrough", dict(library.CF_SIZES["CF40 (DN40)"]))

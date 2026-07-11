@@ -302,6 +302,22 @@ def _kf_flange_solid(p, name="KF flange") -> CadNode:
     return solid
 
 
+def _kf_flange_head(p, name="KF flange") -> CadNode:
+    """KF clamp head oriented for a fitting: the taper rises from the
+    tube OD (z = 0, the inner/tube side) to the flange, then the flat
+    sealing face sits on top (z = thickness) — so the seal faces
+    *outward* at the end of the tube, like a CF flange does."""
+    t = p["thickness"]
+    solid = CadNode("union", name)
+    solid.add(CadNode("cylinder", "Clamp taper", dict(
+        x=0.0, y=0.0, z=0.0, height=t * 0.4,
+        radius_bottom=p["tube_od"] / 2.0,
+        radius_top=p["flange_od"] / 2.0, segments=96, center=False)))
+    solid.add(_cyl("Clamp face", p["flange_od"] / 2.0, t * 0.6,
+                   z=t * 0.4))
+    return solid
+
+
 def kf_flange(p, name="KF flange", tube_length=20.0) -> CadNode:
     """A KF flange: chamfered clamp disc + tube, bore subtracted."""
     solid = _kf_flange_solid(p, f"{name} solid")
@@ -327,7 +343,7 @@ def kf_fitting(p, ports, name="KF fitting", port_length=40.0) -> CadNode:
         frame.add(_cyl("Tube", p["tube_od"] / 2.0, port_length))
         lift = CadNode("translate", "Flange position", dict(
             x=0.0, y=0.0, z=port_length - p["thickness"]))
-        lift.add(_kf_flange_solid(p, f"Flange {port}"))
+        lift.add(_kf_flange_head(p, f"Flange {port}"))
         frame.add(lift)
         solid.add(frame)
     for port in ports:
