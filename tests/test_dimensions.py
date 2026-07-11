@@ -142,6 +142,17 @@ def test_dimensions_only_show_in_their_plane(window):
     assert v._dimension_at(vp) is None               # not hit-testable here
 
 
+def test_auto_dim_size_is_true_geometry_not_pen_inflated(window):
+    m = window.model
+    rect = m.add_node("rect", dict(width=40.0, height=25.0))
+    QApplication.instance().processEvents()
+    item = window.scene._items[rect.id]
+    lr = window.view2d._geometry_rect(item)
+    # must be the true 40 × 25, not the pen-stroke-inflated 41.6 × 26.6
+    assert round(lr.width(), 3) == 40.0
+    assert round(lr.height(), 3) == 25.0
+
+
 def test_auto_dims_render_for_every_shape(window):
     from PyQt5.QtGui import QPainter, QPixmap
     m = window.model

@@ -1531,6 +1531,17 @@ class SketchView(QGraphicsView):
             if isinstance(item, (ShapeItem, PartItem)):
                 self._auto_dim_item(painter, item, color, bg)
 
+    def _geometry_rect(self, item):
+        """The shape's true local rect (mm) — from its own geometry, not
+        ``sceneBoundingRect`` which the cosmetic pen stroke inflates."""
+        if isinstance(item, (QGraphicsRectItem, QGraphicsEllipseItem)):
+            return item.rect()
+        if isinstance(item, QGraphicsPolygonItem):
+            return item.polygon().boundingRect()
+        if isinstance(item, QGraphicsPathItem):
+            return item.path().boundingRect()
+        return item.boundingRect()
+
     def _auto_dim_item(self, painter, item, color, bg):
         if isinstance(item, CircleShapeItem):        # ⌀ across the centre
             c = item.mapToScene(item.rect().center())
@@ -1547,20 +1558,21 @@ class SketchView(QGraphicsView):
                            item.mapToScene(ln.p2()),
                            color=color, bg=bg, dots=False, offset=18)
             return
-        r = item.sceneBoundingRect()                 # bounding W × H
-        if r.width() < 1e-6 or r.height() < 1e-6:
+        lr = self._geometry_rect(item)
+        if lr.width() < 1e-6 or lr.height() < 1e-6:
             return
-        pts = [QPointF(self.mapFromScene(c)) for c in
-               (r.topLeft(), r.topRight(), r.bottomLeft(), r.bottomRight())]
+        pts = [QPointF(self.mapFromScene(item.mapToScene(c))) for c in
+               (lr.topLeft(), lr.topRight(), lr.bottomLeft(),
+                lr.bottomRight())]
         xs = [p.x() for p in pts]
         ys = [p.y() for p in pts]
         sl, sr, stop, sbot = min(xs), max(xs), min(ys), max(ys)
         # width below the box, height on the right (screen space)
         self._dim_screen(painter, QPointF(sl, sbot), QPointF(sr, sbot),
-                         color=color, bg=bg, text=_fmt_mm(r.width()),
+                         color=color, bg=bg, text=_fmt_mm(lr.width()),
                          offset=22, dots=False)
         self._dim_screen(painter, QPointF(sr, sbot), QPointF(sr, stop),
-                         color=color, bg=bg, text=_fmt_mm(r.height()),
+                         color=color, bg=bg, text=_fmt_mm(lr.height()),
                          offset=22, dots=False)
 
     def wheelEvent(self, event):
