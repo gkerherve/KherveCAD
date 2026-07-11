@@ -139,6 +139,61 @@ def test_primitive_dimension_handles_edit_params(window):
     assert abs(cyl.params["radius_bottom"] - 5.0) < 0.01  # no along-axis
 
 
+class _SceneEvt:
+    """Minimal stand-in for a QGraphicsSceneMouseEvent carrying just a
+    scene position — enough to drive HandleItem's drag handlers."""
+
+    def __init__(self, scene_pos):
+        self._sp = scene_pos
+
+    def scenePos(self):
+        return self._sp
+
+    def accept(self):
+        pass
+
+
+def test_dimension_handle_drag_smooth_through_real_handlers(window):
+    """Driving HandleItem's actual press/move handlers (which read
+    event.scenePos) must change the radius smoothly and reject
+    perpendicular cursor wobble — the erratic-drag regression guard."""
+    import math
+
+    from PyQt5.QtCore import QPointF
+    m = window.model
+    part = library.build_part("cf_nipple",
+                              dict(library.CF_SIZES["CF40 (DN40)"],
+                                   port_length=50.0))
+    m.root.add(part)
+    m.structure_changed.emit()
+    window._set_plane("Front (XZ)")
+    tube = next(n for n in part.walk()
+                if n.name == "Tube" and n.type == "cylinder")
+    window.builder.tree.select_nodes([tube])
+    item = window.scene._part_items[tube.id]
+
+    spec = next(d for d in item._dims if d["role"] == "radius_bottom")
+    handle = next(h for h in item.handles
+                  if h.role == "radius_bottom")
+    ax, ay = spec["axis"]
+    perp = (-ay, ax)
+    start = tube.params["radius_bottom"]
+    grab = QPointF(handle.pos())
+    handle.mousePressEvent(_SceneEvt(grab))
+    values = []
+    for i in range(1, 9):
+        travel = 12.0 * i / 8.0
+        noise = 9.0 * math.sin(i * 1.7)           # heavy off-axis wobble
+        sp = QPointF(grab.x() + ax * travel + perp[0] * noise,
+                     grab.y() + ay * travel + perp[1] * noise)
+        handle.mouseMoveEvent(_SceneEvt(sp))
+        values.append(tube.params["radius_bottom"])
+    # monotonic (no jitter) and lands where the along-axis travel says
+    assert all(b >= a - 1e-6 for a, b in zip(values, values[1:]))
+    assert abs(values[-1] - (start + 12.0)) < 0.05
+    assert tube.params["radius_top"] == start     # untouched
+
+
 def test_cube_and_sphere_have_size_handles(window):
     m = window.model
     cube = m.add_node("cube", dict(width=10.0, depth=10.0, height=10.0))

@@ -60,19 +60,18 @@ class HandleItem(QGraphicsRectItem):
         self.setCursor(Qt.SizeAllCursor)
         self.setAcceptedMouseButtons(Qt.LeftButton)
 
-    def _scene_pos(self, event):
-        return self.parentItem().mapToScene(
-            self.mapToParent(event.pos()))
-
     def mousePressEvent(self, event):
         parent = self.parentItem()
         if hasattr(parent, "handle_pressed"):
             # record the grab point so the drag is measured as a delta
-            parent.handle_pressed(self.role, self._scene_pos(event))
+            parent.handle_pressed(self.role, event.scenePos())
         event.accept()
 
     def mouseMoveEvent(self, event):
-        pos = self._scene_pos(event)
+        # the cursor's scene position directly — robust even though the
+        # handle ignores view transforms and slides out from under the
+        # cursor (mapToScene of event.pos() jitters in that case)
+        pos = event.scenePos()
         if self._snap:
             pos = self.scene().snap(pos)
         self.parentItem().handle_dragged(self.role, pos)
