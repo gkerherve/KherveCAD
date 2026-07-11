@@ -32,6 +32,11 @@ METAL = "#9aa0a8"
 METAL_DK = "#5f646c"
 WOOD = "#c8a06a"
 WHITE = "#eef1f3"
+RUBBER = "#37393d"       # dropper bulb / tubing
+PLASTIC = "#e6ebee"      # wash-bottle body
+CERAMIC = "#d8cbb0"      # wire-gauze centre
+DARK = "#2b2e33"         # hotplate top / screens
+BRASS = "#c69a4c"        # burner / fittings
 
 
 # ----------------------------------------------------------- primitives
@@ -44,7 +49,7 @@ def _cyl(name, radius, height, z=0.0, x=0.0, y=0.0, r2=None,
         segments=segments, center=False))
 
 
-def _col(node, color, alpha=1.0, name=None):
+def _col(node, color, name=None, alpha=1.0):
     """Wrap *node* in an OpenSCAD color() node."""
     c = CadNode("color", name or "Colour",
                 dict(color=color, alpha=alpha))
@@ -60,7 +65,7 @@ def _revolve(name, profile, color=GLASS, segments=120, alpha=1.0):
                     dict(x=0.0, y=0.0,
                          points=[[round(r, 4), round(z, 4)]
                                  for r, z in profile])))
-    return _col(rev, color, alpha, f"{name} glass")
+    return _col(rev, color, name=f"{name} glass", alpha=alpha)
 
 
 def _arc(cx, cz, radius, a0, a1, n):
@@ -259,6 +264,231 @@ def build_retort_stand(dims):
     return part
 
 
+# ------------------------------------------------ more glass + equipment
+
+def _arm(name, radius, length, at_z, angle=45.0, color=GLASS):
+    """A tube leaving the axis at *angle* (deg from vertical), based at
+    height *at_z* — condenser side arms, wash-bottle nozzles, etc."""
+    base = CadNode("translate", f"{name} base", dict(x=0.0, y=0.0,
+                                                     z=at_z))
+    rot = CadNode("rotate", f"{name} angle", dict(x=0.0, y=angle,
+                                                  z=0.0))
+    rot.add(_cyl(name, radius, length, segments=24))
+    base.add(rot)
+    return _col(base, color, name)
+
+
+def build_volumetric_flask(dims):
+    p = _dims(dims, VOLU_SIZES)
+    rb, rn, h, w = p["d"] / 2.0, p["neck"] / 2.0, p["h"], p["wall"]
+    base_r, bz = rb * 0.5, h * 0.30
+    sh = h * 0.5                          # shoulder
+    outer = [(0.0, 0.0), (base_r, 0.0), (rb, bz), (rb, bz + h * 0.06),
+             (rn, sh), (rn, h)]
+    inner = [(rn - w, h), (rn - w, sh), (rb - w, bz + h * 0.06),
+             (rb - w, bz), (base_r - w, w), (0.0, w)]
+    return _revolve("Volumetric flask", outer + inner, segments=96)
+
+
+def build_separating_funnel(dims):
+    p = _dims(dims, SEP_SIZES)
+    r, h, w = p["d"] / 2.0, p["h"], 1.6
+    stem_h = h * 0.16
+    rs = max(r * 0.14, 2.0)
+    top = h
+    outer = [(rs, 0.0), (rs, stem_h), (r, top * 0.55), (r, top)]
+    inner = [(r - w, top), (r - w, top * 0.55),
+             (max(rs - w, 0.6), stem_h), (max(rs - w, 0.6), 0.0)]
+    part = CadNode("union", "Separating funnel")
+    part.add(_revolve("Funnel body", outer + inner, segments=80))
+    # PTFE stopcock across the neck + conical stopper on top
+    barrel = CadNode("rotate", "Stopcock", dict(x=0.0, y=90.0, z=0.0))
+    barrel.add(_cyl("Barrel", rs * 1.6, r * 1.1, x=0.0, z=-r * 0.55,
+                    segments=24))
+    lift = CadNode("translate", "Stopcock pos",
+                   dict(x=0.0, y=0.0, z=stem_h + 6.0))
+    lift.add(barrel)
+    part.add(_col(lift, WHITE, "Stopcock"))
+    part.add(_col(_cyl("Stopper", r * 0.5, r * 0.4, z=top, r2=r * 0.34,
+                       segments=32), GLASS, "Stopper"))
+    return part
+
+
+def build_condenser(dims):
+    p = _dims(dims, CONDENSER_SIZES)
+    L, rj, ri, w = p["length"], p["jacket_d"] / 2.0, \
+        p["inner_d"] / 2.0, 1.4
+    js, je = L * 0.12, L * 0.88
+    part = CadNode("union", "Liebig condenser")
+    # outer water jacket (open-ended shell) + full-length inner tube
+    part.add(_revolve("Jacket", [(rj - w, js), (rj, js), (rj, je),
+                                 (rj - w, je)], segments=64))
+    part.add(_revolve("Inner tube", [(ri - w, 0.0), (ri, 0.0), (ri, L),
+                                     (ri - w, L)], segments=48))
+    # two water side-arms near the ends
+    part.add(_arm("Water out", ri * 0.7, rj * 1.6, je - rj * 0.4, 55.0))
+    part.add(_arm("Water in", ri * 0.7, rj * 1.6, js + rj * 0.4, 125.0))
+    return part
+
+
+def build_pipette(dims):
+    p = _dims(dims, PIPETTE_SIZES)
+    L, rb, rt, w = p["length"], p["bulb_d"] / 2.0, p["tip_d"] / 2.0, 0.8
+    lower, bc = L * 0.32, L * 0.5
+    hb = rb * 0.7
+    outer = [(0.6, 0.0), (rt, L * 0.05), (rt, lower), (rb, bc - hb),
+             (rb, bc + hb), (rt, bc + hb + 6.0), (rt, L)]
+    inner = [(rt - w, L), (rt - w, bc + hb + 6.0), (rb - w, bc + hb),
+             (rb - w, bc - hb), (rt - w, lower), (rt - w, L * 0.05),
+             (0.6, 0.0)]
+    return _revolve("Volumetric pipette", outer + inner, segments=64)
+
+
+def build_dropper(dims):
+    p = _dims(dims, DROPPER_SIZES)
+    L, rt = p["length"], p["tube_d"] / 2.0
+    part = CadNode("union", "Dropper")
+    # thin glass tube, tapered tip
+    prof = [(0.5, 0.0), (rt, L * 0.08), (rt, L * 0.72),
+            (rt - 0.6, L * 0.72), (rt - 0.6, L * 0.1), (0.5, 0.0)]
+    part.add(_revolve("Glass tube", prof, segments=32))
+    # rubber teat bulb on top
+    bulb = _cyl("Bulb", rt * 2.4, L * 0.24, z=L * 0.72, r2=rt * 1.4,
+                segments=32)
+    part.add(_col(bulb, RUBBER, "Bulb"))
+    return part
+
+
+def build_bunsen_burner(dims):
+    p = _dims(dims, BURNER_SIZES)
+    base_r, h, br = p["base"] / 2.0, p["h"], p["barrel"] / 2.0
+    part = CadNode("union", "Bunsen burner")
+    part.add(_col(_cyl("Base", base_r, 12.0, r2=base_r * 0.6,
+                       segments=48), METAL_DK, "Base"))
+    part.add(_col(_cyl("Barrel", br, h - 12.0, z=12.0, segments=32),
+                  METAL, "Barrel"))
+    # gas inlet spigot at the base + needle valve
+    part.add(_arm("Gas inlet", br * 0.5, base_r * 1.4, 16.0, 90.0,
+                  BRASS))
+    part.add(_col(_cyl("Collar", br * 1.25, 14.0, z=20.0, segments=32),
+                  METAL_DK, "Air collar"))
+    return part
+
+
+def build_hotplate(dims):
+    p = _dims(dims, HOTPLATE_SIZES)
+    w, d, h = p["w"], p["d"], p["h"]
+    plate_r = p["plate"] / 2.0
+    part = CadNode("union", "Hotplate stirrer")
+    part.add(_col(CadNode("cube", "Body", dict(
+        x=-w / 2.0, y=-d / 2.0, z=0.0, width=w, depth=d, height=h,
+        center=False)), METAL, "Body"))
+    part.add(_col(_cyl("Top plate", plate_r, 6.0, y=-d * 0.15, z=h,
+                       segments=48), DARK, "Top plate"))
+    # two control knobs on the front face
+    for sx in (-1.0, 1.0):
+        knob = CadNode("rotate", "Knob axis", dict(x=-90.0, y=0.0,
+                                                   z=0.0))
+        knob.add(_cyl("Knob", 12.0, 10.0, segments=24))
+        lift = CadNode("translate", "Knob pos",
+                       dict(x=sx * w * 0.25, y=-d / 2.0, z=h * 0.35))
+        lift.add(knob)
+        part.add(_col(lift, DARK, "Knob"))
+    return part
+
+
+def build_tripod(dims):
+    p = _dims(dims, TRIPOD_SIZES)
+    r, h = p["ring_d"] / 2.0, p["h"]
+    part = CadNode("union", "Tripod")
+    # top ring (thin annular disc)
+    part.add(_revolve("Ring", [(r - 4.0, h), (r + 4.0, h),
+                               (r + 4.0, h + 6.0), (r - 4.0, h + 6.0)],
+                      color=METAL, segments=48))
+    legs = CadNode("for_loop", "Legs", dict(variable="a", start=0.0,
+                   end=240.0, step=120.0))
+    rot = CadNode("rotate", "Leg angle", dict(x=0.0, y=0.0, z="a"))
+    leg = CadNode("rotate", "Splay", dict(x=0.0, y=12.0, z=0.0))
+    leg.add(_cyl("Leg", 5.0, h + 4.0, x=r * 0.9, segments=16))
+    rot.add(leg)
+    legs.add(rot)
+    part.add(_col(legs, METAL, "Legs"))
+    return part
+
+
+def build_wire_gauze(dims):
+    p = _dims(dims, GAUZE_SIZES)
+    s = p["side"]
+    part = CadNode("union", "Wire gauze")
+    part.add(_col(CadNode("cube", "Mesh", dict(
+        x=-s / 2.0, y=-s / 2.0, z=0.0, width=s, depth=s, height=1.2,
+        center=False)), METAL, "Mesh"))
+    part.add(_col(_cyl("Ceramic centre", s * 0.32, 1.6, z=0.6,
+                       segments=48), CERAMIC, "Ceramic"))
+    return part
+
+
+def build_gas_cylinder(dims):
+    p = _dims(dims, GAS_SIZES)
+    r, h = p["d"] / 2.0, p["h"]
+    color = GAS_COLORS.get(dims.get("_size", ""), "#3b7a4b")
+    part = CadNode("union", "Gas cylinder")
+    # body + rounded shoulder (revolved) so no boolean, colour-coded
+    shoulder = r * 0.9
+    prof = [(0.0, 0.0), (r, 0.0), (r, h),
+            (r * 0.55, h + shoulder), (r * 0.28, h + shoulder)]
+    part.add(_revolve("Bottle", prof, color=color, segments=64))
+    # neck + valve + guard
+    part.add(_col(_cyl("Neck", r * 0.28, 30.0, z=h + shoulder,
+                       segments=24), METAL_DK, "Neck"))
+    part.add(_col(_cyl("Valve", r * 0.16, 26.0, z=h + shoulder + 30.0,
+                       segments=16), BRASS, "Valve"))
+    part.add(_arm("Outlet", r * 0.08, r * 0.6, h + shoulder + 40.0,
+                  90.0, BRASS))
+    return part
+
+
+def build_balance(dims):
+    p = _dims(dims, BALANCE_SIZES)
+    w, d, h = p["w"], p["d"], p["h"]
+    part = CadNode("union", "Analytical balance")
+    # base with a sloped display block
+    part.add(_col(CadNode("cube", "Base", dict(
+        x=-w / 2.0, y=-d / 2.0, z=0.0, width=w, depth=d,
+        height=h * 0.34, center=False)), METAL, "Base"))
+    part.add(_col(CadNode("cube", "Display", dict(
+        x=-w * 0.34, y=-d / 2.0 - 6.0, z=8.0, width=w * 0.68,
+        depth=8.0, height=h * 0.16, center=False)), DARK, "Display"))
+    # glass draught shield + weighing pan inside
+    part.add(_col(CadNode("cube", "Draught shield", dict(
+        x=-w / 2.0, y=-d * 0.18, z=h * 0.34, width=w,
+        depth=d * 0.8, height=h * 0.66, center=False)), GLASS,
+        "Shield"))
+    part.add(_col(_cyl("Pan", w * 0.22, 4.0, y=d * 0.1,
+                       z=h * 0.34 + 4.0, segments=48), METAL,
+                  "Pan"))
+    return part
+
+
+def build_wash_bottle(dims):
+    p = _dims(dims, WASH_SIZES)
+    r, h, w = p["d"] / 2.0, p["h"], 1.6
+    part = CadNode("union", "Wash bottle")
+    body = [(0.0, 0.0), (r, 0.0), (r, h * 0.72),
+            (r * 0.55, h * 0.86), (r * 0.55, h),
+            (r * 0.55 - w, h), (r * 0.55 - w, h * 0.86),
+            (r - w, h * 0.72), (r - w, w), (0.0, w)]
+    part.add(_revolve("Bottle", body, color=PLASTIC, segments=64))
+    part.add(_col(_cyl("Cap", r * 0.62, 14.0, z=h, segments=32),
+                  DARK, "Cap"))
+    # bent delivery nozzle out of the cap
+    part.add(_arm("Nozzle up", r * 0.14, h * 0.5, h + 10.0, 8.0,
+                  PLASTIC))
+    part.add(_arm("Nozzle tip", r * 0.14, r * 1.4,
+                  h + 10.0 + h * 0.48, 100.0, PLASTIC))
+    return part
+
+
 # --------------------------------------------------------------- registry
 
 BEAKER_SIZES = {
@@ -306,6 +536,58 @@ RACK_SIZES = {
 STAND_SIZES = {
     "Standard": dict(base=160.0, h=450.0),
     "Tall": dict(base=200.0, h=750.0),
+}
+VOLU_SIZES = {
+    "100 mL": dict(d=62.0, neck=15.0, h=170.0, wall=1.3),
+    "250 mL": dict(d=80.0, neck=17.0, h=220.0, wall=1.4),
+    "500 mL": dict(d=100.0, neck=19.0, h=270.0, wall=1.5),
+}
+SEP_SIZES = {
+    "100 mL": dict(d=58.0, h=200.0),
+    "250 mL": dict(d=78.0, h=260.0),
+    "500 mL": dict(d=95.0, h=320.0),
+}
+CONDENSER_SIZES = {
+    "Liebig 200 mm": dict(length=280.0, jacket_d=30.0, inner_d=12.0),
+    "Liebig 300 mm": dict(length=400.0, jacket_d=32.0, inner_d=13.0),
+}
+PIPETTE_SIZES = {
+    "10 mL": dict(length=330.0, bulb_d=18.0, tip_d=4.0),
+    "25 mL": dict(length=400.0, bulb_d=24.0, tip_d=5.0),
+}
+DROPPER_SIZES = {
+    "Pasteur 150 mm": dict(length=150.0, tube_d=6.0),
+    "Pasteur 230 mm": dict(length=230.0, tube_d=7.0),
+}
+BURNER_SIZES = {
+    "Standard": dict(base=65.0, h=130.0, barrel=13.0),
+}
+HOTPLATE_SIZES = {
+    "Standard": dict(w=220.0, d=260.0, h=110.0, plate=150.0),
+    "Large": dict(w=300.0, d=340.0, h=130.0, plate=200.0),
+}
+TRIPOD_SIZES = {
+    "Standard": dict(ring_d=110.0, h=200.0),
+    "Tall": dict(ring_d=130.0, h=300.0),
+}
+GAUZE_SIZES = {
+    "125 mm": dict(side=125.0),
+    "150 mm": dict(side=150.0),
+}
+#: gas cylinders are colour-coded like the carpet squares.
+GAS_COLORS = {
+    "Nitrogen (black)": "#2b2e33", "Oxygen (white)": "#e6ebee",
+    "Argon (green)": "#3b9a5a", "Helium (brown)": "#7a5230",
+    "CO₂ (grey)": "#8a9099", "Hydrogen (red)": "#c0392b",
+}
+GAS_SIZES = {name: dict(d=230.0, h=1200.0, color=hexcol)
+             for name, hexcol in GAS_COLORS.items()}
+BALANCE_SIZES = {
+    "Analytical": dict(w=230.0, d=340.0, h=340.0),
+}
+WASH_SIZES = {
+    "250 mL": dict(d=64.0, h=150.0),
+    "500 mL": dict(d=78.0, h=185.0),
 }
 
 _D = [("d", "Diameter")]
@@ -356,4 +638,54 @@ PARTS = {
                        sizes=STAND_SIZES, build=build_retort_stand,
                        fields=[("base", "Base length"),
                                ("h", "Rod height")]),
+    "chem_volumetric": dict(label="Volumetric flask", category=CATEGORY,
+                            sizes=VOLU_SIZES,
+                            build=build_volumetric_flask,
+                            fields=_D + [("neck", "Neck Ø"),
+                                         ("h", "Height"),
+                                         ("wall", "Wall")]),
+    "chem_sep_funnel": dict(label="Separating funnel", category=CATEGORY,
+                            sizes=SEP_SIZES,
+                            build=build_separating_funnel,
+                            fields=_D + [("h", "Height")]),
+    "chem_condenser": dict(label="Condenser (Liebig)", category=CATEGORY,
+                           sizes=CONDENSER_SIZES, build=build_condenser,
+                           fields=[("length", "Length"),
+                                   ("jacket_d", "Jacket Ø"),
+                                   ("inner_d", "Inner Ø")]),
+    "chem_pipette": dict(label="Pipette (volumetric)", category=CATEGORY,
+                         sizes=PIPETTE_SIZES, build=build_pipette,
+                         fields=[("length", "Length"),
+                                 ("bulb_d", "Bulb Ø"),
+                                 ("tip_d", "Tube Ø")]),
+    "chem_dropper": dict(label="Dropper (Pasteur)", category=CATEGORY,
+                         sizes=DROPPER_SIZES, build=build_dropper,
+                         fields=[("length", "Length"),
+                                 ("tube_d", "Tube Ø")]),
+    "chem_bunsen": dict(label="Bunsen burner", category=CATEGORY,
+                        sizes=BURNER_SIZES, build=build_bunsen_burner,
+                        fields=[("base", "Base Ø"), ("h", "Height"),
+                                ("barrel", "Barrel Ø")]),
+    "chem_hotplate": dict(label="Hotplate stirrer", category=CATEGORY,
+                          sizes=HOTPLATE_SIZES, build=build_hotplate,
+                          fields=[("w", "Width"), ("d", "Depth"),
+                                  ("h", "Height"), ("plate", "Plate Ø")]),
+    "chem_tripod": dict(label="Tripod", category=CATEGORY,
+                        sizes=TRIPOD_SIZES, build=build_tripod,
+                        fields=[("ring_d", "Ring Ø"),
+                                ("h", "Height")]),
+    "chem_gauze": dict(label="Wire gauze", category=CATEGORY,
+                       sizes=GAUZE_SIZES, build=build_wire_gauze,
+                       fields=[("side", "Side")]),
+    "chem_gas_cylinder": dict(label="Gas cylinder (pick gas)",
+                              category=CATEGORY, sizes=GAS_SIZES,
+                              build=build_gas_cylinder,
+                              fields=_D + [("h", "Body height")]),
+    "chem_balance": dict(label="Analytical balance", category=CATEGORY,
+                         sizes=BALANCE_SIZES, build=build_balance,
+                         fields=[("w", "Width"), ("d", "Depth"),
+                                 ("h", "Height")]),
+    "chem_wash_bottle": dict(label="Wash bottle", category=CATEGORY,
+                             sizes=WASH_SIZES, build=build_wash_bottle,
+                             fields=_D + [("h", "Height")]),
 }

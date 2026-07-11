@@ -277,6 +277,24 @@ def test_chemistry_parts_registered_with_category(model):
         assert library.PARTS[pid]["category"] == "Chemistry"
 
 
+def test_gas_cylinder_takes_its_colour_from_the_gas(model):
+    for name, hexcol in (("Argon (green)", "#3b9a5a"),
+                         ("Hydrogen (red)", "#c0392b")):
+        node = library.build_part(
+            "chem_gas_cylinder",
+            dict(library_chem.GAS_SIZES[name], _size=name))
+        assert f'color("{hexcol}")' in node.to_scad()
+
+
+def test_full_chemistry_set_present(model):
+    # every part shown in the menu is registered
+    for pid in ("chem_volumetric", "chem_sep_funnel", "chem_condenser",
+                "chem_pipette", "chem_dropper", "chem_bunsen",
+                "chem_hotplate", "chem_tripod", "chem_gauze",
+                "chem_gas_cylinder", "chem_balance", "chem_wash_bottle"):
+        assert pid in library_chem.PARTS
+
+
 # ---------------------------------------------------------- room/furniture
 
 from khervecad import library_room             # noqa: E402
