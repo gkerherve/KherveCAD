@@ -108,6 +108,58 @@ def test_selected_subtracted_tool_is_highlightable(model):
     assert len(mesh.tessellate(model.root)) == 12          # just the cube
 
 
+def test_primitive_dimension_handles_edit_params(window):
+    """A 3D primitive selected in the 2D view gets drag handles that
+    change its size, mapped through ancestor transforms."""
+    from PyQt5.QtCore import QPointF
+    m = window.model
+    cyl = m.add_node("cylinder", dict(radius_bottom=5.0, radius_top=5.0,
+                                      height=20.0, segments=12))
+    rot = m.wrap_nodes([cyl], "rotate")           # tilt the local frame
+    rot.params.update(x=0.0, y=90.0, z=0.0)
+    window._set_plane("Front (XZ)")
+    window.builder.tree.select_nodes([cyl])
+    item = window.scene._part_items[cyl.id]
+    roles = {d["role"] for d in item._dims}
+    assert {"radius_bottom", "radius_top", "height"} <= roles
+
+    rb = next(d for d in item._dims if d["role"] == "radius_bottom")
+    ax, ay = rb["axis"]
+    target = QPointF(rb["anchor"].x() + ax * 12,
+                     rb["anchor"].y() + ay * 12)
+    item.handle_dragged("radius_bottom", target)
+    assert abs(cyl.params["radius_bottom"] - 12.0) < 0.5
+    assert cyl.params["radius_top"] == 5.0        # only bottom changed
+
+
+def test_cube_and_sphere_have_size_handles(window):
+    m = window.model
+    cube = m.add_node("cube", dict(width=10.0, depth=10.0, height=10.0))
+    window._set_plane("Top (XY)")
+    window.builder.tree.select_nodes([cube])
+    roles = {d["role"] for d in window.scene._part_items[cube.id]._dims}
+    assert {"width", "depth"} <= roles            # height is edge-on
+    assert "height" not in roles
+
+    m2 = window.model
+    sph = m2.add_node("sphere", dict(radius=6.0, segments=12))
+    window.builder.tree.select_nodes([sph])
+    dims = window.scene._part_items[sph.id]._dims
+    assert [d["role"] for d in dims] == ["radius"]
+
+
+def test_revolve_part_has_no_size_handles(window):
+    m = window.model
+    part = library.build_part("cf_flange",
+                              dict(library.CF_SIZES["CF40 (DN40)"]))
+    m.root.add(part)
+    m.structure_changed.emit()
+    revolve = next(n for n in part.walk()
+                   if n.type == "rotate_extrude")
+    window.builder.tree.select_nodes([revolve])
+    assert window.scene._part_items[revolve.id]._dims == []
+
+
 def test_selecting_bore_shows_it_in_both_views(window):
     m = window.model
     tee = library.build_part("cf_tee",

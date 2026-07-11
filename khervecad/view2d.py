@@ -342,11 +342,13 @@ class PartItem(QGraphicsPathItem):
     """
 
     def __init__(self, node, scene, path, label, movable=True,
-                 dashed=True):
+                 dashed=True, dims=None):
         super().__init__()
         self.node = node
         self._scene = scene
         self._movable = movable
+        self._dims = dims or []            # dimension-edit handle specs
+        self.handles = []
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         if movable:
             self.setFlag(QGraphicsItem.ItemIsMovable, True)
@@ -394,10 +396,44 @@ class PartItem(QGraphicsPathItem):
         if change == QGraphicsItem.ItemPositionChange and \
                 not self._scene.updating:
             return self._scene.snap(value)
-        if change == QGraphicsItem.ItemSelectedHasChanged and \
-                not self._scene.updating:
-            self._scene.emit_selection()
+        if change == QGraphicsItem.ItemSelectedHasChanged:
+            self._refresh_dim_handles()
+            if not self._scene.updating:
+                self._scene.emit_selection()
         return super().itemChange(change, value)
+
+    # -------- dimension handles (editable primitive sizes in 2D)
+    def _refresh_dim_handles(self):
+        for handle in self.handles:
+            if handle.scene() is not None:
+                self._scene.removeItem(handle)
+        self.handles = []
+        if self.isSelected() and self._dims:
+            for spec in self._dims:
+                handle = HandleItem(spec["role"], self)
+                handle.setPos(spec["tip"])
+                self.handles.append(handle)
+
+    def handle_dragged(self, role, scene_pos):
+        spec = next((d for d in self._dims if d["role"] == role), None)
+        if spec is None:
+            return
+        ax, ay = spec["axis"]
+        denom = ax * ax + ay * ay
+        if denom < 1e-12:
+            return
+        # project the cursor onto the handle's axis line -> local length
+        s = ((scene_pos.x() - spec["anchor"].x()) * ax
+             + (scene_pos.y() - spec["anchor"].y()) * ay) / denom
+        value = max(s * spec["factor"], spec["minval"])
+        self.node.params[spec["param"]] = round(value, 4)
+        self._scene.model.node_changed.emit(self.node)
+        # keep the grabbed handle under the cursor for live feedback
+        new_s = value / spec["factor"]
+        for handle in self.handles:
+            if handle.role == role:
+                handle.setPos(QPointF(spec["anchor"].x() + new_s * ax,
+                                      spec["anchor"].y() + new_s * ay))
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
@@ -621,7 +657,100 @@ class SketchScene(QGraphicsScene):
             path.addPolygon(QPolygonF([QPointF(x, y) for x, y in pts]))
         movable = node.parent is self.model.root
         return PartItem(node, self, path, node.name, movable=movable,
-                        dashed=False)
+                        dashed=False, dims=self._dim_handles(node))
+
+    def _world_matrix(self, node):
+        """4x4 transform mapping *node*'s local coordinates to world —
+        the product of its ancestor translate/rotate/scale/mirror nodes,
+        with expressions resolved (loop vars at their first value)."""
+        from . import mesh as mesh_mod
+        chain = []
+        probe = node.parent
+        while probe is not None:
+            chain.append(probe)
+            probe = probe.parent
+        mat = mesh_mod.mat_identity()
+        builders = dict(translate=mesh_mod.mat_translate,
+                        rotate=mesh_mod.mat_rotate,
+                        scale=mesh_mod.mat_scale,
+                        mirror=mesh_mod.mat_mirror)
+        for anc in reversed(chain):                # root .. parent order
+            if anc.type in builders:
+                p = mesh_mod.rp(anc, self.env_for(anc))
+                default = 1.0 if anc.type == "scale" else 0.0
+                mat = mesh_mod.mat_mul(mat, builders[anc.type](
+                    p.get("x", default), p.get("y", default),
+                    p.get("z", default)))
+        return mat
+
+    def _dim_handles(self, node):
+        """Editable size handles for a 3D primitive in the current plane
+        — cylinder radii + height, cube sides, sphere radius — mapped
+        through the node's ancestor transforms so a drag in the plane
+        changes the right parameter. Handles whose axis points along the
+        view direction (invisible here) are dropped."""
+        from . import mesh as mesh_mod
+        if node.type not in ("cylinder", "cube", "sphere"):
+            return []
+        (ai, bi), _keys = PLANES[self.plane]
+        env = self.env_for(node)
+        mat = self._world_matrix(node)
+
+        def val(key, default=0.0):
+            return expr.resolve(node.params.get(key, default), env,
+                                default)
+
+        def project(p):                            # local point -> 2D
+            w = mesh_mod.transform_point(mat, p)
+            return QPointF(w[ai], w[bi])
+
+        def direction(d):                          # local dir -> 2D vec
+            w = (mat[0][0] * d[0] + mat[0][1] * d[1] + mat[0][2] * d[2],
+                 mat[1][0] * d[0] + mat[1][1] * d[1] + mat[1][2] * d[2],
+                 mat[2][0] * d[0] + mat[2][1] * d[1] + mat[2][2] * d[2])
+            return (w[ai], w[bi])
+
+        px, py, pz = val("x"), val("y"), val("z")
+        center = bool(node.params.get("center"))
+        out = []
+
+        def add(role, param, anchor3, dir3, mag, factor):
+            ax = direction(dir3)
+            if ax[0] * ax[0] + ax[1] * ax[1] < 1e-9:
+                return                             # edge-on in this plane
+            anchor = project(anchor3)
+            out.append(dict(
+                role=role, param=param, anchor=anchor, axis=ax,
+                factor=factor, minval=0.1,
+                tip=QPointF(anchor.x() + ax[0] * mag,
+                            anchor.y() + ax[1] * mag)))
+
+        if node.type == "cylinder":
+            h = val("height")
+            z0 = pz - (h / 2 if center else 0.0)
+            z1 = z0 + h
+            # radius direction most visible in this plane
+            radial = max(((1, 0, 0), (0, 1, 0)),
+                         key=lambda d: sum(c * c for c in direction(d)))
+            add("radius_bottom", "radius_bottom", (px, py, z0), radial,
+                val("radius_bottom"), 1.0)
+            add("radius_top", "radius_top", (px, py, z1), radial,
+                val("radius_top"), 1.0)
+            add("height", "height", (px, py, z0), (0, 0, 1), h, 1.0)
+        elif node.type == "sphere":
+            radial = max(((1, 0, 0), (0, 1, 0), (0, 0, 1)),
+                         key=lambda d: sum(c * c for c in direction(d)))
+            add("radius", "radius", (px, py, pz), radial,
+                val("radius"), 1.0)
+        else:                                       # cube
+            w, d, hh = val("width"), val("depth"), val("height")
+            cx = px + (0.0 if center else w / 2)
+            cy = py + (0.0 if center else d / 2)
+            cz = pz + (0.0 if center else hh / 2)
+            add("width", "width", (cx, cy, cz), (1, 0, 0), w / 2, 2.0)
+            add("depth", "depth", (cx, cy, cz), (0, 1, 0), d / 2, 2.0)
+            add("height", "height", (cx, cy, cz), (0, 0, 1), hh / 2, 2.0)
+        return out
 
     def _make_part_item(self, node):
         from . import mesh as mesh_mod
