@@ -143,14 +143,15 @@ class ObjectTree(QTreeWidget):
         if not self._updating:
             self.selection_changed.emit(self.selected_nodes())
 
-    def select_node(self, node):
+    def select_nodes(self, nodes):
         """Programmatic selection (e.g. clicked in the 2D view)."""
         self._updating = True
         self.clearSelection()
-        item = self._item_of(node) if node else None
-        if item:
-            item.setSelected(True)
-            self.scrollToItem(item)
+        for node in nodes:
+            item = self._item_of(node)
+            if item:
+                item.setSelected(True)
+                self.scrollToItem(item)
         self._updating = False
         self._emit_selection()
 

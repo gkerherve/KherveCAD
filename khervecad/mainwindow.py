@@ -1,0 +1,484 @@
+"""MainWindow shell: panels, toolbars, menus, selection sync.
+
+Layout (the classic 3D-builder arrangement):
+
+- left column — the object builder: Objects tree / Code tabs on top,
+  the Properties panel below;
+- right column — the 2D sketch view on top, the 3D preview below;
+- vertical toolbar — shape tools (select, line, rectangle, circle,
+  polygon, text) and 3D primitives (cube, sphere, cylinder);
+- horizontal toolbar — file ops, the operations that wrap selected
+  objects (linear/rotate extrude, transforms, booleans) and grid
+  controls.
+
+Copyright (C) 2026 Gwilherm Kerherve
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+"""
+
+from pathlib import Path
+
+from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtWidgets import (QAction, QActionGroup, QApplication,
+                             QFileDialog, QLabel, QMainWindow,
+                             QMessageBox, QSpinBox, QSplitter,
+                             QToolBar)
+
+from . import APP_NAME, __version__, document, icons, mesh
+from .engine import ScadEngine, set_openscad_path
+from .model import NODE_TYPES, DocumentModel
+from .properties import PropertiesPanel
+from .style import THEMES, apply_style, current_theme
+from .treepanel import BuilderPanel
+from .view2d import (CIRCLE, LINE, POLYGON, RECT, SELECT, TEXT,
+                     SketchScene, SketchView)
+from .view3d import View3D
+
+ICON_SIZE = QSize(28, 28)
+
+#: (tool id, mdi icon, label, shortcut) for the 2D drawing tools.
+TOOLS = [
+    (SELECT, "mdi.cursor-default-outline", "Select", "V"),
+    (LINE, "mdi.vector-line", "Line", "L"),
+    (RECT, "mdi.rectangle-outline", "Rectangle", "R"),
+    (CIRCLE, "mdi.circle-outline", "Circle", "C"),
+    (POLYGON, "mdi.vector-polygon", "Polygon", "P"),
+    (TEXT, "mdi.format-text", "Text", "T"),
+]
+
+#: 3D primitives added with one click.
+PRIMITIVES = ["cube", "sphere", "cylinder"]
+
+#: operations in the horizontal toolbar (applied to the selection).
+OPERATIONS = ["linear_extrude", "rotate_extrude", "translate", "rotate",
+              "scale", "mirror", "union", "difference", "intersection"]
+
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowIcon(icons.app_icon())
+        self.resize(1400, 900)
+
+        self.model = DocumentModel()
+        self.engine = ScadEngine(self)
+        self._path = None
+        self._dirty = False
+        self._syncing = False
+        self._fitted = False
+
+        # ---- panels
+        self.builder = BuilderPanel(self.model)
+        self.properties = PropertiesPanel(self.model)
+        self.scene = SketchScene(self.model)
+        self.view2d = SketchView(self.scene)
+        self.view3d = View3D()
+
+        left = QSplitter(Qt.Vertical)
+        left.addWidget(self.builder)
+        left.addWidget(self.properties)
+        left.setStretchFactor(0, 3)
+        left.setStretchFactor(1, 2)
+
+        right = QSplitter(Qt.Vertical)
+        right.addWidget(self.view2d)
+        right.addWidget(self.view3d)
+        right.setStretchFactor(0, 3)
+        right.setStretchFactor(1, 2)
+
+        split = QSplitter(Qt.Horizontal)
+        split.addWidget(left)
+        split.addWidget(right)
+        split.setStretchFactor(0, 0)
+        split.setStretchFactor(1, 1)
+        split.setSizes([340, 1060])
+        self.setCentralWidget(split)
+
+        # ---- wiring
+        self.builder.tree.selection_changed.connect(self._tree_selected)
+        self.scene.selection_changed.connect(self._scene_selected)
+        self.scene.node_created.connect(self._node_created)
+        self.view2d.cursor_moved.connect(
+            lambda p: self._cursor_label.setText(
+                f"x: {p.x():.1f}  y: {p.y():.1f}"))
+        self.model.structure_changed.connect(self._model_edited)
+        self.model.node_changed.connect(lambda _n: self._model_edited())
+        self.engine.mesh_ready.connect(self._engine_mesh)
+        self.engine.render_failed.connect(self._engine_failed)
+        self.engine.busy_changed.connect(self._engine_busy)
+
+        self._build_tool_bar()
+        self._build_options_bar()
+        self._build_menus()
+        self._build_status_bar()
+        self._update_title()
+        self._refresh_preview()
+
+    # ------------------------------------------------------------ chrome
+    def _build_tool_bar(self):
+        bar = QToolBar("Tools")
+        bar.setIconSize(ICON_SIZE)
+        bar.setMovable(False)
+        self.addToolBar(Qt.LeftToolBarArea, bar)
+        self._tool_group = QActionGroup(self)
+        for tool, glyph, label, shortcut in TOOLS:
+            act = QAction(icons.icon(glyph), label, self)
+            act.setCheckable(True)
+            act.setShortcut(shortcut)
+            act.setToolTip(f"{label} ({shortcut})")
+            act.triggered.connect(lambda _, t=tool: self._set_tool(t))
+            self._tool_group.addAction(act)
+            bar.addAction(act)
+        self._tool_group.actions()[0].setChecked(True)
+        bar.addSeparator()
+        for prim in PRIMITIVES:
+            spec = NODE_TYPES[prim]
+            bar.addAction(icons.icon(spec["icon"]), spec["label"],
+                          lambda _=False, t=prim: self._add_primitive(t))
+
+    def _build_options_bar(self):
+        bar = QToolBar("Options")
+        bar.setIconSize(ICON_SIZE)
+        bar.setMovable(False)
+        self.addToolBar(Qt.TopToolBarArea, bar)
+
+        bar.addAction(icons.icon("mdi.file-outline"), "New",
+                      self.new_document)
+        bar.addAction(icons.icon("mdi.folder-open-outline"), "Open",
+                      self.open_file)
+        bar.addAction(icons.icon("mdi.content-save-outline"), "Save",
+                      self.save_file)
+        bar.addSeparator()
+
+        for op in OPERATIONS:
+            spec = NODE_TYPES[op]
+            bar.addAction(icons.icon(spec["icon"]), spec["label"],
+                          lambda _=False, o=op: self._apply_operation(o))
+        bar.addSeparator()
+
+        self._grid_act = QAction(icons.icon("mdi.grid"), "Grid", self)
+        self._grid_act.setCheckable(True)
+        self._grid_act.setChecked(self.scene.show_grid)
+        self._grid_act.setToolTip("Show grid (Ctrl+')")
+        self._grid_act.setShortcut("Ctrl+'")
+        self._grid_act.toggled.connect(self._set_show_grid)
+        bar.addAction(self._grid_act)
+
+        self._snap_act = QAction(icons.icon("mdi.magnet"), "Snap", self)
+        self._snap_act.setCheckable(True)
+        self._snap_act.setChecked(self.scene.snap_enabled)
+        self._snap_act.setToolTip("Snap to grid (Ctrl+Shift+')")
+        self._snap_act.setShortcut("Ctrl+Shift+'")
+        self._snap_act.toggled.connect(self._set_snap)
+        bar.addAction(self._snap_act)
+
+        bar.addWidget(QLabel(" Grid "))
+        self._grid_spin = QSpinBox()
+        self._grid_spin.setRange(1, 100)
+        self._grid_spin.setValue(int(self.scene.grid_size))
+        self._grid_spin.valueChanged.connect(self._set_grid_size)
+        bar.addWidget(self._grid_spin)
+        bar.addSeparator()
+
+        bar.addAction(icons.icon("mdi.play-outline"), "Render (F5)",
+                      self._render_now).setShortcut("F5")
+        bar.addAction(icons.icon("mdi.arrow-expand-all"), "Fit 3D",
+                      self.view3d.fit)
+
+    def _build_menus(self):
+        m = self.menuBar()
+
+        file_menu = m.addMenu("&File")
+        file_menu.addAction("&New", self.new_document, "Ctrl+N")
+        file_menu.addAction("&Open...", self.open_file, "Ctrl+O")
+        file_menu.addAction("&Save", self.save_file, "Ctrl+S")
+        file_menu.addAction("Save &As...", self.save_file_as,
+                            "Ctrl+Shift+S")
+        file_menu.addSeparator()
+        file_menu.addAction("Export Open&SCAD...", self.export_scad,
+                            "Ctrl+E")
+        file_menu.addAction("Export S&TL...", self.export_stl,
+                            "Ctrl+Shift+E")
+        file_menu.addSeparator()
+        file_menu.addAction("E&xit", self.close, "Ctrl+Q")
+
+        edit_menu = m.addMenu("&Edit")
+        edit_menu.addAction("&Delete", self._delete_selection, "Delete")
+        edit_menu.addAction("D&uplicate", self._duplicate_selection,
+                            "Ctrl+D")
+        edit_menu.addSeparator()
+        edit_menu.addAction("&Group", lambda: self._apply_operation(
+            "union"), "Ctrl+G")
+        edit_menu.addAction("&Ungroup", self._ungroup_selection,
+                            "Ctrl+Shift+G")
+        edit_menu.addSeparator()
+        edit_menu.addAction("&Locate OpenSCAD...", self._locate_openscad)
+
+        view_menu = m.addMenu("&View")
+        view_menu.addAction(self._grid_act)
+        view_menu.addAction(self._snap_act)
+        view_menu.addSeparator()
+        view_menu.addAction("Zoom &In", lambda: self.view2d.zoom(1.25),
+                            "Ctrl++")
+        view_menu.addAction("Zoom &Out",
+                            lambda: self.view2d.zoom(1 / 1.25), "Ctrl+-")
+        view_menu.addAction("&Reset 2D Zoom", self.view2d.zoom_reset,
+                            "Ctrl+0")
+        view_menu.addAction("&Fit 3D View", self.view3d.fit, "Ctrl+F")
+        view_menu.addSeparator()
+        theme_menu = view_menu.addMenu("&Theme")
+        theme_group = QActionGroup(self)
+        for name in THEMES:
+            act = QAction(name, self, checkable=True)
+            act.setChecked(name == current_theme())
+            act.triggered.connect(
+                lambda _, n=name: apply_style(QApplication.instance(), n))
+            theme_group.addAction(act)
+            theme_menu.addAction(act)
+
+        help_menu = m.addMenu("&Help")
+        help_menu.addAction("&About", self._about)
+
+    def _build_status_bar(self):
+        self._cursor_label = QLabel("x: 0.0  y: 0.0")
+        self.statusBar().addWidget(self._cursor_label)
+        self._engine_label = QLabel()
+        self.statusBar().addPermanentWidget(self._engine_label)
+        self._refresh_engine_label()
+
+    def _refresh_engine_label(self, busy=False):
+        if self.engine.available:
+            state = "rendering…" if busy else "ready"
+            self._engine_label.setText(f"Engine: OpenSCAD ({state})")
+        else:
+            self._engine_label.setText(
+                "Engine: built-in preview — OpenSCAD not found "
+                "(Edit > Locate OpenSCAD)")
+
+    # ---------------------------------------------------------- editing
+    def _set_tool(self, tool):
+        self.view2d.set_tool(tool)
+
+    def _add_primitive(self, type: str):
+        node = self.model.add_node(type)
+        self.builder.tree.select_nodes([node])
+
+    def _apply_operation(self, op: str):
+        nodes = self.builder.tree.selected_nodes()
+        if not nodes:
+            self.statusBar().showMessage(
+                "Select objects in the tree first.", 3000)
+            return
+        wrapper = self.model.wrap_nodes(nodes, op)
+        if wrapper is not None:
+            self.builder.tree.select_nodes([wrapper])
+
+    def _ungroup_selection(self):
+        for node in self.builder.tree.selected_nodes():
+            self.model.ungroup(node)
+
+    def _delete_selection(self):
+        for node in self.builder.tree.selected_nodes():
+            self.model.remove_node(node)
+
+    def _duplicate_selection(self):
+        for node in self.builder.tree.selected_nodes():
+            self.model.duplicate(node)
+
+    def _set_show_grid(self, show):
+        self.scene.show_grid = show
+        self.view2d.viewport().update()
+
+    def _set_snap(self, snap):
+        self.scene.snap_enabled = snap
+
+    def _set_grid_size(self, size):
+        self.scene.grid_size = float(size)
+        self.view2d.viewport().update()
+
+    # -------------------------------------------------- selection sync
+    def _tree_selected(self, nodes):
+        if self._syncing:
+            return
+        self._syncing = True
+        self.properties.set_node(nodes[0] if len(nodes) == 1 else None)
+        self.scene.select_nodes(nodes)
+        self._syncing = False
+
+    def _scene_selected(self, nodes):
+        if self._syncing:
+            return
+        self._syncing = True
+        self.builder.tree.select_nodes(nodes)
+        self.properties.set_node(nodes[0] if len(nodes) == 1 else None)
+        self._syncing = False
+
+    def _node_created(self, node):
+        self.builder.tree.select_nodes([node])
+
+    # ---------------------------------------------------- 3D pipeline
+    def _model_edited(self):
+        self._dirty = True
+        self._update_title()
+        self._refresh_preview()
+
+    def _refresh_preview(self):
+        tris = mesh.tessellate(self.model.root)
+        label = "built-in preview"
+        if mesh.uses_booleans(self.model.root):
+            label += (" (booleans approximated)"
+                      if not self.engine.available else "")
+        self.view3d.set_mesh(tris, label)
+        if tris and not self._fitted:
+            self.view3d.fit()
+            self._fitted = True
+        if self.engine.available:
+            self.engine.request_render(self.model.to_scad())
+
+    def _render_now(self):
+        if self.engine.available:
+            self.engine.request_render(self.model.to_scad())
+            self.statusBar().showMessage("Rendering with OpenSCAD…",
+                                         2000)
+        else:
+            self._refresh_preview()
+            self.statusBar().showMessage(
+                "OpenSCAD not found — using built-in preview.", 4000)
+
+    def _engine_mesh(self, tris):
+        self.view3d.set_mesh(tris, "OpenSCAD")
+
+    def _engine_failed(self, message):
+        self.statusBar().showMessage(f"OpenSCAD: {message}", 6000)
+
+    def _engine_busy(self, busy):
+        self._refresh_engine_label(busy)
+
+    def _locate_openscad(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Locate the OpenSCAD executable")
+        if not path:
+            return
+        set_openscad_path(path)
+        self.engine.refresh_binary()
+        self._refresh_engine_label()
+        self._refresh_preview()
+
+    # ------------------------------------------------------------ files
+    def new_document(self):
+        if not self._confirm_discard():
+            return
+        self.model.clear()
+        self._path = None
+        self._dirty = False
+        self._fitted = False
+        self._update_title()
+
+    def open_file(self):
+        if not self._confirm_discard():
+            return
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Open", "", "KherveCAD document (*.kcad)")
+        if not path:
+            return
+        try:
+            document.load_kcad(self.model, path)
+        except Exception as exc:
+            QMessageBox.warning(self, APP_NAME, f"Could not open:\n{exc}")
+            return
+        self._path = path
+        self._dirty = False
+        self._fitted = False
+        self.view3d.fit()
+        self._update_title()
+
+    def save_file(self):
+        if self._path is None:
+            self.save_file_as()
+            return
+        try:
+            document.save_kcad(self.model, self._path)
+        except Exception as exc:
+            QMessageBox.warning(self, APP_NAME, f"Could not save:\n{exc}")
+            return
+        self._dirty = False
+        self._update_title()
+
+    def save_file_as(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save As", "", "KherveCAD document (*.kcad)")
+        if not path:
+            return
+        if not path.lower().endswith(".kcad"):
+            path += ".kcad"
+        self._path = path
+        self.save_file()
+
+    def export_scad(self):
+        suggestion = str(Path(self._path).with_suffix(".scad")) \
+            if self._path else ""
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export OpenSCAD", suggestion,
+            "OpenSCAD program (*.scad)")
+        if not path:
+            return
+        if not path.lower().endswith(".scad"):
+            path += ".scad"
+        try:
+            document.export_scad(self.model, path)
+        except Exception as exc:
+            QMessageBox.warning(self, APP_NAME,
+                                f"Could not export:\n{exc}")
+
+    def export_stl(self):
+        suggestion = str(Path(self._path).with_suffix(".stl")) \
+            if self._path else ""
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export STL", suggestion, "STL mesh (*.stl)")
+        if not path:
+            return
+        if not path.lower().endswith(".stl"):
+            path += ".stl"
+        if self.engine.available:
+            error = self.engine.export_stl(self.model.to_scad(), path)
+            if error:
+                QMessageBox.warning(self, APP_NAME,
+                                    f"OpenSCAD export failed:\n{error}")
+            return
+        from .engine import write_stl
+        write_stl(mesh.tessellate(self.model.root), path)
+        if mesh.uses_booleans(self.model.root):
+            QMessageBox.information(
+                self, APP_NAME,
+                "Exported with the built-in tessellator: booleans are "
+                "approximated. Install OpenSCAD for exact geometry.")
+
+    # ------------------------------------------------------------- misc
+    def _update_title(self):
+        name = Path(self._path).name if self._path else "Untitled"
+        star = "*" if self._dirty else ""
+        self.setWindowTitle(f"{star}{name} — {APP_NAME} v{__version__}")
+
+    def _confirm_discard(self) -> bool:
+        if not self._dirty:
+            return True
+        answer = QMessageBox.question(
+            self, APP_NAME, "Discard unsaved changes?",
+            QMessageBox.Discard | QMessageBox.Cancel)
+        return answer == QMessageBox.Discard
+
+    def closeEvent(self, event):
+        if self._confirm_discard():
+            event.accept()
+        else:
+            event.ignore()
+
+    def _about(self):
+        QMessageBox.about(
+            self, f"About {APP_NAME}",
+            f"<b>{APP_NAME}</b> v{__version__}<br>"
+            "Easy-to-use CAD GUI with OpenSCAD as the engine, in the "
+            "Kherve family.<br><br>GPL-3.0 — Gwilherm Kerherve")

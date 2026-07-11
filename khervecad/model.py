@@ -87,7 +87,7 @@ NODE_TYPES = {
                 ("radius", "Radius", "float", 0.01, 1e6),
                 ("segments", "Segments ($fn)", "int", 4, 512)]),
     "cylinder": dict(
-        label="Cylinder", category=SHAPE_3D, icon="mdi.cylinder",
+        label="Cylinder", category=SHAPE_3D, icon="mdi.database-outline",
         params=dict(x=0.0, y=0.0, z=0.0, height=25.0,
                     radius_bottom=10.0, radius_top=10.0,
                     segments=64, center=False),
