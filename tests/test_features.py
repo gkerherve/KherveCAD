@@ -1,0 +1,216 @@
+"""Tests for expressions, control flow, rounding ops and partial
+circles.
+
+Copyright (C) 2026 Gwilherm Kerherve
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+"""
+
+import os
+import sys
+from pathlib import Path
+
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import pytest
+from PyQt5.QtWidgets import QApplication
+
+from khervecad import expr
+from khervecad.model import DocumentModel
+
+
+@pytest.fixture(scope="session")
+def app():
+    return QApplication.instance() or QApplication([])
+
+
+@pytest.fixture
+def model(app):
+    return DocumentModel()
+
+
+# --------------------------------------------------------- expressions
+
+def test_expr_arithmetic():
+    assert expr.evaluate("2 + 3 * 4") == 14
+    assert expr.evaluate("2 ^ 3") == 8            # OpenSCAD power
+    assert expr.evaluate("i * 10 + 2", {"i": 3}) == 32
+
+
+def test_expr_trig_in_degrees():
+    assert expr.evaluate("sin(30)") == pytest.approx(0.5)
+    assert expr.evaluate("cos(60)") == pytest.approx(0.5)
+    assert expr.evaluate("atan2(1, 1)") == pytest.approx(45.0)
+
+
+def test_expr_conditions():
+    assert expr.evaluate("x < 100", {"x": 50}) is True
+    assert expr.evaluate("x < 100 and x > 10", {"x": 5}) is False
+
+
+def test_expr_rejects_python():
+    with pytest.raises(expr.ExprError):
+        expr.evaluate("__import__('os')")
+    with pytest.raises(expr.ExprError):
+        expr.evaluate("open('/etc/passwd')")
+
+
+def test_expr_resolve_fallback():
+    assert expr.resolve("nope + 1", None, 7.0) == 7.0
+    assert expr.resolve(3.5) == 3.5
+
+
+# ----------------------------------------------------- expression params
+
+def test_expression_param_emitted_raw(model):
+    model.add_node("circle", dict(x="i * 10", y=0.0, radius=5.0))
+    assert "translate([i * 10, 0])" in model.root.to_scad()
+
+
+# ------------------------------------------------------ partial circles
+
+def test_quarter_circle_is_polygon_fan(model):
+    model.add_node("circle", dict(radius=10.0, angle=90.0, segments=8))
+    code = model.root.to_scad()
+    assert "polygon(points=[[0, 0]," in code
+    assert "[10, 0]" in code                      # arc start
+    assert "[0, 10]" in code.replace("[0.0", "[0")  # arc end at 90 deg
+
+
+def test_semi_circle_arc_ends(model):
+    node = model.add_node("circle", dict(radius=10.0, angle=180.0,
+                                         segments=16))
+    pts = node.arc_points()
+    assert pts[0] == (pytest.approx(10.0), pytest.approx(0.0))
+    assert pts[-1][0] == pytest.approx(-10.0)
+    assert pts[-1][1] == pytest.approx(0.0, abs=1e-9)
+
+
+def test_full_circle_still_circle(model):
+    model.add_node("circle", dict(radius=10.0, angle=360.0))
+    assert "circle(r=10" in model.root.to_scad()
+
+
+# ---------------------------------------------------------- rounding ops
+
+def test_offset_codegen(model):
+    c = model.add_node("circle")
+    off = model.wrap_nodes([c], "offset")
+    off.params["radius"] = 3.0
+    assert "offset(r=3)" in model.root.to_scad()
+    off.params["chamfer"] = True
+    assert "offset(delta=3, chamfer=true)" in model.root.to_scad()
+
+
+def test_round_edges_builds_minkowski_with_sphere(model):
+    cube = model.add_node("cube")
+    wrapper = model.round_edges([cube], radius=2.0)
+    assert wrapper.type == "minkowski"
+    code = model.root.to_scad()
+    assert code.startswith("minkowski() {")
+    assert "sphere(r=2" in code
+    assert "cube(" in code
+
+
+def test_hull_codegen(model):
+    a = model.add_node("circle")
+    b = model.add_node("rect")
+    model.wrap_nodes([a, b], "hull")
+    assert model.root.to_scad().startswith("hull() {")
+
+
+# ---------------------------------------------------------- control flow
+
+def test_for_loop_codegen(model):
+    loop = model.add_node("for_loop", dict(variable="a", start=0.0,
+                                           end=270.0, step=90.0))
+    model.add_node("cube", parent=loop)
+    code = model.root.to_scad()
+    assert code.startswith("for (a = [0 : 90 : 270]) {")
+
+
+def test_for_loop_value_list(model):
+    loop = model.add_node("for_loop", dict(values="3, 7, 12"))
+    model.add_node("sphere", parent=loop)
+    assert "for (i = [3, 7, 12])" in model.root.to_scad()
+    assert loop.loop_values() == [3, 7, 12]
+
+
+def test_while_loop_unrolls_to_valid_for(model):
+    loop = model.add_node("while_loop", dict(
+        variable="x", start=1.0, condition="x < 20", update="x * 2"))
+    model.add_node("sphere", dict(radius="x"), parent=loop)
+    assert loop.loop_values() == [1, 2, 4, 8, 16]
+    code = model.root.to_scad()
+    assert "for (x = [1, 2, 4, 8, 16])" in code
+    assert "sphere(r=x" in code
+
+
+def test_while_loop_never_infinite(model):
+    loop = model.add_node("while_loop", dict(
+        variable="x", start=0.0, condition="true", update="x"))
+    assert len(loop.loop_values()) == 1000
+
+
+def test_if_else_codegen(model):
+    cond = model.add_node("if_else", dict(condition="size > 10"))
+    # add_node auto-creates the Else union
+    else_branch = cond.children[0]
+    assert else_branch.name == "Else"
+    model.add_node("cube", parent=cond)
+    model.add_node("sphere", parent=else_branch)
+    code = model.root.to_scad()
+    assert code.startswith("if (size > 10) {")
+    assert "} else {" in code
+    assert code.index("cube") < code.index("} else")
+    assert code.index("sphere") > code.index("} else")
+
+
+def test_if_without_else_children(model):
+    cond = model.add_node("if_else", dict(condition="true"))
+    model.add_node("cube", parent=cond)
+    assert "else" not in model.root.to_scad().replace("Else", "")
+
+
+def test_assign_codegen(model):
+    model.add_node("assign", dict(variable="bore", value="38.1"))
+    model.add_node("circle", dict(radius="bore / 2"))
+    code = model.root.to_scad()
+    assert "bore = 38.1;" in code
+    assert "circle(r=bore / 2" in code
+
+
+def test_wrap_in_if_else_puts_nodes_in_then(model):
+    cube = model.add_node("cube")
+    cond = model.wrap_nodes([cube], "if_else")
+    code = model.root.to_scad()
+    assert "cube(" in code.split("else")[0]
+
+
+# ------------------------------------------------------------ STL import
+
+def test_stl_import_codegen(model):
+    model.add_node("stl_import", dict(path="parts/rotor.stl", x=5.0))
+    code = model.root.to_scad()
+    assert 'import("parts/rotor.stl", convexity=10)' in code
+    assert "translate([5, 0, 0])" in code
+
+
+# -------------------------------------------------------------- roundtrip
+
+def test_new_nodes_roundtrip_kcad(model, tmp_path):
+    from khervecad import document
+    loop = model.add_node("for_loop", dict(variable="a", start=0.0,
+                                           end=270.0, step=90.0))
+    rot = model.add_node("rotate", dict(z="a"), parent=loop)
+    model.add_node("circle", dict(radius=5.0, angle=90.0), parent=rot)
+    model.add_node("assign", dict(variable="k", value="2"))
+    path = tmp_path / "loops.kcad"
+    document.save_kcad(model, str(path))
+    other = DocumentModel()
+    document.load_kcad(other, str(path))
+    assert other.to_scad() == model.to_scad()
