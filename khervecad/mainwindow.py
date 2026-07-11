@@ -491,7 +491,8 @@ class MainWindow(QMainWindow):
         if rect is not None:
             self.view2d.frame_rect(rect)
         self.view3d.set_highlight_mesh(
-            mesh.selected_world_tris(self.model.root, self._selected_ids)
+            mesh.selected_world_tris(self.model.root, self._selected_ids,
+                                     fn=self.model.effective_fn())
             if self._selected_ids else [])
 
     def _node_created(self, node):
@@ -504,7 +505,8 @@ class MainWindow(QMainWindow):
         self._refresh_preview()
 
     def _refresh_preview(self):
-        colored = mesh.tessellate_colored(self.model.root)
+        fn = self.model.effective_fn()
+        colored = mesh.tessellate_colored(self.model.root, fn=fn)
         tris = [t for t, _c in colored]
         colors = [c for _t, c in colored]
         has_colors = any(c is not None for c in colors)
@@ -517,7 +519,7 @@ class MainWindow(QMainWindow):
         selected = getattr(self, "_selected_ids", set())
         if selected:
             self.view3d.set_highlight_mesh(
-                mesh.selected_world_tris(self.model.root, selected))
+                mesh.selected_world_tris(self.model.root, selected, fn=fn))
         if tris and not self._fitted:
             self.view3d.fit()
             self._fitted = True

@@ -17,7 +17,7 @@ import json
 
 from .model import NODE_TYPES, CadNode, DocumentModel
 
-FORMAT_VERSION = 1
+FORMAT_VERSION = 2
 
 
 def node_to_dict(node: CadNode) -> dict:
@@ -42,6 +42,8 @@ def node_from_dict(data: dict) -> CadNode:
 
 def save_kcad(model: DocumentModel, path: str):
     data = {"format": "kcad", "version": FORMAT_VERSION,
+            "global_fn": int(model.global_fn),
+            "global_fn_on": bool(model.global_fn_on),
             "tree": node_to_dict(model.root)}
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=1)
@@ -53,6 +55,9 @@ def load_kcad(model: DocumentModel, path: str):
     if data.get("format") != "kcad":
         raise ValueError("not a KherveCAD document")
     model.root = node_from_dict(data["tree"])
+    # segment override (absent in v1 documents -> defaults preserved)
+    model.global_fn = int(data.get("global_fn", model.global_fn))
+    model.global_fn_on = bool(data.get("global_fn_on", False))
     model.structure_changed.emit()
 
 

@@ -673,7 +673,8 @@ class SketchScene(QGraphicsScene):
         # filled shape (holes and concavities included), built
         # instantly — no simplify() (it explodes on helical threads).
         tris = mesh_mod.selected_world_tris(
-            self.model.root, {node.id}, detail=14)
+            self.model.root, {node.id}, detail=14,
+            fn=self.model.effective_fn())
         if not tris:
             return None
         path = QPainterPath()
@@ -795,7 +796,8 @@ class SketchScene(QGraphicsScene):
 
     def _make_part_item(self, node):
         from . import mesh as mesh_mod
-        tris = mesh_mod.tessellate(node, self.env_for(node))
+        tris = mesh_mod.tessellate(node, self.env_for(node),
+                                   fn=self.model.effective_fn())
         if not tris:
             return None
         (ai, bi), _keys = PLANES[self.plane]

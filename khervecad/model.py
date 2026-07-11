@@ -241,6 +241,18 @@ def scad_str(text: str) -> str:
     return '"' + str(text).replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
+#: document-wide segment count applied to every round object while set
+#: (None = each object keeps its own $fn). Set around codegen by
+#: DocumentModel.to_scad_map(); the mesh module has its own copy.
+_FN_OVERRIDE = None
+
+
+def _fn(p) -> object:
+    """Effective $fn for a round object: the document-wide common
+    segment count when one is active, else the object's own value."""
+    return _FN_OVERRIDE if _FN_OVERRIDE is not None else p["segments"]
+
+
 # ------------------------------------------------------------------ node
 
 class CadNode:
@@ -439,7 +451,7 @@ class CadNode:
             if not partial:
                 return (f"translate([{fmt(p['x'])}, {fmt(p['y'])}]) "
                         f"circle(r={fmt(p['radius'])}, "
-                        f"$fn={fmt(p['segments'])})")
+                        f"$fn={fmt(_fn(p))})")
             # Quarter / semi / any pie slice: a polygon fan of arc
             # points (centre first) — a real 2D solid.
             pts = ", ".join(f"[{fmt(x)}, {fmt(y)}]"
@@ -463,14 +475,14 @@ class CadNode:
             return (f"translate([{fmt(p['x'])}, {fmt(p['y'])}, "
                     f"{fmt(p['z'])}]) "
                     f"sphere(r={fmt(p['radius'])}, "
-                    f"$fn={fmt(p['segments'])})")
+                    f"$fn={fmt(_fn(p))})")
         if t == "cylinder":
             return (f"translate([{fmt(p['x'])}, {fmt(p['y'])}, "
                     f"{fmt(p['z'])}]) "
                     f"cylinder(h={fmt(p['height'])}, "
                     f"r1={fmt(p['radius_bottom'])}, "
                     f"r2={fmt(p['radius_top'])}, "
-                    f"$fn={fmt(p['segments'])}, "
+                    f"$fn={fmt(_fn(p))}, "
                     f"center={fmt(p['center'])})")
         if t == "linear_extrude":
             args = [f"height={fmt(p['height'])}"]
@@ -487,7 +499,7 @@ class CadNode:
             args = []
             if p["angle"] != 360.0:
                 args.append(f"angle={fmt(p['angle'])}")
-            args.append(f"$fn={fmt(p['segments'])}")
+            args.append(f"$fn={fmt(_fn(p))}")
             return f"rotate_extrude({', '.join(args)})"
         if t in ("translate", "rotate", "scale", "mirror"):
             return (f"{t}([{fmt(p['x'])}, {fmt(p['y'])}, "
@@ -549,6 +561,9 @@ class DocumentModel(QObject):
     def __init__(self):
         super().__init__()
         self.root = CadNode("root")
+        # optional document-wide segment count for round objects
+        self.global_fn = 32
+        self.global_fn_on = False
         self.undo_stack = QUndoStack(self)
         self._restoring = False
         self._last_state = self._serialize()
@@ -605,6 +620,19 @@ class DocumentModel(QObject):
             if name not in taken:
                 return name
 
+    def effective_fn(self):
+        """The document-wide segment count in force, or None when each
+        object keeps its own $fn."""
+        return int(self.global_fn) if self.global_fn_on else None
+
+    def set_global_fn(self, on: bool, value: int = None):
+        """Enable/disable the common segment count (and optionally set
+        it), then refresh every view."""
+        self.global_fn_on = bool(on)
+        if value is not None:
+            self.global_fn = max(int(value), 3)
+        self.structure_changed.emit()
+
     def to_scad(self) -> str:
         return self.to_scad_map()[0]
 
@@ -618,7 +646,12 @@ class DocumentModel(QObject):
                   f"// regenerated from the object tree.\n")
         offset = header.count("\n") + 1          # + the blank line
         lines, spans = [], {}
-        self.root.emit(lines, 0, spans)
+        global _FN_OVERRIDE
+        _FN_OVERRIDE = self.effective_fn()
+        try:
+            self.root.emit(lines, 0, spans)
+        finally:
+            _FN_OVERRIDE = None
         body = "\n".join(text for text, _n in lines)
         code = header + "\n" + body + ("\n" if body else "")
         shifted = {nid: (s + offset, e + offset)

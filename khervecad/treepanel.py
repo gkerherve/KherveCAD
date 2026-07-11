@@ -20,9 +20,10 @@ import re
 from PyQt5.QtCore import QEvent, Qt, pyqtSignal
 from PyQt5.QtGui import (QBrush, QColor, QFont, QKeySequence,
                          QSyntaxHighlighter, QTextCharFormat)
-from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QMenu,
-                             QPlainTextEdit, QTabWidget, QTextEdit,
-                             QTreeWidget, QTreeWidgetItem)
+from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QCheckBox,
+                             QHBoxLayout, QMenu, QPlainTextEdit,
+                             QSpinBox, QTabWidget, QTextEdit, QTreeWidget,
+                             QTreeWidgetItem, QVBoxLayout, QWidget)
 
 from . import icons
 from .document import node_from_dict, node_to_dict
@@ -566,11 +567,58 @@ class BuilderPanel(QTabWidget):
         self._spans = {}
         self._engine_errors = {}
         self._selected_ids = []
-        self.addTab(self.tree, icons.icon("mdi.file-tree"), "Objects")
+
+        # Objects tab: a common-segments toggle pinned above the tree
+        objects = QWidget()
+        box = QVBoxLayout(objects)
+        box.setContentsMargins(4, 4, 4, 0)
+        box.setSpacing(4)
+        row = QHBoxLayout()
+        self.fn_check = QCheckBox("Common segments ($fn)")
+        self.fn_check.setToolTip(
+            "Force one segment count on every round object — cylinders, "
+            "spheres and revolved flanges — overriding their own $fn")
+        self.fn_check.setChecked(model.global_fn_on)
+        self.fn_spin = QSpinBox()
+        self.fn_spin.setRange(3, 512)
+        self.fn_spin.setValue(int(model.global_fn))
+        self.fn_spin.setEnabled(model.global_fn_on)
+        self.fn_check.toggled.connect(self._fn_toggled)
+        self.fn_spin.valueChanged.connect(self._fn_value_changed)
+        row.addWidget(self.fn_check)
+        row.addWidget(self.fn_spin)
+        row.addStretch()
+        box.addLayout(row)
+        box.addWidget(self.tree)
+
+        self.addTab(objects, icons.icon("mdi.file-tree"), "Objects")
         self.addTab(self.code, icons.icon("mdi.code-braces"), "Code")
         model.structure_changed.connect(self.refresh_code)
+        model.structure_changed.connect(self._sync_fn_ui)
         model.node_changed.connect(lambda _n: self.refresh_code())
         self.refresh_code()
+
+    def _fn_toggled(self, on):
+        self.fn_spin.setEnabled(on)
+        self.model.set_global_fn(on, self.fn_spin.value())
+
+    def _fn_value_changed(self, value):
+        if self.fn_check.isChecked():
+            self.model.set_global_fn(True, value)
+        else:
+            self.model.global_fn = value
+
+    def _sync_fn_ui(self):
+        """Reflect the model's setting (e.g. after loading a document)
+        without echoing back a change."""
+        on = self.model.global_fn_on
+        for w in (self.fn_check, self.fn_spin):
+            w.blockSignals(True)
+        self.fn_check.setChecked(on)
+        self.fn_spin.setValue(int(self.model.global_fn))
+        self.fn_spin.setEnabled(on)
+        for w in (self.fn_check, self.fn_spin):
+            w.blockSignals(False)
 
     def refresh_code(self):
         code, self._spans = self.model.to_scad_map()

@@ -202,6 +202,47 @@ def test_stl_import_codegen(model):
 
 # -------------------------------------------------------------- roundtrip
 
+def test_common_fn_overrides_round_objects(model):
+    import re
+    from khervecad import mesh
+    model.add_node("cylinder", dict(radius_bottom=5.0, radius_top=5.0,
+                                    height=10.0, segments=96))
+    model.add_node("sphere", dict(radius=4.0, segments=48))
+    # a linear_extrude whose "segments" means slices, not $fn
+    ext = model.add_node("linear_extrude", dict(height=3.0, segments=7))
+    model.add_node("circle", dict(radius=2.0), parent=ext)
+
+    fns = lambda code: sorted(set(int(x)
+                                  for x in re.findall(r"\$fn=(\d+)", code)))
+    own = fns(model.to_scad())
+    assert len(own) > 1 and 96 in own and 48 in own   # each keeps its own
+
+    model.set_global_fn(True, 16)
+    assert model.effective_fn() == 16
+    assert fns(model.to_scad()) == [16]             # all forced to 16
+    assert "slices=7" in model.to_scad()            # slices untouched
+    # tessellation honours it too (coarser mesh => fewer triangles)
+    coarse = len(mesh.tessellate(model.root, fn=16))
+    fine = len(mesh.tessellate(model.root, fn=None))
+    assert coarse < fine
+
+    model.set_global_fn(False)
+    assert fns(model.to_scad()) == own              # own values restored
+
+
+def test_common_fn_roundtrips_kcad(model, tmp_path):
+    from khervecad import document
+    model.add_node("cylinder", dict(segments=96))
+    model.set_global_fn(True, 24)
+    path = tmp_path / "fn.kcad"
+    document.save_kcad(model, str(path))
+    other = DocumentModel()
+    document.load_kcad(other, str(path))
+    assert other.global_fn_on is True
+    assert other.global_fn == 24
+    assert other.to_scad() == model.to_scad()
+
+
 def test_new_nodes_roundtrip_kcad(model, tmp_path):
     from khervecad import document
     loop = model.add_node("for_loop", dict(variable="a", start=0.0,

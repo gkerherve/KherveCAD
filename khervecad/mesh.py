@@ -48,6 +48,13 @@ def rv(value, env=None, default=0.0) -> float:
     return expr.resolve(value, env, default)
 
 
+#: round object types whose segment count the document-wide $fn
+#: override replaces (linear_extrude's "segments" means slices, so it
+#: is deliberately excluded).
+_FN_TYPES = {"circle", "cylinder", "sphere", "rotate_extrude"}
+_FN_OVERRIDE = None
+
+
 def rp(node: CadNode, env=None) -> dict:
     """Node params with every numeric/expression value resolved."""
     out = {}
@@ -60,6 +67,8 @@ def rp(node: CadNode, env=None) -> dict:
             out[key] = [[rv(x, env), rv(y, env)] for x, y in value]
         else:
             out[key] = rv(value, env)
+    if _FN_OVERRIDE is not None and node.type in _FN_TYPES:
+        out["segments"] = _FN_OVERRIDE
     return out
 
 
@@ -566,20 +575,36 @@ def flat_mesh(node: CadNode, env=None):
 
 # ----------------------------------------------------------- tree walk
 
-def tessellate(node: CadNode, env=None):
-    """Triangle mesh for *node*'s subtree (fallback semantics)."""
-    return [tri for tri, _c, _s in
-            _tess(node, dict(env or {}), None, frozenset(), False)]
+def _set_fn(fn):
+    global _FN_OVERRIDE
+    _FN_OVERRIDE = int(fn) if fn else None
 
-def tessellate_colored(node: CadNode, env=None):
+
+def tessellate(node: CadNode, env=None, fn=None):
+    """Triangle mesh for *node*'s subtree (fallback semantics). *fn*
+    overrides the segment count of every round object when given."""
+    _set_fn(fn)
+    try:
+        return [tri for tri, _c, _s in
+                _tess(node, dict(env or {}), None, frozenset(), False)]
+    finally:
+        _set_fn(None)
+
+
+def tessellate_colored(node: CadNode, env=None, fn=None):
     """Like tessellate but returns [(triangle, (color, alpha) | None)]
     with per-face colours from color() nodes — the built-in preview
     shows them (STL from the engine is geometry-only)."""
-    return [(t, c) for t, c, _s in
-            _tess(node, dict(env or {}), None, frozenset(), False)]
+    _set_fn(fn)
+    try:
+        return [(t, c) for t, c, _s in
+                _tess(node, dict(env or {}), None, frozenset(), False)]
+    finally:
+        _set_fn(None)
 
 
-def selected_world_tris(node: CadNode, sel_ids, env=None, detail=None):
+def selected_world_tris(node: CadNode, sel_ids, env=None, detail=None,
+                        fn=None):
     """World-space triangles belonging to any node whose id is in
     *sel_ids* — used to highlight the selected object in both views.
     Ancestor transforms are already applied, so the triangles land
@@ -590,11 +615,13 @@ def selected_world_tris(node: CadNode, sel_ids, env=None, detail=None):
     if not sel:
         return []
     _DETAIL = detail
+    _set_fn(fn)
     try:
         return [t for t, _c, s in
                 _tess(node, dict(env or {}), None, sel, False) if s]
     finally:
         _DETAIL = None
+        _set_fn(None)
 
 
 def _emit(tris, color, selected):
