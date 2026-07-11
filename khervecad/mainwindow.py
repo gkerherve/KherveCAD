@@ -222,6 +222,18 @@ class MainWindow(QMainWindow):
         edit_menu.addSeparator()
         edit_menu.addAction("&Locate OpenSCAD...", self._locate_openscad)
 
+        insert_menu = m.addMenu("&Insert")
+        insert_menu.addAction(icons.icon("mdi.toy-brick-outline"),
+                              "&Part Library...", self.open_library,
+                              "Ctrl+L")
+        insert_menu.addSeparator()
+        for control in ("for_loop", "while_loop", "if_else", "assign",
+                        "stl_import"):
+            spec = NODE_TYPES[control]
+            insert_menu.addAction(
+                icons.icon(spec["icon"]), spec["label"],
+                lambda _=False, t=control: self._add_primitive(t))
+
         view_menu = m.addMenu("&View")
         view_menu.addAction(self._grid_act)
         view_menu.addAction(self._snap_act)
@@ -421,6 +433,13 @@ class MainWindow(QMainWindow):
             path += ".kcad"
         self._path = path
         self.save_file()
+
+    def open_library(self):
+        from .library import PartLibraryDialog
+        dialog = PartLibraryDialog(self.model, self)
+        if dialog.exec_() and getattr(dialog, "inserted", None):
+            self.builder.tree.select_nodes([dialog.inserted])
+            self.view3d.fit()
 
     def import_scad(self):
         if not self._confirm_discard():
