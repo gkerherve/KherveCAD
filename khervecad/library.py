@@ -690,6 +690,11 @@ PARTS = {
                     fields=_NUT_FIELDS),
 }
 
+# parts contributed by sibling modules (chemistry, room & furniture);
+# each entry carries its own `build` callable, dispatched by build_part.
+from . import library_chem                    # noqa: E402
+PARTS.update(library_chem.PARTS)
+
 
 def build_part(part_id: str, dims: dict) -> CadNode:
     """Build the requested part from (possibly customised) *dims*."""

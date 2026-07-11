@@ -239,6 +239,44 @@ def test_part_categories_present():
         assert pid in library.PARTS
 
 
+# -------------------------------------------------------------- chemistry
+
+from khervecad import library_chem              # noqa: E402
+from khervecad.model import validate            # noqa: E402
+
+
+@pytest.mark.parametrize("part_id", list(library_chem.PARTS))
+def test_every_chemistry_part_builds(model, part_id):
+    spec = library_chem.PARTS[part_id]
+    size = next(iter(spec["sizes"]))
+    dims = dict(spec["sizes"][size])
+    dims["_size"] = size
+    node = library.build_part(part_id, dims)
+    model.root.add(node)
+    assert not validate(model.root)               # no red errors
+    assert len(mesh.tessellate(node)) > 0         # renders something
+
+
+def test_glassware_is_revolved_and_hollow(model):
+    # the beaker is a revolved wall profile (no boolean), so its inner
+    # wall really exists — the built-in preview shows the cavity.
+    node = library.build_part(
+        "chem_beaker", dict(library_chem.BEAKER_SIZES["250 mL"],
+                            _size="250 mL"))
+    code = node.to_scad()
+    assert "rotate_extrude" in code
+    assert 'color("#cfe8ee")' in code             # glass tint
+    tris = mesh.tessellate(node)
+    zs = [v[2] for t in tris for v in t]
+    assert max(zs) == pytest.approx(95.0, abs=1.0)   # 250 mL height
+
+
+def test_chemistry_parts_registered_with_category(model):
+    for pid, spec in library_chem.PARTS.items():
+        assert pid in library.PARTS
+        assert library.PARTS[pid]["category"] == "Chemistry"
+
+
 # -------------------------------------------------------------- fasteners
 
 def test_thread_profile_radii():
