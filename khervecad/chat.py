@@ -412,6 +412,43 @@ _SCAD_BLOCK_RE = re.compile(r"```(?:scad|openscad)\s*\n(.*?)```",
                             re.DOTALL)
 
 
+class ChatInput(QLineEdit):
+    """Message box that recalls previously sent lines with Up/Down,
+    shell-style — the same feel as KherveAI elsewhere in the family."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._history = []
+        self._index = 0                       # len == "composing new"
+        self._draft = ""                      # text held while browsing
+
+    def remember(self, text):
+        """Record a just-sent line and reset the browse cursor."""
+        if text and (not self._history or self._history[-1] != text):
+            self._history.append(text)
+        self._index = len(self._history)
+        self._draft = ""
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Up:
+            self._browse(-1)
+        elif event.key() == Qt.Key_Down:
+            self._browse(1)
+        else:
+            super().keyPressEvent(event)
+
+    def _browse(self, step):
+        if not self._history:
+            return
+        if self._index == len(self._history) and step < 0:
+            self._draft = self.text()         # keep the unsent draft
+        new = max(0, min(self._index + step, len(self._history)))
+        self._index = new
+        self.setText(self._draft if new == len(self._history)
+                     else self._history[new])
+        self.end(False)                       # cursor to end of line
+
+
 class ChatPanel(QWidget):
     """The KherveAI chat box, docked in the main window."""
 
@@ -439,7 +476,7 @@ class ChatPanel(QWidget):
         self.transcript.setOpenLinks(False)
         self.transcript.anchorClicked.connect(self._anchor_clicked)
 
-        self.input = QLineEdit()
+        self.input = ChatInput()
         self.input.setPlaceholderText(
             "Ask, or /help for commands — e.g. “add a CF40 flange”")
         self.input.returnPressed.connect(self.send)
@@ -544,6 +581,7 @@ class ChatPanel(QWidget):
         text = self.input.text().strip()
         if not text:
             return
+        self.input.remember(text)             # recall with Up/Down later
         self.input.clear()
         self._append("user", html.escape(text))
         if text.startswith("/"):

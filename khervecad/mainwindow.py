@@ -137,7 +137,7 @@ class MainWindow(QMainWindow):
         self._chat_dock.setObjectName("chat_dock")
         self._chat_dock.setWidget(self.chat)
         self.addDockWidget(Qt.RightDockWidgetArea, self._chat_dock)
-        self._chat_dock.hide()               # opt-in via View or Ctrl+/
+        self._chat_dock.show()               # visible by default (Ctrl+/)
 
     # ------------------------------------------------------------ chrome
     def _build_tool_bar(self):

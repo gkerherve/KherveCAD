@@ -215,6 +215,50 @@ def test_history_trims_only_when_over_budget(window):
     assert len(panel.history) >= 2             # but never wiped out
 
 
+def test_chat_dock_visible_by_default(window):
+    assert not window._chat_dock.isHidden()
+
+
+def _press(widget, key):
+    from PyQt5.QtCore import QEvent, Qt
+    from PyQt5.QtGui import QKeyEvent
+    widget.keyPressEvent(QKeyEvent(QEvent.KeyPress, key, Qt.NoModifier))
+
+
+def test_input_history_up_down_recall(window):
+    from PyQt5.QtCore import Qt
+    inp = window.chat.input
+    for line in ("first", "second", "third"):
+        inp.setText(line)
+        inp.remember(line)
+    inp.clear()
+    _press(inp, Qt.Key_Up)
+    assert inp.text() == "third"
+    _press(inp, Qt.Key_Up)
+    assert inp.text() == "second"
+    _press(inp, Qt.Key_Up)
+    assert inp.text() == "first"
+    _press(inp, Qt.Key_Up)
+    assert inp.text() == "first"              # clamped at the oldest
+    _press(inp, Qt.Key_Down)
+    assert inp.text() == "second"
+    _press(inp, Qt.Key_Down)
+    assert inp.text() == "third"
+    _press(inp, Qt.Key_Down)
+    assert inp.text() == ""                    # back to the empty draft
+
+
+def test_input_history_preserves_draft(window):
+    from PyQt5.QtCore import Qt
+    inp = window.chat.input
+    inp.remember("old message")
+    inp.setText("half-typed")                  # a new, unsent draft
+    _press(inp, Qt.Key_Up)
+    assert inp.text() == "old message"
+    _press(inp, Qt.Key_Down)
+    assert inp.text() == "half-typed"          # draft restored
+
+
 def test_missing_key_warns_instead_of_sending(window, monkeypatch):
     panel = window.chat
     monkeypatch.setattr(chat, "get_api_key", lambda p: "")
