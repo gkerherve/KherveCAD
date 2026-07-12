@@ -461,7 +461,9 @@ def bosl2_attachments_raw() -> CadNode:
     ``BOSL2`` library folder."""
     code = (
         "// BOSL2 example — renders via the OpenSCAD engine.\n"
-        "// Needs BOSL2 on the OpenSCAD library path (a 'BOSL2' folder).\n"
+        "// Needs BOSL2 in your OpenSCAD libraries folder, and the folder\n"
+        "// must be named exactly 'BOSL2' (a GitHub download unzips as\n"
+        "// 'BOSL2-master' — rename it to 'BOSL2' or the include fails).\n"
         "include <BOSL2/std.scad>\n"
         "$fn = 32;\n"
         "cuboid([60,40,40], rounding=5, edges=\"Z\", anchor=BOTTOM) {\n"
