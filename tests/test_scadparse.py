@@ -272,3 +272,29 @@ def test_module_with_body_renders(app):
     m = DocumentModel()
     m.root = root
     assert len(mesh.tessellate(m.root, fn=m.effective_fn())) > 0
+
+
+def test_logical_operators_evaluate():
+    """OpenSCAD `&&`, `||` and prefix `!` map to Python and/or/not."""
+    from khervecad import expr
+    assert expr.evaluate("1 == 1 && 2 == 2") is True
+    assert expr.evaluate("0 == 0 || 1 == 2") is True
+    assert expr.evaluate("1 > 2 || 2 > 3") is False
+    assert expr.evaluate("!false") is True
+    assert expr.evaluate("3 != 4") is True          # `!=` untouched
+    assert expr.evaluate("!(1 > 2) && 3 != 4") is True
+
+
+def test_imported_if_with_or_condition_validates(app):
+    """An `if` whose condition uses `||` must not be flagged red."""
+    from khervecad import model
+    root, warns = _parse("""
+        n = [0, 0];
+        if (n.x == 0 || n.y == 0) {
+            cube([10, 10, 10]);
+        } else {
+            sphere(5);
+        }
+    """)
+    assert not warns
+    assert model.validate(root) == {}

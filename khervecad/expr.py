@@ -17,6 +17,7 @@ the Free Software Foundation, either version 3 of the License, or
 import ast
 import math
 import operator
+import re
 
 _BINOPS = {
     ast.Add: operator.add,
@@ -142,6 +143,13 @@ def _expand_ranges(s):
     return "".join(out)
 
 
+def _translate_logical(s):
+    """OpenSCAD boolean operators -> Python: `&&`->`and`, `||`->`or`,
+    and a prefix `!` (but not `!=`) -> `not`."""
+    s = s.replace("&&", " and ").replace("||", " or ")
+    return re.sub(r"!(?!=)", " not ", s)
+
+
 def _translate_groups(s):
     """Translate ternaries nested inside top-level (...) / [...] groups."""
     out, i, n = [], 0, len(s)
@@ -190,7 +198,8 @@ def evaluate(expression, env: dict = None):
     text = str(expression).strip()
     # OpenSCAD uses ^ for power; ranges and ?: aren't Python, so rewrite.
     text = text.replace("^", "**")
-    text = _translate_ternary(_expand_ranges(text))
+    text = _translate_logical(text)
+    text = _translate_ternary(_expand_ranges(text)).strip()
     try:
         tree = ast.parse(text, mode="eval")
     except SyntaxError as exc:
