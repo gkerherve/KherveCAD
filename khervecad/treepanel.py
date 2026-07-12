@@ -17,15 +17,15 @@ the Free Software Foundation, either version 3 of the License, or
 import json
 import re
 
-from PyQt5.QtCore import QEvent, Qt, pyqtSignal
-from PyQt5.QtGui import (QBrush, QColor, QFont, QKeySequence,
-                         QSyntaxHighlighter, QTextCharFormat)
+from PyQt5.QtCore import QEvent, QRect, QSize, Qt, pyqtSignal
+from PyQt5.QtGui import (QBrush, QColor, QFont, QKeySequence, QPainter,
+                         QSyntaxHighlighter, QTextCharFormat, QTextCursor)
 from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QCheckBox,
                              QHBoxLayout, QMenu, QMessageBox,
                              QPlainTextEdit, QPushButton, QSpinBox,
                              QTableWidget, QTableWidgetItem, QTabWidget,
-                             QTextEdit, QTreeWidget, QTreeWidgetItem,
-                             QVBoxLayout, QWidget)
+                             QTextEdit, QToolBar, QTreeWidget,
+                             QTreeWidgetItem, QVBoxLayout, QWidget)
 
 from . import icons
 from .document import node_from_dict, node_to_dict
@@ -584,11 +584,29 @@ class ScadHighlighter(QSyntaxHighlighter):
                 self.setFormat(start, end - start, fmt)
 
 
+class _LineNumberArea(QWidget):
+    """The gutter that paints line numbers next to the code."""
+
+    def __init__(self, editor):
+        super().__init__(editor)
+        self.editor = editor
+
+    def sizeHint(self):
+        return QSize(self.editor.line_number_area_width(), 0)
+
+    def paintEvent(self, event):
+        self.editor.paint_line_numbers(event)
+
+
 class CodeView(QPlainTextEdit):
-    """Editable view of the OpenSCAD program with line highlights: the
-    selected object's lines glow in the theme accent, broken lines are
-    tinted red. Edits take effect only when "Apply code" re-parses the
-    text back into the object tree."""
+    """Editable view of the OpenSCAD program with a line-number gutter
+    and text-editor conveniences (Tab/Shift+Tab indent, the toolbar's
+    cut/copy/paste/undo/redo). Line highlights show the selected
+    object's lines in the accent and broken lines in red. Edits take
+    effect only when "Apply code" re-parses the text into the tree."""
+
+    #: spaces inserted per Tab / indent step.
+    INDENT = "    "
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -597,13 +615,111 @@ class CodeView(QPlainTextEdit):
         font.setPointSize(10)
         self.setFont(font)
         self.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.setTabStopDistance(4 * self.fontMetrics().horizontalAdvance(" "))
         self._selected_ranges = []
         self._error_ranges = []
+        # line-number gutter
+        self._gutter = _LineNumberArea(self)
+        self.blockCountChanged.connect(self._update_gutter_width)
+        self.updateRequest.connect(self._update_gutter)
+        self._update_gutter_width(0)
         self.refresh_theme()
+
+    # ----------------------------------------------------- line numbers
+    def line_number_area_width(self):
+        digits = len(str(max(1, self.blockCount())))
+        return 12 + self.fontMetrics().horizontalAdvance("9") * digits
+
+    def _update_gutter_width(self, _count):
+        self.setViewportMargins(self.line_number_area_width(), 0, 0, 0)
+
+    def _update_gutter(self, rect, dy):
+        if dy:
+            self._gutter.scroll(0, dy)
+        else:
+            self._gutter.update(0, rect.y(), self._gutter.width(),
+                                rect.height())
+        if rect.contains(self.viewport().rect()):
+            self._update_gutter_width(0)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        cr = self.contentsRect()
+        self._gutter.setGeometry(QRect(cr.left(), cr.top(),
+                                       self.line_number_area_width(),
+                                       cr.height()))
+
+    def paint_line_numbers(self, event):
+        from .style import tokens
+        t = tokens()
+        painter = QPainter(self._gutter)
+        bg = QColor(t.get("chrome", "#f0f0f0"))
+        painter.fillRect(event.rect(), bg)
+        pen = QColor("#7f848e" if t.get("dark") else "#9aa0a6")
+        block = self.firstVisibleBlock()
+        num = block.blockNumber()
+        top = round(self.blockBoundingGeometry(block)
+                    .translated(self.contentOffset()).top())
+        bottom = top + round(self.blockBoundingRect(block).height())
+        h = self.fontMetrics().height()
+        while block.isValid() and top <= event.rect().bottom():
+            if block.isVisible() and bottom >= event.rect().top():
+                painter.setPen(pen)
+                painter.drawText(0, top, self._gutter.width() - 5, h,
+                                 Qt.AlignRight, str(num + 1))
+            block = block.next()
+            top = bottom
+            bottom = top + round(self.blockBoundingRect(block).height())
+            num += 1
+
+    # ------------------------------------------------------ indentation
+    def indent_selection(self):
+        self._shift_lines(1)
+
+    def dedent_selection(self):
+        self._shift_lines(-1)
+
+    def _shift_lines(self, direction):
+        doc = self.document()
+        cur = self.textCursor()
+        start, end = cur.selectionStart(), cur.selectionEnd()
+        first = doc.findBlock(start).blockNumber()
+        last = doc.findBlock(max(end - 1, start)).blockNumber()
+        cur.beginEditBlock()
+        for bn in range(first, last + 1):
+            block = doc.findBlockByNumber(bn)
+            edit = QTextCursor(block)
+            edit.movePosition(QTextCursor.StartOfBlock)
+            if direction > 0:
+                edit.insertText(self.INDENT)
+            else:
+                text = block.text()
+                for _ in range(len(self.INDENT)):
+                    if block.text().startswith(" "):
+                        edit.deleteChar()
+                    elif block.text().startswith("\t"):
+                        edit.deleteChar()
+                        break
+                    else:
+                        break
+        cur.endEditBlock()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Backtab:
+            self.dedent_selection()
+            return
+        if event.key() == Qt.Key_Tab:
+            if self.textCursor().hasSelection():
+                self.indent_selection()
+            else:
+                self.insertPlainText(self.INDENT)
+            return
+        super().keyPressEvent(event)
 
     def refresh_theme(self):
         from .style import tokens
         self._highlighter = ScadHighlighter(self.document(), tokens())
+        self._gutter.update()
         self._apply_marks()
 
     def set_code(self, code: str):
@@ -812,12 +928,13 @@ class BuilderPanel(QTabWidget):
         mbox.addLayout(mrow)
         mbox.addWidget(self.masters_tree)
 
-        # Code tab: the editable program + an Apply button that parses it
-        # back into the object tree
+        # Code tab: a text-editor toolbar + the editable program + an
+        # Apply button that parses it back into the object tree
         code_tab = QWidget()
         cbox = QVBoxLayout(code_tab)
         cbox.setContentsMargins(0, 0, 0, 0)
         cbox.setSpacing(4)
+        cbox.addWidget(self._build_code_toolbar())
         cbox.addWidget(self.code)
         crow = QHBoxLayout()
         crow.setContentsMargins(4, 0, 4, 4)
@@ -917,6 +1034,27 @@ class BuilderPanel(QTabWidget):
                    getattr(self, "_error_ids", [])
                    if i in self._spans]
         self.code.set_marks(selected, errored)
+
+    def _build_code_toolbar(self) -> QToolBar:
+        """A text-editor toolbar for the Code tab: undo/redo, cut/copy/
+        paste and indent/dedent, acting on the code editor."""
+        tb = QToolBar("Code")
+        tb.setIconSize(QSize(18, 18))
+        c = self.code
+        tb.addAction(icons.icon("mdi.undo"), "Undo (Ctrl+Z)", c.undo)
+        tb.addAction(icons.icon("mdi.redo"), "Redo (Ctrl+Y)", c.redo)
+        tb.addSeparator()
+        tb.addAction(icons.icon("mdi.content-cut"), "Cut (Ctrl+X)", c.cut)
+        tb.addAction(icons.icon("mdi.content-copy"), "Copy (Ctrl+C)",
+                     c.copy)
+        tb.addAction(icons.icon("mdi.content-paste"), "Paste (Ctrl+V)",
+                     c.paste)
+        tb.addSeparator()
+        tb.addAction(icons.icon("mdi.format-indent-increase"),
+                     "Indent (Tab)", c.indent_selection)
+        tb.addAction(icons.icon("mdi.format-indent-decrease"),
+                     "Dedent (Shift+Tab)", c.dedent_selection)
+        return tb
 
     def _instance_selected_masters(self):
         """Drop a Linked copy of each selected master into the scene."""

@@ -134,9 +134,12 @@ into a new module and import.
                        rename, duplicate, delete, **Make Master**; drag &
                        drop reparent/reorder) + a **Masters tab**
                        (`MastersTree`) listing only the reusable master
-                       definitions, a **Variables** sheet, and a
-                       read-only Code tab with OpenSCAD syntax
-                       highlighting.
+                       definitions, a **Variables** sheet, and a Code tab
+                       — an editable OpenSCAD view with syntax
+                       highlighting, a **line-number gutter**, a
+                       text-editor toolbar (undo/redo, cut/copy/paste,
+                       indent/dedent) and Tab/Shift+Tab indentation;
+                       edits apply back to the tree via **Apply code**.
   - `properties.py`  — bottom-left panel; editors generated from each
                        node type's schema, polygon points table.
   - `view2d.py`      — top-right sketch view: Y-up QGraphicsScene,
