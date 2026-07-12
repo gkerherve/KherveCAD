@@ -78,8 +78,11 @@ into a new module and import.
                        three inlet classes (DN63/DN100/DN160 CF); plus
                        CF/KF elbows, KF nipples/tees (`kf_fitting`),
                        CF/KF electrical feedthroughs, a hemispherical
-                       electron energy analyser (twin revolved dome
-                       shells), an **XYZ(R1) manipulator** (edge-welded
+                       electron energy analyser (dome + concentric inner
+                       shell closed by a large **equatorial bolt flange**
+                       with hex bolt heads, a stepped lens column to a
+                       tapered entrance nozzle, and CF side ports), an
+                       **XYZ(R1) manipulator** (edge-welded
                        `bellows` whose length is the Z-travel size),
                        and **rotary vane / dry scroll backing pumps**.
                        Parts are ordinary node subtrees; bolt circles

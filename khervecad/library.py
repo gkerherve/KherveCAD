@@ -586,40 +586,133 @@ def _hemisphere(name, radius, wall=None, segments=128) -> CadNode:
     return revolve
 
 
+def _bolt_ring(count, circle_r, head_r, head_h, z,
+               name="Bolt ring") -> CadNode:
+    """A for-loop of hex bolt heads (6-sided prisms) around a circle."""
+    count = max(int(count), 1)
+    step = 360.0 / count
+    loop = CadNode("for_loop", name, dict(
+        variable="a", start=0.0, end=360.0 - step / 2, step=step))
+    rot = CadNode("rotate", "Around axis", dict(x=0.0, y=0.0, z="a"))
+    rot.add(_cyl("Bolt head", head_r, head_h, z=z, x=circle_r,
+                 segments=6))
+    loop.add(rot)
+    return loop
+
+
+def _plain_flange(od, thickness, bore, bolts, bolt_circle, bolt_hole,
+                  z, name="Flange") -> CadNode:
+    """A simple bolted flange disc: a plate with a central bore and a
+    ring of clearance holes — the plain cousin of cf_flange, for the
+    analyser's lens and side-port mounts."""
+    part = CadNode("difference", name)
+    part.add(_cyl(f"{name} disc", od / 2.0, thickness, z=z))
+    if bore > 0:
+        part.add(_cyl(f"{name} bore", bore / 2.0, thickness + 2.0,
+                      z=z - 1.0))
+    count = max(int(bolts), 1)
+    step = 360.0 / count
+    loop = CadNode("for_loop", f"{name} holes", dict(
+        variable="a", start=0.0, end=360.0 - step / 2, step=step))
+    rot = CadNode("rotate", "Around axis", dict(x=0.0, y=0.0, z="a"))
+    rot.add(_cyl("Bolt hole", bolt_hole / 2.0, thickness + 2.0,
+                 z=z - 1.0, x=bolt_circle / 2.0, segments=18))
+    loop.add(rot)
+    part.add(loop)
+    return part
+
+
 def hemispherical_analyser(r_out=150.0, r_in=75.0,
                            mount=None) -> CadNode:
-    """A stylised hemispherical electron energy analyser (HSA): two
-    concentric hemispherical dome shells over an entrance base plate,
-    a stepped electron-lens column below it ending in a CF mount, and
-    a detector housing at the top."""
+    """A hemispherical electron energy analyser (HSA): a polished dome
+    closed by a large **equatorial bolt flange** (the signature bolted
+    ring), a concentric inner hemisphere, a small vent port on top, an
+    electron-**lens column** below that steps down to a tapered entrance
+    nozzle on a bolted mount flange, and a few CF side ports."""
     mount = mount or CF_SIZES["CF160 (DN160)"]
+    R = float(r_out)
+    wall = max(R * 0.05, 4.0)
     part = CadNode("union", "Hemispherical analyser")
-    part.add(_hemisphere("Outer dome", r_out, wall=8.0))
-    part.add(_hemisphere("Inner dome", r_in, wall=6.0))
-    # entrance/exit base plate (annular slab under the domes)
-    base = CadNode("difference", "Base plate")
-    base.add(_cyl("Base disc", r_out * 1.02, 12.0, z=-12.0))
-    base.add(_cyl("Base slot", r_in * 0.6, 14.0, z=-13.0))
-    part.add(base)
-    # detector housing on top of the outer dome
-    part.add(_cyl("Detector housing", r_in * 0.5, r_in * 0.7,
-                  z=r_out - 4.0))
-    # electron lens column: a stack of narrowing cylinders below the base
+
+    # --- equatorial mounting flange: the defining bolted ring --------
+    plate_t = R * 0.10
+    plate_r = R * 1.14
+    bc_r = R * 1.04                        # bolt circle, in the overhang
+    nbolts = 36
+    head_r, head_h = R * 0.035, R * 0.045
+    plate = CadNode("difference", "Equatorial flange")
+    plate.add(_cyl("Flange ring", plate_r, plate_t, z=-plate_t))
+    plate.add(_cyl("Aperture", r_in * 0.85, plate_t + 2.0,
+                   z=-plate_t - 1.0))
+    step = 360.0 / nbolts
+    holes = CadNode("for_loop", "Flange holes", dict(
+        variable="a", start=0.0, end=360.0 - step / 2, step=step))
+    hrot = CadNode("rotate", "Around axis", dict(x=0.0, y=0.0, z="a"))
+    hrot.add(_cyl("Bolt hole", head_r * 0.55, plate_t + 2.0,
+                  z=-plate_t - 1.0, x=bc_r, segments=14))
+    holes.add(hrot)
+    plate.add(holes)
+    part.add(plate)
+    part.add(_bolt_ring(nbolts, bc_r, head_r, head_h, z=0.0,
+                        name="Bolt heads"))
+    part.add(_bolt_ring(nbolts, bc_r, head_r * 0.95, head_h,
+                        z=-plate_t - head_h, name="Nuts"))
+
+    # --- domes: outer shell + concentric inner shell -----------------
+    part.add(_hemisphere("Outer dome", R, wall=wall))
+    if r_in < R - wall - 2.0:
+        part.add(_hemisphere("Inner dome", r_in,
+                             wall=max(wall * 0.7, 3.0)))
+
+    # --- small vent port on top of the dome --------------------------
+    top = CadNode("union", "Top port")
+    top.add(_cyl("Vent tube", R * 0.06, R * 0.18, z=R - wall))
+    top.add(_cyl("Vent cap", R * 0.09, R * 0.03,
+                 z=R - wall + R * 0.18))
+    part.add(top)
+
+    # --- electron lens column below the flange -----------------------
     column = CadNode("union", "Lens column")
-    seg_h = r_out * 0.16
-    for i in range(4):
-        rr = r_in * (0.55 - 0.07 * i)
-        column.add(_cyl(f"Lens {i + 1}", rr, seg_h * 0.85,
-                        z=-12.0 - seg_h * (i + 1)))
-    col_bottom = -12.0 - seg_h * 4
-    # CF mounting flange at the bottom of the column, facing down
-    flange = CadNode("translate", "Mount flange", dict(
-        x=0.0, y=0.0, z=col_bottom))
-    flip = CadNode("rotate", "Face down", dict(x=180.0, y=0.0, z=0.0))
-    flip.add(cf_flange(mount, "CF mount", tube_length=seg_h))
-    flange.add(flip)
-    column.add(flange)
+    z = -plate_t
+    neck_h = R * 0.14
+    column.add(_cyl("Lens neck", R * 0.30, neck_h, z=z - neck_h))
+    z -= neck_h
+    lf_od = mount["flange_od"] * 0.62
+    lf_t = R * 0.07
+    column.add(_plain_flange(lf_od, lf_t, R * 0.34, 12, lf_od * 0.86,
+                             mount["bolt_hole"], z - lf_t,
+                             "Lens flange"))
+    z -= lf_t
+    for i, (rf, hf) in enumerate([(0.20, 0.22), (0.17, 0.22)]):
+        h = R * hf
+        column.add(_cyl(f"Lens {i + 1}", R * rf, h, z=z - h))
+        z -= h
+    cone_h = R * 0.22
+    column.add(CadNode("cylinder", "Entrance nozzle", dict(
+        x=0.0, y=0.0, z=z - cone_h, height=cone_h,
+        radius_bottom=R * 0.17, radius_top=R * 0.05,
+        segments=64, center=False)))
     part.add(column)
+
+    # --- CF side ports around the base -------------------------------
+    for angle in (0.0, 120.0, 240.0):
+        yaw = CadNode("rotate", f"Port {int(angle)}",
+                      dict(x=0.0, y=0.0, z=angle))
+        pos = CadNode("translate", "To dome side",
+                      dict(x=R * 0.82, y=0.0, z=R * 0.20))
+        arm = CadNode("rotate", "Point outward", dict(x=0.0, y=90.0,
+                                                      z=0.0))
+        arm.add(_cyl("Port tube", R * 0.09, R * 0.42))
+        cap = CadNode("translate", "Port flange pos",
+                      dict(x=0.0, y=0.0, z=R * 0.42))
+        cap.add(_plain_flange(R * 0.28, R * 0.05, R * 0.12, 6,
+                              R * 0.22, mount["bolt_hole"] * 0.7,
+                              0.0, "Port flange"))
+        arm.add(cap)
+        pos.add(arm)
+        yaw.add(pos)
+        part.add(yaw)
+
     return part
 
 
