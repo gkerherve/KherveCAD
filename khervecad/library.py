@@ -688,50 +688,48 @@ def _plain_flange(od, thickness, bore, bolts, bolt_circle, bolt_hole,
     return part
 
 
-def _entrance_lens(R, mount, name="Entrance lens") -> CadNode:
-    """The electron transfer lens, built along local +Z from the
+def _entrance_lens(R, cf, name="Entrance lens") -> CadNode:
+    """The electron transfer lens: a real **CF-tube** column (the caller
+    passes CF100 for a 100 mm OD tube), built along local +Z from the
     analyser end (z = 0, a bolted flange) out to the tapered entrance
-    nozzle at the sample end — a long, slim, stepped column."""
+    nozzle at the sample end."""
+    r = cf["tube_od"] / 2.0
     g = CadNode("union", name)
     z = 0.0
-    lf_od = R * 0.34
-    lf_t = R * 0.06
-    g.add(_plain_flange(lf_od, lf_t, R * 0.18, 8, lf_od * 0.82,
-                        mount["bolt_hole"], z, "Lens flange"))
-    z += lf_t
-    neck = R * 0.14
-    g.add(_cyl("Lens neck", R * 0.15, neck, z=z))
-    z += neck
-    for i, (rf, hf) in enumerate([(0.13, 0.36), (0.10, 0.36)]):
-        h = R * hf
-        g.add(_cyl(f"Lens tube {i + 1}", R * rf, h, z=z))
-        z += h
-    cone = R * 0.28
+    fl_od = cf["tube_od"] + 26.0               # a bolt ring on the tube
+    fl_t = R * 0.05
+    g.add(_plain_flange(fl_od, fl_t, cf["bore"], cf["bolts"],
+                        cf["tube_od"] + 12.0, cf["bolt_hole"], z,
+                        "Lens flange"))
+    z += fl_t
+    tube = R * 0.85
+    g.add(_cyl("Lens tube", r, tube, z=z))
+    z += tube
+    cone = R * 0.30
     g.add(CadNode("cylinder", "Entrance nozzle", dict(
         x=0.0, y=0.0, z=z, height=cone,
-        radius_bottom=R * 0.10, radius_top=R * 0.03,
-        segments=48, center=False)))
+        radius_bottom=r, radius_top=r * 0.28,
+        segments=64, center=False)))
     return g
 
 
-def _detector(R, mount, name="Detector") -> CadNode:
-    """The exit detector housing (channeltron / MCP), built along local
-    +Z from the analyser end — a short, fat housing with a connector and
-    an end cap: the counterpart on the opposite side to the lens."""
+def _detector(R, cf, name="Detector") -> CadNode:
+    """The exit detector housing (channeltron / MCP): a shorter **CF
+    tube** (CF63 for a 63 mm OD tube), the counterpart on the opposite
+    side to the lens."""
+    r = cf["tube_od"] / 2.0
     g = CadNode("union", name)
     z = 0.0
-    df_od = R * 0.36
-    df_t = R * 0.06
-    g.add(_plain_flange(df_od, df_t, R * 0.16, 8, df_od * 0.82,
-                        mount["bolt_hole"], z, "Detector flange"))
-    z += df_t
-    hz = R * 0.40
-    g.add(_cyl("MCP housing", R * 0.19, hz, z=z))
-    z += hz
-    cz = R * 0.16
-    g.add(_cyl("Connector", R * 0.10, cz, z=z))
-    z += cz
-    g.add(_cyl("End cap", R * 0.13, R * 0.05, z=z))
+    fl_od = cf["tube_od"] + 26.0
+    fl_t = R * 0.05
+    g.add(_plain_flange(fl_od, fl_t, cf["bore"], cf["bolts"],
+                        cf["tube_od"] + 12.0, cf["bolt_hole"], z,
+                        "Detector flange"))
+    z += fl_t
+    housing = R * 0.55
+    g.add(_cyl("MCP housing", r, housing, z=z))
+    z += housing
+    g.add(_cyl("End cap", r * 0.72, R * 0.08, z=z))
     return g
 
 
@@ -786,23 +784,23 @@ def hemispherical_analyser(r_out=150.0, r_in=75.0,
                  z=R - wall + R * 0.18))
     part.add(top)
 
-    # --- entrance lens: straight DOWN (-Z), offset to +X -------------
-    # (rotate 180° about X flips the local +Z column to point down)
-    offset = R * 0.38
+    # --- entrance lens: a CF100 (100 mm OD) tube straight DOWN (-Z),
+    # offset well out to +X (rotate 180° about X flips it to point down)
+    offset = R * 0.52
     lens_pos = CadNode("translate", "Lens mount",
                        dict(x=offset, y=0.0, z=-plate_t))
     lens_down = CadNode("rotate", "Point down", dict(x=180.0, y=0.0,
                                                      z=0.0))
-    lens_down.add(_entrance_lens(R, mount))
+    lens_down.add(_entrance_lens(R, CF_SIZES["CF100 (DN100)"]))
     lens_pos.add(lens_down)
     part.add(lens_pos)
 
-    # --- detector: straight DOWN on the OPPOSITE side (-X) -----------
+    # --- detector: a CF63 (63 mm OD) tube straight DOWN, OPPOSITE (-X)
     det_pos = CadNode("translate", "Detector mount",
                       dict(x=-offset, y=0.0, z=-plate_t))
     det_down = CadNode("rotate", "Point down", dict(x=180.0, y=0.0,
                                                     z=0.0))
-    det_down.add(_detector(R, mount))
+    det_down.add(_detector(R, CF_SIZES["CF63 (DN63)"]))
     det_pos.add(det_down)
     part.add(det_pos)
 
