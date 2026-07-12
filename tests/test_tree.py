@@ -85,7 +85,9 @@ def test_decorator_chain_merges_into_one_row(model):
     assert tree._root_of(item).type == "color"
     badges = item.data(0, ROLE_BADGES)
     assert badges[0][0] == "color"             # colour swatch
-    assert badges[1] == ("icon", "mdi.cursor-move")   # translate glyph
+    assert badges[1][:2] == ("icon", "mdi.cursor-move")   # translate glyph
+    # each badge carries its modifier's node id, so it is clickable
+    assert all(len(b) == 3 for b in badges)
 
 
 def test_group_is_not_merged(model):
@@ -121,8 +123,8 @@ def test_decorator_wrapping_group_folds_but_keeps_children(model):
     assert tree.node_of(row).type == "union"   # the group is the row
     assert row.childCount() == 2               # its children still nest
     badges = row.data(0, ROLE_BADGES)
-    assert badges == [("icon", "mdi.rotate-right"),
-                      ("icon", "mdi.rotate-right")]
+    assert [b[:2] for b in badges] == [("icon", "mdi.rotate-right"),
+                                       ("icon", "mdi.rotate-right")]
 
 
 def test_hiding_a_group_dims_the_whole_subtree(model):
@@ -137,3 +139,20 @@ def test_hiding_a_group_dims_the_whole_subtree(model):
     assert child.data(0, ROLE_TAG) is False    # child not tagged...
     assert child.font(0).italic()              # ...but dimmed by its parent
     assert row.text(0) == grp.name             # text stays clean (rename ok)
+
+
+def test_clicking_a_badge_targets_that_modifier(model):
+    from PyQt5.QtCore import QPoint
+    from khervecad.treepanel import _BADGE_SIZE, _BADGE_GAP
+    cube = model.add_node("cube")
+    rot = model.wrap_nodes([cube], "rotate")   # one rotate badge
+    tree = ObjectTree(model)
+    tree.resize(320, 200)
+    row = tree.topLevelItem(0)
+    rect = tree.visualItemRect(row)
+    x = rect.right() - _BADGE_GAP - _BADGE_SIZE // 2
+    hit = tree._badge_at(QPoint(x, rect.center().y()))
+    assert model.find(hit) is rot              # the badge maps to the rotate
+    # a click in the row body is not a badge
+    assert tree._badge_at(QPoint(rect.left() + 30,
+                                 rect.center().y())) is None

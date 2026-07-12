@@ -63,6 +63,11 @@ ROLE_BADGES = Qt.UserRole + 2      # [("icon", name) | ("color", hex)]
 ROLE_CHAIN = Qt.UserRole + 3       # all node ids in the collapsed chain
 ROLE_TAG = Qt.UserRole + 4         # True -> paint a "(hidden)" tag
 
+#: modifier-badge geometry, shared by the delegate (paint) and the tree
+#: (click hit-testing), so a badge is clickable to edit that modifier.
+_BADGE_SIZE = 15
+_BADGE_GAP = 4
+
 CLIPBOARD_FORMAT = "kcad-clipboard"
 
 
@@ -89,12 +94,12 @@ class _RowDelegate(QStyledItemDelegate):
         badges = index.data(ROLE_BADGES)
         if not badges:
             return
-        size = 13
-        gap = 3
+        size = _BADGE_SIZE
+        gap = _BADGE_GAP
         x = option.rect.right() - gap
         y = option.rect.center().y() - size // 2
         painter.save()
-        for kind, value in reversed(badges):
+        for kind, value, _nid in reversed(badges):
             x -= size
             if kind == "color":
                 painter.setPen(QPen(QColor("#888888")))
@@ -140,6 +145,7 @@ class ObjectTree(QTreeWidget):
         self.setIndentation(15)
         self.setRootIsDecorated(True)
         self.setItemDelegate(_RowDelegate(self))
+        self.viewport().setMouseTracking(True)   # for badge hover cursor
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._context_menu)
         self.itemChanged.connect(self._item_changed)
@@ -174,7 +180,8 @@ class ObjectTree(QTreeWidget):
             # match the primary node or the merged chain's root, so
             # selecting either the geometry or its wrapper finds the row
             if child.data(0, Qt.UserRole) == node.id \
-                    or child.data(0, ROLE_ROOT) == node.id:
+                    or child.data(0, ROLE_ROOT) == node.id \
+                    or node.id in (child.data(0, ROLE_CHAIN) or []):
                 return child
             found = self._item_of(node, child)
             if found:
@@ -284,13 +291,16 @@ class ObjectTree(QTreeWidget):
 
     @staticmethod
     def _badges(mods):
-        """Badge specs for a merged chain's modifiers (outermost first)."""
+        """Badge specs (kind, value, node_id) for a merged chain's
+        modifiers, outermost first — clickable to edit that modifier."""
         out = []
         for m in mods:
             if m.type == "color":
-                out.append(("color", str(m.params.get("color", "#888"))))
+                out.append(("color",
+                            str(m.params.get("color", "#888")), m.id))
             else:
-                out.append(("icon", BADGE_ICON.get(m.type, "mdi.cog")))
+                out.append(("icon",
+                            BADGE_ICON.get(m.type, "mdi.cog"), m.id))
         return out
 
     def _model_visible(self, node):
@@ -341,6 +351,9 @@ class ObjectTree(QTreeWidget):
         else:
             item.setData(0, Qt.ForegroundRole, None)
             item.setToolTip(0, label)
+        if item.data(0, ROLE_BADGES):
+            item.setToolTip(0, item.toolTip(0)
+                            + "  ·  click a badge to edit its modifier")
 
     def set_errors(self, errors: dict):
         """Paint nodes with problems red (tooltip = the message)."""
@@ -515,6 +528,45 @@ class ObjectTree(QTreeWidget):
             self.step_selection(1 if e.key() == Qt.Key_Tab else -1)
             return True
         return super().event(e)
+
+    # ------------------------------------------------- clickable badges
+    def _badge_at(self, pos):
+        """The modifier node id under a badge at *pos*, or None."""
+        item = self.itemAt(pos)
+        if item is None:
+            return None
+        badges = item.data(0, ROLE_BADGES)
+        if not badges:
+            return None
+        rect = self.visualItemRect(item)
+        if not (rect.top() <= pos.y() <= rect.bottom()):
+            return None
+        x_right = rect.right() - _BADGE_GAP
+        for badge in reversed(badges):        # painted right-to-left
+            x0 = x_right - _BADGE_SIZE
+            if x0 <= pos.x() <= x_right:
+                return badge[2]
+            x_right = x0 - _BADGE_GAP
+        return None
+
+    def mousePressEvent(self, event):
+        # clicking a modifier badge opens that modifier in the Properties
+        # panel (the folded rotate/translate/colour is editable again)
+        if event.button() == Qt.LeftButton:
+            nid = self._badge_at(event.pos())
+            if nid is not None:
+                node = self.model.find(nid)
+                if node is not None:
+                    self.selection_changed.emit([node])
+                    return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() == Qt.NoButton:     # hover: hint clickability
+            over = self._badge_at(event.pos()) is not None
+            self.viewport().setCursor(Qt.PointingHandCursor if over
+                                      else Qt.ArrowCursor)
+        super().mouseMoveEvent(event)
 
     def keyPressEvent(self, event):
         key = event.key()
