@@ -17,7 +17,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 import math
 
-from PyQt5.QtCore import QPointF, QSettings, Qt
+from PyQt5.QtCore import QPointF, QSettings, Qt, QTimer
 from PyQt5.QtGui import QColor, QPainter, QPen, QPolygonF
 from PyQt5.QtWidgets import QWidget
 
@@ -42,11 +42,22 @@ BACKGROUNDS = {
 class View3D(QWidget):
     """Orbiting shaded view of a triangle mesh."""
 
+    #: past this many triangles, orbiting/panning/zooming draws a
+    #: decimated "draft" mesh for a snappy frame rate, then the full
+    #: mesh snaps back the moment you stop — OpenSCAD's preview/render
+    #: split, done on the CPU.
+    DRAFT_ABOVE = 9000
+    DRAFT_TARGET = 6000
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.mesh = []                  # [(v0, v1, v2)] world space
         self.colors = None              # optional per-face colours
         self.highlight_mesh = []        # selected object, world space
+        self._draft_mesh = None         # decimated mesh for interaction
+        self._draft_colors = None
+        self._draft_hi = None
+        self._fast = False              # currently interacting
         self.source = "no model"
         self.yaw = 35.0                 # degrees around Z
         self.pitch = 22.0               # degrees above the XY plane
@@ -54,6 +65,12 @@ class View3D(QWidget):
         self.target = [0.0, 0.0, 10.0]
         self._last = None
         self._mode = None
+        # clears fast mode a moment after the last wheel tick (no
+        # release event) so the crisp full mesh returns
+        self._idle = QTimer(self)
+        self._idle.setSingleShot(True)
+        self._idle.setInterval(140)
+        self._idle.timeout.connect(self._end_fast)
         #: set once the user orbits/pans/zooms, so the app stops
         #: auto-refitting their view out from under them.
         self.user_moved = False
@@ -102,19 +119,41 @@ class View3D(QWidget):
             self.fit()
 
     # ------------------------------------------------------------- API
+    def _decimate(self, mesh, colors=None):
+        """A strided subset of *mesh* (and matching colours) targeting
+        ~DRAFT_TARGET triangles, or None when the mesh is small enough to
+        draw whole even during interaction."""
+        n = len(mesh)
+        if n <= self.DRAFT_ABOVE:
+            return None, None
+        stride = (n + self.DRAFT_TARGET - 1) // self.DRAFT_TARGET
+        return mesh[::stride], (colors[::stride] if colors else None)
+
     def set_mesh(self, mesh, source: str, colors=None):
         """*colors* is an optional per-face list of (colorstring,
         alpha) — colours from color() nodes shown by the preview."""
         self.mesh = mesh or []
         self.colors = colors if colors and len(colors) == len(self.mesh) \
             else None
+        self._draft_mesh, self._draft_colors = self._decimate(
+            self.mesh, self.colors)
         self.source = source
         self.update()
 
     def set_highlight_mesh(self, tris):
         """Triangles of the selected object, drawn glowing on top."""
         self.highlight_mesh = tris or []
+        self._draft_hi, _ = self._decimate(self.highlight_mesh)
         self.update()
+
+    def _begin_fast(self):
+        if self._draft_mesh is not None or self._draft_hi is not None:
+            self._fast = True
+
+    def _end_fast(self):
+        if self._fast:
+            self._fast = False
+            self.update()                 # repaint the full, crisp mesh
 
     def fit(self):
         """Frame the whole mesh: centre it in the pane and size it to
@@ -243,51 +282,97 @@ class View3D(QWidget):
         cull = style not in ("Wireframe", "X-ray")
         tex, tey, tez = to_eye
 
+        # while interacting with a big model, draw the decimated draft
+        if self._fast and self._draft_mesh is not None:
+            mesh, colors = self._draft_mesh, self._draft_colors
+        else:
+            mesh, colors = self.mesh, self.colors
+        hmesh = self._draft_hi if (self._fast and self._draft_hi
+                                   is not None) else self.highlight_mesh
+
+        # hoist every projection constant out of the per-vertex hot path
+        # (the old _project recomputed focal/width/height for each vertex)
+        f = self._focal()
+        hw = self.width() * 0.5
+        hh = self.height() * 0.5
+        ex, ey, ez = eye
+        rx, ry, rz = right
+        uxa, uya, uza = up
+        fxa, fya, fza = forward
+        lx, ly, lz = light
+        hax, hay, haz = half
+
+        def proj(v):
+            dx = v[0] - ex
+            dy = v[1] - ey
+            dz = v[2] - ez
+            cz = dx * fxa + dy * fya + dz * fza
+            if cz < 0.1:
+                return None
+            return (hw + f * (dx * rx + dy * ry + dz * rz) / cz,
+                    hh - f * (dx * uxa + dy * uya + dz * uza) / cz, cz)
+
         faces = []
-        for index, tri in enumerate(self.mesh):
-            ux, uy, uz = (tri[1][0] - tri[0][0], tri[1][1] - tri[0][1],
-                          tri[1][2] - tri[0][2])
-            vx, vy, vz = (tri[2][0] - tri[0][0], tri[2][1] - tri[0][1],
-                          tri[2][2] - tri[0][2])
-            nx, ny, nz = (uy * vz - uz * vy, uz * vx - ux * vz,
-                          ux * vy - uy * vx)
-            length = math.sqrt(nx * nx + ny * ny + nz * nz)
-            if length < 1e-12:
-                continue
-            nx, ny, nz = nx / length, ny / length, nz / length
+        append = faces.append
+        for index, tri in enumerate(mesh):
+            a, b, c = tri
+            ux = b[0] - a[0]; uy = b[1] - a[1]; uz = b[2] - a[2]
+            vx = c[0] - a[0]; vy = c[1] - a[1]; vz = c[2] - a[2]
+            nx = uy * vz - uz * vy
+            ny = uz * vx - ux * vz
+            nz = ux * vy - uy * vx
+            # cull on the raw normal (its sign is scale-independent)
+            # before paying for the sqrt normalisation
             if cull and nx * tex + ny * tey + nz * tez < 0.0:
-                continue                       # back-facing: not visible
-            pts = [self._project(eye, right, up, forward, v)
-                   for v in tri]
-            if any(p is None for p in pts):
                 continue
-            depth = (pts[0][2] + pts[1][2] + pts[2][2]) / 3
-            shade = abs(nx * light[0] + ny * light[1] + nz * light[2])
-            spec = max(nx * half[0] + ny * half[1] + nz * half[2], 0.0)
-            face_color = self.colors[index] if self.colors else None
-            faces.append((depth, pts, shade, spec, face_color, False))
+            l2 = nx * nx + ny * ny + nz * nz
+            if l2 < 1e-24:
+                continue
+            p0 = proj(a)
+            if p0 is None:
+                continue
+            p1 = proj(b)
+            if p1 is None:
+                continue
+            p2 = proj(c)
+            if p2 is None:
+                continue
+            inv = 1.0 / math.sqrt(l2)
+            nx *= inv
+            ny *= inv
+            nz *= inv
+            depth = (p0[2] + p1[2] + p2[2]) / 3
+            shade = abs(nx * lx + ny * ly + nz * lz)
+            spec = max(nx * hax + ny * hay + nz * haz, 0.0)
+            face_color = colors[index] if colors else None
+            append((depth, (p0, p1, p2), shade, spec, face_color, False))
 
         # the selected object's faces, drawn glowing over the model
         # in a warm accent that contrasts with the blue base shading
         hi = QColor("#ff8c1a")
-        for tri in self.highlight_mesh:
-            pts = [self._project(eye, right, up, forward, v)
-                   for v in tri]
-            if any(p is None for p in pts):
+        for tri in hmesh:
+            a, b, c = tri
+            p0 = proj(a)
+            if p0 is None:
                 continue
-            depth = (pts[0][2] + pts[1][2] + pts[2][2]) / 3 - 0.02
-            ux, uy, uz = (tri[1][0] - tri[0][0], tri[1][1] - tri[0][1],
-                          tri[1][2] - tri[0][2])
-            vx, vy, vz = (tri[2][0] - tri[0][0], tri[2][1] - tri[0][1],
-                          tri[2][2] - tri[0][2])
-            nx, ny, nz = (uy * vz - uz * vy, uz * vx - ux * vz,
-                          ux * vy - uy * vx)
+            p1 = proj(b)
+            if p1 is None:
+                continue
+            p2 = proj(c)
+            if p2 is None:
+                continue
+            ux = b[0] - a[0]; uy = b[1] - a[1]; uz = b[2] - a[2]
+            vx = c[0] - a[0]; vy = c[1] - a[1]; vz = c[2] - a[2]
+            nx = uy * vz - uz * vy
+            ny = uz * vx - ux * vz
+            nz = ux * vy - uy * vx
             length = math.sqrt(nx * nx + ny * ny + nz * nz)
-            shade = abs(nx * light[0] + ny * light[1] + nz * light[2]) \
-                / length if length > 1e-12 else 0.6
-            faces.append((depth, pts, shade, 0.0, None, True))
+            shade = abs(nx * lx + ny * ly + nz * lz) / length \
+                if length > 1e-12 else 0.6
+            depth = (p0[2] + p1[2] + p2[2]) / 3 - 0.02
+            append((depth, (p0, p1, p2), shade, 0.0, None, True))
 
-        faces.sort(key=lambda f: -f[0])
+        faces.sort(key=lambda fc: -fc[0])
         edge = QColor(t["border"])
         edge.setAlpha(60)
         pen = QPen(edge)
@@ -444,10 +529,12 @@ class View3D(QWidget):
     def mousePressEvent(self, event):
         self._last = event.pos()
         self._mode = "orbit" if event.button() == Qt.LeftButton else "pan"
+        self._begin_fast()
 
     def mouseReleaseEvent(self, event):
         self._last = None
         self._mode = None
+        self._fast = False
         self.update()                     # repaint the final frame crisp
 
     def mouseMoveEvent(self, event):
@@ -474,6 +561,8 @@ class View3D(QWidget):
         self.user_moved = True
         factor = 0.87 if event.angleDelta().y() > 0 else 1.15
         self.distance = max(2.0, min(5000.0, self.distance * factor))
+        self._begin_fast()                # draft while zooming...
+        self._idle.start()                # ...back to crisp when it stops
         self.update()
 
     def mouseDoubleClickEvent(self, event):

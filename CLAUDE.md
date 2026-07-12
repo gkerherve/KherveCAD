@@ -158,7 +158,12 @@ into a new module and import.
                        no OpenGL dependency); render styles (shaded,
                        brushed metal with specular, matte, wireframe,
                        x-ray) selectable in View > 3D Render Style and
-                       persisted via QSettings.
+                       persisted via QSettings. Backface-culls, hoists
+                       the projection constants out of the per-vertex
+                       loop, and — past `DRAFT_ABOVE` triangles — draws a
+                       decimated **draft mesh while orbiting/zooming**
+                       (OpenSCAD's preview/render split on the CPU),
+                       snapping back to the full mesh on release/idle.
   - `mesh.py`        — pure-Python fallback tessellator (primitives,
                        linear/rotate extrude with twist/scale/angle,
                        transforms, ear-clipping triangulation).

@@ -39,6 +39,37 @@ def test_every_style_paints_without_error(app):
         view.grab()                    # exercises the paint path
 
 
+def _grid_mesh(n):
+    """A throwaway mesh of *n* triangles."""
+    return [((i, 0, 0), (i + 1, 0, 0), (i, 1, 0)) for i in range(n)]
+
+
+def test_small_mesh_has_no_draft(app):
+    view = View3D()
+    view.set_mesh(_grid_mesh(100), "test")
+    assert view._draft_mesh is None          # drawn whole even while dragging
+
+
+def test_big_mesh_decimates_for_interaction(app):
+    view = View3D()
+    view.set_mesh(_grid_mesh(60000), "test")
+    assert view._draft_mesh is not None
+    # the draft targets ~DRAFT_TARGET triangles, well under the full count
+    assert len(view._draft_mesh) <= view.DRAFT_TARGET * 1.2
+    assert len(view._draft_mesh) < 60000
+
+
+def test_fast_mode_draws_the_draft(app):
+    view = View3D()
+    view.resize(200, 200)
+    view.set_mesh(_grid_mesh(60000), "test")
+    view._begin_fast()
+    assert view._fast is True
+    view.grab()                              # paints the draft path
+    view._end_fast()
+    assert view._fast is False
+
+
 def test_style_persists(app):
     view = View3D()
     view.set_style("Brushed metal")
