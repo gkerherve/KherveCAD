@@ -60,8 +60,8 @@ class View3D(QWidget):
         settings = QSettings(*_SETTINGS)
         saved = settings.value("render_style", "Shaded")
         self.style = saved if saved in RENDER_STYLES else "Shaded"
-        bg = settings.value("render_bg", "Theme")
-        self.background = bg if bg in BACKGROUNDS else "Theme"
+        bg = settings.value("render_bg", "Slate")
+        self.background = bg if bg in BACKGROUNDS else "Slate"
         self.setMinimumHeight(160)
         self.setMouseTracking(False)
 
