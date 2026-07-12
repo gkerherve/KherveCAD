@@ -117,6 +117,7 @@ class MainWindow(QMainWindow):
         self.builder.tree.selection_changed.connect(self._tree_selected)
         self.scene.selection_changed.connect(self._scene_selected)
         self.scene.node_created.connect(self._node_created)
+        self.scene.plane_changed.connect(self._on_plane_auto_changed)
         self.properties.point_selected.connect(
             self.scene.set_point_highlight)
         self.view2d.cursor_moved.connect(self._cursor_moved)
@@ -442,6 +443,13 @@ class MainWindow(QMainWindow):
         _axes, (kx, ky) = PLANES[self.scene.plane]
         self._cursor_label.setText(
             f"{kx}: {p.x():.1f} mm  {ky}: {p.y():.1f} mm")
+
+    def _on_plane_auto_changed(self, plane):
+        """The 2D view jumped planes to expose a primitive's edit handles;
+        reflect it in the Plane combo without re-triggering a rebuild."""
+        self._plane_combo.blockSignals(True)
+        self._plane_combo.setCurrentText(plane)
+        self._plane_combo.blockSignals(False)
 
     def _set_plane(self, plane):
         self.scene.set_plane(plane)

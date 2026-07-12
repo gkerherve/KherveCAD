@@ -387,7 +387,7 @@ class PartItem(QGraphicsPathItem):
     """
 
     def __init__(self, node, scene, path, label, movable=True,
-                 dashed=True, dims=None):
+                 dashed=True, dims=None, blue=False):
         super().__init__()
         self.node = node
         self._scene = scene
@@ -398,12 +398,21 @@ class PartItem(QGraphicsPathItem):
         if movable:
             self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
+        from .style import tokens
         if dashed:
-            from .style import tokens
             color = QColor(tokens()["select"])
             pen = QPen(color, 1.4, Qt.DashLine)
             pen.setCosmetic(True)
             fill_alpha = 26
+        elif blue:
+            # an editable primitive: a crisp blue outline + light fill,
+            # like a 2D sketch shape, with its size handles on top. The
+            # sketch blue is fixed (matches the handles), not the theme
+            # accent — so it stays blue under the Sand/gold theme too.
+            color = QColor("#2176c7")
+            pen = QPen(color, 1.6)
+            pen.setCosmetic(True)
+            fill_alpha = 45
         else:
             # solid filled silhouette — no pen, or the internal
             # triangle edges would show as a wireframe
@@ -415,7 +424,7 @@ class PartItem(QGraphicsPathItem):
         fill = QColor(color)
         fill.setAlpha(fill_alpha)
         self.setBrush(QBrush(fill))
-        if not dashed:
+        if not dashed and not blue:
             # the silhouette is a heavy static path; cache its raster
             # so panning/redraw stay smooth (re-rasters only on zoom)
             self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
@@ -513,6 +522,7 @@ class SketchScene(QGraphicsScene):
     selection_changed = pyqtSignal(list)      # list of CadNode
     node_created = pyqtSignal(object)         # CadNode
     measure_changed = pyqtSignal(str)         # live mm readout
+    plane_changed = pyqtSignal(str)           # view auto-switched plane
 
     def __init__(self, model: DocumentModel, parent=None):
         super().__init__(-2000, -2000, 4000, 4000, parent)
@@ -733,6 +743,13 @@ class SketchScene(QGraphicsScene):
         shapes just get selected in place."""
         self._highlight_ids = {n.id for n in nodes}
         self._point_hl = (None, -1)            # fresh selection, no point
+        # selecting a single primitive jumps to the plane that shows its
+        # size handles, so you land straight on the editable view
+        if len(nodes) == 1:
+            best = self._best_edit_plane(nodes[0])
+            if best is not None and best != self.plane:
+                self.plane = best
+                self.plane_changed.emit(best)
         self.rebuild()
 
     def _isolate_target(self, node):
@@ -803,13 +820,26 @@ class SketchScene(QGraphicsScene):
         and bores show and the shape is correctly oriented."""
         from . import mesh as mesh_mod
         (ai, bi), _keys = PLANES[self.plane]
-        # a low-detail tessellation keeps the silhouette light; the
-        # winding-fill union of the projected triangles is the real
-        # filled shape (holes and concavities included), built
-        # instantly — no simplify() (it explodes on helical threads).
-        tris = mesh_mod.selected_world_tris(
-            self.model.root, {node.id}, detail=14,
-            fn=self.model.effective_fn())
+        dims = self._dim_handles(node)
+        editable = node.type in ("cylinder", "cube", "sphere")
+        if editable:
+            # an editable primitive: show a SINGLE instance (its own mesh
+            # through the first-iteration world transform), so a bolt hole
+            # inside a for-loop reads as one editable cylinder, not every
+            # copy — and it lines up with the size handles.
+            mat = self._world_matrix(node)
+            local = mesh_mod.tessellate(node, self.env_for(node),
+                                        fn=self.model.effective_fn())
+            tris = [tuple(mesh_mod.transform_point(mat, v) for v in tri)
+                    for tri in local]
+        else:
+            # a low-detail tessellation keeps the silhouette light; the
+            # winding-fill union of the projected triangles is the real
+            # filled shape (holes and concavities included), built
+            # instantly — no simplify() (it explodes on helical threads).
+            tris = mesh_mod.selected_world_tris(
+                self.model.root, {node.id}, detail=14,
+                fn=self.model.effective_fn())
         if not tris:
             return None
         path = QPainterPath()
@@ -824,9 +854,11 @@ class SketchScene(QGraphicsScene):
                     - (p2[0] - p0[0]) * (p1[1] - p0[1]))
             pts = (p0, p1, p2) if area >= 0 else (p0, p2, p1)
             path.addPolygon(QPolygonF([QPointF(x, y) for x, y in pts]))
+        if editable:
+            path = path.simplified()           # crisp outline like a shape
         movable = node.parent is self.model.root
         return PartItem(node, self, path, node.name, movable=movable,
-                        dashed=False, dims=self._dim_handles(node))
+                        dashed=False, dims=dims, blue=editable)
 
     def _world_matrix(self, node):
         """4x4 transform mapping *node*'s local coordinates to world —
@@ -852,7 +884,21 @@ class SketchScene(QGraphicsScene):
                     p.get("z", default)))
         return mat
 
-    def _dim_handles(self, node):
+    def _best_edit_plane(self, node):
+        """The assembly plane that exposes the most editable size handles
+        for a selected primitive, so selecting e.g. a Z-cylinder jumps to
+        a side view where its height *and* radius are draggable rather
+        than a plane where it is just a bare circle."""
+        if node is None or node.type not in ("cylinder", "cube", "sphere"):
+            return None
+        counts = {pl: len(self._dim_handles(node, plane=pl))
+                  for pl in PLANES}
+        if not any(counts.values()):
+            return None
+        # most handles wins; keep the current plane on a tie (no churn)
+        return max(PLANES, key=lambda pl: (counts[pl], pl == self.plane))
+
+    def _dim_handles(self, node, plane=None):
         """Editable size handles for a 3D primitive in the current plane
         — cylinder radii + height, cube sides, sphere radius — mapped
         through the node's ancestor transforms so a drag in the plane
@@ -861,7 +907,7 @@ class SketchScene(QGraphicsScene):
         from . import mesh as mesh_mod
         if node.type not in ("cylinder", "cube", "sphere"):
             return []
-        (ai, bi), _keys = PLANES[self.plane]
+        (ai, bi), _keys = PLANES[plane or self.plane]
         env = self.env_for(node)
         mat = self._world_matrix(node)
 

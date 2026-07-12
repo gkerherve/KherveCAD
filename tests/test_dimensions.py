@@ -170,7 +170,7 @@ def test_auto_dims_render_for_every_shape(window):
     app = QApplication.instance()
     app.processEvents()
     sc = window.scene
-    assert sc.show_dims                    # on by default
+    sc.show_dims = True                    # independent of the saved pref
     for node in (rect, circ, line):
         it = sc._items.get(node.id)
         if it:
@@ -182,3 +182,39 @@ def test_auto_dims_render_for_every_shape(window):
     painter = QPainter(pm)
     window.view2d.render(painter)
     painter.end()
+
+
+def test_selecting_cylinder_jumps_to_editing_plane_blue_one_instance(window):
+    from khervecad import library
+    from khervecad.view2d import PartItem
+    m = window.model
+    node = library.build_part(
+        "cf_nipple", dict(library.CF_SIZES["CF40 (DN40)"],
+                          port_length=60.0))
+    m.root.add(node)
+    m.structure_changed.emit()
+    QApplication.instance().processEvents()
+    window.scene.plane = "Top (XY)"
+
+    def part_items():
+        return [it for it in window.scene._part_items.values()
+                if isinstance(it, PartItem)]
+
+    # a Z-cylinder: selecting it jumps to a side plane where height AND
+    # radius are draggable, and it draws as ONE blue editable shape
+    bore = next(n for n in m.root.walk() if n.name == "Bore")
+    window.builder.tree.select_nodes([bore])
+    QApplication.instance().processEvents()
+    assert window.scene.plane in ("Front (XZ)", "Side (YZ)")
+    assert window._plane_combo.currentText() == window.scene.plane
+    items = part_items()
+    assert len(items) == 1
+    assert items[0].pen().style() != 0           # a blue outline, not NoPen
+    assert len(items[0]._dims) >= 2              # editable size handles
+
+    # a bolt hole inside a for-loop of 6 shows a SINGLE instance, not all
+    bolt = next(n for n in m.root.walk() if n.name == "Bolt hole")
+    window.builder.tree.select_nodes([bolt])
+    QApplication.instance().processEvents()
+    box = part_items()[0].path().boundingRect()
+    assert box.width() < 20.0                    # one hole, not the Ø58 ring
