@@ -680,6 +680,10 @@ def _tess(node, env, color, sel, selected):
         # definitions store: masters render only through Linked copies,
         # so the group contributes no geometry of its own.
         return []
+    if t == "scad_raw":
+        # verbatim OpenSCAD — only the OpenSCAD engine can render it;
+        # the built-in tessellator has no model for it.
+        return []
     if t in ("root", "hull", "variables"):
         # 3D hull is approximated as the union of its children;
         # "variables" only holds assignments, so it adds no geometry.

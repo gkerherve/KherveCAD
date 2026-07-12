@@ -119,11 +119,16 @@ into a new module and import.
                        threaded rod, fan impeller, a **Masters +
                        Linked-copy bolt circle**) — several placing
                        library fasteners round a bolt circle by for-loop
-                       — plus a vacuum starter and a desk setup.
-                       `load_example()` swaps it in; `EXAMPLES` is
-                       grouped by category. Gears use trapezoidal teeth
-                       stamped by a for-loop; bearings/pulleys use
-                       revolved rings so they preview without a boolean.
+                       — plus **Showcase** examples (orientation cubes,
+                       2D boolean regions, a recursively-built fractal
+                       tree, and a raw-OpenSCAD BOSL2 passthrough), a
+                       vacuum starter and a desk setup. `load_example()`
+                       swaps it in; `EXAMPLES` is grouped by category.
+                       Gears use trapezoidal teeth stamped by a for-loop;
+                       bearings/pulleys use revolved rings so they
+                       preview without a boolean; the fractal tree
+                       recurses in the Python builder (the node tree has
+                       no recursion) and unrolls into the object tree.
   - `chat.py`        — **KherveAI chat box** (family assistant):
                        Claude/Mistral/Ollama Cloud via urllib, keys
                        in QSettings or env vars, slash commands, and
@@ -188,6 +193,13 @@ into a new module and import.
 - Booleans/grouping (`union` = group, `difference`, `intersection`,
   `hull`, `minkowski`; `round_edges()` = minkowski + small sphere,
   the post-extrusion rounding idiom).
+- `scad_raw` — a leaf holding **verbatim OpenSCAD** (`code` param,
+  multi-line `text` editor). Emitted straight into the program, so
+  library calls the built-in tessellator can't model (BOSL2, ...) still
+  render **through the OpenSCAD engine**; the built-in preview shows
+  nothing for it (`mesh._tess` returns `[]`). Hidden ⇒ emits nothing
+  (raw code can't take the `*` modifier). Insert via Insert > OpenSCAD
+  code.
 - Control flow (`for_loop`, `while_loop`, `if_else`, `assign`).
   `while` has no OpenSCAD equivalent, so codegen unrolls it into a
   value-list `for` (capped at 1000 iterations); it re-imports as a

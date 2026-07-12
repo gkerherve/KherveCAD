@@ -337,6 +337,145 @@ def bolt_circle() -> CadNode:
     return _root(masters, disc, ring)
 
 
+def _color(name, hex_color, child) -> CadNode:
+    c = CadNode("color", name, dict(color=hex_color, alpha=1.0))
+    c.add(child)
+    return c
+
+
+def _extrude(name, height, child) -> CadNode:
+    ext = CadNode("linear_extrude", name, dict(
+        height=height, twist=0.0, scale=1.0, center=False, segments=0))
+    ext.add(child)
+    return ext
+
+
+def orientation_cubes() -> CadNode:
+    """Inspired by BOSL2's orientations example: a cube marked with its
+    local X/Y/Z axes — coloured edge stripes and axis rods — so you can
+    read orientation at a glance."""
+    s = 30.0
+    cube = _color("Body", "#b8bcc2",
+                  _cube("Cube", s, s, s, x=-s / 2, y=-s / 2, z=-s / 2))
+    root = _root(cube)
+    bar = s * 0.9
+    e = s / 2.0
+    # coloured edge stripes at the top, like the original
+    root.add(_color("X edge", "#d64545",
+                    _cube("X", bar, 2, 2, x=-bar / 2, y=e - 2, z=e - 2)))
+    root.add(_color("Y edge", "#3f9e4d",
+                    _cube("Y", 2, bar, 2, x=e - 2, y=-bar / 2, z=e - 2)))
+    root.add(_color("Z edge", "#3a6fd8",
+                    _cube("Z", 2, 2, bar, x=e - 2, y=e - 2, z=-bar / 2)))
+    # axis rods out of the origin corner
+    rod = s * 0.8
+    root.add(_color("X axis", "#d64545",
+                    _rot(_cyl("Xr", 1.4, rod, segments=16), y=90)))
+    root.add(_color("Y axis", "#3f9e4d",
+                    _rot(_cyl("Yr", 1.4, rod, segments=16), x=-90)))
+    root.add(_color("Z axis", "#3a6fd8",
+                    _cyl("Zr", 1.4, rod, segments=16)))
+    return root
+
+
+def boolean_regions() -> CadNode:
+    """Inspired by BOSL2's boolean_geometry example: a square and a
+    circle combined four ways — union, difference, intersection and
+    exclusive-or — each extruded to a thin plate and laid out in a row."""
+    def shapes():
+        rect = CadNode("rect", "A (square)",
+                       dict(x=-24, y=-24, width=48, height=48))
+        circ = CadNode("circle", "B (circle)",
+                       dict(x=18, y=18, radius=26, segments=64,
+                            angle=360.0, start_angle=0.0))
+        return rect, circ
+
+    def op(kind, name):
+        a, b = shapes()
+        node = CadNode(kind, name)
+        node.add(a)
+        node.add(b)
+        return node
+
+    def xor():
+        a1, b1 = shapes()
+        a2, b2 = shapes()
+        d1 = CadNode("difference", "A-B")
+        d1.add(a1)
+        d1.add(b1)
+        d2 = CadNode("difference", "B-A")
+        d2.add(b2)
+        d2.add(a2)
+        u = CadNode("union", "XOR")
+        u.add(d1)
+        u.add(d2)
+        return u
+
+    root = _root()
+    plates = [
+        ("Union", "#e06666", op("union", "Union A+B")),
+        ("Difference", "#6fa8dc", op("difference", "Difference A-B")),
+        ("Intersection", "#93c47d", op("intersection", "Intersection")),
+        ("XOR", "#c27ba0", xor()),
+    ]
+    for i, (label, hexc, region) in enumerate(plates):
+        root.add(_place(_color(label, hexc, _extrude(label, 4.0, region)),
+                        x=i * 90.0))
+    return root
+
+
+def _tree_branch(length, sc, depth) -> CadNode:
+    """One branch of the fractal tree, recursively built (the builder is
+    plain Python, so it can recurse where the node tree — which has no
+    recursion — cannot)."""
+    node = CadNode("union", f"Branch d{depth}")
+    node.add(_color("Wood", "#9c8b74",
+                    _cyl("Trunk", length * 0.09, length,
+                         r2=max(length * 0.09 * sc, 0.4), segments=14)))
+    top = CadNode("translate", "Top", dict(x=0.0, y=0.0, z=length))
+    if depth > 0:
+        for rz in (0.0, 180.0):                # two opposed children
+            spread = _rot(_tree_branch(length * sc, sc, depth - 1),
+                          y=32.0)
+            top.add(_rot(spread, z=90.0 + rz))
+    else:
+        top.add(_color("Leaf", "#59b359",
+                       CadNode("sphere", "Leaf",
+                               dict(x=0.0, y=0.0, z=length * 0.2,
+                                    radius=length * 0.6, segments=12))))
+    node.add(top)
+    return node
+
+
+def fractal_tree() -> CadNode:
+    """Inspired by BOSL2's fractal_tree: a recursively branching tree
+    (five levels), grey wood with green leaves — built by recursing in
+    the Python builder and unrolling into the object tree."""
+    return _root(_tree_branch(120.0, 0.72, 5))
+
+
+def bosl2_attachments_raw() -> CadNode:
+    """A BOSL2 example (attachments) dropped in verbatim as an OpenSCAD
+    code node. It renders through the **OpenSCAD engine only** (the
+    built-in preview stays blank) and needs BOSL2 installed as a
+    ``BOSL2`` library folder."""
+    code = (
+        "// BOSL2 example — renders via the OpenSCAD engine.\n"
+        "// Needs BOSL2 on the OpenSCAD library path (a 'BOSL2' folder).\n"
+        "include <BOSL2/std.scad>\n"
+        "$fn = 32;\n"
+        "cuboid([60,40,40], rounding=5, edges=\"Z\", anchor=BOTTOM) {\n"
+        "    attach(TOP, BOTTOM)\n"
+        "    prismoid([60,40],[20,20], h=50, rounding1=5, rounding2=10) {\n"
+        "        attach(TOP) cylinder(d=20, h=30, center=false) {\n"
+        "            attach(TOP) cylinder(d1=50, d2=30, h=12,"
+        " center=false);\n"
+        "        }\n"
+        "    }\n"
+        "}\n")
+    return _root(CadNode("scad_raw", "BOSL2 attachments", dict(code=code)))
+
+
 def vacuum_starter() -> CadNode:
     """An assembly starter from the part library: a CF tee with a turbo
     pump hung below it — drag the parts in the 2D assembly view or edit
@@ -379,6 +518,10 @@ EXAMPLES = [
     ("Threaded rod & nuts", "Mechanical", threaded_rod),
     ("Fan impeller", "Mechanical", fan_impeller),
     ("Bolt circle (Masters demo)", "Mechanical", bolt_circle),
+    ("Orientation cubes", "Showcase", orientation_cubes),
+    ("Boolean regions (2D ops)", "Showcase", boolean_regions),
+    ("Fractal tree", "Showcase", fractal_tree),
+    ("BOSL2 attachments (raw OpenSCAD)", "Showcase", bosl2_attachments_raw),
     ("Vacuum starter (CF tee + turbo)", "Vacuum", vacuum_starter),
     ("Desk setup", "Room", desk_setup),
 ]

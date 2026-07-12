@@ -127,8 +127,11 @@ def test_all_examples_build_cleanly(model):
         m = DocumentModel()
         examples.load_example(m, build)
         assert validate(m.root) == {}, f"{label} has validation errors"
+        # raw-OpenSCAD examples render only through the engine, so the
+        # built-in tessellator legitimately produces nothing for them
+        raw = any(n.type == "scad_raw" for n in m.root.walk())
         tris = mesh.tessellate(m.root, fn=m.effective_fn())
-        assert len(tris) > 0, f"{label} produced no geometry"
+        assert raw or len(tris) > 0, f"{label} produced no geometry"
 
 
 def test_bolt_circle_uses_masters(model):

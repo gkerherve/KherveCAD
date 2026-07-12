@@ -15,11 +15,12 @@ Foundation, either version 3 of the License.
 """
 
 from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDoubleSpinBox,
                              QFormLayout, QHBoxLayout, QLabel, QLineEdit,
-                             QPushButton, QScrollArea, QSpinBox,
-                             QTableWidget, QTableWidgetItem, QVBoxLayout,
-                             QWidget)
+                             QPlainTextEdit, QPushButton, QScrollArea,
+                             QSpinBox, QTableWidget, QTableWidgetItem,
+                             QVBoxLayout, QWidget)
 
 from . import icons
 from .model import NODE_TYPES, DocumentModel, fmt
@@ -69,6 +70,25 @@ class VarOrValueEdit(QComboBox):
         except ValueError:
             value = text
         self._on_commit(value)
+
+
+class MultilineEdit(QPlainTextEdit):
+    """A monospaced multi-line editor (for the raw-OpenSCAD `code`
+    param). Commits on focus-out, so the model doesn't regenerate on
+    every keystroke."""
+
+    def __init__(self, on_commit, parent=None):
+        super().__init__(parent)
+        self._on_commit = on_commit
+        font = QFont("Consolas")
+        font.setStyleHint(QFont.Monospace)
+        self.setFont(font)
+        self.setMinimumHeight(160)
+        self.setLineWrapMode(QPlainTextEdit.NoWrap)
+
+    def focusOutEvent(self, event):
+        super().focusOutEvent(event)
+        self._on_commit(self.toPlainText())
 
 
 class PointsEditor(QWidget):
@@ -298,6 +318,9 @@ class PropertiesPanel(QScrollArea):
                 lambda b=None, k=key: self._set_param(
                     k, self._editors[k].text()))
             return box
+        if kind == "text":
+            return MultilineEdit(
+                lambda v, k=key: self._set_param(k, v))
         if kind == "points":
             editor = PointsEditor(
                 self.node.params[key],
@@ -343,6 +366,8 @@ class PropertiesPanel(QScrollArea):
                 editor.setChecked(bool(value))
             elif isinstance(editor, QPushButton):
                 self._swatch(editor, str(value))
+            elif isinstance(editor, MultilineEdit):
+                editor.setPlainText(str(value))
             elif isinstance(editor, QLineEdit):
                 editor.setText(str(value))
         self._updating = False

@@ -250,12 +250,22 @@ NODE_TYPES = {
                 ("x", "X", "float", -1e6, 1e6),
                 ("y", "Y", "float", -1e6, 1e6),
                 ("z", "Z", "float", -1e6, 1e6)]),
+    "scad_raw": dict(
+        # verbatim OpenSCAD, emitted straight into the program — for
+        # library calls (BOSL2, ...) the built-in tessellator can't
+        # model. It renders only through the OpenSCAD engine, so the
+        # built-in preview shows nothing for it.
+        label="OpenSCAD code", category=CONTROL, icon="mdi.code-tags",
+        params=dict(code="// Raw OpenSCAD — rendered by the engine\n"
+                         "cube([10, 10, 10], center = true);"),
+        schema=[("code", "OpenSCAD code", "text", None, None)]),
 }
 
-#: types that accept children (assignments and Linked copies are leaves).
+#: types that accept children (assignments, Linked copies and raw code
+#: are leaves).
 CONTAINER_TYPES = {t for t, d in NODE_TYPES.items()
                    if d["category"] in (OPERATION, BOOLEAN, CONTROL)} \
-    - {"assign", "reference"}
+    - {"assign", "reference", "scad_raw"}
 
 
 def fmt(value) -> str:
@@ -466,6 +476,13 @@ class CadNode:
             # and OpenSCAD scope are exactly as if they were loose.
             for child in self.children:
                 child.emit(lines, indent, spans)
+        elif self.type == "scad_raw":
+            # verbatim OpenSCAD, one (text, node) pair per line so the
+            # code tab maps back to this node; hidden => nothing emitted
+            if self.visible:
+                code = str(self.params.get("code", ""))
+                for ln in (code.split("\n") if code else [""]):
+                    lines.append((pad + ln, self))
         elif self.type == "reference":
             self._emit_reference(lines, indent, spans)
         elif self.type == "if_else":
