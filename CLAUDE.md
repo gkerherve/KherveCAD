@@ -112,7 +112,14 @@ into a new module and import.
                        its colour in the preview.
   - `examples.py`    — ready-made **example models** for the Examples
                        menu: each `build()` returns a fresh `root` that
-                       replaces the document. A dozen **Mechanical**
+                       replaces the document. A **Learn** category of 21
+                       numbered tutorials, basic → advanced, one
+                       technique each (primitives, 2D shapes, text,
+                       translate/rotate/scale/mirror, linear & rotate
+                       extrude, union/difference/intersection/hull/
+                       minkowski, for loops incl. polar & nested,
+                       variables, if/else, while, masters). A dozen
+                       **Mechanical**
                        examples (parametric box, L-bracket, bolt & nut,
                        bolted flange joint, pillow block, spur gear,
                        meshing gear pair, ball bearing, V-belt pulley,

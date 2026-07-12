@@ -504,8 +504,281 @@ def desk_setup() -> CadNode:
     return _root(table, mon_pos, chair_pos)
 
 
+# ============================ LEARN =================================
+# A progressive tour, one technique per example, basic -> advanced.
+
+def _sphere(name, r, x=0.0, y=0.0, z=0.0, seg=48) -> CadNode:
+    return CadNode("sphere", name,
+                   dict(x=x, y=y, z=z, radius=r, segments=seg))
+
+
+def _ext(name, height, child, twist=0.0, scale=1.0) -> CadNode:
+    ext = CadNode("linear_extrude", name, dict(
+        height=height, twist=twist, scale=scale, center=False,
+        segments=0))
+    ext.add(child)
+    return ext
+
+
+def _for(name, var, start, end, step, child) -> CadNode:
+    loop = CadNode("for_loop", name, dict(
+        variable=var, start=start, end=end, step=step, values=""))
+    loop.add(child)
+    return loop
+
+
+def learn_01_cube() -> CadNode:
+    """1 · The cube. The simplest solid — a box of width/depth/height.
+    Every model starts with primitives like this."""
+    return _root(_cube("My first cube", 30, 30, 30))
+
+
+def learn_02_primitives() -> CadNode:
+    """2 · The three 3D primitives: cube, sphere and cylinder, set side
+    by side. Pick one from the vertical toolbar and edit its size in the
+    Properties panel."""
+    return _root(
+        _cube("Cube", 26, 26, 26, x=-55),
+        _sphere("Sphere", 15, x=0, y=13, z=13),
+        _cyl("Cylinder", 13, 30, x=45, y=13))
+
+
+def learn_03_2d_shapes() -> CadNode:
+    """3 · 2D sketch shapes — a square, a circle and a polygon — each
+    extruded 2 mm so they show in 3D. 2D shapes live in the sketch view
+    and become solids when you extrude them."""
+    square = CadNode("rect", "Square",
+                     dict(x=-15, y=-15, width=30, height=30))
+    circle = CadNode("circle", "Circle",
+                     dict(x=0, y=0, radius=18, segments=64,
+                          angle=360.0, start_angle=0.0))
+    tri = CadNode("polygon", "Triangle",
+                  dict(x=0, y=0, points=[[-18, -15], [18, -15], [0, 20]]))
+    return _root(
+        _place(_ext("Square plate", 2, square), x=-50),
+        _place(_ext("Disc", 2, circle), x=0),
+        _place(_ext("Triangle plate", 2, tri), x=50))
+
+
+def learn_04_text() -> CadNode:
+    """4 · Text — a `text` sketch object extruded into 3D letters. Change
+    the string and size in Properties."""
+    txt = CadNode("text", "Label", dict(x=-24, y=-8, text="CAD", size=24))
+    return _root(_color("Letters", "#3f7fd8", _ext("3D text", 6, txt)))
+
+
+def learn_05_translate() -> CadNode:
+    """5 · Translate — move an object in X/Y/Z. Here the same cube is
+    placed three times at growing X (a translate node wraps each)."""
+    root = _root()
+    for i in range(3):
+        root.add(_place(_cube("Box", 20, 20, 20), x=i * 30.0))
+    return root
+
+
+def learn_06_rotate() -> CadNode:
+    """6 · Rotate — spin an object about an axis. Four bars fanned out by
+    rotating each a bit more about Z."""
+    root = _root()
+    for a in (0.0, 22.5, 45.0, 67.5, 90.0):
+        root.add(_color("Bar", "#d98a3f",
+                        _rot(_cube("Bar", 60, 6, 6, y=-3), z=a)))
+    return root
+
+
+def learn_07_scale_mirror() -> CadNode:
+    """7 · Scale and mirror. The middle wedge is the original; left is it
+    scaled up, right is it mirrored across X."""
+    def wedge(name):
+        return CadNode("polygon", name,
+                       dict(x=0, y=0, points=[[0, 0], [24, 0], [0, 30]]))
+    orig = _ext("Original", 12, wedge("W"))
+    scaled = CadNode("scale", "Scaled 1.6x", dict(x=1.6, y=1.6, z=1.0))
+    scaled.add(_ext("W", 12, wedge("W")))
+    mirrored = CadNode("mirror", "Mirror X", dict(x=1, y=0, z=0))
+    mirrored.add(_ext("W", 12, wedge("W")))
+    return _root(orig, _place(scaled, x=-70),
+                 _place(mirrored, x=50))
+
+
+def learn_08_linear_extrude() -> CadNode:
+    """8 · Linear extrude — push a 2D profile straight up into a solid,
+    optionally twisting it. This plus-shaped profile is extruded 50 mm
+    with a 90° twist."""
+    plus = CadNode("polygon", "Plus", dict(x=0, y=0, points=[
+        [-6, -18], [6, -18], [6, -6], [18, -6], [18, 6], [6, 6],
+        [6, 18], [-6, 18], [-6, 6], [-18, 6], [-18, -6], [-6, -6]]))
+    return _root(_ext("Twisted column", 50, plus, twist=90.0))
+
+
+def learn_09_rotate_extrude() -> CadNode:
+    """9 · Rotate extrude — revolve a 2D profile around the Z axis to
+    make lathe-turned shapes. This profile sweeps out a vase."""
+    prof = [[6, 0], [26, 0], [22, 12], [14, 30], [12, 55], [20, 72],
+            [18, 78], [6, 78]]
+    rev = CadNode("rotate_extrude", "Vase", dict(angle=360, segments=96))
+    rev.add(CadNode("polygon", "Vase profile",
+                    dict(x=0, y=0, points=[[round(r, 2), round(z, 2)]
+                                           for r, z in prof])))
+    return _root(_color("Vase", "#57a0a0", rev))
+
+
+def learn_10_union() -> CadNode:
+    """10 · Union — glue overlapping solids into one. Two spheres and a
+    bar become a single part."""
+    u = CadNode("union", "Union")
+    u.add(_sphere("Ball A", 18, x=-16))
+    u.add(_sphere("Ball B", 18, x=16))
+    u.add(_cyl("Bar", 8, 40, x=-20, y=0, z=-4))
+    return _root(_rot(u, x=90))
+
+
+def learn_11_difference() -> CadNode:
+    """11 · Difference — subtract later shapes from the first. A block
+    with a bore and two cross-holes drilled through it. (The built-in
+    preview shows the block; OpenSCAD shows the holes.)"""
+    d = CadNode("difference", "Drilled block")
+    d.add(_cube("Block", 50, 40, 30, x=-25, y=-20))
+    d.add(_cyl("Bore", 10, 34, z=-2, segments=48))
+    d.add(_rot(_cyl("Cross hole", 5, 60, z=-30, segments=32), y=90))
+    return _root(d)
+
+
+def learn_12_intersection() -> CadNode:
+    """12 · Intersection — keep only the overlap. A cube intersected with
+    a sphere gives a cube with bulged, rounded faces."""
+    it = CadNode("intersection", "Intersection")
+    it.add(_cube("Cube", 34, 34, 34, x=-17, y=-17, z=-17))
+    it.add(_sphere("Sphere", 22))
+    return _root(it)
+
+
+def learn_13_hull() -> CadNode:
+    """13 · Hull — wrap a tight convex skin around several shapes. Two
+    cylinders hulled become a rounded slot / capsule."""
+    h = CadNode("hull", "Hull")
+    h.add(_cyl("End A", 10, 8, x=-25))
+    h.add(_cyl("End B", 10, 8, x=25))
+    return _root(h)
+
+
+def learn_14_rounded() -> CadNode:
+    """14 · Round edges (minkowski) — sweep a small sphere over a box to
+    round every edge and corner. The post-extrusion rounding idiom."""
+    mk = CadNode("minkowski", "Rounded box")
+    mk.add(_cube("Box", 34, 24, 14, x=-17, y=-12, z=0))
+    mk.add(_sphere("Rounding", 4, seg=24))
+    return _root(mk)
+
+
+def learn_15_for_row() -> CadNode:
+    """15 · For loop — repeat with a counter. `i` runs 0..5 and each
+    pillar is placed at x = i * 20 (an expression using the loop
+    variable)."""
+    pillar = _cyl("Pillar", 6, "10 + i * 6", x="i * 20")
+    return _root(_for("Colonnade", "i", 0, 5, 1, pillar))
+
+
+def learn_16_polar() -> CadNode:
+    """16 · Polar array — a for loop plus rotate makes a circular
+    pattern. `i` runs 0..11 and each spoke is rotated i * 30° about Z."""
+    spoke = _rot(_cube("Spoke", 34, 5, 5, x=12, y=-2.5, z=-2.5),
+                 z="i * 30")
+    hub = _cyl("Hub", 12, 5, segments=48)
+    return _root(hub, _for("Spokes", "i", 0, 11, 1, spoke))
+
+
+def learn_17_grid() -> CadNode:
+    """17 · Nested for loops — one loop inside another sweeps a grid.
+    `i` and `j` each run 0..4 to place a 5×5 field of pins."""
+    pin = _cyl("Pin", 3, 14, x="i * 12", y="j * 12", segments=20)
+    inner = _for("Columns", "j", 0, 4, 1, pin)
+    base = _cube("Base", 60, 60, 4, x=-6, y=-6, z=-4)
+    return _root(base, _for("Rows", "i", 0, 4, 1, inner))
+
+
+def learn_18_variables() -> CadNode:
+    """18 · Variables — name your dimensions once and reuse them. Edit
+    `w`, `d`, `h` or `wall` in the Variables tab and the tray follows;
+    expressions like `w - 2 * wall` do the maths for you."""
+    outer = _cube("Outer", "w", "d", "h")
+    inner = _cube("Cavity", "w - 2 * wall", "d - 2 * wall", "h",
+                  x="wall", y="wall", z="wall")
+    tray = CadNode("difference", "Parametric tray")
+    tray.add(outer)
+    tray.add(inner)
+    return _root(_var("w", 70), _var("d", 45), _var("h", 22),
+                 _var("wall", 3), tray)
+
+
+def learn_19_if_else() -> CadNode:
+    """19 · If / else — choose geometry from a condition. `mode` picks a
+    cube (mode > 0) or a sphere; flip the variable to 0 to switch. The
+    else branch lives in a child group named "Else"."""
+    cond = CadNode("if_else", "Pick a shape", dict(condition="mode > 0"))
+    cond.add(_color("Then (cube)", "#d98a3f",
+                    _cube("Cube", 30, 30, 30, x=-15, y=-15)))
+    els = CadNode("union", "Else")
+    els.add(_color("Else (sphere)", "#57a0a0", _sphere("Sphere", 20)))
+    cond.add(els)
+    return _root(_var("mode", 1), cond)
+
+
+def learn_20_while() -> CadNode:
+    """20 · While loop — repeat until a condition fails. `a` climbs from
+    0 by 30 while a < 700; each step rotates and lifts a small cube, so
+    the loop draws a rising spiral. (Codegen unrolls it into a for.)"""
+    step = CadNode("while_loop", "Spiral",
+                   dict(variable="a", start=0.0, condition="a < 700",
+                        update="a + 30"))
+    block = _rot(_place(_cube("Step", 12, 6, 4, y=-3), x=34, z="a * 0.06"),
+                 z="a")
+    step.add(block)
+    return _root(_cyl("Post", 4, 44, segments=24), step)
+
+
+def learn_21_masters() -> CadNode:
+    """21 · Masters — define a part once, place it many times. The
+    "Widget" lives in the Masters tab; three Linked copies sit in the
+    scene. Edit the master and every copy updates. (See the Masters tab
+    and the Objects tree.)"""
+    widget = CadNode("union", "Widget")
+    widget.add(_cyl("Base", 12, 6, segments=32))
+    widget.add(_sphere("Knob", 7, z=12))
+    widget.add(_cyl("Stem", 3, 12, z=6, segments=16))
+    masters = CadNode("masters", "Masters")
+    masters.add(widget)
+    root = _root(masters)
+    for i, x in enumerate((-45.0, 0.0, 45.0)):
+        root.add(CadNode("reference", f"Copy {i + 1}",
+                         dict(ref="Widget", x=x, y=0.0, z=0.0,
+                              rx=0.0, ry=0.0, rz=i * 30.0)))
+    return root
+
+
 #: (menu label, category, builder) — grouped in the Examples menu.
 EXAMPLES = [
+    ("1 · Cube", "Learn", learn_01_cube),
+    ("2 · Three primitives", "Learn", learn_02_primitives),
+    ("3 · 2D shapes", "Learn", learn_03_2d_shapes),
+    ("4 · 3D text", "Learn", learn_04_text),
+    ("5 · Translate", "Learn", learn_05_translate),
+    ("6 · Rotate", "Learn", learn_06_rotate),
+    ("7 · Scale & mirror", "Learn", learn_07_scale_mirror),
+    ("8 · Linear extrude", "Learn", learn_08_linear_extrude),
+    ("9 · Rotate extrude (vase)", "Learn", learn_09_rotate_extrude),
+    ("10 · Union", "Learn", learn_10_union),
+    ("11 · Difference", "Learn", learn_11_difference),
+    ("12 · Intersection", "Learn", learn_12_intersection),
+    ("13 · Hull", "Learn", learn_13_hull),
+    ("14 · Round edges", "Learn", learn_14_rounded),
+    ("15 · For loop (row)", "Learn", learn_15_for_row),
+    ("16 · Polar array", "Learn", learn_16_polar),
+    ("17 · Nested for (grid)", "Learn", learn_17_grid),
+    ("18 · Variables", "Learn", learn_18_variables),
+    ("19 · If / else", "Learn", learn_19_if_else),
+    ("20 · While loop (spiral)", "Learn", learn_20_while),
+    ("21 · Masters", "Learn", learn_21_masters),
     ("Parametric box", "Mechanical", parametric_box),
     ("L-bracket with holes", "Mechanical", l_bracket),
     ("Bolt & nut through a plate", "Mechanical", bolt_and_nut),
