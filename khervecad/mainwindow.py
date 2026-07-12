@@ -302,8 +302,8 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         file_menu.addAction("&Import OpenSCAD...", self.import_scad,
                             "Ctrl+I")
-        file_menu.addAction("Import S&TL...", self.import_stl,
-                            "Ctrl+Shift+I")
+        file_menu.addAction("Import &Mesh (STL/OBJ/OFF/3MF)...",
+                            self.import_stl, "Ctrl+Shift+I")
         file_menu.addSeparator()
         file_menu.addAction("Export Open&SCAD...", self.export_scad,
                             "Ctrl+E")
@@ -851,17 +851,19 @@ class MainWindow(QMainWindow):
         start = str(Path(recent[0]).parent) if recent else ""
         path, _ = QFileDialog.getOpenFileName(
             self, "Open", start,
-            "All supported (*.kcad *.scad *.stl);;"
+            "All supported (*.kcad *.scad *.stl *.obj *.off *.3mf);;"
             "KherveCAD document (*.kcad);;OpenSCAD program (*.scad);;"
-            "STL mesh (*.stl)")
+            "Mesh (*.stl *.obj *.off *.3mf)")
         if not path:
             return
         self.open_any(path)
 
     def open_any(self, path):
         """Open or import a file by extension — .kcad opens, .scad
-        imports (as objects, or a raw block), .stl imports a mesh. Used
-        by File > Open and by drag-and-drop."""
+        imports (as objects, or a raw block), and mesh files
+        (.stl/.obj/.off/.3mf) import as a mesh. Used by File > Open and
+        by drag-and-drop."""
+        from .engine import MESH_EXTS
         ext = Path(path).suffix.lower()
         if ext == ".kcad":
             self._open_path(path)
@@ -869,16 +871,16 @@ class MainWindow(QMainWindow):
             if not self._confirm_discard():
                 return
             self._import_scad_path(path)
-        elif ext == ".stl":
-            self._import_stl_path(path)
+        elif ext in MESH_EXTS:
+            self._import_mesh_path(path)
         else:
             QMessageBox.warning(
                 self, APP_NAME,
-                f"KherveCAD can open .kcad, .scad and .stl files "
-                f"— not {ext or 'this type'}.")
+                f"KherveCAD can open .kcad, .scad and mesh files "
+                f"(.stl/.obj/.off/.3mf) — not {ext or 'this type'}.")
 
     # ------------------------------------------------------ drag & drop
-    _DROP_EXTS = (".kcad", ".scad", ".stl")
+    _DROP_EXTS = (".kcad", ".scad", ".stl", ".obj", ".off", ".3mf")
 
     def _dropped_file(self, event):
         """The first supported local file in a file drag, or None."""
@@ -1164,13 +1166,33 @@ class MainWindow(QMainWindow):
 
     def import_stl(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Import STL", "", "STL mesh (*.stl)")
+            self, "Import mesh", "",
+            "Mesh (*.stl *.obj *.off *.3mf);;STL (*.stl);;"
+            "Wavefront OBJ (*.obj);;OFF (*.off);;3MF (*.3mf)")
         if not path:
             return
-        self._import_stl_path(path)
+        self._import_mesh_path(path)
 
-    def _import_stl_path(self, path):
-        node = self.model.add_node("stl_import", dict(path=path),
+    def _import_mesh_path(self, path):
+        # OpenSCAD's import() renders STL/OFF/3MF but not OBJ, so convert
+        # an OBJ to a sibling STL (from the same triangles the preview
+        # uses) and point the node at that, so the exact render works too.
+        use_path = path
+        if Path(path).suffix.lower() == ".obj":
+            from .engine import parse_mesh, write_stl
+            tris = parse_mesh(path)
+            if tris:
+                stl_path = Path(path).with_name(
+                    Path(path).stem + "_from_obj.stl")
+                try:
+                    write_stl(tris, str(stl_path), Path(path).stem)
+                    use_path = str(stl_path)
+                    self.statusBar().showMessage(
+                        f"Converted OBJ → {stl_path.name} for rendering",
+                        6000)
+                except OSError:
+                    pass                     # fall back to the .obj path
+        node = self.model.add_node("stl_import", dict(path=use_path),
                                    name=Path(path).stem)
         self.builder.tree.select_nodes([node])
         if not self.view3d.user_moved:

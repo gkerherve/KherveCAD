@@ -166,7 +166,8 @@ Linked copies); the Examples menu (Learn tutorials, Mechanical parts,
 Showcase); the Library menu of parametric parts (CF/KF flanges,
 fasteners, chemistry & room items); the Git menu (Commit Ctrl+K, Push,
 Pull) for the current .kcad's folder; F5 to render with OpenSCAD;
-opening/importing .kcad/.scad/.stl via File > Open or drag-and-drop;
+opening/importing .kcad/.scad and meshes (.stl/.obj/.off/.3mf) via
+File > Open or drag-and-drop;
 and File > New Window for a second document.
 """
 

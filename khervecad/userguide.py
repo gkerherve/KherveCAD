@@ -162,7 +162,8 @@ common actions.</p>
 every node, parameter, colour and visibility flag.</li>
 <li><b>Export</b> to <b>.scad</b> (OpenSCAD) or <b>.stl</b>; <b>import</b>
 a <b>.scad</b> file back in (the export &rarr; import round-trip is
-lossless).</li>
+lossless), or a mesh (<b>.stl / .obj / .off / .3mf</b>) &mdash; drag any
+of these onto the window or use File &rsaquo; Open.</li>
 <li><b>Undo / Redo</b> ({_kbd("Ctrl+Z")} / {_kbd("Ctrl+Shift+Z")}) covers
 every edit as whole-document snapshots, so drags and spinbox scrubs stay a
 single step.</li>

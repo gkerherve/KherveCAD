@@ -307,10 +307,15 @@ instances. Ctrl+Up/Down reorders within the parent; arrow keys walk
 the tree.
 
 **Opening files**: `MainWindow.open_any(path)` routes by extension —
-`.kcad` opens, `.scad` imports (as objects or a raw block), `.stl`
-imports a mesh. File > Open offers all three; **dragging** a file onto
-the window (or the Objects tree, which forwards it) opens/imports it;
-imported files land in Open Recent.
+`.kcad` opens, `.scad` imports (as objects or a raw block), and a mesh
+(`.stl`/`.obj`/`.off`/`.3mf`, `engine.MESH_EXTS`) imports as an
+`stl_import` node. `engine.parse_mesh()` dispatches by extension to STL
+(binary/ASCII), OBJ, OFF and 3MF (zip+XML) parsers for the built-in
+preview; the OpenSCAD engine's `import()` renders STL/OFF/3MF directly,
+while **OBJ is converted to a sibling `<stem>_from_obj.stl`** on import
+(OpenSCAD can't read OBJ) so the exact render works too. File > Open and
+**dragging** a file onto the window (or the Objects tree, which forwards
+it) open/import it; imported files land in Open Recent.
 
 **Render pipeline**: any model change re-tessellates instantly
 (built-in preview) and schedules a debounced exact OpenSCAD render

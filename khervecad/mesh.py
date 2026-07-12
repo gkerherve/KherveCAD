@@ -454,16 +454,17 @@ def cylinder_mesh(p):
 
 
 def stl_mesh(p):
-    """Triangles of an imported STL, cached by path + mtime."""
+    """Triangles of an imported mesh (STL/OBJ/OFF/3MF), cached by path
+    + mtime."""
     path = str(p.get("path", "")).strip()
     if not path or not Path(path).exists():
         return []
     try:
         key = (path, Path(path).stat().st_mtime)
         if key not in _stl_cache:
-            from .engine import parse_stl
+            from .engine import parse_mesh
             _stl_cache.clear()               # keep only the latest
-            _stl_cache[key] = parse_stl(path)
+            _stl_cache[key] = parse_mesh(path)
         mesh = _stl_cache[key]
     except Exception:
         return []

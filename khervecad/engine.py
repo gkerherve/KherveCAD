@@ -20,6 +20,8 @@ import os
 import shutil
 import struct
 import tempfile
+import xml.etree.ElementTree as ET
+import zipfile
 from pathlib import Path
 
 from PyQt5.QtCore import QObject, QProcess, QSettings, QTimer, pyqtSignal
@@ -98,6 +100,109 @@ def _parse_ascii(text: str):
                 mesh.append(tuple(vertices))
                 vertices = []
     return mesh
+
+
+def _parse_obj(text):
+    """Wavefront OBJ -> triangle list (v vertices + f faces, triangulated
+    by fan; vt/vn slashes and negative indices handled)."""
+    verts, mesh = [], []
+    for line in text.splitlines():
+        parts = line.split()
+        if not parts:
+            continue
+        if parts[0] == "v" and len(parts) >= 4:
+            verts.append((float(parts[1]), float(parts[2]),
+                          float(parts[3])))
+        elif parts[0] == "f" and len(parts) >= 4:
+            idx = []
+            for tok in parts[1:]:
+                n = int(tok.split("/")[0])
+                idx.append(n - 1 if n > 0 else len(verts) + n)
+            for j in range(1, len(idx) - 1):
+                try:
+                    mesh.append((verts[idx[0]], verts[idx[j]],
+                                 verts[idx[j + 1]]))
+                except IndexError:
+                    pass
+    return mesh
+
+
+def _parse_off(text):
+    """Object File Format (OFF) -> triangle list. Faces of any vertex
+    count are fan-triangulated; a leading OFF/COFF/NOFF header and #
+    comments are tolerated."""
+    tokens = []
+    for line in text.splitlines():
+        tokens.extend(line.split("#", 1)[0].split())
+    if not tokens:
+        return []
+    i = 1 if tokens[0].upper().endswith("OFF") else 0
+    mesh = []
+    try:
+        nv, nf = int(tokens[i]), int(tokens[i + 1])
+        i += 3                                    # skip the edge count
+        verts = []
+        for _ in range(nv):
+            verts.append((float(tokens[i]), float(tokens[i + 1]),
+                          float(tokens[i + 2])))
+            i += 3
+        for _ in range(nf):
+            cnt = int(tokens[i])
+            i += 1
+            face = [int(tokens[i + j]) for j in range(cnt)]
+            i += cnt
+            for j in range(1, cnt - 1):
+                mesh.append((verts[face[0]], verts[face[j]],
+                             verts[face[j + 1]]))
+    except (IndexError, ValueError):
+        pass
+    return mesh
+
+
+def _parse_3mf(path: str):
+    """3MF (a zip of XML) -> triangle list. Reads every mesh's vertices
+    and triangles; build-item transforms are ignored (the OpenSCAD engine
+    applies them for the exact render)."""
+    with zipfile.ZipFile(path) as archive:
+        names = archive.namelist()
+        model = "3D/3dmodel.model"
+        if model not in names:
+            model = next((n for n in names
+                          if n.lower().endswith(".model")), None)
+            if model is None:
+                return []
+        root = ET.fromstring(archive.read(model))
+    for element in root.iter():                   # drop XML namespaces
+        element.tag = element.tag.split("}")[-1]
+    mesh = []
+    for block in root.iter("mesh"):
+        verts = [(float(v.get("x")), float(v.get("y")), float(v.get("z")))
+                 for v in block.iter("vertex")]
+        for tri in block.iter("triangle"):
+            try:
+                mesh.append((verts[int(tri.get("v1"))],
+                             verts[int(tri.get("v2"))],
+                             verts[int(tri.get("v3"))]))
+            except (IndexError, TypeError, ValueError):
+                pass
+    return mesh
+
+
+#: Mesh formats KherveCAD can preview in the built-in viewer (the
+#: OpenSCAD engine's import() renders them all for the exact mesh).
+MESH_EXTS = (".stl", ".obj", ".off", ".3mf")
+
+
+def parse_mesh(path: str):
+    """Parse any supported mesh file into a triangle list, by extension."""
+    ext = Path(path).suffix.lower()
+    if ext == ".obj":
+        return _parse_obj(Path(path).read_text(errors="replace"))
+    if ext == ".off":
+        return _parse_off(Path(path).read_text(errors="replace"))
+    if ext == ".3mf":
+        return _parse_3mf(path)
+    return parse_stl(path)
 
 
 def write_stl(mesh, path: str, name: str = "khervecad"):

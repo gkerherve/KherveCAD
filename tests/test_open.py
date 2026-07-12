@@ -68,6 +68,59 @@ def test_open_any_imports_stl_as_node(window, tmp_path):
     assert stl[0].params["path"] == str(p)
 
 
+_OBJ = "v 0 0 0\nv 10 0 0\nv 0 20 0\nf 1 2 3\n"
+_OFF = "OFF\n3 1 0\n0 0 0\n10 0 0\n0 20 0\n3 0 1 2\n"
+
+
+def _write_3mf(path):
+    import zipfile
+    model = (
+        '<?xml version="1.0"?>'
+        '<model xmlns="http://schemas.microsoft.com/3dmanufacturing/'
+        'core/2015/02"><resources><object id="1" type="model"><mesh>'
+        '<vertices><vertex x="0" y="0" z="0"/><vertex x="10" y="0" z="0"/>'
+        '<vertex x="0" y="20" z="0"/></vertices>'
+        '<triangles><triangle v1="0" v2="1" v3="2"/></triangles>'
+        '</mesh></object></resources><build><item objectid="1"/></build>'
+        '</model>')
+    with zipfile.ZipFile(path, "w") as z:
+        z.writestr("3D/3dmodel.model", model)
+
+
+def test_parse_mesh_reads_obj_off_3mf(tmp_path):
+    from khervecad import engine
+    (tmp_path / "t.obj").write_text(_OBJ, encoding="utf-8")
+    (tmp_path / "t.off").write_text(_OFF, encoding="utf-8")
+    _write_3mf(tmp_path / "t.3mf")
+    for name in ("t.obj", "t.off", "t.3mf"):
+        tris = engine.parse_mesh(str(tmp_path / name))
+        assert len(tris) == 1, name
+        assert set(tris[0]) == {(0, 0, 0), (10, 0, 0), (0, 20, 0)}, name
+
+
+def test_open_any_imports_off_and_3mf(window, tmp_path):
+    (tmp_path / "m.off").write_text(_OFF, encoding="utf-8")
+    _write_3mf(tmp_path / "m.3mf")
+    for name in ("m.off", "m.3mf"):
+        window.model.clear()
+        window.open_any(str(tmp_path / name))
+        nodes = [n for n in window.model.root.walk()
+                 if n.type == "stl_import"]
+        assert len(nodes) == 1, name
+        assert nodes[0].params["path"] == str(tmp_path / name)
+
+
+def test_obj_import_converts_to_sibling_stl(window, tmp_path):
+    """OBJ isn't renderable by OpenSCAD, so it is converted to an STL the
+    engine can render, and the node points at that STL."""
+    (tmp_path / "part.obj").write_text(_OBJ, encoding="utf-8")
+    window.open_any(str(tmp_path / "part.obj"))
+    node = next(n for n in window.model.root.walk()
+                if n.type == "stl_import")
+    assert node.params["path"].endswith("part_from_obj.stl")
+    assert (tmp_path / "part_from_obj.stl").exists()
+
+
 def test_dropping_a_file_opens_it(window, tmp_path):
     p = tmp_path / "plate.scad"
     p.write_text("cube([10, 10, 10]);\n", encoding="utf-8")
