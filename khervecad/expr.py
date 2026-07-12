@@ -123,6 +123,24 @@ def _eval(node, env):
     if isinstance(node, ast.IfExp):
         return _eval(node.body, env) if _eval(node.test, env) \
             else _eval(node.orelse, env)
+    if isinstance(node, (ast.List, ast.Tuple)):
+        return [_eval(e, env) for e in node.elts]
+    if isinstance(node, ast.Attribute):
+        # OpenSCAD vector swizzle: v.x / v.y / v.z -> v[0] / v[1] / v[2]
+        target = _eval(node.value, env)
+        idx = {"x": 0, "y": 1, "z": 2}.get(node.attr)
+        if idx is None or not isinstance(target, (list, tuple)) \
+                or idx >= len(target):
+            raise ExprError(f"bad vector accessor .{node.attr}")
+        return target[idx]
+    if isinstance(node, ast.Subscript):
+        target = _eval(node.value, env)
+        index = node.slice.value if isinstance(node.slice, ast.Index) \
+            else node.slice                 # py3.9+: slice is the expr
+        try:
+            return target[int(_eval(index, env))]
+        except (TypeError, IndexError, ValueError) as exc:
+            raise ExprError(f"bad index into {target!r}") from exc
     if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
         func = FUNCTIONS.get(node.func.id)
         if func is None:

@@ -203,3 +203,27 @@ def test_full_roundtrip_export_import_export(model, tmp_path):
 def _body(code):
     return "\n".join(line for line in code.splitlines()
                      if not line.startswith("//")).strip()
+
+
+def test_vector_variable_and_accessors(app):
+    """A vector variable used via .x/.y/.z and [i] evaluates."""
+    from khervecad import expr
+    env = {"plate": [100, 50, 5]}
+    assert expr.evaluate("plate.x", env) == 100
+    assert expr.evaluate("plate.y", env) == 50
+    assert expr.evaluate("plate.z", env) == 5
+    assert expr.evaluate("plate[1]", env) == 50
+    assert expr.evaluate("plate.x - 2 * 4", env) == 92
+    assert expr.evaluate("[1, 2, 3]") == [1, 2, 3]
+
+
+def test_import_scad_with_dot_accessor(app):
+    """A basic file using `plate.z` imports and renders."""
+    from khervecad import mesh
+    root, warnings = _parse(
+        "plate = [100, 50, 5];\n"
+        "cube(plate);\n"
+        "translate([0, 0, plate.z]) cylinder(h = 10, d = 6);\n")
+    m = DocumentModel()
+    m.root = root
+    assert len(mesh.tessellate(m.root, fn=m.effective_fn())) > 0
