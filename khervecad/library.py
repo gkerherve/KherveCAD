@@ -691,25 +691,25 @@ def _plain_flange(od, thickness, bore, bolts, bolt_circle, bolt_hole,
 def _entrance_lens(R, mount, name="Entrance lens") -> CadNode:
     """The electron transfer lens, built along local +Z from the
     analyser end (z = 0, a bolted flange) out to the tapered entrance
-    nozzle at the sample end — a long, stepped column."""
+    nozzle at the sample end — a long, slim, stepped column."""
     g = CadNode("union", name)
     z = 0.0
-    lf_od = mount["flange_od"] * 0.55
+    lf_od = R * 0.34
     lf_t = R * 0.06
-    g.add(_plain_flange(lf_od, lf_t, R * 0.22, 8, lf_od * 0.82,
+    g.add(_plain_flange(lf_od, lf_t, R * 0.18, 8, lf_od * 0.82,
                         mount["bolt_hole"], z, "Lens flange"))
     z += lf_t
     neck = R * 0.14
-    g.add(_cyl("Lens neck", R * 0.22, neck, z=z))
+    g.add(_cyl("Lens neck", R * 0.15, neck, z=z))
     z += neck
-    for i, (rf, hf) in enumerate([(0.16, 0.34), (0.12, 0.34)]):
+    for i, (rf, hf) in enumerate([(0.13, 0.36), (0.10, 0.36)]):
         h = R * hf
         g.add(_cyl(f"Lens tube {i + 1}", R * rf, h, z=z))
         z += h
-    cone = R * 0.26
+    cone = R * 0.28
     g.add(CadNode("cylinder", "Entrance nozzle", dict(
         x=0.0, y=0.0, z=z, height=cone,
-        radius_bottom=R * 0.12, radius_top=R * 0.035,
+        radius_bottom=R * 0.10, radius_top=R * 0.03,
         segments=48, center=False)))
     return g
 
@@ -720,18 +720,18 @@ def _detector(R, mount, name="Detector") -> CadNode:
     an end cap: the counterpart on the opposite side to the lens."""
     g = CadNode("union", name)
     z = 0.0
-    df_od = mount["flange_od"] * 0.50
+    df_od = R * 0.36
     df_t = R * 0.06
-    g.add(_plain_flange(df_od, df_t, R * 0.20, 8, df_od * 0.82,
+    g.add(_plain_flange(df_od, df_t, R * 0.16, 8, df_od * 0.82,
                         mount["bolt_hole"], z, "Detector flange"))
     z += df_t
-    hz = R * 0.42
-    g.add(_cyl("MCP housing", R * 0.24, hz, z=z))
+    hz = R * 0.40
+    g.add(_cyl("MCP housing", R * 0.19, hz, z=z))
     z += hz
     cz = R * 0.16
-    g.add(_cyl("Connector", R * 0.12, cz, z=z))
+    g.add(_cyl("Connector", R * 0.10, cz, z=z))
     z += cz
-    g.add(_cyl("End cap", R * 0.15, R * 0.05, z=z))
+    g.add(_cyl("End cap", R * 0.13, R * 0.05, z=z))
     return g
 
 
@@ -786,37 +786,25 @@ def hemispherical_analyser(r_out=150.0, r_in=75.0,
                  z=R - wall + R * 0.18))
     part.add(top)
 
-    # --- entrance lens: angled off ONE side of the base --------------
+    # --- entrance lens: straight DOWN (-Z), offset to +X -------------
+    # (rotate 180° about X flips the local +Z column to point down)
+    offset = R * 0.38
     lens_pos = CadNode("translate", "Lens mount",
-                       dict(x=R * 0.12, y=0.0, z=-plate_t))
-    lens_tilt = CadNode("rotate", "Lens angle", dict(x=0.0, y=135.0,
+                       dict(x=offset, y=0.0, z=-plate_t))
+    lens_down = CadNode("rotate", "Point down", dict(x=180.0, y=0.0,
                                                      z=0.0))
-    lens_tilt.add(_entrance_lens(R, mount))
-    lens_pos.add(lens_tilt)
+    lens_down.add(_entrance_lens(R, mount))
+    lens_pos.add(lens_down)
     part.add(lens_pos)
 
-    # --- detector: angled off the OPPOSITE side ----------------------
+    # --- detector: straight DOWN on the OPPOSITE side (-X) -----------
     det_pos = CadNode("translate", "Detector mount",
-                      dict(x=-R * 0.12, y=0.0, z=-plate_t))
-    det_tilt = CadNode("rotate", "Detector angle", dict(x=0.0, y=225.0,
-                                                        z=0.0))
-    det_tilt.add(_detector(R, mount))
-    det_pos.add(det_tilt)
+                      dict(x=-offset, y=0.0, z=-plate_t))
+    det_down = CadNode("rotate", "Point down", dict(x=180.0, y=0.0,
+                                                    z=0.0))
+    det_down.add(_detector(R, mount))
+    det_pos.add(det_down)
     part.add(det_pos)
-
-    # --- a small pumping port on the base, between the two -----------
-    pump_pos = CadNode("translate", "Pump port",
-                       dict(x=0.0, y=R * 0.5, z=-plate_t))
-    pump_tilt = CadNode("rotate", "Pump angle", dict(x=135.0, y=0.0,
-                                                     z=0.0))
-    pump_tilt.add(_cyl("Pump tube", R * 0.11, R * 0.40))
-    pcap = CadNode("translate", "Pump flange pos",
-                   dict(x=0.0, y=0.0, z=R * 0.40))
-    pcap.add(_plain_flange(R * 0.32, R * 0.05, R * 0.16, 6, R * 0.25,
-                           mount["bolt_hole"] * 0.8, 0.0, "Pump flange"))
-    pump_tilt.add(pcap)
-    pump_pos.add(pump_tilt)
-    part.add(pump_pos)
 
     return part
 
