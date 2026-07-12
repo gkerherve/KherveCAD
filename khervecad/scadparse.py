@@ -769,10 +769,51 @@ def _is_zero(value):
 
 # ------------------------------------------------------------- API
 
+#: Leaf node types that actually emit geometry. A container built only
+#: from other things (assignments, empty operations) produces nothing.
+_GEOMETRY_LEAVES = {
+    "cube", "sphere", "cylinder", "stl_import", "circle", "rect",
+    "polygon", "text", "line", "scad_raw", "reference",
+}
+#: Container/operation types that are meaningless when they wrap no
+#: geometry — pruned on import so a skipped ``children()`` does not leave
+#: an empty red node behind.
+_PRUNE_WHEN_DEAD = {
+    "translate", "rotate", "scale", "mirror", "offset", "color",
+    "linear_extrude", "rotate_extrude", "projection",
+    "union", "difference", "intersection", "hull", "minkowski",
+    "if_else",
+}
+
+
+def _has_geometry(node) -> bool:
+    if node.type in _GEOMETRY_LEAVES:
+        return True
+    return any(_has_geometry(child) for child in node.children)
+
+
+def _prune_dead(root) -> None:
+    """Drop operation/boolean nodes that end up wrapping no geometry —
+    e.g. a module whose body was a bare ``children()`` we could not
+    inline. Cascades bottom-up so a whole dead branch disappears rather
+    than surfacing as empty red nodes."""
+    changed = True
+    while changed:
+        changed = False
+        for node in list(root.walk()):
+            parent = node.parent
+            if parent is None or node.type not in _PRUNE_WHEN_DEAD:
+                continue
+            if not _has_geometry(node):
+                parent.remove(node)
+                changed = True
+
+
 def parse_scad(text: str):
     """Parse *text* into (root CadNode, warnings list)."""
     parser = Parser(text)
     root = parser.parse_program()
+    _prune_dead(root)
     return root, parser.warnings
 
 

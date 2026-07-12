@@ -285,6 +285,23 @@ def test_logical_operators_evaluate():
     assert expr.evaluate("!(1 > 2) && 3 != 4") is True
 
 
+def test_dead_children_operation_is_pruned_not_red(app):
+    """A module whose body is a bare children() leaves an empty operation
+    behind; the importer prunes it instead of surfacing an empty red node,
+    while real geometry beside it survives."""
+    from khervecad import model
+    root, warns = _parse("""
+        module frame() { projection(cut = true) children(); }
+        if (false) { frame(); }
+        cube([10, 10, 10]);
+    """)
+    types = [n.type for n in root.walk()]
+    assert "cube" in types                         # real geometry kept
+    assert "projection" not in types               # dead op pruned
+    assert "if_else" not in types                  # empty branch pruned
+    assert model.validate(root) == {}              # nothing painted red
+
+
 def test_imported_if_with_or_condition_validates(app):
     """An `if` whose condition uses `||` must not be flagged red."""
     from khervecad import model
