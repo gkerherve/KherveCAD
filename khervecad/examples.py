@@ -763,118 +763,233 @@ def learn_21_masters() -> CadNode:
 
 def project_02_wall_anchor() -> CadNode:
     """Ch.2 · Wall anchor — a tapered plug for a drilled hole. Teaches
-    linear_extrude with a scale taper, a difference for the screw cavity,
-    and a for loop that cuts the two expansion slits."""
-    length, outer = 40.0, 10.0
+    linear_extrude with a scale taper, a difference for the tapered screw
+    cavity, a for loop for the two expansion slits above a short collar,
+    and nested for loops that stamp ratchet-tooth barbs down all four
+    sides."""
     section = CadNode("rect", "Section",
-                      dict(x=-outer / 2, y=-outer / 2,
-                           width=outer, height=outer))
-    body = _ext("Tapered post", length, section, scale=0.72)
-    cavity = _cyl("Screw cavity", 2.6, length + 2, z=-1, r2=1.0,
-                  segments=24)
-    slit = _rot(_cube("Slit", outer + 2, 1.4, length * 0.72,
-                      x=-(outer + 2) / 2, y=-0.7, z=length * 0.2),
+                      dict(x=-5.5, y=-5.5, width=11, height=11))
+    body = _ext("Tapered body", 50, section, scale=0.72)
+    cavity = _cyl("Screw cavity", 3.0, 52, z=-1, r2=1.2, segments=24)
+    slit = _rot(_cube("Slit", 13, 1.6, 34, x=-6.5, y=-0.8, z=6),
                 z="i * 90")
+    slits = _for("Slits", "i", 0, 1, 1, slit)
+
+    tooth = _place(_rot(_rot(_cube("Tooth", 3.2, 3.2, 3.2, center=True),
+                             y=15),
+                        z=45),
+                   x=5.0, z="i * 7")
+    column = _for("Tooth column", "i", 1, 6, 1, tooth)
+    side = _rot(column, z="j * 90")
+    teeth = _for("Teeth sides", "j", 0, 3, 1, side)
+
     anchor = CadNode("difference", "Wall anchor")
     anchor.add(body)
     anchor.add(cavity)
-    anchor.add(_for("Slits", "i", 0, 1, 1, slit))
+    anchor.add(slits)
+    anchor.add(teeth)
     return _root(_color("Anchor", "#c9b28a", anchor))
 
 
 def project_03_window_stopper() -> CadNode:
-    """Ch.3 · Window stopper — a wedge case with a lever on an axle.
-    Teaches a nested difference (the axle bore), a hull-shaped lever and a
-    rotate that sets the lever angle."""
-    case = CadNode("difference", "Case")
-    case.add(_cube("Body", 30, 40, 40, x=-15, y=-20))
-    case.add(_cube("Frame slot", 34, 18, 34, x=-17, y=-9, z=8))
-    case.add(_rot(_cyl("Axle bore", 5.5, 44, z=-22, segments=36), x=90))
-    case = _color("Case", "#b8b0a0", case)
+    """Ch.3 · Window stopper — a wedge case with a rotating cam and lever.
+    Teaches a nested difference (frame slot + axle bore), an Archimedean
+    spiral cam wedge built from a polygon, a hull-shaped lever and the
+    rotates that set the cam/lever angle around the shared axle."""
+    # -- CASE: body with the window-frame slot and the axle bore removed
+    case_diff = CadNode("difference", "Case")
+    case_diff.add(_cube("Body", 30, 28, 27, x=-15, y=-14))
+    case_diff.add(_cube("Frame slot", 34, 18, 22, x=-17, y=-9, z=7))
+    case_diff.add(_place(
+        _rot(_cyl("Axle bore", 5.25, 32, z=-16, segments=36), x=90),
+        z=18))
+    case = _color("Case", "#b8b0a0", case_diff)
 
-    axle = _color("Axle", "#7c7c7c",
-                  _place(_rot(_cyl("Axle", 5, 44, segments=36), x=90),
-                         z=28, y=22))
+    # -- AXLE: the pivot rod running through the bore, along Y
+    axle = _color("Axle", "#7c7c7c", _place(
+        _rot(_cyl("Axle", 5, 32, z=-16, segments=36), x=90), z=18))
+
+    # -- STOPPER: cam wedge + lever, both centred on the axle, rotating
+    # together to push the window frame out as the lever is turned.
+    cam_points = [
+        [round(math.cos(math.radians(a)) * (0.5 + 11.0 * a / 360.0), 2),
+         round(math.sin(math.radians(a)) * (0.5 + 11.0 * a / 360.0), 2)]
+        for a in range(0, 361, 10)]
+    cam_poly = CadNode("polygon", "Cam", dict(x=0, y=0, points=cam_points))
+    cam = _ext("Cam wedge", 15, cam_poly)
+    cam = _rot(cam, z=42)          # spiral's start orientation
+    cam = _rot(cam, x=90)          # stand the extrusion up along Y
+    cam = _place(cam, y=7.5, z=18)
 
     lever_2d = CadNode("hull", "Lever arm")
     lever_2d.add(CadNode("circle", "Pivot",
-                         dict(x=0, y=0, radius=6, segments=36,
+                         dict(x=0, y=0, radius=5, segments=36,
                               angle=360.0, start_angle=0.0)))
     lever_2d.add(CadNode("circle", "Grip",
-                         dict(x=40, y=0, radius=4, segments=36,
+                         dict(x=40, y=0, radius=3.3, segments=36,
                               angle=360.0, start_angle=0.0)))
-    lever = _rot(_ext("Lever", 8, lever_2d), x=90)     # lay it flat in Y
-    lever = _rot(lever, y=-28)                         # swing it up
-    lever = _color("Lever", "#d98a3f", _place(lever, z=28, y=4))
-    return _root(case, axle, lever)
+    lever = _ext("Lever", 15, lever_2d)
+    lever = _rot(lever, x=90)      # stand the extrusion up along Y
+    lever = _rot(lever, y=-25)     # tilt the handle up
+    lever = _place(lever, y=7.5, z=18)
+
+    stopper_asm = CadNode("union", "Stopper")
+    stopper_asm.add(cam)
+    stopper_asm.add(lever)
+    stopper_asm = _rot(stopper_asm, y=-60)   # spin on the axle: lever out
+    stopper = _color("Stopper", "#d98a3f", stopper_asm)
+
+    return _root(case, axle, stopper)
 
 
 def project_04_clock_movement() -> CadNode:
-    """Ch.4 · Clock movement mock-up — a quartz movement with the hands
-    set to a time. Teaches naming dimensions and colouring each part; the
-    three hands are bars rotated by the hour/minute/second angles."""
+    """Ch.4 · Clock movement mock-up — named dimensions, coloured parts,
+    long hands rotated to a time."""
     body = _color("Body", "#6e6e6e", _cube("Case", 56, 56, 20,
                                            x=-28, y=-28, z=-20))
+    disc = _color("Alignment", "#4a4a4a", _cyl("Disc", 7, 1, segments=36))
     terminal = _color("Terminal", "#d4af37",
                       _cyl("Screw terminal", 3.9, 5, segments=36))
+
     axles = CadNode("union", "Axles")
     axles.add(_cyl("Hour axle", 2.55, 8.3, segments=36))
     axles.add(_cyl("Minute axle", 1.6, 12.1, segments=36))
     axles.add(_cyl("Second axle", 0.5, 14.5, segments=24))
     axles = _color("Axles", "#202020", axles)
 
-    def hand(name, col, length, width, z, angle):
-        bar = _cube(name, width, length, 0.8, x=-width / 2, y=0, z=0)
-        return _color(name, col, _rot(_place(bar, z=z), z=angle))
+    def hand(name, col, z, angle, parts):
+        u = CadNode("union", name)
+        for p in parts:
+            u.add(p)
+        return _color(name, col, _rot(_place(u, z=z), z=angle))
 
-    hour = hand("Hour hand", "#111111", 18, 4.0, 8.3,
-                -360 * (10 + 9 / 60) / 12)
-    minute = hand("Minute hand", "#111111", 25, 2.5, 12.1,
-                  -360 * 9 / 60)
-    second = hand("Second hand", "#c0332b", 27, 1.2, 14.5,
-                  -360 * 30 / 60)
-    return _root(body, terminal, axles, hour, minute, second)
+    time_h, time_m, time_s = 10, 9, 36
+    hour_angle = -360 * (time_h + time_m / 60) / 12
+    minute_angle = -360 * time_m / 60
+    second_angle = -360 * time_s / 60
+
+    hour = hand("Hour hand", "#111111", 7.3, hour_angle, [
+        _cyl("Hub", 4.75, 0.4, segments=36),
+        _cube("Bar", 5, 67.6, 0.4, x=-2.5),
+    ])
+    minute = hand("Minute hand", "#111111", 11.1, minute_angle, [
+        _cyl("Hub", 4.5, 0.4, segments=36),
+        _cube("Bar", 4, 96, 0.4, x=-2),
+    ])
+    second = hand("Second hand", "#c0332b", 14.4, second_angle, [
+        _cyl("Hub", 3.55, 0.4, segments=36),
+        _cube("Bar", 1.25, 95, 0.4, x=-0.625),
+        _cube("Tail", 4.6, 24, 0.4, x=-2.3, y=-24),
+    ])
+
+    return _root(body, disc, terminal, axles, hour, minute, second)
 
 
 def project_05_pen_holder() -> CadNode:
-    """Ch.5 · Pen holder — a ring of arches around a cup. Teaches partial
-    rotate_extrude (each arch is a half-torus stood upright) placed by a
-    polar for loop, the way the gothic pen holder is built."""
-    cup = CadNode("rotate_extrude", "Cup", dict(angle=360, segments=72))
-    cup.add(CadNode("polygon", "Cup wall", dict(
-        x=0, y=0, points=[[16, 0], [19, 0], [19, 80], [16, 80]])))
+    """Ch.5 · Pen holder — six pointed gothic arches ringed around a
+    centre tube. Teaches partial rotate_extrude arches (a swept arc that
+    peaks to a point) placed by a polar for loop around a hexagon."""
+    arch_width = 60.0
+    arch_base = 5.0
+    pillar_height = 75.0
+    arch_angle = 50.0
+    hexagonal_height = arch_width / (2 * math.tan(math.radians(30.0)))
+
+    # centre tube
+    cup = CadNode("difference", "Cup")
+    cup.add(_cyl("Outer", 25.0, 100.0, segments=72))
+    cup.add(_cyl("Bore", 23.0, 100.0, z=1.0, segments=72))
     cup = _color("Cup", "#b0894f", cup)
 
-    def arch():
-        prof = CadNode("circle", "Bar", dict(x=15, y=0, radius=2.2,
-                                             segments=20, angle=360.0,
-                                             start_angle=0.0))
-        rev = CadNode("rotate_extrude", "Arch",
-                      dict(angle=180, segments=64))
-        rev.add(prof)
-        return _rot(rev, x=-90)                # stand the half-torus up
+    # a pointed gothic arch = two mirrored partial-torus arcs that meet
+    # at a peak directly above the pillar tops
+    arch_radius = arch_width / (2 - 2 * math.cos(math.radians(arch_angle)))
+    x_offset = -arch_radius * math.cos(math.radians(arch_angle))
 
-    piece = _rot(_color("Arch", "#b0894f", _place(arch(), y=24)),
-                 z="i * 60")
-    return _root(cup, _for("Arch ring", "i", 0, 5, 1, piece))
+    def one_arc() -> CadNode:
+        prof = CadNode("circle", "Bar", dict(
+            x=arch_radius, y=0.0, radius=2.5, segments=16,
+            angle=360.0, start_angle=0.0))
+        arc = CadNode("rotate_extrude", "Arc",
+                      dict(angle=arch_angle, segments=64))
+        arc.add(prof)
+        return _place(_rot(arc, x=90.0), x=x_offset, z=pillar_height)
+
+    def gothic_arch() -> CadNode:
+        panel = CadNode("union", "Arch")
+        panel.add(one_arc())
+        mirrored = CadNode("mirror", "Mirror", dict(x=1.0, y=0.0, z=0.0))
+        mirrored.add(one_arc())
+        panel.add(mirrored)
+        return panel
+
+    def panel_unit() -> CadNode:
+        unit = CadNode("union", "Panel")
+        unit.add(_cube("Pillar L", arch_base, arch_base, pillar_height,
+                       x=-arch_width / 2))
+        unit.add(_cube("Pillar R", arch_base, arch_base, pillar_height,
+                       x=arch_width / 2 - arch_base))
+        unit.add(gothic_arch())
+        unit.add(_cube("Base", arch_width, hexagonal_height, 2.0,
+                       x=-arch_width / 2, y=-hexagonal_height, z=0.0))
+        unit.add(_cube("Border", arch_width, 3.0, 6.0,
+                       x=-arch_width / 2, y=-1.5, z=0.0))
+        return _color("Panel", "#b0894f", unit)
+
+    arches = _for("Arch ring", "i", 0, 5, 1,
+                 _rot(_place(panel_unit(), y=hexagonal_height), z="i * 60"))
+    return _root(cup, arches)
 
 
 def project_06_stamp() -> CadNode:
-    """Ch.6 · Rubber stamp — mirrored text on a handled base. Teaches the
-    text object, mirror (so the imprint reads the right way round), linear
-    extrude and a coloured handle."""
-    plate = _color("Base", "#8a5a3a",
-                   _ext("Plate", 3, CadNode("rect", "Plate area",
-                        dict(x=-24, y=-11, width=48, height=22))))
+    """Ch.6 · Rubber stamp — mirrored relief, a tapered body and a handle.
+    Teaches text + offset-rounded plates, a hull taper between two
+    profiles, a rotate_extrude neck and a spherical grip."""
+
+    def rounded_plate(name, x, y, width, height, radius):
+        rect = CadNode("rect", "Plate area",
+                       dict(x=x, y=y, width=width, height=height))
+        off = CadNode("offset", name, dict(radius=radius, chamfer=False))
+        off.add(rect)
+        return off
+
+    # ----- relief: mirrored raised text on a rounded base plate -----
+    base = _ext("Base", 3, rounded_plate("Rounded", -24, -9, 48, 18, 5))
     txt = CadNode("text", "Text", dict(x=-15, y=-6, text="OPEN", size=12))
-    relief = CadNode("mirror", "Mirror (reads right when stamped)",
+    letters = _place(_ext("Text", 2, txt), z=3)
+    relief_union = CadNode("union", "Relief")
+    relief_union.add(base)
+    relief_union.add(letters)
+    mirror = CadNode("mirror", "Reads right when stamped",
                      dict(x=1, y=0, z=0))
-    relief.add(_place(_ext("Letters", 2, txt), z=3))
-    relief = _color("Letters", "#c8783c", relief)
-    stem = _color("Handle", "#5a3a24",
-                  _cyl("Stem", 6, 22, z=3, segments=36))
-    knob = _color("Knob", "#5a3a24", _sphere("Knob", 11, z=32))
-    return _root(plate, relief, stem, knob)
+    mirror.add(relief_union)
+    relief = _color("Letters", "#c8783c", mirror)
+
+    # ----- body: hull between a wide base plate and a narrower top plate,
+    # producing a tapered stamp body -----
+    body_base = _place(
+        _ext("Body base", 0.5, rounded_plate("B", -24, -9, 48, 18, 4)), z=3)
+    body_top = _place(
+        _ext("Body top", 0.5, rounded_plate("T", -16, -6, 32, 12, 1)), z=33)
+    hull_node = CadNode("hull", "Stamp body")
+    hull_node.add(body_base)
+    hull_node.add(body_top)
+    body = _color("Body", "#8a5a3a", hull_node)
+
+    # ----- neck: an hourglass rotate_extrude profile -----
+    neck_profile = CadNode("polygon", "Neck profile",
+                           dict(x=0, y=0,
+                                points=[[8, 0], [6, 10], [8, 20],
+                                        [0, 20], [0, 0]]))
+    neck_rev = CadNode("rotate_extrude", "Neck", dict(angle=360,
+                                                       segments=48))
+    neck_rev.add(neck_profile)
+    neck = _color("Neck", "#5a3a24", _place(neck_rev, z=33))
+
+    # ----- knob: the round handle grip -----
+    knob = _color("Grip", "#5a3a24", _sphere("Knob", 12.5, z=55, seg=48))
+
+    return _root(relief, body, neck, knob)
 
 
 def _star_points(points, r_out, r_in):
@@ -927,21 +1042,25 @@ def project_08_recursive_tree() -> CadNode:
 
 
 def project_09_parabolic_reflector() -> CadNode:
-    """Ch.9 · Parabolic reflector — a dish whose depth follows z =
-    r²/(4f). Teaches building a rotate_extrude profile from a computed
-    curve, closed off with a wall thickness."""
-    focus, rim, wall, n = 40.0, 75.0, 3.0, 24
-    inner = [[round(rim * i / n, 2),
-              round((rim * i / n) ** 2 / (4 * focus), 2)]
-             for i in range(n + 1)]
-    outer = [[round(rim * i / n, 2),
-              round((rim * i / n) ** 2 / (4 * focus) - wall, 2)]
-             for i in range(n, -1, -1)]
-    prof = CadNode("polygon", "Dish profile",
+    """Ch.9 · Parabolic reflector — a square dish whose depth follows
+    z = 50 + r²/200. Teaches a rotate_extrude profile built from a
+    computed parabola curve, intersected with a square prism so the
+    round shell of revolution crops down to a square aperture."""
+    R, N, wall = 106.0, 24, 3.0
+    inner = [[round(R * i / N, 2),
+              round(50 + (R * i / N) ** 2 / 200, 2)]
+             for i in range(N + 1)]
+    outer = [[round(R * i / N, 2),
+              round(47 + (R * i / N) ** 2 / 200, 2)]
+             for i in range(N, -1, -1)]
+    prof = CadNode("polygon", "Shell profile",
                    dict(x=0, y=0, points=inner + outer))
-    dish = CadNode("rotate_extrude", "Reflector",
-                   dict(angle=360, segments=96))
-    dish.add(prof)
+    shell = CadNode("rotate_extrude", "Paraboloid shell",
+                    dict(angle=360, segments=120))
+    shell.add(prof)
+    dish = CadNode("intersection", "Square dish")
+    dish.add(shell)
+    dish.add(_cube("Square aperture", 150, 150, 120, x=-75, y=-75, z=40))
     return _root(_color("Reflector", "#9fb6c6", dish))
 
 
