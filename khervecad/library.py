@@ -1059,6 +1059,24 @@ def build_part(part_id: str, dims: dict) -> CadNode:
     raise ValueError(f"unknown part: {part_id}")
 
 
+def default_part(part_id: str) -> CadNode:
+    """Build a part at its default size — the same choice the dialog
+    pre-selects — for one-click insertion from the Library menu."""
+    spec = PARTS[part_id]
+    sizes = spec.get("sizes") or {}
+    dims, size_key = {}, ""
+    if sizes:
+        keys = list(sizes)
+        size_key = keys[1] if len(keys) > 1 else keys[0]
+        dims = dict(sizes[size_key])
+        dims["_size"] = size_key
+    node = build_part(part_id, dims)
+    label = size_key.split(" ")[0] if size_key else ""
+    if label and not node.name.startswith(label):
+        node.name = f"{label} {node.name}"
+    return node
+
+
 # ---------------------------------------------------------------- dialog
 
 class PartLibraryDialog(QDialog):

@@ -115,6 +115,8 @@ class MainWindow(QMainWindow):
 
         # ---- wiring
         self.builder.tree.selection_changed.connect(self._tree_selected)
+        self.builder.masters_tree.selection_changed.connect(
+            self._masters_selected)
         self.scene.selection_changed.connect(self._scene_selected)
         self.scene.node_created.connect(self._node_created)
         self.scene.plane_changed.connect(self._on_plane_auto_changed)
@@ -349,6 +351,9 @@ class MainWindow(QMainWindow):
                 icons.icon(spec["icon"]), spec["label"],
                 lambda _=False, t=control: self._add_primitive(t))
 
+        self._build_library_menu(m)
+        self._build_examples_menu(m)
+
         view_menu = m.addMenu("&View")
         chat_act = self._chat_dock.toggleViewAction()
         chat_act.setText("&Chat Assistant (KherveAI)")
@@ -424,6 +429,64 @@ class MainWindow(QMainWindow):
         help_menu.addAction("&User Guide", self._user_guide, "F1")
         help_menu.addSeparator()
         help_menu.addAction("&About", self._about)
+
+    def _build_library_menu(self, menubar):
+        """A Library menu that inserts a part at its default size in one
+        click — the same catalogue as the Part Library dialog, grouped by
+        category, without opening the dialog."""
+        from .library import PARTS
+        menu = menubar.addMenu("&Library")
+        menu.addAction(icons.icon("mdi.toy-brick-outline"),
+                       "Part Library (customise)...", self.open_library,
+                       "Ctrl+L")
+        menu.addSeparator()
+        submenus = {}
+        for part_id, spec in PARTS.items():
+            cat = spec.get("category", "Other")
+            sub = submenus.get(cat)
+            if sub is None:
+                sub = submenus[cat] = menu.addMenu(cat)
+            sub.addAction(
+                spec["label"],
+                lambda _=False, pid=part_id: self._insert_library_part(pid))
+
+    def _build_examples_menu(self, menubar):
+        """An Examples menu of complete demo models; picking one replaces
+        the document (Ctrl+Z to get the old one back)."""
+        from .examples import EXAMPLES
+        menu = menubar.addMenu("&Examples")
+        submenus = {}
+        for label, cat, build in EXAMPLES:
+            sub = submenus.get(cat)
+            if sub is None:
+                sub = submenus[cat] = menu.addMenu(cat)
+            sub.addAction(
+                label,
+                lambda _=False, b=build: self._load_example(b))
+
+    def _insert_library_part(self, part_id):
+        from .library import default_part
+        try:
+            node = default_part(part_id)
+        except Exception as exc:
+            QMessageBox.warning(self, APP_NAME,
+                                f"Could not build the part:\n{exc}")
+            return
+        self.model.root.add(node)
+        self.model.structure_changed.emit()
+        self.builder.tree.select_nodes([node])
+        self.view3d.fit()
+
+    def _load_example(self, build):
+        if not self._confirm_discard():
+            return
+        from .examples import load_example
+        load_example(self.model, build)
+        self._path = None
+        self._dirty = False
+        self._fitted = False
+        self.view3d.fit()
+        self._update_title()
 
     def _build_status_bar(self):
         self._cursor_label = QLabel("x: 0.0 mm  y: 0.0 mm")
@@ -523,6 +586,16 @@ class MainWindow(QMainWindow):
         self.scene.select_nodes(nodes)
         self.builder.highlight_nodes(nodes)
         self._sync_highlight(nodes)
+        self._syncing = False
+
+    def _masters_selected(self, nodes):
+        """A master picked in the Masters tab drives the Properties panel
+        (and the code highlight) so it can be edited like any object."""
+        if self._syncing:
+            return
+        self._syncing = True
+        self.properties.set_node(nodes[0] if len(nodes) == 1 else None)
+        self.builder.highlight_nodes(nodes)
         self._syncing = False
 
     def _scene_selected(self, nodes):

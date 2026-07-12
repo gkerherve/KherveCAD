@@ -663,6 +663,10 @@ def _tess(node, env, color, sel, selected):
         color = (str(node.params.get("color", "#4a90d9")),
                  rv(node.params.get("alpha", 1.0), env, 1.0))
         return _children_mesh(node, env, color, sel, selected)
+    if t == "masters":
+        # definitions store: masters render only through Linked copies,
+        # so the group contributes no geometry of its own.
+        return []
     if t in ("root", "hull", "variables"):
         # 3D hull is approximated as the union of its children;
         # "variables" only holds assignments, so it adds no geometry.

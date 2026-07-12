@@ -101,6 +101,12 @@ into a new module and import.
                        (colour chosen from the size list). Multi-colour
                        unions with no booleans, so each component keeps
                        its colour in the preview.
+  - `examples.py`    — ready-made **example models** for the Examples
+                       menu: each `build()` returns a fresh `root` that
+                       replaces the document (parametric box, L-bracket,
+                       a **Masters + Linked-copy bolt circle**, a vacuum
+                       starter, a desk setup). `load_example()` swaps it
+                       in; `EXAMPLES` is grouped by category.
   - `chat.py`        — **KherveAI chat box** (family assistant):
                        Claude/Mistral/Ollama Cloud via urllib, keys
                        in QSettings or env vars, slash commands, and
@@ -108,9 +114,12 @@ into a new module and import.
                        scadparse.
   - `treepanel.py`   — `BuilderPanel`: Objects tree (context menu:
                        hide/show, Apply operation, group/ungroup,
-                       rename, duplicate, delete; drag & drop
-                       reparent/reorder) + read-only Code tab with
-                       OpenSCAD syntax highlighting.
+                       rename, duplicate, delete, **Make Master**; drag &
+                       drop reparent/reorder) + a **Masters tab**
+                       (`MastersTree`) listing only the reusable master
+                       definitions, a **Variables** sheet, and a
+                       read-only Code tab with OpenSCAD syntax
+                       highlighting.
   - `properties.py`  — bottom-left panel; editors generated from each
                        node type's schema, polygon points table.
   - `view2d.py`      — top-right sketch view: Y-up QGraphicsScene,
@@ -159,6 +168,16 @@ into a new module and import.
   value-list `for` (capped at 1000 iterations); it re-imports as a
   list-form for loop. `if_else` keeps its else branch in a child
   union named "Else" (auto-created).
+- Organisational groups: `variables` (leading assignments, transparent
+  in codegen) and `masters` (a **definitions store**). A `masters`
+  group holds reusable **masters**; it renders **no geometry of its own**
+  (skipped in `emit()` and `mesh._tess()`) but is still walked to index
+  its masters as reference targets. Masters appear in their own Masters
+  tab, not the Objects tree. A `reference` ("Linked copy") inlines a
+  master's geometry by name (its own move/rotate applied), so editing a
+  master updates every copy. `make_master()` promotes a scene object
+  into the store and leaves a Linked copy behind; `instance_master()`
+  drops a copy into the scene.
 
 Hidden objects are emitted with OpenSCAD's `*` disable modifier, so
 visibility round-trips through the generated program. New node types

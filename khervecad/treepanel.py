@@ -52,6 +52,10 @@ class ObjectTree(QTreeWidget):
 
     selection_changed = pyqtSignal(list)     # list of CadNode
 
+    #: True in the Masters variant — roots at the masters store and hides
+    #: the store from the ordinary Objects tab.
+    IS_MASTERS = False
+
     def __init__(self, model: DocumentModel, parent=None):
         super().__init__(parent)
         self.model = model
@@ -98,11 +102,20 @@ class ObjectTree(QTreeWidget):
         return [n for n in (self.node_of(i) for i in self.selectedItems())
                 if n is not None]
 
+    def _top_nodes(self):
+        """The nodes shown at the top level of this tree — the document
+        root's children with the Masters store filtered out."""
+        return [c for c in self.model.root.children if c.type != "masters"]
+
+    def _drop_container(self):
+        """Container a top-level drop lands in."""
+        return self.model.root
+
     def rebuild(self):
         selected = {n.id for n in self.selected_nodes()}
         self._updating = True
         self.clear()
-        for child in self.model.root.children:
+        for child in self._top_nodes():
             self._build_item(child, self.invisibleRootItem(), selected)
         self._updating = False
         self._emit_selection()
@@ -370,8 +383,9 @@ class ObjectTree(QTreeWidget):
     # ----------------------------------------------------- drag & drop
     def dropEvent(self, event):
         moving = self.selected_nodes()
+        root = self._drop_container()
         target_item = self.itemAt(event.pos())
-        target = self.node_of(target_item) or self.model.root
+        target = self.node_of(target_item) or root
         pos = self.dropIndicatorPosition()
         if pos == QAbstractItemView.OnItem and not target.is_container():
             pos = QAbstractItemView.BelowItem
@@ -385,69 +399,122 @@ class ObjectTree(QTreeWidget):
                     (1 if pos == QAbstractItemView.BelowItem else 0)
                 self.model.move_node(node, target.parent, index)
             else:
-                self.model.move_node(node, self.model.root)
+                self.model.move_node(node, root)
 
     # --------------------------------------------------- context menu
     def _context_menu(self, pos):
         nodes = self.selected_nodes()
         menu = QMenu(self)
-        if nodes:
-            hidden = [n for n in nodes if not n.visible]
-            menu.addAction(
-                icons.icon("mdi.eye-outline" if hidden
-                           else "mdi.eye-off-outline"),
-                "Show" if hidden else "Hide",
-                lambda: [self.model.set_visible(n, bool(hidden))
-                         for n in nodes])
-            menu.addSeparator()
-            apply_menu = menu.addMenu(icons.icon("mdi.auto-fix"), "Apply")
-            for op in APPLY_OPS:
-                apply_menu.addAction(
-                    icons.icon(NODE_TYPES[op]["icon"]),
-                    NODE_TYPES[op]["label"],
-                    lambda _=False, o=op: self.model.wrap_nodes(nodes, o))
-            apply_menu.addSeparator()
-            apply_menu.addAction(
-                icons.icon("mdi.blur"), "Round edges (3D)",
-                lambda: self.model.round_edges(nodes))
-            menu.addAction(icons.icon("mdi.palette-outline"),
-                           "Color...", lambda: self._pick_color(nodes))
-            menu.addAction(icons.icon("mdi.group"), "Group\tCtrl+G",
-                           lambda: self.model.group_nodes(nodes))
-            containers = [n for n in nodes if n.is_container()]
-            if containers:
-                menu.addAction(
-                    icons.icon("mdi.ungroup"), "Ungroup\tCtrl+Shift+G",
-                    lambda: [self.model.ungroup(n) for n in containers])
-            menu.addSeparator()
-            menu.addAction(icons.icon("mdi.content-cut"),
-                           "Cut\tCtrl+X", self.cut_selection)
-            menu.addAction(icons.icon("mdi.content-copy"),
-                           "Copy\tCtrl+C", self.copy_selection)
-            menu.addAction(icons.icon("mdi.content-paste"),
-                           "Paste\tCtrl+V", self.paste_clipboard)
-            menu.addSeparator()
-            if len(nodes) == 1:
-                menu.addAction(icons.icon("mdi.rename-box"), "Rename",
-                               lambda: self.editItem(
-                                   self.selectedItems()[0], 0))
-            menu.addAction(icons.icon("mdi.content-duplicate"),
-                           "Duplicate", lambda: [self.model.duplicate(n)
-                                                 for n in nodes])
-            if len(nodes) == 1:
-                menu.addAction(
-                    icons.icon("mdi.link-variant"),
-                    "Linked copy (updates with master)",
-                    lambda: self.model.add_linked_copy(nodes[0]))
-            menu.addSeparator()
-            menu.addAction(icons.icon("mdi.delete-outline"), "Delete",
-                           lambda: [self.model.remove_node(n)
-                                    for n in nodes])
+        if nodes and self.IS_MASTERS:
+            self._masters_menu(menu, nodes)
+        elif nodes:
+            self._objects_menu(menu, nodes)
         else:
             menu.addAction(icons.icon("mdi.content-paste"),
                            "Paste\tCtrl+V", self.paste_clipboard)
+            if self.IS_MASTERS:
+                menu.addAction(icons.icon("mdi.plus"), "New master",
+                               lambda: self.select_nodes(
+                                   [self.model.new_master()]))
         if menu.actions():
             menu.exec_(self.viewport().mapToGlobal(pos))
+
+    def _masters_menu(self, menu, nodes):
+        """Context menu inside the Masters tab."""
+        menu.addAction(
+            icons.icon("mdi.link-variant"), "Add to Scene (Linked copy)",
+            lambda: [self.model.instance_master(n) for n in nodes])
+        menu.addAction(icons.icon("mdi.plus"), "New master",
+                       lambda: self.select_nodes(
+                           [self.model.new_master()]))
+        menu.addSeparator()
+        menu.addAction(icons.icon("mdi.palette-outline"),
+                       "Color...", lambda: self._pick_color(nodes))
+        if len(nodes) == 1:
+            menu.addAction(icons.icon("mdi.rename-box"), "Rename",
+                           lambda: self.editItem(self.selectedItems()[0], 0))
+        menu.addAction(icons.icon("mdi.content-duplicate"), "Duplicate",
+                       lambda: [self.model.duplicate(n) for n in nodes])
+        menu.addSeparator()
+        menu.addAction(icons.icon("mdi.delete-outline"), "Delete",
+                       lambda: [self.model.remove_node(n) for n in nodes])
+
+    def _objects_menu(self, menu, nodes):
+        hidden = [n for n in nodes if not n.visible]
+        menu.addAction(
+            icons.icon("mdi.eye-outline" if hidden
+                       else "mdi.eye-off-outline"),
+            "Show" if hidden else "Hide",
+            lambda: [self.model.set_visible(n, bool(hidden))
+                     for n in nodes])
+        menu.addSeparator()
+        apply_menu = menu.addMenu(icons.icon("mdi.auto-fix"), "Apply")
+        for op in APPLY_OPS:
+            apply_menu.addAction(
+                icons.icon(NODE_TYPES[op]["icon"]),
+                NODE_TYPES[op]["label"],
+                lambda _=False, o=op: self.model.wrap_nodes(nodes, o))
+        apply_menu.addSeparator()
+        apply_menu.addAction(
+            icons.icon("mdi.blur"), "Round edges (3D)",
+            lambda: self.model.round_edges(nodes))
+        menu.addAction(icons.icon("mdi.palette-outline"),
+                       "Color...", lambda: self._pick_color(nodes))
+        menu.addAction(icons.icon("mdi.group"), "Group\tCtrl+G",
+                       lambda: self.model.group_nodes(nodes))
+        containers = [n for n in nodes if n.is_container()]
+        if containers:
+            menu.addAction(
+                icons.icon("mdi.ungroup"), "Ungroup\tCtrl+Shift+G",
+                lambda: [self.model.ungroup(n) for n in containers])
+        menu.addSeparator()
+        menu.addAction(icons.icon("mdi.content-cut"),
+                       "Cut\tCtrl+X", self.cut_selection)
+        menu.addAction(icons.icon("mdi.content-copy"),
+                       "Copy\tCtrl+C", self.copy_selection)
+        menu.addAction(icons.icon("mdi.content-paste"),
+                       "Paste\tCtrl+V", self.paste_clipboard)
+        menu.addSeparator()
+        if len(nodes) == 1:
+            menu.addAction(icons.icon("mdi.rename-box"), "Rename",
+                           lambda: self.editItem(
+                               self.selectedItems()[0], 0))
+        menu.addAction(icons.icon("mdi.content-duplicate"),
+                       "Duplicate", lambda: [self.model.duplicate(n)
+                                             for n in nodes])
+        if len(nodes) == 1:
+            menu.addAction(
+                icons.icon("mdi.link-variant"),
+                "Linked copy (updates with master)",
+                lambda: self.model.add_linked_copy(nodes[0]))
+        promotable = [n for n in nodes if n.type not in
+                      ("assign", "variables", "masters", "reference")]
+        if promotable:
+            menu.addAction(
+                icons.icon("mdi.folder-star-outline"),
+                "Make Master (moves to Masters tab)",
+                lambda: [self.model.make_master(n)
+                         for n in promotable])
+        menu.addSeparator()
+        menu.addAction(icons.icon("mdi.delete-outline"), "Delete",
+                       lambda: [self.model.remove_node(n)
+                                for n in nodes])
+
+
+class MastersTree(ObjectTree):
+    """The Masters store as its own tree: it roots at the masters group
+    (created on demand) and lists only the master definitions, so the
+    Objects tab stays uncluttered. Masters render in the scene only
+    through Linked copies."""
+
+    IS_MASTERS = True
+
+    def _top_nodes(self):
+        group = self.model.masters_group()
+        return list(group.children) if group else []
+
+    def _drop_container(self):
+        return self.model.masters_group(create=True)
 
 
 # ------------------------------------------------------------- code tab
@@ -721,6 +788,30 @@ class BuilderPanel(QTabWidget):
 
         self.variables = VariablesSheet(model)
 
+        # Masters tab: the reusable-definition store as its own tree, with
+        # buttons to create one and drop a Linked copy into the scene
+        self.masters_tree = MastersTree(model)
+        masters_tab = QWidget()
+        mbox = QVBoxLayout(masters_tab)
+        mbox.setContentsMargins(4, 4, 4, 0)
+        mbox.setSpacing(4)
+        mrow = QHBoxLayout()
+        new_master = QPushButton(icons.icon("mdi.plus"), " New")
+        new_master.setToolTip("Create a new empty master")
+        new_master.clicked.connect(
+            lambda: self.masters_tree.select_nodes(
+                [self.model.new_master()]))
+        add_scene = QPushButton(icons.icon("mdi.link-variant"),
+                                " Add to Scene")
+        add_scene.setToolTip(
+            "Add a Linked copy of the selected master to the scene")
+        add_scene.clicked.connect(self._instance_selected_masters)
+        mrow.addWidget(new_master)
+        mrow.addWidget(add_scene)
+        mrow.addStretch()
+        mbox.addLayout(mrow)
+        mbox.addWidget(self.masters_tree)
+
         # Code tab: the editable program + an Apply button that parses it
         # back into the object tree
         code_tab = QWidget()
@@ -741,6 +832,8 @@ class BuilderPanel(QTabWidget):
         cbox.addLayout(crow)
 
         self.addTab(objects, icons.icon("mdi.file-tree"), "Objects")
+        self.addTab(masters_tab, icons.icon("mdi.folder-star-outline"),
+                    "Masters")
         self.addTab(self.variables, icons.icon("mdi.table"), "Variables")
         self.addTab(code_tab, icons.icon("mdi.code-braces"), "Code")
         model.structure_changed.connect(self.refresh_code)
@@ -824,6 +917,11 @@ class BuilderPanel(QTabWidget):
                    getattr(self, "_error_ids", [])
                    if i in self._spans]
         self.code.set_marks(selected, errored)
+
+    def _instance_selected_masters(self):
+        """Drop a Linked copy of each selected master into the scene."""
+        for node in self.masters_tree._top_level_selection():
+            self.model.instance_master(node)
 
     def refresh_theme(self):
         self.code.refresh_theme()

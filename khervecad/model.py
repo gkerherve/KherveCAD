@@ -221,6 +221,12 @@ NODE_TYPES = {
     "variables": dict(
         label="Variables", category=CONTROL, icon="mdi.table",
         params=dict(), schema=[]),
+    "masters": dict(
+        # a definitions store: the masters it holds render only through
+        # Linked copies, so the group itself adds no scene geometry. It
+        # is shown in its own Masters tab, away from the Objects tree.
+        label="Masters", category=CONTROL, icon="mdi.folder-star-outline",
+        params=dict(), schema=[]),
     "reference": dict(
         # a linked instance of another object ("master"): it renders
         # whatever the master contains, so editing the master updates
@@ -449,7 +455,12 @@ class CadNode:
         pad = "    " * indent
         star = "" if self.visible else "*"
 
-        if self.type in ("root", "variables"):
+        if self.type == "masters":
+            # A definitions store: its masters render only through Linked
+            # copies, so the group contributes no scene geometry. It is
+            # still walked to index masters as reference targets.
+            pass
+        elif self.type in ("root", "variables"):
             # "variables" is a purely organisational group: its children
             # (assignments) are emitted at the same level, so the code
             # and OpenSCAD scope are exactly as if they were loose.
@@ -957,6 +968,63 @@ class DocumentModel(QObject):
                       dict(ref=master.name))
         parent = master.parent or self.root
         parent.add(ref, master.index() + 1)
+        self.structure_changed.emit()
+        return ref
+
+    # -------------------------------------------------------- masters
+    def masters_group(self, create: bool = False) -> CadNode:
+        """The Masters definitions store at the top of the tree (created
+        on demand). Returns None when absent and *create* is False."""
+        for child in self.root.children:
+            if child.type == "masters":
+                return child
+        if not create:
+            return None
+        group = CadNode("masters", "Masters")
+        # keep it at the top, just below a leading Variables group
+        idx = 1 if (self.root.children
+                    and self.root.children[0].type == "variables") else 0
+        self.root.add(group, idx)
+        return group
+
+    def new_master(self, name: str = "") -> CadNode:
+        """Create an empty master (a union container) in the store."""
+        group = self.masters_group(create=True)
+        master = CadNode("union", name or self.unique_name("union"))
+        group.add(master)
+        self.structure_changed.emit()
+        return master
+
+    def make_master(self, node: CadNode) -> CadNode:
+        """Move *node* into the Masters store and leave a Linked copy in
+        its place, so the scene is unchanged but the definition now lives
+        in the Masters tab. Returns the Linked copy."""
+        if node.parent is None or node.type in ("masters", "root"):
+            return None
+        group = self.masters_group(create=True)
+        if node is group or group in node.walk():
+            return None
+        # a unique name so the reference resolves reliably
+        names = [n.name for n in self.root.walk()]
+        if names.count(node.name) > 1:
+            node.name = self.unique_name(node.type)
+        parent, index = node.parent, node.index()
+        ref = CadNode("reference", f"Copy of {node.name}",
+                      dict(ref=node.name))
+        parent.remove(node)
+        parent.add(ref, index)
+        group.add(node)
+        self.structure_changed.emit()
+        return ref
+
+    def instance_master(self, master: CadNode) -> CadNode:
+        """Add a Linked copy of *master* to the document (the scene)."""
+        if master.name and \
+                [n.name for n in self.root.walk()].count(master.name) > 1:
+            master.name = self.unique_name(master.type)
+        ref = CadNode("reference", f"Copy of {master.name}",
+                      dict(ref=master.name))
+        self.root.add(ref)
         self.structure_changed.emit()
         return ref
 
