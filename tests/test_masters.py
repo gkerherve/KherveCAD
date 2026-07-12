@@ -137,6 +137,34 @@ def test_bolt_circle_uses_masters(model):
     assert any(n.type == "reference" for n in model.root.walk())
 
 
+# --------------------------------------------- highlight an off-scene master
+
+def test_selected_world_tris_reaches_a_master(model):
+    """A master isn't in the rendered scene, but selecting it must still
+    yield highlight geometry (2D silhouette + 3D glow) — so
+    selected_world_tris falls back to the master's own subtree."""
+    cube = model.add_node("cube")
+    model.make_master(cube)
+    # walking the whole scene from root would skip the store...
+    tris = mesh.selected_world_tris(model.root, {cube.id},
+                                    fn=model.effective_fn())
+    assert len(tris) > 0
+
+
+def test_master_difference_shows_in_2d(app):
+    """Regression: a non-primitive master (a flange = difference) used to
+    return no 2D silhouette because the isolate path walked from root."""
+    from khervecad.library import default_part
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    flange = default_part("cf_flange")
+    w.model.masters_group(create=True).add(flange)
+    w.model.structure_changed.emit()
+    w.builder.masters_tree.select_nodes([flange])
+    assert w.scene._isolating()
+    assert len(w.scene._part_items) == 1        # the silhouette is drawn
+
+
 # ------------------------------------------------------------ library menu
 
 def test_default_part_builds_with_a_size():

@@ -642,8 +642,21 @@ def selected_world_tris(node: CadNode, sel_ids, env=None, detail=None,
     _set_fn(fn)
     _set_refs(node)
     try:
-        return [t for t, _c, s in
-                _tess(node, dict(env or {}), None, sel, False) if s]
+        out = [t for t, _c, s in
+               _tess(node, dict(env or {}), None, sel, False) if s]
+        if not out:
+            # the selection may live in a non-rendering store (a master),
+            # which _tess skips — so it never appears in the scene walk.
+            # Tessellate each selected node's own subtree directly so it
+            # can still be highlighted in both views.
+            by_id = {n.id: n for n in node.walk()}
+            for nid in sel:
+                target = by_id.get(nid)
+                if target is not None and target is not node:
+                    out += [t for t, _c, _s in
+                            _tess(target, dict(env or {}), None,
+                                  frozenset({nid}), True)]
+        return out
     finally:
         _DETAIL = None
         _set_fn(None)

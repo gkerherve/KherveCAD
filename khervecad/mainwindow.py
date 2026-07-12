@@ -589,13 +589,18 @@ class MainWindow(QMainWindow):
         self._syncing = False
 
     def _masters_selected(self, nodes):
-        """A master picked in the Masters tab drives the Properties panel
-        (and the code highlight) so it can be edited like any object."""
+        """A master picked in the Masters tab drives the Properties panel,
+        the code highlight, and both viewers — its projected outline in
+        2D and its glow in 3D. A master lives in the non-rendering store,
+        so `mesh.selected_world_tris` falls back to tessellating its own
+        subtree directly (see mesh.py)."""
         if self._syncing:
             return
         self._syncing = True
+        self.builder.tree.clearSelection()   # one tree selected at a time
         self.properties.set_node(nodes[0] if len(nodes) == 1 else None)
         self.builder.highlight_nodes(nodes)
+        self._sync_highlight(nodes)
         self._syncing = False
 
     def _scene_selected(self, nodes):
