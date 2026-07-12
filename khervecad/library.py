@@ -60,25 +60,39 @@ CF_SIZES = {
 
 #: ISO metric coarse fasteners, mm (DIN 933 hex head / DIN 912 socket
 #: head / DIN 934 nut). af = across flats, socket = hex key size.
+#: ISO metric fastener dimensions (mm), from the BOSL2 metric_screws
+#: tables: af = hex head/nut across-flats (ISO 4017/4032), head_h = hex
+#: head height, cap_d/cap_h = socket cap head Ø/height (ISO 4762),
+#: socket = hex-key across-flats, socket_depth = drive depth,
+#: nut_h = nut thickness, pitch = ISO coarse.
 BOLT_SIZES = {
-    "M3": dict(d=3.0, pitch=0.5, af=5.5, head_h=2.0, socket=2.5,
-               nut_h=2.4, length=12.0),
-    "M4": dict(d=4.0, pitch=0.7, af=7.0, head_h=2.8, socket=3.0,
-               nut_h=3.2, length=16.0),
-    "M5": dict(d=5.0, pitch=0.8, af=8.0, head_h=3.5, socket=4.0,
-               nut_h=4.0, length=20.0),
-    "M6": dict(d=6.0, pitch=1.0, af=10.0, head_h=4.0, socket=5.0,
-               nut_h=5.0, length=20.0),
-    "M8": dict(d=8.0, pitch=1.25, af=13.0, head_h=5.3, socket=6.0,
-               nut_h=6.5, length=25.0),
-    "M10": dict(d=10.0, pitch=1.5, af=17.0, head_h=6.4, socket=8.0,
-                nut_h=8.0, length=30.0),
-    "M12": dict(d=12.0, pitch=1.75, af=19.0, head_h=7.5, socket=10.0,
-                nut_h=10.0, length=40.0),
-    "M16": dict(d=16.0, pitch=2.0, af=24.0, head_h=10.0, socket=14.0,
-                nut_h=13.0, length=50.0),
-    "M20": dict(d=20.0, pitch=2.5, af=30.0, head_h=12.5, socket=17.0,
-                nut_h=16.0, length=60.0),
+    "M3": dict(d=3.0, pitch=0.5, af=5.5, head_h=2.13, socket=2.5,
+               socket_depth=1.3, cap_d=5.5, cap_h=3.0, nut_h=2.4,
+               length=12.0),
+    "M4": dict(d=4.0, pitch=0.7, af=7.0, head_h=2.93, socket=3.0,
+               socket_depth=2.0, cap_d=7.0, cap_h=4.0, nut_h=3.2,
+               length=16.0),
+    "M5": dict(d=5.0, pitch=0.8, af=8.0, head_h=3.65, socket=4.0,
+               socket_depth=2.5, cap_d=8.5, cap_h=5.0, nut_h=4.0,
+               length=20.0),
+    "M6": dict(d=6.0, pitch=1.0, af=10.0, head_h=4.15, socket=5.0,
+               socket_depth=3.0, cap_d=10.0, cap_h=6.0, nut_h=5.0,
+               length=20.0),
+    "M8": dict(d=8.0, pitch=1.25, af=13.0, head_h=5.45, socket=6.0,
+               socket_depth=4.0, cap_d=13.0, cap_h=8.0, nut_h=6.5,
+               length=25.0),
+    "M10": dict(d=10.0, pitch=1.5, af=17.0, head_h=6.58, socket=8.0,
+                socket_depth=5.0, cap_d=16.0, cap_h=10.0, nut_h=8.0,
+                length=30.0),
+    "M12": dict(d=12.0, pitch=1.75, af=19.0, head_h=7.68, socket=10.0,
+                socket_depth=6.0, cap_d=18.0, cap_h=12.0, nut_h=10.0,
+                length=40.0),
+    "M16": dict(d=16.0, pitch=2.0, af=24.0, head_h=10.18, socket=14.0,
+                socket_depth=8.0, cap_d=24.0, cap_h=16.0, nut_h=13.0,
+                length=50.0),
+    "M20": dict(d=20.0, pitch=2.5, af=30.0, head_h=12.72, socket=17.0,
+                socket_depth=10.0, cap_d=30.0, cap_h=20.0, nut_h=16.0,
+                length=60.0),
 }
 
 #: KF (Quick Flange / QF) conventional sizes, mm.
@@ -189,32 +203,84 @@ def _hex(name, af, height, z=0.0):
                 segments=6)
 
 
+def _hex_head(af, height, z=0.0, name="Hex head",
+              chamfer_bottom=False) -> CadNode:
+    """A wrench head/nut body with the top edge **chamfered** (the
+    30°-ish cone real hex heads have, which is what makes them read as
+    a bolt and not a plain prism). Built boolean-free as a hex prism
+    topped by a short hex frustum, so it previews; *chamfer_bottom*
+    adds the matching chamfer under the head, as on a nut."""
+    rc = round(af / math.sqrt(3.0), 4)         # circumradius (corner)
+    r_flat = af / 2.0                          # inradius (flat)
+    # a shallow bevel that cuts the corners back to the across-flats
+    # circle (~45°), leaving most of the height as full hex flats
+    cham = round(min(height * 0.2, rc - r_flat), 4)
+    body = CadNode("union", name)
+    if chamfer_bottom:
+        body.add(_cyl("Bottom chamfer", r_flat, cham, z=z, r2=rc,
+                      segments=6))
+        body.add(_cyl("Flats", rc, height - 2 * cham, z=z + cham,
+                      segments=6))
+        body.add(_cyl("Top chamfer", rc, cham, z=z + height - cham,
+                      r2=r_flat, segments=6))
+    else:
+        body.add(_cyl("Flats", rc, height - cham, z=z, segments=6))
+        body.add(_cyl("Top chamfer", rc, cham, z=z + height - cham,
+                      r2=r_flat, segments=6))
+    return body
+
+
+def _thread_tip(d, pitch, name="Lead chamfer") -> CadNode:
+    """A short chamfered cone at the thread start (z<=0), so the bolt
+    has a lead-in instead of a flat, full-diameter face."""
+    depth = 0.6134 * pitch
+    r_minor = d / 2.0 - depth
+    return CadNode("cylinder", name, dict(
+        x=0.0, y=0.0, z=-pitch, height=pitch,
+        radius_bottom=max(r_minor - pitch * 0.2, 0.1),
+        radius_top=d / 2.0, segments=48, center=False))
+
+
 def hex_bolt(p, length: float) -> CadNode:
-    """DIN 933 style hex head bolt, fully threaded."""
+    """DIN 933 hex head bolt, fully threaded, with a chamfered head and
+    a lead-in chamfer at the tip."""
     part = CadNode("union", "Hex bolt")
     part.add(thread_solid(p["d"], p["pitch"], length))
-    part.add(_hex("Hex head", p["af"], p["head_h"], z=length))
+    part.add(_thread_tip(p["d"], p["pitch"]))
+    part.add(_hex_head(p["af"], p["head_h"], z=length, name="Hex head"))
     return part
 
 
 def socket_screw(p, length: float) -> CadNode:
-    """DIN 912 style socket head cap screw with hex socket."""
+    """DIN 912 socket head cap screw: a cylindrical head at the true
+    ISO 4762 diameter with a chamfered top edge and a hex drive socket
+    at its standard depth, plus a lead-in chamfer at the tip."""
+    cap_d = p.get("cap_d", 1.5 * p["d"])
+    cap_h = p.get("cap_h", p["d"])
+    depth = p.get("socket_depth", 0.6 * p["d"])
+    cham = cap_h * 0.12
     part = CadNode("difference", "Socket head screw")
     solid = CadNode("union", "Screw body")
     solid.add(thread_solid(p["d"], p["pitch"], length))
-    solid.add(_cyl("Cap head", 0.75 * p["d"], p["d"], z=length,
+    solid.add(_thread_tip(p["d"], p["pitch"]))
+    # cap: main cylinder + a chamfered top edge (boolean-free)
+    solid.add(_cyl("Cap head", cap_d / 2.0, cap_h - cham, z=length,
+                   segments=48))
+    solid.add(_cyl("Cap chamfer", cap_d / 2.0, cham,
+                   z=length + cap_h - cham, r2=cap_d / 2.0 - cham,
                    segments=48))
     part.add(solid)
-    part.add(_hex("Hex socket", p["socket"], 0.6 * p["d"] + 1.0,
-                  z=length + 0.4 * p["d"]))
+    part.add(_hex("Hex socket", p["socket"], depth + 1.0,
+                  z=length + cap_h - depth))
     return part
 
 
 def hex_nut(p) -> CadNode:
-    """DIN 934 style hex nut — the threaded hole is the bolt thread
-    subtracted with clearance, so it really mates."""
+    """DIN 934 hex nut — chamfered top *and* bottom (as real nuts are),
+    with the bolt thread subtracted at clearance so it truly mates."""
     part = CadNode("difference", "Hex nut")
-    part.add(_hex("Nut body", p["af"], p["nut_h"]))
+    part.add(_hex_head(p["af"], p["nut_h"], name="Nut body",
+                       chamfer_bottom=True))
     hole = CadNode("translate", "Thread hole", dict(x=0.0, y=0.0,
                                                     z=-1.0))
     hole.add(thread_solid(p["d"], p["pitch"], p["nut_h"] + 2.0,

@@ -71,9 +71,15 @@ into a new module and import.
                        flanges, blank/nipple/tee/cross, a simplified
                        turbo shell, and M3-M20 hex bolts / socket
                        screws / hex nuts with **real helical ISO
-                       threads** (thread-form polygon + twist
-                       extrude; nuts subtract the thread with
-                       clearance), VAT-style **gate valves** and
+                       threads** (thread-form polygon + twist extrude;
+                       nuts subtract the thread with clearance). The
+                       fasteners use the BOSL2 dimensional tables
+                       (`BOLT_SIZES`): **chamfered** hex heads (DIN 933)
+                       and hex nuts chamfered both faces (DIN 934), a
+                       socket cap at the true ISO 4762 diameter with the
+                       standard drive depth, and a lead-in chamfer at the
+                       thread tip — all boolean-free where possible so
+                       they preview. Also VAT-style **gate valves** and
                        right-angle valves, and turbo pump shells in
                        three inlet classes (DN63/DN100/DN160 CF); plus
                        CF/KF elbows, KF nipples/tees (`kf_fitting`),
@@ -106,10 +112,18 @@ into a new module and import.
                        its colour in the preview.
   - `examples.py`    — ready-made **example models** for the Examples
                        menu: each `build()` returns a fresh `root` that
-                       replaces the document (parametric box, L-bracket,
-                       a **Masters + Linked-copy bolt circle**, a vacuum
-                       starter, a desk setup). `load_example()` swaps it
-                       in; `EXAMPLES` is grouped by category.
+                       replaces the document. A dozen **Mechanical**
+                       examples (parametric box, L-bracket, bolt & nut,
+                       bolted flange joint, pillow block, spur gear,
+                       meshing gear pair, ball bearing, V-belt pulley,
+                       threaded rod, fan impeller, a **Masters +
+                       Linked-copy bolt circle**) — several placing
+                       library fasteners round a bolt circle by for-loop
+                       — plus a vacuum starter and a desk setup.
+                       `load_example()` swaps it in; `EXAMPLES` is
+                       grouped by category. Gears use trapezoidal teeth
+                       stamped by a for-loop; bearings/pulleys use
+                       revolved rings so they preview without a boolean.
   - `chat.py`        — **KherveAI chat box** (family assistant):
                        Claude/Mistral/Ollama Cloud via urllib, keys
                        in QSettings or env vars, slash commands, and
