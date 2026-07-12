@@ -71,6 +71,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowIcon(icons.app_icon())
         self.resize(1400, 900)
+        self.setAcceptDrops(True)             # drop .kcad/.scad/.stl to open
 
         self.model = DocumentModel()
         self.engine = ScadEngine(self)
@@ -831,15 +832,63 @@ class MainWindow(QMainWindow):
         self._update_title()
 
     def open_file(self):
-        if not self._confirm_discard():
-            return
         recent = self._recent_files()
         start = str(Path(recent[0]).parent) if recent else ""
         path, _ = QFileDialog.getOpenFileName(
-            self, "Open", start, "KherveCAD document (*.kcad)")
+            self, "Open", start,
+            "All supported (*.kcad *.scad *.stl);;"
+            "KherveCAD document (*.kcad);;OpenSCAD program (*.scad);;"
+            "STL mesh (*.stl)")
         if not path:
             return
-        self._open_path(path, confirm=False)
+        self.open_any(path)
+
+    def open_any(self, path):
+        """Open or import a file by extension — .kcad opens, .scad
+        imports (as objects, or a raw block), .stl imports a mesh. Used
+        by File > Open and by drag-and-drop."""
+        ext = Path(path).suffix.lower()
+        if ext == ".kcad":
+            self._open_path(path)
+        elif ext == ".scad":
+            if not self._confirm_discard():
+                return
+            self._import_scad_path(path)
+        elif ext == ".stl":
+            self._import_stl_path(path)
+        else:
+            QMessageBox.warning(
+                self, APP_NAME,
+                f"KherveCAD can open .kcad, .scad and .stl files "
+                f"— not {ext or 'this type'}.")
+
+    # ------------------------------------------------------ drag & drop
+    _DROP_EXTS = (".kcad", ".scad", ".stl")
+
+    def _dropped_file(self, event):
+        """The first supported local file in a file drag, or None."""
+        md = event.mimeData()
+        if not md.hasUrls():
+            return None
+        for url in md.urls():
+            p = url.toLocalFile()
+            if p and p.lower().endswith(self._DROP_EXTS):
+                return p
+        return None
+
+    def dragEnterEvent(self, event):
+        if self._dropped_file(event):
+            event.acceptProposedAction()
+
+    def dragMoveEvent(self, event):
+        if self._dropped_file(event):
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        path = self._dropped_file(event)
+        if path:
+            event.acceptProposedAction()
+            self.open_any(path)
 
     def _open_path(self, path, confirm=True):
         """Load *path* into the model (shared by Open... and Recent)."""
@@ -1021,6 +1070,9 @@ class MainWindow(QMainWindow):
             self, "Import OpenSCAD", "", "OpenSCAD program (*.scad)")
         if not path:
             return
+        self._import_scad_path(path)
+
+    def _import_scad_path(self, path):
         from . import mesh, scadparse
         try:
             warnings = scadparse.import_scad(self.model, path)
@@ -1046,10 +1098,12 @@ class MainWindow(QMainWindow):
                       "editable objects, so the object tree is empty.")
             if self._offer_scad_raw(path, reason):
                 return
-        self._path = None                     # imported = new document
+        self._path = None                     # imported: save as .kcad
         self._dirty = True
         self._fitted = False
         self.view3d.user_moved = False        # fresh document, frame it
+        self._add_recent(path)                # re-openable from Recent
+        self.view3d.fit()
         self._update_title()
         if warnings:
             QMessageBox.information(
@@ -1088,6 +1142,7 @@ class MainWindow(QMainWindow):
         self._dirty = True
         self._fitted = False
         self.view3d.user_moved = False
+        self._add_recent(path)
         self._update_title()
         if self.engine.available:
             self._render_now()
@@ -1097,6 +1152,9 @@ class MainWindow(QMainWindow):
             self, "Import STL", "", "STL mesh (*.stl)")
         if not path:
             return
+        self._import_stl_path(path)
+
+    def _import_stl_path(self, path):
         node = self.model.add_node("stl_import", dict(path=path),
                                    name=Path(path).stem)
         self.builder.tree.select_nodes([node])

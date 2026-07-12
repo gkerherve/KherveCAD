@@ -507,7 +507,28 @@ class ObjectTree(QTreeWidget):
                                  round(chosen.alphaF(), 3))
 
     # ----------------------------------------------------- drag & drop
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():        # a file drag -> open it
+            event.acceptProposedAction()
+            return
+        super().dragEnterEvent(event)
+
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+            return
+        super().dragMoveEvent(event)
+
     def dropEvent(self, event):
+        if event.mimeData().hasUrls():        # forward a dropped file
+            win = self.window()
+            for url in event.mimeData().urls():
+                path = url.toLocalFile()
+                if path and hasattr(win, "open_any"):
+                    win.open_any(path)
+                    break
+            event.acceptProposedAction()
+            return
         moving = self.selected_nodes()
         fallback = self._drop_container()
         target_item = self.itemAt(event.pos())

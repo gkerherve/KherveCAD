@@ -289,6 +289,12 @@ paste subtrees as JSON via the system clipboard — works across app
 instances. Ctrl+Up/Down reorders within the parent; arrow keys walk
 the tree.
 
+**Opening files**: `MainWindow.open_any(path)` routes by extension —
+`.kcad` opens, `.scad` imports (as objects or a raw block), `.stl`
+imports a mesh. File > Open offers all three; **dragging** a file onto
+the window (or the Objects tree, which forwards it) opens/imports it;
+imported files land in Open Recent.
+
 **Render pipeline**: any model change re-tessellates instantly
 (built-in preview) and schedules a debounced exact OpenSCAD render
 that replaces the preview when it lands.
