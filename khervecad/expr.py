@@ -56,13 +56,128 @@ FUNCTIONS = {
     "round": round,
     "sign": lambda a: (a > 0) - (a < 0),
     "norm": lambda *a: math.sqrt(sum(v * v for v in a)),
+    "len": len,
+    "__range": lambda a, s, b: _range_list(a, s, b),
 }
 
 CONSTANTS = {"PI": math.pi, "undef": None, "true": True, "false": False}
 
+_MAX_RANGE = 100000
+
+
+def _range_list(start, step, end):
+    """OpenSCAD range [start : step : end] as a concrete list."""
+    if step == 0:
+        return [start]
+    out, v, n = [], start, 0
+    while (step > 0 and v <= end + 1e-9) or (step < 0 and v >= end - 1e-9):
+        out.append(v)
+        v += step
+        n += 1
+        if n >= _MAX_RANGE:
+            break
+    return out
+
 
 class ExprError(ValueError):
     """Raised when an expression cannot be evaluated."""
+
+
+def _split_top(text, sep):
+    """Split *text* on *sep* only at bracket-depth 0."""
+    parts, depth, start = [], 0, 0
+    for i, c in enumerate(text):
+        if c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth -= 1
+        elif c == sep and depth == 0:
+            parts.append(text[start:i])
+            start = i + 1
+    parts.append(text[start:])
+    return parts
+
+
+def _find_top(text, ch):
+    depth = 0
+    for i, c in enumerate(text):
+        if c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth -= 1
+        elif c == ch and depth == 0:
+            return i
+    return -1
+
+
+def _expand_ranges(s):
+    """Rewrite OpenSCAD range literals `[a:b]` / `[a:s:b]` as
+    `__range(a,1,b)` / `__range(a,s,b)` so the AST can evaluate them."""
+    out, i, n = [], 0, len(s)
+    while i < n:
+        if s[i] != "[":
+            out.append(s[i])
+            i += 1
+            continue
+        depth, j = 0, i
+        while j < n:
+            if s[j] == "[":
+                depth += 1
+            elif s[j] == "]":
+                depth -= 1
+                if depth == 0:
+                    break
+            j += 1
+        inner = s[i + 1:j]
+        parts = _split_top(inner, ":")
+        if len(parts) == 2:
+            out.append("__range(%s,1,%s)" % (_expand_ranges(parts[0]),
+                                             _expand_ranges(parts[1])))
+        elif len(parts) == 3:
+            out.append("__range(%s,%s,%s)" % tuple(
+                _expand_ranges(p) for p in parts))
+        else:                                   # a plain list / subscript
+            out.append("[" + _expand_ranges(inner) + "]")
+        i = j + 1
+    return "".join(out)
+
+
+def _translate_groups(s):
+    """Translate ternaries nested inside top-level (...) / [...] groups."""
+    out, i, n = [], 0, len(s)
+    while i < n:
+        c = s[i]
+        if c in "([{":
+            depth, j = 0, i
+            while j < n:
+                if s[j] in "([{":
+                    depth += 1
+                elif s[j] in ")]}":
+                    depth -= 1
+                    if depth == 0:
+                        break
+                j += 1
+            out.append(c + _translate_ternary(s[i + 1:j]) + s[j])
+            i = j + 1
+        else:
+            out.append(c)
+            i += 1
+    return "".join(out)
+
+
+def _translate_ternary(s):
+    """OpenSCAD `cond ? a : b` -> Python `(a) if (cond) else (b)`,
+    recursing into parenthesised sub-expressions."""
+    q = _find_top(s, "?")
+    if q < 0:
+        return _translate_groups(s)
+    cond, rest = s[:q], s[q + 1:]
+    c = _find_top(rest, ":")
+    if c < 0:
+        return _translate_groups(s)
+    return "(({0}) if ({1}) else ({2}))".format(
+        _translate_ternary(rest[:c]), _translate_ternary(cond),
+        _translate_ternary(rest[c + 1:]))
 
 
 def evaluate(expression, env: dict = None):
@@ -73,8 +188,9 @@ def evaluate(expression, env: dict = None):
     if isinstance(expression, (int, float)):
         return expression
     text = str(expression).strip()
-    # OpenSCAD uses ^ for power and single = never appears in exprs.
+    # OpenSCAD uses ^ for power; ranges and ?: aren't Python, so rewrite.
     text = text.replace("^", "**")
+    text = _translate_ternary(_expand_ranges(text))
     try:
         tree = ast.parse(text, mode="eval")
     except SyntaxError as exc:
@@ -126,12 +242,17 @@ def _eval(node, env):
     if isinstance(node, (ast.List, ast.Tuple)):
         return [_eval(e, env) for e in node.elts]
     if isinstance(node, ast.Attribute):
-        # OpenSCAD vector swizzle: v.x / v.y / v.z -> v[0] / v[1] / v[2]
+        # OpenSCAD vector swizzle: v.x / v.y / v.z -> v[0] / v[1] / v[2].
+        # A scalar reads as [s, s, s], so `cube(size)` works whether the
+        # variable holds a number or a vector.
         target = _eval(node.value, env)
         idx = {"x": 0, "y": 1, "z": 2}.get(node.attr)
-        if idx is None or not isinstance(target, (list, tuple)) \
-                or idx >= len(target):
+        if idx is None:
             raise ExprError(f"bad vector accessor .{node.attr}")
+        if not isinstance(target, (list, tuple)):
+            return target
+        if idx >= len(target):
+            raise ExprError(f"vector too short for .{node.attr}")
         return target[idx]
     if isinstance(node, ast.Subscript):
         target = _eval(node.value, env)

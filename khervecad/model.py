@@ -418,9 +418,16 @@ class CadNode:
                 out = []
                 for chunk in str(p["values"]).split(","):
                     try:
-                        out.append(expr.evaluate(chunk, env))
+                        value = expr.evaluate(chunk, env)
                     except expr.ExprError:
-                        out.append(0.0)
+                        value = 0.0
+                    # a chunk may resolve to a whole list/range (e.g. a
+                    # `for (x = x_values)` over a vector variable) — then
+                    # iterate its elements, not the list itself
+                    if isinstance(value, (list, tuple)):
+                        out.extend(value)
+                    else:
+                        out.append(value)
                 return out
             start = expr.resolve(p["start"], env, 0.0)
             end = expr.resolve(p["end"], env, 0.0)
@@ -636,8 +643,13 @@ class CadNode:
             return f"color({scad_str(p['color'])}, {fmt(alpha)})"
         if t == "for_loop":
             var = str(p.get("variable", "i")) or "i"
-            if str(p.get("values", "")).strip():
-                return f"for ({var} = [{p['values']}])"
+            values = str(p.get("values", "")).strip()
+            if values:
+                # a bare variable holds a list/range already — iterate it
+                # directly; a literal value list gets wrapped in [ ... ]
+                if values.isidentifier():
+                    return f"for ({var} = {values})"
+                return f"for ({var} = [{values}])"
             return (f"for ({var} = [{fmt(p['start'])} : "
                     f"{fmt(p['step'])} : {fmt(p['end'])}])")
         if t == "while_loop":

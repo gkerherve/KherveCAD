@@ -61,6 +61,9 @@ class Parser:
         self.tokens = _tokenize(text)
         self.i = 0
         self.warnings = []
+        #: name -> (params, body_start_i, body_end_i) for user modules,
+        #: expanded (inlined) at each call site.
+        self.modules = {}
 
     # ------------------------------------------------------- helpers
     def peek(self, offset=0):
@@ -93,8 +96,11 @@ class Parser:
 
     # ------------------------------------------- expression scanning
     def _scan_expr(self, stop=(",", ")", "]", ";", ":")):
-        """Consume one expression; return (numeric_or_None, source)."""
+        """Consume one expression; return (numeric_or_None, source). A
+        ternary `c ? a : b` is kept whole — its `:` is the ternary
+        separator, not a stop (that would otherwise cut the expression)."""
         depth = 0
+        ternary = 0
         start = self.peek()
         if start is None:
             raise ScadParseError("expected expression")
@@ -104,11 +110,17 @@ class Parser:
             token = self.peek()
             if token is None:
                 break
-            if depth == 0 and token[1] in stop:
-                break
-            if token[1] in "([{":
+            t = token[1]
+            if depth == 0:
+                if t == "?":
+                    ternary += 1
+                elif t == ":" and ternary > 0:
+                    ternary -= 1               # ternary colon, keep going
+                elif t in stop:
+                    break
+            if t in "([{":
                 depth += 1
-            elif token[1] in ")]}":
+            elif t in ")]}":
                 if depth == 0:
                     break
                 depth -= 1
@@ -220,7 +232,10 @@ class Parser:
         if value in ("use", "include"):
             self._skip_directive()
             return None
-        if value in ("module", "function"):
+        if value == "module":
+            self._capture_module()
+            return None
+        if value == "function":
             self._skip_definition(value)
             return None
         nxt = self.peek(1)
@@ -355,6 +370,65 @@ class Parser:
                 break
         self.warn(f"{kind} '{name}' skipped (not supported)")
 
+    # ------------------------------------------------------- modules
+    def _capture_module(self):
+        """Record a `module name(params) { body }` definition so each
+        call can be inlined (its body re-parsed with the arguments bound
+        as local variables)."""
+        self.next()                                   # 'module'
+        name = "?"
+        if self.peek() is not None and self.peek()[0] == "ident":
+            name = self.next()[1]
+        self.expect("(")
+        params = []
+        if not self.accept(")"):
+            while True:
+                pname = self.next()[1]
+                default = None
+                if self.accept("="):
+                    default = self._scan_expr(stop=(",", ")"))[1]
+                params.append((pname, default))
+                if self.accept(")"):
+                    break
+                self.expect(",")
+        self.expect("{")
+        body_start = self.i
+        depth = 1
+        while depth > 0 and self.peek() is not None:
+            tok = self.next()
+            if tok[1] == "{":
+                depth += 1
+            elif tok[1] == "}":
+                depth -= 1
+        body_end = self.i - 1                          # the closing '}'
+        self.modules[name] = (params, body_start, body_end)
+
+    def _inline_module(self, name):
+        """Expand a call to a user module: a union holding one assign per
+        bound parameter, then the module body re-parsed as its children."""
+        params, body_start, body_end = self.modules[name]
+        positional, named = self._arguments()
+        inst = CadNode("union", name)
+        for idx, (pname, default) in enumerate(params):
+            if idx < len(positional):
+                value = positional[idx]
+            elif pname in named:
+                value = named[pname]
+            else:
+                value = default
+            inst.add(CadNode("assign", f"{pname} =",
+                             dict(variable=pname,
+                                  value=_arg_source(value))))
+        saved = self.i                                # re-parse the body
+        self.i = body_start
+        while self.i < body_end:
+            child = self.parse_statement()
+            if child is not None:
+                inst.add(child)
+        self.i = saved
+        self.accept(";")                              # end of the call
+        return inst
+
     def _skip_call_statement(self):
         """Skip the arg list + attached statement of an unknown call."""
         self._arguments()
@@ -377,6 +451,8 @@ class Parser:
     # ----------------------------------------------------------- calls
     def _parse_call(self):
         name = self.next()[1]
+        if name in self.modules and name not in _BUILDERS:
+            return self._inline_module(name)
         builder = _BUILDERS.get(name)
         if builder is None:
             self.warn(f"unsupported call '{name}' skipped")
@@ -395,6 +471,19 @@ class Parser:
         else:
             self.accept(";")
         return node
+
+
+def _arg_source(value) -> str:
+    """A module argument (float, expression string, or vector list) as an
+    expression source string for the bound-parameter assign node."""
+    from .model import fmt
+    if value is None:
+        return "0"
+    if isinstance(value, list):
+        return "[" + ", ".join(_arg_source(v) for v in value) + "]"
+    if isinstance(value, str):
+        return value
+    return fmt(value)
 
 
 def _unquote(literal: str) -> str:
@@ -475,11 +564,16 @@ def _b_cube(parser, positional, named):
     size = _get(positional, named, 0, "size", default=10.0)
     if isinstance(size, list):
         w, d, h = (size + [10.0, 10.0])[:3]
+        w, d, h = _num(w, 10.0), _num(d, 10.0), _num(h, 10.0)
+    elif isinstance(size, str):
+        # a variable/expression — could be scalar or a vector; the
+        # graceful .x/.y/.z accessors read a scalar as [s, s, s]
+        w, d, h = f"({size}).x", f"({size}).y", f"({size}).z"
     else:
-        w = d = h = size
+        w = d = h = _num(size, 10.0)
     return CadNode("cube", "Cube", dict(
-        x=0.0, y=0.0, z=0.0, width=_num(w, 10.0), depth=_num(d, 10.0),
-        height=_num(h, 10.0), center=bool(named.get("center", False))))
+        x=0.0, y=0.0, z=0.0, width=w, depth=d, height=h,
+        center=bool(named.get("center", False))))
 
 
 def _b_sphere(parser, positional, named):

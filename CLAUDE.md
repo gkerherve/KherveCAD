@@ -57,10 +57,18 @@ into a new module and import.
   - `scadparse.py`   — **.scad import**: tokenizer + recursive-descent
                        parser for the generated subset plus common
                        variations (d= diameters, scalar rotate/scale,
-                       positional args, modifiers, for/if/assigns).
-                       Unknown constructs (custom `module`/`function`
-                       definitions, `children()`, list comprehensions,
-                       recursion) are skipped with warnings. When a file
+                       positional args, modifiers, for/if/assigns,
+                       vector variables + `.x/.y/.z` swizzles and `[i]`
+                       indexing, ranges `[a:s:b]`, ternary `c?a:b`, and
+                       **user `module` definitions** — each call is
+                       *inlined* as a union with the arguments bound to
+                       assign nodes, then the module body re-parsed).
+                       `expr.py` evaluates the extra syntax (a scalar
+                       reads as `[s,s,s]` so `cube(size)` works either
+                       way). Constructs still outside the subset
+                       (`function` definitions, `children()`, list
+                       comprehensions, recursion) are skipped with
+                       warnings. When a file
                        leans on those and imports **empty**, `import_scad`
                        offers to load it as a single **`scad_raw`** node
                        so the OpenSCAD engine still renders it (editable

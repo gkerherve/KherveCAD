@@ -163,13 +163,28 @@ def test_unknown_call_is_skipped_with_warning(app):
     assert any("frobnicate" in w for w in warnings)
 
 
-def test_module_definition_skipped(app):
+def test_module_call_is_inlined(app):
+    """A user module is expanded at each call: a union holding the bound
+    parameters as assigns, then the module body."""
     root, warnings = _parse("""
-        module thing(a) { cube(a); }
-        cube(5);
+        module thing(a = 3) { cube(a); }
+        thing(7);
+        thing();
     """)
+    calls = [n for n in root.children if n.type == "union"]
+    assert len(calls) == 2                       # two inlined calls
+    inst = calls[0]
+    assigns = [c for c in inst.children if c.type == "assign"]
+    assert assigns[0].params == {"variable": "a", "value": "7"}
+    assert any(c.type == "cube" for c in inst.children)
+    # the default-argument call binds the default
+    assert calls[1].children[0].params["value"] == "3"
+
+
+def test_function_definition_still_skipped(app):
+    root, warnings = _parse("function sq(x) = x * x;\ncube(5);")
     assert [n.type for n in root.children] == ["cube"]
-    assert any("module" in w for w in warnings)
+    assert any("function" in w for w in warnings)
 
 
 def test_full_roundtrip_export_import_export(model, tmp_path):
@@ -224,6 +239,36 @@ def test_import_scad_with_dot_accessor(app):
         "plate = [100, 50, 5];\n"
         "cube(plate);\n"
         "translate([0, 0, plate.z]) cylinder(h = 10, d = 6);\n")
+    m = DocumentModel()
+    m.root = root
+    assert len(mesh.tessellate(m.root, fn=m.effective_fn())) > 0
+
+
+def test_ternary_and_range_expressions(app):
+    from khervecad import expr
+    assert expr.evaluate("x > 1 ? 10 : 20", {"x": 5}) == 10
+    assert expr.evaluate("x > 1 ? 10 : 20", {"x": 0}) == 20
+    assert expr.evaluate("[2 : 2 : 8]") == [2, 4, 6, 8]
+    assert expr.evaluate("[1 : 3]") == [1, 2, 3]
+
+
+def test_for_loop_over_a_vector_variable(app):
+    """`for (x = vals)` iterates the elements of a list variable."""
+    from khervecad.model import CadNode
+    loop = CadNode("for_loop", "For x",
+                   dict(variable="x", values="vals"))
+    assert loop.loop_values({"vals": [5, 10, 15]}) == [5, 10, 15]
+
+
+def test_module_with_body_renders(app):
+    from khervecad import mesh
+    root, _w = _parse("""
+        module plate(size = [40, 30, 5]) {
+            cube(size);
+        }
+        plate();
+        translate([0, 40, 0]) plate([20, 20, 5]);
+    """)
     m = DocumentModel()
     m.root = root
     assert len(mesh.tessellate(m.root, fn=m.effective_fn())) > 0
