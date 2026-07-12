@@ -454,6 +454,92 @@ def fractal_tree() -> CadNode:
     return _root(_tree_branch(120.0, 0.72, 5))
 
 
+def _petal(length, width, thick, lean, color, seg=22) -> CadNode:
+    """One petal: a cone flattened into a pointed blade, leaned open by
+    *lean* degrees. A fresh node tree each call."""
+    cone = _cyl("Blade", width / 2.0, length, r2=0.0, segments=seg)
+    flat = CadNode("scale", "Flatten",
+                   dict(x=1.0, y=max(thick / width, 0.05), z=1.0))
+    flat.add(cone)
+    return _color("Petal", color, _rot(flat, x=lean))
+
+
+def flower() -> CadNode:
+    """A blooming rose, built the way the fractal tree is: a Python
+    builder loops petal rings — each leaning further open, longer and
+    lighter, staggered by a golden offset — and unrolls them into the
+    object tree. Coloured solids only, so it previews without the engine."""
+    stem_h = 92.0
+    stem = _color("Stem", "#3f8f3f",
+                  _cyl("Stem", 2.6, stem_h, r2=1.7, segments=20))
+
+    def leaf(length, width, height, side):
+        n = 10
+        pts = [[round(width * math.sin(math.pi * i / n), 2),
+                round(length * i / n, 2)] for i in range(n + 1)]
+        pts += [[round(-width * math.sin(math.pi * i / n), 2),
+                 round(length * i / n, 2)] for i in range(n, -1, -1)]
+        blade = _color("Leaf", "#4aa04a", _ext(
+            "Leaf", 1.4, CadNode("polygon", "Leaf blade",
+                                 dict(x=0.0, y=0.0, points=pts))))
+        return _rot(_place(_rot(blade, x=62.0), y=2.0, z=height), z=side)
+
+    bloom = CadNode("union", "Bloom")
+    dome = CadNode("scale", "Dome", dict(x=1.0, y=1.0, z=0.5))
+    dome.add(_sphere("Receptacle", 6.5, seg=28))
+    bloom.add(_color("Centre", "#f4c430", dome))
+    for k in range(14):                              # stamens
+        pip = _rot(_place(_sphere("Pip", 1.0, z=6.0, seg=8), y=3.2),
+                   z=k * 360.0 / 14)
+        bloom.add(_color("Stamen", "#e6a12c", pip))
+    #        count, base r, lean°, length, width, colour  (inner -> outer)
+    rings = [(5, 0.0, 20.0, 15, 9, "#b0261a"),
+             (6, 1.6, 38.0, 21, 12, "#cf3a2a"),
+             (7, 3.2, 56.0, 27, 15, "#e2513f"),
+             (8, 4.8, 76.0, 31, 17, "#ef6f5a")]
+    for ri, (count, r, lean, length, width, color) in enumerate(rings):
+        for k in range(count):
+            az = ri * 24.0 + k * 360.0 / count       # golden-ish stagger
+            bloom.add(_rot(_place(_petal(length, width, 3.0, lean, color),
+                                  y=r), z=az))
+    return _root(stem, leaf(30, 9, 34, 90.0), leaf(26, 8, 56, 255.0),
+                 _place(bloom, z=stem_h))
+
+
+def sunflower() -> CadNode:
+    """A sunflower head laid out by phyllotaxis — each seed placed at the
+    golden angle (137.5°) and a radius of sqrt(index), the spiral nature
+    packs seeds with. A Python loop unrolls the whole head into the tree,
+    ringed by ray petals on a stem."""
+    golden = 137.50776
+    seeds, r_seed = 140, 19.0
+    spacing = r_seed / math.sqrt(seeds)              # so the last seed sits
+    head = CadNode("union", "Seed head")             # at the disc rim
+    # green calyx cup under the whole head
+    head.add(_color("Calyx", "#3f8f3f",
+                    _cyl("Calyx", r_seed + 3, 3, z=-3, segments=72)))
+    # two staggered rings of ray florets radiating around the seed disc
+    for ring, (count, length, lean) in enumerate(
+            [(26, 30, 74.0), (26, 26, 70.0)]):
+        for k in range(count):
+            az = ring * (360.0 / count / 2) + k * 360.0 / count
+            head.add(_rot(_place(_petal(length, 7, 2.2, lean, "#f2b500"),
+                                 y=r_seed - 1), z=az))
+    # the phyllotaxis seed spiral, gently domed (centre highest), on top
+    for i in range(seeds):
+        r = spacing * math.sqrt(i)
+        z = 1.0 + 3.0 * (1.0 - (r / r_seed) ** 2)    # convex, above petals
+        seed = CadNode("scale", "Seed", dict(x=1.0, y=0.55, z=0.8))
+        seed.add(_cyl("Seed", 1.7, 1.3, segments=10))
+        color = "#33240f" if i < seeds * 0.5 else "#5f4019"
+        head.add(_color("Seed", color,
+                        _rot(_place(seed, x=r, z=z), z=i * golden)))
+    stem_h = 120.0
+    stem = _color("Stem", "#3f8f3f",
+                  _cyl("Stem", 3.2, stem_h, r2=2.4, segments=20))
+    return _root(stem, _place(_rot(head, x=16.0), z=stem_h))
+
+
 def bosl2_attachments_raw() -> CadNode:
     """A BOSL2 example (attachments) dropped in verbatim as an OpenSCAD
     code node. It renders through the **OpenSCAD engine only** (the
@@ -1127,6 +1213,8 @@ EXAMPLES = [
     ("Orientation cubes", "Showcase", orientation_cubes),
     ("Boolean regions (2D ops)", "Showcase", boolean_regions),
     ("Fractal tree", "Showcase", fractal_tree),
+    ("Flower (layered bloom)", "Showcase", flower),
+    ("Sunflower (phyllotaxis)", "Showcase", sunflower),
     ("BOSL2 attachments (raw OpenSCAD)", "Showcase", bosl2_attachments_raw),
     ("Vacuum starter (CF tee + turbo)", "Vacuum", vacuum_starter),
     ("Desk setup", "Room", desk_setup),

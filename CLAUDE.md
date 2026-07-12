@@ -149,7 +149,10 @@ into a new module and import.
                        library fasteners round a bolt circle by for-loop
                        — plus **Showcase** examples (orientation cubes,
                        2D boolean regions, a recursively-built fractal
-                       tree, and a raw-OpenSCAD BOSL2 passthrough), a
+                       tree, a **layered-bloom flower** and a
+                       **phyllotaxis sunflower** — both procedural,
+                       petals/seeds unrolled from a Python loop into the
+                       tree — and a raw-OpenSCAD BOSL2 passthrough), a
                        vacuum starter and a desk setup. A **Projects**
                        category rebuilds one finished part per chapter of
                        the "Mastering OpenSCAD in 10 projects" course
