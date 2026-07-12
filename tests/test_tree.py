@@ -67,3 +67,42 @@ def test_hidden_node_is_dimmed_and_italic(model):
     assert item.font(0).italic()
     # a foreground brush is set (the dim colour), not the default
     assert item.foreground(0).style() != Qt.NoBrush
+
+
+# --------------------------------------------- merged decorator rows
+
+def test_decorator_chain_merges_into_one_row(model):
+    from khervecad.treepanel import ROLE_BADGES
+    cube = model.add_node("cube")
+    tr = model.wrap_nodes([cube], "translate")
+    model.wrap_nodes([tr], "color")            # color > translate > cube
+    tree = ObjectTree(model)
+    assert tree.topLevelItemCount() == 1       # one merged row
+    item = tree.topLevelItem(0)
+    assert item.childCount() == 0              # the chain is collapsed
+    # selection/properties targets the geometry; structure the chain root
+    assert tree.node_of(item).type == "cube"
+    assert tree._root_of(item).type == "color"
+    badges = item.data(0, ROLE_BADGES)
+    assert badges[0][0] == "color"             # colour swatch
+    assert badges[1] == ("icon", "mdi.cursor-move")   # translate glyph
+
+
+def test_group_is_not_merged(model):
+    a = model.add_node("cube")
+    b = model.add_node("sphere")
+    model.wrap_nodes([a, b], "union")          # a real group, 2 children
+    tree = ObjectTree(model)
+    assert tree.topLevelItemCount() == 1
+    assert tree.topLevelItem(0).childCount() == 2
+
+
+def test_delete_merged_row_removes_whole_chain(model):
+    cube = model.add_node("cube")
+    tr = model.wrap_nodes([cube], "translate")
+    model.wrap_nodes([tr], "color")
+    tree = ObjectTree(model)
+    tree.topLevelItem(0).setSelected(True)
+    for node in tree._top_level_selection():
+        model.remove_node(node)
+    assert model.root.children == []           # nothing orphaned

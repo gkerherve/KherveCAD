@@ -153,7 +153,16 @@ into a new module and import.
                        checkboxes**: hidden objects read greyed + italic
                        and toggle with **Space** or right-click Hide/Show;
                        connecting **guide lines** (custom `drawBranches`)
-                       and a tight indent keep deep trees readable.
+                       and a tight indent keep deep trees readable. A
+                       single-child **decorator chain** (color/translate/
+                       rotate/scale/mirror/offset) wrapping a leaf
+                       collapses into **one row** — the geometry's
+                       icon+name plus **modifier badges** (a colour swatch
+                       or transform glyph, painted by `_RowDelegate`).
+                       `node_of` is the geometry (selection/properties);
+                       `_root_of` is the chain root (delete/drag/duplicate
+                       move the whole part); right-click **Modifiers**
+                       jumps to a wrapped modifier's properties.
                        Context menu: hide/show, Apply operation, group/
                        ungroup, rename, duplicate, delete, **Make
                        Master**; drag & drop reparent/reorder. Plus a

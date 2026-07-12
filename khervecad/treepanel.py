@@ -24,9 +24,10 @@ from PyQt5.QtGui import (QBrush, QColor, QFont, QKeySequence, QPainter,
 from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QCheckBox,
                              QHBoxLayout, QMenu, QMessageBox,
                              QPlainTextEdit, QPushButton, QSpinBox,
-                             QTableWidget, QTableWidgetItem, QTabWidget,
-                             QTextEdit, QToolBar, QTreeWidget,
-                             QTreeWidgetItem, QVBoxLayout, QWidget)
+                             QStyledItemDelegate, QTableWidget,
+                             QTableWidgetItem, QTabWidget, QTextEdit,
+                             QToolBar, QTreeWidget, QTreeWidgetItem,
+                             QVBoxLayout, QWidget)
 
 from . import icons
 from .document import node_from_dict, node_to_dict
@@ -43,7 +44,51 @@ VAR_COLOR_DARK = "#c39bf0"
 HIDDEN_COLOR = "#a8adb4"
 HIDDEN_COLOR_DARK = "#697079"
 
+#: single-child "decorator" wrappers that collapse onto the object they
+#: modify: a chain of these ending in a leaf shows as one row + badges.
+DECORATOR_TYPES = ("color", "translate", "rotate", "scale", "mirror",
+                   "offset")
+#: MDI icon per decorator for its row badge (color uses a live swatch).
+BADGE_ICON = {
+    "translate": "mdi.cursor-move",
+    "rotate": "mdi.rotate-right",
+    "scale": "mdi.resize",
+    "mirror": "mdi.flip-horizontal",
+    "offset": "mdi.rounded-corner",
+}
+
+# item data roles beyond the primary node id (Qt.UserRole)
+ROLE_ROOT = Qt.UserRole + 1        # chain root node id (structural ops)
+ROLE_BADGES = Qt.UserRole + 2      # [("icon", name) | ("color", hex)]
+ROLE_CHAIN = Qt.UserRole + 3       # all node ids in the collapsed chain
+
 CLIPBOARD_FORMAT = "kcad-clipboard"
+
+
+class _RowDelegate(QStyledItemDelegate):
+    """Paints modifier badges (colour swatch / transform glyphs) at the
+    right of a merged row, after the normal icon + text."""
+
+    def paint(self, painter, option, index):
+        super().paint(painter, option, index)
+        badges = index.data(ROLE_BADGES)
+        if not badges:
+            return
+        size = 13
+        gap = 3
+        x = option.rect.right() - gap
+        y = option.rect.center().y() - size // 2
+        painter.save()
+        for kind, value in reversed(badges):
+            x -= size
+            if kind == "color":
+                painter.setPen(QPen(QColor("#888888")))
+                painter.setBrush(QColor(value))
+                painter.drawRoundedRect(x, y, size, size, 3, 3)
+            else:
+                icons.icon(value).paint(painter, x, y, size, size)
+            x -= gap
+        painter.restore()
 
 #: operations offered by the "Apply" context submenu.
 APPLY_OPS = ["linear_extrude", "rotate_extrude", "offset", "translate",
@@ -79,6 +124,7 @@ class ObjectTree(QTreeWidget):
         # connecting guide lines drawn in drawBranches()
         self.setIndentation(15)
         self.setRootIsDecorated(True)
+        self.setItemDelegate(_RowDelegate(self))
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._context_menu)
         self.itemChanged.connect(self._item_changed)
@@ -93,13 +139,27 @@ class ObjectTree(QTreeWidget):
 
     # ------------------------------------------------------------ sync
     def node_of(self, item: QTreeWidgetItem):
+        """The node a row represents for selection/properties — the
+        geometry itself when a decorator chain is merged onto it."""
         return self.model.find(item.data(0, Qt.UserRole)) if item else None
+
+    def _root_of(self, item):
+        """The node a row represents for structural ops (delete, drag,
+        duplicate) — the outermost node of a merged chain, so the whole
+        decorated part moves together."""
+        if item is None:
+            return None
+        rid = item.data(0, ROLE_ROOT)
+        return self.model.find(rid) if rid is not None else self.node_of(item)
 
     def _item_of(self, node, root_item=None):
         root_item = root_item or self.invisibleRootItem()
         for i in range(root_item.childCount()):
             child = root_item.child(i)
-            if child.data(0, Qt.UserRole) == node.id:
+            # match the primary node or the merged chain's root, so
+            # selecting either the geometry or its wrapper finds the row
+            if child.data(0, Qt.UserRole) == node.id \
+                    or child.data(0, ROLE_ROOT) == node.id:
                 return child
             found = self._item_of(node, child)
             if found:
@@ -109,6 +169,26 @@ class ObjectTree(QTreeWidget):
     def selected_nodes(self):
         return [n for n in (self.node_of(i) for i in self.selectedItems())
                 if n is not None]
+
+    def selected_roots(self):
+        """Structural nodes for the selected rows (chain roots)."""
+        return [n for n in (self._root_of(i) for i in self.selectedItems())
+                if n is not None]
+
+    def _collapse_chain(self, node):
+        """If *node* begins a chain of single-child decorators
+        (color/transform) that bottoms out in a leaf, return
+        ``(geometry, modifiers)`` — else None (keep it nested)."""
+        if node.type not in DECORATOR_TYPES or len(node.children) != 1:
+            return None
+        mods = []
+        cur = node
+        while cur.type in DECORATOR_TYPES and len(cur.children) == 1:
+            mods.append(cur)
+            cur = cur.children[0]
+        if cur.is_container():
+            return None                # ends in a group — leave nested
+        return cur, mods
 
     def _top_nodes(self):
         """The nodes shown at the top level of this tree — the document
@@ -124,7 +204,7 @@ class ObjectTree(QTreeWidget):
         self._updating = True
         self.clear()
         for child in self._top_nodes():
-            self._build_item(child, self.invisibleRootItem(), selected)
+            self._build_node(child, self.invisibleRootItem(), selected)
         self._updating = False
         self._emit_selection()
 
@@ -140,9 +220,8 @@ class ObjectTree(QTreeWidget):
             if node is not None:
                 self._expand_state[node.id] = False
 
-    def _build_item(self, node, parent_item, selected):
+    def _new_item(self, parent_item, node):
         item = QTreeWidgetItem(parent_item)
-        item.setData(0, Qt.UserRole, node.id)
         # no visibility checkbox — hidden objects are dimmed instead,
         # toggled with Space or the right-click Hide/Show. Tree items are
         # user-checkable by default, so clear that flag explicitly.
@@ -153,10 +232,26 @@ class ObjectTree(QTreeWidget):
         else:
             flags &= ~Qt.ItemIsDropEnabled
         item.setFlags(flags)
+        return item
+
+    def _build_node(self, node, parent_item, selected):
+        merged = self._collapse_chain(node)
+        if merged is not None:
+            geometry, mods = merged
+            item = self._new_item(parent_item, geometry)
+            item.setData(0, Qt.UserRole, geometry.id)
+            item.setData(0, ROLE_ROOT, node.id)   # structural ops -> chain
+            item.setData(0, ROLE_CHAIN,
+                         [m.id for m in mods] + [geometry.id])
+            item.setData(0, ROLE_BADGES, self._badges(mods))
+            self._decorate(item, geometry)
+            if geometry.id in selected or node.id in selected:
+                item.setSelected(True)
+            return                                # chain fully consumed
+        # a normal row, recursing into its children
+        item = self._new_item(parent_item, node)
+        item.setData(0, Qt.UserRole, node.id)
         self._decorate(item, node)
-        # honour the user's own expand/collapse (remembered across
-        # rebuilds); a brand-new container defaults to open, except the
-        # Variables group which starts collapsed
         if node.is_container():
             default_open = node.type != "variables"
             if self._expand_state.get(node.id, default_open):
@@ -164,7 +259,18 @@ class ObjectTree(QTreeWidget):
         if node.id in selected:
             item.setSelected(True)
         for child in node.children:
-            self._build_item(child, item, selected)
+            self._build_node(child, item, selected)
+
+    @staticmethod
+    def _badges(mods):
+        """Badge specs for a merged chain's modifiers (outermost first)."""
+        out = []
+        for m in mods:
+            if m.type == "color":
+                out.append(("color", str(m.params.get("color", "#888"))))
+            else:
+                out.append(("icon", BADGE_ICON.get(m.type, "mdi.cog")))
+        return out
 
     def _decorate(self, item, node):
         from .style import tokens
@@ -175,7 +281,10 @@ class ObjectTree(QTreeWidget):
         font = item.font(0)
         font.setItalic(not node.visible)
         item.setFont(0, font)
-        error = self.errors.get(node.id)
+        # an error on any node of a merged chain reddens the row
+        chain = item.data(0, ROLE_CHAIN) or [node.id]
+        error = next((self.errors[i] for i in chain if i in self.errors),
+                     None)
         label = NODE_TYPES[node.type]["label"]
         if error:
             color = ERROR_COLOR_DARK if dark else ERROR_COLOR
@@ -218,7 +327,14 @@ class ObjectTree(QTreeWidget):
         item = self._item_of(node)
         if item:
             self._updating = True
-            self._decorate(item, node)
+            # always redraw with the row's primary node (a merged row
+            # shows its geometry, even when a wrapped modifier changed)
+            self._decorate(item, self.node_of(item))
+            root = self._root_of(item)
+            merged = self._collapse_chain(root) if root is not None \
+                else None
+            if merged is not None:
+                item.setData(0, ROLE_BADGES, self._badges(merged[1]))
             self._updating = False
 
     def _item_changed(self, item, column):
@@ -249,8 +365,10 @@ class ObjectTree(QTreeWidget):
 
     # -------------------------------------------------------- clipboard
     def _top_level_selection(self):
-        """Selected nodes minus any whose ancestor is also selected."""
-        nodes = self.selected_nodes()
+        """Structural roots for the selection, minus any whose ancestor
+        is also selected — the whole decorated part for a merged row, so
+        cut/copy/delete/group act on the entire chain."""
+        nodes = self.selected_roots()
         chosen = []
         for node in nodes:
             probe = node.parent
@@ -450,10 +568,10 @@ class ObjectTree(QTreeWidget):
 
     # ----------------------------------------------------- drag & drop
     def dropEvent(self, event):
-        moving = self.selected_nodes()
+        moving = self.selected_roots()         # move whole decorated parts
         root = self._drop_container()
         target_item = self.itemAt(event.pos())
-        target = self.node_of(target_item) or root
+        target = self._root_of(target_item) or root
         pos = self.dropIndicatorPosition()
         if pos == QAbstractItemView.OnItem and not target.is_container():
             pos = QAbstractItemView.BelowItem
@@ -471,12 +589,13 @@ class ObjectTree(QTreeWidget):
 
     # --------------------------------------------------- context menu
     def _context_menu(self, pos):
-        nodes = self.selected_nodes()
+        nodes = self.selected_nodes()          # geometry (hide/colour)
+        roots = self._top_level_selection()    # whole parts (structural)
         menu = QMenu(self)
         if nodes and self.IS_MASTERS:
-            self._masters_menu(menu, nodes)
+            self._masters_menu(menu, nodes, roots)
         elif nodes:
-            self._objects_menu(menu, nodes)
+            self._objects_menu(menu, nodes, roots)
         else:
             menu.addAction(icons.icon("mdi.content-paste"),
                            "Paste\tCtrl+V", self.paste_clipboard)
@@ -487,11 +606,29 @@ class ObjectTree(QTreeWidget):
         if menu.actions():
             menu.exec_(self.viewport().mapToGlobal(pos))
 
-    def _masters_menu(self, menu, nodes):
+    def _modifiers_menu(self, menu):
+        """For a single merged row, a submenu to jump to each wrapped
+        modifier's properties (colour, transform)."""
+        items = self.selectedItems()
+        if len(items) != 1:
+            return
+        chain = items[0].data(0, ROLE_CHAIN)
+        mods = [self.model.find(i) for i in (chain or [])[:-1]]
+        mods = [m for m in mods if m is not None]
+        if not mods:
+            return
+        sub = menu.addMenu(icons.icon("mdi.tune-variant"), "Modifiers")
+        for m in mods:
+            sub.addAction(
+                icons.icon(NODE_TYPES[m.type]["icon"]),
+                f"{NODE_TYPES[m.type]['label']} — {m.name}",
+                lambda _=False, node=m: self.selection_changed.emit([node]))
+
+    def _masters_menu(self, menu, nodes, roots):
         """Context menu inside the Masters tab."""
         menu.addAction(
             icons.icon("mdi.link-variant"), "Add to Scene (Linked copy)",
-            lambda: [self.model.instance_master(n) for n in nodes])
+            lambda: [self.model.instance_master(n) for n in roots])
         menu.addAction(icons.icon("mdi.plus"), "New master",
                        lambda: self.select_nodes(
                            [self.model.new_master()]))
@@ -502,12 +639,12 @@ class ObjectTree(QTreeWidget):
             menu.addAction(icons.icon("mdi.rename-box"), "Rename",
                            lambda: self.editItem(self.selectedItems()[0], 0))
         menu.addAction(icons.icon("mdi.content-duplicate"), "Duplicate",
-                       lambda: [self.model.duplicate(n) for n in nodes])
+                       lambda: [self.model.duplicate(n) for n in roots])
         menu.addSeparator()
         menu.addAction(icons.icon("mdi.delete-outline"), "Delete",
-                       lambda: [self.model.remove_node(n) for n in nodes])
+                       lambda: [self.model.remove_node(n) for n in roots])
 
-    def _objects_menu(self, menu, nodes):
+    def _objects_menu(self, menu, nodes, roots):
         hidden = [n for n in nodes if not n.visible]
         menu.addAction(
             icons.icon("mdi.eye-outline" if hidden
@@ -515,22 +652,23 @@ class ObjectTree(QTreeWidget):
             "Show" if hidden else "Hide",
             lambda: [self.model.set_visible(n, bool(hidden))
                      for n in nodes])
+        self._modifiers_menu(menu)
         menu.addSeparator()
         apply_menu = menu.addMenu(icons.icon("mdi.auto-fix"), "Apply")
         for op in APPLY_OPS:
             apply_menu.addAction(
                 icons.icon(NODE_TYPES[op]["icon"]),
                 NODE_TYPES[op]["label"],
-                lambda _=False, o=op: self.model.wrap_nodes(nodes, o))
+                lambda _=False, o=op: self.model.wrap_nodes(roots, o))
         apply_menu.addSeparator()
         apply_menu.addAction(
             icons.icon("mdi.blur"), "Round edges (3D)",
-            lambda: self.model.round_edges(nodes))
+            lambda: self.model.round_edges(roots))
         menu.addAction(icons.icon("mdi.palette-outline"),
                        "Color...", lambda: self._pick_color(nodes))
         menu.addAction(icons.icon("mdi.group"), "Group\tCtrl+G",
-                       lambda: self.model.group_nodes(nodes))
-        containers = [n for n in nodes if n.is_container()]
+                       lambda: self.model.group_nodes(roots))
+        containers = [n for n in roots if n.is_container()]
         if containers:
             menu.addAction(
                 icons.icon("mdi.ungroup"), "Ungroup\tCtrl+Shift+G",
@@ -549,13 +687,13 @@ class ObjectTree(QTreeWidget):
                                self.selectedItems()[0], 0))
         menu.addAction(icons.icon("mdi.content-duplicate"),
                        "Duplicate", lambda: [self.model.duplicate(n)
-                                             for n in nodes])
-        if len(nodes) == 1:
+                                             for n in roots])
+        if len(roots) == 1:
             menu.addAction(
                 icons.icon("mdi.link-variant"),
                 "Linked copy (updates with master)",
-                lambda: self.model.add_linked_copy(nodes[0]))
-        promotable = [n for n in nodes if n.type not in
+                lambda: self.model.add_linked_copy(roots[0]))
+        promotable = [n for n in roots if n.type not in
                       ("assign", "variables", "masters", "reference")]
         if promotable:
             menu.addAction(
@@ -566,7 +704,7 @@ class ObjectTree(QTreeWidget):
         menu.addSeparator()
         menu.addAction(icons.icon("mdi.delete-outline"), "Delete",
                        lambda: [self.model.remove_node(n)
-                                for n in nodes])
+                                for n in roots])
 
 
 class MastersTree(ObjectTree):
