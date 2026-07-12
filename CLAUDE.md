@@ -149,10 +149,15 @@ into a new module and import.
                        Pull, Connect to GitHub); the status bar shows the
                        current file path, File > Show in File Explorer
                        reveals it.
-  - `treepanel.py`   — `BuilderPanel`: Objects tree (context menu:
-                       hide/show, Apply operation, group/ungroup,
-                       rename, duplicate, delete, **Make Master**; drag &
-                       drop reparent/reorder) + a **Masters tab**
+  - `treepanel.py`   — `BuilderPanel`: Objects tree — **no visibility
+                       checkboxes**: hidden objects read greyed + italic
+                       and toggle with **Space** or right-click Hide/Show;
+                       connecting **guide lines** (custom `drawBranches`)
+                       and a tight indent keep deep trees readable.
+                       Context menu: hide/show, Apply operation, group/
+                       ungroup, rename, duplicate, delete, **Make
+                       Master**; drag & drop reparent/reorder. Plus a
+                       **Masters tab**
                        (`MastersTree`) listing only the reusable master
                        definitions, a **Variables** sheet, and a Code tab
                        — an editable OpenSCAD view with syntax

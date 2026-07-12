@@ -19,7 +19,8 @@ import re
 
 from PyQt5.QtCore import QEvent, QRect, QSize, Qt, pyqtSignal
 from PyQt5.QtGui import (QBrush, QColor, QFont, QKeySequence, QPainter,
-                         QSyntaxHighlighter, QTextCharFormat, QTextCursor)
+                         QPen, QSyntaxHighlighter, QTextCharFormat,
+                         QTextCursor)
 from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QCheckBox,
                              QHBoxLayout, QMenu, QMessageBox,
                              QPlainTextEdit, QPushButton, QSpinBox,
@@ -38,6 +39,9 @@ ERROR_COLOR_DARK = "#ef6c6c"
 #: colour for variable (assign) nodes so they read as a group.
 VAR_COLOR = "#6f42c1"
 VAR_COLOR_DARK = "#c39bf0"
+#: dimmed colour for hidden objects (shown greyed + italic, no checkbox).
+HIDDEN_COLOR = "#a8adb4"
+HIDDEN_COLOR_DARK = "#697079"
 
 CLIPBOARD_FORMAT = "kcad-clipboard"
 
@@ -71,6 +75,10 @@ class ObjectTree(QTreeWidget):
         self.setDragDropMode(QAbstractItemView.InternalMove)
         self.setDefaultDropAction(Qt.MoveAction)
         self.setExpandsOnDoubleClick(False)
+        # deep trees stay compact and readable: a tight indent and the
+        # connecting guide lines drawn in drawBranches()
+        self.setIndentation(15)
+        self.setRootIsDecorated(True)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._context_menu)
         self.itemChanged.connect(self._item_changed)
@@ -135,12 +143,16 @@ class ObjectTree(QTreeWidget):
     def _build_item(self, node, parent_item, selected):
         item = QTreeWidgetItem(parent_item)
         item.setData(0, Qt.UserRole, node.id)
-        item.setFlags(item.flags() | Qt.ItemIsEditable
-                      | Qt.ItemIsUserCheckable
-                      | (Qt.ItemIsDropEnabled if node.is_container()
-                         else Qt.ItemFlags()))
-        if not node.is_container():
-            item.setFlags(item.flags() & ~Qt.ItemIsDropEnabled)
+        # no visibility checkbox — hidden objects are dimmed instead,
+        # toggled with Space or the right-click Hide/Show. Tree items are
+        # user-checkable by default, so clear that flag explicitly.
+        flags = (item.flags() | Qt.ItemIsEditable) \
+            & ~Qt.ItemIsUserCheckable
+        if node.is_container():
+            flags |= Qt.ItemIsDropEnabled
+        else:
+            flags &= ~Qt.ItemIsDropEnabled
+        item.setFlags(flags)
         self._decorate(item, node)
         # honour the user's own expand/collapse (remembered across
         # rebuilds); a brand-new container defaults to open, except the
@@ -155,25 +167,32 @@ class ObjectTree(QTreeWidget):
             self._build_item(child, item, selected)
 
     def _decorate(self, item, node):
+        from .style import tokens
+        dark = tokens().get("dark")
         item.setText(0, node.name)
         item.setIcon(0, icons.icon(NODE_TYPES[node.type]["icon"]))
-        item.setCheckState(0, Qt.Checked if node.visible else Qt.Unchecked)
+        # hidden objects read as greyed + italic (no checkbox)
+        font = item.font(0)
+        font.setItalic(not node.visible)
+        item.setFont(0, font)
         error = self.errors.get(node.id)
+        label = NODE_TYPES[node.type]["label"]
         if error:
-            from .style import tokens
-            color = ERROR_COLOR_DARK if tokens().get("dark") \
-                else ERROR_COLOR
+            color = ERROR_COLOR_DARK if dark else ERROR_COLOR
             item.setForeground(0, QBrush(QColor(color)))
             item.setToolTip(0, f"⚠ {error}")
+        elif not node.visible:
+            color = HIDDEN_COLOR_DARK if dark else HIDDEN_COLOR
+            item.setForeground(0, QBrush(QColor(color)))
+            item.setToolTip(0, f"{label} — hidden (Space to show)")
         elif node.type == "assign":
-            from .style import tokens
-            color = VAR_COLOR_DARK if tokens().get("dark") else VAR_COLOR
+            color = VAR_COLOR_DARK if dark else VAR_COLOR
             item.setForeground(0, QBrush(QColor(color)))
             item.setToolTip(0, "Variable — also editable in the "
                                "Variables sheet")
         else:
             item.setData(0, Qt.ForegroundRole, None)
-            item.setToolTip(0, NODE_TYPES[node.type]["label"])
+            item.setToolTip(0, label)
 
     def set_errors(self, errors: dict):
         """Paint nodes with problems red (tooltip = the message)."""
@@ -203,14 +222,12 @@ class ObjectTree(QTreeWidget):
             self._updating = False
 
     def _item_changed(self, item, column):
+        # only rename now — visibility is toggled via Space / context menu
         if self._updating or column != 0:
             return
         node = self.node_of(item)
         if node is None:
             return
-        visible = item.checkState(0) == Qt.Checked
-        if visible != node.visible:
-            self.model.set_visible(node, visible)
         if item.text(0) and item.text(0) != node.name:
             self.model.rename(node, item.text(0))
 
@@ -353,8 +370,59 @@ class ObjectTree(QTreeWidget):
         elif event.key() == Qt.Key_Down and \
                 event.modifiers() & Qt.ControlModifier:
             self.shift_selection(1)
+        elif key == Qt.Key_Space:
+            self._toggle_visibility(self.selected_nodes())
         else:
             super().keyPressEvent(event)
+
+    def _toggle_visibility(self, nodes):
+        """Show/hide the given objects — the whole selection flips to the
+        opposite of the first one's state, so a mixed selection lands in
+        sync."""
+        if not nodes:
+            return
+        target = not nodes[0].visible
+        for node in nodes:
+            self.model.set_visible(node, target)
+
+    # ------------------------------------------------------ guide lines
+    def drawBranches(self, painter, rect, index):
+        """Draw faint connecting lines down the indentation so deep trees
+        read clearly — a vertical line per continuing ancestor and an
+        L/T connector into each row."""
+        item = self.itemFromIndex(index)
+        if item is None:
+            super().drawBranches(painter, rect, index)
+            return
+        # for the item and each ancestor: does it have a sibling below?
+        cont = []
+        cur = item
+        while cur is not None:
+            parent = cur.parent() or self.invisibleRootItem()
+            cont.append(parent.indexOfChild(cur)
+                        < parent.childCount() - 1)
+            cur = cur.parent()
+        cont.reverse()                         # top ancestor .. this item
+        depth = len(cont) - 1
+        indent = self.indentation()
+        from .style import tokens
+        pen = QPen(QColor("#5b6168" if tokens().get("dark")
+                          else "#ccd0d6"))
+        pen.setWidthF(1.0)
+        painter.save()
+        painter.setPen(pen)
+        top, bottom = rect.top(), rect.bottom()
+        mid = (top + bottom) // 2
+        base = rect.left()
+        for c in range(depth):                 # ancestor continuation lines
+            if cont[c]:
+                x = base + c * indent + indent // 2
+                painter.drawLine(x, top, x, bottom)
+        xc = rect.right() - indent // 2         # this row's own column
+        painter.drawLine(xc, top, xc, bottom if cont[depth] else mid)
+        painter.drawLine(xc, mid, rect.right(), mid)
+        painter.restore()
+        super().drawBranches(painter, rect, index)   # expand arrow on top
 
     def _pick_color(self, nodes):
         """Colour the selected objects with OpenSCAD's color()."""
