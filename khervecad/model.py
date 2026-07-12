@@ -158,6 +158,14 @@ NODE_TYPES = {
         params=dict(radius=2.0, chamfer=False),
         schema=[("radius", "Radius (+out/-in)", "float", -1e4, 1e4),
                 ("chamfer", "Chamfer (no rounding)", "bool", None, None)]),
+    "projection": dict(
+        # flattens 3D children to a 2D outline (cut = a section slice).
+        # A 2D result the built-in preview can't show — the OpenSCAD
+        # engine renders it (mainly for 2D/DXF templates).
+        label="Projection (3D→2D)", category=OPERATION,
+        icon="mdi.image-filter-center-focus-weak",
+        params=dict(cut=False),
+        schema=[("cut", "Cut (section slice)", "bool", None, None)]),
     "color": dict(
         label="Color", category=OPERATION, icon="mdi.palette-outline",
         params=dict(color="#4a90d9", alpha=1.0),
@@ -636,6 +644,8 @@ class CadNode:
                 return (f"offset(delta={fmt(p['radius'])}, "
                         f"chamfer=true)")
             return f"offset(r={fmt(p['radius'])})"
+        if t == "projection":
+            return f"projection(cut = {fmt(bool(p.get('cut', False)))})"
         if t == "color":
             alpha = p.get("alpha", 1.0)
             if isinstance(alpha, float) and alpha >= 1.0:

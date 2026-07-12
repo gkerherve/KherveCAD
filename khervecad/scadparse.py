@@ -675,6 +675,11 @@ def _b_offset(parser, positional, named):
         chamfer=False))
 
 
+def _b_projection(parser, positional, named):
+    return CadNode("projection", "Projection",
+                   dict(cut=bool(named.get("cut", False))))
+
+
 def _b_import(parser, positional, named):
     path = _get(positional, named, 0, "file", default="")
     return CadNode("stl_import", "Import STL",
@@ -708,7 +713,8 @@ _BUILDERS = {
     "scale": _b_scale, "mirror": _b_mirror,
     "linear_extrude": _b_linear_extrude,
     "rotate_extrude": _b_rotate_extrude,
-    "offset": _b_offset, "import": _b_import, "color": _b_color,
+    "offset": _b_offset, "projection": _b_projection,
+    "import": _b_import, "color": _b_color,
     "union": _simple("union", "Group"),
     "difference": _simple("difference", "Difference"),
     "intersection": _simple("intersection", "Intersection"),

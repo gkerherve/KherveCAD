@@ -684,6 +684,10 @@ def _tess(node, env, color, sel, selected):
         # verbatim OpenSCAD — only the OpenSCAD engine can render it;
         # the built-in tessellator has no model for it.
         return []
+    if t == "projection":
+        # flattens 3D to a 2D outline — a 2D result the mesh preview
+        # can't represent; the OpenSCAD engine renders it.
+        return []
     if t in ("root", "hull", "variables"):
         # 3D hull is approximated as the union of its children;
         # "variables" only holds assignments, so it adds no geometry.

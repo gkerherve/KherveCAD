@@ -67,6 +67,9 @@ OPERATIONS = ["linear_extrude", "rotate_extrude", "translate", "rotate",
 
 
 class MainWindow(QMainWindow):
+    #: every open window, so a second instance isn't garbage-collected.
+    _windows = []
+
     def __init__(self):
         super().__init__()
         self.setWindowIcon(icons.app_icon())
@@ -284,6 +287,8 @@ class MainWindow(QMainWindow):
 
         file_menu = m.addMenu("&File")
         file_menu.addAction("&New", self.new_document, "Ctrl+N")
+        file_menu.addAction("New &Window", self.new_window,
+                            "Ctrl+Shift+N")
         file_menu.addAction("&Open...", self.open_file, "Ctrl+O")
         self.recent_menu = file_menu.addMenu("Open &Recent")
         self.recent_menu.aboutToShow.connect(self._rebuild_recent_menu)
@@ -831,6 +836,16 @@ class MainWindow(QMainWindow):
         self.view3d.user_moved = False        # fresh document, frame it
         self._update_title()
 
+    def new_window(self):
+        """Open a second, independent KherveCAD window (empty document)."""
+        win = MainWindow()
+        MainWindow._windows.append(win)       # keep it alive
+        # offset it a little so it doesn't sit exactly on this one
+        win.move(self.x() + 40, self.y() + 40)
+        win.show()
+        win.raise_()
+        win.activateWindow()
+
     def open_file(self):
         recent = self._recent_files()
         start = str(Path(recent[0]).parent) if recent else ""
@@ -1224,6 +1239,8 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         if self._confirm_discard():
+            if self in MainWindow._windows:    # let a closed window GC
+                MainWindow._windows.remove(self)
             event.accept()
         else:
             event.ignore()
