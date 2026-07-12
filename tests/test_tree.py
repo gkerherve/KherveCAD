@@ -106,3 +106,34 @@ def test_delete_merged_row_removes_whole_chain(model):
     for node in tree._top_level_selection():
         model.remove_node(node)
     assert model.root.children == []           # nothing orphaned
+
+
+def test_decorator_wrapping_group_folds_but_keeps_children(model):
+    from khervecad.treepanel import ROLE_BADGES
+    a = model.add_node("cube")
+    b = model.add_node("sphere")
+    grp = model.wrap_nodes([a, b], "union")
+    r1 = model.wrap_nodes([grp], "rotate")
+    model.wrap_nodes([r1], "rotate")           # rotate>rotate>union
+    tree = ObjectTree(model)
+    assert tree.topLevelItemCount() == 1
+    row = tree.topLevelItem(0)
+    assert tree.node_of(row).type == "union"   # the group is the row
+    assert row.childCount() == 2               # its children still nest
+    badges = row.data(0, ROLE_BADGES)
+    assert badges == [("icon", "mdi.rotate-right"),
+                      ("icon", "mdi.rotate-right")]
+
+
+def test_hiding_a_group_dims_the_whole_subtree(model):
+    from khervecad.treepanel import ROLE_TAG
+    a = model.add_node("cube")
+    grp = model.wrap_nodes([a], "union")
+    model.set_visible(grp, False)
+    tree = ObjectTree(model)
+    row = tree.topLevelItem(0)
+    child = row.child(0)
+    assert row.data(0, ROLE_TAG) is True       # explicitly hidden -> tag
+    assert child.data(0, ROLE_TAG) is False    # child not tagged...
+    assert child.font(0).italic()              # ...but dimmed by its parent
+    assert row.text(0) == grp.name             # text stays clean (rename ok)

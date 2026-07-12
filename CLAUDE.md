@@ -152,13 +152,20 @@ into a new module and import.
   - `treepanel.py`   — `BuilderPanel`: Objects tree — **no visibility
                        checkboxes**: hidden objects read greyed + italic
                        and toggle with **Space** or right-click Hide/Show;
-                       connecting **guide lines** (custom `drawBranches`)
-                       and a tight indent keep deep trees readable. A
-                       single-child **decorator chain** (color/translate/
-                       rotate/scale/mirror/offset) wrapping a leaf
-                       collapses into **one row** — the geometry's
-                       icon+name plus **modifier badges** (a colour swatch
-                       or transform glyph, painted by `_RowDelegate`).
+                       hiding a node **dims its whole subtree** (effective
+                       visibility walks model ancestors) and only the
+                       explicitly-hidden row shows a "(hidden)" tag
+                       (painted by the delegate, so the item text stays
+                       clean for renaming). Connecting **guide lines**
+                       (custom `drawBranches`) and a tight indent keep
+                       deep trees readable. A single-child **decorator
+                       chain** (color/translate/rotate/scale/mirror/
+                       offset) folds onto the object it wraps — **one
+                       row** with the object's icon+name plus **modifier
+                       badges** (colour swatch / transform glyph via
+                       `_RowDelegate`); when it wraps a **container** the
+                       badges land on the container's row and its
+                       children still nest below.
                        `node_of` is the geometry (selection/properties);
                        `_root_of` is the chain root (delete/drag/duplicate
                        move the whole part); right-click **Modifiers**

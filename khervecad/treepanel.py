@@ -61,6 +61,7 @@ BADGE_ICON = {
 ROLE_ROOT = Qt.UserRole + 1        # chain root node id (structural ops)
 ROLE_BADGES = Qt.UserRole + 2      # [("icon", name) | ("color", hex)]
 ROLE_CHAIN = Qt.UserRole + 3       # all node ids in the collapsed chain
+ROLE_TAG = Qt.UserRole + 4         # True -> paint a "(hidden)" tag
 
 CLIPBOARD_FORMAT = "kcad-clipboard"
 
@@ -71,6 +72,20 @@ class _RowDelegate(QStyledItemDelegate):
 
     def paint(self, painter, option, index):
         super().paint(painter, option, index)
+        # a "(hidden)" tag just after the object's name
+        if index.data(ROLE_TAG):
+            fm = option.fontMetrics
+            text = index.data(Qt.DisplayRole) or ""
+            icon_w = option.decorationSize.width() + 6
+            x = option.rect.left() + icon_w + fm.horizontalAdvance(text) + 8
+            painter.save()
+            f = painter.font()
+            f.setItalic(True)
+            painter.setFont(f)
+            painter.setPen(QColor("#9aa0a6"))
+            painter.drawText(x, option.rect.top(), 90, option.rect.height(),
+                             int(Qt.AlignVCenter), "(hidden)")
+            painter.restore()
         badges = index.data(ROLE_BADGES)
         if not badges:
             return
@@ -177,8 +192,10 @@ class ObjectTree(QTreeWidget):
 
     def _collapse_chain(self, node):
         """If *node* begins a chain of single-child decorators
-        (color/transform) that bottoms out in a leaf, return
-        ``(geometry, modifiers)`` — else None (keep it nested)."""
+        (color/transform), fold them onto the object they wrap: return
+        ``(end, modifiers)`` where *end* is the wrapped node (a leaf, or
+        a container whose children still nest under the merged row).
+        None when *node* isn't such a chain."""
         if node.type not in DECORATOR_TYPES or len(node.children) != 1:
             return None
         mods = []
@@ -186,8 +203,6 @@ class ObjectTree(QTreeWidget):
         while cur.type in DECORATOR_TYPES and len(cur.children) == 1:
             mods.append(cur)
             cur = cur.children[0]
-        if cur.is_container():
-            return None                # ends in a group — leave nested
         return cur, mods
 
     def _top_nodes(self):
@@ -237,17 +252,23 @@ class ObjectTree(QTreeWidget):
     def _build_node(self, node, parent_item, selected):
         merged = self._collapse_chain(node)
         if merged is not None:
-            geometry, mods = merged
-            item = self._new_item(parent_item, geometry)
-            item.setData(0, Qt.UserRole, geometry.id)
-            item.setData(0, ROLE_ROOT, node.id)   # structural ops -> chain
+            end, mods = merged
+            item = self._new_item(parent_item, end)
+            item.setData(0, Qt.UserRole, end.id)   # selection -> wrapped
+            item.setData(0, ROLE_ROOT, node.id)    # structural -> chain
             item.setData(0, ROLE_CHAIN,
-                         [m.id for m in mods] + [geometry.id])
+                         [m.id for m in mods] + [end.id])
             item.setData(0, ROLE_BADGES, self._badges(mods))
-            self._decorate(item, geometry)
-            if geometry.id in selected or node.id in selected:
+            self._decorate(item, end)
+            # a wrapped container still shows its children one level down
+            if end.is_container():
+                if self._expand_state.get(end.id, end.type != "variables"):
+                    item.setExpanded(True)
+                for child in end.children:
+                    self._build_node(child, item, selected)
+            if end.id in selected or node.id in selected:
                 item.setSelected(True)
-            return                                # chain fully consumed
+            return
         # a normal row, recursing into its children
         item = self._new_item(parent_item, node)
         item.setData(0, Qt.UserRole, node.id)
@@ -272,14 +293,30 @@ class ObjectTree(QTreeWidget):
                 out.append(("icon", BADGE_ICON.get(m.type, "mdi.cog")))
         return out
 
+    def _model_visible(self, node):
+        """True only if *node* and every ancestor is visible — hiding a
+        parent effectively hides the whole subtree below it."""
+        n = node
+        while n is not None:
+            if not n.visible:
+                return False
+            n = n.parent
+        return True
+
     def _decorate(self, item, node):
         from .style import tokens
         dark = tokens().get("dark")
-        item.setText(0, node.name)
         item.setIcon(0, icons.icon(NODE_TYPES[node.type]["icon"]))
-        # hidden objects read as greyed + italic (no checkbox)
+        own_hidden = not node.visible                 # explicitly hidden
+        eff_hidden = not self._model_visible(node)    # or a parent is
+        # keep the row text clean (so renaming isn't polluted); the
+        # "(hidden)" tag on the explicitly-hidden node is painted by the
+        # delegate from ROLE_TAG
+        item.setText(0, node.name)
+        item.setData(0, ROLE_TAG, own_hidden)
+        # dim + italic if hidden by itself OR by an ancestor
         font = item.font(0)
-        font.setItalic(not node.visible)
+        font.setItalic(eff_hidden)
         item.setFont(0, font)
         # an error on any node of a merged chain reddens the row
         chain = item.data(0, ROLE_CHAIN) or [node.id]
@@ -290,10 +327,12 @@ class ObjectTree(QTreeWidget):
             color = ERROR_COLOR_DARK if dark else ERROR_COLOR
             item.setForeground(0, QBrush(QColor(color)))
             item.setToolTip(0, f"⚠ {error}")
-        elif not node.visible:
+        elif eff_hidden:
             color = HIDDEN_COLOR_DARK if dark else HIDDEN_COLOR
             item.setForeground(0, QBrush(QColor(color)))
-            item.setToolTip(0, f"{label} — hidden (Space to show)")
+            item.setToolTip(0, f"{label} — hidden (Space to show)"
+                            if own_hidden
+                            else f"{label} — hidden by a parent")
         elif node.type == "assign":
             color = VAR_COLOR_DARK if dark else VAR_COLOR
             item.setForeground(0, QBrush(QColor(color)))
@@ -327,18 +366,28 @@ class ObjectTree(QTreeWidget):
         item = self._item_of(node)
         if item:
             self._updating = True
+            # re-decorate the whole subtree: hiding a node dims every row
+            # below it, so its descendants must refresh too
+            self._decorate_subtree(item)
+            self._updating = False
+
+    def _decorate_subtree(self, item):
+        node = self.node_of(item)
+        if node is not None:
             # always redraw with the row's primary node (a merged row
-            # shows its geometry, even when a wrapped modifier changed)
-            self._decorate(item, self.node_of(item))
+            # shows its wrapped object, even when a modifier changed)
+            self._decorate(item, node)
             root = self._root_of(item)
             merged = self._collapse_chain(root) if root is not None \
                 else None
             if merged is not None:
                 item.setData(0, ROLE_BADGES, self._badges(merged[1]))
-            self._updating = False
+        for i in range(item.childCount()):
+            self._decorate_subtree(item.child(i))
 
     def _item_changed(self, item, column):
-        # only rename now — visibility is toggled via Space / context menu
+        # only rename now — visibility is toggled via Space / context menu.
+        # Read the edit-role name (clean of the "(hidden)" display tag).
         if self._updating or column != 0:
             return
         node = self.node_of(item)
@@ -569,23 +618,25 @@ class ObjectTree(QTreeWidget):
     # ----------------------------------------------------- drag & drop
     def dropEvent(self, event):
         moving = self.selected_roots()         # move whole decorated parts
-        root = self._drop_container()
+        fallback = self._drop_container()
         target_item = self.itemAt(event.pos())
-        target = self._root_of(target_item) or root
+        into = self.node_of(target_item)       # drop INTO this container
+        beside = self._root_of(target_item) or fallback   # or reorder by it
         pos = self.dropIndicatorPosition()
-        if pos == QAbstractItemView.OnItem and not target.is_container():
+        if pos == QAbstractItemView.OnItem \
+                and (into is None or not into.is_container()):
             pos = QAbstractItemView.BelowItem
         event.setDropAction(Qt.IgnoreAction)   # we mutate the model
         event.accept()
         for node in moving:
             if pos == QAbstractItemView.OnItem:
-                self.model.move_node(node, target)
-            elif target.parent is not None:
-                index = target.index() + \
+                self.model.move_node(node, into)
+            elif beside is not None and beside.parent is not None:
+                index = beside.index() + \
                     (1 if pos == QAbstractItemView.BelowItem else 0)
-                self.model.move_node(node, target.parent, index)
+                self.model.move_node(node, beside.parent, index)
             else:
-                self.model.move_node(node, root)
+                self.model.move_node(node, fallback)
 
     # --------------------------------------------------- context menu
     def _context_menu(self, pos):
