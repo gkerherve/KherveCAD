@@ -297,3 +297,87 @@ def test_missing_key_warns_instead_of_sending(window, monkeypatch):
     panel._ask("hello")
     assert "No API key" in panel.transcript.toPlainText()
     assert panel._worker is None
+
+
+def _tiny_image():
+    from PyQt5.QtGui import QImage
+    img = QImage(4, 4, QImage.Format_RGB32)
+    img.fill(0xFF3366)
+    return img
+
+
+def test_qimage_encodes_to_png_base64(app):
+    import base64
+    data = base64.b64decode(chat._qimage_to_png_b64(_tiny_image()))
+    assert data[:8] == b"\x89PNG\r\n\x1a\n"       # PNG signature
+
+
+def test_build_request_attaches_images_per_provider():
+    messages = [{"role": "user", "content": "make this"}]
+    images = [{"media_type": "image/png", "data": "QUJD"}]
+
+    claude = chat.build_request("Claude", "m", messages, "sys", images)
+    content = claude["messages"][-1]["content"]
+    assert content[0]["type"] == "image"
+    assert content[0]["source"]["data"] == "QUJD"
+    assert content[-1] == {"type": "text", "text": "make this"}
+
+    openai = chat.build_request("OpenAI", "gpt-4o", messages, "sys",
+                                images)
+    parts = openai["messages"][-1]["content"]
+    assert parts[0]["type"] == "text"
+    assert parts[1]["image_url"]["url"] == "data:image/png;base64,QUJD"
+
+    ollama = chat.build_request("Ollama (Cloud)", "m", messages, "sys",
+                                images)
+    assert ollama["messages"][-1]["images"] == ["QUJD"]
+
+    # the caller's message list must not be mutated, and the no-image
+    # path still sends a plain string
+    assert messages[0]["content"] == "make this"
+    plain = chat.build_request("Claude", "m", messages, "sys")
+    assert plain["messages"][0]["content"] == "make this"
+
+
+def test_attach_image_queues_and_clears(window):
+    panel = window.chat
+    panel._attach_image(_tiny_image())
+    assert len(panel._pending_images) == 1
+    assert panel._pending_images[0]["media_type"] == "image/png"
+    assert not panel.attach_info.isHidden()            # indicator shown
+    assert "1 image" in panel.attach_info.text()
+    panel._clear_attachments()
+    assert panel._pending_images == []
+    assert panel.attach_info.isHidden()
+
+
+class _FakeSignal:
+    def connect(self, *_):
+        pass
+
+
+class _FakeWorker:                       # no QThread — safe to leak
+    replied = failed = finished = _FakeSignal()
+
+    def __init__(self, provider, model, key, messages, system,
+                 images=None, parent=None):
+        _FakeWorker.last_images = images
+        _FakeWorker.last_messages = messages
+
+    def start(self):
+        pass
+
+
+def test_send_passes_images_to_worker(window, monkeypatch):
+    panel = window.chat
+    monkeypatch.setattr(chat, "get_api_key", lambda p: "k")   # has a key
+    monkeypatch.setattr(chat, "ChatWorker", _FakeWorker)
+    panel._attach_image(_tiny_image())
+    panel.input.setText("copy this")
+    panel.send()
+    assert len(_FakeWorker.last_images) == 1
+    assert _FakeWorker.last_images[0]["data"]          # base64 present
+    assert "thumb" not in _FakeWorker.last_images[0]    # stripped for wire
+    assert panel._pending_images == []                 # queue drained
+    # the image rode along with the request, not the persisted history
+    assert panel.history[-1]["content"] == "copy this"

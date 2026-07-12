@@ -19,6 +19,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
+import base64
 import html
 import json
 import os
@@ -26,12 +27,14 @@ import re
 import urllib.error
 import urllib.request
 
-from PyQt5.QtCore import QSettings, Qt, QThread, pyqtSignal
-from PyQt5.QtWidgets import (QComboBox, QDialog, QDialogButtonBox,
-                             QFormLayout, QHBoxLayout, QLabel,
-                             QLineEdit, QMessageBox, QPushButton,
-                             QTextBrowser, QToolButton, QVBoxLayout,
-                             QWidget)
+from PyQt5.QtCore import (QBuffer, QByteArray, QSettings, Qt, QThread,
+                          QUrl, pyqtSignal)
+from PyQt5.QtGui import QImage, QKeySequence, QTextDocument
+from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog,
+                             QDialogButtonBox, QFileDialog, QFormLayout,
+                             QHBoxLayout, QLabel, QLineEdit, QMessageBox,
+                             QPushButton, QTextBrowser, QToolButton,
+                             QVBoxLayout, QWidget)
 
 from . import icons
 
@@ -151,6 +154,12 @@ size=[x,y,z]) for key dimensions so parts stay parametric. The user's
 current program is provided with every message — modify it rather than
 starting over, unless asked.
 
+If the user attaches an image or screenshot, study it and reproduce the
+object as faithfully as you can in 3D: identify the primitive shapes,
+their proportions and how they combine, estimate sensible millimetre
+dimensions, and emit a `scad` program that recreates it. Say briefly
+what you saw and note any assumptions you made about size.
+
 App features you can explain if asked: the Objects / Masters /
 Variables / Code tabs (Masters holds reusable definitions placed as
 Linked copies); the Examples menu (Learn tutorials, Mechanical parts,
@@ -237,8 +246,42 @@ def fetch_models(provider: str, key: str) -> list:
     return [i for i in ids if i and _keep_model(provider, i)]
 
 
-def build_request(provider: str, model: str, messages, system: str):
-    """Request body per provider — same formats as KherveAI."""
+def _attach_images(provider: str, messages, images):
+    """Return a copy of *messages* with *images* merged into the most
+    recent user turn, in the shape each provider's vision API expects.
+    Each image is a dict ``{"media_type", "data"}`` (base64 PNG)."""
+    if not images:
+        return messages
+    msgs = [dict(m) for m in messages]
+    idx = next((i for i in range(len(msgs) - 1, -1, -1)
+                if msgs[i].get("role") == "user"), None)
+    if idx is None:
+        return msgs
+    text = msgs[idx].get("content", "")
+    if provider == "Claude":
+        content = [{"type": "image",
+                    "source": {"type": "base64",
+                               "media_type": im["media_type"],
+                               "data": im["data"]}} for im in images]
+        content.append({"type": "text", "text": text})
+        msgs[idx] = {"role": "user", "content": content}
+    elif provider == "Ollama (Cloud)":
+        msgs[idx] = {"role": "user", "content": text,
+                     "images": [im["data"] for im in images]}
+    else:                                   # OpenAI / Mistral vision
+        content = [{"type": "text", "text": text}]
+        for im in images:
+            content.append({"type": "image_url", "image_url": {
+                "url": f"data:{im['media_type']};base64,{im['data']}"}})
+        msgs[idx] = {"role": "user", "content": content}
+    return msgs
+
+
+def build_request(provider: str, model: str, messages, system: str,
+                  images=None):
+    """Request body per provider — same formats as KherveAI. When
+    *images* are given they are attached to the latest user message."""
+    messages = _attach_images(provider, messages, images)
     if provider == "Claude":
         return {"model": model, "messages": messages,
                 "max_tokens": MAX_TOKENS, "system": system,
@@ -280,10 +323,11 @@ class ChatWorker(QThread):
     failed = pyqtSignal(str)
 
     def __init__(self, provider, model, key, messages, system,
-                 parent=None):
+                 images=None, parent=None):
         super().__init__(parent)
         self.provider, self.model, self.key = provider, model, key
         self.messages, self.system = messages, system
+        self.images = images or []
 
     def run(self):
         config = AI_PROVIDERS[self.provider]
@@ -294,7 +338,7 @@ class ChatWorker(QThread):
             headers["x-api-key"] = self.key
             headers["anthropic-version"] = "2023-06-01"
         body = build_request(self.provider, self.model, self.messages,
-                             self.system)
+                             self.system, self.images)
         request = urllib.request.Request(
             config["api_url"], data=json.dumps(body).encode(),
             headers=headers, method="POST")
@@ -447,16 +491,52 @@ class ChatConfigDialog(QDialog):
 _SCAD_BLOCK_RE = re.compile(r"```(?:scad|openscad)\s*\n(.*?)```",
                             re.DOTALL)
 
+_IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp")
+
+
+def _qimage_to_png_b64(image: QImage) -> str:
+    """Base64-encode a QImage as PNG (the wire format for every vision
+    API we support)."""
+    store = QByteArray()                  # must outlive the QBuffer that
+    buffer = QBuffer(store)               # only holds a pointer to it
+    buffer.open(QBuffer.WriteOnly)
+    image.save(buffer, "PNG")
+    buffer.close()
+    return base64.b64encode(bytes(store)).decode("ascii")
+
+
+def _images_from_mime(mime) -> list:
+    """Every image a drop/paste carries: a raw bitmap and/or image
+    files referenced by URL."""
+    out = []
+    if mime.hasImage():
+        image = QImage(mime.imageData())
+        if not image.isNull():
+            out.append(image)
+    if mime.hasUrls():
+        for url in mime.urls():
+            path = url.toLocalFile()
+            if path.lower().endswith(_IMAGE_EXTS):
+                image = QImage(path)
+                if not image.isNull():
+                    out.append(image)
+    return out
+
 
 class ChatInput(QLineEdit):
     """Message box that recalls previously sent lines with Up/Down,
-    shell-style — the same feel as KherveAI elsewhere in the family."""
+    shell-style — the same feel as KherveAI elsewhere in the family.
+    Pasting (Ctrl+V) or dropping an image attaches it to the next
+    message via :attr:`image_added`."""
+
+    image_added = pyqtSignal(object)          # a QImage
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._history = []
         self._index = 0                       # len == "composing new"
         self._draft = ""                      # text held while browsing
+        self.setAcceptDrops(True)
 
     def remember(self, text):
         """Record a just-sent line and reset the browse cursor."""
@@ -476,12 +556,38 @@ class ChatInput(QLineEdit):
         return self._history[-limit:]
 
     def keyPressEvent(self, event):
+        if event.matches(QKeySequence.Paste):
+            image = QApplication.clipboard().image()
+            if not image.isNull():            # a bitmap on the clipboard
+                self.image_added.emit(image)
+                return
         if event.key() == Qt.Key_Up:
             self._browse(-1)
         elif event.key() == Qt.Key_Down:
             self._browse(1)
         else:
             super().keyPressEvent(event)
+
+    def dragEnterEvent(self, event):
+        if _images_from_mime(event.mimeData()):
+            event.acceptProposedAction()
+        else:
+            super().dragEnterEvent(event)
+
+    def dragMoveEvent(self, event):
+        if _images_from_mime(event.mimeData()):
+            event.acceptProposedAction()
+        else:
+            super().dragMoveEvent(event)
+
+    def dropEvent(self, event):
+        images = _images_from_mime(event.mimeData())
+        if images:
+            for image in images:
+                self.image_added.emit(image)
+            event.acceptProposedAction()
+        else:
+            super().dropEvent(event)
 
     def _browse(self, step):
         if not self._history:
@@ -504,6 +610,8 @@ class ChatPanel(QWidget):
         self.history = []                     # [{"role", "content"}]
         self._blocks = []                     # scad blocks by index
         self._worker = None
+        self._pending_images = []             # {"media_type","data","thumb"}
+        self._thumb_seq = 0                   # unique transcript image keys
 
         header = QHBoxLayout()
         title = QLabel("<b>Assistant</b> — CAD helper")
@@ -524,13 +632,26 @@ class ChatPanel(QWidget):
 
         self.input = ChatInput()
         self.input.setPlaceholderText(
-            "Ask, or /help for commands — e.g. “add a CF40 flange”")
+            "Ask, paste an image to reproduce, or /help for commands")
         self.input.returnPressed.connect(self.send)
+        self.input.image_added.connect(self._attach_image)
+        self.attach_btn = QToolButton()
+        self.attach_btn.setIcon(icons.icon("mdi.image-plus"))
+        self.attach_btn.setToolTip(
+            "Attach an image for the assistant to reproduce "
+            "(you can also paste or drop one)")
+        self.attach_btn.clicked.connect(self._attach_from_file)
         self.send_btn = QPushButton(icons.icon("mdi.send-outline"), "")
         self.send_btn.setToolTip("Send")
         self.send_btn.clicked.connect(self.send)
 
+        self.attach_info = QLabel()
+        self.attach_info.setStyleSheet("color:#2176c7")
+        self.attach_info.setVisible(False)
+        self.attach_info.linkActivated.connect(self._clear_attachments)
+
         input_row = QHBoxLayout()
+        input_row.addWidget(self.attach_btn)
         input_row.addWidget(self.input)
         input_row.addWidget(self.send_btn)
 
@@ -538,6 +659,7 @@ class ChatPanel(QWidget):
         layout.setContentsMargins(6, 6, 6, 6)
         layout.addLayout(header)
         layout.addWidget(self.transcript, 1)
+        layout.addWidget(self.attach_info)
         layout.addLayout(input_row)
 
         if _persist_enabled():
@@ -648,6 +770,51 @@ class ChatPanel(QWidget):
             return
         self.apply_scad(code)
 
+    # ------------------------------------------------------- attachments
+    def _attach_from_file(self):
+        paths, _ = QFileDialog.getOpenFileNames(
+            self, "Attach image(s)", "",
+            "Images (*.png *.jpg *.jpeg *.bmp *.gif *.webp)")
+        for path in paths:
+            image = QImage(path)
+            if not image.isNull():
+                self._attach_image(image)
+
+    def _attach_image(self, image):
+        """Queue a QImage to ride along with the next message."""
+        self._pending_images.append({
+            "media_type": "image/png",
+            "data": _qimage_to_png_b64(image),
+            "thumb": image})
+        self._update_attach_info()
+
+    def _clear_attachments(self, *_):
+        self._pending_images = []
+        self._update_attach_info()
+
+    def _update_attach_info(self):
+        count = len(self._pending_images)
+        if count:
+            plural = "s" if count != 1 else ""
+            self.attach_info.setText(
+                f"📎 {count} image{plural} attached — "
+                f'<a href="clear">remove</a>')
+            self.attach_info.setVisible(True)
+        else:
+            self.attach_info.clear()
+            self.attach_info.setVisible(False)
+
+    def _embed_thumb(self, image) -> str:
+        """Register a scaled copy of *image* as a transcript resource and
+        return the URL to reference it from an <img> tag."""
+        thumb = image.scaled(240, 240, Qt.KeepAspectRatio,
+                             Qt.SmoothTransformation)
+        self._thumb_seq += 1
+        url = QUrl(f"attached://{self._thumb_seq}")
+        self.transcript.document().addResource(
+            QTextDocument.ImageResource, url, thumb)
+        return url.toString()
+
     # ---------------------------------------------------------- applying
     def apply_scad(self, code):
         from .scadparse import parse_scad
@@ -682,18 +849,30 @@ class ChatPanel(QWidget):
     # ------------------------------------------------------------ sending
     def send(self):
         text = self.input.text().strip()
-        if not text:
+        images = self._pending_images
+        if not text and not images:
             return
+        if not text:                          # image-only: give it a task
+            text = "Reproduce this image as 3D geometry."
         self.input.remember(text)             # recall with Up/Down later
         self.input.clear()
-        self._append("user", html.escape(text))
+        self._pending_images = []
+        self._update_attach_info()
+        self._append_user(text, images)
         if text.startswith("/"):
-            self.handle_command(text)
+            self.handle_command(text)         # commands ignore images
         else:
-            self._ask(text)
+            self._ask(text, images)
         self._save_state()                    # remember across restarts
 
-    def _ask(self, text):
+    def _append_user(self, text, images):
+        """Show a user turn, with any attached images as inline thumbs."""
+        parts = [f'<img src="{self._embed_thumb(im["thumb"])}"><br>'
+                 for im in images]
+        parts.append(html.escape(text).replace("\n", "<br>"))
+        self._append("user", "".join(parts))
+
+    def _ask(self, text, images=()):
         settings = QSettings(*_SETTINGS)
         provider = settings.value("chat/provider", "Claude")
         if provider not in AI_PROVIDERS:
@@ -715,9 +894,16 @@ class ChatPanel(QWidget):
                   + "\n\nCurrent document program:\n```scad\n"
                   + self.window.model.to_scad() + "\n```")
         self.send_btn.setEnabled(False)
-        self._append_note(f"asking {provider} ({model})…")
+        note = f"asking {provider} ({model})…"
+        if images:
+            note = (f"asking {provider} ({model}) to reproduce "
+                    f"{len(images)} image(s)…")
+        self._append_note(note)
+        payload = [{"media_type": im["media_type"], "data": im["data"]}
+                   for im in images]
         self._worker = ChatWorker(provider, model, key,
-                                  list(self.history), system, self)
+                                  list(self.history), system,
+                                  payload, self)
         self._worker.replied.connect(self._replied)
         self._worker.failed.connect(self._failed)
         self._worker.finished.connect(
