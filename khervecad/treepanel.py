@@ -44,71 +44,33 @@ VAR_COLOR_DARK = "#c39bf0"
 HIDDEN_COLOR = "#a8adb4"
 HIDDEN_COLOR_DARK = "#697079"
 
-#: single-child "decorator" wrappers that collapse onto the object they
-#: modify: a chain of these ending in a leaf shows as one row + badges.
-DECORATOR_TYPES = ("color", "translate", "rotate", "scale", "mirror",
-                   "offset")
-#: MDI icon per decorator for its row badge (color uses a live swatch).
-BADGE_ICON = {
-    "translate": "mdi.cursor-move",
-    "rotate": "mdi.rotate-right",
-    "scale": "mdi.resize",
-    "mirror": "mdi.flip-horizontal",
-    "offset": "mdi.rounded-corner",
-}
-
-# item data roles beyond the primary node id (Qt.UserRole)
-ROLE_ROOT = Qt.UserRole + 1        # chain root node id (structural ops)
-ROLE_BADGES = Qt.UserRole + 2      # [("icon", name) | ("color", hex)]
-ROLE_CHAIN = Qt.UserRole + 3       # all node ids in the collapsed chain
-ROLE_TAG = Qt.UserRole + 4         # True -> paint a "(hidden)" tag
-
-#: modifier-badge geometry, shared by the delegate (paint) and the tree
-#: (click hit-testing), so a badge is clickable to edit that modifier.
-_BADGE_SIZE = 15
-_BADGE_GAP = 4
+# item data role beyond the primary node id (Qt.UserRole)
+ROLE_TAG = Qt.UserRole + 1         # True -> paint a "(hidden)" tag
 
 CLIPBOARD_FORMAT = "kcad-clipboard"
 
 
 class _RowDelegate(QStyledItemDelegate):
-    """Paints modifier badges (colour swatch / transform glyphs) at the
-    right of a merged row, after the normal icon + text."""
+    """Paints a faint '(hidden)' tag after an explicitly-hidden object's
+    name (kept out of the item text so renaming stays clean)."""
 
     def paint(self, painter, option, index):
         super().paint(painter, option, index)
-        # a "(hidden)" tag just after the object's name
-        if index.data(ROLE_TAG):
-            fm = option.fontMetrics
-            text = index.data(Qt.DisplayRole) or ""
-            icon_w = option.decorationSize.width() + 6
-            x = option.rect.left() + icon_w + fm.horizontalAdvance(text) + 8
-            painter.save()
-            f = painter.font()
-            f.setItalic(True)
-            painter.setFont(f)
-            painter.setPen(QColor("#9aa0a6"))
-            painter.drawText(x, option.rect.top(), 90, option.rect.height(),
-                             int(Qt.AlignVCenter), "(hidden)")
-            painter.restore()
-        badges = index.data(ROLE_BADGES)
-        if not badges:
+        if not index.data(ROLE_TAG):
             return
-        size = _BADGE_SIZE
-        gap = _BADGE_GAP
-        x = option.rect.right() - gap
-        y = option.rect.center().y() - size // 2
+        fm = option.fontMetrics
+        text = index.data(Qt.DisplayRole) or ""
+        icon_w = option.decorationSize.width() + 6
+        x = option.rect.left() + icon_w + fm.horizontalAdvance(text) + 8
         painter.save()
-        for kind, value, _nid in reversed(badges):
-            x -= size
-            if kind == "color":
-                painter.setPen(QPen(QColor("#888888")))
-                painter.setBrush(QColor(value))
-                painter.drawRoundedRect(x, y, size, size, 3, 3)
-            else:
-                icons.icon(value).paint(painter, x, y, size, size)
-            x -= gap
+        f = painter.font()
+        f.setItalic(True)
+        painter.setFont(f)
+        painter.setPen(QColor("#9aa0a6"))
+        painter.drawText(x, option.rect.top(), 90, option.rect.height(),
+                         int(Qt.AlignVCenter), "(hidden)")
         painter.restore()
+
 
 #: operations offered by the "Apply" context submenu.
 APPLY_OPS = ["linear_extrude", "rotate_extrude", "offset", "translate",
@@ -145,7 +107,6 @@ class ObjectTree(QTreeWidget):
         self.setIndentation(15)
         self.setRootIsDecorated(True)
         self.setItemDelegate(_RowDelegate(self))
-        self.viewport().setMouseTracking(True)   # for badge hover cursor
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._context_menu)
         self.itemChanged.connect(self._item_changed)
@@ -160,28 +121,13 @@ class ObjectTree(QTreeWidget):
 
     # ------------------------------------------------------------ sync
     def node_of(self, item: QTreeWidgetItem):
-        """The node a row represents for selection/properties — the
-        geometry itself when a decorator chain is merged onto it."""
         return self.model.find(item.data(0, Qt.UserRole)) if item else None
-
-    def _root_of(self, item):
-        """The node a row represents for structural ops (delete, drag,
-        duplicate) — the outermost node of a merged chain, so the whole
-        decorated part moves together."""
-        if item is None:
-            return None
-        rid = item.data(0, ROLE_ROOT)
-        return self.model.find(rid) if rid is not None else self.node_of(item)
 
     def _item_of(self, node, root_item=None):
         root_item = root_item or self.invisibleRootItem()
         for i in range(root_item.childCount()):
             child = root_item.child(i)
-            # match the primary node or the merged chain's root, so
-            # selecting either the geometry or its wrapper finds the row
-            if child.data(0, Qt.UserRole) == node.id \
-                    or child.data(0, ROLE_ROOT) == node.id \
-                    or node.id in (child.data(0, ROLE_CHAIN) or []):
+            if child.data(0, Qt.UserRole) == node.id:
                 return child
             found = self._item_of(node, child)
             if found:
@@ -191,26 +137,6 @@ class ObjectTree(QTreeWidget):
     def selected_nodes(self):
         return [n for n in (self.node_of(i) for i in self.selectedItems())
                 if n is not None]
-
-    def selected_roots(self):
-        """Structural nodes for the selected rows (chain roots)."""
-        return [n for n in (self._root_of(i) for i in self.selectedItems())
-                if n is not None]
-
-    def _collapse_chain(self, node):
-        """If *node* begins a chain of single-child decorators
-        (color/transform), fold them onto the object they wrap: return
-        ``(end, modifiers)`` where *end* is the wrapped node (a leaf, or
-        a container whose children still nest under the merged row).
-        None when *node* isn't such a chain."""
-        if node.type not in DECORATOR_TYPES or len(node.children) != 1:
-            return None
-        mods = []
-        cur = node
-        while cur.type in DECORATOR_TYPES and len(cur.children) == 1:
-            mods.append(cur)
-            cur = cur.children[0]
-        return cur, mods
 
     def _top_nodes(self):
         """The nodes shown at the top level of this tree — the document
@@ -257,26 +183,8 @@ class ObjectTree(QTreeWidget):
         return item
 
     def _build_node(self, node, parent_item, selected):
-        merged = self._collapse_chain(node)
-        if merged is not None:
-            end, mods = merged
-            item = self._new_item(parent_item, end)
-            item.setData(0, Qt.UserRole, end.id)   # selection -> wrapped
-            item.setData(0, ROLE_ROOT, node.id)    # structural -> chain
-            item.setData(0, ROLE_CHAIN,
-                         [m.id for m in mods] + [end.id])
-            item.setData(0, ROLE_BADGES, self._badges(mods))
-            self._decorate(item, end)
-            # a wrapped container still shows its children one level down
-            if end.is_container():
-                if self._expand_state.get(end.id, end.type != "variables"):
-                    item.setExpanded(True)
-                for child in end.children:
-                    self._build_node(child, item, selected)
-            if end.id in selected or node.id in selected:
-                item.setSelected(True)
-            return
-        # a normal row, recursing into its children
+        """One row per node — colour/translate/rotate wrappers show as
+        their own rows, so the whole structure is visible."""
         item = self._new_item(parent_item, node)
         item.setData(0, Qt.UserRole, node.id)
         self._decorate(item, node)
@@ -288,20 +196,6 @@ class ObjectTree(QTreeWidget):
             item.setSelected(True)
         for child in node.children:
             self._build_node(child, item, selected)
-
-    @staticmethod
-    def _badges(mods):
-        """Badge specs (kind, value, node_id) for a merged chain's
-        modifiers, outermost first — clickable to edit that modifier."""
-        out = []
-        for m in mods:
-            if m.type == "color":
-                out.append(("color",
-                            str(m.params.get("color", "#888")), m.id))
-            else:
-                out.append(("icon",
-                            BADGE_ICON.get(m.type, "mdi.cog"), m.id))
-        return out
 
     def _model_visible(self, node):
         """True only if *node* and every ancestor is visible — hiding a
@@ -328,10 +222,7 @@ class ObjectTree(QTreeWidget):
         font = item.font(0)
         font.setItalic(eff_hidden)
         item.setFont(0, font)
-        # an error on any node of a merged chain reddens the row
-        chain = item.data(0, ROLE_CHAIN) or [node.id]
-        error = next((self.errors[i] for i in chain if i in self.errors),
-                     None)
+        error = self.errors.get(node.id)
         label = NODE_TYPES[node.type]["label"]
         if error:
             color = ERROR_COLOR_DARK if dark else ERROR_COLOR
@@ -351,9 +242,6 @@ class ObjectTree(QTreeWidget):
         else:
             item.setData(0, Qt.ForegroundRole, None)
             item.setToolTip(0, label)
-        if item.data(0, ROLE_BADGES):
-            item.setToolTip(0, item.toolTip(0)
-                            + "  ·  click a badge to edit its modifier")
 
     def set_errors(self, errors: dict):
         """Paint nodes with problems red (tooltip = the message)."""
@@ -387,20 +275,12 @@ class ObjectTree(QTreeWidget):
     def _decorate_subtree(self, item):
         node = self.node_of(item)
         if node is not None:
-            # always redraw with the row's primary node (a merged row
-            # shows its wrapped object, even when a modifier changed)
             self._decorate(item, node)
-            root = self._root_of(item)
-            merged = self._collapse_chain(root) if root is not None \
-                else None
-            if merged is not None:
-                item.setData(0, ROLE_BADGES, self._badges(merged[1]))
         for i in range(item.childCount()):
             self._decorate_subtree(item.child(i))
 
     def _item_changed(self, item, column):
-        # only rename now — visibility is toggled via Space / context menu.
-        # Read the edit-role name (clean of the "(hidden)" display tag).
+        # only rename now — visibility is toggled via Space / context menu
         if self._updating or column != 0:
             return
         node = self.node_of(item)
@@ -427,10 +307,8 @@ class ObjectTree(QTreeWidget):
 
     # -------------------------------------------------------- clipboard
     def _top_level_selection(self):
-        """Structural roots for the selection, minus any whose ancestor
-        is also selected — the whole decorated part for a merged row, so
-        cut/copy/delete/group act on the entire chain."""
-        nodes = self.selected_roots()
+        """Selected nodes minus any whose ancestor is also selected."""
+        nodes = self.selected_nodes()
         chosen = []
         for node in nodes:
             probe = node.parent
@@ -528,45 +406,6 @@ class ObjectTree(QTreeWidget):
             self.step_selection(1 if e.key() == Qt.Key_Tab else -1)
             return True
         return super().event(e)
-
-    # ------------------------------------------------- clickable badges
-    def _badge_at(self, pos):
-        """The modifier node id under a badge at *pos*, or None."""
-        item = self.itemAt(pos)
-        if item is None:
-            return None
-        badges = item.data(0, ROLE_BADGES)
-        if not badges:
-            return None
-        rect = self.visualItemRect(item)
-        if not (rect.top() <= pos.y() <= rect.bottom()):
-            return None
-        x_right = rect.right() - _BADGE_GAP
-        for badge in reversed(badges):        # painted right-to-left
-            x0 = x_right - _BADGE_SIZE
-            if x0 <= pos.x() <= x_right:
-                return badge[2]
-            x_right = x0 - _BADGE_GAP
-        return None
-
-    def mousePressEvent(self, event):
-        # clicking a modifier badge opens that modifier in the Properties
-        # panel (the folded rotate/translate/colour is editable again)
-        if event.button() == Qt.LeftButton:
-            nid = self._badge_at(event.pos())
-            if nid is not None:
-                node = self.model.find(nid)
-                if node is not None:
-                    self.selection_changed.emit([node])
-                    return
-        super().mousePressEvent(event)
-
-    def mouseMoveEvent(self, event):
-        if event.buttons() == Qt.NoButton:     # hover: hint clickability
-            over = self._badge_at(event.pos()) is not None
-            self.viewport().setCursor(Qt.PointingHandCursor if over
-                                      else Qt.ArrowCursor)
-        super().mouseMoveEvent(event)
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -669,24 +508,22 @@ class ObjectTree(QTreeWidget):
 
     # ----------------------------------------------------- drag & drop
     def dropEvent(self, event):
-        moving = self.selected_roots()         # move whole decorated parts
+        moving = self.selected_nodes()
         fallback = self._drop_container()
         target_item = self.itemAt(event.pos())
-        into = self.node_of(target_item)       # drop INTO this container
-        beside = self._root_of(target_item) or fallback   # or reorder by it
+        target = self.node_of(target_item) or fallback
         pos = self.dropIndicatorPosition()
-        if pos == QAbstractItemView.OnItem \
-                and (into is None or not into.is_container()):
+        if pos == QAbstractItemView.OnItem and not target.is_container():
             pos = QAbstractItemView.BelowItem
         event.setDropAction(Qt.IgnoreAction)   # we mutate the model
         event.accept()
         for node in moving:
             if pos == QAbstractItemView.OnItem:
-                self.model.move_node(node, into)
-            elif beside is not None and beside.parent is not None:
-                index = beside.index() + \
+                self.model.move_node(node, target)
+            elif target.parent is not None:
+                index = target.index() + \
                     (1 if pos == QAbstractItemView.BelowItem else 0)
-                self.model.move_node(node, beside.parent, index)
+                self.model.move_node(node, target.parent, index)
             else:
                 self.model.move_node(node, fallback)
 
@@ -708,24 +545,6 @@ class ObjectTree(QTreeWidget):
                                    [self.model.new_master()]))
         if menu.actions():
             menu.exec_(self.viewport().mapToGlobal(pos))
-
-    def _modifiers_menu(self, menu):
-        """For a single merged row, a submenu to jump to each wrapped
-        modifier's properties (colour, transform)."""
-        items = self.selectedItems()
-        if len(items) != 1:
-            return
-        chain = items[0].data(0, ROLE_CHAIN)
-        mods = [self.model.find(i) for i in (chain or [])[:-1]]
-        mods = [m for m in mods if m is not None]
-        if not mods:
-            return
-        sub = menu.addMenu(icons.icon("mdi.tune-variant"), "Modifiers")
-        for m in mods:
-            sub.addAction(
-                icons.icon(NODE_TYPES[m.type]["icon"]),
-                f"{NODE_TYPES[m.type]['label']} — {m.name}",
-                lambda _=False, node=m: self.selection_changed.emit([node]))
 
     def _masters_menu(self, menu, nodes, roots):
         """Context menu inside the Masters tab."""
@@ -755,7 +574,6 @@ class ObjectTree(QTreeWidget):
             "Show" if hidden else "Hide",
             lambda: [self.model.set_visible(n, bool(hidden))
                      for n in nodes])
-        self._modifiers_menu(menu)
         menu.addSeparator()
         apply_menu = menu.addMenu(icons.icon("mdi.auto-fix"), "Apply")
         for op in APPLY_OPS:

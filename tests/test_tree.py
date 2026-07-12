@@ -69,62 +69,20 @@ def test_hidden_node_is_dimmed_and_italic(model):
     assert item.foreground(0).style() != Qt.NoBrush
 
 
-# --------------------------------------------- merged decorator rows
+# ----------------------------------------- decorators are their own rows
 
-def test_decorator_chain_merges_into_one_row(model):
-    from khervecad.treepanel import ROLE_BADGES
+def test_decorator_chain_shows_each_node_as_a_row(model):
     cube = model.add_node("cube")
     tr = model.wrap_nodes([cube], "translate")
     model.wrap_nodes([tr], "color")            # color > translate > cube
     tree = ObjectTree(model)
-    assert tree.topLevelItemCount() == 1       # one merged row
-    item = tree.topLevelItem(0)
-    assert item.childCount() == 0              # the chain is collapsed
-    # selection/properties targets the geometry; structure the chain root
-    assert tree.node_of(item).type == "cube"
-    assert tree._root_of(item).type == "color"
-    badges = item.data(0, ROLE_BADGES)
-    assert badges[0][0] == "color"             # colour swatch
-    assert badges[1][:2] == ("icon", "mdi.cursor-move")   # translate glyph
-    # each badge carries its modifier's node id, so it is clickable
-    assert all(len(b) == 3 for b in badges)
-
-
-def test_group_is_not_merged(model):
-    a = model.add_node("cube")
-    b = model.add_node("sphere")
-    model.wrap_nodes([a, b], "union")          # a real group, 2 children
-    tree = ObjectTree(model)
-    assert tree.topLevelItemCount() == 1
-    assert tree.topLevelItem(0).childCount() == 2
-
-
-def test_delete_merged_row_removes_whole_chain(model):
-    cube = model.add_node("cube")
-    tr = model.wrap_nodes([cube], "translate")
-    model.wrap_nodes([tr], "color")
-    tree = ObjectTree(model)
-    tree.topLevelItem(0).setSelected(True)
-    for node in tree._top_level_selection():
-        model.remove_node(node)
-    assert model.root.children == []           # nothing orphaned
-
-
-def test_decorator_wrapping_group_folds_but_keeps_children(model):
-    from khervecad.treepanel import ROLE_BADGES
-    a = model.add_node("cube")
-    b = model.add_node("sphere")
-    grp = model.wrap_nodes([a, b], "union")
-    r1 = model.wrap_nodes([grp], "rotate")
-    model.wrap_nodes([r1], "rotate")           # rotate>rotate>union
-    tree = ObjectTree(model)
-    assert tree.topLevelItemCount() == 1
-    row = tree.topLevelItem(0)
-    assert tree.node_of(row).type == "union"   # the group is the row
-    assert row.childCount() == 2               # its children still nest
-    badges = row.data(0, ROLE_BADGES)
-    assert [b[:2] for b in badges] == [("icon", "mdi.rotate-right"),
-                                       ("icon", "mdi.rotate-right")]
+    assert tree.topLevelItemCount() == 1       # the outer color
+    color_item = tree.topLevelItem(0)
+    assert tree.node_of(color_item).type == "color"
+    trans_item = color_item.child(0)
+    assert tree.node_of(trans_item).type == "translate"
+    cube_item = trans_item.child(0)
+    assert tree.node_of(cube_item).type == "cube"
 
 
 def test_hiding_a_group_dims_the_whole_subtree(model):
@@ -139,20 +97,3 @@ def test_hiding_a_group_dims_the_whole_subtree(model):
     assert child.data(0, ROLE_TAG) is False    # child not tagged...
     assert child.font(0).italic()              # ...but dimmed by its parent
     assert row.text(0) == grp.name             # text stays clean (rename ok)
-
-
-def test_clicking_a_badge_targets_that_modifier(model):
-    from PyQt5.QtCore import QPoint
-    from khervecad.treepanel import _BADGE_SIZE, _BADGE_GAP
-    cube = model.add_node("cube")
-    rot = model.wrap_nodes([cube], "rotate")   # one rotate badge
-    tree = ObjectTree(model)
-    tree.resize(320, 200)
-    row = tree.topLevelItem(0)
-    rect = tree.visualItemRect(row)
-    x = rect.right() - _BADGE_GAP - _BADGE_SIZE // 2
-    hit = tree._badge_at(QPoint(x, rect.center().y()))
-    assert model.find(hit) is rot              # the badge maps to the rotate
-    # a click in the row body is not a badge
-    assert tree._badge_at(QPoint(rect.left() + 30,
-                                 rect.center().y())) is None
