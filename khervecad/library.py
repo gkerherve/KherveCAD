@@ -622,13 +622,62 @@ def _plain_flange(od, thickness, bore, bolts, bolt_circle, bolt_hole,
     return part
 
 
+def _entrance_lens(R, mount, name="Entrance lens") -> CadNode:
+    """The electron transfer lens, built along local +Z from the
+    analyser end (z = 0, a bolted flange) out to the tapered entrance
+    nozzle at the sample end — a long, stepped column."""
+    g = CadNode("union", name)
+    z = 0.0
+    lf_od = mount["flange_od"] * 0.55
+    lf_t = R * 0.06
+    g.add(_plain_flange(lf_od, lf_t, R * 0.22, 8, lf_od * 0.82,
+                        mount["bolt_hole"], z, "Lens flange"))
+    z += lf_t
+    neck = R * 0.14
+    g.add(_cyl("Lens neck", R * 0.22, neck, z=z))
+    z += neck
+    for i, (rf, hf) in enumerate([(0.16, 0.34), (0.12, 0.34)]):
+        h = R * hf
+        g.add(_cyl(f"Lens tube {i + 1}", R * rf, h, z=z))
+        z += h
+    cone = R * 0.26
+    g.add(CadNode("cylinder", "Entrance nozzle", dict(
+        x=0.0, y=0.0, z=z, height=cone,
+        radius_bottom=R * 0.12, radius_top=R * 0.035,
+        segments=48, center=False)))
+    return g
+
+
+def _detector(R, mount, name="Detector") -> CadNode:
+    """The exit detector housing (channeltron / MCP), built along local
+    +Z from the analyser end — a short, fat housing with a connector and
+    an end cap: the counterpart on the opposite side to the lens."""
+    g = CadNode("union", name)
+    z = 0.0
+    df_od = mount["flange_od"] * 0.50
+    df_t = R * 0.06
+    g.add(_plain_flange(df_od, df_t, R * 0.20, 8, df_od * 0.82,
+                        mount["bolt_hole"], z, "Detector flange"))
+    z += df_t
+    hz = R * 0.42
+    g.add(_cyl("MCP housing", R * 0.24, hz, z=z))
+    z += hz
+    cz = R * 0.16
+    g.add(_cyl("Connector", R * 0.12, cz, z=z))
+    z += cz
+    g.add(_cyl("End cap", R * 0.15, R * 0.05, z=z))
+    return g
+
+
 def hemispherical_analyser(r_out=150.0, r_in=75.0,
                            mount=None) -> CadNode:
     """A hemispherical electron energy analyser (HSA): a polished dome
     closed by a large **equatorial bolt flange** (the signature bolted
-    ring), a concentric inner hemisphere, a small vent port on top, an
-    electron-**lens column** below that steps down to a tapered entrance
-    nozzle on a bolted mount flange, and a few CF side ports."""
+    ring), a concentric inner hemisphere and a top vent port. As in a
+    real analyser the **entrance lens** and the **detector** sit on
+    *opposite* sides of the base — the long stepped lens angles out one
+    side to its entrance nozzle at the sample, the shorter detector
+    housing out the other — with a small pumping port between them."""
     mount = mount or CF_SIZES["CF160 (DN160)"]
     R = float(r_out)
     wall = max(R * 0.05, 4.0)
@@ -671,47 +720,37 @@ def hemispherical_analyser(r_out=150.0, r_in=75.0,
                  z=R - wall + R * 0.18))
     part.add(top)
 
-    # --- electron lens column below the flange -----------------------
-    column = CadNode("union", "Lens column")
-    z = -plate_t
-    neck_h = R * 0.14
-    column.add(_cyl("Lens neck", R * 0.30, neck_h, z=z - neck_h))
-    z -= neck_h
-    lf_od = mount["flange_od"] * 0.62
-    lf_t = R * 0.07
-    column.add(_plain_flange(lf_od, lf_t, R * 0.34, 12, lf_od * 0.86,
-                             mount["bolt_hole"], z - lf_t,
-                             "Lens flange"))
-    z -= lf_t
-    for i, (rf, hf) in enumerate([(0.20, 0.22), (0.17, 0.22)]):
-        h = R * hf
-        column.add(_cyl(f"Lens {i + 1}", R * rf, h, z=z - h))
-        z -= h
-    cone_h = R * 0.22
-    column.add(CadNode("cylinder", "Entrance nozzle", dict(
-        x=0.0, y=0.0, z=z - cone_h, height=cone_h,
-        radius_bottom=R * 0.17, radius_top=R * 0.05,
-        segments=64, center=False)))
-    part.add(column)
+    # --- entrance lens: angled off ONE side of the base --------------
+    lens_pos = CadNode("translate", "Lens mount",
+                       dict(x=R * 0.12, y=0.0, z=-plate_t))
+    lens_tilt = CadNode("rotate", "Lens angle", dict(x=0.0, y=135.0,
+                                                     z=0.0))
+    lens_tilt.add(_entrance_lens(R, mount))
+    lens_pos.add(lens_tilt)
+    part.add(lens_pos)
 
-    # --- CF side ports around the base -------------------------------
-    for angle in (0.0, 120.0, 240.0):
-        yaw = CadNode("rotate", f"Port {int(angle)}",
-                      dict(x=0.0, y=0.0, z=angle))
-        pos = CadNode("translate", "To dome side",
-                      dict(x=R * 0.82, y=0.0, z=R * 0.20))
-        arm = CadNode("rotate", "Point outward", dict(x=0.0, y=90.0,
-                                                      z=0.0))
-        arm.add(_cyl("Port tube", R * 0.09, R * 0.42))
-        cap = CadNode("translate", "Port flange pos",
-                      dict(x=0.0, y=0.0, z=R * 0.42))
-        cap.add(_plain_flange(R * 0.28, R * 0.05, R * 0.12, 6,
-                              R * 0.22, mount["bolt_hole"] * 0.7,
-                              0.0, "Port flange"))
-        arm.add(cap)
-        pos.add(arm)
-        yaw.add(pos)
-        part.add(yaw)
+    # --- detector: angled off the OPPOSITE side ----------------------
+    det_pos = CadNode("translate", "Detector mount",
+                      dict(x=-R * 0.12, y=0.0, z=-plate_t))
+    det_tilt = CadNode("rotate", "Detector angle", dict(x=0.0, y=225.0,
+                                                        z=0.0))
+    det_tilt.add(_detector(R, mount))
+    det_pos.add(det_tilt)
+    part.add(det_pos)
+
+    # --- a small pumping port on the base, between the two -----------
+    pump_pos = CadNode("translate", "Pump port",
+                       dict(x=0.0, y=R * 0.5, z=-plate_t))
+    pump_tilt = CadNode("rotate", "Pump angle", dict(x=135.0, y=0.0,
+                                                     z=0.0))
+    pump_tilt.add(_cyl("Pump tube", R * 0.11, R * 0.40))
+    pcap = CadNode("translate", "Pump flange pos",
+                   dict(x=0.0, y=0.0, z=R * 0.40))
+    pcap.add(_plain_flange(R * 0.32, R * 0.05, R * 0.16, 6, R * 0.25,
+                           mount["bolt_hole"] * 0.8, 0.0, "Pump flange"))
+    pump_tilt.add(pcap)
+    pump_pos.add(pump_tilt)
+    part.add(pump_pos)
 
     return part
 
