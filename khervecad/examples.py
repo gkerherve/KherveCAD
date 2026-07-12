@@ -1213,12 +1213,19 @@ EXAMPLES = [
     ("Orientation cubes", "Showcase", orientation_cubes),
     ("Boolean regions (2D ops)", "Showcase", boolean_regions),
     ("Fractal tree", "Showcase", fractal_tree),
-    ("Flower (layered bloom)", "Showcase", flower),
-    ("Sunflower (phyllotaxis)", "Showcase", sunflower),
+    ("Flower (layered bloom)", "Flowers", flower),
+    ("Sunflower (phyllotaxis)", "Flowers", sunflower),
     ("BOSL2 attachments (raw OpenSCAD)", "Showcase", bosl2_attachments_raw),
     ("Vacuum starter (CF tee + turbo)", "Vacuum", vacuum_starter),
     ("Desk setup", "Room", desk_setup),
 ]
+
+# The flower garden lives in its own module (kept small per the file-size
+# policy); importing it here — after the helpers and EXAMPLES above are
+# defined — registers its builders (it extends EXAMPLES in place). Only a
+# side-effecting import (no attribute access) so import order can't
+# deadlock the two modules.
+from . import examples_flowers  # noqa: E402,F401
 
 
 def load_example(model: DocumentModel, build) -> None:

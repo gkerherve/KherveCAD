@@ -149,10 +149,12 @@ into a new module and import.
                        library fasteners round a bolt circle by for-loop
                        — plus **Showcase** examples (orientation cubes,
                        2D boolean regions, a recursively-built fractal
-                       tree, a **layered-bloom flower** and a
-                       **phyllotaxis sunflower** — both procedural,
-                       petals/seeds unrolled from a Python loop into the
-                       tree — and a raw-OpenSCAD BOSL2 passthrough), a
+                       tree, and a raw-OpenSCAD BOSL2 passthrough), a
+                       **Flowers** category (layered bloom, phyllotaxis
+                       sunflower, tulip, rose, daisy, lily, daffodil,
+                       calla lily — all procedural, petals/seeds/stamens
+                       unrolled from Python loops into the tree; the six
+                       named species live in `examples_flowers.py`), a
                        vacuum starter and a desk setup. A **Projects**
                        category rebuilds one finished part per chapter of
                        the "Mastering OpenSCAD in 10 projects" course
@@ -170,6 +172,11 @@ into a new module and import.
                        preview without a boolean; the fractal tree
                        recurses in the Python builder (the node tree has
                        no recursion) and unrolls into the object tree.
+  - `examples_flowers.py` — the **Flowers** category's six named
+                       species (tulip, rose, daisy, lily, daffodil, calla
+                       lily), each a procedural coloured-solids bloom.
+                       Imports the primitive helpers from `examples.py`
+                       and extends `examples.EXAMPLES` in place on import.
   - `chat.py`        — **Assistant chat box** (family assistant, docked
                        right, toggled Ctrl+/): Claude/Mistral/Ollama
                        Cloud via urllib, keys in QSettings or env vars,
