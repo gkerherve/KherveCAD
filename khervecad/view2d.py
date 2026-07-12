@@ -57,6 +57,22 @@ def _fmt_mm(value: float) -> str:
     return f"{text or '0'} mm"
 
 
+def _resize_cursor(ax: float, ay: float):
+    """The directional resize cursor for a drag axis given in scene
+    (Y-up) coordinates — ↔ / ↕ / the two diagonals — so a size handle
+    shows which way it stretches, not the four-way move sign."""
+    axx, ayy = abs(ax), abs(ay)
+    if axx < 1e-9 and ayy < 1e-9:
+        return Qt.SizeAllCursor
+    if axx > 2.4 * ayy:                        # mostly horizontal ↔
+        return Qt.SizeHorCursor
+    if ayy > 2.4 * axx:                        # mostly vertical ↕
+        return Qt.SizeVerCursor
+    # diagonal: scene up-right / down-left is "/", the other is "\"
+    return Qt.SizeBDiagCursor if (ax > 0) == (ay > 0) \
+        else Qt.SizeFDiagCursor
+
+
 def _point_seg_dist(p: QPointF, a: QPointF, b: QPointF) -> float:
     """Shortest distance from point *p* to segment *a*-*b*."""
     vx, vy = b.x() - a.x(), b.y() - a.y()
@@ -71,7 +87,8 @@ def _point_seg_dist(p: QPointF, a: QPointF, b: QPointF) -> float:
 class HandleItem(QGraphicsRectItem):
     """Square resize handle, constant size on screen."""
 
-    def __init__(self, role: str, parent, snap=True, hot=False):
+    def __init__(self, role: str, parent, snap=True, hot=False,
+                 cursor=Qt.SizeAllCursor):
         size = HANDLE_SIZE
         super().__init__(-size / 2, -size / 2, size, size, parent)
         self.role = role
@@ -83,7 +100,7 @@ class HandleItem(QGraphicsRectItem):
         else:
             self.setBrush(QBrush(QColor("#ffffff")))
             self.setPen(_pen("#2176c7", 1.2))
-        self.setCursor(Qt.SizeAllCursor)
+        self.setCursor(cursor)
         self.setAcceptedMouseButtons(Qt.LeftButton)
 
     def mousePressEvent(self, event):
@@ -115,6 +132,7 @@ class ShapeItem:
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
+        self.setCursor(Qt.SizeAllCursor)   # the body moves the shape
         self.handles = []
         self._hot_vertex = -1              # point picked in the table
 
@@ -147,8 +165,15 @@ class ShapeItem:
         self.handles = []
         if self.isSelected():
             hot = f"v{self._hot_vertex}"
+            # rect/circle handles resize a dimension (directional cursor);
+            # line/polygon vertices move a point freely (four-way move)
+            free = self.node.type in ("line", "polygon", "text")
+            center = self.boundingRect().center()
             for role, pos in self.handle_spec():
-                handle = HandleItem(role, self, hot=(role == hot))
+                cur = Qt.SizeAllCursor if free else _resize_cursor(
+                    pos.x() - center.x(), pos.y() - center.y())
+                handle = HandleItem(role, self, hot=(role == hot),
+                                    cursor=cur)
                 handle.setPos(pos)
                 self.handles.append(handle)
 
@@ -397,6 +422,7 @@ class PartItem(QGraphicsPathItem):
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         if movable:
             self.setFlag(QGraphicsItem.ItemIsMovable, True)
+            self.setCursor(Qt.SizeAllCursor)   # the body moves the part
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
         from .style import tokens
         if dashed:
@@ -464,7 +490,8 @@ class PartItem(QGraphicsPathItem):
         self.handles = []
         if self.isSelected() and self._dims:
             for spec in self._dims:
-                handle = HandleItem(spec["role"], self, snap=False)
+                handle = HandleItem(spec["role"], self, snap=False,
+                                    cursor=_resize_cursor(*spec["axis"]))
                 handle.setPos(spec["tip"])
                 self.handles.append(handle)
 

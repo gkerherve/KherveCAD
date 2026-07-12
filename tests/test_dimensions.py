@@ -184,6 +184,51 @@ def test_auto_dims_render_for_every_shape(window):
     painter.end()
 
 
+def test_resize_cursor_directions():
+    from PyQt5.QtCore import Qt
+    from khervecad.view2d import _resize_cursor
+    assert _resize_cursor(1, 0) == Qt.SizeHorCursor      # radius: left-right
+    assert _resize_cursor(0, 1) == Qt.SizeVerCursor      # height: up-down
+    assert _resize_cursor(1, 1) == Qt.SizeBDiagCursor    # "/"
+    assert _resize_cursor(1, -1) == Qt.SizeFDiagCursor   # "\\"
+
+
+def test_size_handles_show_resize_cursor_body_shows_move(window):
+    from PyQt5.QtCore import Qt
+    from khervecad.view2d import PartItem
+    from khervecad import library
+    m = window.model
+    node = library.build_part(
+        "cf_nipple", dict(library.CF_SIZES["CF40 (DN40)"],
+                          port_length=60.0))
+    m.root.add(node)
+    m.structure_changed.emit()
+    QApplication.instance().processEvents()
+    bore = next(n for n in m.root.walk() if n.name == "Bore")
+    window.builder.tree.select_nodes([bore])
+    QApplication.instance().processEvents()
+    part = [it for it in window.scene._part_items.values()
+            if isinstance(it, PartItem)][0]
+    cursors = {h.role: h.cursor().shape() for h in part.handles}
+    # radius drags left-right, height drags up-down — never the move sign
+    assert cursors["radius_bottom"] == Qt.SizeHorCursor
+    assert cursors["height"] == Qt.SizeVerCursor
+    assert Qt.SizeAllCursor not in cursors.values()
+
+    # a movable 2D shape: body = move, corner handles = diagonal resize
+    window.builder.tree.select_nodes([])
+    window.scene.set_plane("Top (XY)")         # rebuilds in the sketch plane
+    rect = m.add_node("rect", dict(width=30.0, height=20.0))
+    QApplication.instance().processEvents()
+    item = window.scene._items[rect.id]
+    item.setSelected(True)
+    QApplication.instance().processEvents()
+    assert item.cursor().shape() == Qt.SizeAllCursor          # body moves
+    assert all(h.cursor().shape() in (Qt.SizeFDiagCursor,
+                                      Qt.SizeBDiagCursor)
+               for h in item.handles)                         # corners
+
+
 def test_selecting_cylinder_jumps_to_editing_plane_blue_one_instance(window):
     from khervecad import library
     from khervecad.view2d import PartItem
