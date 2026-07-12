@@ -96,6 +96,30 @@ def test_load_scad_raw_keeps_the_program(app, tmp_path):
     assert "module widget" in w.model.to_scad()
 
 
+VECTOR_SCAD = """\
+plate = [100, 50, 5];
+cube(plate);
+translate([0, 0, plate.z]) cylinder(h = 10, d = 6);
+"""
+
+
+def test_vector_accessor_scad_hard_fails_to_parse(app, tmp_path):
+    """A file using the vector .x/.z accessor can't tokenize — the raw
+    fallback (offered on any import error) is the way to open it."""
+    import pytest
+    from khervecad import scadparse
+    f = tmp_path / "vec.scad"
+    f.write_text(VECTOR_SCAD, encoding="utf-8")
+    m = DocumentModel()
+    with pytest.raises(Exception):
+        scadparse.import_scad(m, str(f))
+    # ...but it still loads verbatim as a raw block
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    w._load_scad_raw(str(f))
+    assert "plate.z" in w.model.to_scad()
+
+
 def test_raw_node_round_trips(model):
     n = model.add_node("scad_raw")
     n.params["code"] = CODE

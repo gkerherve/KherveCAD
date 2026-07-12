@@ -1025,31 +1025,26 @@ class MainWindow(QMainWindow):
         try:
             warnings = scadparse.import_scad(self.model, path)
         except Exception as exc:
-            QMessageBox.warning(self, APP_NAME,
-                                f"Could not import:\n{exc}")
+            # KherveCAD couldn't parse it into objects at all (e.g. it
+            # uses vector .x/.y, ranges, custom modules). Offer the raw
+            # OpenSCAD block so the file still opens and renders.
+            reason = (f"KherveCAD couldn't read this file as editable "
+                      f"objects:\n{exc}")
+            if not self._offer_scad_raw(path, reason):
+                QMessageBox.warning(self, APP_NAME,
+                                    f"Could not import:\n{exc}")
             return
-        # A file built on custom modules/functions the parser can't model
-        # imports as an empty tree. Offer to keep it as a raw OpenSCAD
-        # block so the OpenSCAD engine can still render it.
+        # Parsed, but a file built on custom modules/functions comes in
+        # empty — offer the raw block for that case too.
         empty = not mesh.tessellate(self.model.root,
                                     fn=self.model.effective_fn())
         advanced = any("not supported" in w or "unsupported" in w
                        for w in warnings)
         if empty and advanced:
-            note = "" if self.engine.available else (
-                "\n\n(OpenSCAD isn't detected — set it via Edit > "
-                "Locate OpenSCAD to render it.)")
-            if QMessageBox.question(
-                    self, APP_NAME,
-                    "This file is built from custom OpenSCAD "
-                    "modules/functions that KherveCAD can't turn into "
-                    "editable objects, so the object tree is empty.\n\n"
-                    "Load the whole file as a raw OpenSCAD block instead? "
-                    "It renders through the OpenSCAD engine (editable as "
-                    "text in the Code tab, not as objects)." + note,
-                    QMessageBox.Yes | QMessageBox.No,
-                    QMessageBox.Yes) == QMessageBox.Yes:
-                self._load_scad_raw(path)
+            reason = ("This file is built from custom OpenSCAD "
+                      "modules/functions that KherveCAD can't turn into "
+                      "editable objects, so the object tree is empty.")
+            if self._offer_scad_raw(path, reason):
                 return
         self._path = None                     # imported = new document
         self._dirty = True
@@ -1062,6 +1057,23 @@ class MainWindow(QMainWindow):
                 "Imported with limitations:\n- "
                 + "\n- ".join(warnings[:12])
                 + ("\n…" if len(warnings) > 12 else ""))
+
+    def _offer_scad_raw(self, path, reason):
+        """Ask whether to load *path* as a raw OpenSCAD block; do it and
+        return True if the user accepts."""
+        note = "" if self.engine.available else (
+            "\n\n(OpenSCAD isn't detected — set it via Edit > Locate "
+            "OpenSCAD to render it.)")
+        answer = QMessageBox.question(
+            self, APP_NAME,
+            reason + "\n\nLoad the whole file as a raw OpenSCAD block? "
+            "It renders through the OpenSCAD engine and is editable as "
+            "text in the Code tab (not as objects)." + note,
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+        if answer == QMessageBox.Yes:
+            self._load_scad_raw(path)
+            return True
+        return False
 
     def _load_scad_raw(self, path):
         """Replace the document with a single raw-OpenSCAD node holding
