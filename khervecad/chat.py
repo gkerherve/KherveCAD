@@ -115,7 +115,7 @@ def _persist_enabled() -> bool:
     return os.environ.get("QT_QPA_PLATFORM", "") != "offscreen"
 
 SYSTEM_PROMPT = """\
-You are KherveAI, the assistant inside KherveCAD — an easy-to-use CAD
+You are the assistant inside KherveCAD — an easy-to-use CAD
 GUI with OpenSCAD as the engine. The document is a tree of objects
 that maps 1:1 to an OpenSCAD program.
 
@@ -326,7 +326,7 @@ class ChatConfigDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("KherveAI settings")
+        self.setWindowTitle("Assistant settings")
         self._mworker = None
         settings = QSettings(*_SETTINGS)
 
@@ -483,7 +483,7 @@ class ChatPanel(QWidget):
         self._worker = None
 
         header = QHBoxLayout()
-        title = QLabel("<b>KherveAI</b> — CAD assistant")
+        title = QLabel("<b>Assistant</b> — CAD helper")
         settings_btn = QToolButton()
         settings_btn.setIcon(icons.icon("mdi.cog-outline"))
         settings_btn.setToolTip("Provider, model and API key")
@@ -582,7 +582,7 @@ class ChatPanel(QWidget):
     def _append(self, role, html_text):
         colors = {"user": "#2176c7", "assistant": "#2e7d4f",
                   "note": "#888888"}
-        who = {"user": "You", "assistant": "KherveAI",
+        who = {"user": "You", "assistant": "Assistant",
                "note": "•"}[role]
         self.transcript.append(
             f'<p><b style="color:{colors[role]}">{who}:</b> '

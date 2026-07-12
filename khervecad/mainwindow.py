@@ -152,7 +152,7 @@ class MainWindow(QMainWindow):
     def _build_chat_dock(self):
         from .chat import ChatPanel
         self.chat = ChatPanel(self)
-        self._chat_dock = QDockWidget("KherveAI", self)
+        self._chat_dock = QDockWidget("Assistant", self)
         self._chat_dock.setObjectName("chat_dock")
         self._chat_dock.setWidget(self.chat)
         self.addDockWidget(Qt.RightDockWidgetArea, self._chat_dock)
@@ -272,7 +272,7 @@ class MainWindow(QMainWindow):
                       self.view3d.fit)
         bar.addSeparator()
         chat_btn = QAction(icons.icon("mdi.robot-outline"),
-                           "KherveAI chat (Ctrl+/)", self)
+                           "Assistant (Ctrl+/)", self)
         chat_btn.triggered.connect(
             lambda: self._chat_dock.setVisible(
                 not self._chat_dock.isVisible()))
@@ -290,6 +290,9 @@ class MainWindow(QMainWindow):
         file_menu.addAction("&Save", self.save_file, "Ctrl+S")
         file_menu.addAction("Save &As...", self.save_file_as,
                             "Ctrl+Shift+S")
+        file_menu.addAction(icons.icon("mdi.folder-eye-outline"),
+                            "Show in File E&xplorer",
+                            self._show_in_explorer)
         file_menu.addSeparator()
         file_menu.addAction("&Import OpenSCAD...", self.import_scad,
                             "Ctrl+I")
@@ -356,7 +359,7 @@ class MainWindow(QMainWindow):
 
         view_menu = m.addMenu("&View")
         chat_act = self._chat_dock.toggleViewAction()
-        chat_act.setText("&Chat Assistant (KherveAI)")
+        chat_act.setText("&Assistant")
         chat_act.setIcon(icons.icon("mdi.robot-outline"))
         chat_act.setShortcut("Ctrl+/")
         view_menu.addAction(chat_act)
@@ -424,6 +427,18 @@ class MainWindow(QMainWindow):
                                    self.builder.refresh_theme()))
             theme_group.addAction(act)
             theme_menu.addAction(act)
+
+        git_menu = m.addMenu("&Git")
+        git_menu.addAction(icons.icon("mdi.source-commit"),
+                           "&Commit...", self._git_commit, "Ctrl+K")
+        git_menu.addAction(icons.icon("mdi.cloud-upload-outline"),
+                           "&Push", self._git_push)
+        git_menu.addAction(icons.icon("mdi.cloud-download-outline"),
+                           "P&ull", self._git_pull)
+        git_menu.addSeparator()
+        git_menu.addAction(icons.icon("mdi.github"),
+                           "Connect to Git&Hub / GitLab...",
+                           self._git_connect)
 
         help_menu = m.addMenu("&Help")
         help_menu.addAction("&User Guide", self._user_guide, "F1")
@@ -495,12 +510,15 @@ class MainWindow(QMainWindow):
         self.statusBar().addWidget(self._measure_label)
         self._dims_label = QLabel("")          # selected object's size
         self.statusBar().addWidget(self._dims_label)
+        self._file_label = QLabel()            # current document path
+        self.statusBar().addPermanentWidget(self._file_label)
         self._zoom_label = QLabel(
             f"1 mm = {self.view2d.px_per_mm():.2f} px")
         self.statusBar().addPermanentWidget(self._zoom_label)
         self._engine_label = QLabel()
         self.statusBar().addPermanentWidget(self._engine_label)
         self._refresh_engine_label()
+        self._update_title()                   # fills the file label
 
     def _cursor_moved(self, p):
         _axes, (kx, ky) = PLANES[self.scene.plane]
@@ -870,6 +888,116 @@ class MainWindow(QMainWindow):
         self._path = path
         self.save_file()
 
+    def _show_in_explorer(self):
+        """Reveal the current document in the OS file manager."""
+        if not self._path:
+            QMessageBox.information(
+                self, APP_NAME,
+                "Save the document first — there is no file to show yet.")
+            return
+        import subprocess
+        import sys
+        path = Path(self._path)
+        try:
+            if sys.platform == "win32":
+                subprocess.Popen(["explorer", "/select,", str(path)])
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", "-R", str(path)])
+            else:
+                subprocess.Popen(["xdg-open", str(path.parent)])
+        except Exception as exc:
+            QMessageBox.warning(self, APP_NAME,
+                                f"Could not open the file manager:\n{exc}")
+
+    # -------------------------------------------------------------- git
+    def _git_ready(self):
+        """The document's repo dir, after ensuring it is saved and that
+        pygit2 is available. Returns the Path, or None (with a message)
+        when Git can't proceed."""
+        from . import git_backend
+        if not git_backend.is_available():
+            QMessageBox.warning(
+                self, APP_NAME,
+                "Git support needs the 'pygit2' package, which isn't "
+                "installed.\n\n    pip install pygit2")
+            return None
+        if self._path is None:
+            self.save_file_as()
+            if self._path is None:
+                return None
+        return Path(self._path).parent
+
+    def _git_commit(self):
+        """Save, then snapshot the current document as a git commit."""
+        repo_dir = self._git_ready()
+        if repo_dir is None:
+            return
+        self.save_file()
+        from PyQt5.QtWidgets import QInputDialog
+        from . import git_backend
+        stem = Path(self._path).stem
+        message, ok = QInputDialog.getText(
+            self, "Commit", "Commit message:",
+            text=f"Update {Path(self._path).name}")
+        if not ok or not message.strip():
+            return
+        oid = git_backend.commit_all(repo_dir, message.strip(),
+                                     file_stem=stem)
+        if oid:
+            self.statusBar().showMessage(
+                f"Committed {oid[:8]} on "
+                f"{git_backend.current_branch(repo_dir) or '?'}", 5000)
+        else:
+            self.statusBar().showMessage(
+                "Nothing to commit — no changes since the last commit.",
+                5000)
+
+    def _git_push(self):
+        repo_dir = self._git_ready()
+        if repo_dir is None:
+            return
+        from . import git_backend
+        if not git_backend.get_remotes(repo_dir):
+            if QMessageBox.question(
+                    self, APP_NAME,
+                    "No remote is configured. Connect to GitHub / GitLab "
+                    "now?") == QMessageBox.Yes:
+                self._git_connect()
+            return
+        branch = git_backend.current_branch(repo_dir) or "main"
+        ok, message = git_backend.push(repo_dir, "origin", branch)
+        (QMessageBox.information if ok
+         else QMessageBox.warning)(self, APP_NAME, message)
+
+    def _git_pull(self):
+        repo_dir = self._git_ready()
+        if repo_dir is None:
+            return
+        from . import git_backend
+        ok, message = git_backend.pull(repo_dir, "origin")
+        (QMessageBox.information if ok
+         else QMessageBox.warning)(self, APP_NAME, message)
+
+    def _git_connect(self):
+        repo_dir = self._git_ready()
+        if repo_dir is None:
+            return
+        from PyQt5.QtWidgets import QInputDialog
+        from . import git_backend
+        current = dict(git_backend.get_remotes(repo_dir)).get("origin", "")
+        url, ok = QInputDialog.getText(
+            self, "Connect to GitHub / GitLab",
+            "Remote URL for 'origin'\n"
+            "(e.g. https://github.com/you/repo.git):", text=current)
+        if not ok or not url.strip():
+            return
+        if git_backend.set_remote(repo_dir, "origin", url.strip()):
+            self.statusBar().showMessage(
+                "Remote 'origin' configured — use Git > Push.", 5000)
+        else:
+            QMessageBox.warning(self, APP_NAME,
+                                "Could not set the remote.")
+
     def open_library(self):
         """Non-modal: the library stays open while you keep editing."""
         if getattr(self, "_library_dialog", None) is None:
@@ -967,6 +1095,14 @@ class MainWindow(QMainWindow):
         name = Path(self._path).name if self._path else "Untitled"
         star = "*" if self._dirty else ""
         self.setWindowTitle(f"{star}{name} — {APP_NAME} v{__version__}")
+        label = getattr(self, "_file_label", None)
+        if label is not None:
+            if self._path:
+                label.setText(f"File: {star}{self._path}")
+                label.setToolTip(str(self._path))
+            else:
+                label.setText(f"File: {star}Untitled (not saved)")
+                label.setToolTip("")
 
     def _confirm_discard(self) -> bool:
         if not self._dirty:

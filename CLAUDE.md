@@ -129,11 +129,19 @@ into a new module and import.
                        preview without a boolean; the fractal tree
                        recurses in the Python builder (the node tree has
                        no recursion) and unrolls into the object tree.
-  - `chat.py`        — **KherveAI chat box** (family assistant):
-                       Claude/Mistral/Ollama Cloud via urllib, keys
-                       in QSettings or env vars, slash commands, and
-                       `scad` reply blocks applied to the tree via
-                       scadparse.
+  - `chat.py`        — **Assistant chat box** (family assistant, docked
+                       right, toggled Ctrl+/): Claude/Mistral/Ollama
+                       Cloud via urllib, keys in QSettings or env vars,
+                       slash commands, and `scad` reply blocks applied to
+                       the tree via scadparse.
+  - `git_backend.py` — **per-document Git** (pygit2, ported from the
+                       Kherve family): init/commit/push/pull, remotes and
+                       history for the folder holding the current
+                       `.kcad`. Degrades to no-ops if pygit2 is absent.
+                       Wired to the **Git menu** (Commit Ctrl+K, Push,
+                       Pull, Connect to GitHub); the status bar shows the
+                       current file path, File > Show in File Explorer
+                       reveals it.
   - `treepanel.py`   — `BuilderPanel`: Objects tree (context menu:
                        hide/show, Apply operation, group/ungroup,
                        rename, duplicate, delete, **Make Master**; drag &
