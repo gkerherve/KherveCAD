@@ -181,10 +181,56 @@ def test_module_call_is_inlined(app):
     assert calls[1].children[0].params["value"] == "3"
 
 
-def test_function_definition_still_skipped(app):
-    root, warnings = _parse("function sq(x) = x * x;\ncube(5);")
-    assert [n.type for n in root.children] == ["cube"]
-    assert any("function" in w for w in warnings)
+def test_list_comprehension_points(app):
+    """A polygon fed a `[for ...]` comprehension imports as real points."""
+    root, _w = _parse(
+        "pts = [ for (i = [0:1:3]) [i * 10, i] ];\npolygon(pts);")
+    poly = next(n for n in root.walk() if n.type == "polygon")
+    assert poly.params["points"] == [[0, 0], [10, 1], [20, 2], [30, 3]]
+
+
+def test_list_comprehension_with_let(app):
+    """`let (...)` bindings inside a comprehension resolve."""
+    root, _w = _parse(
+        "p = [ for (i = [0:1:2]) let (r = i * i) [i, r] ];\npolygon(p);")
+    poly = next(n for n in root.walk() if n.type == "polygon")
+    assert poly.params["points"] == [[0, 0], [1, 1], [2, 4]]
+
+
+def test_polygon_from_vector_variables(app):
+    """points = [p0, p1, ...] where each p is a vector variable."""
+    root, _w = _parse(
+        "p0=[0,0]; p1=[0,30]; p2=[35,0];\n"
+        "pts=[p0,p1,p2];\npolygon(pts);")
+    poly = next(n for n in root.walk() if n.type == "polygon")
+    assert poly.params["points"] == [[0, 0], [0, 30], [35, 0]]
+
+
+def test_module_trailing_comma_and_defaults(app):
+    """A module with a trailing comma in its parameter list imports (the
+    window-stopper tutorial style)."""
+    root, warns = _parse(
+        "module part(a = 10, b = 20,) { cube([a, b, 2]); }\n"
+        "part();")
+    assert not warns
+    assert any(n.type == "cube" for n in root.walk())
+
+
+def test_multiline_expression_evaluates(app):
+    """An expression split across lines is not cut off at the newline."""
+    from khervecad import expr
+    assert expr.evaluate("(2 + 3) / 5 +\n  4 - 0.5") == 4.5
+
+
+def test_user_function_resolves_in_points(app):
+    """A user function is evaluated so polygon points that call it import
+    as real coordinates."""
+    root, warnings = _parse(
+        "function sq(x) = x * x;\n"
+        "points = [ for (i = [0:1:3]) [i, sq(i)] ];\n"
+        "polygon(points);")
+    poly = next(n for n in root.walk() if n.type == "polygon")
+    assert poly.params["points"] == [[0, 0], [1, 1], [2, 4], [3, 9]]
 
 
 def test_full_roundtrip_export_import_export(model, tmp_path):

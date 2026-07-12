@@ -6,11 +6,21 @@ loops, `if/else`, assignments, `import()` and the `*` disable
 modifier — plus common variations (named or positional arguments,
 `d=` diameters, scalar `rotate`/`scale`, bare `{}` blocks).
 
-Anything outside the subset (modules, functions, `use`/`include`,
-unknown calls) is skipped with a warning instead of failing, so
-real-world files import as far as possible. Expressions that are not
-constant are kept verbatim as expression strings, which KherveCAD
-params support.
+User `module` definitions are inlined at each call site and user
+`function` definitions are evaluated (recursion and cross-calls
+included), so list comprehensions `[for (i = r) let (..) if (c) expr]`,
+`concat`, vector variables and `.x/.y/.z` all resolve to real numbers at
+import — a `polygon(points)` whose points come from a variable, a
+comprehension or a function (e.g. a NACA airfoil) imports as concrete
+coordinates. Assignments that evaluate to a vector are stored as a
+self-contained literal so the tree never depends on a function that
+codegen can't emit.
+
+Parsing never crashes a whole file: a statement that can't be parsed is
+skipped with a warning and import resumes at the next boundary. Anything
+still outside the subset (`use`/`include`, unknown external calls) is
+skipped with a warning. Non-constant expressions are kept verbatim as
+expression strings, which KherveCAD params support.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -64,6 +74,10 @@ class Parser:
         #: name -> (params, body_start_i, body_end_i) for user modules,
         #: expanded (inlined) at each call site.
         self.modules = {}
+        #: concrete values of top-level/bound assignments, so later
+        #: expressions (polygon points, vector variables, list
+        #: comprehensions) can be resolved to real numbers at import.
+        self.scope = {}
 
     # ------------------------------------------------------- helpers
     def peek(self, offset=0):
@@ -93,6 +107,35 @@ class Parser:
 
     def warn(self, message):
         self.warnings.append(message)
+
+    def resolve_points(self, raw):
+        """Turn a polygon ``points`` argument into a concrete list of
+        ``[x, y]`` pairs. Accepts an inline list, a variable name, a list
+        of variable names, or a list comprehension — anything that
+        evaluates against the current scope. Returns None if it can't."""
+        value = raw
+        if isinstance(value, str):
+            try:
+                value = expr.evaluate(value, self.scope)
+            except Exception:
+                return None
+        if not isinstance(value, (list, tuple)):
+            return None
+        pts = []
+        for element in value:
+            if isinstance(element, str):
+                try:
+                    element = expr.evaluate(element, self.scope)
+                except Exception:
+                    return None
+            if isinstance(element, (list, tuple)) and len(element) >= 2:
+                try:
+                    pts.append([float(element[0]), float(element[1])])
+                except (TypeError, ValueError):
+                    return None
+            else:
+                return None
+        return pts if len(pts) >= 3 else None
 
     # ------------------------------------------- expression scanning
     def _scan_expr(self, stop=(",", ")", "]", ";", ":")):
@@ -130,8 +173,8 @@ class Parser:
         if not source:
             raise ScadParseError("empty expression")
         try:
-            value = expr.evaluate(source, {})
-        except expr.ExprError:
+            value = expr.evaluate(source, self.scope)
+        except (expr.ExprError, Exception):
             return None, source
         return value, source
 
@@ -155,6 +198,8 @@ class Parser:
                 if self.accept("]"):
                     break
                 self.expect(",")
+                if self.accept("]"):             # trailing comma
+                    break
         return items
 
     def _arguments(self):
@@ -176,6 +221,8 @@ class Parser:
             if self.accept(")"):
                 return positional, named
             self.expect(",")
+            if self.accept(")"):                 # trailing comma
+                return positional, named
 
     def _argument_value(self):
         token = self.peek()
@@ -200,10 +247,37 @@ class Parser:
     def parse_program(self) -> CadNode:
         root = CadNode("root")
         while self.peek() is not None:
-            node = self.parse_statement()
+            start = self.i
+            try:
+                node = self.parse_statement()
+            except ScadParseError as exc:
+                self.warn(f"skipped unparseable statement: {exc}")
+                self._recover(start)
+                continue
+            except Exception as exc:             # never crash a whole file
+                self.warn(f"skipped statement ({type(exc).__name__})")
+                self._recover(start)
+                continue
             if node is not None:
                 root.add(node)
         return root
+
+    def _recover(self, start):
+        """After a failed statement, advance to the next top-level ';' or
+        '}' so the rest of the file still imports (and we never loop)."""
+        if self.i <= start:
+            self.i = start + 1
+        depth = 0
+        while self.peek() is not None:
+            token = self.next()
+            if token[1] in "([{":
+                depth += 1
+            elif token[1] in ")]}":
+                if depth == 0:
+                    break
+                depth -= 1
+            elif token[1] == ";" and depth == 0:
+                break
 
     def parse_statement(self):
         token = self.peek()
@@ -236,7 +310,7 @@ class Parser:
             self._capture_module()
             return None
         if value == "function":
-            self._skip_definition(value)
+            self._capture_function()
             return None
         nxt = self.peek(1)
         if nxt is not None and nxt[1] == "=":
@@ -274,10 +348,25 @@ class Parser:
     def _parse_assign(self):
         name = self.next()[1]
         self.expect("=")
-        value = self._expr_param()
+        value, source = self._scan_expr()
         self.accept(";")
+        # remember the concrete value so later expressions (points that
+        # reference this, list comprehensions using it, ...) can resolve.
+        if value is not None:
+            self.scope[name] = value
+        if isinstance(value, bool):
+            param = value
+        elif isinstance(value, (int, float)):
+            param = float(value)
+        elif isinstance(value, (list, tuple)):
+            # store the resolved vector/list as a self-contained literal —
+            # its source may call user functions that are not tree nodes
+            # (so validate() and codegen would otherwise choke on them).
+            param = _literal(value)
+        else:                                    # unresolved expression
+            param = source
         return CadNode("assign", f"{name} =",
-                       dict(variable=name, value=value))
+                       dict(variable=name, value=param))
 
     def _parse_for(self):
         self.next()                              # for
@@ -370,6 +459,44 @@ class Parser:
                 break
         self.warn(f"{kind} '{name}' skipped (not supported)")
 
+    def _capture_function(self):
+        """Record `function name(params) = expr;` as a callable in the
+        scope, so expressions (and polygon points) that call it resolve
+        at import. Supports defaults and recursion / cross-calls via a
+        live closure over the parser scope."""
+        self.next()                                   # 'function'
+        if self.peek() is None or self.peek()[0] != "ident":
+            return self._skip_definition("function")
+        name = self.next()[1]
+        self.expect("(")
+        params = []
+        while not self.accept(")"):
+            pname = self.next()[1]
+            default = None
+            if self.accept("="):
+                default = self._scan_expr(stop=(",", ")"))[1]
+            params.append((pname, default))
+            if self.accept(")"):
+                break
+            self.expect(",")
+        self.expect("=")
+        body = self._scan_expr(stop=(";",))[1]
+        self.accept(";")
+        scope = self.scope
+
+        def call(*args, **kwargs):
+            local = dict(scope)
+            for idx, (pname, default) in enumerate(params):
+                if idx < len(args):
+                    local[pname] = args[idx]
+                elif pname in kwargs:
+                    local[pname] = kwargs[pname]
+                elif default is not None:
+                    local[pname] = expr.evaluate(default, local)
+            return expr.evaluate(body, local)
+
+        self.scope[name] = call
+
     # ------------------------------------------------------- modules
     def _capture_module(self):
         """Record a `module name(params) { body }` definition so each
@@ -381,16 +508,15 @@ class Parser:
             name = self.next()[1]
         self.expect("(")
         params = []
-        if not self.accept(")"):
-            while True:
-                pname = self.next()[1]
-                default = None
-                if self.accept("="):
-                    default = self._scan_expr(stop=(",", ")"))[1]
-                params.append((pname, default))
-                if self.accept(")"):
-                    break
-                self.expect(",")
+        while not self.accept(")"):
+            pname = self.next()[1]
+            default = None
+            if self.accept("="):
+                default = self._scan_expr(stop=(",", ")"))[1]
+            params.append((pname, default))
+            if self.accept(")"):
+                break
+            self.expect(",")                     # trailing comma tolerated
         self.expect("{")
         body_start = self.i
         depth = 1
@@ -409,6 +535,8 @@ class Parser:
         params, body_start, body_end = self.modules[name]
         positional, named = self._arguments()
         inst = CadNode("union", name)
+        outer_scope = self.scope                      # bound params shadow
+        self.scope = dict(outer_scope)                # the enclosing scope
         for idx, (pname, default) in enumerate(params):
             if idx < len(positional):
                 value = positional[idx]
@@ -416,9 +544,13 @@ class Parser:
                 value = named[pname]
             else:
                 value = default
+            source = _arg_source(value)
             inst.add(CadNode("assign", f"{pname} =",
-                             dict(variable=pname,
-                                  value=_arg_source(value))))
+                             dict(variable=pname, value=source)))
+            try:                                      # so the body can use
+                self.scope[pname] = expr.evaluate(source, self.scope)
+            except Exception:
+                pass
         saved = self.i                                # re-parse the body
         self.i = body_start
         while self.i < body_end:
@@ -426,6 +558,7 @@ class Parser:
             if child is not None:
                 inst.add(child)
         self.i = saved
+        self.scope = outer_scope                      # restore
         self.accept(";")                              # end of the call
         return inst
 
@@ -471,6 +604,20 @@ class Parser:
         else:
             self.accept(";")
         return node
+
+
+def _literal(value) -> str:
+    """Serialise a concrete number/bool/vector as an OpenSCAD literal
+    expression string (so an assign carries no reference to user
+    functions or other variables)."""
+    from .model import fmt
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return fmt(float(value))
+    if isinstance(value, (list, tuple)):
+        return "[" + ", ".join(_literal(v) for v in value) + "]"
+    return str(value)
 
 
 def _arg_source(value) -> str:
@@ -543,11 +690,14 @@ def _b_square(parser, positional, named):
 
 
 def _b_polygon(parser, positional, named):
-    points = _get(positional, named, 0, "points", default=[])
+    raw = _get(positional, named, 0, "points", default=None)
     if "paths" in named:
         parser.warn("polygon paths= ignored (single outline assumed)")
-    pts = [[_num(x), _num(y)] for x, y in points] if points else \
-        [[0.0, 0.0], [10.0, 0.0], [0.0, 10.0]]
+    pts = parser.resolve_points(raw)
+    if pts is None:
+        parser.warn("polygon points could not be resolved — "
+                    "placeholder triangle used")
+        pts = [[0.0, 0.0], [10.0, 0.0], [0.0, 10.0]]
     return CadNode("polygon", "Polygon",
                    dict(x=0.0, y=0.0, points=pts))
 

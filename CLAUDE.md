@@ -59,10 +59,17 @@ into a new module and import.
                        variations (d= diameters, scalar rotate/scale,
                        positional args, modifiers, for/if/assigns,
                        vector variables + `.x/.y/.z` swizzles and `[i]`
-                       indexing, ranges `[a:s:b]`, ternary `c?a:b`, and
-                       **user `module` definitions** — each call is
-                       *inlined* as a union with the arguments bound to
-                       assign nodes, then the module body re-parsed).
+                       indexing, ranges `[a:s:b]`, ternary `c?a:b`,
+                       **list comprehensions** `[for (i=r) let(..) if(c)
+                       expr]`, `concat`, **user `module` definitions**
+                       (each call *inlined* as a union with the arguments
+                       bound to assign nodes, then the body re-parsed) and
+                       **user `function` definitions** (evaluated with
+                       recursion + cross-calls, so a `polygon` fed a
+                       variable / comprehension / function — e.g. a NACA
+                       airfoil — imports as concrete points). Import never
+                       crashes a file: an unparseable statement is skipped
+                       with a warning and parsing resumes.
                        `expr.py` evaluates the extra syntax (a scalar
                        reads as `[s,s,s]` so `cube(size)` works either
                        way). Constructs still outside the subset

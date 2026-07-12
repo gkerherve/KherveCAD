@@ -40,11 +40,14 @@ FUNCTIONS = {
     "sin": lambda a: math.sin(math.radians(a)),
     "cos": lambda a: math.cos(math.radians(a)),
     "tan": lambda a: math.tan(math.radians(a)),
-    "asin": lambda a: math.degrees(math.asin(a)),
-    "acos": lambda a: math.degrees(math.acos(a)),
+    # clamp the domain-sensitive functions so float noise (e.g. a range
+    # endpoint landing at -1e-16) yields a sane value instead of a
+    # "math domain error", matching OpenSCAD's forgiving numerics.
+    "asin": lambda a: math.degrees(math.asin(max(-1.0, min(1.0, a)))),
+    "acos": lambda a: math.degrees(math.acos(max(-1.0, min(1.0, a)))),
     "atan": lambda a: math.degrees(math.atan(a)),
     "atan2": lambda a, b: math.degrees(math.atan2(a, b)),
-    "sqrt": math.sqrt,
+    "sqrt": lambda a: math.sqrt(a) if a > 0 else 0.0,
     "abs": abs,
     "pow": math.pow,
     "exp": math.exp,
@@ -58,6 +61,9 @@ FUNCTIONS = {
     "sign": lambda a: (a > 0) - (a < 0),
     "norm": lambda *a: math.sqrt(sum(v * v for v in a)),
     "len": len,
+    "concat": lambda *a: [x for arg in a
+                          for x in (arg if isinstance(arg, (list, tuple))
+                                    else [arg])],
     "__range": lambda a, s, b: _range_list(a, s, b),
 }
 
@@ -188,6 +194,83 @@ def _translate_ternary(s):
         _translate_ternary(rest[c + 1:]))
 
 
+def _read_paren(s):
+    """*s* starts at '('; return (inner, remainder-after-matching-')')."""
+    depth, i = 0, 0
+    for i, c in enumerate(s):
+        if c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+            if depth == 0:
+                return s[1:i], s[i + 1:]
+    return s[1:], ""
+
+
+def _word_at(s, word):
+    """True if *s* begins with *word* as a whole word (not a prefix of a
+    longer identifier)."""
+    if not s.startswith(word):
+        return False
+    tail = s[len(word):].lstrip()
+    return tail.startswith("(")
+
+
+def _comp_to_python(inner):
+    """OpenSCAD list comprehension body `for (v = r) [let (..)] [if (c)]
+    elt` -> a Python comprehension. `let (a = x)` becomes `for a in [x]`
+    so a single machinery covers generators, bindings and filters."""
+    clauses, tail = [], inner.strip()
+    while True:
+        if _word_at(tail, "for"):
+            content, tail = _read_paren(tail[3:].lstrip())
+            for gen in _split_top(content, ","):
+                eq = _find_top(gen, "=")
+                clauses.append(f"for {gen[:eq].strip()} in "
+                               f"{_translate_listcomp(gen[eq + 1:].strip())}")
+        elif _word_at(tail, "let"):
+            content, tail = _read_paren(tail[3:].lstrip())
+            for bind in _split_top(content, ","):
+                eq = _find_top(bind, "=")
+                clauses.append(f"for {bind[:eq].strip()} in "
+                               f"[{_translate_listcomp(bind[eq + 1:].strip())}]")
+        elif _word_at(tail, "if"):
+            content, tail = _read_paren(tail[2:].lstrip())
+            clauses.append(f"if {_translate_listcomp(content.strip())}")
+        else:
+            break
+        tail = tail.lstrip()
+    elt = _translate_listcomp(tail.strip()) or "None"
+    return "[" + elt + " " + " ".join(clauses) + "]"
+
+
+def _translate_listcomp(s):
+    """Rewrite OpenSCAD list comprehensions `[for (..) ..]` as Python
+    comprehensions, recursing into nested brackets."""
+    out, i, n = [], 0, len(s)
+    while i < n:
+        if s[i] != "[":
+            out.append(s[i])
+            i += 1
+            continue
+        depth, j = 0, i
+        while j < n:
+            if s[j] == "[":
+                depth += 1
+            elif s[j] == "]":
+                depth -= 1
+                if depth == 0:
+                    break
+            j += 1
+        inner = s[i:j][1:] if j < n else s[i + 1:]
+        if _word_at(inner.lstrip(), "for"):
+            out.append(_comp_to_python(inner))
+        else:
+            out.append("[" + _translate_listcomp(inner) + "]")
+        i = j + 1
+    return "".join(out)
+
+
 def evaluate(expression, env: dict = None):
     """Evaluate *expression* (number or OpenSCAD-ish string) with the
     variables in *env*. Raises ExprError on failure."""
@@ -196,10 +279,15 @@ def evaluate(expression, env: dict = None):
     if isinstance(expression, (int, float)):
         return expression
     text = str(expression).strip()
-    # OpenSCAD uses ^ for power; ranges and ?: aren't Python, so rewrite.
+    # OpenSCAD expressions may span several lines; collapse whitespace so
+    # a newline mid-expression does not end it in Python's eval mode.
+    text = re.sub(r"\s+", " ", text)
+    # OpenSCAD uses ^ for power; ranges, comprehensions and ?: aren't
+    # Python, so rewrite them before parsing.
     text = text.replace("^", "**")
     text = _translate_logical(text)
-    text = _translate_ternary(_expand_ranges(text)).strip()
+    text = _translate_listcomp(_expand_ranges(text))
+    text = _translate_ternary(text).strip()
     try:
         tree = ast.parse(text, mode="eval")
     except SyntaxError as exc:
@@ -250,6 +338,8 @@ def _eval(node, env):
             else _eval(node.orelse, env)
     if isinstance(node, (ast.List, ast.Tuple)):
         return [_eval(e, env) for e in node.elts]
+    if isinstance(node, ast.ListComp):
+        return _eval_comp(node.elt, node.generators, 0, env)
     if isinstance(node, ast.Attribute):
         # OpenSCAD vector swizzle: v.x / v.y / v.z -> v[0] / v[1] / v[2].
         # A scalar reads as [s, s, s], so `cube(size)` works whether the
@@ -272,11 +362,43 @@ def _eval(node, env):
         except (TypeError, IndexError, ValueError) as exc:
             raise ExprError(f"bad index into {target!r}") from exc
     if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
-        func = FUNCTIONS.get(node.func.id)
+        args = [_eval(a, env) for a in node.args]
+        kwargs = {kw.arg: _eval(kw.value, env) for kw in node.keywords}
+        # user-defined functions live in the env as callables; built-ins
+        # fall back to the FUNCTIONS table
+        func = env.get(node.func.id)
+        if not callable(func):
+            func = FUNCTIONS.get(node.func.id)
         if func is None:
             raise ExprError(f"unknown function: {node.func.id}")
-        return func(*[_eval(a, env) for a in node.args])
+        return func(*args, **kwargs)
     raise ExprError(f"unsupported syntax: {ast.dump(node)[:40]}")
+
+
+def _bind_target(target, value, env):
+    """Bind a comprehension target (a name or a tuple/list of names)."""
+    if isinstance(target, ast.Name):
+        env[target.id] = value
+    elif isinstance(target, (ast.Tuple, ast.List)):
+        for sub, item in zip(target.elts, value):
+            _bind_target(sub, item, env)
+    else:
+        raise ExprError("unsupported comprehension target")
+
+
+def _eval_comp(elt, generators, gi, env):
+    """Evaluate a (possibly multi-generator) list comprehension."""
+    if gi == len(generators):
+        return [_eval(elt, env)]
+    gen = generators[gi]
+    iterable = _eval(gen.iter, env)
+    out = []
+    for item in iterable:
+        scope = dict(env)
+        _bind_target(gen.target, item, scope)
+        if all(_eval(cond, scope) for cond in gen.ifs):
+            out.extend(_eval_comp(elt, generators, gi + 1, scope))
+    return out
 
 
 def resolve(value, env: dict = None, default: float = 0.0) -> float:

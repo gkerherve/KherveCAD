@@ -70,15 +70,18 @@ function sq(x) = x * x;
 """
 
 
-def test_function_scad_imports_empty_with_warnings(app, tmp_path):
-    """A program built on a custom function still can't be modelled."""
+def test_function_scad_imports_empty(app, tmp_path):
+    """A function-only program produces no geometry (the function is
+    captured for expressions, but emits nothing on its own), so the raw
+    fallback is offered."""
     from khervecad import scadparse
     m = DocumentModel()
     f = tmp_path / "fn.scad"
     f.write_text(FUNCTION_SCAD, encoding="utf-8")
-    warns = scadparse.import_scad(m, str(f))
+    scadparse.import_scad(m, str(f))
     assert mesh.tessellate(m.root, fn=m.effective_fn()) == []
-    assert any("not supported" in w or "unsupported" in w for w in warns)
+    assert not any(n.category and "3D" in str(n.category)
+                   for n in m.root.walk())
 
 
 def test_load_scad_raw_keeps_the_program(app, tmp_path):
