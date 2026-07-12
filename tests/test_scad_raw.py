@@ -64,6 +64,38 @@ def test_hidden_raw_node_emits_nothing(model):
     assert "sphere(5);" not in model.to_scad()
 
 
+MODULE_SCAD = """\
+module widget(n = 3) {
+    for (i = [0:n]) translate([i*10,0,0]) cube(5);
+}
+widget(4);
+"""
+
+
+def test_module_scad_imports_empty_with_warnings(app, tmp_path):
+    """A module-based program the parser can't model comes in empty."""
+    from khervecad import scadparse
+    m = DocumentModel()
+    f = tmp_path / "widget.scad"
+    f.write_text(MODULE_SCAD, encoding="utf-8")
+    warns = scadparse.import_scad(m, str(f))
+    assert mesh.tessellate(m.root, fn=m.effective_fn()) == []
+    assert any("not supported" in w or "unsupported" in w for w in warns)
+
+
+def test_load_scad_raw_keeps_the_program(app, tmp_path):
+    """The raw fallback loads the whole file into a scad_raw node."""
+    from khervecad.mainwindow import MainWindow
+    f = tmp_path / "widget.scad"
+    f.write_text(MODULE_SCAD, encoding="utf-8")
+    w = MainWindow()
+    w._load_scad_raw(str(f))
+    raw = [n for n in w.model.root.walk() if n.type == "scad_raw"]
+    assert len(raw) == 1
+    assert "module widget" in raw[0].params["code"]
+    assert "module widget" in w.model.to_scad()
+
+
 def test_raw_node_round_trips(model):
     n = model.add_node("scad_raw")
     n.params["code"] = CODE

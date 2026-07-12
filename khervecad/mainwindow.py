@@ -1021,13 +1021,36 @@ class MainWindow(QMainWindow):
             self, "Import OpenSCAD", "", "OpenSCAD program (*.scad)")
         if not path:
             return
-        from . import scadparse
+        from . import mesh, scadparse
         try:
             warnings = scadparse.import_scad(self.model, path)
         except Exception as exc:
             QMessageBox.warning(self, APP_NAME,
                                 f"Could not import:\n{exc}")
             return
+        # A file built on custom modules/functions the parser can't model
+        # imports as an empty tree. Offer to keep it as a raw OpenSCAD
+        # block so the OpenSCAD engine can still render it.
+        empty = not mesh.tessellate(self.model.root,
+                                    fn=self.model.effective_fn())
+        advanced = any("not supported" in w or "unsupported" in w
+                       for w in warnings)
+        if empty and advanced:
+            note = "" if self.engine.available else (
+                "\n\n(OpenSCAD isn't detected — set it via Edit > "
+                "Locate OpenSCAD to render it.)")
+            if QMessageBox.question(
+                    self, APP_NAME,
+                    "This file is built from custom OpenSCAD "
+                    "modules/functions that KherveCAD can't turn into "
+                    "editable objects, so the object tree is empty.\n\n"
+                    "Load the whole file as a raw OpenSCAD block instead? "
+                    "It renders through the OpenSCAD engine (editable as "
+                    "text in the Code tab, not as objects)." + note,
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.Yes) == QMessageBox.Yes:
+                self._load_scad_raw(path)
+                return
         self._path = None                     # imported = new document
         self._dirty = True
         self._fitted = False
@@ -1039,6 +1062,23 @@ class MainWindow(QMainWindow):
                 "Imported with limitations:\n- "
                 + "\n- ".join(warnings[:12])
                 + ("\n…" if len(warnings) > 12 else ""))
+
+    def _load_scad_raw(self, path):
+        """Replace the document with a single raw-OpenSCAD node holding
+        the file's text — for programs KherveCAD can't model as a tree."""
+        from .model import CadNode
+        text = Path(path).read_text(encoding="utf-8")
+        root = CadNode("root")
+        root.add(CadNode("scad_raw", Path(path).stem, dict(code=text)))
+        self.model.root = root
+        self.model.structure_changed.emit()
+        self._path = None
+        self._dirty = True
+        self._fitted = False
+        self.view3d.user_moved = False
+        self._update_title()
+        if self.engine.available:
+            self._render_now()
 
     def import_stl(self):
         path, _ = QFileDialog.getOpenFileName(

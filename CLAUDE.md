@@ -58,9 +58,15 @@ into a new module and import.
                        parser for the generated subset plus common
                        variations (d= diameters, scalar rotate/scale,
                        positional args, modifiers, for/if/assigns).
-                       Unknown constructs are skipped with warnings.
-                       Round-trip (export -> import -> export) is
-                       lossless and tested.
+                       Unknown constructs (custom `module`/`function`
+                       definitions, `children()`, list comprehensions,
+                       recursion) are skipped with warnings. When a file
+                       leans on those and imports **empty**, `import_scad`
+                       offers to load it as a single **`scad_raw`** node
+                       so the OpenSCAD engine still renders it (editable
+                       as text in the Code tab, not as objects). Round-
+                       trip (export -> import -> export) is lossless and
+                       tested.
   - `library.py`     — parametric vacuum parts + fasteners + the
                        Insert > Part Library dialog (non-modal, so
                        it stays open while editing). CF flanges
