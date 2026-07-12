@@ -756,6 +756,208 @@ def learn_21_masters() -> CadNode:
     return root
 
 
+# ============================ PROJECTS =============================
+# One finished part per chapter of the "Mastering OpenSCAD in 10
+# projects" course, rebuilt natively so each previews and teaches the
+# chapter's key technique.
+
+def project_02_wall_anchor() -> CadNode:
+    """Ch.2 · Wall anchor — a tapered plug for a drilled hole. Teaches
+    linear_extrude with a scale taper, a difference for the screw cavity,
+    and a for loop that cuts the two expansion slits."""
+    length, outer = 40.0, 10.0
+    section = CadNode("rect", "Section",
+                      dict(x=-outer / 2, y=-outer / 2,
+                           width=outer, height=outer))
+    body = _ext("Tapered post", length, section, scale=0.72)
+    cavity = _cyl("Screw cavity", 2.6, length + 2, z=-1, r2=1.0,
+                  segments=24)
+    slit = _rot(_cube("Slit", outer + 2, 1.4, length * 0.72,
+                      x=-(outer + 2) / 2, y=-0.7, z=length * 0.2),
+                z="i * 90")
+    anchor = CadNode("difference", "Wall anchor")
+    anchor.add(body)
+    anchor.add(cavity)
+    anchor.add(_for("Slits", "i", 0, 1, 1, slit))
+    return _root(_color("Anchor", "#c9b28a", anchor))
+
+
+def project_03_window_stopper() -> CadNode:
+    """Ch.3 · Window stopper — a wedge case with a lever on an axle.
+    Teaches a nested difference (the axle bore), a hull-shaped lever and a
+    rotate that sets the lever angle."""
+    case = CadNode("difference", "Case")
+    case.add(_cube("Body", 30, 40, 40, x=-15, y=-20))
+    case.add(_cube("Frame slot", 34, 18, 34, x=-17, y=-9, z=8))
+    case.add(_rot(_cyl("Axle bore", 5.5, 44, z=-22, segments=36), x=90))
+    case = _color("Case", "#b8b0a0", case)
+
+    axle = _color("Axle", "#7c7c7c",
+                  _place(_rot(_cyl("Axle", 5, 44, segments=36), x=90),
+                         z=28, y=22))
+
+    lever_2d = CadNode("hull", "Lever arm")
+    lever_2d.add(CadNode("circle", "Pivot",
+                         dict(x=0, y=0, radius=6, segments=36,
+                              angle=360.0, start_angle=0.0)))
+    lever_2d.add(CadNode("circle", "Grip",
+                         dict(x=40, y=0, radius=4, segments=36,
+                              angle=360.0, start_angle=0.0)))
+    lever = _rot(_ext("Lever", 8, lever_2d), x=90)     # lay it flat in Y
+    lever = _rot(lever, y=-28)                         # swing it up
+    lever = _color("Lever", "#d98a3f", _place(lever, z=28, y=4))
+    return _root(case, axle, lever)
+
+
+def project_04_clock_movement() -> CadNode:
+    """Ch.4 · Clock movement mock-up — a quartz movement with the hands
+    set to a time. Teaches naming dimensions and colouring each part; the
+    three hands are bars rotated by the hour/minute/second angles."""
+    body = _color("Body", "#6e6e6e", _cube("Case", 56, 56, 20,
+                                           x=-28, y=-28, z=-20))
+    terminal = _color("Terminal", "#d4af37",
+                      _cyl("Screw terminal", 3.9, 5, segments=36))
+    axles = CadNode("union", "Axles")
+    axles.add(_cyl("Hour axle", 2.55, 8.3, segments=36))
+    axles.add(_cyl("Minute axle", 1.6, 12.1, segments=36))
+    axles.add(_cyl("Second axle", 0.5, 14.5, segments=24))
+    axles = _color("Axles", "#202020", axles)
+
+    def hand(name, col, length, width, z, angle):
+        bar = _cube(name, width, length, 0.8, x=-width / 2, y=0, z=0)
+        return _color(name, col, _rot(_place(bar, z=z), z=angle))
+
+    hour = hand("Hour hand", "#111111", 18, 4.0, 8.3,
+                -360 * (10 + 9 / 60) / 12)
+    minute = hand("Minute hand", "#111111", 25, 2.5, 12.1,
+                  -360 * 9 / 60)
+    second = hand("Second hand", "#c0332b", 27, 1.2, 14.5,
+                  -360 * 30 / 60)
+    return _root(body, terminal, axles, hour, minute, second)
+
+
+def project_05_pen_holder() -> CadNode:
+    """Ch.5 · Pen holder — a ring of arches around a cup. Teaches partial
+    rotate_extrude (each arch is a half-torus stood upright) placed by a
+    polar for loop, the way the gothic pen holder is built."""
+    cup = CadNode("rotate_extrude", "Cup", dict(angle=360, segments=72))
+    cup.add(CadNode("polygon", "Cup wall", dict(
+        x=0, y=0, points=[[16, 0], [19, 0], [19, 80], [16, 80]])))
+    cup = _color("Cup", "#b0894f", cup)
+
+    def arch():
+        prof = CadNode("circle", "Bar", dict(x=15, y=0, radius=2.2,
+                                             segments=20, angle=360.0,
+                                             start_angle=0.0))
+        rev = CadNode("rotate_extrude", "Arch",
+                      dict(angle=180, segments=64))
+        rev.add(prof)
+        return _rot(rev, x=-90)                # stand the half-torus up
+
+    piece = _rot(_color("Arch", "#b0894f", _place(arch(), y=24)),
+                 z="i * 60")
+    return _root(cup, _for("Arch ring", "i", 0, 5, 1, piece))
+
+
+def project_06_stamp() -> CadNode:
+    """Ch.6 · Rubber stamp — mirrored text on a handled base. Teaches the
+    text object, mirror (so the imprint reads the right way round), linear
+    extrude and a coloured handle."""
+    plate = _color("Base", "#8a5a3a",
+                   _ext("Plate", 3, CadNode("rect", "Plate area",
+                        dict(x=-24, y=-11, width=48, height=22))))
+    txt = CadNode("text", "Text", dict(x=-15, y=-6, text="OPEN", size=12))
+    relief = CadNode("mirror", "Mirror (reads right when stamped)",
+                     dict(x=1, y=0, z=0))
+    relief.add(_place(_ext("Letters", 2, txt), z=3))
+    relief = _color("Letters", "#c8783c", relief)
+    stem = _color("Handle", "#5a3a24",
+                  _cyl("Stem", 6, 22, z=3, segments=36))
+    knob = _color("Knob", "#5a3a24", _sphere("Knob", 11, z=32))
+    return _root(plate, relief, stem, knob)
+
+
+def _star_points(points, r_out, r_in):
+    pts = []
+    for k in range(points * 2):
+        angle = math.pi * k / points
+        radius = r_out if k % 2 == 0 else r_in
+        pts.append([round(radius * math.cos(angle), 2),
+                    round(radius * math.sin(angle), 2)])
+    return pts
+
+
+def project_07_flame_sculpture() -> CadNode:
+    """Ch.7 · Flame sculpture — twisting, tapering spires. Teaches linear
+    extrude with both twist and scale at once: a star profile spins as it
+    shrinks to a point."""
+    def flame(height, twist, col, x, y):
+        star = CadNode("polygon", "Star",
+                       dict(x=0, y=0, points=_star_points(6, 16, 7)))
+        return _color("Flame", col,
+                      _place(_ext("Flame", height, star,
+                                  twist=twist, scale=0.05), x=x, y=y))
+    return _root(
+        flame(150, 300, "#e2622c", 0, 0),
+        flame(112, 240, "#f0902a", 28, 8),
+        flame(120, -260, "#d9451f", -28, 8))
+
+
+def _tree3d(length, radius, depth) -> CadNode:
+    node = CadNode("union", f"Branch d{depth}")
+    node.add(_cyl("Segment", radius, length, r2=radius * 0.72,
+                  segments=16))
+    if depth <= 0:
+        node.add(_color("Leaf", "#3f8f3f",
+                        _sphere("Leaf", radius * 2.4, z=length, seg=16)))
+        return node
+    top = CadNode("union", "Fork")
+    for az in (0.0, 120.0, 240.0):
+        child = _tree3d(length * 0.72, radius * 0.7, depth - 1)
+        top.add(_rot(_rot(child, x=32), z=az))
+    node.add(_place(top, z=length))
+    return node
+
+
+def project_08_recursive_tree() -> CadNode:
+    """Ch.8 · Recursive tree — a trunk that keeps splitting into smaller
+    branches. Teaches recursion: the Python builder unrolls it into the
+    object tree, so you can open branch inside branch inside branch."""
+    return _root(_color("Trunk", "#7a5230", _tree3d(40, 5, 3)))
+
+
+def project_09_parabolic_reflector() -> CadNode:
+    """Ch.9 · Parabolic reflector — a dish whose depth follows z =
+    r²/(4f). Teaches building a rotate_extrude profile from a computed
+    curve, closed off with a wall thickness."""
+    focus, rim, wall, n = 40.0, 75.0, 3.0, 24
+    inner = [[round(rim * i / n, 2),
+              round((rim * i / n) ** 2 / (4 * focus), 2)]
+             for i in range(n + 1)]
+    outer = [[round(rim * i / n, 2),
+              round((rim * i / n) ** 2 / (4 * focus) - wall, 2)]
+             for i in range(n, -1, -1)]
+    prof = CadNode("polygon", "Dish profile",
+                   dict(x=0, y=0, points=inner + outer))
+    dish = CadNode("rotate_extrude", "Reflector",
+                   dict(angle=360, segments=96))
+    dish.add(prof)
+    return _root(_color("Reflector", "#9fb6c6", dish))
+
+
+def project_10_fan_wheel() -> CadNode:
+    """Ch.10 · Fan wheel — a hub with pitched blades in a polar array.
+    Teaches combining a for-loop polar pattern with a twisted linear
+    extrude, so each blade carries the same aerofoil pitch."""
+    hub = _color("Hub", "#8a8a8a", _cyl("Hub", 14, 16, z=-8, segments=48))
+    section = CadNode("rect", "Blade section",
+                      dict(x=-3, y=-18, width=6, height=36))
+    blade = _rot(_ext("Blade", 40, section, twist=-42), y=90)
+    blade = _rot(_color("Blade", "#c7c7c7", _place(blade, x=14)),
+                 z="i * 45")
+    return _root(hub, _for("Blades", "i", 0, 7, 1, blade))
+
+
 #: (menu label, category, builder) — grouped in the Examples menu.
 EXAMPLES = [
     ("1 · Cube", "Learn", learn_01_cube),
@@ -791,6 +993,16 @@ EXAMPLES = [
     ("Threaded rod & nuts", "Mechanical", threaded_rod),
     ("Fan impeller", "Mechanical", fan_impeller),
     ("Bolt circle (Masters demo)", "Mechanical", bolt_circle),
+    ("Ch.2 · Wall anchor", "Projects", project_02_wall_anchor),
+    ("Ch.3 · Window stopper", "Projects", project_03_window_stopper),
+    ("Ch.4 · Clock movement", "Projects", project_04_clock_movement),
+    ("Ch.5 · Pen holder", "Projects", project_05_pen_holder),
+    ("Ch.6 · Rubber stamp", "Projects", project_06_stamp),
+    ("Ch.7 · Flame sculpture", "Projects", project_07_flame_sculpture),
+    ("Ch.8 · Recursive tree", "Projects", project_08_recursive_tree),
+    ("Ch.9 · Parabolic reflector", "Projects",
+     project_09_parabolic_reflector),
+    ("Ch.10 · Fan wheel", "Projects", project_10_fan_wheel),
     ("Orientation cubes", "Showcase", orientation_cubes),
     ("Boolean regions (2D ops)", "Showcase", boolean_regions),
     ("Fractal tree", "Showcase", fractal_tree),

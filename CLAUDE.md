@@ -143,7 +143,17 @@ into a new module and import.
                        — plus **Showcase** examples (orientation cubes,
                        2D boolean regions, a recursively-built fractal
                        tree, and a raw-OpenSCAD BOSL2 passthrough), a
-                       vacuum starter and a desk setup. `load_example()`
+                       vacuum starter and a desk setup. A **Projects**
+                       category rebuilds one finished part per chapter of
+                       the "Mastering OpenSCAD in 10 projects" course
+                       (wall anchor, window stopper, clock movement, pen
+                       holder, rubber stamp, flame sculpture, recursive
+                       tree, parabolic reflector, fan wheel) natively, so
+                       each previews and teaches that chapter's technique
+                       (extrude taper, hull lever, coloured parts, polar
+                       rotate_extrude arches, mirrored text, twist+scale,
+                       recursion, a computed rotate_extrude curve, twisted
+                       blades). `load_example()`
                        swaps it in; `EXAMPLES` is grouped by category.
                        Gears use trapezoidal teeth stamped by a for-loop;
                        bearings/pulleys use revolved rings so they
