@@ -1226,6 +1226,7 @@ EXAMPLES = [
 # side-effecting import (no attribute access) so import order can't
 # deadlock the two modules.
 from . import examples_flowers  # noqa: E402,F401
+from . import examples_trees    # noqa: E402,F401
 
 
 def load_example(model: DocumentModel, build) -> None:

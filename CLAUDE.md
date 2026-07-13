@@ -152,9 +152,13 @@ into a new module and import.
                        tree, and a raw-OpenSCAD BOSL2 passthrough), a
                        **Flowers** category (layered bloom, phyllotaxis
                        sunflower, tulip, rose, daisy, lily, daffodil,
-                       calla lily — all procedural, petals/seeds/stamens
-                       unrolled from Python loops into the tree; the six
-                       named species live in `examples_flowers.py`), a
+                       calla lily, poppy, hibiscus, orchid, cherry
+                       blossom) and a **Trees** category (fir/conifer,
+                       oak, palm, weeping willow, silver birch, cherry
+                       blossom tree) — all procedural, petals/seeds/
+                       fronds/branches unrolled from Python loops into the
+                       tree; the named species live in
+                       `examples_flowers.py` / `examples_trees.py`), a
                        vacuum starter and a desk setup. A **Projects**
                        category rebuilds one finished part per chapter of
                        the "Mastering OpenSCAD in 10 projects" course
@@ -172,11 +176,18 @@ into a new module and import.
                        preview without a boolean; the fractal tree
                        recurses in the Python builder (the node tree has
                        no recursion) and unrolls into the object tree.
-  - `examples_flowers.py` — the **Flowers** category's six named
-                       species (tulip, rose, daisy, lily, daffodil, calla
-                       lily), each a procedural coloured-solids bloom.
-                       Imports the primitive helpers from `examples.py`
-                       and extends `examples.EXAMPLES` in place on import.
+  - `examples_flowers.py` — the **Flowers** category's named species
+                       (tulip, rose, daisy, lily, daffodil, calla lily,
+                       poppy, hibiscus, orchid, cherry blossom), each a
+                       procedural coloured-solids bloom.
+  - `examples_trees.py` — the **Trees** category (fir/conifer, oak,
+                       palm, weeping willow, silver birch, cherry blossom
+                       tree), each a procedural coloured-solids tree.
+                       Both flower/tree modules import the primitive
+                       helpers from `examples.py` and extend
+                       `examples.EXAMPLES` in place on import (a
+                       side-effect import from the bottom of `examples.py`
+                       so neither load order deadlocks).
   - `chat.py`        — **Assistant chat box** (family assistant, docked
                        right, toggled Ctrl+/): Claude/Mistral/Ollama
                        Cloud via urllib, keys in QSettings or env vars,
