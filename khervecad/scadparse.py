@@ -531,10 +531,16 @@ class Parser:
 
     def _inline_module(self, name):
         """Expand a call to a user module: a union holding one assign per
-        bound parameter, then the module body re-parsed as its children."""
+        bound parameter, then the module body re-parsed as its children.
+        A zero-parameter module is what KherveCAD emits for an Object
+        (component), so those come back as component nodes — the
+        export -> import round trip keeps the assembly structure."""
         params, body_start, body_end = self.modules[name]
         positional, named = self._arguments()
-        inst = CadNode("union", name)
+        if not params and not positional and not named:
+            inst = CadNode("component", name)
+        else:
+            inst = CadNode("union", name)
         outer_scope = self.scope                      # bound params shadow
         self.scope = dict(outer_scope)                # the enclosing scope
         for idx, (pname, default) in enumerate(params):
@@ -896,6 +902,33 @@ def _fold_container(node: CadNode):
                 child.params["z"] = node.params["z"]
             elif not _is_zero(node.params.get("z", 0.0)):
                 return None                     # 2D shape lifted in z
+            node.remove(child)
+            child.visible = node.visible and child.visible
+            return child
+    if len(node.children) == 1 and node.children[0].type == "component":
+        # a component's call is emitted as `color(...) translate(...)
+        # rotate(...) Name();` — fold those wrappers back into the
+        # component's own placement/colour params (innermost first, as
+        # the parse recursion unwinds).
+        child = node.children[0]
+        p = child.params
+        folded = False
+        if node.type == "translate" and all(
+                _is_zero(p.get(k, 0.0)) for k in ("x", "y", "z")):
+            for k in ("x", "y", "z"):
+                p[k] = node.params.get(k, 0.0)
+            folded = True
+        elif node.type == "rotate" and all(
+                _is_zero(p.get(k, 0.0)) for k in ("rx", "ry", "rz")):
+            for k, src in (("rx", "x"), ("ry", "y"), ("rz", "z")):
+                p[k] = node.params.get(src, 0.0)
+            folded = True
+        elif node.type == "color" and \
+                not str(p.get("color", "")).strip():
+            p["color"] = node.params.get("color", "")
+            p["alpha"] = node.params.get("alpha", 1.0)
+            folded = True
+        if folded:
             node.remove(child)
             child.visible = node.visible and child.visible
             return child

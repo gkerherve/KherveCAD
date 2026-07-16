@@ -17,7 +17,7 @@ import json
 
 from .model import NODE_TYPES, CadNode, DocumentModel
 
-FORMAT_VERSION = 3
+FORMAT_VERSION = 4          # 4: "component" (Object) node type
 
 
 def node_to_dict(node: CadNode) -> dict:

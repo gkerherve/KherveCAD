@@ -1027,8 +1027,9 @@ class SketchScene(QGraphicsScene):
         if abs(delta.x()) < 1e-9 and abs(delta.y()) < 1e-9:
             return
         _axes, (kx, ky) = PLANES[self.plane]
-        # a Group or Linked copy is a part with its own move params
-        if node.type in ("translate", "union", "reference"):
+        # a Group, Object or Linked copy is a part with its own move
+        # params
+        if node.type in ("translate", "union", "component", "reference"):
             env = self.env_for(node)
             node.params[kx] = round(
                 expr.resolve(node.params.get(kx, 0.0), env, 0.0)

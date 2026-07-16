@@ -715,9 +715,11 @@ def _tess(node, env, color, sel, selected):
                              mat_rotate(rx, ry, rz))
             out = _transform_colored(matrix, out)
         return out
-    if t == "union":
-        # a group is a part: apply its own colour, then its rotate and
-        # translate (matching the color()/translate()/rotate() codegen)
+    if t in ("union", "component"):
+        # a group / Object is a part: apply its own colour, then its
+        # rotate and translate (matching the color()/translate()/
+        # rotate() codegen; a component's module call carries the same
+        # prefix)
         group_color = color
         col = str(node.params.get("color", "")).strip()
         if col:

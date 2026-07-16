@@ -185,6 +185,23 @@ NODE_TYPES = {
                 ("rz", "Rotate Z°", "float", -360.0, 360.0),
                 ("color", "Color", "color", None, None),
                 ("alpha", "Opacity (0-1)", "float", 0.0, 1.0)]),
+    "component": dict(
+        # an Object: a self-contained part that compiles to its own
+        # OpenSCAD module (one definition + one placed call), so the
+        # program reads as an assembly of named parts. Carries the
+        # same placement/colour params as a Group.
+        label="Object", category=BOOLEAN,
+        icon="mdi.package-variant-closed",
+        params=dict(x=0.0, y=0.0, z=0.0, rx=0.0, ry=0.0, rz=0.0,
+                    color="", alpha=1.0),
+        schema=[("x", "Move X", "float", -1e6, 1e6),
+                ("y", "Move Y", "float", -1e6, 1e6),
+                ("z", "Move Z", "float", -1e6, 1e6),
+                ("rx", "Rotate X°", "float", -360.0, 360.0),
+                ("ry", "Rotate Y°", "float", -360.0, 360.0),
+                ("rz", "Rotate Z°", "float", -360.0, 360.0),
+                ("color", "Color", "color", None, None),
+                ("alpha", "Opacity (0-1)", "float", 0.0, 1.0)]),
     "difference": dict(
         label="Difference", category=BOOLEAN, icon="mdi.set-left",
         params=dict(), schema=[]),
@@ -302,6 +319,36 @@ _FN_OVERRIDE = None
 #: codegen by DocumentModel.to_scad_map().
 _REF_INDEX = None
 _REF_STACK = set()
+
+#: {node id: OpenSCAD module name} for Objects (components), assigned
+#: per-document by DocumentModel.to_scad_map() so every module name is
+#: unique; None when emitting a loose subtree (sanitised name only).
+_MODULE_NAMES = None
+
+#: identifiers a component's module must not shadow: OpenSCAD keywords
+#: and built-in calls.
+_SCAD_RESERVED = {
+    "module", "function", "if", "else", "for", "let", "each", "true",
+    "false", "undef", "include", "use", "circle", "square", "polygon",
+    "text", "cube", "sphere", "cylinder", "polyhedron", "translate",
+    "rotate", "scale", "mirror", "resize", "multmatrix", "color",
+    "offset", "hull", "minkowski", "union", "difference",
+    "intersection", "render", "surface", "projection",
+    "linear_extrude", "rotate_extrude", "import", "children", "echo",
+    "assert",
+}
+
+
+def module_name(name: str) -> str:
+    """*name* as a valid, non-reserved OpenSCAD module identifier
+    (``Object 2`` -> ``Object_2``)."""
+    import re
+    ident = re.sub(r"\W", "_", str(name).strip()) or "part"
+    if ident[0].isdigit():
+        ident = "_" + ident
+    if ident in _SCAD_RESERVED:
+        ident += "_"
+    return ident
 
 
 def _fn(p) -> object:
@@ -500,6 +547,8 @@ class CadNode:
                     lines.append((pad + ln, self))
         elif self.type == "reference":
             self._emit_reference(lines, indent, spans)
+        elif self.type == "component":
+            self._emit_component(lines, indent, spans)
         elif self.type == "if_else":
             self._emit_if_else(lines, indent, spans)
         else:
@@ -534,6 +583,21 @@ class CadNode:
         finally:
             _REF_STACK.discard(self.id)
         lines.append((pad + "}", self))
+
+    def _emit_component(self, lines, indent: int, spans):
+        """An Object compiles to its own zero-argument module plus one
+        placed call, so the generated program reads as an assembly of
+        named parts and each part is reusable OpenSCAD."""
+        pad = "    " * indent
+        star = "" if self.visible else "*"
+        name = (_MODULE_NAMES or {}).get(self.id) \
+            or module_name(self.name)
+        lines.append((pad + f"module {name}() {{", self))
+        for child in self.children:
+            child.emit(lines, indent + 1, spans)
+        lines.append((pad + "}", self))
+        lines.append((pad + star + _group_prefix(self.params)
+                      + f"{name}();", self))
 
     def _emit_if_else(self, lines, indent: int, spans):
         """`if (cond) { then } else { else }` — the else branch is a
@@ -813,17 +877,28 @@ class DocumentModel(QObject):
                   f"// regenerated from the object tree.\n")
         offset = header.count("\n") + 1          # + the blank line
         lines, spans = [], {}
-        global _FN_OVERRIDE, _REF_INDEX
+        global _FN_OVERRIDE, _REF_INDEX, _MODULE_NAMES
         _FN_OVERRIDE = self.effective_fn()
         _REF_INDEX = {}                          # by name: masters persist
+        _MODULE_NAMES = {}                       # unique per document
+        taken = set()
         for n in self.root.walk():
             _REF_INDEX.setdefault(n.name, n)
+            if n.type == "component":
+                base = candidate = module_name(n.name)
+                for k in itertools.count(2):
+                    if candidate not in taken:
+                        break
+                    candidate = f"{base}_{k}"
+                taken.add(candidate)
+                _MODULE_NAMES[n.id] = candidate
         _REF_STACK.clear()
         try:
             self.root.emit(lines, 0, spans)
         finally:
             _FN_OVERRIDE = None
             _REF_INDEX = None
+            _MODULE_NAMES = None
             _REF_STACK.clear()
         body = "\n".join(text for text, _n in lines)
         code = header + "\n" + body + ("\n" if body else "")
@@ -1066,6 +1141,43 @@ class DocumentModel(QObject):
         self.root.add(ref)
         self.structure_changed.emit()
         return ref
+
+    # ----------------------------------------------------- components
+    def components(self):
+        """Top-level Objects (components) in document order — the
+        assembly the Main tab lists."""
+        return [c for c in self.root.children if c.type == "component"]
+
+    def new_component(self, name: str = "") -> CadNode:
+        """Create an empty Object at the top level."""
+        node = CadNode("component",
+                       name or self.unique_name("component"))
+        self.root.add(node)
+        self.structure_changed.emit()
+        return node
+
+    def make_component(self, node: CadNode) -> CadNode:
+        """Promote *node* into an Object: a Group converts in place
+        (it carries the same placement params), anything else is
+        wrapped. Returns the component node."""
+        if node.type == "component":
+            return node
+        if node.parent is None or \
+                node.type in ("masters", "variables", "root"):
+            return None
+        if node.type == "union":
+            node.type = "component"
+            if node.name.startswith("Group"):
+                node.name = self.unique_name("component")
+            self.structure_changed.emit()
+            return node
+        parent, index = node.parent, node.index()
+        comp = CadNode("component", self.unique_name("component"))
+        parent.remove(node)
+        comp.add(node)
+        parent.add(comp, index)
+        self.structure_changed.emit()
+        return comp
 
     def _clone(self, node: CadNode) -> CadNode:
         copy = CadNode(node.type, node.name, None)
