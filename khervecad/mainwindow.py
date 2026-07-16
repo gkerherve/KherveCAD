@@ -129,6 +129,9 @@ class MainWindow(QMainWindow):
             lambda _n: self._isolation_changed())
         self.builder.currentChanged.connect(
             lambda _i: self._isolation_changed())
+        self.builder.tree.pick_anchor.connect(self._start_anchor_pick)
+        self.builder.object_tab.tree.pick_anchor.connect(
+            self._start_anchor_pick)
         self.scene.selection_changed.connect(self._scene_selected)
         self.scene.node_created.connect(self._node_created)
         self.scene.plane_changed.connect(self._on_plane_auto_changed)
@@ -674,6 +677,7 @@ class MainWindow(QMainWindow):
                                          fn=self.model.effective_fn())
                 if self._selected_ids else [])
         self.view3d.set_highlight_mesh(tris)
+        self._refresh_anchor_markers()
         self._show_dimensions(tris)
 
     def _show_dimensions(self, tris):
@@ -707,6 +711,56 @@ class MainWindow(QMainWindow):
         for the (un)isolated scope."""
         self.scene.rebuild()
         self._refresh_preview()
+        self._refresh_anchor_markers()
+
+    # ---------------------------------------------------------- anchors
+    def _anchor_component(self):
+        """The Object whose anchors show in the 3D view: the isolated
+        one, else a single selected component."""
+        comp = self.builder.isolated_component()
+        if comp is not None:
+            return comp
+        selected = [self.model.find(nid)
+                    for nid in getattr(self, "_selected_ids", set())]
+        comps = [n for n in selected
+                 if n is not None and n.type == "component"]
+        return comps[0] if len(comps) == 1 else None
+
+    def _refresh_anchor_markers(self):
+        from . import anchors
+        comp = self._anchor_component()
+        markers = []
+        if comp is not None:
+            markers = anchors.world_markers(
+                comp, env=anchors.doc_env(self.model),
+                fn=self.model.effective_fn())
+        self.view3d.set_anchor_markers(markers)
+
+    def _start_anchor_pick(self, comp):
+        """Context menu "Add anchor": isolate the Object, then let the
+        user click a face or edge in the 3D view."""
+        from . import anchors
+        self.builder.open_component(comp)
+        self.statusBar().showMessage(
+            "Click a face or edge of the object in the 3D view to add "
+            "an anchor — right-click to cancel.", 10000)
+
+        def done(desc):
+            if desc is None:
+                self.statusBar().showMessage("Anchor pick cancelled.",
+                                             3000)
+                return
+            env = anchors.doc_env(self.model)
+            pos = anchors.to_local(comp, desc["pos"], env)
+            direction = anchors.dir_to_local(comp, desc["dir"], env)
+            anchor = anchors.add_user_anchor(
+                self.model, comp, pos, direction,
+                name=desc.get("name", "Anchor"), kind="custom")
+            self.statusBar().showMessage(
+                f"Anchor '{anchor['name']}' added to {comp.name} "
+                f"({desc['kind']}).", 5000)
+            self._refresh_anchor_markers()
+        self.view3d.start_pick(done)
 
     def _render_scope(self):
         """(root node, scad code callable) for the current view — the

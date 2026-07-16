@@ -54,6 +54,12 @@ class View3D(QWidget):
         self.mesh = []                  # [(v0, v1, v2)] world space
         self.colors = None              # optional per-face colours
         self.highlight_mesh = []        # selected object, world space
+        #: anchor markers [{pos, dir, name, kind}] in world space —
+        #: the selected Object's attachment points
+        self.anchor_markers = []
+        #: pick mode: a callable fed the picked face/edge description
+        #: (see anchors.describe_pick); left click picks, right cancels
+        self._pick_cb = None
         self._draft_mesh = None         # decimated mesh for interaction
         self._draft_colors = None
         self._draft_hi = None
@@ -145,6 +151,41 @@ class View3D(QWidget):
         self.highlight_mesh = tris or []
         self._draft_hi, _ = self._decimate(self.highlight_mesh)
         self.update()
+
+    def set_anchor_markers(self, markers):
+        """World-space anchor markers of the selected Object."""
+        self.anchor_markers = markers or []
+        self.update()
+
+    # ------------------------------------------------------- anchor pick
+    def start_pick(self, callback):
+        """Enter pick mode: the next left click on the model picks a
+        face or edge and *callback* receives its description (world
+        coordinates); right click cancels."""
+        self._pick_cb = callback
+        self.setCursor(Qt.CrossCursor)
+
+    def cancel_pick(self):
+        self._pick_cb = None
+        self.unsetCursor()
+
+    def _run_pick(self, x, y):
+        from . import anchors
+        callback, self._pick_cb = self._pick_cb, None
+        self.unsetCursor()
+        eye, right, up, forward = self._camera()
+
+        def projector(v):
+            return self._project(eye, right, up, forward, v)
+
+        index, point = anchors.pick(self.mesh, projector, x, y)
+        if index is None:
+            callback(None)
+            return
+        # snap tolerance: ~8 px converted to world units at the hit depth
+        depth = projector(point)[2]
+        tol = 8.0 * depth / self._focal()
+        callback(anchors.describe_pick(self.mesh, index, point, tol))
 
     def _begin_fast(self):
         if self._draft_mesh is not None or self._draft_hi is not None:
@@ -427,6 +468,7 @@ class View3D(QWidget):
             painter.setBrush(color)
             painter.drawPolygon(poly)
 
+        self._draw_anchors(painter, eye, right, up, forward)
         self._draw_axes(painter, t, eye, right, up, forward)
         pair = BACKGROUNDS.get(self.background)
         if pair is None:
@@ -490,6 +532,46 @@ class View3D(QWidget):
         v = min((0.30 + 0.70 * shade) * val + 0.45 * gloss, 1.0)
         return QColor.fromHsvF(hue, min(sat * 1.1, 1.0), v), None
 
+    #: marker colour per anchor kind.
+    ANCHOR_COLORS = {"origin": "#ffcf40", "face": "#37c4dd",
+                     "edge": "#ff9d2e", "corner": "#a9b2ba",
+                     "custom": "#d55ce0"}
+
+    def _draw_anchors(self, painter, eye, right, up, forward):
+        """Small dot + outward tick per anchor; custom anchors and the
+        origin carry their names so they read at a glance."""
+        if not self.anchor_markers or self._fast:
+            return
+        tick = self.distance / 18.0
+        font = painter.font()
+        font.setBold(False)
+        font.setPointSizeF(8.0)
+        painter.setFont(font)
+        for marker in self.anchor_markers:
+            pos = marker["pos"]
+            head = self._project(eye, right, up, forward, pos)
+            if head is None:
+                continue
+            d = marker["dir"]
+            tip = self._project(eye, right, up, forward,
+                                (pos[0] + d[0] * tick,
+                                 pos[1] + d[1] * tick,
+                                 pos[2] + d[2] * tick))
+            color = QColor(self.ANCHOR_COLORS.get(
+                marker.get("kind", "custom"), "#d55ce0"))
+            pen = QPen(color)
+            pen.setWidthF(1.4)
+            painter.setPen(pen)
+            if tip is not None:
+                painter.drawLine(QPointF(head[0], head[1]),
+                                 QPointF(tip[0], tip[1]))
+            painter.setBrush(color)
+            r = 3.0 if marker.get("kind") in ("origin", "custom") else 2.2
+            painter.drawEllipse(QPointF(head[0], head[1]), r, r)
+            if marker.get("kind") in ("origin", "custom"):
+                painter.drawText(QPointF(head[0] + 5, head[1] - 4),
+                                 marker.get("name", ""))
+
     def _draw_ground(self, painter, t, eye, right, up, forward):
         pen = QPen(QColor(t["border"]))
         pen.setWidthF(0.7)
@@ -527,6 +609,14 @@ class View3D(QWidget):
 
     # ------------------------------------------------------------- mouse
     def mousePressEvent(self, event):
+        if self._pick_cb is not None:
+            if event.button() == Qt.LeftButton:
+                self._run_pick(event.pos().x(), event.pos().y())
+            else:                            # right/middle click cancels
+                callback, self._pick_cb = self._pick_cb, None
+                self.unsetCursor()
+                callback(None)
+            return
         self._last = event.pos()
         self._mode = "orbit" if event.button() == Qt.LeftButton else "pan"
         self._begin_fast()

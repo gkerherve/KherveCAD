@@ -85,6 +85,9 @@ class ObjectTree(QTreeWidget):
     #: an Object was double-clicked / "opened" — edit it in the Object
     #: tab (carries the component CadNode).
     open_component = pyqtSignal(object)
+    #: "Add anchor" was chosen — the main window starts a face/edge
+    #: pick in the 3D view (carries the component CadNode).
+    pick_anchor = pyqtSignal(object)
 
     #: True in the Masters variant — roots at the masters store and hides
     #: the store from the ordinary Objects tab.
@@ -579,6 +582,40 @@ class ObjectTree(QTreeWidget):
         if menu.actions():
             menu.exec_(self.viewport().mapToGlobal(pos))
 
+    def _anchor_menu(self, menu, comp):
+        """The Anchors submenu of one Object: add a picked anchor,
+        re-base the origin onto any anchor, remove picked ones."""
+        from . import anchors as anc
+        sub = menu.addMenu(icons.icon("mdi.anchor"), "Anchors")
+        sub.addAction(
+            icons.icon("mdi.target"),
+            "Add anchor (pick face/edge in 3D)...",
+            lambda: self.pick_anchor.emit(comp))
+        env = anc.doc_env(self.model)
+        fn = self.model.effective_fn()
+        origin_menu = sub.addMenu(icons.icon("mdi.axis-arrow"),
+                                  "Set origin at")
+        for anchor in anc.auto_anchors(comp, env=env, fn=fn):
+            if anchor["kind"] in ("face", "corner"):
+                origin_menu.addAction(
+                    anchor["name"],
+                    lambda _=False, p=list(anchor["pos"]):
+                        anc.set_origin(self.model, comp, p, env))
+        users = anc.user_anchors(comp)
+        for anchor in users:
+            origin_menu.addAction(
+                f"{anchor['name']} (picked)",
+                lambda _=False, p=list(anchor["pos"]):
+                    anc.set_origin(self.model, comp, p, env))
+        if users:
+            remove_menu = sub.addMenu(icons.icon("mdi.delete-outline"),
+                                      "Remove anchor")
+            for anchor in users:
+                remove_menu.addAction(
+                    anchor["name"],
+                    lambda _=False, n=anchor["name"]:
+                        anc.remove_user_anchor(self.model, comp, n))
+
     def _masters_menu(self, menu, nodes, roots):
         """Context menu inside the Masters tab."""
         menu.addAction(
@@ -606,6 +643,7 @@ class ObjectTree(QTreeWidget):
                 icons.icon("mdi.pencil-box-outline"),
                 "Edit in Object tab",
                 lambda: self.open_component.emit(comps[0]))
+            self._anchor_menu(menu, comps[0])
             menu.addSeparator()
         hidden = [n for n in nodes if not n.visible]
         menu.addAction(
