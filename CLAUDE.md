@@ -48,7 +48,17 @@ into a new module and import.
                        type), OpenSCAD codegen in `to_scad()`,
                        `DocumentModel` with change signals and all
                        editing operations (wrap/group/ungroup/move/
-                       duplicate/round_edges).
+                       duplicate/round_edges/make_component). The
+                       **`component` ("Object")** node type is a group
+                       that compiles to its own zero-arg OpenSCAD
+                       `module` plus one placed call (`module_name()`
+                       sanitises/dedupes; `to_scad_map(only=...)` /
+                       `subtree_scad()` emit one Object standalone with
+                       the document globals), so the program reads as
+                       an assembly of named parts and re-imports
+                       losslessly (zero-param modules come back as
+                       components, their placement wrappers folded into
+                       params by `scadparse._fold_container`).
   - `expr.py`        — safe evaluator for OpenSCAD-style expressions
                        (whitelisted AST, trig in degrees); numeric
                        params may hold expression strings like
@@ -201,7 +211,46 @@ into a new module and import.
                        Pull, Connect to GitHub); the status bar shows the
                        current file path, File > Show in File Explorer
                        reveals it.
-  - `treepanel.py`   — `BuilderPanel`: Objects tree — **no visibility
+  - `objecttab.py`   — the **Object tab**: `ObjectTab` (dropdown of the
+                       document's Objects + "New") and `ComponentTree`
+                       (the same tree widget rooted at the **active
+                       Object**). The active Object is tracked by node
+                       id with a name fallback so it survives renames
+                       AND undo restores (which rebuild the tree with
+                       fresh ids). While the Object tab is current,
+                       `BuilderPanel.isolated_component()` is non-None
+                       and **both viewers isolate to that Object**
+                       (scene `isolation_resolver`, `_render_scope()` in
+                       the main window); drawn shapes and Insert-menu
+                       primitives land inside it.
+  - `anchors.py`     — **anchors & origins**: auto bounding-box anchors
+                       per Object (origin, 6 face centres, 12 edge
+                       midpoints, 8 corners) computed from the LOCAL
+                       mesh (`local_tris` zeroes the placement), plus
+                       user anchors persisted in `params["anchors"]`.
+                       World/local transforms (`anchor_world`,
+                       `to_local`), `set_origin()` re-bases an Object
+                       onto any anchor without moving it in the scene
+                       (contents shift -p, placement shifts +R·p), and
+                       the **3D face/edge picking** geometry: `pick()`
+                       ray-hits the front-most projected triangle,
+                       `describe_pick()` grows the coplanar face and
+                       snaps to a boundary edge within tolerance.
+  - `mates.py`       — **attach/snap**: a mate is a live record on the
+                       child Object's params (`parent`, two anchor
+                       names, `offset` mm along the axis, `spin` deg
+                       about it) solved by `solve_mate()` into the
+                       ordinary placement params — anchors coincide,
+                       directions anti-aligned (BOSL2 attach() model,
+                       no constraint solver). `refresh(model)` re-solves
+                       every mate in dependency order (cycle-guarded;
+                       called from `MainWindow._model_edited`) so
+                       chains follow a moved parent; `AttachDialog` is
+                       the context-menu UI. Renames propagate
+                       (`DocumentModel.rename`), drags detach, and
+                       dropping a part outline in the assembly view
+                       snaps anchor-to-anchor (`_anchor_snap`).
+  - `treepanel.py`   — `BuilderPanel`: Main tab (assembly) tree — **no visibility
                        checkboxes**: hidden objects read greyed + italic
                        and toggle with **Space** or right-click Hide/Show;
                        hiding a node **dims its whole subtree** (effective
@@ -219,15 +268,21 @@ into a new module and import.
                        jumps to a wrapped modifier's properties.
                        Context menu: hide/show, Apply operation, group/
                        ungroup, rename, duplicate, delete, **Make
-                       Master**; drag & drop reparent/reorder. Plus a
-                       **Masters tab**
-                       (`MastersTree`) listing only the reusable master
-                       definitions, a **Variables** sheet, and a Code tab
-                       — an editable OpenSCAD view with syntax
-                       highlighting, a **line-number gutter**, a
-                       text-editor toolbar (undo/redo, cut/copy/paste,
-                       indent/dedent) and Tab/Shift+Tab indentation;
-                       edits apply back to the tree via **Apply code**.
+                       Object**, **Make Master**, and for a single
+                       Object: Edit in Object tab (also double-click),
+                       Anchors (add-by-pick / set origin / remove) and
+                       Attach/Detach; drag & drop reparent/reorder.
+                       Tab order: **Main | Object | Masters | Variables
+                       | Code**. The **Variables** sheet is scoped
+                       (Global vs per-Object, following the active
+                       Object); the Code tab — an editable OpenSCAD view
+                       with syntax highlighting, a **line-number
+                       gutter**, a text-editor toolbar (undo/redo,
+                       cut/copy/paste, indent/dedent) and Tab/Shift+Tab
+                       indentation — has a scope combo (**Whole program
+                       / Active object**); edits apply back to the tree
+                       via **Apply code** (object scope swaps just that
+                       Object and writes edited globals back by name).
   - `properties.py`  — bottom-left panel; editors generated from each
                        node type's schema, polygon points table.
   - `view2d.py`      — top-right sketch view: Y-up QGraphicsScene,
@@ -252,9 +307,21 @@ into a new module and import.
                        decimated **draft mesh while orbiting/zooming**
                        (OpenSCAD's preview/render split on the CPU),
                        snapping back to the full mesh on release/idle.
+                       Draws the selected Object's **anchor markers**
+                       (colour-coded per kind) and has a **pick mode**
+                       (`start_pick`) where a left click hits a face or
+                       edge via `anchors.pick`/`describe_pick`.
   - `mesh.py`        — pure-Python fallback tessellator (primitives,
                        linear/rotate extrude with twist/scale/angle,
-                       transforms, ear-clipping triangulation).
+                       transforms, ear-clipping triangulation). Objects
+                       get a **two-level mesh cache** (`_component_mesh`):
+                       the local tessellation keyed by subtree content +
+                       env + $fn + mesh mtimes, and the placed world
+                       mesh keyed by placement + colour — dragging one
+                       part re-transforms only that part (~11x faster on
+                       a 12-part assembly, ~25x when nothing changed).
+                       Objects containing Linked copies skip the cache;
+                       selection passes bypass it.
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.
@@ -276,6 +343,10 @@ into a new module and import.
 - Booleans/grouping (`union` = group, `difference`, `intersection`,
   `hull`, `minkowski`; `round_edges()` = minkowski + small sphere,
   the post-extrusion rounding idiom).
+- `component` ("Object") — a group that compiles to its own OpenSCAD
+  module + placed call; the unit of the Main/Object tabs, anchors and
+  mates (see `objecttab.py`/`anchors.py`/`mates.py` above). Imported
+  meshes arrive wrapped in one.
 - `scad_raw` — a leaf holding **verbatim OpenSCAD** (`code` param,
   multi-line `text` editor). Emitted straight into the program, so
   library calls the built-in tessellator can't model (BOSL2, ...) still
