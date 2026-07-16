@@ -579,6 +579,121 @@ def flat_mesh(node: CadNode, env=None):
     return mesh
 
 
+# ------------------------------------------------- per-Object mesh cache
+
+#: {component node id: (content key, local [(tri, color, False)])} —
+#: an Object's tessellation in its LOCAL frame, reused as long as its
+#: contents are unchanged. Moving/rotating/recolouring an Object (or
+#: anything else in the assembly) then costs one matrix transform
+#: instead of a full re-tessellation, which is what keeps assembly
+#: drags snappy.
+_COMP_CACHE = {}
+_COMP_CACHE_MAX = 128
+
+#: cache hit/miss counters (tests and profiling).
+CACHE_STATS = {"hits": 0, "misses": 0}
+
+#: the Object's own params that do NOT affect its local mesh.
+_PLACEMENT_KEYS = ("x", "y", "z", "rx", "ry", "rz", "color", "alpha",
+                   "mate", "anchors")
+
+
+def clear_component_cache():
+    _COMP_CACHE.clear()
+
+
+def _component_key(node, env):
+    """Content key of an Object's subtree: anything that could change
+    the local mesh — child types/params/visibility, the environment,
+    the $fn override, the detail cap, mesh-file mtimes. Returns None
+    when the subtree cannot be cached (it pulls in a Linked copy whose
+    master lives outside the subtree)."""
+    parts = []
+    walk = [node]
+    while walk:
+        n = walk.pop()
+        if n.type == "reference":
+            return None                     # master may change unseen
+        parts.append(n.type)
+        parts.append("1" if n.visible else "0")
+        for key in sorted(n.params):
+            if n is node and key in _PLACEMENT_KEYS:
+                continue
+            parts.append(f"{key}={n.params[key]!r}")
+        if n.type == "stl_import":
+            from pathlib import Path
+            try:
+                parts.append(str(Path(str(n.params.get(
+                    "path", ""))).stat().st_mtime_ns))
+            except OSError:
+                parts.append("?")
+        parts.append(";")
+        walk.extend(n.children)
+    parts.append(repr(sorted(env.items(), key=lambda kv: kv[0]))
+                 if env else "")
+    parts.append(str(_FN_OVERRIDE))
+    parts.append(str(_DETAIL))
+    return "\x00".join(parts)
+
+
+def _component_mesh(node, env, color, sel, selected):
+    """The component branch of _tess with a two-level cache:
+
+    1. the LOCAL mesh, invalidated only when the Object's contents
+       change (placement and colour are excluded from the key);
+    2. the PLACED mesh (local × placement, colours applied), reused
+       while the placement/colour stay put — so re-tessellating the
+       assembly after a drag re-transforms only the dragged Object
+       and every other one is a dictionary lookup.
+
+    Selection passes bypass the cache (per-triangle flags)."""
+    group_color = color
+    col = str(node.params.get("color", "")).strip()
+    if col:
+        group_color = (col, rv(node.params.get("alpha", 1.0), env, 1.0))
+    rx = rv(node.params.get("rx", 0), env, 0.0)
+    ry = rv(node.params.get("ry", 0), env, 0.0)
+    rz = rv(node.params.get("rz", 0), env, 0.0)
+    tx = rv(node.params.get("x", 0), env, 0.0)
+    ty = rv(node.params.get("y", 0), env, 0.0)
+    tz = rv(node.params.get("z", 0), env, 0.0)
+    moved = any((rx, ry, rz, tx, ty, tz))
+
+    if sel:
+        # highlight pass: rare, needs true per-triangle selection flags
+        out = _children_mesh(node, env, group_color, sel, selected)
+        if moved:
+            out = _transform_colored(
+                mat_mul(mat_translate(tx, ty, tz),
+                        mat_rotate(rx, ry, rz)), out)
+        return out
+
+    key = _component_key(node, env)
+    placed_key = (key, (tx, ty, tz, rx, ry, rz), group_color)
+    cached = _COMP_CACHE.get(node.id) if key is not None else None
+    if cached is not None and cached[0] == key:
+        CACHE_STATS["hits"] += 1
+        local = cached[1]
+        if cached[2] == placed_key:            # nothing moved: free
+            return cached[3]
+    else:
+        CACHE_STATS["misses"] += 1
+        # children tessellated colour-neutral, so the Object's own
+        # colour can change without invalidating the local cache
+        local = _children_mesh(node, env, None, frozenset(), False)
+    out = [(tri, c if c is not None else group_color, False)
+           for tri, c, _s in local]
+    if moved:
+        out = _transform_colored(
+            mat_mul(mat_translate(tx, ty, tz),
+                    mat_rotate(rx, ry, rz)), out)
+    if key is not None:
+        if len(_COMP_CACHE) >= _COMP_CACHE_MAX:
+            _COMP_CACHE.clear()
+        _COMP_CACHE[node.id] = (key, local, placed_key, out)
+    return out
+
+
 # ----------------------------------------------------------- tree walk
 
 def _set_fn(fn):
@@ -715,11 +830,13 @@ def _tess(node, env, color, sel, selected):
                              mat_rotate(rx, ry, rz))
             out = _transform_colored(matrix, out)
         return out
-    if t in ("union", "component"):
-        # a group / Object is a part: apply its own colour, then its
-        # rotate and translate (matching the color()/translate()/
-        # rotate() codegen; a component's module call carries the same
-        # prefix)
+    if t == "component":
+        # like a group, but the local mesh is cached (see
+        # _component_mesh) so assembly edits stay snappy
+        return _component_mesh(node, env, color, sel, selected)
+    if t == "union":
+        # a group is a part: apply its own colour, then its rotate and
+        # translate (matching the color()/translate()/rotate() codegen)
         group_color = color
         col = str(node.params.get("color", "")).strip()
         if col:
