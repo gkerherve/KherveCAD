@@ -702,6 +702,10 @@ class MainWindow(QMainWindow):
 
     # ---------------------------------------------------- 3D pipeline
     def _model_edited(self):
+        # keep attached Objects glued to their (possibly just moved)
+        # parents; the guard makes nested refreshes no-ops
+        from . import mates
+        mates.refresh(self.model)
         self._dirty = True
         self._update_title()
         self._refresh_preview()

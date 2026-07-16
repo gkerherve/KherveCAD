@@ -997,12 +997,17 @@ class DocumentModel(QObject):
     def rename(self, node: CadNode, name: str):
         old = node.name
         node.name = name
-        # keep Linked copies pointing at a renamed master
+        # keep Linked copies and mates pointing at a renamed target
         if old and old != name:
             for other in self.root.walk():
                 if other.type == "reference" \
                         and other.params.get("ref") == old:
                     other.params["ref"] = name
+                elif other.type == "component":
+                    mate = other.params.get("mate")
+                    if isinstance(mate, dict) \
+                            and mate.get("parent") == old:
+                        mate["parent"] = name
         self.node_changed.emit(node)
 
     def shift_node(self, node: CadNode, delta: int):

@@ -256,7 +256,14 @@ class ObjectTree(QTreeWidget):
                                "Variables sheet")
         else:
             item.setData(0, Qt.ForegroundRole, None)
-            item.setToolTip(0, label)
+            mate = node.params.get("mate") \
+                if node.type == "component" else None
+            if isinstance(mate, dict) and mate.get("parent"):
+                item.setToolTip(
+                    0, f"{label} — attached to {mate['parent']} "
+                       f"({mate.get('parent_anchor', '')})")
+            else:
+                item.setToolTip(0, label)
 
     def set_errors(self, errors: dict):
         """Paint nodes with problems red (tooltip = the message)."""
@@ -644,6 +651,17 @@ class ObjectTree(QTreeWidget):
                 "Edit in Object tab",
                 lambda: self.open_component.emit(comps[0]))
             self._anchor_menu(menu, comps[0])
+            from .mates import AttachDialog, detach, mate_of
+            menu.addAction(
+                icons.icon("mdi.magnet"), "Attach / snap to...",
+                lambda: AttachDialog(self.model, comps[0],
+                                     self).exec_())
+            mate = mate_of(comps[0])
+            if mate is not None:
+                menu.addAction(
+                    icons.icon("mdi.magnet-on"),
+                    f"Detach from {mate['parent']}",
+                    lambda: detach(self.model, comps[0]))
             menu.addSeparator()
         hidden = [n for n in nodes if not n.visible]
         menu.addAction(

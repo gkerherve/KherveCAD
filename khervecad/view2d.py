@@ -1036,12 +1036,51 @@ class SketchScene(QGraphicsScene):
         path.closeSubpath()
         return PartItem(node, self, path, node.name)
 
+    def _anchor_snap(self, node, delta):
+        """Magnetic assembly snap: if dropping *node* puts one of its
+        anchors within a few pixels of another Object's anchor (in the
+        current plane), adjust the move so they land exactly on each
+        other."""
+        from . import anchors as anc
+        views = self.views()
+        ppm = views[0].px_per_mm() if views else 4.0
+        tol = 10.0 / max(ppm, 1e-6)
+        (ai, bi), _keys = PLANES[self.plane]
+        env = anc.doc_env(self.model)
+        fn = self.model.effective_fn()
+        mine = anc.world_markers(node, env=env, fn=fn)
+        targets = []
+        for other in self.model.components():
+            if other is not node and other.visible:
+                targets.extend(anc.world_markers(other, env=env, fn=fn))
+        best = None
+        for marker in mine:
+            mx = marker["pos"][ai] + delta.x()
+            my = marker["pos"][bi] + delta.y()
+            for target in targets:
+                d = ((target["pos"][ai] - mx) ** 2
+                     + (target["pos"][bi] - my) ** 2) ** 0.5
+                if d < tol and (best is None or d < best[0]):
+                    best = (d, target["pos"][ai] - marker["pos"][ai],
+                            target["pos"][bi] - marker["pos"][bi])
+        if best is not None:
+            return QPointF(best[1], best[2])
+        return delta
+
     def commit_part_move(self, node, delta):
         """A part outline was dropped: bake the move into the object.
         Translate nodes and Groups carry their own position, so those
-        are edited in place; anything else is wrapped in a translate."""
+        are edited in place; anything else is wrapped in a translate.
+        Objects snap anchor-to-anchor, and dragging a mated Object
+        detaches it (the drag is the user taking control back)."""
         if abs(delta.x()) < 1e-9 and abs(delta.y()) < 1e-9:
             return
+        if node.type == "component":
+            from .mates import detach, mate_of
+            if mate_of(node) is not None:
+                detach(self.model, node)
+            if self.snap_enabled:
+                delta = self._anchor_snap(node, delta)
         _axes, (kx, ky) = PLANES[self.plane]
         # a Group, Object or Linked copy is a part with its own move
         # params
