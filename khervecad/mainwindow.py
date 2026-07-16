@@ -119,8 +119,16 @@ class MainWindow(QMainWindow):
 
         # ---- wiring
         self.builder.tree.selection_changed.connect(self._tree_selected)
+        self.builder.object_tab.tree.selection_changed.connect(
+            self._tree_selected)
         self.builder.masters_tree.selection_changed.connect(
             self._masters_selected)
+        # the Object tab isolates both viewers to the active Object
+        self.scene.isolation_resolver = self.builder.isolated_component
+        self.builder.active_component_changed.connect(
+            lambda _n: self._isolation_changed())
+        self.builder.currentChanged.connect(
+            lambda _i: self._isolation_changed())
         self.scene.selection_changed.connect(self._scene_selected)
         self.scene.node_created.connect(self._node_created)
         self.scene.plane_changed.connect(self._on_plane_auto_changed)
@@ -349,6 +357,10 @@ class MainWindow(QMainWindow):
         edit_menu.addAction("&Locate OpenSCAD...", self._locate_openscad)
 
         insert_menu = m.addMenu("&Insert")
+        insert_menu.addAction(icons.icon("mdi.package-variant-closed"),
+                              "New &Object", self._new_object,
+                              "Ctrl+Alt+N")
+        insert_menu.addSeparator()
         insert_menu.addAction(icons.icon("mdi.toy-brick-outline"),
                               "&Part Library...", self.open_library,
                               "Ctrl+L")
@@ -556,8 +568,18 @@ class MainWindow(QMainWindow):
         self.view2d.set_tool(tool)
 
     def _add_primitive(self, type: str):
-        node = self.model.add_node(type)
-        self.builder.tree.select_nodes([node])
+        # while the Object tab edits an Object, new geometry lands
+        # inside it — matching what both viewers show
+        parent = self.builder.isolated_component()
+        node = self.model.add_node(type, parent=parent)
+        tree = self.builder.tree if parent is None \
+            else self.builder.object_tab.tree
+        tree.select_nodes([node])
+
+    def _new_object(self):
+        """Insert > New Object: create an empty Object and open it for
+        editing in the Object tab."""
+        self.builder.open_component(self.model.new_component())
 
     def _apply_operation(self, op: str):
         nodes = self.builder.tree.selected_nodes()
@@ -669,7 +691,10 @@ class MainWindow(QMainWindow):
             f"Size  X {dx:.1f} · Y {dy:.1f} · Z {dz:.1f} mm")
 
     def _node_created(self, node):
-        self.builder.tree.select_nodes([node])
+        tree = self.builder.tree \
+            if self.builder.isolated_component() is None \
+            else self.builder.object_tab.tree
+        tree.select_nodes([node])
 
     # ---------------------------------------------------- 3D pipeline
     def _model_edited(self):
@@ -677,14 +702,32 @@ class MainWindow(QMainWindow):
         self._update_title()
         self._refresh_preview()
 
+    def _isolation_changed(self):
+        """The Object tab took or released the viewers: re-render both
+        for the (un)isolated scope."""
+        self.scene.rebuild()
+        self._refresh_preview()
+
+    def _render_scope(self):
+        """(root node, scad code callable) for the current view — the
+        active Object while the Object tab is current, else the whole
+        document."""
+        iso = self.builder.isolated_component()
+        if iso is not None:
+            return iso, (lambda: self.model.subtree_scad(iso))
+        return self.model.root, self.model.to_scad
+
     def _refresh_preview(self):
         fn = self.model.effective_fn()
-        colored = mesh.tessellate_colored(self.model.root, fn=fn)
+        root, scad = self._render_scope()
+        colored = mesh.tessellate_colored(root, fn=fn)
         tris = [t for t, _c in colored]
         colors = [c for _t, c in colored]
         has_colors = any(c is not None for c in colors)
         label = "built-in preview"
-        if mesh.uses_booleans(self.model.root):
+        if root is not self.model.root:
+            label += f" — Object: {root.name}"
+        if mesh.uses_booleans(root):
             label += (" (booleans approximated)"
                       if not self.engine.available else "")
         self.view3d.set_mesh(tris, label,
@@ -710,11 +753,11 @@ class MainWindow(QMainWindow):
             # since an STL cannot carry them — tinting it all one colour
             # would wrongly paint every part the same.
             if not has_colors or uniform:
-                self.engine.request_render(self.model.to_scad())
+                self.engine.request_render(scad())
 
     def _render_now(self):
         if self.engine.available:
-            self.engine.request_render(self.model.to_scad())
+            self.engine.request_render(self._render_scope()[1]())
             self.statusBar().showMessage("Rendering with OpenSCAD…",
                                          2000)
         else:
@@ -1192,9 +1235,12 @@ class MainWindow(QMainWindow):
                         6000)
                 except OSError:
                     pass                     # fall back to the .obj path
-        node = self.model.add_node("stl_import", dict(path=use_path),
-                                   name=Path(path).stem)
-        self.builder.tree.select_nodes([node])
+        # an imported mesh arrives as one Object holding the whole
+        # structure — it moves, snaps and lists as a single part
+        comp = self.model.new_component(Path(path).stem)
+        self.model.add_node("stl_import", dict(path=use_path),
+                            parent=comp, name=f"{Path(path).stem} mesh")
+        self.builder.tree.select_nodes([comp])
         if not self.view3d.user_moved:
             self.view3d.fit()
 

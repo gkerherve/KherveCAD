@@ -574,6 +574,10 @@ class SketchScene(QGraphicsScene):
         self._measure_a = None
         self._measure_b = None
         self._measure_cursor = None
+        #: callable returning the Object the scene is isolated to (the
+        #: Object tab's active component) or None — re-resolved on
+        #: every rebuild so undo restores never leave a stale node.
+        self.isolation_resolver = None
         model.structure_changed.connect(self.rebuild)
         model.node_changed.connect(self._node_changed)
         model.dimensions_changed.connect(self.update)
@@ -606,6 +610,13 @@ class SketchScene(QGraphicsScene):
                 env.setdefault(var, values[0] if values else 0.0)
             ancestor = ancestor.parent
         return env
+
+    def _create(self, type_: str, params: dict):
+        """Add a drawn shape — inside the active Object while the
+        Object tab has the viewers isolated, else at the top level."""
+        iso = self.isolation_resolver() if self.isolation_resolver \
+            else None
+        return self.model.add_node(type_, params, parent=iso)
 
     def snap(self, pos: QPointF) -> QPointF:
         if not self.snap_enabled:
@@ -728,9 +739,14 @@ class SketchScene(QGraphicsScene):
             self.updating = False
             return
 
+        # the Object tab isolates the scene to the active Object: its
+        # contents behave exactly like a small document of their own
+        iso = self.isolation_resolver() if self.isolation_resolver \
+            else None
+        scope = iso if iso is not None else self.model.root
         if self.plane == "Top (XY)":
             # sketch mode: individual 2D shapes are editable
-            for node in self.model.root.walk():
+            for node in scope.walk():
                 if node.category == SHAPE_2D and \
                         self._branch_visible(node):
                     item = _ITEM_CLASSES[node.type](node, self)
@@ -740,7 +756,7 @@ class SketchScene(QGraphicsScene):
                         item.setSelected(True)
                         self._apply_point_hl(item, node)
         # assembly mode: every top-level part gets a draggable outline
-        for node in self.model.root.children:
+        for node in scope.children:
             if node.visible and _produces_3d(node):
                 item = self._make_part_item(node)
                 if item is not None:
@@ -1187,8 +1203,7 @@ class SketchScene(QGraphicsScene):
             self._poly_points.append(pos)
             self._update_poly_draft(pos)
         elif self.tool == TEXT:
-            node = self.model.add_node(
-                "text", dict(x=pos.x(), y=pos.y()))
+            node = self._create("text", dict(x=pos.x(), y=pos.y()))
             self.node_created.emit(node)
         event.accept()
 
@@ -1248,19 +1263,19 @@ class SketchScene(QGraphicsScene):
         self._draft_start = None
         node = None
         if self.tool == LINE and (pos - start).manhattanLength() > 0.5:
-            node = self.model.add_node("line", dict(
+            node = self._create("line", dict(
                 x1=start.x(), y1=start.y(), x2=pos.x(), y2=pos.y()))
         elif self.tool == RECT:
             rect = QRectF(start, pos).normalized()
             if rect.width() > 0.5 and rect.height() > 0.5:
-                node = self.model.add_node("rect", dict(
+                node = self._create("rect", dict(
                     x=rect.x(), y=rect.y(),
                     width=rect.width(), height=rect.height()))
         elif self.tool == CIRCLE:
             radius = ((pos.x() - start.x()) ** 2 +
                       (pos.y() - start.y()) ** 2) ** 0.5
             if radius > 0.5:
-                node = self.model.add_node("circle", dict(
+                node = self._create("circle", dict(
                     x=start.x(), y=start.y(), radius=radius))
         if node is not None:
             self.node_created.emit(node)
@@ -1291,7 +1306,7 @@ class SketchScene(QGraphicsScene):
         if len(points) < 3:
             return
         origin = points[0]
-        node = self.model.add_node("polygon", dict(
+        node = self._create("polygon", dict(
             x=origin.x(), y=origin.y(),
             points=[[p.x() - origin.x(), p.y() - origin.y()]
                     for p in points]))

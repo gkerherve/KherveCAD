@@ -82,6 +82,9 @@ class ObjectTree(QTreeWidget):
     """The work tree: one item per CadNode, checkbox = visibility."""
 
     selection_changed = pyqtSignal(list)     # list of CadNode
+    #: an Object was double-clicked / "opened" — edit it in the Object
+    #: tab (carries the component CadNode).
+    open_component = pyqtSignal(object)
 
     #: True in the Masters variant — roots at the masters store and hides
     #: the store from the ordinary Objects tab.
@@ -113,11 +116,20 @@ class ObjectTree(QTreeWidget):
         self.itemSelectionChanged.connect(self._emit_selection)
         self.itemExpanded.connect(self._remember_expanded)
         self.itemCollapsed.connect(self._remember_collapsed)
-        self.itemDoubleClicked.connect(
-            lambda item, _col: self.editItem(item, 0))
+        self.itemDoubleClicked.connect(self._double_clicked)
         model.structure_changed.connect(self.rebuild)
         model.node_changed.connect(self._refresh_node)
         self.rebuild()
+
+    def _double_clicked(self, item, _col):
+        """Double-click opens an Object for editing (Object tab);
+        everything else starts an in-place rename."""
+        node = self.node_of(item)
+        if node is not None and node.type == "component" \
+                and not self.IS_MASTERS:
+            self.open_component.emit(node)
+        else:
+            self.editItem(item, 0)
 
     # ------------------------------------------------------------ sync
     def node_of(self, item: QTreeWidgetItem):
@@ -351,7 +363,7 @@ class ObjectTree(QTreeWidget):
         if not nodes:
             return
         selected = self._top_level_selection()
-        parent, index = self.model.root, None
+        parent, index = self._drop_container(), None
         if len(selected) == 1:
             if selected[0].is_container():
                 parent = selected[0]
@@ -588,6 +600,13 @@ class ObjectTree(QTreeWidget):
                        lambda: [self.model.remove_node(n) for n in roots])
 
     def _objects_menu(self, menu, nodes, roots):
+        comps = [n for n in roots if n.type == "component"]
+        if len(comps) == 1:
+            menu.addAction(
+                icons.icon("mdi.pencil-box-outline"),
+                "Edit in Object tab",
+                lambda: self.open_component.emit(comps[0]))
+            menu.addSeparator()
         hidden = [n for n in nodes if not n.visible]
         menu.addAction(
             icons.icon("mdi.eye-outline" if hidden
@@ -637,6 +656,13 @@ class ObjectTree(QTreeWidget):
                 lambda: self.model.add_linked_copy(roots[0]))
         promotable = [n for n in roots if n.type not in
                       ("assign", "variables", "masters", "reference")]
+        objectable = [n for n in promotable if n.type != "component"]
+        if objectable:
+            menu.addAction(
+                icons.icon("mdi.package-variant-closed"),
+                "Make Object",
+                lambda: [self.model.make_component(n)
+                         for n in objectable])
         if promotable:
             menu.addAction(
                 icons.icon("mdi.folder-star-outline"),
@@ -922,16 +948,31 @@ class VariablesSheet(QWidget):
     """A spreadsheet of the document's variables (assign nodes), so all
     the parameters live in one place instead of sprawling down the
     object tree. Edits write straight back to the model, and it stays in
-    sync when variables are changed elsewhere."""
+    sync when variables are changed elsewhere.
+
+    Variables are **scoped**: the dropdown picks between the document's
+    Global variables (outside every Object) and each Object's own —
+    and it follows the Object tab's active Object automatically."""
 
     def __init__(self, model: DocumentModel, parent=None):
         super().__init__(parent)
         self.model = model
         self._updating = False
         self._rows = []
+        self._scope_name = None                # None -> Global
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(4, 4, 4, 4)
+        from PyQt5.QtWidgets import QComboBox, QLabel
+        scope_row = QHBoxLayout()
+        scope_row.addWidget(QLabel("Scope:"))
+        self.scope_combo = QComboBox()
+        self.scope_combo.setToolTip(
+            "Whose variables to show — the document's globals or one "
+            "Object's own (module-local) variables")
+        self.scope_combo.currentIndexChanged.connect(self._scope_picked)
+        scope_row.addWidget(self.scope_combo, 1)
+        layout.addLayout(scope_row)
         self.table = QTableWidget(0, 2)
         self.table.setHorizontalHeaderLabels(["Name", "Value / expression"])
         self.table.horizontalHeader().setStretchLastSection(True)
@@ -952,12 +993,62 @@ class VariablesSheet(QWidget):
         buttons.addStretch()
         layout.addLayout(buttons)
 
-        model.structure_changed.connect(self.rebuild)
+        model.structure_changed.connect(self._structure_changed)
         model.node_changed.connect(self._node_changed)
+        self._structure_changed()
+
+    # ------------------------------------------------------------ scope
+    def _structure_changed(self):
+        self._sync_scopes()
+        self.rebuild()
+
+    def scope_node(self):
+        """The Object whose variables are shown, or None for Global."""
+        if self._scope_name is None:
+            return None
+        for comp in self.model.components():
+            if comp.name == self._scope_name:
+                return comp
+        return None
+
+    def set_scope(self, node):
+        """Follow the Object tab: show *node*'s variables (or Global
+        when *node* is None)."""
+        name = node.name if node is not None else None
+        if name != self._scope_name:
+            self._scope_name = name
+            self._sync_scopes()
+            self.rebuild()
+
+    def _sync_scopes(self):
+        """Rebuild the scope dropdown; a vanished Object falls back to
+        Global."""
+        self._updating = True
+        self.scope_combo.clear()
+        self.scope_combo.addItem("Global (document)")
+        index = 0
+        for i, comp in enumerate(self.model.components(), start=1):
+            self.scope_combo.addItem(
+                icons.icon("mdi.package-variant-closed"), comp.name)
+            if comp.name == self._scope_name:
+                index = i
+        if index == 0:
+            self._scope_name = None
+        self.scope_combo.setCurrentIndex(index)
+        self._updating = False
+
+    def _scope_picked(self, index):
+        if self._updating:
+            return
+        self._scope_name = None if index <= 0 \
+            else self.scope_combo.itemText(index)
         self.rebuild()
 
     def _assigns(self):
-        return [n for n in self.model.root.walk() if n.type == "assign"]
+        scope = self.scope_node()
+        if scope is not None:
+            return [n for n in scope.walk() if n.type == "assign"]
+        return self.model.global_assigns()
 
     def rebuild(self):
         self._updating = True
@@ -996,12 +1087,13 @@ class VariablesSheet(QWidget):
         name = f"var{i}"
         node = CadNode("assign", f"{name} =",
                        dict(variable=name, value="0"))
-        # keep new variables in the variable block, ahead of geometry
+        # keep new variables in the variable block, ahead of geometry —
+        # inside the scoped Object when one is selected
         if assigns:
             last = assigns[-1]
             last.parent.add(node, last.index() + 1)
         else:
-            self.model.root.add(node, 0)
+            (self.scope_node() or self.model.root).add(node, 0)
         self.model.structure_changed.emit()
 
     def _remove(self):
@@ -1011,23 +1103,34 @@ class VariablesSheet(QWidget):
 
 
 class BuilderPanel(QTabWidget):
-    """Objects tree + Variables + Code tabs, kept in sync with the model.
+    """Main (assembly) + Object + Masters + Variables + Code tabs, kept
+    in sync with the model.
+
+    The **Main** tab is the whole document; the **Object** tab edits
+    one Object (component) at a time; **Variables** is scoped to the
+    active Object (or Global); **Code** can show the whole program or
+    just the active Object's module.
 
     Also owns the error state: static validation runs on every change
     and OpenSCAD compiler errors are merged in by the main window;
     broken nodes turn red in the tree and their lines red in the
     code."""
 
+    #: the Object tab's active Object changed (CadNode or None).
+    active_component_changed = pyqtSignal(object)
+
     def __init__(self, model: DocumentModel, parent=None):
         super().__init__(parent)
+        from .objecttab import ObjectTab       # here: avoids the cycle
         self.model = model
         self.tree = ObjectTree(model)
+        self.object_tab = ObjectTab(model)
         self.code = CodeView()
         self._spans = {}
         self._engine_errors = {}
         self._selected_ids = []
 
-        # Objects tab: a common-segments toggle pinned above the tree
+        # Main tab: a common-segments toggle pinned above the tree
         objects = QWidget()
         box = QVBoxLayout(objects)
         box.setContentsMargins(4, 4, 4, 0)
@@ -1086,6 +1189,15 @@ class BuilderPanel(QTabWidget):
         cbox.addWidget(self.code)
         crow = QHBoxLayout()
         crow.setContentsMargins(4, 0, 4, 4)
+        from PyQt5.QtWidgets import QComboBox
+        self.code_scope = QComboBox()
+        self.code_scope.addItems(["Whole program", "Active object"])
+        self.code_scope.setToolTip(
+            "Show / apply the whole program, or only the active "
+            "Object's module")
+        self.code_scope.currentIndexChanged.connect(
+            lambda _i: self.refresh_code())
+        crow.addWidget(self.code_scope)
         crow.addStretch()
         self.apply_btn = QPushButton(icons.icon("mdi.check"),
                                      " Apply code")
@@ -1096,15 +1208,43 @@ class BuilderPanel(QTabWidget):
         crow.addWidget(self.apply_btn)
         cbox.addLayout(crow)
 
-        self.addTab(objects, icons.icon("mdi.file-tree"), "Objects")
+        self.addTab(objects, icons.icon("mdi.file-tree"), "Main")
+        self.addTab(self.object_tab,
+                    icons.icon("mdi.package-variant-closed"), "Object")
         self.addTab(masters_tab, icons.icon("mdi.folder-star-outline"),
                     "Masters")
         self.addTab(self.variables, icons.icon("mdi.table"), "Variables")
         self.addTab(code_tab, icons.icon("mdi.code-braces"), "Code")
+        self.tree.open_component.connect(self.open_component)
+        self.object_tab.tree.open_component.connect(self.open_component)
+        self.object_tab.active_changed.connect(self._active_changed)
         model.structure_changed.connect(self.refresh_code)
         model.structure_changed.connect(self._sync_fn_ui)
         model.node_changed.connect(lambda _n: self.refresh_code())
         self.refresh_code()
+
+    # --------------------------------------------------- active object
+    def open_component(self, node):
+        """Activate *node* in the Object tab and switch to it."""
+        self.object_tab.set_active(node)
+        self.setCurrentWidget(self.object_tab)
+
+    def isolated_component(self):
+        """The active Object while the Object tab is current — what
+        the viewers isolate to. None otherwise."""
+        if self.currentWidget() is self.object_tab:
+            return self.object_tab.active_component()
+        return None
+
+    def _active_changed(self, node):
+        """The Object tab's active Object changed: scope the Variables
+        sheet and the Code tab to it, then tell the main window."""
+        self.variables.set_scope(node)
+        self.code_scope.blockSignals(True)
+        self.code_scope.setCurrentIndex(1 if node is not None else 0)
+        self.code_scope.blockSignals(False)
+        self.refresh_code()
+        self.active_component_changed.emit(node)
 
     def _fn_toggled(self, on):
         self.fn_spin.setEnabled(on)
@@ -1128,31 +1268,78 @@ class BuilderPanel(QTabWidget):
         for w in (self.fn_check, self.fn_spin):
             w.blockSignals(False)
 
+    def _code_component(self):
+        """The Object the Code tab is scoped to, or None for the whole
+        program."""
+        if self.code_scope.currentIndex() == 1:
+            return self.object_tab.active_component()
+        return None
+
     def refresh_code(self):
-        code, self._spans = self.model.to_scad_map()
+        comp = self._code_component()
+        code, self._spans = self.model.to_scad_map(only=comp) \
+            if comp is not None else self.model.to_scad_map()
         self.code.set_code(code)
         self._refresh_errors()
 
     def _apply_code(self):
-        """Parse the edited program back into the object tree. Only the
-        supported subset survives (no modules/functions); anything else
-        is reported and skipped."""
+        """Parse the edited program back into the object tree. In
+        "Active object" scope only that Object is replaced (plus any
+        edited global variables); otherwise the whole document is.
+        Only the supported subset survives; anything else is reported
+        and skipped."""
         from .scadparse import parse_scad
+        comp = self._code_component()
         try:
             root, warnings = parse_scad(self.code.toPlainText())
         except Exception as exc:
             QMessageBox.warning(self, "Apply code",
                                 f"Could not parse the program:\n{exc}")
             return
-        self.model.root = root
-        self.model.group_variables()
-        self.model.structure_changed.emit()       # regenerates + undoable
+        if comp is not None:
+            if not self._apply_component_code(comp, root):
+                return
+        else:
+            self.model.root = root
+            self.model.group_variables()
+            self.model.structure_changed.emit()   # regenerates + undoable
         if warnings:
             QMessageBox.information(
                 self, "Apply code",
                 "Applied, but some constructs were skipped:\n- "
                 + "\n- ".join(warnings[:12])
                 + ("\n…" if len(warnings) > 12 else ""))
+
+    def _apply_component_code(self, comp, root) -> bool:
+        """Swap the active Object for the one parsed from the scoped
+        code and write edited globals back by name."""
+        new_comps = [n for n in root.children if n.type == "component"]
+        if len(new_comps) != 1:
+            QMessageBox.warning(
+                self, "Apply code",
+                "Object scope expects exactly one Object (a "
+                "zero-argument module plus its call). Switch the scope "
+                "to 'Whole program' to replace the document.")
+            return False
+        by_var = {a.params.get("variable"): a
+                  for a in self.model.global_assigns()}
+        for assign in [n for n in root.children if n.type == "assign"]:
+            var = assign.params.get("variable")
+            target = by_var.get(var)
+            if target is not None:
+                target.params["value"] = assign.params.get("value", 0)
+            else:
+                self.model.root.add(
+                    CadNode("assign", f"{var} =", dict(assign.params)),
+                    0)
+        new = new_comps[0]
+        root.remove(new)
+        parent, index = comp.parent, comp.index()
+        parent.remove(comp)
+        parent.add(new, index)
+        self.object_tab.set_active(new)
+        self.model.structure_changed.emit()
+        return True
 
     def set_engine_errors(self, errors: dict):
         """OpenSCAD compiler errors mapped to nodes ({id: message})."""
