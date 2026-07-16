@@ -1264,6 +1264,7 @@ class BuilderPanel(QTabWidget):
         crow.addWidget(self.apply_btn)
         cbox.addLayout(crow)
 
+        self._main_page = objects
         self.addTab(objects, icons.icon("mdi.file-tree"), "Main")
         self.addTab(self.object_tab,
                     icons.icon("mdi.package-variant-closed"), "Object")
@@ -1274,6 +1275,7 @@ class BuilderPanel(QTabWidget):
         self.tree.open_component.connect(self.open_component)
         self.object_tab.tree.open_component.connect(self.open_component)
         self.object_tab.active_changed.connect(self._active_changed)
+        self.currentChanged.connect(self._tab_changed)
         model.structure_changed.connect(self.refresh_code)
         model.structure_changed.connect(self._sync_fn_ui)
         model.node_changed.connect(lambda _n: self.refresh_code())
@@ -1292,13 +1294,33 @@ class BuilderPanel(QTabWidget):
             return self.object_tab.active_component()
         return None
 
+    def _tab_changed(self, index):
+        """The Code tab shows whatever tree you last worked in: coming
+        from Main it scopes to the whole program, coming from the
+        Object tab it scopes to the active Object."""
+        widget = self.widget(index)
+        if widget is self._main_page:
+            self._set_code_scope(0)
+        elif widget is self.object_tab:
+            self._set_code_scope(
+                1 if self.object_tab.active_component() else 0)
+
+    def _set_code_scope(self, index):
+        if self.code_scope.currentIndex() != index:
+            self.code_scope.blockSignals(True)
+            self.code_scope.setCurrentIndex(index)
+            self.code_scope.blockSignals(False)
+            self.refresh_code()
+
     def _active_changed(self, node):
         """The Object tab's active Object changed: scope the Variables
-        sheet and the Code tab to it, then tell the main window."""
+        sheet (and, while the Object tab is current, the Code tab) to
+        it, then tell the main window."""
         self.variables.set_scope(node)
-        self.code_scope.blockSignals(True)
-        self.code_scope.setCurrentIndex(1 if node is not None else 0)
-        self.code_scope.blockSignals(False)
+        if node is None:
+            self._set_code_scope(0)
+        elif self.currentWidget() is self.object_tab:
+            self._set_code_scope(1)
         self.refresh_code()
         self.active_component_changed.emit(node)
 

@@ -106,7 +106,7 @@ def test_code_scope_follows_active(model, app):
     comp = model.new_component("Solo")
     model.add_node("cube", parent=comp)
     model.new_component("Noise")
-    panel.object_tab.set_active(comp)
+    panel.open_component(comp)              # Object tab current
     assert panel.code_scope.currentIndex() == 1
     code = panel.code.toPlainText()
     assert "module Solo() {" in code
@@ -123,7 +123,7 @@ def test_apply_code_object_scope(model, app):
     model.add_node("cube", parent=comp)
     other = model.new_component("Untouched")
     model.add_node("sphere", parent=other)
-    panel.object_tab.set_active(comp)
+    panel.open_component(comp)              # Object tab + object scope
     panel.code.setPlainText(
         "module Editable() {\n"
         "    cylinder(h=30, r1=5, r2=5, $fn=32, center=false);\n"
@@ -150,3 +150,48 @@ def test_isolated_component_requires_object_tab(model, app):
     assert panel.isolated_component() is None
     panel.setCurrentWidget(panel.object_tab)
     assert panel.isolated_component() is comp
+
+
+def test_new_object_hidden_in_main_by_default(model, app):
+    """UI-created Objects start hidden in the Main assembly; the model
+    API default stays visible (imports, scripts)."""
+    tab = ObjectTab(model)
+    comp = tab.new_object()
+    assert comp.visible is False
+    assert model.new_component("api").visible is True
+
+
+def test_hidden_object_still_renders_isolated(model):
+    """Main-tab visibility and the Object view are independent: a
+    hidden Object still has code (unstarred), a mesh in its local
+    frame, and anchors."""
+    from khervecad import anchors, mesh
+    comp = model.new_component("Ghost", visible=False)
+    model.add_node("cube", parent=comp)
+    # assembly code keeps the * (hidden in Main and in exports)
+    assert "*Ghost();" in model.to_scad()
+    # the isolated render drops it
+    iso = model.subtree_scad(comp)
+    assert "*Ghost();" not in iso
+    assert "Ghost();" in iso
+    assert comp.visible is False            # flag restored
+    # anchors still exist (bbox from the forced-visible local mesh)
+    items = anchors.auto_anchors(comp)
+    assert any(a["kind"] == "face" for a in items)
+    # while the plain assembly tessellation skips it
+    assert mesh.tessellate(model.root) == []
+
+
+def test_code_scope_follows_last_tree_tab(model, app):
+    panel = BuilderPanel(model)
+    comp = model.new_component("Solo")
+    model.add_node("cube", parent=comp)
+    model.new_component("Noise")
+    panel.open_component(comp)              # Object tab current
+    assert panel.code_scope.currentIndex() == 1
+    panel.setCurrentWidget(panel._main_page)
+    assert panel.code_scope.currentIndex() == 0
+    assert "Noise" in panel.code.toPlainText()
+    panel.setCurrentWidget(panel.object_tab)
+    assert panel.code_scope.currentIndex() == 1
+    assert "Noise" not in panel.code.toPlainText()

@@ -93,9 +93,14 @@ class ObjectTab(QWidget):
         self.combo.currentIndexChanged.connect(self._combo_picked)
         row.addWidget(self.combo, 1)
         new_btn = QPushButton(icons.icon("mdi.plus"), " New")
-        new_btn.setToolTip("Create a new empty Object and edit it")
+        new_btn.setToolTip("Create a new empty Object and edit it "
+                           "(hidden in Main until you show it)")
         new_btn.clicked.connect(self.new_object)
         row.addWidget(new_btn)
+        rename_btn = QPushButton(icons.icon("mdi.rename-box"), "")
+        rename_btn.setToolTip("Rename this Object")
+        rename_btn.clicked.connect(self.rename_active)
+        row.addWidget(rename_btn)
         layout.addLayout(row)
 
         self.tree = ComponentTree(model, self.active_component)
@@ -131,9 +136,25 @@ class ObjectTab(QWidget):
             self.active_changed.emit(self.active_component())
 
     def new_object(self):
-        comp = self.model.new_component()
+        # hidden in the Main assembly until the user shows it — the
+        # Object tab shows it regardless (independent visibility)
+        comp = self.model.new_component(visible=False)
         self.set_active(comp)
         return comp
+
+    def rename_active(self):
+        """Rename the edited Object (mates and Linked copies follow)."""
+        comp = self.active_component()
+        if comp is None:
+            return
+        from PyQt5.QtWidgets import QInputDialog
+        name, ok = QInputDialog.getText(self, "Rename Object", "Name:",
+                                        text=comp.name)
+        name = name.strip()
+        if ok and name and name != comp.name:
+            self.model.rename(comp, name)
+            self._active_name = name
+            self._sync_combo()
 
     # ------------------------------------------------------------ combo
     def _sync_combo(self):

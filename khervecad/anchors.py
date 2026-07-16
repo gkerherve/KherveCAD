@@ -52,14 +52,18 @@ def doc_env(model) -> dict:
 
 def local_tris(comp, env=None, fn=None):
     """Triangles of *comp*'s subtree in its LOCAL frame — the Object's
-    own placement params are not applied."""
+    own placement params are not applied, and neither is its Main-tab
+    visibility (a hidden Object still has anchors and can be mated)."""
     saved = {k: comp.params.get(k, 0.0) for k in _PLACEMENT}
+    saved_visible = comp.visible
     try:
         for k in _PLACEMENT:
             comp.params[k] = 0.0
+        comp.visible = True
         return mesh.tessellate(comp, env=env, fn=fn)
     finally:
         comp.params.update(saved)
+        comp.visible = saved_visible
 
 
 def bbox(tris):

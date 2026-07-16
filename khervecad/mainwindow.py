@@ -581,8 +581,10 @@ class MainWindow(QMainWindow):
 
     def _new_object(self):
         """Insert > New Object: create an empty Object and open it for
-        editing in the Object tab."""
-        self.builder.open_component(self.model.new_component())
+        editing in the Object tab. New Objects start hidden in the
+        Main assembly — show them (Space) when they are ready."""
+        self.builder.open_component(
+            self.model.new_component(visible=False))
 
     def _apply_operation(self, op: str):
         nodes = self.builder.tree.selected_nodes()
@@ -672,10 +674,11 @@ class MainWindow(QMainWindow):
         rect = self.scene.isolated_bounds()
         if rect is not None:
             self.view2d.frame_rect(rect)
-        tris = (mesh.selected_world_tris(self.model.root,
-                                         self._selected_ids,
-                                         fn=self.model.effective_fn())
-                if self._selected_ids else [])
+        with self._force_visible(self.builder.isolated_component()):
+            tris = (mesh.selected_world_tris(
+                        self.model.root, self._selected_ids,
+                        fn=self.model.effective_fn())
+                    if self._selected_ids else [])
         self.view3d.set_highlight_mesh(tris)
         self._refresh_anchor_markers()
         self._show_dimensions(tris)
@@ -775,17 +778,38 @@ class MainWindow(QMainWindow):
             return iso, (lambda: self.model.subtree_scad(iso))
         return self.model.root, self.model.to_scad
 
+    def _force_visible(self, node):
+        """Context manager: render *node* even when it is hidden in the
+        Main assembly — the isolated Object view is independent of the
+        Main-tab visibility."""
+        from contextlib import contextmanager
+
+        @contextmanager
+        def ctx():
+            flip = node is not None and not node.visible
+            if flip:
+                node.visible = True
+            try:
+                yield
+            finally:
+                if flip:
+                    node.visible = False
+        return ctx()
+
     def _refresh_preview(self):
         fn = self.model.effective_fn()
         root, scad = self._render_scope()
-        colored = mesh.tessellate_colored(root, fn=fn)
+        iso = root if root is not self.model.root else None
+        with self._force_visible(iso):
+            colored = mesh.tessellate_colored(root, fn=fn)
+            booleans = mesh.uses_booleans(root)
         tris = [t for t, _c in colored]
         colors = [c for _t, c in colored]
         has_colors = any(c is not None for c in colors)
         label = "built-in preview"
-        if root is not self.model.root:
+        if iso is not None:
             label += f" — Object: {root.name}"
-        if mesh.uses_booleans(root):
+        if booleans:
             label += (" (booleans approximated)"
                       if not self.engine.available else "")
         self.view3d.set_mesh(tris, label,

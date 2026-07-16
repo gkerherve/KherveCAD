@@ -615,7 +615,10 @@ def _component_key(node, env):
         if n.type == "reference":
             return None                     # master may change unseen
         parts.append(n.type)
-        parts.append("1" if n.visible else "0")
+        # the Object's own visibility is not content: _tess gates on it
+        # before the cache, and the isolated view force-shows hidden
+        # Objects — either way the local mesh is the same
+        parts.append("1" if (n.visible or n is node) else "0")
         for key in sorted(n.params):
             if n is node and key in _PLACEMENT_KEYS:
                 continue

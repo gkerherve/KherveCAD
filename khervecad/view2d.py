@@ -748,7 +748,7 @@ class SketchScene(QGraphicsScene):
             # sketch mode: individual 2D shapes are editable
             for node in scope.walk():
                 if node.category == SHAPE_2D and \
-                        self._branch_visible(node):
+                        self._branch_visible(node, stop=iso):
                     item = _ITEM_CLASSES[node.type](node, self)
                     self.addItem(item)
                     self._items[node.id] = item
@@ -1106,8 +1106,10 @@ class SketchScene(QGraphicsScene):
         self.model.structure_changed.emit()
 
     @staticmethod
-    def _branch_visible(node):
-        while node is not None:
+    def _branch_visible(node, stop=None):
+        """Effective visibility; *stop* (exclusive) lets the isolated
+        Object view ignore the Object's own Main-tab visibility."""
+        while node is not None and node is not stop:
             if not node.visible:
                 return False
             node = node.parent

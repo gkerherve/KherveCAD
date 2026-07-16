@@ -870,9 +870,15 @@ class DocumentModel(QObject):
     def subtree_scad(self, node: CadNode) -> str:
         """A standalone program for one Object/subtree: the document's
         top-level variables first (so expressions still resolve), then
-        *node* — what the isolated Object view renders and the Code
-        tab shows in "Active object" scope."""
-        return self.to_scad_map(only=node)[0]
+        *node* — what the isolated Object view renders. The node's own
+        Main-tab visibility is ignored (no ``*``): hiding an Object in
+        the assembly must not hide it from its own editing view."""
+        saved = node.visible
+        node.visible = True
+        try:
+            return self.to_scad_map(only=node)[0]
+        finally:
+            node.visible = saved
 
     def global_assigns(self):
         """Document variables that live outside every Object — the
@@ -1184,10 +1190,16 @@ class DocumentModel(QObject):
         assembly the Main tab lists."""
         return [c for c in self.root.children if c.type == "component"]
 
-    def new_component(self, name: str = "") -> CadNode:
-        """Create an empty Object at the top level."""
+    def new_component(self, name: str = "",
+                      visible: bool = True) -> CadNode:
+        """Create an empty Object at the top level. The UI creates new
+        Objects hidden (visible=False): they are built in the Object
+        tab first and shown in the Main assembly when ready — the
+        isolated Object view ignores this flag, so the two stay
+        independent."""
         node = CadNode("component",
                        name or self.unique_name("component"))
+        node.visible = bool(visible)
         self.root.add(node)
         self.structure_changed.emit()
         return node

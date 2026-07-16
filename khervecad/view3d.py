@@ -532,45 +532,116 @@ class View3D(QWidget):
         v = min((0.30 + 0.70 * shade) * val + 0.45 * gloss, 1.0)
         return QColor.fromHsvF(hue, min(sat * 1.1, 1.0), v), None
 
-    #: marker colour per anchor kind.
-    ANCHOR_COLORS = {"origin": "#ffcf40", "face": "#37c4dd",
-                     "edge": "#ff9d2e", "corner": "#a9b2ba",
-                     "custom": "#d55ce0"}
+    #: automatic (bounding-box) anchors: one uniform, subtle colour —
+    #: only the origin and the user's picked anchors stand out.
+    AUTO_ANCHOR_COLOR = "#7f9db8"
+    PICKED_ANCHOR_COLOR = "#f0269e"
+    ORIGIN_ANCHOR_COLOR = "#ffcf40"
+
+    def _marker_label(self, painter, x, y, text, color):
+        """Bold label with a dark halo so it reads on any background."""
+        if not text:
+            return
+        halo = QPen(QColor(0, 0, 0, 190))
+        painter.setPen(halo)
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                if dx or dy:
+                    painter.drawText(QPointF(x + dx, y + dy), text)
+        painter.setPen(QPen(QColor(color)))
+        painter.drawText(QPointF(x, y), text)
 
     def _draw_anchors(self, painter, eye, right, up, forward):
-        """Small dot + outward tick per anchor; custom anchors and the
-        origin carry their names so they read at a glance."""
+        """The selected Object's attachment points. Automatic anchors
+        are small uniform dots; the origin is an RGB triad; the user's
+        picked anchors are big haloed markers with an arrow and their
+        name — unmissable."""
         if not self.anchor_markers or self._fast:
             return
-        tick = self.distance / 18.0
         font = painter.font()
-        font.setBold(False)
-        font.setPointSizeF(8.0)
+        font.setBold(True)
+        font.setPointSizeF(8.5)
         painter.setFont(font)
+        tick = self.distance / 14.0
+
+        def project(p):
+            return self._project(eye, right, up, forward, p)
+
+        # 1. automatic bbox anchors: quiet, identical dots
+        auto = QColor(self.AUTO_ANCHOR_COLOR)
+        auto.setAlpha(170)
+        painter.setPen(QPen(auto, 1.0))
+        painter.setBrush(auto)
         for marker in self.anchor_markers:
+            if marker.get("kind") not in ("face", "edge", "corner"):
+                continue
+            head = project(marker["pos"])
+            if head is not None:
+                r = 2.6 if marker["kind"] == "face" else 1.8
+                painter.drawEllipse(QPointF(head[0], head[1]), r, r)
+
+        # 2. the origin: a small RGB triad + yellow hub
+        for marker in self.anchor_markers:
+            if marker.get("kind") != "origin":
+                continue
             pos = marker["pos"]
-            head = self._project(eye, right, up, forward, pos)
+            head = project(pos)
             if head is None:
                 continue
+            for axis, color in (((tick, 0, 0), "#d64545"),
+                                ((0, tick, 0), "#3f9e4d"),
+                                ((0, 0, tick), "#3a6fd8")):
+                tip = project((pos[0] + axis[0] * 0.8,
+                               pos[1] + axis[1] * 0.8,
+                               pos[2] + axis[2] * 0.8))
+                if tip is not None:
+                    painter.setPen(QPen(QColor(color), 1.8))
+                    painter.drawLine(QPointF(head[0], head[1]),
+                                     QPointF(tip[0], tip[1]))
+            hub = QColor(self.ORIGIN_ANCHOR_COLOR)
+            painter.setPen(QPen(QColor(255, 255, 255, 230), 2.0))
+            painter.setBrush(hub)
+            painter.drawEllipse(QPointF(head[0], head[1]), 4.0, 4.0)
+            self._marker_label(painter, head[0] + 8, head[1] - 6,
+                               marker.get("name", "Origin"),
+                               self.ORIGIN_ANCHOR_COLOR)
+
+        # 3. picked anchors: white-haloed marker, arrow, bold name
+        pink = QColor(self.PICKED_ANCHOR_COLOR)
+        for marker in self.anchor_markers:
+            if marker.get("kind") != "custom":
+                continue
+            pos = marker["pos"]
             d = marker["dir"]
-            tip = self._project(eye, right, up, forward,
-                                (pos[0] + d[0] * tick,
-                                 pos[1] + d[1] * tick,
-                                 pos[2] + d[2] * tick))
-            color = QColor(self.ANCHOR_COLORS.get(
-                marker.get("kind", "custom"), "#d55ce0"))
-            pen = QPen(color)
-            pen.setWidthF(1.4)
-            painter.setPen(pen)
+            head = project(pos)
+            tip = project((pos[0] + d[0] * tick * 1.3,
+                           pos[1] + d[1] * tick * 1.3,
+                           pos[2] + d[2] * tick * 1.3))
+            if head is None:
+                continue
             if tip is not None:
+                # white halo under the arrow, then the arrow itself
+                painter.setPen(QPen(QColor(255, 255, 255, 220), 4.5))
                 painter.drawLine(QPointF(head[0], head[1]),
                                  QPointF(tip[0], tip[1]))
-            painter.setBrush(color)
-            r = 3.0 if marker.get("kind") in ("origin", "custom") else 2.2
-            painter.drawEllipse(QPointF(head[0], head[1]), r, r)
-            if marker.get("kind") in ("origin", "custom"):
-                painter.drawText(QPointF(head[0] + 5, head[1] - 4),
-                                 marker.get("name", ""))
+                painter.setPen(QPen(pink, 2.2))
+                painter.drawLine(QPointF(head[0], head[1]),
+                                 QPointF(tip[0], tip[1]))
+                # arrowhead: two short barbs back from the tip
+                vx, vy = tip[0] - head[0], tip[1] - head[1]
+                length = (vx * vx + vy * vy) ** 0.5 or 1.0
+                vx, vy = vx / length, vy / length
+                for s in (1.0, -1.0):
+                    bx = tip[0] - 8.0 * vx + 4.5 * s * -vy
+                    by = tip[1] - 8.0 * vy + 4.5 * s * vx
+                    painter.drawLine(QPointF(tip[0], tip[1]),
+                                     QPointF(bx, by))
+            painter.setPen(QPen(QColor(255, 255, 255, 235), 2.4))
+            painter.setBrush(pink)
+            painter.drawEllipse(QPointF(head[0], head[1]), 5.5, 5.5)
+            self._marker_label(painter, head[0] + 9, head[1] - 7,
+                               marker.get("name", ""),
+                               self.PICKED_ANCHOR_COLOR)
 
     def _draw_ground(self, painter, t, eye, right, up, forward):
         pen = QPen(QColor(t["border"]))
