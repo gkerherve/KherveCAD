@@ -40,6 +40,18 @@ class ComponentTree(ObjectTree):
     def _active(self):
         return self._active_getter()
 
+    def _visibility_root(self):
+        # the active Object is hidden in Main (it is a definition), so
+        # stop the grey/italic visibility walk at it — its contents are
+        # edited here at full strength regardless.
+        return self._active()
+
+    def _is_opaque(self, node):
+        # the active Object's own contents are the point of this tab, so
+        # show them; only a *nested* Object stays a single row (edit it
+        # from its own tab).
+        return node.type == "component" and node is not self._active()
+
     def _top_nodes(self):
         active = self._active()
         return list(active.children) if active is not None else []

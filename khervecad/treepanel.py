@@ -204,12 +204,23 @@ class ObjectTree(QTreeWidget):
         item.setFlags(flags)
         return item
 
+    def _is_opaque(self, node):
+        """A node shown as one solid row, its internals hidden — an
+        Object (component) in the Main assembly: you see the part, not
+        how it is built (edit that in the Object tab). Overridden off
+        in the Object tab's own tree."""
+        return node.type == "component"
+
     def _build_node(self, node, parent_item, selected):
         """One row per node — colour/translate/rotate wrappers show as
-        their own rows, so the whole structure is visible."""
+        their own rows, so the whole structure is visible. An opaque
+        node (an assembly Object) is a single leaf: its construction
+        tree stays in the Object tab."""
         item = self._new_item(parent_item, node)
         item.setData(0, Qt.UserRole, node.id)
         self._decorate(item, node)
+        if self._is_opaque(node):
+            return
         if node.is_container():
             default_open = node.type != "variables"
             if self._expand_state.get(node.id, default_open):
@@ -219,11 +230,20 @@ class ObjectTree(QTreeWidget):
         for child in node.children:
             self._build_node(child, item, selected)
 
+    def _visibility_root(self):
+        """Ancestor at which the effective-visibility walk stops
+        (exclusive). None = walk to the document root. The Object tab
+        overrides this with the active Object, whose own hidden-in-Main
+        flag is a definition detail that must not grey its contents."""
+        return None
+
     def _model_visible(self, node):
-        """True only if *node* and every ancestor is visible — hiding a
-        parent effectively hides the whole subtree below it."""
+        """True only if *node* and every ancestor up to (but not
+        including) `_visibility_root()` is visible — hiding a parent
+        effectively hides the whole subtree below it."""
+        stop = self._visibility_root()
         n = node
-        while n is not None:
+        while n is not None and n is not stop:
             if not n.visible:
                 return False
             n = n.parent

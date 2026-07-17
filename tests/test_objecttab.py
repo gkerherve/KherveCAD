@@ -36,6 +36,47 @@ def model(app):
     return DocumentModel()
 
 
+def test_object_contents_not_greyed_when_definition_hidden(model, app):
+    """An Object is hidden in Main (it is a definition), but editing it
+    in the Object tab must show its contents at full strength — not
+    greyed as if hidden."""
+    panel = BuilderPanel(model)
+    comp = model.new_component("Spacer", visible=False)
+    body = model.add_node("union", parent=comp, name="Body")
+    inner = model.add_node("cylinder", parent=body)
+    panel.open_component(comp)
+    tree = panel.object_tab.tree
+    assert not tree._item_of(body).font(0).italic()
+    assert not tree._item_of(inner).font(0).italic()
+    # a genuinely hidden child inside the Object still greys, though
+    model.set_visible(body, False)
+    assert tree._item_of(body).font(0).italic()
+
+
+def test_instance_is_one_opaque_row_in_main(model, app):
+    """Inserting an Object shows a single row in Main; its construction
+    tree is not exposed there (that lives in the Object tab)."""
+    panel = BuilderPanel(model)
+    comp = model.new_component("Widget", visible=False)
+    g = model.add_node("union", parent=comp, name="Sub")
+    model.add_node("cube", parent=g)
+    inst = model.add_instance(comp)
+    row = panel.tree._item_of(inst)
+    assert row is not None
+    assert row.childCount() == 0
+
+
+def test_visible_component_is_opaque_in_main(model, app):
+    """A visible top-level Object (an imported mesh, an old-style part)
+    also shows as one row in Main — you see the part, not its
+    features."""
+    panel = BuilderPanel(model)
+    comp = model.new_component("Imported", visible=True)
+    model.add_node("cube", parent=comp)
+    row = panel.tree._item_of(comp)
+    assert row.childCount() == 0
+
+
 def test_subtree_scad_includes_globals(model):
     model.add_node("assign", dict(variable="size", value="20"))
     comp = model.new_component("Plate")
