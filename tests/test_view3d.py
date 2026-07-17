@@ -172,9 +172,9 @@ def test_selection_paints_openscad_red(app):
 
 
 def test_selection_keeps_the_form_readable(app):
-    """The `#` overlay must not flatten the object into one solid
-    blob: the faces keep distinct shading (the old opaque amber fill
-    plus a per-triangle pen destroyed this)."""
+    """The `#` tint must not flatten the object into one solid blob:
+    the faces keep distinct shading (the old opaque amber fill plus a
+    per-triangle pen destroyed this)."""
     view = View3D()
     view.resize(300, 300)
     view.set_mesh(_cube(), "test")
@@ -182,6 +182,56 @@ def test_selection_keeps_the_form_readable(app):
     view.set_highlight_mesh(_cube())
     shades = {r // 16 for r, _g, _b in _selection_pixels(view)}
     assert len(shades) >= 2, "selection collapsed to a flat colour"
+
+
+def test_selection_does_not_stripe_on_a_mismatched_mesh(app):
+    """The displayed mesh is OpenSCAD's exact render while the
+    highlight comes from the built-in tessellator, so the two are
+    different triangulations of one surface. They must not be sorted
+    together: that interleaved them and striped the selection with
+    untinted bands (the "zebra" bug)."""
+    import math
+
+    def disc(segments, phase):
+        """A closed disc; *phase* rotates the tessellation without
+        changing the shape."""
+        tris, r, h = [], 20.0, 5.0
+        for i in range(segments):
+            a0 = 2 * math.pi * (i + phase) / segments
+            a1 = 2 * math.pi * (i + 1 + phase) / segments
+            p0 = (r * math.cos(a0), r * math.sin(a0))
+            p1 = (r * math.cos(a1), r * math.sin(a1))
+            tris.append(((0.0, 0.0, h), (p0[0], p0[1], h),
+                         (p1[0], p1[1], h)))
+            tris.append(((0.0, 0.0, 0.0), (p1[0], p1[1], 0.0),
+                         (p0[0], p0[1], 0.0)))
+            # both triangles of the side quad, or the wall has holes
+            tris.append(((p0[0], p0[1], 0.0), (p1[0], p1[1], 0.0),
+                         (p1[0], p1[1], h)))
+            tris.append(((p0[0], p0[1], 0.0), (p1[0], p1[1], h),
+                         (p0[0], p0[1], h)))
+        return tris
+
+    view = View3D()
+    view.resize(300, 300)
+    view.set_style("Matte")
+    # the same disc tessellated two different ways, as OpenSCAD's
+    # exact render and the built-in tessellator really do differ
+    view.set_mesh(disc(40, 0.37), "OpenSCAD")
+    view.set_highlight_mesh(disc(40, 0.0))
+    view.fit()
+    # Count only pixels still wearing the untinted base colour — a
+    # warm r > g > b in the shaded range. That excludes the pale
+    # background (too bright) and the axis gizmo drawn over the tint
+    # (blue/green, so not warm), leaving exactly the striping signal.
+    pixels = _selection_pixels(view)
+    untinted = [p for p in pixels
+                if 90 < p[1] < 215 and p[0] > p[1] > p[2]]
+    # striping loses ~97% of the part; a handful of antialiased edge
+    # blends is not it, so 1% keeps a wide margin either way
+    assert len(untinted) * 100 < len(pixels), \
+        (f"{len(untinted)}/{len(pixels)} px escaped the tint — "
+         f"the selection striped")
 
 
 def test_backface_culling_keeps_the_solid_opaque(app):

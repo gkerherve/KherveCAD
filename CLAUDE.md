@@ -395,15 +395,27 @@ per-node line spans via `CadNode.emit()` / `to_scad_map()`), and the
 selected object's **geometry** is highlighted in both viewers —
 `mesh.selected_world_tris()` tags the selected subtree's world-space
 triangles (ancestor transforms applied), which the 3D view paints
-the way **OpenSCAD's `#` debug modifier** looks (transparent red
-over the normally shaded object: back-face culled, shade-modulated
-and with no per-triangle pen, so the form reads through instead of
-flattening into a blob — `View3D.HIGHLIGHT_*`), and the 2D view
+the way **OpenSCAD's `#` debug modifier** looks, and the 2D view
 projects to an accent outline in the current plane (works at any
 tree depth). The `#` is **imitated, never emitted**: OpenSCAD's
 modifiers only affect its own GUI preview and the engine hands back
 a colourless STL, so a real `#` in the program would change nothing
 here (and would leak into exported `.scad`).
+
+The 3D tint (`View3D._tint_selection`) fills the selection's
+silhouette into an offscreen mask and composites it with
+**Multiply**, rather than drawing highlight faces into the depth
+sort. This is not cosmetic — the highlight always comes from the
+built-in tessellator while `mesh` may be **OpenSCAD's exact render**
+(and for a `difference()` the built-in only approximates: first
+operand, holes uncut). Those are different triangulations of one
+surface, so sorting them together let model faces win over highlight
+faces in radial bands and **striped the selection ("zebra")** — no
+depth bias can fix that. Multiplying a flat mask over the finished
+render is immune to the mismatch, keeps the shading, facet edges and
+cut holes underneath (dark pixels stay dark), and cannot stack into
+a darker patch where faces overlap. Guarded by
+`test_selection_does_not_stripe_on_a_mismatched_mesh`.
 
 **Errors turn red.** `model.validate()` runs on every change (bad
 expressions, empty extrusions, 3D inside extrude, axis-crossing

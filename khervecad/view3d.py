@@ -18,7 +18,7 @@ the Free Software Foundation, either version 3 of the License, or
 import math
 
 from PyQt5.QtCore import QPointF, QSettings, Qt, QTimer
-from PyQt5.QtGui import QColor, QPainter, QPen, QPolygonF
+from PyQt5.QtGui import (QColor, QImage, QPainter, QPen, QPolygonF)
 from PyQt5.QtWidgets import QWidget
 
 _SETTINGS = ("Kherve", "KherveCAD")
@@ -49,13 +49,11 @@ class View3D(QWidget):
     DRAFT_ABOVE = 9000
     DRAFT_TARGET = 6000
 
-    #: the selection overlay imitates OpenSCAD's `#` debug modifier —
-    #: transparent red laid over the normally shaded object, so the
-    #: form still reads instead of turning into a flat blob. Alpha is
-    #: per face: back faces are culled, so it does not stack up.
-    HIGHLIGHT_HUE = 0.0                  # red
-    HIGHLIGHT_SAT = 0.88
-    HIGHLIGHT_ALPHA = 0.8
+    #: the selection tint imitates OpenSCAD's `#` debug modifier. It is
+    #: multiplied over the finished render (see _tint_selection), so
+    #: the red channel passes through and green/blue are crushed: the
+    #: object turns red while keeping its own shading and its holes.
+    HIGHLIGHT_COLOR = "#ff2d2d"
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -429,36 +427,29 @@ class View3D(QWidget):
             shade = abs(nx * lx + ny * ly + nz * lz)
             spec = max(nx * hax + ny * hay + nz * haz, 0.0)
             face_color = colors[index] if colors else None
-            append((depth, (p0, p1, p2), shade, spec, face_color, False))
+            append((depth, (p0, p1, p2), shade, spec, face_color))
 
-        # The selected object drawn over the model the way OpenSCAD's
-        # `#` debug modifier shows it: transparent red. The object is
-        # also in `mesh`, so its own shading reads through the overlay
-        # and the form survives. Back faces are culled with the same
-        # rule as the model, so the alpha never stacks into opacity.
+        # The selected object is NOT drawn into the depth sort: its
+        # triangles come from the built-in tessellator while `mesh` may
+        # be OpenSCAD's exact render, and no depth bias can reconcile
+        # two different tessellations of one surface — sorting them
+        # together interleaved the two meshes and striped the selection
+        # (zebra). Instead its silhouette is collected here and used as
+        # a flat tint mask once the model is painted.
+        hi_polys = []
         for tri in hmesh:
-            a, b, c = tri
-            ux = b[0] - a[0]; uy = b[1] - a[1]; uz = b[2] - a[2]
-            vx = c[0] - a[0]; vy = c[1] - a[1]; vz = c[2] - a[2]
-            nx = uy * vz - uz * vy
-            ny = uz * vx - ux * vz
-            nz = ux * vy - uy * vx
-            if cull and nx * tex + ny * tey + nz * tez < 0.0:
-                continue
-            p0 = proj(a)
+            p0 = proj(tri[0])
             if p0 is None:
                 continue
-            p1 = proj(b)
+            p1 = proj(tri[1])
             if p1 is None:
                 continue
-            p2 = proj(c)
+            p2 = proj(tri[2])
             if p2 is None:
                 continue
-            length = math.sqrt(nx * nx + ny * ny + nz * nz)
-            shade = abs(nx * lx + ny * ly + nz * lz) / length \
-                if length > 1e-12 else 0.6
-            depth = (p0[2] + p1[2] + p2[2]) / 3 - 0.02
-            append((depth, (p0, p1, p2), shade, 0.0, None, True))
+            hi_polys.append(QPolygonF([QPointF(p0[0], p0[1]),
+                                       QPointF(p1[0], p1[1]),
+                                       QPointF(p2[0], p2[1])]))
 
         faces.sort(key=lambda fc: -fc[0])
         edge = QColor(t["border"])
@@ -469,19 +460,8 @@ class View3D(QWidget):
         wire.setAlpha(70)
         wire_pen = QPen(wire)
         wire_pen.setWidthF(0.3)
-        for _depth, pts, shade, spec, face_color, highlight in faces:
+        for _depth, pts, shade, spec, face_color in faces:
             poly = QPolygonF([QPointF(p[0], p[1]) for p in pts])
-            if highlight:
-                # no per-triangle outline: on a dense mesh that pen web
-                # is what turned the selection into a solid blob
-                painter.setPen(Qt.NoPen)
-                c = QColor.fromHsvF(self.HIGHLIGHT_HUE,
-                                    self.HIGHLIGHT_SAT,
-                                    min(0.5 + 0.5 * shade, 1.0))
-                c.setAlphaF(self.HIGHLIGHT_ALPHA)
-                painter.setBrush(c)
-                painter.drawPolygon(poly)
-                continue
             if face_color is not None and face_color[0]:
                 own = QColor(face_color[0])
                 hue = max(own.hueF(), 0.0)
@@ -516,6 +496,8 @@ class View3D(QWidget):
             painter.setBrush(color)
             painter.drawPolygon(poly)
 
+        if hi_polys:
+            self._tint_selection(painter, hi_polys)
         self._draw_anchors(painter, eye, right, up, forward)
         self._draw_axes(painter, t, eye, right, up, forward)
         pair = BACKGROUNDS.get(self.background)
@@ -528,6 +510,34 @@ class View3D(QWidget):
                          f"{self.source} — {len(self.mesh)} triangles "
                          f"· {self.style}")
         painter.end()
+
+    def _tint_selection(self, painter, polys):
+        """Tint the selected object's screen region red, the way
+        OpenSCAD's `#` modifier reads.
+
+        The silhouette is filled into an offscreen mask and composited
+        with **Multiply**, which buys three things a plain overlay
+        cannot: the shading, facet edges and *cut holes* of whatever is
+        underneath all survive (multiply keeps dark pixels dark, so a
+        bore stays a bore); overlapping faces cannot stack into a
+        darker patch, because the mask is flat; and nothing is
+        interleaved with the model's own depth sort, so a mismatch
+        between OpenSCAD's tessellation and the built-in one can never
+        stripe the selection again."""
+        mask = QImage(self.size(), QImage.Format_ARGB32_Premultiplied)
+        mask.fill(Qt.transparent)
+        mp = QPainter(mask)
+        mp.setRenderHint(QPainter.Antialiasing,
+                         painter.testRenderHint(QPainter.Antialiasing))
+        mp.setPen(Qt.NoPen)
+        mp.setBrush(QColor(self.HIGHLIGHT_COLOR))
+        for poly in polys:
+            mp.drawPolygon(poly)
+        mp.end()
+        mode = painter.compositionMode()
+        painter.setCompositionMode(QPainter.CompositionMode_Multiply)
+        painter.drawImage(0, 0, mask)
+        painter.setCompositionMode(mode)
 
     @staticmethod
     def _style_color(style, hue, sat, val, shade, spec, base):
