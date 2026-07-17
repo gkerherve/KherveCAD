@@ -49,6 +49,14 @@ class View3D(QWidget):
     DRAFT_ABOVE = 9000
     DRAFT_TARGET = 6000
 
+    #: the selection overlay imitates OpenSCAD's `#` debug modifier —
+    #: transparent red laid over the normally shaded object, so the
+    #: form still reads instead of turning into a flat blob. Alpha is
+    #: per face: back faces are culled, so it does not stack up.
+    HIGHLIGHT_HUE = 0.0                  # red
+    HIGHLIGHT_SAT = 0.88
+    HIGHLIGHT_ALPHA = 0.8
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.mesh = []                  # [(v0, v1, v2)] world space
@@ -423,11 +431,20 @@ class View3D(QWidget):
             face_color = colors[index] if colors else None
             append((depth, (p0, p1, p2), shade, spec, face_color, False))
 
-        # the selected object's faces, drawn glowing over the model
-        # in a warm accent that contrasts with the blue base shading
-        hi = QColor("#ff8c1a")
+        # The selected object drawn over the model the way OpenSCAD's
+        # `#` debug modifier shows it: transparent red. The object is
+        # also in `mesh`, so its own shading reads through the overlay
+        # and the form survives. Back faces are culled with the same
+        # rule as the model, so the alpha never stacks into opacity.
         for tri in hmesh:
             a, b, c = tri
+            ux = b[0] - a[0]; uy = b[1] - a[1]; uz = b[2] - a[2]
+            vx = c[0] - a[0]; vy = c[1] - a[1]; vz = c[2] - a[2]
+            nx = uy * vz - uz * vy
+            ny = uz * vx - ux * vz
+            nz = ux * vy - uy * vx
+            if cull and nx * tex + ny * tey + nz * tez < 0.0:
+                continue
             p0 = proj(a)
             if p0 is None:
                 continue
@@ -437,11 +454,6 @@ class View3D(QWidget):
             p2 = proj(c)
             if p2 is None:
                 continue
-            ux = b[0] - a[0]; uy = b[1] - a[1]; uz = b[2] - a[2]
-            vx = c[0] - a[0]; vy = c[1] - a[1]; vz = c[2] - a[2]
-            nx = uy * vz - uz * vy
-            ny = uz * vx - ux * vz
-            nz = ux * vy - uy * vx
             length = math.sqrt(nx * nx + ny * ny + nz * nz)
             shade = abs(nx * lx + ny * ly + nz * lz) / length \
                 if length > 1e-12 else 0.6
@@ -457,16 +469,17 @@ class View3D(QWidget):
         wire.setAlpha(70)
         wire_pen = QPen(wire)
         wire_pen.setWidthF(0.3)
-        hi_pen = QPen(hi.lighter(120))
-        hi_pen.setWidthF(1.4)
         for _depth, pts, shade, spec, face_color, highlight in faces:
             poly = QPolygonF([QPointF(p[0], p[1]) for p in pts])
             if highlight:
-                painter.setPen(hi_pen)
-                painter.setBrush(QColor.fromHsvF(
-                    max(hi.hueF(), 0.0),
-                    min(hi.saturationF() + 0.1, 1.0),
-                    min(0.55 + 0.45 * shade, 1.0)))
+                # no per-triangle outline: on a dense mesh that pen web
+                # is what turned the selection into a solid blob
+                painter.setPen(Qt.NoPen)
+                c = QColor.fromHsvF(self.HIGHLIGHT_HUE,
+                                    self.HIGHLIGHT_SAT,
+                                    min(0.5 + 0.5 * shade, 1.0))
+                c.setAlphaF(self.HIGHLIGHT_ALPHA)
+                painter.setBrush(c)
                 painter.drawPolygon(poly)
                 continue
             if face_color is not None and face_color[0]:

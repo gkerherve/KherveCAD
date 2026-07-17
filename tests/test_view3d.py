@@ -136,6 +136,54 @@ def test_styles_render_distinctly(app):
     assert dist(avgs["Matte"], avgs["Shaded"]) > 60
 
 
+def _selection_pixels(view):
+    """Every pixel over the model, as (r, g, b)."""
+    from PyQt5.QtCore import QSize
+    from PyQt5.QtGui import QImage, QPainter
+    w, h = view.width(), view.height()
+    img = QImage(QSize(w, h), QImage.Format_ARGB32)
+    img.fill(0)
+    painter = QPainter(img)
+    view.render(painter)
+    painter.end()
+    out = []
+    for x in range(w // 3, 2 * w // 3, 2):
+        for y in range(h // 3, 2 * h // 3, 2):
+            c = img.pixelColor(x, y)
+            if c.alpha() > 0:
+                out.append((c.red(), c.green(), c.blue()))
+    return out
+
+
+def test_selection_paints_openscad_red(app):
+    """Selecting an object shows it in OpenSCAD `#` style: red, not
+    the base shading."""
+    view = View3D()
+    view.resize(300, 300)
+    view.set_mesh(_cube(), "test")
+    view.fit()
+    plain = _central_avg(view)
+    view.set_highlight_mesh(_cube())
+    picked = _central_avg(view)
+    # red channel dominates, and it clearly changed from unselected
+    assert picked[0] > picked[1] + 40
+    assert picked[0] > picked[2] + 40
+    assert abs(picked[0] - plain[0]) + abs(picked[2] - plain[2]) > 40
+
+
+def test_selection_keeps_the_form_readable(app):
+    """The `#` overlay must not flatten the object into one solid
+    blob: the faces keep distinct shading (the old opaque amber fill
+    plus a per-triangle pen destroyed this)."""
+    view = View3D()
+    view.resize(300, 300)
+    view.set_mesh(_cube(), "test")
+    view.fit()
+    view.set_highlight_mesh(_cube())
+    shades = {r // 16 for r, _g, _b in _selection_pixels(view)}
+    assert len(shades) >= 2, "selection collapsed to a flat colour"
+
+
 def test_backface_culling_keeps_the_solid_opaque(app):
     """Culling back faces must not make a closed solid see-through:
     the centre of a shaded cube stays a solid surface colour."""

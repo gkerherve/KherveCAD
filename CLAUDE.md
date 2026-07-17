@@ -392,11 +392,18 @@ properties panel and tree pick them up automatically.
 tree <-> 2D view <-> properties always show the same objects, the
 Code tab highlights the selected object's lines (codegen emits
 per-node line spans via `CadNode.emit()` / `to_scad_map()`), and the
-selected object's **geometry** is highlighted in amber in both
-viewers — `mesh.selected_world_tris()` tags the selected subtree's
-world-space triangles (ancestor transforms applied), which the 3D
-view draws glowing over the model and the 2D view projects to an
-accent outline in the current plane (works at any tree depth).
+selected object's **geometry** is highlighted in both viewers —
+`mesh.selected_world_tris()` tags the selected subtree's world-space
+triangles (ancestor transforms applied), which the 3D view paints
+the way **OpenSCAD's `#` debug modifier** looks (transparent red
+over the normally shaded object: back-face culled, shade-modulated
+and with no per-triangle pen, so the form reads through instead of
+flattening into a blob — `View3D.HIGHLIGHT_*`), and the 2D view
+projects to an accent outline in the current plane (works at any
+tree depth). The `#` is **imitated, never emitted**: OpenSCAD's
+modifiers only affect its own GUI preview and the engine hands back
+a colourless STL, so a real `#` in the program would change nothing
+here (and would leak into exported `.scad`).
 
 **Errors turn red.** `model.validate()` runs on every change (bad
 expressions, empty extrusions, 3D inside extrude, axis-crossing
