@@ -245,16 +245,25 @@ into a new module and import.
                        `describe_pick()` grows the coplanar face and
                        snaps to a boundary edge within tolerance.
   - `mates.py`       — **attach/snap**: a mate is a live record on the
-                       child Object's params (`parent`, two anchor
+                       child part's params (`parent`, two anchor
                        names, `offset` mm along the axis, `spin` deg
                        about it) solved by `solve_mate()` into the
                        ordinary placement params — anchors coincide,
                        directions anti-aligned (BOSL2 attach() model,
-                       no constraint solver). `refresh(model)` re-solves
-                       every mate in dependency order (cycle-guarded;
-                       called from `MainWindow._model_edited`) so
-                       chains follow a moved parent; `AttachDialog` is
-                       the context-menu UI. Renames propagate
+                       no constraint solver). A mate's parent is a
+                       **sibling** (`_mate_siblings`): at the assembly
+                       root an Object mates to another Object; inside an
+                       Object a **group mates to a sibling group** (the
+                       "secondary" anchors that build a part). `parts(
+                       model, scope)` enumerates the mateable parts —
+                       Objects+instances when `scope is None`, the
+                       Object's `union`/`component` children when
+                       `scope` is that Object. `refresh(model)`
+                       re-solves every mated node at any depth in
+                       dependency order (cycle-guarded; called from
+                       `MainWindow._model_edited`) so chains follow a
+                       moved parent; `AttachDialog` is the context-menu
+                       UI. Renames propagate
                        (`DocumentModel.rename`), drags detach, and
                        dropping a part outline in the assembly view
                        snaps anchor-to-anchor (`_anchor_snap`). The
@@ -268,9 +277,17 @@ into a new module and import.
                        anchor (never litters duplicates) or persists a
                        custom one on the part's **definition** (shared
                        by every instance), and the mate solves
-                       immediately. Anchors and mates are an **assembly
-                       (Main tab) concern only** — the Object tab just
-                       defines and edits parts.
+                       immediately. Assembly anchors mate whole Objects
+                       in the **Main tab**; **secondary anchors** in the
+                       **Object tab** snap the `union` groups that build
+                       an Object to each other (`_snap_scope` =
+                       `isolated_component()`, stored on the group). An
+                       Object shows as **one opaque row** in Main
+                       (`ObjectTree._is_opaque`); its construction tree
+                       lives in the Object tab, whose visibility walk
+                       stops at the active Object (`_visibility_root`)
+                       so a definition's hidden-in-Main flag doesn't
+                       grey its contents.
   - `treepanel.py`   — `BuilderPanel`: Main tab (assembly) tree — **no visibility
                        checkboxes**: hidden objects read greyed + italic
                        and toggle with **Space** or right-click Hide/Show;

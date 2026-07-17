@@ -112,3 +112,62 @@ def test_snap_needs_two_visible_objects(window):
     model.add_node("cube", parent=hidden)
     window._start_snap()
     assert window.view3d._pick_cb is None        # tool refused to arm
+
+
+def test_secondary_anchors_snap_groups_inside_an_object(window):
+    """In the Object tab, the Snap tool mates the *groups* that build
+    the Object (secondary anchors), not whole Objects: the mate lands
+    on the group and solves within the Object's frame."""
+    model = window.model
+    comp = model.new_component("Bracket", visible=False)
+    base = model.add_node("union", parent=comp, name="Base")
+    model.add_node("cube", dict(width=20.0, depth=20.0, height=6.0),
+                   parent=base)
+    post = model.add_node("union", parent=comp, name="Post")
+    model.add_node("cube", dict(width=8.0, depth=8.0, height=20.0),
+                   parent=post)
+    post.params["x"] = 60.0
+    window.builder.open_component(comp)          # Object tab active
+
+    assert window._snap_scope() is comp
+    assert {p.name for p, _ in window._snap_groups(comp)} == \
+        {"Base", "Post"}
+
+    window._start_snap()
+    window.view3d._pick_cb(dict(kind="face", name="Face",
+                                pos=[60.0, 0.0, 0.0],
+                                dir=[0.0, 0.0, -1.0]), post)   # Post base
+    window.view3d._pick_cb(dict(kind="face", name="Face",
+                                pos=[0.0, 0.0, 6.0],
+                                dir=[0.0, 0.0, 1.0]), base)    # Base top
+    mate = post.params.get("mate")
+    assert mate is not None and mate["parent"] == "Base"
+    # Post now sits on Base's top face, back at the Object's axis
+    assert post.params["z"] == 6.0
+    assert post.params["x"] == 0.0
+    # the whole-object assembly anchors are untouched
+    assert not comp.params.get("mate")
+
+
+def test_group_mate_survives_kcad_roundtrip(window, tmp_path):
+    """A secondary (group) mate persists and re-solves on load."""
+    from khervecad import document
+    from khervecad.model import DocumentModel
+    model = window.model
+    comp = model.new_component("Bracket", visible=False)
+    base = model.add_node("union", parent=comp, name="Base")
+    model.add_node("cube", dict(width=20.0, depth=20.0, height=6.0),
+                   parent=base)
+    post = model.add_node("union", parent=comp, name="Post")
+    model.add_node("cube", dict(width=8.0, depth=8.0, height=20.0),
+                   parent=post)
+    from khervecad import mates
+    mates.attach(model, post, "Base", "Top", "Bottom")
+    path = tmp_path / "bracket.kcad"
+    document.save_kcad(model, str(path))
+
+    other = DocumentModel()
+    document.load_kcad(other, str(path))
+    loaded = next(n for n in other.root.walk()
+                  if n.type == "union" and n.name == "Post")
+    assert loaded.params["mate"]["parent"] == "Base"

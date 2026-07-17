@@ -735,14 +735,19 @@ class MainWindow(QMainWindow):
 
     # ---------------------------------------------------------- anchors
     def _anchor_component(self):
-        """The part whose anchors show in the 3D view: the isolated
-        Object, else a single selected Object or instance."""
+        """The part whose anchors show in the 3D view. In the Object
+        tab: a single selected group inside the Object (its secondary
+        anchors), else the Object itself. In Main: a single selected
+        Object or instance."""
         from . import mates
-        comp = self.builder.isolated_component()
-        if comp is not None:
-            return comp
+        iso = self.builder.isolated_component()
         selected = [self.model.find(nid)
                     for nid in getattr(self, "_selected_ids", set())]
+        if iso is not None:
+            groups = [n for n in selected if n is not None
+                      and n.type in ("union", "component")
+                      and n is not iso and n.parent is iso]
+            return groups[0] if len(groups) == 1 else iso
         chosen = [n for n in selected if n is not None
                   and (n.type == "component"
                        or (n.type == "reference"
@@ -799,6 +804,34 @@ class MainWindow(QMainWindow):
                 self._refresh_anchor_markers()
             self.view3d.start_pick(done_instance, groups=[(comp, tris)])
             return
+        if comp.type == "union":
+            # a group inside an Object: pick against its own mesh in the
+            # isolated view and store a secondary anchor on the group
+            env = anchors.doc_env(self.model)
+            tris = mesh.tessellate(comp, env=env,
+                                   fn=self.model.effective_fn())
+            if not tris:
+                return
+            self.statusBar().showMessage(
+                f"Click a face or edge of {comp.name} to add a "
+                f"secondary anchor — right-click to cancel.", 10000)
+
+            def done_group(desc, _key=None):
+                if desc is None:
+                    self.statusBar().showMessage(
+                        "Anchor pick cancelled.", 3000)
+                    return
+                pos = anchors.to_local(comp, desc["pos"], env)
+                direction = anchors.dir_to_local(comp, desc["dir"], env)
+                anchor = anchors.add_user_anchor(
+                    self.model, comp, pos, direction,
+                    name=desc.get("name", "Anchor"), kind="custom")
+                self.statusBar().showMessage(
+                    f"Secondary anchor '{anchor['name']}' added to "
+                    f"{comp.name} ({desc['kind']}).", 5000)
+                self._refresh_anchor_markers()
+            self.view3d.start_pick(done_group, groups=[(comp, tris)])
+            return
         self.builder.open_component(comp)
         self.statusBar().showMessage(
             "Click a face or edge of the object in the 3D view to add "
@@ -822,15 +855,24 @@ class MainWindow(QMainWindow):
         self.view3d.start_pick(done)
 
     # ------------------------------------------------- two-click snap
-    def _snap_groups(self):
-        """[(part, placed world triangles)] of every visible part of
-        the assembly — Objects and instances alike — what the
-        two-click Snap tool picks against."""
+    def _snap_scope(self):
+        """Where snapping/anchoring happens: the active Object while
+        the Object tab is current (snap its groups together — the
+        "secondary" anchors), else None for the Main assembly."""
+        return self.builder.isolated_component()
+
+    def _snap_groups(self, scope=None):
+        """[(part, world triangles)] of every visible mateable part at
+        *scope* — Objects and instances in the assembly, or the groups
+        inside an Object — what the two-click Snap tool picks against.
+        In an Object scope the parts are tessellated in the Object's
+        own local frame (its placement zeroed), matching the isolated
+        3D view."""
         from . import anchors, mates
         env = anchors.doc_env(self.model)
         fn = self.model.effective_fn()
         groups = []
-        for part in mates.parts(self.model):
+        for part in mates.parts(self.model, scope):
             if not part.visible:
                 continue
             tris = mesh.tessellate(part, env=env, fn=fn)
@@ -861,19 +903,26 @@ class MainWindow(QMainWindow):
                                        name=desc.get("name", "Anchor"))
 
     def _start_snap(self):
-        """Fusion-style two-click snap: click a face/edge on the
-        Object to move, then the target face on another Object — the
-        mate is created and solved immediately."""
+        """Fusion-style two-click snap: click a face/edge on the part
+        to move, then the target face on another part — the mate is
+        created and solved immediately. In the Main tab this snaps
+        whole Objects; in the Object tab it snaps the groups that make
+        up the Object (the secondary anchors)."""
         from . import mates
-        groups = self._snap_groups()
+        scope = self._snap_scope()
+        groups = self._snap_groups(scope)
         if len(groups) < 2:
+            where = ("two visible groups inside this Object"
+                     if scope is not None
+                     else "two visible Objects in the Main assembly")
             self.statusBar().showMessage(
-                "Snap needs at least two visible Objects in the Main "
-                "assembly (hidden ones don't count).", 5000)
+                f"Snap needs at least {where} (hidden ones don't "
+                f"count).", 5000)
             return
-        self.builder.setCurrentIndex(0)          # the assembly view
+        if scope is None:
+            self.builder.setCurrentIndex(0)      # the assembly view
         self.statusBar().showMessage(
-            "Snap 1/2: click the face or edge of the object to MOVE "
+            "Snap 1/2: click the face or edge of the part to MOVE "
             "— right-click cancels.", 0)
 
         def first(desc, comp):

@@ -29,6 +29,9 @@ class ComponentTree(ObjectTree):
 
     #: instances belong to the Main assembly, not inside a definition.
     SHOWS_INSERT_OBJECT = False
+    #: groups inside the edited Object can be snapped together — the
+    #: secondary anchors that build a part from sub-parts.
+    ALLOWS_GROUP_MATES = True
 
     def __init__(self, model: DocumentModel, active_getter, parent=None):
         #: callable returning the active component node (or None) —

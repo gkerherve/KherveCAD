@@ -121,16 +121,40 @@ def definition_of(model, part):
     return part
 
 
-def parts(model):
-    """The placed, mateable parts of the Main assembly: top-level
-    Objects plus instances of Objects. A hidden Object is a pure
-    definition, but it stays mateable for backward compatibility."""
+#: node types that carry a placement + can be snapped around: Objects
+#: and their instances (assembly), and groups (building a part).
+_MATEABLE = ("component", "reference", "union")
+
+
+def parts(model, scope=None):
+    """The mateable parts at *scope*.
+
+    ``scope=None`` — the **Main assembly**: top-level Objects plus
+    instances of Objects (a hidden Object is a pure definition but
+    stays mateable for backward compatibility).
+
+    ``scope=<component>`` — the **groups inside that Object** (the
+    Object tab: snap sub-parts together to build the part). Its direct
+    ``union``/``component`` children, i.e. the "secondary" parts.
+    """
+    if scope is not None:
+        return [c for c in scope.children
+                if c.type in ("union", "component")]
     out = list(model.components())
     for child in model.root.children:
         if child.type == "reference" \
                 and definition_of(model, child) is not None:
             out.append(child)
     return out
+
+
+def _mate_siblings(node):
+    """The parts a *node*'s mate may reference — its siblings under the
+    same container (the assembly root, or the Object being built)."""
+    if node.parent is None:
+        return []
+    return [c for c in node.parent.children
+            if c is not node and c.type in _MATEABLE]
 
 
 def find_anchor(definition, name, env=None, fn=None):
@@ -170,12 +194,14 @@ def solve_mate(comp, parent, mate, env=None, fn=None,
 
 def apply_mate(model, comp, env=None, fn=None) -> bool:
     """Solve the part's mate and write the placement. Returns True
-    when any placement value actually changed."""
+    when any placement value actually changed. The mate's parent is
+    looked up among the part's siblings, so an assembly Object mates
+    to another Object and a group mates to a sibling group."""
     mate = mate_of(comp)
     if mate is None:
         return False
-    parent = next((c for c in parts(model)
-                   if c.name == mate["parent"] and c is not comp), None)
+    parent = next((c for c in _mate_siblings(comp)
+                   if c.name == mate["parent"]), None)
     if parent is None:
         return False
     placement = solve_mate(comp, parent, mate, env, fn,
@@ -207,7 +233,9 @@ def refresh(model) -> bool:
     try:
         env = anchors.doc_env(model)
         fn = model.effective_fn()
-        comps = parts(model)
+        # every node carrying a mate, at any depth (assembly Objects and
+        # the groups inside an Object alike)
+        mated = [n for n in model.root.walk() if mate_of(n)]
         moved = []
         solved = set()
 
@@ -217,14 +245,13 @@ def refresh(model) -> bool:
             solved.add(comp.id)
             mate = mate_of(comp)
             if mate is not None and mate["parent"] not in stack:
-                parent = next((c for c in comps
-                               if c.name == mate["parent"]
-                               and c is not comp), None)
+                parent = next((c for c in _mate_siblings(comp)
+                               if c.name == mate["parent"]), None)
                 if parent is not None:
                     solve(parent, stack | {comp.name})
                 if apply_mate(model, comp, env, fn):
                     moved.append(comp)
-        for comp in comps:
+        for comp in mated:
             solve(comp, {comp.name})
         for comp in moved:
             model.node_changed.emit(comp)
@@ -270,7 +297,9 @@ class AttachDialog(QDialog):
             "Snap this object onto another: the two anchors touch,\n"
             "faces against each other."))
         self.parent_combo = QComboBox()
-        self.others = [c for c in parts(model) if c is not comp]
+        # candidates are the part's own siblings — assembly Objects for
+        # an Object, sibling groups for a group being built
+        self.others = _mate_siblings(comp)
         for other in self.others:
             self.parent_combo.addItem(other.name)
         form.addRow("Attach to:", self.parent_combo)

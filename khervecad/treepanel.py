@@ -600,6 +600,9 @@ class ObjectTree(QTreeWidget):
     #: the Main tree offers "Insert Object" (assembly instances);
     #: the Object tab's tree and the Masters tree do not.
     SHOWS_INSERT_OBJECT = True
+    #: the Object tab's tree lets the groups building a part be snapped
+    #: together (secondary anchors); the Main tree does not.
+    ALLOWS_GROUP_MATES = False
 
     # --------------------------------------------------- context menu
     def _context_menu(self, pos):
@@ -662,6 +665,40 @@ class ObjectTree(QTreeWidget):
                 icons.icon("mdi.link-off"),
                 f"Detach from {mate['parent']}",
                 lambda: detach(self.model, part))
+        menu.addSeparator()
+
+    def _group_part_menu(self, menu, group):
+        """Snap / anchor / attach a group (union) while building an
+        Object — the "secondary" anchors that arrange sub-parts inside
+        a definition, distinct from the assembly anchors on Objects."""
+        from .mates import AttachDialog, detach, mate_of
+        sub = menu.addMenu(icons.icon("mdi.anchor"), "Anchors")
+        sub.addAction(
+            icons.icon("mdi.target"),
+            "Add anchor (pick face/edge in 3D)...",
+            lambda: self.pick_anchor.emit(group))
+        from . import anchors as anc
+        users = anc.user_anchors(group)
+        if users:
+            remove_menu = sub.addMenu(icons.icon("mdi.delete-outline"),
+                                      "Remove anchor")
+            for anchor in users:
+                remove_menu.addAction(
+                    anchor["name"],
+                    lambda _=False, n=anchor["name"]:
+                        anc.remove_user_anchor(self.model, group, n))
+        menu.addAction(
+            icons.icon("mdi.magnet-on"),
+            "Snap by clicking faces\tJ", self.snap_objects.emit)
+        menu.addAction(
+            icons.icon("mdi.magnet"), "Attach / snap to...",
+            lambda: AttachDialog(self.model, group, self).exec_())
+        mate = mate_of(group)
+        if mate is not None:
+            menu.addAction(
+                icons.icon("mdi.link-off"),
+                f"Detach from {mate['parent']}",
+                lambda: detach(self.model, group))
         menu.addSeparator()
 
     def _instance_anchor_menu(self, menu, part, definition):
@@ -747,6 +784,9 @@ class ObjectTree(QTreeWidget):
                          and definition_of(self.model, n) is not None)]
         if len(parts_sel) == 1:
             self._part_menu(menu, parts_sel[0])
+        elif self.ALLOWS_GROUP_MATES and len(roots) == 1 \
+                and roots[0].type == "union":
+            self._group_part_menu(menu, roots[0])
         hidden = [n for n in nodes if not n.visible]
         menu.addAction(
             icons.icon("mdi.eye-outline" if hidden
