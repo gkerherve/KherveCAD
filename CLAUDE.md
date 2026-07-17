@@ -433,6 +433,17 @@ compatible.
 - **Window style**: Fusion as default; themes shared with the family
   (View > Theme).
 
+## Packaging / installer
+
+**No installer yet — KherveCAD is not a finished product.** The
+decision and the full plan live in `docs/INSTALLER.md`: when the
+time comes, freeze with PyInstaller and bundle the official
+OpenSCAD portable ZIP in an `openscad/` subfolder (Inno Setup on
+Windows; GPL compliance = ship OpenSCAD's licence + attach its
+source ZIP to the release). Do not add packaging files before that
+decision is revisited. The one change welcome early: teach
+`engine.find_openscad()` to look next to the application first.
+
 ## Roadmap
 
 - Undo/redo on a shared `QUndoStack` (node add/remove/move/param
