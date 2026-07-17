@@ -249,7 +249,19 @@ into a new module and import.
                        the context-menu UI. Renames propagate
                        (`DocumentModel.rename`), drags detach, and
                        dropping a part outline in the assembly view
-                       snaps anchor-to-anchor (`_anchor_snap`).
+                       snaps anchor-to-anchor (`_anchor_snap`). The
+                       **two-click Snap tool** (toolbar magnet, J, or
+                       "Snap by clicking faces") is the Fusion-joint
+                       front end: click a face/edge on the Object to
+                       move, then the target face on another —
+                       `MainWindow._start_snap` picks per-Object mesh
+                       groups (`view3d.start_pick(..., groups=...)`),
+                       `_anchor_for_pick` reuses a matching bbox/user
+                       anchor (never litters duplicates) or persists a
+                       custom one, and the mate solves immediately. The
+                       Object tab's **Anchors button** offers the same
+                       anchor/origin/attach/snap tools without leaving
+                       the tab.
   - `treepanel.py`   — `BuilderPanel`: Main tab (assembly) tree — **no visibility
                        checkboxes**: hidden objects read greyed + italic
                        and toggle with **Space** or right-click Hide/Show;

@@ -101,6 +101,12 @@ class ObjectTab(QWidget):
         rename_btn.setToolTip("Rename this Object")
         rename_btn.clicked.connect(self.rename_active)
         row.addWidget(rename_btn)
+        anchors_btn = QPushButton(icons.icon("mdi.anchor"), " Anchors")
+        anchors_btn.setToolTip(
+            "Anchors and snapping for this Object: add a picked "
+            "anchor, set the origin, attach it to another Object")
+        anchors_btn.clicked.connect(self._anchor_tools)
+        row.addWidget(anchors_btn)
         layout.addLayout(row)
 
         self.tree = ComponentTree(model, self.active_component)
@@ -141,6 +147,32 @@ class ObjectTab(QWidget):
         comp = self.model.new_component(visible=False)
         self.set_active(comp)
         return comp
+
+    def _anchor_tools(self):
+        """The active Object's anchor/snap menu — the same tools as
+        the Main tree's right-click, reachable without leaving the
+        Object tab."""
+        comp = self.active_component()
+        if comp is None:
+            return
+        from PyQt5.QtGui import QCursor
+        from PyQt5.QtWidgets import QMenu
+        from .mates import AttachDialog, detach, mate_of
+        menu = QMenu(self)
+        self.tree._anchor_menu(menu, comp)
+        menu.addAction(icons.icon("mdi.magnet-on"),
+                       "Snap by clicking faces\tJ",
+                       self.tree.snap_objects.emit)
+        menu.addAction(
+            icons.icon("mdi.magnet"), "Attach / snap to...",
+            lambda: AttachDialog(self.model, comp, self).exec_())
+        mate = mate_of(comp)
+        if mate is not None:
+            menu.addAction(
+                icons.icon("mdi.link-off"),
+                f"Detach from {mate['parent']}",
+                lambda: detach(self.model, comp))
+        menu.exec_(QCursor.pos())
 
     def rename_active(self):
         """Rename the edited Object (mates and Linked copies follow)."""

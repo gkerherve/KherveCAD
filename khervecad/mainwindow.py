@@ -132,6 +132,9 @@ class MainWindow(QMainWindow):
         self.builder.tree.pick_anchor.connect(self._start_anchor_pick)
         self.builder.object_tab.tree.pick_anchor.connect(
             self._start_anchor_pick)
+        self.builder.tree.snap_objects.connect(self._start_snap)
+        self.builder.object_tab.tree.snap_objects.connect(
+            self._start_snap)
         self.scene.selection_changed.connect(self._scene_selected)
         self.scene.node_created.connect(self._node_created)
         self.scene.plane_changed.connect(self._on_plane_auto_changed)
@@ -234,6 +237,16 @@ class MainWindow(QMainWindow):
             spec = NODE_TYPES[op]
             bar.addAction(icons.icon(spec["icon"]), spec["label"],
                           lambda _=False, o=op: self._apply_operation(o))
+        bar.addSeparator()
+
+        snap_join = QAction(icons.icon("mdi.magnet-on"),
+                            "Snap objects", self)
+        snap_join.setToolTip(
+            "Snap two Objects together — click the face/edge of the "
+            "object to move, then the target face on another object (J)")
+        snap_join.setShortcut("J")
+        snap_join.triggered.connect(self._start_snap)
+        bar.addAction(snap_join)
         bar.addSeparator()
 
         self._grid_act = QAction(icons.icon("mdi.grid"), "Grid", self)
@@ -768,6 +781,90 @@ class MainWindow(QMainWindow):
                 f"({desc['kind']}).", 5000)
             self._refresh_anchor_markers()
         self.view3d.start_pick(done)
+
+    # ------------------------------------------------- two-click snap
+    def _snap_groups(self):
+        """[(component, placed world triangles)] of every visible
+        Object — what the two-click Snap tool picks against."""
+        from . import anchors
+        env = anchors.doc_env(self.model)
+        fn = self.model.effective_fn()
+        groups = []
+        for comp in self.model.components():
+            if not comp.visible:
+                continue
+            tris = mesh.tessellate(comp, env=env, fn=fn)
+            if tris:
+                groups.append((comp, tris))
+        return groups
+
+    def _anchor_for_pick(self, comp, desc):
+        """The anchor a world-space pick means on *comp*: an existing
+        anchor at that spot (a bbox face like "Top", or an already
+        picked one) when there is an exact match, else a new custom
+        anchor — so snapping boxy parts reads as Top/Bottom mates and
+        never litters duplicates."""
+        from . import anchors
+        env = anchors.doc_env(self.model)
+        pos = anchors.to_local(comp, desc["pos"], env)
+        direction = anchors.dir_to_local(comp, desc["dir"], env)
+        for anchor in anchors.anchors_of(comp, env=env,
+                                         fn=self.model.effective_fn()):
+            d2 = sum((anchor["pos"][i] - pos[i]) ** 2 for i in range(3))
+            dot = sum(anchor["dir"][i] * direction[i] for i in range(3))
+            if d2 < 0.01 and dot > 0.999:        # within 0.1 mm, aligned
+                return anchor
+        return anchors.add_user_anchor(self.model, comp, pos, direction,
+                                       name=desc.get("name", "Anchor"))
+
+    def _start_snap(self):
+        """Fusion-style two-click snap: click a face/edge on the
+        Object to move, then the target face on another Object — the
+        mate is created and solved immediately."""
+        from . import mates
+        groups = self._snap_groups()
+        if len(groups) < 2:
+            self.statusBar().showMessage(
+                "Snap needs at least two visible Objects in the Main "
+                "assembly (hidden ones don't count).", 5000)
+            return
+        self.builder.setCurrentIndex(0)          # the assembly view
+        self.statusBar().showMessage(
+            "Snap 1/2: click the face or edge of the object to MOVE "
+            "— right-click cancels.", 0)
+
+        def first(desc, comp):
+            if desc is None:
+                self.statusBar().showMessage("Snap cancelled.", 3000)
+                return
+            child_anchor = self._anchor_for_pick(comp, desc)
+            self.builder.tree.select_nodes([comp])
+            self.statusBar().showMessage(
+                f"Snap 2/2: {comp.name} · {child_anchor['name']} — now "
+                f"click the target face on ANOTHER object.", 0)
+
+            def second(desc2, target):
+                if desc2 is None:
+                    self.statusBar().showMessage("Snap cancelled.",
+                                                 3000)
+                    return
+                if target is comp:
+                    self.statusBar().showMessage(
+                        "That is the same object — click a face on a "
+                        "different one (right-click cancels).", 0)
+                    self.view3d.start_pick(second, groups=groups)
+                    return
+                parent_anchor = self._anchor_for_pick(target, desc2)
+                mates.attach(self.model, comp, target.name,
+                             child_anchor["name"],
+                             parent_anchor["name"])
+                self.statusBar().showMessage(
+                    f"Snapped {comp.name} ({child_anchor['name']}) "
+                    f"onto {target.name} ({parent_anchor['name']}). "
+                    f"Right-click it > Attach / snap to... for offset "
+                    f"and spin.", 8000)
+            self.view3d.start_pick(second, groups=groups)
+        self.view3d.start_pick(first, groups=groups)
 
     def _render_scope(self):
         """(root node, scad code callable) for the current view — the

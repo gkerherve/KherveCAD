@@ -88,6 +88,9 @@ class ObjectTree(QTreeWidget):
     #: "Add anchor" was chosen — the main window starts a face/edge
     #: pick in the 3D view (carries the component CadNode).
     pick_anchor = pyqtSignal(object)
+    #: start the two-click Snap tool (pick a face on each of two
+    #: Objects in the 3D view).
+    snap_objects = pyqtSignal()
 
     #: True in the Masters variant — roots at the masters store and hides
     #: the store from the ordinary Objects tab.
@@ -652,6 +655,9 @@ class ObjectTree(QTreeWidget):
                 lambda: self.open_component.emit(comps[0]))
             self._anchor_menu(menu, comps[0])
             from .mates import AttachDialog, detach, mate_of
+            menu.addAction(
+                icons.icon("mdi.magnet-on"),
+                "Snap by clicking faces\tJ", self.snap_objects.emit)
             menu.addAction(
                 icons.icon("mdi.magnet"), "Attach / snap to...",
                 lambda: AttachDialog(self.model, comps[0],

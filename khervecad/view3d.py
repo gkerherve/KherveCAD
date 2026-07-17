@@ -60,6 +60,7 @@ class View3D(QWidget):
         #: pick mode: a callable fed the picked face/edge description
         #: (see anchors.describe_pick); left click picks, right cancels
         self._pick_cb = None
+        self._pick_groups = None        # [(key, tris)] for group picks
         self._draft_mesh = None         # decimated mesh for interaction
         self._draft_colors = None
         self._draft_hi = None
@@ -158,34 +159,68 @@ class View3D(QWidget):
         self.update()
 
     # ------------------------------------------------------- anchor pick
-    def start_pick(self, callback):
+    def start_pick(self, callback, groups=None):
         """Enter pick mode: the next left click on the model picks a
         face or edge and *callback* receives its description (world
-        coordinates); right click cancels."""
+        coordinates); right click cancels.
+
+        Without *groups* the pick runs on the displayed mesh and the
+        callback gets ``desc``. With *groups* (``[(key, tris)]``) the
+        pick runs across those meshes instead and the callback gets
+        ``(desc, key)`` — how the two-click Snap tool knows which
+        Object a face belongs to."""
         self._pick_cb = callback
+        self._pick_groups = groups
         self.setCursor(Qt.CrossCursor)
 
     def cancel_pick(self):
-        self._pick_cb = None
-        self.unsetCursor()
+        if self._pick_cb is not None:
+            callback, self._pick_cb = self._pick_cb, None
+            groups, self._pick_groups = self._pick_groups, None
+            self.unsetCursor()
+            if groups is None:
+                callback(None)
+            else:
+                callback(None, None)
 
     def _run_pick(self, x, y):
         from . import anchors
         callback, self._pick_cb = self._pick_cb, None
+        groups, self._pick_groups = self._pick_groups, None
         self.unsetCursor()
         eye, right, up, forward = self._camera()
 
         def projector(v):
             return self._project(eye, right, up, forward, v)
 
-        index, point = anchors.pick(self.mesh, projector, x, y)
-        if index is None:
-            callback(None)
+        if groups is None:
+            index, point = anchors.pick(self.mesh, projector, x, y)
+            if index is None:
+                callback(None)
+                return
+            # snap tolerance: ~8 px as world units at the hit depth
+            depth = projector(point)[2]
+            tol = 8.0 * depth / self._focal()
+            callback(anchors.describe_pick(self.mesh, index, point,
+                                           tol))
             return
-        # snap tolerance: ~8 px converted to world units at the hit depth
+        tris = [t for _key, ts in groups for t in ts]
+        index, point = anchors.pick(tris, projector, x, y)
+        if index is None:
+            callback(None, None)
+            return
         depth = projector(point)[2]
         tol = 8.0 * depth / self._focal()
-        callback(anchors.describe_pick(self.mesh, index, point, tol))
+        start = 0
+        for key, ts in groups:
+            if index < start + len(ts):
+                # describe within the owner's own mesh so the face
+                # growth never bleeds into a coplanar neighbour part
+                callback(anchors.describe_pick(ts, index - start,
+                                               point, tol), key)
+                return
+            start += len(ts)
+        callback(None, None)                     # unreachable, defensive
 
     def _begin_fast(self):
         if self._draft_mesh is not None or self._draft_hi is not None:
@@ -684,9 +719,7 @@ class View3D(QWidget):
             if event.button() == Qt.LeftButton:
                 self._run_pick(event.pos().x(), event.pos().y())
             else:                            # right/middle click cancels
-                callback, self._pick_cb = self._pick_cb, None
-                self.unsetCursor()
-                callback(None)
+                self.cancel_pick()
             return
         self._last = event.pos()
         self._mode = "orbit" if event.button() == Qt.LeftButton else "pan"
