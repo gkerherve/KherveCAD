@@ -878,15 +878,23 @@ class DocumentModel(QObject):
     def subtree_scad(self, node: CadNode) -> str:
         """A standalone program for one Object/subtree: the document's
         top-level variables first (so expressions still resolve), then
-        *node* — what the isolated Object view renders. The node's own
-        Main-tab visibility is ignored (no ``*``): hiding an Object in
-        the assembly must not hide it from its own editing view."""
-        saved = node.visible
+        *node* in its **own local frame** — what the isolated Object
+        view renders. The node's Main-assembly placement (`x/y/z/rx/
+        ry/rz`, set by a mate) and its hidden-in-Main flag are ignored:
+        an Object is edited at its own origin, unaffected by where it
+        happens to sit in the assembly."""
+        placement = ("x", "y", "z", "rx", "ry", "rz")
+        saved = {k: node.params.get(k, 0.0) for k in placement
+                 if k in node.params}
+        saved_visible = node.visible
         node.visible = True
+        for k in saved:
+            node.params[k] = 0.0
         try:
             return self.to_scad_map(only=node)[0]
         finally:
-            node.visible = saved
+            node.params.update(saved)
+            node.visible = saved_visible
 
     def global_assigns(self):
         """Document variables that live outside every Object — the

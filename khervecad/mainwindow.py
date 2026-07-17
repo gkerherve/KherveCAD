@@ -687,7 +687,7 @@ class MainWindow(QMainWindow):
         rect = self.scene.isolated_bounds()
         if rect is not None:
             self.view2d.frame_rect(rect)
-        with self._force_visible(self.builder.isolated_component()):
+        with self._isolated_frame(self.builder.isolated_component()):
             tris = (mesh.selected_world_tris(
                         self.model.root, self._selected_ids,
                         fn=self.model.effective_fn())
@@ -762,9 +762,12 @@ class MainWindow(QMainWindow):
         if part is not None:
             definition = mates.definition_of(self.model, part) \
                 if part.type == "reference" else None
-            markers = anchors.world_markers(
-                part, env=anchors.doc_env(self.model),
-                fn=self.model.effective_fn(), definition=definition)
+            # in the Object tab the view shows the Object at its own
+            # origin, so compute markers in that same local frame
+            with self._isolated_frame(self.builder.isolated_component()):
+                markers = anchors.world_markers(
+                    part, env=anchors.doc_env(self.model),
+                    fn=self.model.effective_fn(), definition=definition)
         self.view3d.set_anchor_markers(markers)
 
     def _start_anchor_pick(self, comp):
@@ -967,29 +970,39 @@ class MainWindow(QMainWindow):
             return iso, (lambda: self.model.subtree_scad(iso))
         return self.model.root, self.model.to_scad
 
-    def _force_visible(self, node):
-        """Context manager: render *node* even when it is hidden in the
-        Main assembly — the isolated Object view is independent of the
-        Main-tab visibility."""
+    _PLACEMENT = ("x", "y", "z", "rx", "ry", "rz")
+
+    def _isolated_frame(self, node):
+        """Context manager: render *node* in its own LOCAL frame — its
+        Main-assembly placement (set by a mate) zeroed and its
+        hidden-in-Main flag forced visible. The Object tab edits a
+        part at its own origin, independent of where it sits in the
+        assembly. No-op when *node* is None (the Main tab)."""
         from contextlib import contextmanager
 
         @contextmanager
         def ctx():
-            flip = node is not None and not node.visible
-            if flip:
-                node.visible = True
+            if node is None:
+                yield
+                return
+            saved = {k: node.params.get(k, 0.0) for k in self._PLACEMENT
+                     if k in node.params}
+            saved_visible = node.visible
+            for k in saved:
+                node.params[k] = 0.0
+            node.visible = True
             try:
                 yield
             finally:
-                if flip:
-                    node.visible = False
+                node.params.update(saved)
+                node.visible = saved_visible
         return ctx()
 
     def _refresh_preview(self):
         fn = self.model.effective_fn()
         root, scad = self._render_scope()
         iso = root if root is not self.model.root else None
-        with self._force_visible(iso):
+        with self._isolated_frame(iso):
             colored = mesh.tessellate_colored(root, fn=fn)
             booleans = mesh.uses_booleans(root)
         tris = [t for t, _c in colored]

@@ -230,7 +230,12 @@ into a new module and import.
                        the main window); drawn shapes and Insert-menu
                        primitives land inside it. New Objects are
                        created hidden, so they stay definitions until an
-                       instance places them in Main.
+                       instance places them in Main. The Object is shown
+                       in its **own local frame** — `subtree_scad` and
+                       `MainWindow._isolated_frame` zero its Main
+                       placement (`x/y/z/rx/ry/rz`, set by an assembly
+                       mate) and force it visible, so a part mated high
+                       up in the assembly still edits at its own origin.
   - `anchors.py`     — **anchors & origins**: auto bounding-box anchors
                        per Object (origin, 6 face centres, 12 edge
                        midpoints, 8 corners) computed from the LOCAL

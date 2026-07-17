@@ -77,6 +77,46 @@ def test_visible_component_is_opaque_in_main(model, app):
     assert row.childCount() == 0
 
 
+def test_isolated_object_ignores_main_placement(model, app):
+    """An Object mated in Main carries a placement on its own params.
+    Editing it in the Object tab must show it at its LOCAL origin —
+    the assembly placement (and the hidden-in-Main flag) do not apply
+    to the definition's own editing view."""
+    comp = model.new_component("Spacer", visible=False)
+    tr = model.add_node("translate", dict(z=-10.0), parent=comp)
+    model.add_node("cube", dict(width=20.0, depth=20.0, height=10.0),
+                   parent=tr)
+    # a Main-tab mate left this placement on the component
+    comp.params.update(x=5.0, z=73.7, rx=180.0)
+
+    code = model.subtree_scad(comp)
+    call = [l for l in code.splitlines()
+            if "Spacer()" in l and "module" not in l][-1]
+    assert "translate" not in call        # no assembly placement
+    assert "rotate" not in call
+    assert not call.strip().startswith("*")   # not disabled
+    # the real placement is untouched (Main still needs it)
+    assert comp.params["z"] == 73.7
+    assert comp.params["rx"] == 180.0
+
+
+def test_isolated_frame_zeroes_placement_and_restores(model, app):
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    comp = w.model.new_component("Part", visible=False)
+    w.model.add_node("cube", parent=comp)
+    comp.params.update(x=3.0, z=50.0, ry=90.0)
+    with w._isolated_frame(comp):
+        assert comp.params["x"] == 0.0
+        assert comp.params["z"] == 0.0
+        assert comp.params["ry"] == 0.0
+        assert comp.visible is True
+    assert comp.params["x"] == 3.0
+    assert comp.params["z"] == 50.0
+    assert comp.params["ry"] == 90.0
+    assert comp.visible is False
+
+
 def test_subtree_scad_includes_globals(model):
     model.add_node("assign", dict(variable="size", value="20"))
     comp = model.new_component("Plate")
