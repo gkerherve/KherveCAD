@@ -211,10 +211,16 @@ into a new module and import.
                        Pull, Connect to GitHub); the status bar shows the
                        current file path, File > Show in File Explorer
                        reveals it.
-  - `objecttab.py`   — the **Object tab**: `ObjectTab` (dropdown of the
-                       document's Objects + "New") and `ComponentTree`
+  - `objecttab.py`   — the **Object tab**, where parts are **defined**
+                       and edited (the part/assembly split — anchors and
+                       mates are a Main-tab concern, not here):
+                       `ObjectTab` (dropdown of the document's Objects +
+                       "New", Rename, and **To Main** = insert an
+                       instance into the assembly) and `ComponentTree`
                        (the same tree widget rooted at the **active
-                       Object**). The active Object is tracked by node
+                       Object**; `SHOWS_INSERT_OBJECT = False`, since an
+                       instance belongs to the assembly, not inside a
+                       definition). The active Object is tracked by node
                        id with a name fallback so it survives renames
                        AND undo restores (which rebuild the tree with
                        fresh ids). While the Object tab is current,
@@ -222,7 +228,9 @@ into a new module and import.
                        and **both viewers isolate to that Object**
                        (scene `isolation_resolver`, `_render_scope()` in
                        the main window); drawn shapes and Insert-menu
-                       primitives land inside it.
+                       primitives land inside it. New Objects are
+                       created hidden, so they stay definitions until an
+                       instance places them in Main.
   - `anchors.py`     — **anchors & origins**: auto bounding-box anchors
                        per Object (origin, 6 face centres, 12 edge
                        midpoints, 8 corners) computed from the LOCAL
@@ -258,10 +266,11 @@ into a new module and import.
                        groups (`view3d.start_pick(..., groups=...)`),
                        `_anchor_for_pick` reuses a matching bbox/user
                        anchor (never litters duplicates) or persists a
-                       custom one, and the mate solves immediately. The
-                       Object tab's **Anchors button** offers the same
-                       anchor/origin/attach/snap tools without leaving
-                       the tab.
+                       custom one on the part's **definition** (shared
+                       by every instance), and the mate solves
+                       immediately. Anchors and mates are an **assembly
+                       (Main tab) concern only** — the Object tab just
+                       defines and edits parts.
   - `treepanel.py`   — `BuilderPanel`: Main tab (assembly) tree — **no visibility
                        checkboxes**: hidden objects read greyed + italic
                        and toggle with **Space** or right-click Hide/Show;
@@ -355,10 +364,26 @@ into a new module and import.
 - Booleans/grouping (`union` = group, `difference`, `intersection`,
   `hull`, `minkowski`; `round_edges()` = minkowski + small sphere,
   the post-extrusion rounding idiom).
-- `component` ("Object") — a group that compiles to its own OpenSCAD
-  module + placed call; the unit of the Main/Object tabs, anchors and
-  mates (see `objecttab.py`/`anchors.py`/`mates.py` above). Imported
-  meshes arrive wrapped in one.
+- `component` ("Object") — a **part definition** that compiles to its
+  own OpenSCAD `module`. This is the part/assembly split (SolidWorks
+  part-vs-assembly, Onshape part-studio-vs-assembly): an Object is
+  **defined** in the Object tab and, while it lives only there, is
+  kept **hidden** so it does not appear as geometry in the Main
+  assembly (`ObjectTree._top_nodes` filters hidden components).
+  The **Main tab is an assembly of instances**: right-click > Insert
+  Object (`DocumentModel.add_instance`) drops a `reference` whose
+  `ref` is the Object's name; that instance compiles to **one placed
+  module call** (`translate(...) Part();`, see
+  `CadNode._emit_reference`) and carries its own placement + `mate`.
+  The same Object can be instanced many times, each placed and mated
+  independently. Anchors/mates operate on the instance but resolve
+  the Object **definition** for the anchor geometry
+  (`mates.definition_of`), so a picked anchor stored on the
+  definition is shared by every instance. `mesh._set_refs` indexes
+  from the document root so an instance tessellated alone (Snap pick
+  meshes, 2D outlines) still resolves its definition. Imported meshes
+  arrive wrapped in a visible component (a one-off part, placed
+  directly). See `objecttab.py`/`anchors.py`/`mates.py`.
 - `scad_raw` — a leaf holding **verbatim OpenSCAD** (`code` param,
   multi-line `text` editor). Emitted straight into the program, so
   library calls the built-in tessellator can't model (BOSL2, ...) still

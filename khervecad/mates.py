@@ -102,25 +102,54 @@ def _euler_zyx(m):
 # ------------------------------------------------------------ the mate
 
 def mate_of(comp):
-    """The component's mate record, or None."""
+    """The part's mate record, or None."""
     mate = comp.params.get("mate")
     return dict(mate) if isinstance(mate, dict) and mate.get("parent") \
         else None
 
 
-def find_anchor(comp, name, env=None, fn=None):
-    for anchor in anchors.anchors_of(comp, env=env, fn=fn):
+def definition_of(model, part):
+    """The Object that defines *part*'s geometry (and carries its
+    anchors): the part itself for a component, the referenced Object
+    for an instance (Linked copy), None when dangling."""
+    if part is not None and part.type == "reference":
+        name = str(part.params.get("ref", "")).strip()
+        for node in model.root.walk():
+            if node.type == "component" and node.name == name:
+                return node
+        return None
+    return part
+
+
+def parts(model):
+    """The placed, mateable parts of the Main assembly: top-level
+    Objects plus instances of Objects. A hidden Object is a pure
+    definition, but it stays mateable for backward compatibility."""
+    out = list(model.components())
+    for child in model.root.children:
+        if child.type == "reference" \
+                and definition_of(model, child) is not None:
+            out.append(child)
+    return out
+
+
+def find_anchor(definition, name, env=None, fn=None):
+    for anchor in anchors.anchors_of(definition, env=env, fn=fn):
         if anchor["name"] == name:
             return anchor
     return None
 
 
-def solve_mate(comp, parent, mate, env=None, fn=None):
+def solve_mate(comp, parent, mate, env=None, fn=None,
+               comp_def=None, parent_def=None):
     """The child placement (x, y, z, rx, ry, rz) that satisfies *mate*,
-    or None when an anchor is missing."""
-    p_anchor = find_anchor(parent, mate.get("parent_anchor", ""),
-                           env, fn)
-    c_anchor = find_anchor(comp, mate.get("anchor", ""), env, fn)
+    or None when an anchor is missing. Anchors live on the parts'
+    *definitions* (``comp_def`` / ``parent_def``, defaulting to the
+    parts themselves); placements are the parts' own."""
+    p_anchor = find_anchor(parent_def or parent,
+                           mate.get("parent_anchor", ""), env, fn)
+    c_anchor = find_anchor(comp_def or comp,
+                           mate.get("anchor", ""), env, fn)
     if p_anchor is None or c_anchor is None:
         return None
     p_pos, p_dir = anchors.anchor_world(parent, p_anchor, env)
@@ -140,16 +169,18 @@ def solve_mate(comp, parent, mate, env=None, fn=None):
 
 
 def apply_mate(model, comp, env=None, fn=None) -> bool:
-    """Solve the component's mate and write the placement. Returns
-    True when any placement value actually changed."""
+    """Solve the part's mate and write the placement. Returns True
+    when any placement value actually changed."""
     mate = mate_of(comp)
     if mate is None:
         return False
-    parent = next((c for c in model.components()
+    parent = next((c for c in parts(model)
                    if c.name == mate["parent"] and c is not comp), None)
     if parent is None:
         return False
-    placement = solve_mate(comp, parent, mate, env, fn)
+    placement = solve_mate(comp, parent, mate, env, fn,
+                           definition_of(model, comp),
+                           definition_of(model, parent))
     if placement is None:
         return False
     changed = False
@@ -176,7 +207,7 @@ def refresh(model) -> bool:
     try:
         env = anchors.doc_env(model)
         fn = model.effective_fn()
-        comps = model.components()
+        comps = parts(model)
         moved = []
         solved = set()
 
@@ -239,13 +270,14 @@ class AttachDialog(QDialog):
             "Snap this object onto another: the two anchors touch,\n"
             "faces against each other."))
         self.parent_combo = QComboBox()
-        self.others = [c for c in model.components() if c is not comp]
+        self.others = [c for c in parts(model) if c is not comp]
         for other in self.others:
             self.parent_combo.addItem(other.name)
         form.addRow("Attach to:", self.parent_combo)
 
         self.child_anchor = QComboBox()
-        for anchor in anchors.anchors_of(comp, env=env, fn=fn):
+        for anchor in anchors.anchors_of(
+                definition_of(model, comp) or comp, env=env, fn=fn):
             self.child_anchor.addItem(
                 f"{anchor['name']} ({anchor['kind']})", anchor["name"])
         form.addRow("This object's anchor:", self.child_anchor)
@@ -298,7 +330,8 @@ class AttachDialog(QDialog):
         index = self.parent_combo.currentIndex()
         if 0 <= index < len(self.others):
             target = self.others[index]
-            for anchor in anchors.anchors_of(target, env=self._env,
+            definition = definition_of(self.model, target) or target
+            for anchor in anchors.anchors_of(definition, env=self._env,
                                              fn=self._fn):
                 self.parent_anchor.addItem(
                     f"{anchor['name']} ({anchor['kind']})",

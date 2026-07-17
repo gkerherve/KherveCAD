@@ -705,10 +705,17 @@ def _set_fn(fn):
 
 
 def _set_refs(node):
-    """Index nodes by name so Linked copies can resolve their master."""
+    """Index nodes by name so Linked copies can resolve their master.
+    The index is built from the *document* root (the top of the node's
+    parent chain), so tessellating one instance alone — the Snap
+    tool's per-part pick meshes, a part outline in the 2D assembly —
+    still resolves the Object definition it references."""
     global _REF_INDEX
     _REF_INDEX = {}
-    for n in node.walk():
+    top = node
+    while top.parent is not None:
+        top = top.parent
+    for n in top.walk():
         _REF_INDEX.setdefault(n.name, n)
     _REF_STACK.clear()
 
@@ -812,14 +819,31 @@ def _tess(node, env, color, sel, selected):
         # "variables" only holds assignments, so it adds no geometry.
         return _children_mesh(node, env, color, sel, selected)
     if t == "reference":
-        # a Linked copy renders its master's geometry, moved/rotated
+        # a Linked copy renders its master's geometry, moved/rotated.
+        # When the master is an **Object**, this is an assembly
+        # instance: it renders the Object's LOCAL geometry (the module
+        # body — placement zeroed, definition visibility ignored, as a
+        # hidden Object is a pure definition) under its own placement.
         target = (_REF_INDEX or {}).get(
             str(node.params.get("ref", "")).strip())
         if target is None or node.id in _REF_STACK:
             return []
         _REF_STACK.add(node.id)
         try:
-            out = _tess(target, env, color, sel, selected)
+            if target.type == "component":
+                saved = {k: target.params.get(k, 0.0)
+                         for k in ("x", "y", "z", "rx", "ry", "rz")}
+                saved_visible = target.visible
+                try:
+                    for k in saved:
+                        target.params[k] = 0.0
+                    target.visible = True
+                    out = _tess(target, env, color, sel, selected)
+                finally:
+                    target.params.update(saved)
+                    target.visible = saved_visible
+            else:
+                out = _tess(target, env, color, sel, selected)
         finally:
             _REF_STACK.discard(node.id)
         rx = rv(node.params.get("rx", 0), env, 0.0)

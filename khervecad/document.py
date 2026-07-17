@@ -17,7 +17,9 @@ import json
 
 from .model import NODE_TYPES, CadNode, DocumentModel
 
-FORMAT_VERSION = 4          # 4: "component" (Object) node type
+FORMAT_VERSION = 5          # 4: "component" (Object) node type
+                            # 5: instances (reference->component) may
+                            #    carry a "mate" record
 
 
 def node_to_dict(node: CadNode) -> dict:

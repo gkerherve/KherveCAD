@@ -74,6 +74,9 @@ class Parser:
         #: name -> (params, body_start_i, body_end_i) for user modules,
         #: expanded (inlined) at each call site.
         self.modules = {}
+        #: zero-param module names already materialised as a component —
+        #: any further call becomes an *instance* (reference) of it.
+        self.instanced = set()
         #: concrete values of top-level/bound assignments, so later
         #: expressions (polygon points, vector variables, list
         #: comprehensions) can be resolved to real numbers at import.
@@ -538,6 +541,13 @@ class Parser:
         params, body_start, body_end = self.modules[name]
         positional, named = self._arguments()
         if not params and not positional and not named:
+            if name in self.instanced:
+                # the first call materialised the Object; every further
+                # call is one placed instance of it
+                self.accept(";")
+                return CadNode("reference", f"{name} instance",
+                               dict(ref=name))
+            self.instanced.add(name)
             inst = CadNode("component", name)
         else:
             inst = CadNode("union", name)
@@ -905,11 +915,12 @@ def _fold_container(node: CadNode):
             node.remove(child)
             child.visible = node.visible and child.visible
             return child
-    if len(node.children) == 1 and node.children[0].type == "component":
-        # a component's call is emitted as `color(...) translate(...)
-        # rotate(...) Name();` — fold those wrappers back into the
-        # component's own placement/colour params (innermost first, as
-        # the parse recursion unwinds).
+    if len(node.children) == 1 and \
+            node.children[0].type in ("component", "reference"):
+        # a component's / instance's call is emitted as `color(...)
+        # translate(...) rotate(...) Name();` — fold those wrappers
+        # back into its own placement/colour params (innermost first,
+        # as the parse recursion unwinds).
         child = node.children[0]
         p = child.params
         folded = False
@@ -923,7 +934,7 @@ def _fold_container(node: CadNode):
             for k, src in (("rx", "x"), ("ry", "y"), ("rz", "z")):
                 p[k] = node.params.get(src, 0.0)
             folded = True
-        elif node.type == "color" and \
+        elif node.type == "color" and child.type == "component" and \
                 not str(p.get("color", "")).strip():
             p["color"] = node.params.get("color", "")
             p["alpha"] = node.params.get("alpha", 1.0)

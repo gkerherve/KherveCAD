@@ -566,8 +566,11 @@ class CadNode:
             spans[self.id] = (start, len(lines))
 
     def _emit_reference(self, lines, indent: int, spans):
-        """A Linked copy inlines its master's geometry (moved/rotated by
-        its own transform), so the code fully describes the part."""
+        """A Linked copy of an **Object** is an assembly *instance*: it
+        emits one placed call of the Object's module, so the program
+        reads `translate(...) Part();` — one definition, many placed
+        calls. A copy of anything else inlines its master's geometry
+        (moved/rotated by its own transform) as before."""
         pad = "    " * indent
         star = "" if self.visible else "*"
         prefix = _group_prefix(self.params)             # move/rotate
@@ -575,6 +578,11 @@ class CadNode:
             str(self.params.get("ref", "")).strip())
         if target is None or self.id in _REF_STACK:
             lines.append((pad + star + prefix + "union() { }", self))
+            return
+        if target.type == "component":
+            name = (_MODULE_NAMES or {}).get(target.id) \
+                or module_name(target.name)
+            lines.append((pad + star + prefix + f"{name}();", self))
             return
         lines.append((pad + star + prefix + "union() {", self))
         _REF_STACK.add(self.id)
@@ -1203,6 +1211,30 @@ class DocumentModel(QObject):
         self.root.add(node)
         self.structure_changed.emit()
         return node
+
+    def add_instance(self, comp: CadNode) -> CadNode:
+        """Place an *instance* of an Object into the Main assembly: a
+        Linked copy that compiles to one placed call of the Object's
+        module. The same Object can be instanced many times, each
+        placed and mated on its own."""
+        if comp.name and \
+                [n.name for n in self.root.walk()].count(comp.name) > 1:
+            comp.name = self.unique_name(comp.type)
+        taken = {n.name for n in self.root.walk()}
+        for i in itertools.count(1):
+            name = f"{comp.name} {i}"
+            if name not in taken:
+                break
+        ref = CadNode("reference", name, dict(ref=comp.name))
+        self.root.add(ref)
+        self.structure_changed.emit()
+        return ref
+
+    def instances_of(self, comp: CadNode):
+        """Top-level instances (Linked copies) of *comp*."""
+        return [c for c in self.root.children
+                if c.type == "reference"
+                and c.params.get("ref") == comp.name]
 
     def make_component(self, node: CadNode) -> CadNode:
         """Promote *node* into an Object: a Group converts in place

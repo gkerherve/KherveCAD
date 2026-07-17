@@ -158,8 +158,12 @@ class ObjectTree(QTreeWidget):
 
     def _top_nodes(self):
         """The nodes shown at the top level of this tree — the document
-        root's children with the Masters store filtered out."""
-        return [c for c in self.model.root.children if c.type != "masters"]
+        root's children with the Masters store and the Object
+        *definitions* (hidden components — they live in the Object tab
+        and appear here only through their instances) filtered out."""
+        return [c for c in self.model.root.children
+                if c.type != "masters"
+                and not (c.type == "component" and not c.visible)]
 
     def _drop_container(self):
         """Container a top-level drop lands in."""
@@ -573,6 +577,10 @@ class ObjectTree(QTreeWidget):
             else:
                 self.model.move_node(node, fallback)
 
+    #: the Main tree offers "Insert Object" (assembly instances);
+    #: the Object tab's tree and the Masters tree do not.
+    SHOWS_INSERT_OBJECT = True
+
     # --------------------------------------------------- context menu
     def _context_menu(self, pos):
         nodes = self.selected_nodes()          # geometry (hide/colour)
@@ -583,6 +591,7 @@ class ObjectTree(QTreeWidget):
         elif nodes:
             self._objects_menu(menu, nodes, roots)
         else:
+            self._insert_object_menu(menu)
             menu.addAction(icons.icon("mdi.content-paste"),
                            "Paste\tCtrl+V", self.paste_clipboard)
             if self.IS_MASTERS:
@@ -591,6 +600,70 @@ class ObjectTree(QTreeWidget):
                                    [self.model.new_master()]))
         if menu.actions():
             menu.exec_(self.viewport().mapToGlobal(pos))
+
+    def _insert_object_menu(self, menu):
+        """"Insert Object" — place an instance of a defined Object into
+        the Main assembly (the part/assembly model: definitions live in
+        the Object tab, the assembly calls the ones it wants)."""
+        if self.IS_MASTERS or not self.SHOWS_INSERT_OBJECT:
+            return
+        comps = self.model.components()
+        if not comps:
+            return
+        sub = menu.addMenu(icons.icon("mdi.package-variant-plus"),
+                           "Insert Object")
+        for comp in comps:
+            sub.addAction(
+                icons.icon("mdi.package-variant-closed"), comp.name,
+                lambda _=False, c=comp:
+                    self.select_nodes([self.model.add_instance(c)]))
+
+    def _part_menu(self, menu, part):
+        """Assembly-part actions for one Object or instance: edit its
+        definition in the Object tab, anchors, and mates."""
+        from .mates import AttachDialog, definition_of, detach, mate_of
+        definition = definition_of(self.model, part) or part
+        menu.addAction(
+            icons.icon("mdi.pencil-box-outline"), "Edit in Object tab",
+            lambda: self.open_component.emit(definition))
+        if part.type == "component":
+            self._anchor_menu(menu, part)
+        else:
+            self._instance_anchor_menu(menu, part, definition)
+        menu.addAction(
+            icons.icon("mdi.magnet-on"),
+            "Snap by clicking faces\tJ", self.snap_objects.emit)
+        menu.addAction(
+            icons.icon("mdi.magnet"), "Attach / snap to...",
+            lambda: AttachDialog(self.model, part, self).exec_())
+        mate = mate_of(part)
+        if mate is not None:
+            menu.addAction(
+                icons.icon("mdi.link-off"),
+                f"Detach from {mate['parent']}",
+                lambda: detach(self.model, part))
+        menu.addSeparator()
+
+    def _instance_anchor_menu(self, menu, part, definition):
+        """Anchors reachable from an instance: picked anchors live on
+        the *definition*, so every instance of the Object shares
+        them."""
+        from . import anchors as anc
+        sub = menu.addMenu(icons.icon("mdi.anchor"), "Anchors")
+        sub.addAction(
+            icons.icon("mdi.target"),
+            "Add anchor (pick face/edge in 3D)...",
+            lambda: self.pick_anchor.emit(part))
+        users = anc.user_anchors(definition)
+        if users:
+            remove_menu = sub.addMenu(icons.icon("mdi.delete-outline"),
+                                      "Remove anchor")
+            for anchor in users:
+                remove_menu.addAction(
+                    anchor["name"],
+                    lambda _=False, n=anchor["name"]:
+                        anc.remove_user_anchor(self.model, definition,
+                                               n))
 
     def _anchor_menu(self, menu, comp):
         """The Anchors submenu of one Object: add a picked anchor,
@@ -647,28 +720,13 @@ class ObjectTree(QTreeWidget):
                        lambda: [self.model.remove_node(n) for n in roots])
 
     def _objects_menu(self, menu, nodes, roots):
-        comps = [n for n in roots if n.type == "component"]
-        if len(comps) == 1:
-            menu.addAction(
-                icons.icon("mdi.pencil-box-outline"),
-                "Edit in Object tab",
-                lambda: self.open_component.emit(comps[0]))
-            self._anchor_menu(menu, comps[0])
-            from .mates import AttachDialog, detach, mate_of
-            menu.addAction(
-                icons.icon("mdi.magnet-on"),
-                "Snap by clicking faces\tJ", self.snap_objects.emit)
-            menu.addAction(
-                icons.icon("mdi.magnet"), "Attach / snap to...",
-                lambda: AttachDialog(self.model, comps[0],
-                                     self).exec_())
-            mate = mate_of(comps[0])
-            if mate is not None:
-                menu.addAction(
-                    icons.icon("mdi.magnet-on"),
-                    f"Detach from {mate['parent']}",
-                    lambda: detach(self.model, comps[0]))
-            menu.addSeparator()
+        from .mates import definition_of
+        parts_sel = [n for n in roots
+                     if n.type == "component"
+                     or (n.type == "reference"
+                         and definition_of(self.model, n) is not None)]
+        if len(parts_sel) == 1:
+            self._part_menu(menu, parts_sel[0])
         hidden = [n for n in nodes if not n.visible]
         menu.addAction(
             icons.icon("mdi.eye-outline" if hidden
@@ -731,6 +789,7 @@ class ObjectTree(QTreeWidget):
                 "Make Master (moves to Masters tab)",
                 lambda: [self.model.make_master(n)
                          for n in promotable])
+        self._insert_object_menu(menu)
         menu.addSeparator()
         menu.addAction(icons.icon("mdi.delete-outline"), "Delete",
                        lambda: [self.model.remove_node(n)

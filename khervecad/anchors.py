@@ -205,11 +205,14 @@ def anchor_world(comp, anchor, env=None):
             dir_to_world(comp, anchor["dir"], env))
 
 
-def world_markers(comp, env=None, fn=None):
+def world_markers(comp, env=None, fn=None, definition=None):
     """Every anchor of *comp* as a world-space marker dict — what the
-    3D view draws."""
+    3D view draws. For an assembly instance, pass the Object it
+    references as *definition*: the anchors come from the definition's
+    local frame, the placement from the instance."""
     markers = []
-    for anchor in anchors_of(comp, env=env, fn=fn):
+    for anchor in anchors_of(definition if definition is not None
+                             else comp, env=env, fn=fn):
         pos, direction = anchor_world(comp, anchor, env)
         markers.append(dict(name=anchor["name"], kind=anchor["kind"],
                             pos=pos, dir=direction))

@@ -735,31 +735,70 @@ class MainWindow(QMainWindow):
 
     # ---------------------------------------------------------- anchors
     def _anchor_component(self):
-        """The Object whose anchors show in the 3D view: the isolated
-        one, else a single selected component."""
+        """The part whose anchors show in the 3D view: the isolated
+        Object, else a single selected Object or instance."""
+        from . import mates
         comp = self.builder.isolated_component()
         if comp is not None:
             return comp
         selected = [self.model.find(nid)
                     for nid in getattr(self, "_selected_ids", set())]
-        comps = [n for n in selected
-                 if n is not None and n.type == "component"]
-        return comps[0] if len(comps) == 1 else None
+        chosen = [n for n in selected if n is not None
+                  and (n.type == "component"
+                       or (n.type == "reference"
+                           and mates.definition_of(self.model, n)
+                           is not None))]
+        return chosen[0] if len(chosen) == 1 else None
 
     def _refresh_anchor_markers(self):
-        from . import anchors
-        comp = self._anchor_component()
+        from . import anchors, mates
+        part = self._anchor_component()
         markers = []
-        if comp is not None:
+        if part is not None:
+            definition = mates.definition_of(self.model, part) \
+                if part.type == "reference" else None
             markers = anchors.world_markers(
-                comp, env=anchors.doc_env(self.model),
-                fn=self.model.effective_fn())
+                part, env=anchors.doc_env(self.model),
+                fn=self.model.effective_fn(), definition=definition)
         self.view3d.set_anchor_markers(markers)
 
     def _start_anchor_pick(self, comp):
-        """Context menu "Add anchor": isolate the Object, then let the
-        user click a face or edge in the 3D view."""
-        from . import anchors
+        """Context menu "Add anchor": let the user click a face or
+        edge in the 3D view. On an *instance* the pick runs in the
+        Main assembly against that instance's own mesh and the anchor
+        is stored on its definition; on an Object it isolates first."""
+        from . import anchors, mates
+        if comp.type == "reference":
+            definition = mates.definition_of(self.model, comp)
+            if definition is None:
+                return
+            env = anchors.doc_env(self.model)
+            tris = mesh.tessellate(comp, env=env,
+                                   fn=self.model.effective_fn())
+            if not tris:
+                return
+            self.statusBar().showMessage(
+                f"Click a face or edge of {comp.name} in the 3D view "
+                f"to add an anchor (stored on {definition.name}, "
+                f"shared by all its instances) — right-click to "
+                f"cancel.", 10000)
+
+            def done_instance(desc, _key=None):
+                if desc is None:
+                    self.statusBar().showMessage(
+                        "Anchor pick cancelled.", 3000)
+                    return
+                pos = anchors.to_local(comp, desc["pos"], env)
+                direction = anchors.dir_to_local(comp, desc["dir"], env)
+                anchor = anchors.add_user_anchor(
+                    self.model, definition, pos, direction,
+                    name=desc.get("name", "Anchor"), kind="custom")
+                self.statusBar().showMessage(
+                    f"Anchor '{anchor['name']}' added to "
+                    f"{definition.name} ({desc['kind']}).", 5000)
+                self._refresh_anchor_markers()
+            self.view3d.start_pick(done_instance, groups=[(comp, tris)])
+            return
         self.builder.open_component(comp)
         self.statusBar().showMessage(
             "Click a face or edge of the object in the 3D view to add "
@@ -784,37 +823,41 @@ class MainWindow(QMainWindow):
 
     # ------------------------------------------------- two-click snap
     def _snap_groups(self):
-        """[(component, placed world triangles)] of every visible
-        Object — what the two-click Snap tool picks against."""
-        from . import anchors
+        """[(part, placed world triangles)] of every visible part of
+        the assembly — Objects and instances alike — what the
+        two-click Snap tool picks against."""
+        from . import anchors, mates
         env = anchors.doc_env(self.model)
         fn = self.model.effective_fn()
         groups = []
-        for comp in self.model.components():
-            if not comp.visible:
+        for part in mates.parts(self.model):
+            if not part.visible:
                 continue
-            tris = mesh.tessellate(comp, env=env, fn=fn)
+            tris = mesh.tessellate(part, env=env, fn=fn)
             if tris:
-                groups.append((comp, tris))
+                groups.append((part, tris))
         return groups
 
-    def _anchor_for_pick(self, comp, desc):
-        """The anchor a world-space pick means on *comp*: an existing
+    def _anchor_for_pick(self, part, desc):
+        """The anchor a world-space pick means on *part*: an existing
         anchor at that spot (a bbox face like "Top", or an already
         picked one) when there is an exact match, else a new custom
         anchor — so snapping boxy parts reads as Top/Bottom mates and
-        never litters duplicates."""
-        from . import anchors
+        never litters duplicates. Anchors live on the part's
+        *definition*, so every instance of an Object shares them."""
+        from . import anchors, mates
         env = anchors.doc_env(self.model)
-        pos = anchors.to_local(comp, desc["pos"], env)
-        direction = anchors.dir_to_local(comp, desc["dir"], env)
-        for anchor in anchors.anchors_of(comp, env=env,
+        definition = mates.definition_of(self.model, part) or part
+        pos = anchors.to_local(part, desc["pos"], env)
+        direction = anchors.dir_to_local(part, desc["dir"], env)
+        for anchor in anchors.anchors_of(definition, env=env,
                                          fn=self.model.effective_fn()):
             d2 = sum((anchor["pos"][i] - pos[i]) ** 2 for i in range(3))
             dot = sum(anchor["dir"][i] * direction[i] for i in range(3))
             if d2 < 0.01 and dot > 0.999:        # within 0.1 mm, aligned
                 return anchor
-        return anchors.add_user_anchor(self.model, comp, pos, direction,
+        return anchors.add_user_anchor(self.model, definition, pos,
+                                       direction,
                                        name=desc.get("name", "Anchor"))
 
     def _start_snap(self):
