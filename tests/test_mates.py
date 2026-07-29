@@ -156,3 +156,38 @@ def test_attach_to_user_anchor(model):
     pos, direction = _anchor_world(bolt, "Bottom")
     assert pos == pytest.approx([20.0, 10.0, 15.0])
     assert direction == pytest.approx([-1.0, 0.0, 0.0], abs=1e-6)
+
+
+def test_attach_dialog_previews_live_and_cancel_restores(model):
+    """Changing a value in the Attach dialog moves the part at once;
+    Cancel puts the original mate and placement back."""
+    base = _cube(model, "Base")
+    lid = _cube(model, "Lid", size=10.0, x=50.0)
+    dlg = mates.AttachDialog(model, lid)
+    dlg.parent_combo.setCurrentIndex(
+        dlg.parent_combo.findText("Base"))
+    dlg.child_anchor.setCurrentIndex(
+        dlg.child_anchor.findData("Bottom"))
+    dlg.parent_anchor.setCurrentIndex(
+        dlg.parent_anchor.findData("Top"))
+    # the preview already applied the mate — no OK needed to see it
+    assert lid.params.get("mate", {}).get("parent") == "Base"
+    assert lid.params["z"] == pytest.approx(20.0)
+    dlg.reject()
+    assert lid.params.get("mate") is None        # original: no mate
+    assert lid.params["x"] == pytest.approx(50.0)
+    assert lid.params.get("z", 0.0) == pytest.approx(0.0)
+
+
+def test_attach_dialog_ok_keeps_the_previewed_mate(model):
+    _cube(model, "Base")
+    lid = _cube(model, "Lid", size=10.0)
+    dlg = mates.AttachDialog(model, lid)
+    dlg.child_anchor.setCurrentIndex(dlg.child_anchor.findData("Bottom"))
+    dlg.parent_anchor.setCurrentIndex(dlg.parent_anchor.findData("Top"))
+    dlg._apply()
+    assert lid.params["mate"] == dict(parent="Base",
+                                      parent_anchor="Top",
+                                      anchor="Bottom",
+                                      offset=0.0, spin=0.0)
+    assert lid.params["z"] == pytest.approx(20.0)

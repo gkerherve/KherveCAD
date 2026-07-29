@@ -281,7 +281,9 @@ def detach(model, comp):
 class AttachDialog(QDialog):
     """Attach one Object to another: pick the two anchors, an offset
     along the mate axis and a spin about it. Editing an existing mate
-    pre-fills; Detach removes it."""
+    pre-fills; Detach removes it. Every change **previews live** in
+    the viewers — OK keeps it, Cancel restores the original mate and
+    placement."""
 
     def __init__(self, model, comp, parent=None):
         super().__init__(parent)
@@ -292,10 +294,16 @@ class AttachDialog(QDialog):
         fn = model.effective_fn()
         mate = mate_of(comp) or {}
 
+        # what to put back if the user cancels the live preview
+        self._orig_mate = dict(mate) if mate else None
+        self._orig_place = {k: comp.params.get(k)
+                            for k in ("x", "y", "z", "rx", "ry", "rz")}
+
         form = QFormLayout(self)
         form.addRow(QLabel(
             "Snap this object onto another: the two anchors touch,\n"
-            "faces against each other."))
+            "faces against each other. Changes preview live —\n"
+            "Cancel puts everything back."))
         self.parent_combo = QComboBox()
         # candidates are the part's own siblings — assembly Objects for
         # an Object, sibling groups for a group being built
@@ -353,6 +361,43 @@ class AttachDialog(QDialog):
                 self.parent_anchor.setCurrentIndex(i)
             self.offset.setValue(float(mate.get("offset", 0.0)))
             self.spin.setValue(float(mate.get("spin", 0.0)))
+        # live preview — connected after the pre-fill so opening the
+        # dialog doesn't itself move anything
+        self.parent_combo.currentIndexChanged.connect(self._preview)
+        self.child_anchor.currentIndexChanged.connect(self._preview)
+        self.parent_anchor.currentIndexChanged.connect(self._preview)
+        self.offset.valueChanged.connect(self._preview)
+        self.spin.valueChanged.connect(self._preview)
+
+    def _preview(self, *_args):
+        """Apply the current choices immediately so the viewers show
+        the mate as it is being edited."""
+        index = self.parent_combo.currentIndex()
+        child = self.child_anchor.currentData()
+        target = self.parent_anchor.currentData()
+        if not (0 <= index < len(self.others)) or not child \
+                or not target:
+            return
+        attach(self.model, self.comp, self.others[index].name,
+               child, target, self.offset.value(), self.spin.value())
+
+    def _restore(self):
+        """Put the original mate and placement back (Cancel)."""
+        if self._orig_mate is None:
+            self.comp.params.pop("mate", None)
+        else:
+            self.comp.params["mate"] = dict(self._orig_mate)
+        for key, value in self._orig_place.items():
+            if value is None:
+                self.comp.params.pop(key, None)
+            else:
+                self.comp.params[key] = value
+        refresh(self.model)
+        self.model.node_changed.emit(self.comp)
+
+    def reject(self):
+        self._restore()
+        super().reject()
 
     def _fill_parent_anchors(self):
         self.parent_anchor.clear()
