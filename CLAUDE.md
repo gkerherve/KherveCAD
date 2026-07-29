@@ -123,7 +123,10 @@ into a new module and import.
                        `bellows` whose length is the Z-travel size),
                        and **rotary vane / dry scroll backing pumps**.
                        Parts are ordinary node subtrees; bolt circles
-                       are for-loops. The
+                       are for-loops. The dialog **inserts each part as
+                       a single visible Object** (`enclose_as_part`), so
+                       it lists as one opaque row in Main and its
+                       construction is edited in the Object tab. The
                        dialog groups parts by **category**; other
                        modules register parts by adding a `build`
                        callable to `PARTS`, which `build_part`
@@ -275,7 +278,14 @@ into a new module and import.
                        **two-click Snap tool** (toolbar magnet, J, or
                        "Snap by clicking faces") is the Fusion-joint
                        front end: click a face/edge on the Object to
-                       move, then the target face on another —
+                       move, then the target face on another — the
+                       face/edge under the cursor **pre-highlights**
+                       with its owner's name while aiming, the first
+                       click stays pinned in orange, each step shows
+                       as a banner across the 3D view, and Esc
+                       cancels. `AttachDialog` **previews live**
+                       (every change applies at once; Cancel restores
+                       the original mate and placement) —
                        `MainWindow._start_snap` picks per-Object mesh
                        groups (`view3d.start_pick(..., groups=...)`),
                        `_anchor_for_pick` reuses a matching bbox/user
@@ -353,7 +363,15 @@ into a new module and import.
                        Draws the selected Object's **anchor markers**
                        (colour-coded per kind) and has a **pick mode**
                        (`start_pick`) where a left click hits a face or
-                       edge via `anchors.pick`/`describe_pick`.
+                       edge via `anchors.pick`/`describe_pick`
+                       (`describe_pick` returns the grown face's
+                       triangles / the edge run, which pick mode uses
+                       to pre-highlight the target under the cursor —
+                       throttled, with a facet-only fallback past
+                       `HOVER_DESCRIBE_LIMIT`); an instruction banner,
+                       a pinned first-pick marker
+                       (`set_pick_pinned`) and Esc-to-cancel complete
+                       the pick-mode feedback.
   - `mesh.py`        — pure-Python fallback tessellator (primitives,
                        linear/rotate extrude with twist/scale/angle,
                        transforms, ear-clipping triangulation). Objects
@@ -403,9 +421,16 @@ into a new module and import.
   (`mates.definition_of`), so a picked anchor stored on the
   definition is shared by every instance. `mesh._set_refs` indexes
   from the document root so an instance tessellated alone (Snap pick
-  meshes, 2D outlines) still resolves its definition. Imported meshes
-  arrive wrapped in a visible component (a one-off part, placed
-  directly). See `objecttab.py`/`anchors.py`/`mates.py`.
+  meshes, 2D outlines) still resolves its definition. **Everything
+  added to Main arrives as one part row**: imported meshes and
+  library parts wrap into a visible component
+  (`DocumentModel.enclose_as_part`); a primitive or 2D shape created
+  while Main is current becomes a new visible Object and the Object
+  tab opens on it (`MainWindow._geometry_created_in_main`); a `.scad`
+  import's loose top-level geometry is gathered into ONE part named
+  after the file (`enclose_import_as_part` — module-defined Objects
+  and instances keep their structure; the tested scadparse round-trip
+  API is untouched). See `objecttab.py`/`anchors.py`/`mates.py`.
 - `scad_raw` — a leaf holding **verbatim OpenSCAD** (`code` param,
   multi-line `text` editor). Emitted straight into the program, so
   library calls the built-in tessellator can't model (BOSL2, ...) still
