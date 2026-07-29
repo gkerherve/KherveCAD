@@ -17,7 +17,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 import math
 
-from PyQt5.QtCore import QPointF, QSettings, Qt, QTimer
+from PyQt5.QtCore import QPointF, QRectF, QSettings, Qt, QTimer
 from PyQt5.QtGui import (QColor, QImage, QPainter, QPen, QPolygonF)
 from PyQt5.QtWidgets import QWidget
 
@@ -67,6 +67,15 @@ class View3D(QWidget):
         #: (see anchors.describe_pick); left click picks, right cancels
         self._pick_cb = None
         self._pick_groups = None        # [(key, tris)] for group picks
+        self._pick_banner = ""          # instruction drawn at the top
+        self._pick_hover = None         # (desc, label) under the cursor
+        self._pick_pinned = None        # (desc, label) first snap click
+        self._hover_pos = None
+        # hover pre-highlight is throttled: at most one pick per tick
+        self._hover_timer = QTimer(self)
+        self._hover_timer.setSingleShot(True)
+        self._hover_timer.setInterval(40)
+        self._hover_timer.timeout.connect(self._hover_pick)
         self._draft_mesh = None         # decimated mesh for interaction
         self._draft_colors = None
         self._draft_hi = None
@@ -165,10 +174,13 @@ class View3D(QWidget):
         self.update()
 
     # ------------------------------------------------------- anchor pick
-    def start_pick(self, callback, groups=None):
+    def start_pick(self, callback, groups=None, banner=""):
         """Enter pick mode: the next left click on the model picks a
         face or edge and *callback* receives its description (world
-        coordinates); right click cancels.
+        coordinates); right click or Esc cancels. While armed, the
+        face/edge under the cursor is pre-highlighted with its owner's
+        name, and *banner* is drawn as an instruction across the top
+        of the view.
 
         Without *groups* the pick runs on the displayed mesh and the
         callback gets ``desc``. With *groups* (``[(key, tris)]``) the
@@ -177,56 +189,116 @@ class View3D(QWidget):
         Object a face belongs to."""
         self._pick_cb = callback
         self._pick_groups = groups
+        self._pick_banner = banner
+        self._pick_hover = None
         self.setCursor(Qt.CrossCursor)
+        self.setMouseTracking(True)          # hover pre-highlight
+        self.setFocus(Qt.OtherFocusReason)   # so Esc reaches us
+        self.update()
+
+    def _end_pick_mode(self):
+        self._pick_groups = None
+        self._pick_banner = ""
+        self._pick_hover = None
+        self._hover_pos = None
+        self._hover_timer.stop()
+        self.setMouseTracking(False)
+        self.unsetCursor()
+        self.update()
 
     def cancel_pick(self):
         if self._pick_cb is not None:
             callback, self._pick_cb = self._pick_cb, None
-            groups, self._pick_groups = self._pick_groups, None
-            self.unsetCursor()
+            groups = self._pick_groups
+            self._end_pick_mode()
+            self.set_pick_pinned(None)
             if groups is None:
                 callback(None)
             else:
                 callback(None, None)
 
-    def _run_pick(self, x, y):
+    def set_pick_pinned(self, desc, label=""):
+        """Keep *desc* (the first click of a two-click snap) visibly
+        highlighted while the second click is aimed; None clears it."""
+        self._pick_pinned = (desc, label) if desc is not None else None
+        self.update()
+
+    #: hover pre-highlight skips the face growth on meshes bigger than
+    #: this (describe_pick builds an edge map over the whole mesh) and
+    #: shows just the hit facet, keeping the feedback fluid.
+    HOVER_DESCRIBE_LIMIT = 24000
+
+    def _pick_at(self, x, y, quick=False):
+        """``(desc, key)`` for the face/edge under screen (x, y), or
+        ``(None, None)`` — key is the owning group key (two-click
+        Snap) or None when picking the displayed mesh."""
         from . import anchors
-        callback, self._pick_cb = self._pick_cb, None
-        groups, self._pick_groups = self._pick_groups, None
-        self.unsetCursor()
         eye, right, up, forward = self._camera()
 
         def projector(v):
             return self._project(eye, right, up, forward, v)
 
+        groups = self._pick_groups
         if groups is None:
+            owner, key, start = self.mesh, None, 0
             index, point = anchors.pick(self.mesh, projector, x, y)
-            if index is None:
-                callback(None)
-                return
-            # snap tolerance: ~8 px as world units at the hit depth
-            depth = projector(point)[2]
-            tol = 8.0 * depth / self._focal()
-            callback(anchors.describe_pick(self.mesh, index, point,
-                                           tol))
-            return
-        tris = [t for _key, ts in groups for t in ts]
-        index, point = anchors.pick(tris, projector, x, y)
-        if index is None:
-            callback(None, None)
-            return
-        depth = projector(point)[2]
-        tol = 8.0 * depth / self._focal()
-        start = 0
-        for key, ts in groups:
-            if index < start + len(ts):
+        else:
+            tris = [t for _key, ts in groups for t in ts]
+            index, point = anchors.pick(tris, projector, x, y)
+            owner, key, start = None, None, 0
+            if index is not None:
                 # describe within the owner's own mesh so the face
                 # growth never bleeds into a coplanar neighbour part
-                callback(anchors.describe_pick(ts, index - start,
-                                               point, tol), key)
-                return
-            start += len(ts)
-        callback(None, None)                     # unreachable, defensive
+                for k, ts in groups:
+                    if index < start + len(ts):
+                        owner, key = ts, k
+                        break
+                    start += len(ts)
+        if index is None or owner is None:
+            return None, None
+        # snap tolerance: ~8 px as world units at the hit depth
+        depth = projector(point)[2]
+        tol = 8.0 * depth / self._focal()
+        if quick and len(owner) > self.HOVER_DESCRIBE_LIMIT:
+            tri = owner[index - start]
+            return dict(kind="face", pos=list(point),
+                        dir=anchors._tri_normal(tri), name="Face",
+                        tris=[tri]), key
+        return anchors.describe_pick(owner, index - start, point,
+                                     tol), key
+
+    def _run_pick(self, x, y):
+        callback, self._pick_cb = self._pick_cb, None
+        groups = self._pick_groups
+        # resolve before tearing pick state down (_pick_at reads groups)
+        desc, key = self._pick_at(x, y)
+        self._end_pick_mode()
+        if groups is None:
+            callback(desc)
+        else:
+            callback(desc, key)
+
+    def _queue_hover(self, pos):
+        self._hover_pos = pos
+        if not self._hover_timer.isActive():
+            self._hover_timer.start()
+
+    def _hover_pick(self):
+        if self._pick_cb is None or self._hover_pos is None:
+            return
+        desc, key = self._pick_at(self._hover_pos.x(),
+                                  self._hover_pos.y(), quick=True)
+        if desc is None:
+            changed = self._pick_hover is not None
+            self._pick_hover = None
+        else:
+            owner = getattr(key, "name", "") if key is not None else ""
+            label = f"{owner} · {desc['name']}" if owner \
+                else desc["name"]
+            self._pick_hover = (desc, label)
+            changed = True
+        if changed:
+            self.update()
 
     def _begin_fast(self):
         if self._draft_mesh is not None or self._draft_hi is not None:
@@ -499,6 +571,7 @@ class View3D(QWidget):
         if hi_polys:
             self._tint_selection(painter, hi_polys)
         self._draw_anchors(painter, eye, right, up, forward)
+        self._draw_pick_overlays(painter, eye, right, up, forward)
         self._draw_axes(painter, t, eye, right, up, forward)
         pair = BACKGROUNDS.get(self.background)
         if pair is None:
@@ -701,6 +774,78 @@ class View3D(QWidget):
                                marker.get("name", ""),
                                self.PICKED_ANCHOR_COLOR)
 
+    #: pick-mode pre-highlight (hover) and the pinned first snap click.
+    HOVER_PICK_COLOR = "#2f9df0"
+    PINNED_PICK_COLOR = "#ff9b2f"
+
+    def _draw_pick_desc(self, painter, project, desc, label, color):
+        """One picked/hovered face or edge: translucent face fill (or a
+        thick edge run), a marker dot and a haloed name label."""
+        col = QColor(color)
+        if desc.get("tris"):
+            fill = QColor(col)
+            fill.setAlpha(80)
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(fill)
+            for a, b, c in desc["tris"]:
+                pa, pb, pc = project(a), project(b), project(c)
+                if pa is None or pb is None or pc is None:
+                    continue
+                painter.drawPolygon(QPolygonF([
+                    QPointF(pa[0], pa[1]), QPointF(pb[0], pb[1]),
+                    QPointF(pc[0], pc[1])]))
+        if desc.get("seg"):
+            a, b = desc["seg"]
+            pa, pb = project(a), project(b)
+            if pa is not None and pb is not None:
+                painter.setPen(QPen(QColor(255, 255, 255, 200), 5.0))
+                painter.drawLine(QPointF(pa[0], pa[1]),
+                                 QPointF(pb[0], pb[1]))
+                painter.setPen(QPen(col, 3.0))
+                painter.drawLine(QPointF(pa[0], pa[1]),
+                                 QPointF(pb[0], pb[1]))
+        head = project(desc["pos"])
+        if head is not None:
+            painter.setPen(QPen(QColor(255, 255, 255, 230), 1.6))
+            painter.setBrush(col)
+            painter.drawEllipse(QPointF(head[0], head[1]), 4.0, 4.0)
+            self._marker_label(painter, head[0] + 8, head[1] - 6,
+                               label, color)
+
+    def _draw_pick_overlays(self, painter, eye, right, up, forward):
+        """Pick mode's visual state: what the cursor is over, what the
+        first snap click grabbed, and what to do next."""
+        if self._pick_pinned is None and self._pick_cb is None:
+            return
+
+        def project(p):
+            return self._project(eye, right, up, forward, p)
+
+        font = painter.font()
+        font.setBold(True)
+        font.setPointSizeF(8.5)
+        painter.setFont(font)
+        if self._pick_pinned is not None:
+            desc, label = self._pick_pinned
+            self._draw_pick_desc(painter, project, desc, label,
+                                 self.PINNED_PICK_COLOR)
+        if self._pick_cb is not None and self._pick_hover is not None:
+            desc, label = self._pick_hover
+            self._draw_pick_desc(painter, project, desc, label,
+                                 self.HOVER_PICK_COLOR)
+        if self._pick_cb is not None and self._pick_banner:
+            font.setPointSizeF(9.5)
+            painter.setFont(font)
+            metrics = painter.fontMetrics()
+            w = metrics.horizontalAdvance(self._pick_banner) + 24
+            h = metrics.height() + 10
+            rect = QRectF((self.width() - w) / 2.0, 8.0, w, h)
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(QColor(20, 26, 32, 215))
+            painter.drawRoundedRect(rect, 6.0, 6.0)
+            painter.setPen(QColor("#f2f6fa"))
+            painter.drawText(rect, Qt.AlignCenter, self._pick_banner)
+
     def _draw_ground(self, painter, t, eye, right, up, forward):
         pen = QPen(QColor(t["border"]))
         pen.setWidthF(0.7)
@@ -755,6 +900,9 @@ class View3D(QWidget):
         self.update()                     # repaint the final frame crisp
 
     def mouseMoveEvent(self, event):
+        if self._pick_cb is not None and self._last is None:
+            self._queue_hover(event.pos())    # pre-highlight the target
+            return
         if self._last is None:
             return
         delta = event.pos() - self._last
@@ -784,3 +932,9 @@ class View3D(QWidget):
 
     def mouseDoubleClickEvent(self, event):
         self.fit()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape and self._pick_cb is not None:
+            self.cancel_pick()
+            return
+        super().keyPressEvent(event)

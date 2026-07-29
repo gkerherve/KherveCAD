@@ -339,3 +339,54 @@ def test_backgrounds_paint_without_error(app):
     p.end()
     assert img.pixelColor(60, 3) != img.pixelColor(60, 117)
     view.set_background("Theme")               # restore default
+
+
+def test_escape_cancels_pick_mode(app):
+    """Esc leaves pick mode and the callback hears the cancel."""
+    from PyQt5.QtCore import Qt
+    from PyQt5.QtGui import QKeyEvent
+    from PyQt5.QtCore import QEvent
+    view = View3D()
+    got = []
+    view.start_pick(got.append, banner="pick something")
+    assert view._pick_banner == "pick something"
+    assert view.hasMouseTracking()
+    view.keyPressEvent(QKeyEvent(QEvent.KeyPress, Qt.Key_Escape,
+                                 Qt.NoModifier))
+    assert got == [None]
+    assert view._pick_cb is None and view._pick_banner == ""
+    assert not view.hasMouseTracking()
+
+
+def test_pick_overlays_paint_without_error(app):
+    """Hover + pinned pick highlights and the banner all paint."""
+    view = View3D()
+    view.resize(200, 200)
+    view.set_mesh([((0, 0, 0), (10, 0, 0), (0, 10, 0))], "test")
+    face = dict(kind="face", name="Face", pos=[3.0, 3.0, 0.0],
+                dir=[0.0, 0.0, 1.0],
+                tris=[((0, 0, 0), (10, 0, 0), (0, 10, 0))])
+    edge = dict(kind="edge", name="Edge", pos=[5.0, 0.0, 0.0],
+                dir=[0.0, -1.0, 0.0],
+                seg=[[0.0, 0.0, 0.0], [10.0, 0.0, 0.0]])
+    view.start_pick(lambda d: None, banner="Snap 1/2 — click a face")
+    view._pick_hover = (face, "Cube · Face")
+    view.set_pick_pinned(edge, "Lid · Edge")
+    view.grab()
+    view.cancel_pick()
+    assert view._pick_pinned is None
+
+
+def test_describe_pick_reports_highlight_geometry(app):
+    """describe_pick returns the grown face (tris) or the edge run
+    (seg) so the view can pre-highlight the exact pick target."""
+    from khervecad import anchors
+    # a 10x10 square in the XY plane, two coplanar triangles
+    tris = [((0, 0, 0), (10, 0, 0), (10, 10, 0)),
+            ((0, 0, 0), (10, 10, 0), (0, 10, 0))]
+    desc = anchors.describe_pick(tris, 0, [5.0, 5.0, 0.0], tol=0.1)
+    assert desc["kind"] == "face" and len(desc["tris"]) == 2
+    desc = anchors.describe_pick(tris, 0, [5.0, 0.05, 0.0], tol=0.5)
+    assert desc["kind"] == "edge"
+    a, b = desc["seg"]
+    assert sorted([a[0], b[0]]) == [0.0, 10.0]

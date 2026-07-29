@@ -434,9 +434,12 @@ def describe_pick(tris, index, point, tol):
                                 used.add(key)
                                 changed = True
         mid = [(ends[0][i] + ends[1][i]) / 2.0 for i in range(3)]
+        # "seg" carries the full straight edge run so the 3D view can
+        # pre-highlight exactly what a click would pick
         return dict(kind="edge", pos=mid,
                     dir=_norm([normal[i] + hit_other[i]
                                for i in range(3)]),
-                    name="Edge")
+                    name="Edge", seg=[list(ends[0]), list(ends[1])])
+    # "tris" carries the grown coplanar face for the same pre-highlight
     return dict(kind="face", pos=centroid, dir=list(normal),
-                name="Face")
+                name="Face", tris=[tris[i] for i in sorted(face)])

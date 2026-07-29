@@ -870,7 +870,9 @@ class MainWindow(QMainWindow):
                 f"Anchor '{anchor['name']}' added to {comp.name} "
                 f"({desc['kind']}).", 5000)
             self._refresh_anchor_markers()
-        self.view3d.start_pick(done)
+        self.view3d.start_pick(
+            done, banner="Click a face or edge to add an anchor "
+                         "(Esc cancels)")
 
     # ------------------------------------------------- two-click snap
     def _snap_scope(self):
@@ -941,7 +943,7 @@ class MainWindow(QMainWindow):
             self.builder.setCurrentIndex(0)      # the assembly view
         self.statusBar().showMessage(
             "Snap 1/2: click the face or edge of the part to MOVE "
-            "— right-click cancels.", 0)
+            "— Esc or right-click cancels.", 0)
 
         def first(desc, comp):
             if desc is None:
@@ -949,6 +951,10 @@ class MainWindow(QMainWindow):
                 return
             child_anchor = self._anchor_for_pick(comp, desc)
             self.builder.tree.select_nodes([comp])
+            # keep the first pick visibly marked while the second is
+            # aimed, so you never lose track of what will move
+            self.view3d.set_pick_pinned(
+                desc, f"{comp.name} · {child_anchor['name']}")
             self.statusBar().showMessage(
                 f"Snap 2/2: {comp.name} · {child_anchor['name']} — now "
                 f"click the target face on ANOTHER object.", 0)
@@ -962,8 +968,12 @@ class MainWindow(QMainWindow):
                     self.statusBar().showMessage(
                         "That is the same object — click a face on a "
                         "different one (right-click cancels).", 0)
-                    self.view3d.start_pick(second, groups=groups)
+                    self.view3d.start_pick(
+                        second, groups=groups,
+                        banner=f"Snap 2/2 — that was {comp.name} "
+                               f"itself: click a face on ANOTHER part")
                     return
+                self.view3d.set_pick_pinned(None)
                 parent_anchor = self._anchor_for_pick(target, desc2)
                 mates.attach(self.model, comp, target.name,
                              child_anchor["name"],
@@ -973,8 +983,15 @@ class MainWindow(QMainWindow):
                     f"onto {target.name} ({parent_anchor['name']}). "
                     f"Right-click it > Attach / snap to... for offset "
                     f"and spin.", 8000)
-            self.view3d.start_pick(second, groups=groups)
-        self.view3d.start_pick(first, groups=groups)
+            self.view3d.start_pick(
+                second, groups=groups,
+                banner=f"Snap 2/2 — {comp.name}: "
+                       f"{child_anchor['name']} picked. Click the "
+                       f"target face on ANOTHER part (Esc cancels)")
+        self.view3d.start_pick(
+            first, groups=groups,
+            banner="Snap 1/2 — click the face or edge of the part to "
+                   "MOVE (Esc cancels)")
 
     def _render_scope(self):
         """(root node, scad code callable) for the current view — the
