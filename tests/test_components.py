@@ -163,3 +163,51 @@ def test_component_mesh_matches_group(model):
     xs = [v[0] for tri in tris for v in tri]
     assert min(xs) == pytest.approx(100.0)
     assert max(xs) == pytest.approx(110.0)
+
+
+def test_enclose_as_part_keeps_name_and_is_visible(model):
+    """A boolean part wraps into a visible Object named after it."""
+    diff = model.add_node("difference", name="Socket screw")
+    model.add_node("cube", parent=diff)
+    comp = model.enclose_as_part(diff)
+    assert comp.type == "component" and comp.visible
+    assert comp.name == "Socket screw"
+    assert comp.parent is model.root and diff.parent is comp
+
+
+def test_enclose_as_part_converts_union_in_place(model):
+    part = model.add_node("union", name="Hex bolt")
+    model.add_node("cube", parent=part)
+    comp = model.enclose_as_part(part)
+    assert comp is part and comp.type == "component"
+    assert comp.name == "Hex bolt" and comp.visible
+
+
+def test_enclose_as_part_names_stay_unique(model):
+    first = model.enclose_as_part(model.add_node("cube", name="Bolt"))
+    second = model.enclose_as_part(model.add_node("cube", name="Bolt"))
+    assert first.name == "Bolt"
+    assert second.name == "Bolt 2"
+
+
+def test_enclose_import_wraps_loose_geometry_only(model):
+    """An import's loose top level becomes ONE part; existing Objects
+    and the variables store stay untouched."""
+    existing = model.new_component("Lib part")
+    model.add_node("cube", parent=existing)
+    var = CadNode("variables", "Variables")
+    model.root.add(var)
+    a = model.add_node("cube", name="A")
+    b = model.add_node("cylinder", name="B")
+    part = model.enclose_import_as_part("gizmo")
+    assert part is not None and part.type == "component"
+    assert part.name == "gizmo" and part.visible
+    assert {n.name for n in part.walk()} >= {"A", "B"}
+    assert existing.parent is model.root
+    assert var.parent is model.root
+    assert a.parent is not model.root and b.parent is not model.root
+
+
+def test_enclose_import_with_nothing_loose_is_a_no_op(model):
+    model.new_component("Only")
+    assert model.enclose_import_as_part("x") is None

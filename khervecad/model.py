@@ -1267,6 +1267,44 @@ class DocumentModel(QObject):
         self.structure_changed.emit()
         return comp
 
+    def enclose_as_part(self, node: CadNode, name: str = "") -> CadNode:
+        """Wrap *node* into a **visible** Object so the Main assembly
+        lists it as a single opaque row (its construction is edited in
+        the Object tab). The part keeps *name* (default: the node's own
+        name), made unique against everything outside its subtree."""
+        base = (name or node.name or "").strip()
+        comp = self.make_component(node)
+        if comp is None:
+            return node
+        comp.visible = True
+        if base and comp.name != base:
+            inside = {n.id for n in comp.walk()}
+            taken = {n.name for n in self.root.walk()
+                     if n.id not in inside}
+            candidate = base
+            for i in itertools.count(2):
+                if candidate not in taken:
+                    break
+                candidate = f"{base} {i}"
+            comp.name = candidate
+            self.node_changed.emit(comp)
+        return comp
+
+    def enclose_import_as_part(self, name: str) -> CadNode:
+        """Gather every loose top-level geometry node (an import's
+        content) into ONE visible Object named *name* — module-defined
+        Objects, instances and the variables/masters stores stay as
+        they are. Returns the part, or None when nothing was loose."""
+        loose = [c for c in self.root.children
+                 if c.type not in ("component", "reference", "masters",
+                                   "variables", "assign")]
+        if not loose:
+            return None
+        if len(loose) == 1:
+            return self.enclose_as_part(loose[0], name=name)
+        group = self.group_nodes(loose)
+        return self.enclose_as_part(group, name=name)
+
     def _clone(self, node: CadNode) -> CadNode:
         copy = CadNode(node.type, node.name, None)
         copy.params = {k: (list(map(list, v)) if isinstance(v, list)
