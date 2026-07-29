@@ -280,12 +280,18 @@ into a new module and import.
                        front end: click a face/edge on the Object to
                        move, then the target face on another — the
                        face/edge under the cursor **pre-highlights**
-                       with its owner's name while aiming, the first
-                       click stays pinned in orange, each step shows
-                       as a banner across the 3D view, and Esc
-                       cancels. `AttachDialog` **previews live**
+                       while aiming, labelled with the anchor a click
+                       would reuse ("Base · Top" — `_snap_labeler`,
+                       anchor lists cached per part), the first click
+                       stays pinned in orange, each step shows as a
+                       banner across the 3D view, and Esc cancels.
+                       Completing the snap opens **`SnapTweakPopup`**
+                       (non-modal: offset/spin applied live, Flip
+                       180°, Detach) so the final nudge needs no
+                       context menu. `AttachDialog` **previews live**
                        (every change applies at once; Cancel restores
-                       the original mate and placement) —
+                       the original mate and placement) and has the
+                       same Flip 180° —
                        `MainWindow._start_snap` picks per-Object mesh
                        groups (`view3d.start_pick(..., groups=...)`),
                        `_anchor_for_pick` reuses a matching bbox/user
