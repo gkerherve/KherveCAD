@@ -900,6 +900,18 @@ class MainWindow(QMainWindow):
                 groups.append((part, tris))
         return groups
 
+    @staticmethod
+    def _match_anchor(anchor_list, pos, direction):
+        """The anchor in *anchor_list* at local *pos* pointing along
+        *direction* (within 0.1 mm, aligned), or None."""
+        for anchor in anchor_list:
+            d2 = sum((anchor["pos"][i] - pos[i]) ** 2 for i in range(3))
+            dot = sum(anchor["dir"][i] * direction[i]
+                      for i in range(3))
+            if d2 < 0.01 and dot > 0.999:
+                return anchor
+        return None
+
     def _anchor_for_pick(self, part, desc):
         """The anchor a world-space pick means on *part*: an existing
         anchor at that spot (a bbox face like "Top", or an already
@@ -912,15 +924,41 @@ class MainWindow(QMainWindow):
         definition = mates.definition_of(self.model, part) or part
         pos = anchors.to_local(part, desc["pos"], env)
         direction = anchors.dir_to_local(part, desc["dir"], env)
-        for anchor in anchors.anchors_of(definition, env=env,
-                                         fn=self.model.effective_fn()):
-            d2 = sum((anchor["pos"][i] - pos[i]) ** 2 for i in range(3))
-            dot = sum(anchor["dir"][i] * direction[i] for i in range(3))
-            if d2 < 0.01 and dot > 0.999:        # within 0.1 mm, aligned
-                return anchor
+        anchor = self._match_anchor(
+            anchors.anchors_of(definition, env=env,
+                               fn=self.model.effective_fn()),
+            pos, direction)
+        if anchor is not None:
+            return anchor
         return anchors.add_user_anchor(self.model, definition, pos,
                                        direction,
                                        name=desc.get("name", "Anchor"))
+
+    def _snap_labeler(self):
+        """A hover labeler for the Snap tool: names the anchor a click
+        would reuse ("Base · Top") instead of the generic Face/Edge.
+        Anchor lists are cached per part for the pick session, so the
+        throttled hover never re-tessellates."""
+        from . import anchors, mates
+        env = anchors.doc_env(self.model)
+        fn = self.model.effective_fn()
+        cache = {}
+
+        def label(desc, part):
+            if part is None:
+                return desc.get("name", "")
+            if part.id not in cache:
+                definition = mates.definition_of(self.model, part) \
+                    or part
+                cache[part.id] = anchors.anchors_of(definition,
+                                                    env=env, fn=fn)
+            pos = anchors.to_local(part, desc["pos"], env)
+            direction = anchors.dir_to_local(part, desc["dir"], env)
+            anchor = self._match_anchor(cache[part.id], pos, direction)
+            name = anchor["name"] if anchor is not None \
+                else desc.get("name", "")
+            return f"{part.name} · {name}"
+        return label
 
     def _start_snap(self):
         """Fusion-style two-click snap: click a face/edge on the part
@@ -941,6 +979,7 @@ class MainWindow(QMainWindow):
             return
         if scope is None:
             self.builder.setCurrentIndex(0)      # the assembly view
+        labeler = self._snap_labeler()
         self.statusBar().showMessage(
             "Snap 1/2: click the face or edge of the part to MOVE "
             "— Esc or right-click cancels.", 0)
@@ -969,7 +1008,7 @@ class MainWindow(QMainWindow):
                         "That is the same object — click a face on a "
                         "different one (right-click cancels).", 0)
                     self.view3d.start_pick(
-                        second, groups=groups,
+                        second, groups=groups, labeler=labeler,
                         banner=f"Snap 2/2 — that was {comp.name} "
                                f"itself: click a face on ANOTHER part")
                     return
@@ -980,18 +1019,31 @@ class MainWindow(QMainWindow):
                              parent_anchor["name"])
                 self.statusBar().showMessage(
                     f"Snapped {comp.name} ({child_anchor['name']}) "
-                    f"onto {target.name} ({parent_anchor['name']}). "
-                    f"Right-click it > Attach / snap to... for offset "
-                    f"and spin.", 8000)
+                    f"onto {target.name} ({parent_anchor['name']}).",
+                    8000)
+                self._show_snap_tweak(comp)
             self.view3d.start_pick(
-                second, groups=groups,
+                second, groups=groups, labeler=labeler,
                 banner=f"Snap 2/2 — {comp.name}: "
                        f"{child_anchor['name']} picked. Click the "
                        f"target face on ANOTHER part (Esc cancels)")
         self.view3d.start_pick(
-            first, groups=groups,
+            first, groups=groups, labeler=labeler,
             banner="Snap 1/2 — click the face or edge of the part to "
                    "MOVE (Esc cancels)")
+
+    def _show_snap_tweak(self, comp):
+        """The small non-modal follow-up after a two-click snap:
+        offset / spin / flip applied live, no context-menu digging."""
+        from . import mates
+        if getattr(self, "_snap_tweak", None) is not None:
+            self._snap_tweak.close()
+        popup = mates.SnapTweakPopup(self.model, comp, self)
+        popup.setAttribute(Qt.WA_DeleteOnClose)
+        popup.finished.connect(
+            lambda _r: setattr(self, "_snap_tweak", None))
+        self._snap_tweak = popup
+        popup.show()
 
     def _render_scope(self):
         """(root node, scad code callable) for the current view — the

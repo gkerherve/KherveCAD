@@ -68,6 +68,7 @@ class View3D(QWidget):
         self._pick_cb = None
         self._pick_groups = None        # [(key, tris)] for group picks
         self._pick_banner = ""          # instruction drawn at the top
+        self._pick_labeler = None       # names the hover highlight
         self._pick_hover = None         # (desc, label) under the cursor
         self._pick_pinned = None        # (desc, label) first snap click
         self._hover_pos = None
@@ -174,7 +175,8 @@ class View3D(QWidget):
         self.update()
 
     # ------------------------------------------------------- anchor pick
-    def start_pick(self, callback, groups=None, banner=""):
+    def start_pick(self, callback, groups=None, banner="",
+                   labeler=None):
         """Enter pick mode: the next left click on the model picks a
         face or edge and *callback* receives its description (world
         coordinates); right click or Esc cancels. While armed, the
@@ -186,10 +188,13 @@ class View3D(QWidget):
         callback gets ``desc``. With *groups* (``[(key, tris)]``) the
         pick runs across those meshes instead and the callback gets
         ``(desc, key)`` — how the two-click Snap tool knows which
-        Object a face belongs to."""
+        Object a face belongs to. *labeler(desc, key)*, when given,
+        names the hover pre-highlight (e.g. resolving the anchor a
+        click would reuse) instead of the default owner · Face/Edge."""
         self._pick_cb = callback
         self._pick_groups = groups
         self._pick_banner = banner
+        self._pick_labeler = labeler
         self._pick_hover = None
         self.setCursor(Qt.CrossCursor)
         self.setMouseTracking(True)          # hover pre-highlight
@@ -199,6 +204,7 @@ class View3D(QWidget):
     def _end_pick_mode(self):
         self._pick_groups = None
         self._pick_banner = ""
+        self._pick_labeler = None
         self._pick_hover = None
         self._hover_pos = None
         self._hover_timer.stop()
@@ -292,9 +298,13 @@ class View3D(QWidget):
             changed = self._pick_hover is not None
             self._pick_hover = None
         else:
-            owner = getattr(key, "name", "") if key is not None else ""
-            label = f"{owner} · {desc['name']}" if owner \
-                else desc["name"]
+            if self._pick_labeler is not None:
+                label = self._pick_labeler(desc, key)
+            else:
+                owner = getattr(key, "name", "") \
+                    if key is not None else ""
+                label = f"{owner} · {desc['name']}" if owner \
+                    else desc["name"]
             self._pick_hover = (desc, label)
             changed = True
         if changed:

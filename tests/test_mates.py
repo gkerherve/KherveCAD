@@ -191,3 +191,26 @@ def test_attach_dialog_ok_keeps_the_previewed_mate(model):
                                       anchor="Bottom",
                                       offset=0.0, spin=0.0)
     assert lid.params["z"] == pytest.approx(20.0)
+
+
+def test_flip_spin_normalises():
+    assert mates._flip_spin(0.0) == 180.0
+    assert mates._flip_spin(180.0) == 0.0
+    assert mates._flip_spin(-90.0) == 90.0
+    assert mates._flip_spin(90.0) == -90.0
+
+
+def test_snap_tweak_popup_edits_the_mate_live(model):
+    """The post-snap popup nudges offset/spin immediately and Detach
+    removes the mate."""
+    base = _cube(model, "Base")
+    lid = _cube(model, "Lid", size=10.0)
+    mates.attach(model, lid, "Base", "Bottom", "Top")
+    popup = mates.SnapTweakPopup(model, lid)
+    popup.offset.setValue(5.0)
+    assert lid.params["mate"]["offset"] == 5.0
+    assert lid.params["z"] == pytest.approx(25.0)   # lifted 5 mm
+    popup.spin.setValue(45.0)
+    assert lid.params["mate"]["spin"] == 45.0
+    popup._detach()
+    assert lid.params.get("mate") is None

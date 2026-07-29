@@ -28,8 +28,8 @@ the Free Software Foundation, either version 3 of the License, or
 import math
 
 from PyQt5.QtWidgets import (QComboBox, QDialog, QDialogButtonBox,
-                             QDoubleSpinBox, QFormLayout, QLabel,
-                             QPushButton)
+                             QDoubleSpinBox, QFormLayout, QHBoxLayout,
+                             QLabel, QPushButton, QWidget)
 
 from . import anchors
 
@@ -278,6 +278,13 @@ def detach(model, comp):
 
 # -------------------------------------------------------------- dialog
 
+def _flip_spin(value):
+    """*value* + a half turn, normalised into (-180, 180]."""
+    v = float(value) + 180.0
+    v = ((v + 180.0) % 360.0) - 180.0
+    return 180.0 if v == -180.0 else v
+
+
 class AttachDialog(QDialog):
     """Attach one Object to another: pick the two anchors, an offset
     along the mate axis and a spin about it. Editing an existing mate
@@ -331,7 +338,17 @@ class AttachDialog(QDialog):
         self.spin.setRange(-360.0, 360.0)
         self.spin.setDecimals(2)
         self.spin.setSuffix(" °")
-        form.addRow("Spin about axis:", self.spin)
+        flip = QPushButton("Flip 180°")
+        flip.setToolTip("Rotate the part half a turn about the mate "
+                        "axis — the quick fix when it lands backwards")
+        flip.clicked.connect(lambda: self.spin.setValue(
+            _flip_spin(self.spin.value())))
+        spin_row = QWidget()
+        row = QHBoxLayout(spin_row)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.addWidget(self.spin, 1)
+        row.addWidget(flip)
+        form.addRow("Spin about axis:", spin_row)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok
                                    | QDialogButtonBox.Cancel)
@@ -426,3 +443,73 @@ class AttachDialog(QDialog):
     def _detach(self):
         detach(self.model, self.comp)
         self.accept()
+
+
+class SnapTweakPopup(QDialog):
+    """Tiny non-modal follow-up to a two-click snap: nudge the fresh
+    mate's offset and spin (applied live), flip the part half a turn,
+    or detach — the final adjustment without the context menu."""
+
+    def __init__(self, model, comp, parent=None):
+        super().__init__(parent)
+        self.model = model
+        self.comp = comp
+        self.setWindowTitle(f"Adjust snap — {comp.name}")
+        self.setModal(False)
+        mate = mate_of(comp) or {}
+
+        form = QFormLayout(self)
+        form.addRow(QLabel(
+            f"Snapped onto {mate.get('parent', '?')} — fine-tune it "
+            f"(applies live):"))
+        self.offset = QDoubleSpinBox()
+        self.offset.setRange(-1e6, 1e6)
+        self.offset.setDecimals(3)
+        self.offset.setSuffix(" mm")
+        self.offset.setSingleStep(1.0)
+        self.offset.setValue(float(mate.get("offset", 0.0)))
+        form.addRow("Offset along axis:", self.offset)
+        self.spin = QDoubleSpinBox()
+        self.spin.setRange(-360.0, 360.0)
+        self.spin.setDecimals(2)
+        self.spin.setSuffix(" °")
+        self.spin.setSingleStep(15.0)
+        self.spin.setValue(float(mate.get("spin", 0.0)))
+        flip = QPushButton("Flip 180°")
+        flip.setToolTip("Rotate the part half a turn about the mate "
+                        "axis")
+        flip.clicked.connect(lambda: self.spin.setValue(
+            _flip_spin(self.spin.value())))
+        spin_row = QWidget()
+        row = QHBoxLayout(spin_row)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.addWidget(self.spin, 1)
+        row.addWidget(flip)
+        form.addRow("Spin about axis:", spin_row)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        buttons.rejected.connect(self.reject)
+        buttons.accepted.connect(self.accept)
+        detach_btn = QPushButton("Detach")
+        detach_btn.setToolTip("Undo this snap: remove the mate (the "
+                              "part stays where it is)")
+        detach_btn.clicked.connect(self._detach)
+        buttons.addButton(detach_btn, QDialogButtonBox.ResetRole)
+        form.addRow(buttons)
+
+        self.offset.valueChanged.connect(self._apply)
+        self.spin.valueChanged.connect(self._apply)
+
+    def _apply(self, *_args):
+        mate = mate_of(self.comp)
+        if mate is None:
+            return
+        mate["offset"] = float(self.offset.value())
+        mate["spin"] = float(self.spin.value())
+        self.comp.params["mate"] = mate
+        refresh(self.model)
+        self.model.node_changed.emit(self.comp)
+
+    def _detach(self):
+        detach(self.model, self.comp)
+        self.reject()

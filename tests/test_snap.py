@@ -171,3 +171,36 @@ def test_group_mate_survives_kcad_roundtrip(window, tmp_path):
     loaded = next(n for n in other.root.walk()
                   if n.type == "union" and n.name == "Post")
     assert loaded.params["mate"]["parent"] == "Base"
+
+
+def test_snap_completion_offers_the_tweak_popup(window):
+    """After the second click the offset/spin popup opens on the
+    mated part, and its flip button spins the mate half a turn."""
+    parent, child = _two_cubes(window.model)
+    window._start_snap()
+    window.view3d._pick_cb(dict(kind="face", name="Face",
+                                pos=[55.0, 5.0, 0.0],
+                                dir=[0.0, 0.0, -1.0]), child)
+    window.view3d._pick_cb(dict(kind="face", name="Face",
+                                pos=[10.0, 10.0, 20.0],
+                                dir=[0.0, 0.0, 1.0]), parent)
+    popup = window._snap_tweak
+    assert popup is not None and popup.comp is child
+    popup.spin.setValue(180.0)
+    assert child.params["mate"]["spin"] == 180.0
+    popup.close()
+    assert window._snap_tweak is None
+
+
+def test_snap_hover_labels_name_the_anchor(window):
+    """Hovering a face that matches a bbox anchor reads as the anchor
+    ("Base · Top"), not the generic Face."""
+    parent, child = _two_cubes(window.model)
+    label = window._snap_labeler()
+    top = dict(kind="face", name="Face", pos=[10.0, 10.0, 20.0],
+               dir=[0.0, 0.0, 1.0])
+    assert label(top, parent) == "Base · Top"
+    odd = dict(kind="face", name="Face", pos=[3.0, 4.0, 20.0],
+               dir=[0.0, 0.0, 1.0])
+    assert label(odd, parent) == "Base · Face"
+    assert not parent.params.get("anchors")   # labelling never persists
