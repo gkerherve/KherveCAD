@@ -588,9 +588,23 @@ class MainWindow(QMainWindow):
         # inside it — matching what both viewers show
         parent = self.builder.isolated_component()
         node = self.model.add_node(type, parent=parent)
-        tree = self.builder.tree if parent is None \
-            else self.builder.object_tab.tree
-        tree.select_nodes([node])
+        if parent is None:
+            self._geometry_created_in_main(node)
+            return
+        self.builder.object_tab.tree.select_nodes([node])
+
+    def _geometry_created_in_main(self, node):
+        """Raw geometry created while the Main tab is current: the Main
+        assembly lists only whole parts, so wrap it in a new visible
+        Object and continue in the Object tab — the part is already
+        placed in Main as a single row."""
+        comp = self.model.enclose_as_part(node)
+        self.builder.open_component(comp)
+        self.builder.object_tab.tree.select_nodes([node])
+        self.statusBar().showMessage(
+            f"New Object '{comp.name}' — it shows as one part in Main; "
+            f"keep building it here, then switch back to Main to place "
+            f"or snap it.", 8000)
 
     def _new_object(self):
         """Insert > New Object: create an empty Object and open it for
@@ -711,10 +725,11 @@ class MainWindow(QMainWindow):
             f"Size  X {dx:.1f} · Y {dy:.1f} · Z {dz:.1f} mm")
 
     def _node_created(self, node):
-        tree = self.builder.tree \
-            if self.builder.isolated_component() is None \
-            else self.builder.object_tab.tree
-        tree.select_nodes([node])
+        if self.builder.isolated_component() is None \
+                and node.parent is self.model.root:
+            self._geometry_created_in_main(node)   # drawn in Main
+            return
+        self.builder.object_tab.tree.select_nodes([node])
 
     # ---------------------------------------------------- 3D pipeline
     def _model_edited(self):
@@ -1442,6 +1457,10 @@ class MainWindow(QMainWindow):
                       "editable objects, so the object tree is empty.")
             if self._offer_scad_raw(path, reason):
                 return
+        # the imported program's loose geometry lands as ONE part in
+        # the Main assembly, edited in the Object tab like any other
+        # part; module-defined Objects and instances keep their shape
+        self.model.enclose_import_as_part(Path(path).stem)
         self._path = None                     # imported: save as .kcad
         self._dirty = True
         self._fitted = False

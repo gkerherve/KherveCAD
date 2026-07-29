@@ -1419,5 +1419,8 @@ class PartLibraryDialog(QDialog):
                 if not node.name.startswith(size) else node.name
         self.model.root.add(node)
         self.model.structure_changed.emit()
-        self.inserted = node
-        self.part_inserted.emit(node)
+        # a library part is a finished part: one opaque row in the Main
+        # assembly, its construction editable in the Object tab
+        comp = self.model.enclose_as_part(node)
+        self.inserted = comp
+        self.part_inserted.emit(comp)
