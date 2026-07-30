@@ -97,3 +97,64 @@ def test_hiding_a_group_dims_the_whole_subtree(model):
     assert child.data(0, ROLE_TAG) is False    # child not tagged...
     assert child.font(0).italic()              # ...but dimmed by its parent
     assert row.text(0) == grp.name             # text stays clean (rename ok)
+
+
+def _placement_children(item):
+    from khervecad.treepanel import ROLE_PLACEMENT
+    return [item.child(i) for i in range(item.childCount())
+            if item.child(i).data(0, ROLE_PLACEMENT)]
+
+
+def test_placed_part_shows_position_and_rotation_rows(model):
+    """A snapped/moved part lists its translate and rotate in the
+    tree, matching the translate(...) rotate(...) the code emits."""
+    comp = model.new_component("Lid")
+    model.add_node("cube", parent=comp)
+    comp.params.update(x=5.0, y=5.0, z=20.0, rz=90.0)
+    tree = ObjectTree(model)
+    item = tree.topLevelItem(0)
+    rows = _placement_children(item)
+    assert [r.text(0) for r in rows] == ["Position (5, 5, 20)",
+                                        "Rotation (0, 0, 90)"]
+    # clicking a placement row selects the part itself
+    assert tree.node_of(rows[0]) is comp
+
+
+def test_unplaced_part_has_no_placement_rows(model):
+    comp = model.new_component("Base")
+    model.add_node("cube", parent=comp)
+    tree = ObjectTree(model)
+    assert _placement_children(tree.topLevelItem(0)) == []
+
+
+def test_placement_rows_follow_a_mate_resolve(model):
+    """When a mate moves the part, the tree rows update live."""
+    from khervecad import mates
+    base = model.new_component("Base")
+    model.add_node("cube", dict(width=20.0, depth=20.0, height=20.0),
+                   parent=base)
+    lid = model.new_component("Lid")
+    model.add_node("cube", dict(width=10.0, depth=10.0, height=10.0),
+                   parent=lid)
+    tree = ObjectTree(model)
+    mates.attach(model, lid, "Base", "Bottom", "Top")
+    item = tree.topLevelItem(1)
+    rows = _placement_children(item)
+    assert rows and rows[0].text(0) == "Position (5, 5, 20)"
+    assert "Base" in rows[0].toolTip(0)      # explains where it came from
+    # placement rows are metadata: not editable, not draggable
+    assert not (rows[0].flags() & Qt.ItemIsEditable)
+    assert not (rows[0].flags() & Qt.ItemIsDragEnabled)
+
+
+def test_instance_shows_placement_rows(model):
+    comp = model.new_component("Bolt", visible=False)
+    model.add_node("cube", parent=comp)
+    ref = model.add_instance(comp)
+    ref.params.update(x=30.0)
+    model.node_changed.emit(ref)
+    tree = ObjectTree(model)
+    item = tree.topLevelItem(0)              # the instance row
+    assert tree.node_of(item) is ref
+    rows = _placement_children(item)
+    assert [r.text(0) for r in rows] == ["Position (30, 0, 0)"]

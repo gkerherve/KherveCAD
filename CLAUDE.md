@@ -320,7 +320,17 @@ into a new module and import.
                        (custom `drawBranches`) and a tight indent keep
                        deep trees readable. One row per node — colour and
                        transform wrappers show as their own rows so the
-                       whole structure is visible.
+                       whole structure is visible. A **placed part**
+                       (Object, instance, or mated group) additionally
+                       shows synthetic **Position/Rotation child rows**
+                       mirroring its placement params — the translate/
+                       rotate a snap, drag or Properties edit wrote, so
+                       the tree matches the `translate(...) rotate(...)`
+                       the code emits. They carry `ROLE_PLACEMENT`,
+                       share the part's node id (clicking selects the
+                       part), are read-only/undraggable, refresh live
+                       on every mate re-solve, and their tooltip names
+                       the mate parent.
                        `node_of` is the geometry (selection/properties);
                        `_root_of` is the chain root (delete/drag/duplicate
                        move the whole part); right-click **Modifiers**

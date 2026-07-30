@@ -46,6 +46,8 @@ HIDDEN_COLOR_DARK = "#697079"
 
 # item data role beyond the primary node id (Qt.UserRole)
 ROLE_TAG = Qt.UserRole + 1         # True -> paint a "(hidden)" tag
+ROLE_PLACEMENT = Qt.UserRole + 2   # True -> synthetic Position/Rotation
+#                                    row under a part (selects the part)
 
 CLIPBOARD_FORMAT = "kcad-clipboard"
 
@@ -130,6 +132,8 @@ class ObjectTree(QTreeWidget):
     def _double_clicked(self, item, _col):
         """Double-click opens an Object for editing (Object tab);
         everything else starts an in-place rename."""
+        if item.data(0, ROLE_PLACEMENT):
+            return          # placement rows are edited via Properties
         node = self.node_of(item)
         if node is not None and node.type == "component" \
                 and not self.IS_MASTERS:
@@ -153,8 +157,15 @@ class ObjectTree(QTreeWidget):
         return None
 
     def selected_nodes(self):
-        return [n for n in (self.node_of(i) for i in self.selectedItems())
-                if n is not None]
+        # a part and its placement rows share the node id — dedupe so
+        # selecting both never lists the part twice
+        seen, out = set(), []
+        for item in self.selectedItems():
+            node = self.node_of(item)
+            if node is not None and node.id not in seen:
+                seen.add(node.id)
+                out.append(node)
+        return out
 
     def _top_nodes(self):
         """The nodes shown at the top level of this tree — the document
@@ -211,15 +222,93 @@ class ObjectTree(QTreeWidget):
         in the Object tab's own tree."""
         return node.type == "component"
 
+    #: node types whose placement (x/y/z/rx/ry/rz params — what a mate
+    #: or drag writes) shows as Position/Rotation rows in the tree.
+    _PLACED_TYPES = ("component", "reference", "union")
+
+    @staticmethod
+    def _placement_texts(node):
+        """``[(text, icon node type)]`` describing *node*'s non-zero
+        placement — the translate/rotate that snapping, dragging or
+        Properties wrote, mirrored as tree rows so the tree matches
+        the ``translate(...) rotate(...)`` the code emits."""
+        def fmt(value):
+            if isinstance(value, str):
+                return value.strip() or "0"
+            try:
+                return f"{float(value):g}"
+            except (TypeError, ValueError):
+                return str(value)
+
+        def nonzero(value):
+            try:
+                return float(value) != 0.0
+            except (TypeError, ValueError):
+                return bool(str(value).strip())
+
+        out = []
+        for label, keys, icon_type in (
+                ("Position", ("x", "y", "z"), "translate"),
+                ("Rotation", ("rx", "ry", "rz"), "rotate")):
+            vals = [node.params.get(k, 0.0) for k in keys]
+            if any(nonzero(v) for v in vals):
+                out.append((f"{label} ({', '.join(fmt(v) for v in vals)})",
+                            icon_type))
+        return out
+
+    def _insert_placement_rows(self, item, node):
+        """Add *node*'s Position/Rotation rows as its first children.
+        They carry the part's node id (clicking selects the part) and
+        are edited via Properties / Attach, never in place."""
+        mate = node.params.get("mate") \
+            if node.type in self._PLACED_TYPES else None
+        mated = isinstance(mate, dict) and mate.get("parent")
+        for index, (text, icon_type) in enumerate(
+                self._placement_texts(node)):
+            row = QTreeWidgetItem()
+            row.setText(0, text)
+            row.setIcon(0, icons.icon(NODE_TYPES[icon_type]["icon"]))
+            row.setData(0, Qt.UserRole, node.id)
+            row.setData(0, ROLE_PLACEMENT, True)
+            row.setFlags((row.flags() | Qt.ItemNeverHasChildren)
+                         & ~(Qt.ItemIsEditable | Qt.ItemIsDropEnabled
+                             | Qt.ItemIsDragEnabled
+                             | Qt.ItemIsUserCheckable))
+            row.setToolTip(0, (
+                f"Solved from the mate to {mate['parent']} — adjust "
+                f"via Attach / snap to..." if mated else
+                "The part's placement — edit x/y/z and rotation in "
+                "Properties"))
+            item.insertChild(index, row)
+
+    def _refresh_placement_rows(self, item, node):
+        """Re-sync the Position/Rotation rows after the node moved
+        (a mate re-solve, a drag, a Properties edit)."""
+        i = 0
+        while i < item.childCount():
+            if item.child(i).data(0, ROLE_PLACEMENT):
+                item.takeChild(i)
+            else:
+                i += 1
+        self._insert_placement_rows(item, node)
+
     def _build_node(self, node, parent_item, selected):
         """One row per node — colour/translate/rotate wrappers show as
         their own rows, so the whole structure is visible. An opaque
         node (an assembly Object) is a single leaf: its construction
-        tree stays in the Object tab."""
+        tree stays in the Object tab, but its assembly placement (the
+        translate/rotate a snap wrote) shows as child rows."""
         item = self._new_item(parent_item, node)
         item.setData(0, Qt.UserRole, node.id)
         self._decorate(item, node)
-        if self._is_opaque(node):
+        if node.type in self._PLACED_TYPES:
+            self._insert_placement_rows(item, node)
+        if self._is_opaque(node) or node.type == "reference":
+            if item.childCount() and self._expand_state.get(node.id,
+                                                            True):
+                item.setExpanded(True)
+            if node.id in selected:
+                item.setSelected(True)
             return
         if node.is_container():
             default_open = node.type != "variables"
@@ -297,6 +386,8 @@ class ObjectTree(QTreeWidget):
         self.errors = errors or {}
         self._updating = True
         for item in self._all_items():
+            if item.data(0, ROLE_PLACEMENT):
+                continue                 # synthetic Position/Rotation
             node = self.node_of(item)
             if node is not None:
                 self._decorate(item, node)
@@ -319,9 +410,15 @@ class ObjectTree(QTreeWidget):
             # re-decorate the whole subtree: hiding a node dims every row
             # below it, so its descendants must refresh too
             self._decorate_subtree(item)
+            if node.type in self._PLACED_TYPES:
+                # a mate re-solve / drag / Properties edit moved it:
+                # keep the Position/Rotation rows in sync
+                self._refresh_placement_rows(item, node)
             self._updating = False
 
     def _decorate_subtree(self, item):
+        if item.data(0, ROLE_PLACEMENT):
+            return          # synthetic rows keep their own text
         node = self.node_of(item)
         if node is not None:
             self._decorate(item, node)
