@@ -401,7 +401,12 @@ into a new module and import.
                        node's own frame (`_local_move`, the inverse of
                        the ancestor chain's linear part) so a Move under
                        a rotated group follows the cursor instead of
-                       shooting off sideways. Everything
+                       shooting off sideways. The drop is committed on
+                       the **next event-loop turn** (`queue_commit`):
+                       committing rebuilds the scene, and deleting the
+                       item mid-release crashed the process
+                       (0xC0000409). Dragging a mated part detaches it.
+                       Everything
                        reads in mm: scale bar, live size while
                        drawing, zoom indicator, Fit Sketch / Zoom to
                        Selection. Middle-mouse drag pans; wheel zooms.

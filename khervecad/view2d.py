@@ -14,7 +14,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-from PyQt5.QtCore import QPointF, QRectF, Qt, pyqtSignal
+from PyQt5.QtCore import QPointF, QRectF, Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import (QBrush, QColor, QFont, QPainter, QPainterPath,
                          QPen, QPolygonF)
 from PyQt5.QtWidgets import (QGraphicsEllipseItem, QGraphicsItem,
@@ -567,10 +567,24 @@ class PartItem(QGraphicsPathItem):
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
-        if self._movable:
-            # committing may rebuild the scene, so do it after our own
-            # mouse handling is completely finished
-            self._scene.commit_part_move(self.node, self.pos())
+        self.queue_commit()
+
+    def queue_commit(self):
+        """Bake this drop into the model on the **next event-loop
+        turn**.
+
+        Committing writes the move, which rebuilds the scene — and the
+        rebuild deletes this item while Qt is still delivering the
+        release event to it. Returning into a freed object takes the
+        whole process down (0xC0000409 on Windows). By the time the
+        timer fires the event is fully delivered and the item is no
+        longer the mouse grabber, so tearing it down is safe. The
+        callback holds the *scene* (which outlives the rebuild), never
+        `self`."""
+        if not self._movable:
+            return
+        scene, node, delta = self._scene, self.node, self.pos()
+        QTimer.singleShot(0, lambda: scene.commit_part_move(node, delta))
 
 
 # ------------------------------------------------------------------ scene
@@ -1141,12 +1155,14 @@ class SketchScene(QGraphicsScene):
         detaches it (the drag is the user taking control back)."""
         if abs(delta.x()) < 1e-9 and abs(delta.y()) < 1e-9:
             return
-        if node.type == "component":
-            from .mates import detach, mate_of
-            if mate_of(node) is not None:
-                detach(self.model, node)
-            if self.snap_enabled:
-                delta = self._anchor_snap(node, delta)
+        from .mates import detach, mate_of
+        # a snapped part is driven by its mate, which re-solves on every
+        # change and would overwrite the drop before it reached the
+        # screen — the drag is the user taking control back
+        if mate_of(node) is not None:
+            detach(self.model, node)
+        if node.type == "component" and self.snap_enabled:
+            delta = self._anchor_snap(node, delta)
         move = self._local_move(node, delta)
         # a Move, Group, Object or Linked copy carries its own position
         if node.type in MOVABLE_TYPES:

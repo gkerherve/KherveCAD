@@ -645,3 +645,63 @@ def test_top_level_drag_still_wraps_in_a_translate(window):
     assert cube.parent.type == "translate"
     assert cube.parent.params["x"] == 5.0
     assert cube.parent.params["z"] == 7.0
+
+
+def test_drop_is_committed_after_the_event_not_during_it(window):
+    """Committing a drag rebuilds the scene, which deletes the item Qt
+    is still delivering the release to — that took the whole process
+    down (0xC0000409). The commit must land on the next event-loop
+    turn instead, once the item is no longer the mouse grabber."""
+    from PyQt5.QtCore import QPointF
+    from PyQt5.QtWidgets import QApplication
+    m = window.model
+    comp = m.new_component("Part", visible=False)
+    move = m.add_node("translate", dict(x=0.0, y=0.0, z=0.0),
+                      parent=comp, name="Move")
+    m.add_node("cube", dict(width=20.0, depth=20.0, height=20.0),
+               parent=move)
+    m.structure_changed.emit()
+    window.builder.open_component(comp)
+    window._set_plane("Front (XZ)")
+    window.builder.object_tab.tree.select_nodes([move])
+
+    item = window.scene._part_items[move.id]
+    item.setPos(QPointF(30.0, -15.0))            # the drag
+    item.queue_commit()                          # what the release does
+
+    # nothing has touched the model yet: the item is still alive and
+    # still the one Qt is delivering the release to
+    assert move.params["x"] == 0.0
+    assert item.scene() is window.scene
+    QApplication.processEvents()                 # ...and now it lands
+    assert move.params["x"] == 30.0
+    assert move.params["z"] == -15.0
+    assert move.id not in window.scene._part_items         or window.scene._part_items[move.id] is not item   # rebuilt
+
+
+def test_dragging_a_snapped_group_releases_its_mate(window):
+    """A mate re-solves on every change, so dragging a snapped part
+    would be undone before it reached the screen. The drag detaches,
+    the same rule as typing a position in Properties."""
+    from PyQt5.QtCore import QPointF
+
+    from khervecad import mates
+    m = window.model
+    comp = m.new_component("Part", visible=False)
+    base = m.add_node("union", parent=comp, name="Base")
+    m.add_node("cube", dict(width=20.0, depth=20.0, height=20.0),
+               parent=base)
+    lid = m.add_node("union", parent=comp, name="Lid")
+    m.add_node("cube", dict(width=10.0, depth=10.0, height=10.0),
+               parent=lid)
+    m.structure_changed.emit()
+    mates.attach(m, lid, "Base", "Bottom", "Top")
+    assert lid.params["z"] == pytest.approx(20.0)
+
+    window.builder.open_component(comp)
+    window._set_plane("Front (XZ)")
+    window.scene.commit_part_move(lid, QPointF(0.0, 15.0))
+    assert mates.mate_of(lid) is None
+    assert lid.params["z"] == pytest.approx(35.0)
+    mates.refresh(m)                          # nothing to overwrite it
+    assert lid.params["z"] == pytest.approx(35.0)
