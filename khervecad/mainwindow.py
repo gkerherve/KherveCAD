@@ -701,11 +701,7 @@ class MainWindow(QMainWindow):
         rect = self.scene.isolated_bounds()
         if rect is not None:
             self.view2d.frame_rect(rect)
-        with self._isolated_frame(self.builder.isolated_component()):
-            tris = (mesh.selected_world_tris(
-                        self.model.root, self._selected_ids,
-                        fn=self.model.effective_fn())
-                    if self._selected_ids else [])
+        tris = self._highlight_tris()
         self.view3d.set_highlight_mesh(tris)
         self._refresh_anchor_markers()
         self._show_dimensions(tris)
@@ -1082,6 +1078,22 @@ class MainWindow(QMainWindow):
                 node.visible = saved_visible
         return ctx()
 
+    def _highlight_tris(self):
+        """World triangles of the selection, walked from the *current
+        scope* — the active Object in the Object tab, the document in
+        Main. Walking the document root instead would tessellate the
+        selection again for every Main instance of that Object and drop
+        those copies, at their assembly placement, into the isolated
+        view: the Object tab would show geometry that belongs to Main."""
+        ids = getattr(self, "_selected_ids", set())
+        if not ids:
+            return []
+        root = self._render_scope()[0]
+        iso = root if root is not self.model.root else None
+        with self._isolated_frame(iso):
+            return mesh.selected_world_tris(
+                root, ids, fn=self.model.effective_fn())
+
     def _refresh_preview(self):
         fn = self.model.effective_fn()
         root, scad = self._render_scope()
@@ -1100,10 +1112,8 @@ class MainWindow(QMainWindow):
                       if not self.engine.available else "")
         self.view3d.set_mesh(tris, label,
                              colors if has_colors else None)
-        selected = getattr(self, "_selected_ids", set())
-        if selected:
-            self.view3d.set_highlight_mesh(
-                mesh.selected_world_tris(self.model.root, selected, fn=fn))
+        if getattr(self, "_selected_ids", set()):
+            self.view3d.set_highlight_mesh(self._highlight_tris())
         if tris and not self._fitted and not self.view3d.user_moved:
             self.view3d.fit()
             self._fitted = True

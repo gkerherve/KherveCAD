@@ -611,6 +611,16 @@ class SketchScene(QGraphicsScene):
             ancestor = ancestor.parent
         return env
 
+    def scope_root(self):
+        """The node the scene draws: the active Object while the Object
+        tab isolates the views, else the document root. Everything that
+        walks the tree starts here, so a part that lives in the Main
+        assembly never leaks into an Object being edited (and vice
+        versa) — the two tabs are visually independent."""
+        iso = self.isolation_resolver() if self.isolation_resolver \
+            else None
+        return iso if iso is not None else self.model.root
+
     def _create(self, type_: str, params: dict):
         """Add a drawn shape — inside the active Object while the
         Object tab has the viewers isolated, else at the top level."""
@@ -804,8 +814,9 @@ class SketchScene(QGraphicsScene):
             return None
         if _produces_3d(node):
             return node
+        stop = self.scope_root()
         probe = node.parent
-        while probe is not None and probe is not self.model.root:
+        while probe is not None and probe is not stop:
             if _produces_3d(probe):
                 return probe
             probe = probe.parent
@@ -881,7 +892,7 @@ class SketchScene(QGraphicsScene):
             # filled shape (holes and concavities included), built
             # instantly — no simplify() (it explodes on helical threads).
             tris = mesh_mod.selected_world_tris(
-                self.model.root, {node.id}, detail=14,
+                self.scope_root(), {node.id}, detail=14,
                 fn=self.model.effective_fn())
         if not tris:
             return None
