@@ -241,6 +241,10 @@ class ScadEngine(QObject):
         self._dir = Path(tempfile.mkdtemp(prefix="khervecad_"))
         self._process = None
         self._pending_code = None
+        #: bumped whenever what is on screen stops matching the render
+        #: in flight; _finished then drops that render's result.
+        self._generation = 0
+        self._running_generation = 0
         self._timer = QTimer(self)
         self._timer.setSingleShot(True)
         self._timer.setInterval(self.DEBOUNCE_MS)
@@ -256,11 +260,24 @@ class ScadEngine(QObject):
 
     # ------------------------------------------------------- rendering
     def request_render(self, scad_code: str):
-        """Schedule a render of *scad_code* (debounced)."""
+        """Schedule a render of *scad_code* (debounced). A render still
+        running is disowned: its code is already superseded, so letting
+        it land would paint the previous model over the current one."""
         if not self.available:
             return
         self._pending_code = scad_code
+        self._generation += 1
         self._timer.start()
+
+    def cancel(self):
+        """Drop the pending render and disown one in flight — the
+        built-in preview is authoritative from here (the document is
+        multi-coloured, say, which a single STL cannot carry). Without
+        this, a render requested before the change lands afterwards and
+        silently replaces what is on screen."""
+        self._timer.stop()
+        self._pending_code = None
+        self._generation += 1
 
     def _start(self):
         if self._pending_code is None:
@@ -271,6 +288,7 @@ class ScadEngine(QObject):
             return
         code = self._pending_code
         self._pending_code = None
+        self._running_generation = self._generation
         scad_path = self._dir / "model.scad"
         stl_path = self._dir / "model.stl"
         scad_path.write_text(code, encoding="utf-8")
@@ -285,6 +303,12 @@ class ScadEngine(QObject):
         process = self._process
         self._process = None
         self.busy_changed.emit(False)
+        if self._running_generation != self._generation:
+            # superseded or cancelled while it ran: its mesh is of the
+            # old model, so it must not reach the view
+            if self._pending_code is not None:
+                self._timer.start()
+            return
         exit_ok = (process.exitStatus() == QProcess.NormalExit
                    and process.exitCode() == 0)
         if exit_ok and Path(stl_path).exists():

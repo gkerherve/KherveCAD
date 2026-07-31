@@ -389,12 +389,15 @@ into a new module and import.
                        brushed metal with specular, matte, wireframe,
                        x-ray) selectable in View > 3D Render Style and
                        persisted via QSettings. A floating **`LightingBar`**
-                       (bottom-right of the frame, hidden during a pick)
+                       (top-left of the frame, hidden during a pick)
                        carries **brightness / contrast** sliders that
                        adjust the finished face colours only — value
                        offset + gain about mid-grey (`_light()` returns
                        None when centred, so the per-face hot path pays
-                       nothing), also persisted. Backface-culls, hoists
+                       nothing), also persisted, plus a **Redraw**
+                       button (`refresh_requested` ->
+                       `MainWindow.force_refresh`: drop the mesh caches
+                       and rebuild both views). Backface-culls, hoists
                        the projection constants out of the per-vertex
                        loop, and — past `DRAFT_ABOVE` triangles — draws a
                        decimated **draft mesh while orbiting/zooming**
@@ -554,7 +557,15 @@ it) open/import it; imported files land in Open Recent.
 
 **Render pipeline**: any model change re-tessellates instantly
 (built-in preview) and schedules a debounced exact OpenSCAD render
-that replaces the preview when it lands.
+that replaces the preview when it lands. A render only lands if it
+still matches what is on screen: `ScadEngine` carries a **generation
+counter** bumped by `request_render()` and `cancel()`, and `_finished`
+drops the mesh when the running generation is stale. Without it a
+render requested moments before a change (colouring the document,
+switching to the Object tab) arrived afterwards and silently repainted
+the view with the *previous* model — the "3D forgot my colours" bug.
+The 3D view's **Redraw** button (`MainWindow.force_refresh`) is the
+manual escape hatch: clear the mesh caches, rebuild both views.
 
 ## Document format
 

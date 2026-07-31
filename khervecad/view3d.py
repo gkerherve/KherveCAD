@@ -17,7 +17,8 @@ the Free Software Foundation, either version 3 of the License, or
 
 import math
 
-from PyQt5.QtCore import QPointF, QRectF, QSettings, Qt, QTimer
+from PyQt5.QtCore import (QPointF, QRectF, QSettings, Qt, QTimer,
+                          pyqtSignal)
 from PyQt5.QtGui import (QColor, QImage, QPainter, QPen, QPolygonF)
 from PyQt5.QtWidgets import (QGridLayout, QLabel, QSlider, QToolButton,
                              QWidget)
@@ -56,7 +57,8 @@ def _clamp_light(value) -> float:
 
 
 class LightingBar(QWidget):
-    """Floating brightness / contrast sliders over the 3D view.
+    """Floating brightness / contrast sliders over the 3D view, with a
+    Redraw button.
 
     Every face is shaded from one fixed light, so depending on the
     render style, the part's own colour and the background, a model can
@@ -64,6 +66,9 @@ class LightingBar(QWidget):
     sliders adjust the *finished* face colours — a value offset and a
     contrast gain about mid-grey — so nothing about the geometry, the
     theme or the exported program changes."""
+
+    #: Redraw was clicked: rebuild both views from the tree.
+    refresh_requested = pyqtSignal()
 
     ROWS = (("brightness", "Bright",
              "Lighten or darken every face (the model only — the "
@@ -101,11 +106,28 @@ class LightingBar(QWidget):
             grid.addWidget(QLabel(label, self), row, 0)
             grid.addWidget(slider, row, 1)
             self.sliders[key] = slider
-        reset = QToolButton(self)
-        reset.setText("⟲")
-        reset.setToolTip("Back to the default lighting")
-        reset.clicked.connect(self.reset)
-        grid.addWidget(reset, 0, 2, 2, 1)
+        grid.addWidget(
+            self._button("mdi.backup-restore", "⟲",
+                         "Back to the default lighting", self.reset),
+            0, 2, 2, 1)
+        grid.addWidget(
+            self._button("mdi.refresh", "⟳",
+                         "Redraw: rebuild both views from the object "
+                         "tree, dropping the mesh caches",
+                         self.refresh_requested.emit),
+            0, 3, 2, 1)
+
+    def _button(self, glyph, fallback, tip, slot):
+        from . import icons
+        button = QToolButton(self)
+        art = icons.icon(glyph, "#e6e9ec")
+        if art.isNull():                      # qtawesome missing
+            button.setText(fallback)
+        else:
+            button.setIcon(art)
+        button.setToolTip(tip)
+        button.clicked.connect(slot)
+        return button
 
     def reset(self):
         for slider in self.sliders.values():
@@ -216,12 +238,11 @@ class View3D(QWidget):
         self._place_lighting_bar()
 
     def _place_lighting_bar(self):
-        """Bottom-right corner: the source badge sits bottom-left and
-        the pick banner across the top, so nothing collides."""
+        """Top-left corner: the source badge sits bottom-left and the
+        bar hides itself for a pick, so nothing collides."""
         bar = self.lighting_bar
         bar.adjustSize()
-        bar.move(max(6, self.width() - bar.width() - 8),
-                 max(6, self.height() - bar.height() - 8))
+        bar.move(8, 8)
 
     def set_style(self, style: str):
         if style in RENDER_STYLES:

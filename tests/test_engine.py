@@ -49,3 +49,91 @@ endsolid test
 
 def test_find_openscad_returns_string():
     assert isinstance(engine.find_openscad(), str)
+
+
+# ------------------------------------------- stale renders never land
+
+class _FakeProcess:
+    """Stands in for the finished QProcess _finished() inspects."""
+
+    def exitStatus(self):
+        from PyQt5.QtCore import QProcess
+        return QProcess.NormalExit
+
+    def exitCode(self):
+        return 0
+
+    def readAllStandardError(self):
+        return b""
+
+
+@pytest.fixture
+def scad_engine(qt_app, tmp_path):
+    eng = engine.ScadEngine()
+    eng.binary = "openscad"                    # pretend one was found
+    return eng
+
+
+@pytest.fixture(scope="session")
+def qt_app():
+    from PyQt5.QtWidgets import QApplication
+    return QApplication.instance() or QApplication([])
+
+
+def _launch(eng, code):
+    """Request a render and do _start's bookkeeping by hand, so the
+    engine believes OpenSCAD is running without spawning it."""
+    eng.request_render(code)
+    eng._timer.stop()
+    eng._pending_code = None
+    eng._running_generation = eng._generation
+    eng._process = _FakeProcess()
+
+
+def _run(eng, code, stl_path):
+    """One render, launched and finished."""
+    _launch(eng, code)
+    eng._finished(str(stl_path))
+
+
+def test_cancelled_render_never_reaches_the_view(scad_engine, tmp_path):
+    """A render requested before the document was coloured must not
+    land afterwards and wipe the colour preview."""
+    path = tmp_path / "model.stl"
+    engine.write_stl(TRIS, str(path))
+    got = []
+    scad_engine.mesh_ready.connect(got.append)
+
+    _launch(scad_engine, "cube(1);")
+    scad_engine.cancel()                        # ...the model changed
+    scad_engine._finished(str(path))
+    assert got == []                            # dropped, not painted
+
+    # and the engine still works for the next render
+    _run(scad_engine, "cube(2);", path)
+    assert len(got) == 1
+
+
+def test_superseded_render_is_dropped(scad_engine, tmp_path):
+    """While one render runs, a newer request supersedes it: the old
+    mesh is of the old model, so it must not be painted."""
+    path = tmp_path / "model.stl"
+    engine.write_stl(TRIS, str(path))
+    got = []
+    scad_engine.mesh_ready.connect(got.append)
+
+    _launch(scad_engine, "cube(1);")
+    scad_engine.request_render("cube(9);")      # newer model
+    scad_engine._timer.stop()
+    scad_engine._finished(str(path))
+    assert got == []
+    assert scad_engine._pending_code == "cube(9);"   # still queued
+
+
+def test_completed_render_reaches_the_view(scad_engine, tmp_path):
+    path = tmp_path / "model.stl"
+    engine.write_stl(TRIS, str(path))
+    got = []
+    scad_engine.mesh_ready.connect(got.append)
+    _run(scad_engine, "cube(1);", path)
+    assert len(got) == 1 and len(got[0]) == 2

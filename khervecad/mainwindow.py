@@ -159,6 +159,8 @@ class MainWindow(QMainWindow):
             lambda n: self.statusBar().showMessage(
                 f"{n.name} detached — its position is now yours to "
                 f"set (the mate would have overwritten it).", 5000))
+        self.view3d.lighting_bar.refresh_requested.connect(
+            self.force_refresh)
         self.engine.mesh_ready.connect(self._engine_mesh)
         self.engine.render_failed.connect(self._engine_failed)
         self.engine.busy_changed.connect(self._engine_busy)
@@ -1136,6 +1138,24 @@ class MainWindow(QMainWindow):
             # would wrongly paint every part the same.
             if not has_colors or uniform:
                 self.engine.request_render(scad())
+            else:
+                # A render requested a moment ago (before the document
+                # was coloured) would land on top of the colour preview
+                # and quietly wipe it — the "3D forgot my colours" bug.
+                self.engine.cancel()
+
+    def force_refresh(self):
+        """Redraw everything from the object tree: drop the mesh caches
+        and rebuild both views. The 3D pipeline is incremental (cached
+        per Object, an exact render swapped in when it lands), so this
+        is the way to make it start over when what is on screen looks
+        stale."""
+        mesh.clear_component_cache()
+        self.scene.rebuild()
+        self._refresh_preview()
+        self.view3d.update()
+        self.statusBar().showMessage("Redrew both views from the "
+                                     "object tree.", 3000)
 
     def _render_now(self):
         if self.engine.available:

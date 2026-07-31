@@ -475,3 +475,43 @@ def test_lighting_bar_steps_aside_for_a_pick(app, neutral_light):
     assert view.lighting_bar.isHidden()
     view.cancel_pick()
     assert not view.lighting_bar.isHidden()
+
+
+def test_redraw_button_rebuilds_both_views(app):
+    """The Redraw button on the bar drops the mesh caches and rebuilds
+    the views — the escape hatch when the incremental 3D pipeline shows
+    something stale."""
+    from khervecad import mesh
+    from khervecad.mainwindow import MainWindow
+    window = MainWindow()
+    m = window.model
+    comp = m.new_component("Part")
+    m.add_node("cube", dict(width=10.0, depth=10.0, height=10.0),
+               parent=comp)
+    m.structure_changed.emit()
+    assert mesh._COMP_CACHE                      # populated by the preview
+
+    window.view3d.lighting_bar.refresh_requested.emit()
+    assert window.view3d.mesh                    # redrawn, not emptied
+    assert comp.id in window.scene._part_items
+
+
+def test_colouring_cancels_a_render_that_would_wipe_it(app):
+    """Colours live only in the built-in preview (an STL carries none),
+    so once a document is multi-coloured any render still in flight is
+    disowned — otherwise it lands and repaints everything grey."""
+    from khervecad.mainwindow import MainWindow
+    window = MainWindow()
+    window.engine.binary = "openscad"            # pretend one was found
+    m = window.model
+    a = m.add_node("cube", dict(width=10.0, depth=10.0, height=10.0))
+    b = m.add_node("sphere", dict(radius=5.0, x=30.0))
+    m.structure_changed.emit()
+    assert window.engine._pending_code is not None   # plain: render it
+
+    m.wrap_nodes([a], "color").params["color"] = "#ff0000"
+    m.wrap_nodes([b], "color").params["color"] = "#00ff00"
+    m.structure_changed.emit()
+    assert window.engine._pending_code is None       # coloured: cancelled
+    colors = window.view3d.colors
+    assert colors and any(c is not None for c in colors)
