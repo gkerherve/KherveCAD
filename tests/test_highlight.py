@@ -575,3 +575,73 @@ def test_dragging_group_edits_own_position(window):
     window.scene.commit_part_move(grp, QPointF(30.0, 20.0))
     assert [c.type for c in m.root.children] == ["union"]   # no wrapper
     assert grp.params["x"] == 30.0 and grp.params["y"] == 20.0
+
+
+# ------------------------------------------- dragging a selected Move
+
+def test_selected_translate_is_draggable_at_any_depth(window):
+    """Highlight a Move inside a part and you can drag it in the 2D
+    view — it used to be movable only at the top level, so a nested
+    Move showed a silhouette that refused to budge."""
+    from PyQt5.QtCore import QPointF
+    m = window.model
+    comp = m.new_component("Part", visible=False)
+    move = m.add_node("translate", dict(x=0.0, y=0.0, z=0.0),
+                      parent=comp, name="Move")
+    m.add_node("cube", dict(width=10.0, depth=10.0, height=10.0),
+               parent=move)
+    m.structure_changed.emit()
+    window.builder.open_component(comp)          # edit it in the Object tab
+    window._set_plane("Front (XZ)")
+    window.builder.object_tab.tree.select_nodes([move])
+
+    item = window.scene._part_items[move.id]
+    assert item._movable
+    window.scene.commit_part_move(move, QPointF(12.0, -4.0))
+    assert move.params["x"] == 12.0
+    assert move.params["z"] == -4.0
+
+
+def test_drag_writes_into_the_nodes_own_frame(window):
+    """The drag is world mm, but a Move writes in its parent's frame.
+    Under a 90° rotation about X the local +Y axis points along world
+    +Z, so dragging up the screen must land in y — writing it to z
+    would send the part off in the wrong direction entirely."""
+    from PyQt5.QtCore import QPointF
+    m = window.model
+    comp = m.new_component("Part")            # visible: world tris below
+    rot = m.add_node("rotate", dict(x=90.0, y=0.0, z=0.0), parent=comp,
+                     name="Tilt")
+    move = m.add_node("translate", dict(x=0.0, y=0.0, z=0.0),
+                      parent=rot, name="Move")
+    m.add_node("cube", dict(width=10.0, depth=10.0, height=10.0),
+               parent=move)
+    m.structure_changed.emit()
+    window.builder.open_component(comp)
+    window._set_plane("Front (XZ)")
+    window.builder.object_tab.tree.select_nodes([move])
+    assert window.scene._part_items[move.id]._movable
+
+    window.scene.commit_part_move(move, QPointF(0.0, 10.0))
+    assert move.params["x"] == 0.0
+    assert move.params["y"] == pytest.approx(10.0, abs=1e-3)
+    assert move.params["z"] == pytest.approx(0.0, abs=1e-3)
+    # and the geometry really did land 10 mm up the screen: the cube
+    # spanned world z 0..10 before the drag
+    tris = mesh.selected_world_tris(comp, {move.id})
+    assert max(v[2] for t in tris for v in t) == pytest.approx(20.0,
+                                                               abs=1e-3)
+
+
+def test_top_level_drag_still_wraps_in_a_translate(window):
+    """A part with nowhere to put the move still gets one wrapped
+    round it — the long-standing assembly-view behaviour."""
+    from PyQt5.QtCore import QPointF
+    m = window.model
+    cube = m.add_node("cube", dict(width=10.0, depth=10.0, height=10.0))
+    m.structure_changed.emit()
+    window._set_plane("Front (XZ)")
+    window.scene.commit_part_move(cube, QPointF(5.0, 7.0))
+    assert cube.parent.type == "translate"
+    assert cube.parent.params["x"] == 5.0
+    assert cube.parent.params["z"] == 7.0

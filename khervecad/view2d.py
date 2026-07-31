@@ -395,6 +395,28 @@ _ITEM_CLASSES = dict(line=LineShapeItem, rect=RectShapeItem,
                      text=TextShapeItem)
 
 
+#: node types that carry their own move params, so a drag is baked
+#: into the node itself instead of wrapping it in a new translate.
+MOVABLE_TYPES = ("translate", "union", "component", "reference")
+
+
+def _invert3(m):
+    """Inverse of a 3x3 matrix (adjugate / determinant), or None when
+    it is singular — a zero scale, say."""
+    a, b, c = m[0]
+    d, e, f = m[1]
+    g, h, i = m[2]
+    det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)
+    if abs(det) < 1e-12:
+        return None
+    return [[(e * i - f * h) / det, (c * h - b * i) / det,
+             (b * f - c * e) / det],
+            [(f * g - d * i) / det, (a * i - c * g) / det,
+             (c * d - a * f) / det],
+            [(d * h - e * g) / det, (b * g - a * h) / det,
+             (a * e - b * d) / det]]
+
+
 def _produces_3d(node) -> bool:
     """True if the subtree makes solid geometry (an assemblable part).
     A Linked copy renders its master, so it counts too."""
@@ -909,7 +931,13 @@ class SketchScene(QGraphicsScene):
             return None
         if editable:
             path = path.simplified()           # crisp outline like a shape
-        movable = node.parent is self.model.root
+        # A selected part is draggable when the move has somewhere to
+        # go: a node that carries its own position (a Move/translate, a
+        # Group, an Object or an instance) takes it directly at any
+        # depth — highlight a Move and you can drag it in the plane —
+        # and a top-level part gets a translate wrapped round it.
+        movable = (node.type in MOVABLE_TYPES
+                   or node.parent is self.scope_root())
         return PartItem(node, self, path, node.name, movable=movable,
                         dashed=False, dims=dims, blue=editable)
 
@@ -936,8 +964,10 @@ class SketchScene(QGraphicsScene):
 
     def _world_matrix(self, node):
         """4x4 transform mapping *node*'s local coordinates to world —
-        the product of its ancestor translate/rotate/scale/mirror nodes,
-        with expressions resolved (loop vars at their first value)."""
+        the product of its ancestor transforms, with expressions
+        resolved (loop vars at their first value). A Group, Object or
+        instance is a transform too: it carries its own placement
+        (x/y/z + rx/ry/rz), exactly as the tessellator applies it."""
         from . import mesh as mesh_mod
         chain = []
         probe = node.parent
@@ -956,6 +986,15 @@ class SketchScene(QGraphicsScene):
                 mat = mesh_mod.mat_mul(mat, builders[anc.type](
                     p.get("x", default), p.get("y", default),
                     p.get("z", default)))
+            elif anc.type in ("union", "component", "reference"):
+                p = mesh_mod.rp(anc, self.env_for(anc))
+                mat = mesh_mod.mat_mul(mat, mesh_mod.mat_mul(
+                    mesh_mod.mat_translate(p.get("x", 0.0),
+                                           p.get("y", 0.0),
+                                           p.get("z", 0.0)),
+                    mesh_mod.mat_rotate(p.get("rx", 0.0),
+                                        p.get("ry", 0.0),
+                                        p.get("rz", 0.0))))
         return mat
 
     def _best_edit_plane(self, node):
@@ -1108,29 +1147,49 @@ class SketchScene(QGraphicsScene):
                 detach(self.model, node)
             if self.snap_enabled:
                 delta = self._anchor_snap(node, delta)
-        _axes, (kx, ky) = PLANES[self.plane]
-        # a Group, Object or Linked copy is a part with its own move
-        # params
-        if node.type in ("translate", "union", "component", "reference"):
+        move = self._local_move(node, delta)
+        # a Move, Group, Object or Linked copy carries its own position
+        if node.type in MOVABLE_TYPES:
             env = self.env_for(node)
-            node.params[kx] = round(
-                expr.resolve(node.params.get(kx, 0.0), env, 0.0)
-                + delta.x(), 4)
-            node.params[ky] = round(
-                expr.resolve(node.params.get(ky, 0.0), env, 0.0)
-                + delta.y(), 4)
+            for key, value in zip(("x", "y", "z"), move):
+                if abs(value) < 1e-9:
+                    continue
+                node.params[key] = round(
+                    expr.resolve(node.params.get(key, 0.0), env, 0.0)
+                    + value, 4)
             self.model.node_changed.emit(node)
             return
         parent, index = node.parent, node.index()
         wrapper = CadNode("translate",
                           self.model.unique_name("translate"),
-                          {kx: round(delta.x(), 4),
-                           ky: round(delta.y(), 4)})
+                          {key: round(value, 4)
+                           for key, value in zip(("x", "y", "z"), move)
+                           if abs(value) > 1e-9})
         wrapper.name = f"Position ({node.name})"
         parent.remove(node)
         wrapper.add(node)
         parent.add(wrapper, index)
         self.model.structure_changed.emit()
+
+    def _local_move(self, node, delta):
+        """A drag is measured in *world* mm in the current plane, but a
+        node's move params live in its **parent's** frame: under a
+        rotated or mirrored ancestor the two are different directions.
+        Map the world delta through the inverse of the ancestor chain's
+        linear part, so dragging a Move inside a rotated group follows
+        the cursor instead of shooting off sideways. Returns the delta
+        as (dx, dy, dz) in the node's own frame."""
+        (ai, bi), _keys = PLANES[self.plane]
+        world = [0.0, 0.0, 0.0]
+        world[ai] = delta.x()
+        world[bi] = delta.y()
+        mat = self._world_matrix(node)
+        inverse = _invert3([[mat[r][c] for c in range(3)]
+                            for r in range(3)])
+        if inverse is None:                    # degenerate: best effort
+            return tuple(world)
+        return tuple(sum(inverse[r][c] * world[c] for c in range(3))
+                     for r in range(3))
 
     @staticmethod
     def _branch_visible(node, stop=None):

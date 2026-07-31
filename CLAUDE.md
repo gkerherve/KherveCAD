@@ -379,7 +379,15 @@ into a new module and import.
                        every internal facet and the part reads as
                        hatching (`PartItem`); dropping
                        commits into a
-                       translate node ("Position (...)"). Everything
+                       translate node ("Position (...)"). A **selected
+                       part is draggable at any depth** when it carries
+                       its own position (`MOVABLE_TYPES`: Move/Group/
+                       Object/instance) — highlight a Move and drag it
+                       in the plane; the world delta is mapped into the
+                       node's own frame (`_local_move`, the inverse of
+                       the ancestor chain's linear part) so a Move under
+                       a rotated group follows the cursor instead of
+                       shooting off sideways. Everything
                        reads in mm: scale bar, live size while
                        drawing, zoom indicator, Fit Sketch / Zoom to
                        Selection. Middle-mouse drag pans; wheel zooms.
