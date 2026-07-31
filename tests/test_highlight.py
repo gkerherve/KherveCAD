@@ -705,3 +705,31 @@ def test_dragging_a_snapped_group_releases_its_mate(window):
     assert lid.params["z"] == pytest.approx(35.0)
     mates.refresh(m)                          # nothing to overwrite it
     assert lid.params["z"] == pytest.approx(35.0)
+
+
+def test_drag_inside_a_part_that_has_anchors(window):
+    """Dragging maps the delta through the ancestor chain, which meant
+    resolving each ancestor's params — including an Object's "anchors"
+    list, which is not points. The ValueError escaped through a Qt
+    slot and PyQt aborted the process (0xC0000409)."""
+    from PyQt5.QtCore import QPointF
+
+    from khervecad import anchors
+    m = window.model
+    comp = m.new_component("Part", visible=False)
+    comp.params.update(x=5.0, y=0.0, z=0.0)
+    move = m.add_node("translate", dict(x=0.0, y=0.0, z=0.0),
+                      parent=comp, name="Move")
+    m.add_node("cube", dict(width=20.0, depth=20.0, height=20.0),
+               parent=move)
+    m.structure_changed.emit()
+    # a picked anchor, exactly what the Snap tool stores on a part
+    anchors.add_user_anchor(m, comp, [10.0, 10.0, 20.0],
+                            [0.0, 0.0, 1.0], name="Port")
+    assert isinstance(comp.params["anchors"], list)
+
+    window.builder.open_component(comp)
+    window._set_plane("Front (XZ)")
+    window.scene.commit_part_move(move, QPointF(12.0, -4.0))
+    assert move.params["x"] == 12.0
+    assert move.params["z"] == -4.0

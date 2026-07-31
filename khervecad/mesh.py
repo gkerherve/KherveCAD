@@ -69,7 +69,15 @@ def rp(node: CadNode, env=None) -> dict:
         elif isinstance(value, bool):
             out[key] = value
         elif isinstance(value, list):
-            out[key] = [[rv(x, env), rv(y, env)] for x, y in value]
+            # a list param is normally polygon points — but not always
+            # (an Object's "anchors" is a list of dicts), and unpacking
+            # one of those raised ValueError straight through a Qt slot,
+            # which PyQt turns into abort(): the whole app died
+            if all(isinstance(pt, (list, tuple)) and len(pt) == 2
+                   for pt in value):
+                out[key] = [[rv(x, env), rv(y, env)] for x, y in value]
+            else:
+                out[key] = value
         else:
             out[key] = rv(value, env)
     if _FN_OVERRIDE is not None and node.type in _FN_TYPES:

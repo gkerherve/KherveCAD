@@ -142,3 +142,23 @@ def test_line_capsule_outline():
     xs = [x for x, _ in outline]
     assert min(xs) == pytest.approx(-1.0, abs=0.05)
     assert max(xs) == pytest.approx(11.0, abs=0.05)
+
+
+def test_rp_survives_a_list_param_that_is_not_points():
+    """`rp` resolves every param, and a list one is normally polygon
+    points — but an Object's "anchors" is a list of dicts. Unpacking
+    one of those raised ValueError through a Qt slot, and PyQt turns an
+    exception in a slot into abort(): the app died on the spot."""
+    from khervecad.model import CadNode
+    node = CadNode("component", "Part",
+                   dict(x=1.0, y=2.0, z=3.0,
+                        anchors=[{"name": "Port", "pos": [0, 0, 1],
+                                  "dir": [0, 0, 1], "kind": "user"}]))
+    out = mesh.rp(node)
+    assert out["x"] == 1.0
+    assert out["anchors"] == node.params["anchors"]   # passed through
+
+    # real point lists still resolve, expressions included
+    poly = CadNode("polygon", "P", dict(points=[[0, 0], [10, 0], ["5*2", 8]]))
+    assert mesh.rp(poly)["points"] == [[0.0, 0.0], [10.0, 0.0],
+                                       [10.0, 8.0]]

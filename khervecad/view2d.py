@@ -994,22 +994,25 @@ class SketchScene(QGraphicsScene):
                         scale=mesh_mod.mat_scale,
                         mirror=mesh_mod.mat_mirror)
         for anc in reversed(chain):                # root .. parent order
+            # only the placement params, resolved one by one: rp() walks
+            # EVERY param, and a part's "anchors" list is not points
             if anc.type in builders:
-                p = mesh_mod.rp(anc, self.env_for(anc))
                 default = 1.0 if anc.type == "scale" else 0.0
-                mat = mesh_mod.mat_mul(mat, builders[anc.type](
-                    p.get("x", default), p.get("y", default),
-                    p.get("z", default)))
+                x, y, z = self._placement(anc, ("x", "y", "z"), default)
+                mat = mesh_mod.mat_mul(mat,
+                                       builders[anc.type](x, y, z))
             elif anc.type in ("union", "component", "reference"):
-                p = mesh_mod.rp(anc, self.env_for(anc))
+                x, y, z = self._placement(anc, ("x", "y", "z"))
+                rx, ry, rz = self._placement(anc, ("rx", "ry", "rz"))
                 mat = mesh_mod.mat_mul(mat, mesh_mod.mat_mul(
-                    mesh_mod.mat_translate(p.get("x", 0.0),
-                                           p.get("y", 0.0),
-                                           p.get("z", 0.0)),
-                    mesh_mod.mat_rotate(p.get("rx", 0.0),
-                                        p.get("ry", 0.0),
-                                        p.get("rz", 0.0))))
+                    mesh_mod.mat_translate(x, y, z),
+                    mesh_mod.mat_rotate(rx, ry, rz)))
         return mat
+
+    def _placement(self, node, keys, default=0.0):
+        env = self.env_for(node)
+        return [expr.resolve(node.params.get(key, default), env, default)
+                for key in keys]
 
     def _best_edit_plane(self, node):
         """The assembly plane that exposes the most editable size handles
