@@ -147,12 +147,9 @@ class MainWindow(QMainWindow):
         self.scene.measure_changed.connect(
             lambda text: self._measure_label.setText(text))
         self.view2d.clipboard_op.connect(
-            lambda op: {"cut": self.builder.tree.cut_selection,
-                        "copy": self.builder.tree.copy_selection,
-                        "paste": self.builder.tree.paste_clipboard
-                        }[op]())
+            lambda op: self._tree_command(op))
         self.view2d.step_object.connect(
-            self.builder.tree.step_selection)
+            lambda step: self._tree_command("step", step))
         self.model.structure_changed.connect(self._model_edited)
         self.model.node_changed.connect(lambda _n: self._model_edited())
         self.model.mate_released.connect(
@@ -354,18 +351,18 @@ class MainWindow(QMainWindow):
         edit_menu.addSeparator()
         edit_menu.addAction(icons.icon("mdi.content-cut"),
                             "Cu&t\tCtrl+X",
-                            self.builder.tree.cut_selection)
+                            lambda: self._tree_command("cut"))
         edit_menu.addAction(icons.icon("mdi.content-copy"),
                             "&Copy\tCtrl+C",
-                            self.builder.tree.copy_selection)
+                            lambda: self._tree_command("copy"))
         edit_menu.addAction(icons.icon("mdi.content-paste"),
                             "&Paste\tCtrl+V",
-                            self.builder.tree.paste_clipboard)
+                            lambda: self._tree_command("paste"))
         edit_menu.addSeparator()
         edit_menu.addAction("Move &Up\tCtrl+Up",
-                            lambda: self.builder.tree.shift_selection(-1))
+                            lambda: self._tree_command("shift", -1))
         edit_menu.addAction("Move Dow&n\tCtrl+Down",
-                            lambda: self.builder.tree.shift_selection(1))
+                            lambda: self._tree_command("shift", 1))
         edit_menu.addSeparator()
         edit_menu.addAction("&Delete", self._delete_selection, "Delete")
         edit_menu.addAction("D&uplicate", self._duplicate_selection,
@@ -619,8 +616,21 @@ class MainWindow(QMainWindow):
         self.builder.open_component(
             self.model.new_component(visible=False))
 
+    def _tree_command(self, op: str, step: int = 0):
+        """Run a selection command on whichever tree is in front — the
+        Object tab's while it is current, else Main."""
+        tree = self.builder.active_tree()
+        if op == "step":                     # walk to the next object
+            tree.step_selection(step)
+        elif op == "shift":                  # reorder within the parent
+            tree.shift_selection(step)
+        else:
+            {"cut": tree.cut_selection, "copy": tree.copy_selection,
+             "paste": tree.paste_clipboard}[op]()
+
     def _apply_operation(self, op: str):
-        nodes = self.builder.tree.selected_nodes()
+        tree = self.builder.active_tree()
+        nodes = tree.selected_nodes()
         if not nodes:
             if op in ("for_loop", "while_loop", "if_else", "union"):
                 self._add_primitive(op)       # empty, fill it after
@@ -630,18 +640,18 @@ class MainWindow(QMainWindow):
             return
         wrapper = self.model.wrap_nodes(nodes, op)
         if wrapper is not None:
-            self.builder.tree.select_nodes([wrapper])
+            tree.select_nodes([wrapper])
 
     def _ungroup_selection(self):
-        for node in self.builder.tree.selected_nodes():
+        for node in self.builder.active_tree().selected_nodes():
             self.model.ungroup(node)
 
     def _delete_selection(self):
-        for node in self.builder.tree.selected_nodes():
+        for node in self.builder.active_tree().selected_nodes():
             self.model.remove_node(node)
 
     def _duplicate_selection(self):
-        for node in self.builder.tree.selected_nodes():
+        for node in self.builder.active_tree().selected_nodes():
             self.model.duplicate(node)
 
     def _set_show_grid(self, show):

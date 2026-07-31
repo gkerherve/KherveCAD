@@ -1516,6 +1516,19 @@ class BuilderPanel(QTabWidget):
             return self.object_tab.active_component()
         return None
 
+    def active_tree(self):
+        """The tree the user is working in: the Object tab's while that
+        tab is current, else the Main assembly tree.
+
+        Every command that acts on the *selection* — apply an
+        operation, group/ungroup, delete, duplicate, the clipboard,
+        reorder — must go through this. Reading the Main tree while the
+        Object tab is up finds nothing selected, so the command
+        silently did nothing (Difference in an Object appeared dead)."""
+        if self.currentWidget() is self.object_tab:
+            return self.object_tab.tree
+        return self.tree
+
     def _tab_changed(self, index):
         """The Code tab shows whatever tree you last worked in: coming
         from Main it scopes to the whole program, coming from the

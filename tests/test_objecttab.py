@@ -276,3 +276,61 @@ def test_code_scope_follows_last_tree_tab(model, app):
     panel.setCurrentWidget(panel.object_tab)
     assert panel.code_scope.currentIndex() == 1
     assert "Noise" not in panel.code.toPlainText()
+
+
+# ------------------------------- commands act on the tree in front
+
+def _window_editing_an_object(app):
+    """A MainWindow with the Object tab open on a two-solid Object."""
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    m = w.model
+    comp = m.new_component("Block", visible=False)
+    body = m.add_node("cube", dict(width=20.0, depth=20.0, height=20.0),
+                      parent=comp, name="Body")
+    hole = m.add_node("cylinder", dict(radius=4.0, height=30.0),
+                      parent=comp, name="Hole")
+    w.builder.open_component(comp)
+    return w, comp, body, hole
+
+
+def test_difference_applies_inside_the_object_tab(app):
+    """Operations read the tree the user is working in. They used to
+    read the Main tree unconditionally, which is empty while the Object
+    tab is up — so clicking Difference in an Object did nothing."""
+    w, comp, body, hole = _window_editing_an_object(app)
+    w.builder.object_tab.tree.select_nodes([body, hole])
+    w._apply_operation("difference")
+
+    assert [c.type for c in comp.children] == ["difference"]
+    diff = comp.children[0]
+    assert [c.name for c in diff.children] == ["Body", "Hole"]
+    # and the new wrapper is selected in the Object tab, not in Main
+    assert w.builder.object_tab.tree.selected_nodes() == [diff]
+
+
+def test_delete_and_duplicate_follow_the_object_tab(app):
+    w, comp, body, hole = _window_editing_an_object(app)
+    w.builder.object_tab.tree.select_nodes([hole])
+    w._duplicate_selection()
+    assert len(comp.children) == 3
+
+    w.builder.object_tab.tree.select_nodes([hole])
+    w._delete_selection()
+    assert hole not in comp.children
+    assert body in comp.children             # only the selection went
+
+
+def test_operations_still_apply_in_main(app):
+    """The Main tab keeps working exactly as before."""
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    m = w.model
+    a = m.new_component("A")
+    m.add_node("cube", parent=a)
+    b = m.new_component("B")
+    m.add_node("sphere", parent=b)
+    w.builder.setCurrentWidget(w.builder._main_page)
+    w.builder.tree.select_nodes([a, b])
+    w._apply_operation("union")
+    assert [c.type for c in m.root.children] == ["union"]

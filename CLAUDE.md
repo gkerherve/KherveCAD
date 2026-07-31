@@ -582,6 +582,11 @@ compatible.
 - Vertical toolbar = shape tools (exclusive checkable group) + 3D
   primitives; horizontal toolbar = file ops, operations applied to
   the selection, grid/snap, Render (F5), Fit 3D.
+- Every command that acts on the **selection** (operations, group/
+  ungroup, delete, duplicate, clipboard, reorder) goes through
+  `BuilderPanel.active_tree()` — the Object tab's tree while that tab
+  is current, else Main. Reading `builder.tree` directly finds nothing
+  selected in the Object tab and the command silently does nothing.
 - Status bar: cursor position in sketch coordinates + engine badge
   (OpenSCAD found / built-in preview).
 - **Window style**: Fusion as default; themes shared with the family
