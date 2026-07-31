@@ -126,6 +126,45 @@ def definition_of(model, part):
 _MATEABLE = ("component", "reference", "union")
 
 
+def unwrap(node):
+    """Look through a **colour wrapper** to the part inside.
+
+    Colouring a part wraps it in a `color` node, and the part is then
+    no longer a direct child of its container — so it dropped out of
+    the assembly entirely: the Snap tool stopped seeing it ("needs at
+    least two visible Objects") and no other part could mate to it.
+    A colour carries no transform, so the part inside sits exactly
+    where it did and is still the assembly part. Transform wrappers
+    (a translate/rotate round a part) are deliberately *not* seen
+    through: the mate would solve as if the wrapper were not there and
+    place the part wrong."""
+    while node is not None and node.type == "color" \
+            and len(node.children) == 1:
+        node = node.children[0]
+    return node
+
+
+def _scope_parts(container, types=_MATEABLE):
+    """Mateable parts directly under *container*, colour wrappers seen
+    through."""
+    out = []
+    for child in container.children:
+        part = unwrap(child)
+        if part is not None and part.type in types:
+            out.append(part)
+    return out
+
+
+def _container_of(node):
+    """The assembly scope a part belongs to: its parent, or what that
+    parent is wrapped in (a colour is not a container of its own)."""
+    container = node.parent
+    while container is not None and container.type == "color" \
+            and len(container.children) == 1:
+        container = container.parent
+    return container
+
+
 def parts(model, scope=None):
     """The mateable parts at *scope*.
 
@@ -138,23 +177,23 @@ def parts(model, scope=None):
     ``union``/``component`` children, i.e. the "secondary" parts.
     """
     if scope is not None:
-        return [c for c in scope.children
-                if c.type in ("union", "component")]
-    out = list(model.components())
-    for child in model.root.children:
-        if child.type == "reference" \
-                and definition_of(model, child) is not None:
-            out.append(child)
+        return _scope_parts(scope, ("union", "component"))
+    out = []
+    for part in _scope_parts(model.root, ("component", "reference")):
+        if part.type == "component" \
+                or definition_of(model, part) is not None:
+            out.append(part)
     return out
 
 
 def _mate_siblings(node):
-    """The parts a *node*'s mate may reference — its siblings under the
-    same container (the assembly root, or the Object being built)."""
-    if node.parent is None:
+    """The parts a *node*'s mate may reference — the other mateable
+    parts in the same container (the assembly root, or the Object being
+    built), colour wrappers on either side seen through."""
+    container = _container_of(node)
+    if container is None:
         return []
-    return [c for c in node.parent.children
-            if c is not node and c.type in _MATEABLE]
+    return [p for p in _scope_parts(container) if p is not node]
 
 
 def find_anchor(definition, name, env=None, fn=None):

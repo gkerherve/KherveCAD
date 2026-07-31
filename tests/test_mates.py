@@ -241,3 +241,59 @@ def test_snap_tweak_popup_edits_the_mate_live(model):
     assert lid.params["mate"]["spin"] == 45.0
     popup._detach()
     assert lid.params.get("mate") is None
+
+
+# ------------------------------- a coloured part is still an assembly part
+
+def test_colouring_a_part_keeps_it_mateable(model):
+    """Colouring wraps a part in a `color` node, so it stops being a
+    direct child of the assembly root. It must still count as an
+    assembly part — otherwise the Snap tool sees one part instead of
+    two and refuses, and nothing can mate to it."""
+    base = _cube(model, "Base")
+    lid = _cube(model, "Lid", size=10.0)
+    tint = model.wrap_nodes([lid], "color")
+    tint.params["color"] = "#c8a000"
+    model.structure_changed.emit()
+
+    assert lid in mates.parts(model)
+    assert lid in mates._mate_siblings(base)
+    assert base in mates._mate_siblings(lid)
+
+    mates.attach(model, lid, "Base", "Bottom", "Top")
+    pos, _d = _anchor_world(lid, "Bottom")
+    assert pos == pytest.approx([10.0, 10.0, 20.0])   # sat on the base
+    # and it still follows its parent
+    before = lid.params["x"]
+    base.params["x"] = 30.0
+    mates.refresh(model)
+    assert lid.params["x"] == pytest.approx(before + 30.0)
+
+
+def test_a_transform_wrapper_is_not_seen_through(model):
+    """Only a colour is transparent. A translate round a part really
+    does move it, so mating the part inside would place it wrong —
+    it stays out of the list rather than snapping to the wrong spot."""
+    _cube(model, "Base")
+    lid = _cube(model, "Lid", size=10.0)
+    moved = model.wrap_nodes([lid], "translate")
+    moved.params.update(x=50.0, y=0.0, z=0.0)
+    model.structure_changed.emit()
+    assert lid not in mates.parts(model)
+
+
+def test_snap_tool_sees_a_coloured_instance(app):
+    """End to end: the two-click Snap tool's part list."""
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    m = w.model
+    comp = m.new_component("Block", visible=False)
+    m.add_node("cube", dict(width=10.0, depth=10.0, height=10.0),
+               parent=comp)
+    a = m.add_instance(comp)
+    b = m.add_instance(comp)
+    tint = m.wrap_nodes([b], "color")
+    tint.params["color"] = "#3070c0"
+    m.structure_changed.emit()
+    names = [p.name for p, _tris in w._snap_groups(None)]
+    assert names == [a.name, b.name]
