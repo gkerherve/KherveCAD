@@ -351,6 +351,29 @@ def module_name(name: str) -> str:
     return ident
 
 
+def _referenced_modules(only):
+    """The Objects whose ``module`` an isolated program for *only* must
+    still define: the Objects *only* instances (a Linked copy of an
+    Object emits a bare ``Part();`` call), transitively through masters
+    and nested instances, minus the ones defined inside the subtree
+    itself. Order is definition-before-use for readability."""
+    inside = {n.id for n in only.walk()}
+    out, queue, seen = [], [only], set()
+    while queue:
+        for node in queue.pop().walk():
+            if node.type != "reference":
+                continue
+            target = (_REF_INDEX or {}).get(
+                str(node.params.get("ref", "")).strip())
+            if target is None or target.id in seen:
+                continue
+            seen.add(target.id)
+            queue.append(target)
+            if target.type == "component" and target.id not in inside:
+                out.append(target)
+    return out
+
+
 def _fn(p) -> object:
     """Effective $fn for a round object: the document-wide common
     segment count when one is active, else the object's own value."""
@@ -600,12 +623,26 @@ class CadNode:
         star = "" if self.visible else "*"
         name = (_MODULE_NAMES or {}).get(self.id) \
             or module_name(self.name)
+        self.emit_module(lines, indent, spans)
+        lines.append((pad + star + _group_prefix(self.params)
+                      + f"{name}();", self))
+
+    def emit_module(self, lines, indent: int = 0, spans: dict = None):
+        """Just the Object's ``module X() { ... }`` definition, without
+        the placed call that puts it in the scene. An isolated Object's
+        program needs the modules of every Object it instances — the
+        instance emits a bare ``Part();`` call, and OpenSCAD silently
+        renders nothing for a module it cannot find, so those parts
+        went missing from the exact render while the built-in preview
+        (which resolves references from the document root) showed
+        them."""
+        pad = "    " * indent
+        name = (_MODULE_NAMES or {}).get(self.id) \
+            or module_name(self.name)
         lines.append((pad + f"module {name}() {{", self))
         for child in self.children:
             child.emit(lines, indent + 1, spans)
         lines.append((pad + "}", self))
-        lines.append((pad + star + _group_prefix(self.params)
-                      + f"{name}();", self))
 
     def _emit_if_else(self, lines, indent: int, spans):
         """`if (cond) { then } else { else }` — the else branch is a
@@ -766,6 +803,12 @@ class DocumentModel(QObject):
     node_changed = pyqtSignal(object)
     #: the drawing's dimension annotations were added/removed.
     dimensions_changed = pyqtSignal()
+    #: a mate was dropped because its placement was edited by hand.
+    mate_released = pyqtSignal(object)
+
+    #: the placement params a mate drives — typing into one of these
+    #: releases the mate (see set_param).
+    PLACEMENT_KEYS = ("x", "y", "z", "rx", "ry", "rz")
 
     #: consecutive edits inside this window merge into one undo step
     #: (a 2D drag or spinbox scrub stays a single Ctrl+Z).
@@ -947,6 +990,8 @@ class DocumentModel(QObject):
                 for child in self.root.children:
                     if child.type in ("variables", "assign"):
                         child.emit(lines, 0, spans)
+                for definition in _referenced_modules(only):
+                    definition.emit_module(lines, 0, spans)
                 only.emit(lines, 0, spans)
         finally:
             _FN_OVERRIDE = None
@@ -1009,6 +1054,16 @@ class DocumentModel(QObject):
         self.structure_changed.emit()
 
     def set_param(self, node: CadNode, key: str, value):
+        if key in self.PLACEMENT_KEYS:
+            # A mate re-solves the placement on every change, so a value
+            # typed here was overwritten before it ever reached the
+            # screen. Editing it by hand is the user taking control
+            # back — the same rule as dragging a mated part in the 2D
+            # view, which detaches it too.
+            from .mates import mate_of
+            if mate_of(node) is not None:
+                node.params.pop("mate", None)
+                self.mate_released.emit(node)
         node.params[key] = value
         self.node_changed.emit(node)
 

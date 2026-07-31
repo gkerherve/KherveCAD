@@ -155,6 +155,10 @@ class MainWindow(QMainWindow):
             self.builder.tree.step_selection)
         self.model.structure_changed.connect(self._model_edited)
         self.model.node_changed.connect(lambda _n: self._model_edited())
+        self.model.mate_released.connect(
+            lambda n: self.statusBar().showMessage(
+                f"{n.name} detached — its position is now yours to "
+                f"set (the mate would have overwritten it).", 5000))
         self.engine.mesh_ready.connect(self._engine_mesh)
         self.engine.render_failed.connect(self._engine_failed)
         self.engine.busy_changed.connect(self._engine_busy)

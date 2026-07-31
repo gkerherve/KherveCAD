@@ -24,7 +24,7 @@ import pytest
 from PyQt5.QtWidgets import QApplication
 
 from khervecad import document, mates, mesh, scadparse
-from khervecad.model import DocumentModel
+from khervecad.model import CadNode, DocumentModel
 from khervecad.treepanel import ObjectTree
 
 
@@ -161,6 +161,45 @@ def test_picked_anchor_shared_by_instances(model):
         pos, direction = anchors.anchor_world(inst, anchor)
         assert pos[0] == pytest.approx(expected_x)
         assert direction[2] == pytest.approx(1.0)
+
+
+def _assembly_object(model, name="Elbow"):
+    """An Object built from instances of another Object — the shape a
+    part takes once you snap library parts together inside it."""
+    part = _definition(model, "CF40_Blank", size=6.0)
+    asm = model.new_component(name)
+    model.add_node("cylinder", dict(radius=3.0, height=40.0), parent=asm)
+    for i in (1, 2):
+        ref = CadNode("reference", f"{part.name} {i}",
+                      dict(ref=part.name, z=10.0 * i))
+        asm.add(ref)
+    model.structure_changed.emit()
+    return asm, part
+
+
+def test_isolated_object_defines_the_modules_it_calls(model):
+    """The Object tab renders one Object standalone. Its instances emit
+    a bare `CF40_Blank();` call — OpenSCAD renders NOTHING for a module
+    it cannot find (a warning, not an error), so without the definition
+    those parts silently vanished from the exact render while the
+    built-in preview still showed them."""
+    asm, _part = _assembly_object(model)
+    code = model.subtree_scad(asm)
+    assert code.count("CF40_Blank();") == 2       # the two instances
+    assert code.count("module CF40_Blank()") == 1
+    # ...and only its module: the definition must not also place itself
+    # in the isolated scene
+    body = code[code.index("module CF40_Blank()"):]
+    end = body.index("module Elbow()")
+    assert "CF40_Blank();" not in body[:end]
+    assert "cube" in body[:end]                   # the module has a body
+
+
+def test_isolated_object_without_instances_is_unchanged(model):
+    comp = _definition(model, "Plain")
+    code = model.subtree_scad(comp)
+    assert code.count("module Plain()") == 1
+    assert code.count("Plain();") == 1
 
 
 def test_kcad_roundtrip_instance_mate(model, tmp_path):

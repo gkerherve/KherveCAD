@@ -54,7 +54,13 @@ into a new module and import.
                        `module` plus one placed call (`module_name()`
                        sanitises/dedupes; `to_scad_map(only=...)` /
                        `subtree_scad()` emit one Object standalone with
-                       the document globals), so the program reads as
+                       the document globals **plus the modules of every
+                       Object it instances** — `_referenced_modules()`
+                       + `emit_module()` (definition only, no placed
+                       call): an instance emits a bare `Part();` and
+                       OpenSCAD renders *nothing* for a module it can't
+                       find, so those parts used to vanish from the
+                       isolated exact render), so the program reads as
                        an assembly of named parts and re-imports
                        losslessly (zero-param modules come back as
                        components, their placement wrappers folded into
@@ -272,7 +278,11 @@ into a new module and import.
                        `MainWindow._model_edited`) so chains follow a
                        moved parent; `AttachDialog` is the context-menu
                        UI. Renames propagate
-                       (`DocumentModel.rename`), drags detach, and
+                       (`DocumentModel.rename`), drags detach, typing a
+                       placement (x/y/z/rx/ry/rz) in Properties detaches
+                       too (`set_param` — the mate would re-solve over
+                       the typed value; `mate_released` reports it in
+                       the status bar), and
                        dropping a part outline in the assembly view
                        snaps anchor-to-anchor (`_anchor_snap`). The
                        **two-click Snap tool** (toolbar magnet, J, or

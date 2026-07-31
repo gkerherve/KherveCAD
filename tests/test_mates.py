@@ -132,6 +132,33 @@ def test_detach_and_rename(model):
     assert mates.mate_of(lid) is None
 
 
+def test_editing_a_placement_releases_the_mate(model):
+    """Typing a position/rotation in Properties must stick: the mate
+    re-solves on every change, so left in place it would overwrite the
+    value before it reached the screen. Editing by hand detaches, like
+    dragging a mated part does."""
+    _cube(model, "Base")
+    lid = _cube(model, "Lid", size=10.0)
+    mates.attach(model, lid, "Base", "Bottom", "Top")
+    assert lid.params["z"] == 20.0
+    released = []
+    model.mate_released.connect(released.append)
+
+    model.set_param(lid, "z", -61.0)
+    assert mates.mate_of(lid) is None
+    assert released == [lid]
+    mates.refresh(model)                     # nothing left to overwrite
+    assert lid.params["z"] == -61.0
+
+
+def test_editing_a_non_placement_param_keeps_the_mate(model):
+    _cube(model, "Base")
+    lid = _cube(model, "Lid", size=10.0)
+    mates.attach(model, lid, "Base", "Bottom", "Top")
+    model.set_param(lid, "color", "#ff0000")
+    assert mates.mate_of(lid) is not None
+
+
 def test_mate_roundtrips_kcad(model, tmp_path):
     base = _cube(model, "Base")
     lid = _cube(model, "Lid", size=10.0)
