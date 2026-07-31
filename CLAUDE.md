@@ -271,8 +271,16 @@ into a new module and import.
                        "secondary" anchors that build a part). `parts(
                        model, scope)` enumerates the mateable parts —
                        Objects+instances when `scope is None`, the
-                       Object's `union`/`component` children when
-                       `scope` is that Object. `refresh(model)`
+                       Object's group/Object/**instance** children when
+                       `scope` is that Object (a part built from library
+                       Objects holds nothing but instances, so leaving
+                       them out left Snap with one part and it refused
+                       to arm). A **colour wrapper is seen through**
+                       (`unwrap`) on both paths — colouring a part used
+                       to drop it out of the assembly entirely; a
+                       transform wrapper is deliberately not, since the
+                       mate would solve as if it were absent.
+                       `refresh(model)`
                        re-solves every mated node at any depth in
                        dependency order (cycle-guarded; called from
                        `MainWindow._model_edited`) so chains follow a

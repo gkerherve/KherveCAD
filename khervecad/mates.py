@@ -172,12 +172,17 @@ def parts(model, scope=None):
     instances of Objects (a hidden Object is a pure definition but
     stays mateable for backward compatibility).
 
-    ``scope=<component>`` — the **groups inside that Object** (the
-    Object tab: snap sub-parts together to build the part). Its direct
-    ``union``/``component`` children, i.e. the "secondary" parts.
+    ``scope=<component>`` — the **sub-parts inside that Object** (the
+    Object tab: snap them together to build the part). Its direct
+    group / Object / **instance** children, i.e. the "secondary"
+    parts. Instances count: a part built from two library Objects has
+    nothing but instances inside it, and leaving them out left the
+    Snap tool with one part to work with, so it refused.
     """
     if scope is not None:
-        return _scope_parts(scope, ("union", "component"))
+        return [p for p in _scope_parts(scope)
+                if p.type != "reference"
+                or definition_of(model, p) is not None]
     out = []
     for part in _scope_parts(model.root, ("component", "reference")):
         if part.type == "component" \

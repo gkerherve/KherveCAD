@@ -23,6 +23,7 @@ import pytest
 from PyQt5.QtWidgets import QApplication
 
 from khervecad.mainwindow import MainWindow
+from khervecad.model import CadNode
 
 
 @pytest.fixture(scope="session")
@@ -204,3 +205,58 @@ def test_snap_hover_labels_name_the_anchor(window):
                dir=[0.0, 0.0, 1.0])
     assert label(odd, parent) == "Base · Face"
     assert not parent.params.get("anchors")   # labelling never persists
+
+
+def test_snap_scope_counts_instances_inside_an_object(app):
+    """A part built from library Objects holds nothing but instances.
+    They are its sub-parts, so the Object tab's Snap tool must offer
+    them — it used to count only groups and Objects, find one part and
+    refuse to arm."""
+    from khervecad import mates
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    m = w.model
+    blank = m.new_component("Blank", visible=False)
+    m.add_node("cube", dict(width=10.0, depth=10.0, height=4.0),
+               parent=blank)
+
+    elbow = m.new_component("Elbow", visible=False)
+    body = m.add_node("union", parent=elbow, name="Body")
+    m.add_node("cylinder", dict(radius=3.0, height=40.0), parent=body)
+    for i, z in enumerate((0.0, 40.0), start=1):
+        elbow.add(CadNode("reference", f"Blank {i}",
+                          dict(ref="Blank", z=z)))
+    m.structure_changed.emit()
+
+    w.builder.open_component(elbow)
+    assert w._snap_scope() is elbow
+    names = [p.name for p in mates.parts(m, elbow)]
+    assert names == ["Body", "Blank 1", "Blank 2"]
+    assert len(w._snap_groups(elbow)) == 3       # all three have geometry
+
+    w._start_snap()
+    assert w.view3d._pick_cb is not None          # armed, not refused
+    w.view3d.cancel_pick()
+
+
+def test_snapping_two_instances_inside_an_object(app):
+    """And the mate actually solves between two instances."""
+    from khervecad import anchors, mates
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    m = w.model
+    blank = m.new_component("Blank", visible=False)
+    m.add_node("cube", dict(width=10.0, depth=10.0, height=4.0),
+               parent=blank)
+    part = m.new_component("Part", visible=False)
+    a = CadNode("reference", "Blank 1", dict(ref="Blank"))
+    b = CadNode("reference", "Blank 2", dict(ref="Blank", z=90.0))
+    part.add(a)
+    part.add(b)
+    m.structure_changed.emit()
+
+    mates.attach(m, b, "Blank 1", "Bottom", "Top")
+    assert b.params["z"] == pytest.approx(4.0)    # stacked on Blank 1
+    pos, _d = anchors.anchor_world(
+        b, mates.find_anchor(mates.definition_of(m, b), "Bottom"))
+    assert pos == pytest.approx([5.0, 5.0, 4.0])
