@@ -33,6 +33,10 @@ SELECT, LINE, RECT, CIRCLE, POLYGON, TEXT, MEASURE, DIMENSION = (
 #: edge midpoint) to snap the measure/dimension tools onto it.
 FEATURE_SNAP_PX = 12.0
 
+#: segment cap for the projected part outlines — they are rebuilt on
+#: every change, so the shape matters and the resolution does not.
+OUTLINE_DETAIL = 14
+
 #: assembly view planes: name -> (horizontal axis, vertical axis)
 #: as indices into (x, y, z) and the translate-param keys they map to.
 PLANES = {
@@ -894,8 +898,22 @@ class SketchScene(QGraphicsScene):
             tris = mesh_mod.selected_world_tris(
                 self.scope_root(), {node.id}, detail=14,
                 fn=self.model.effective_fn())
+        path = self._projected_path(tris)
+        if path is None:
+            return None
+        if editable:
+            path = path.simplified()           # crisp outline like a shape
+        movable = node.parent is self.model.root
+        return PartItem(node, self, path, node.name, movable=movable,
+                        dashed=False, dims=dims, blue=editable)
+
+    def _projected_path(self, tris):
+        """The real filled outline of *tris* in the current plane — the
+        winding-fill union of the projected triangles, so concavities
+        and bores show. None when there is nothing to draw."""
         if not tris:
             return None
+        (ai, bi), _keys = PLANES[self.plane]
         path = QPainterPath()
         path.setFillRule(Qt.WindingFill)
         for tri in tris:
@@ -908,11 +926,7 @@ class SketchScene(QGraphicsScene):
                     - (p2[0] - p0[0]) * (p1[1] - p0[1]))
             pts = (p0, p1, p2) if area >= 0 else (p0, p2, p1)
             path.addPolygon(QPolygonF([QPointF(x, y) for x, y in pts]))
-        if editable:
-            path = path.simplified()           # crisp outline like a shape
-        movable = node.parent is self.model.root
-        return PartItem(node, self, path, node.name, movable=movable,
-                        dashed=False, dims=dims, blue=editable)
+        return path
 
     def _world_matrix(self, node):
         """4x4 transform mapping *node*'s local coordinates to world —
@@ -1030,22 +1044,18 @@ class SketchScene(QGraphicsScene):
         return out
 
     def _make_part_item(self, node):
+        """One draggable outline for a part in the assembly view. It is
+        the part's **real projected shape**, not a convex hull of it: a
+        cross tube used to read as an octagon and a flange as a plain
+        rectangle, so the 2D view looked nothing like the 3D one. The
+        tessellation is capped to a low detail, which keeps the path
+        cheap enough to rebuild on every change."""
         from . import mesh as mesh_mod
         tris = mesh_mod.tessellate(node, self.env_for(node),
-                                   fn=self.model.effective_fn())
-        if not tris:
-            return None
-        (ai, bi), _keys = PLANES[self.plane]
-        points = [(v[ai], v[bi]) for tri in tris for v in tri]
-        outline = mesh_mod.convex_hull_2d(points)
-        if len(outline) < 3:
-            return None
-        path = QPainterPath()
-        path.moveTo(QPointF(*outline[0]))
-        for point in outline[1:]:
-            path.lineTo(QPointF(*point))
-        path.closeSubpath()
-        return PartItem(node, self, path, node.name)
+                                   fn=self.model.effective_fn(),
+                                   detail=OUTLINE_DETAIL)
+        return None if not tris else PartItem(
+            node, self, self._projected_path(tris), node.name)
 
     def _anchor_snap(self, node, delta):
         """Magnetic assembly snap: if dropping *node* puts one of its

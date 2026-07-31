@@ -315,6 +315,29 @@ def test_window_highlights_selected_part_in_both_views(window):
     assert tube.id in window.scene._part_items
 
 
+def test_part_outline_is_the_real_shape_not_a_hull(window):
+    """The assembly outline must look like the 3D part: a cross tube
+    reads as a cross, not as the octagon its convex hull would give.
+    The corner between two arms is empty in the projection, so it must
+    fall outside the outline."""
+    from PyQt5.QtCore import QPointF
+    m = window.model
+    cross = m.new_component("Cross")
+    m.add_node("cube", dict(width=80.0, depth=10.0, height=10.0,
+                            x=-40.0, y=-5.0, z=-5.0), parent=cross)
+    m.add_node("cube", dict(width=10.0, depth=10.0, height=80.0,
+                            x=-5.0, y=-5.0, z=-40.0), parent=cross)
+    m.structure_changed.emit()
+    window._set_plane("Front (XZ)")
+    item = window.scene._part_items[cross.id]
+    path = item.path()
+    assert path.contains(QPointF(0.0, 0.0))         # the hub
+    assert path.contains(QPointF(30.0, 0.0))        # the horizontal arm
+    assert path.contains(QPointF(0.0, 30.0))        # the vertical arm
+    # the notch between two arms: inside the hull, outside the cross
+    assert not path.contains(QPointF(30.0, 30.0))
+
+
 def test_isolate_shows_only_selected(window):
     """Selecting a 3D part hides every other object in the 2D view."""
     m = window.model

@@ -370,7 +370,12 @@ into a new module and import.
                        Doubles as the **assembly view**: pick a plane
                        (Top XY / Front XZ / Side YZ) and every
                        top-level 3D part shows as a draggable
-                       projected outline; dropping commits into a
+                       projected outline — its **real** silhouette
+                       (`_projected_path`, a winding-fill union of the
+                       projected triangles at `OUTLINE_DETAIL`), not a
+                       convex hull, so a cross tube reads as a cross
+                       and the 2D view matches the 3D one; dropping
+                       commits into a
                        translate node ("Position (...)"). Everything
                        reads in mm: scale bar, live size while
                        drawing, zoom indicator, Fit Sketch / Zoom to

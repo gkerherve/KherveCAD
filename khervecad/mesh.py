@@ -726,15 +726,19 @@ def _clear_refs():
     _REF_STACK.clear()
 
 
-def tessellate(node: CadNode, env=None, fn=None):
+def tessellate(node: CadNode, env=None, fn=None, detail=None):
     """Triangle mesh for *node*'s subtree (fallback semantics). *fn*
-    overrides the segment count of every round object when given."""
+    overrides the segment count of every round object when given;
+    *detail* caps it, for the low-resolution 2D outlines."""
+    global _DETAIL
+    _DETAIL = detail
     _set_fn(fn)
     _set_refs(node)
     try:
         return [tri for tri, _c, _s in
                 _tess(node, dict(env or {}), None, frozenset(), False)]
     finally:
+        _DETAIL = None
         _set_fn(None)
         _clear_refs()
 
