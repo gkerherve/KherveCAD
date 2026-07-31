@@ -407,12 +407,19 @@ def _produces_3d(node) -> bool:
 class PartItem(QGraphicsPathItem):
     """A part (a subtree) shown in the assembly plane. Two flavours:
 
-    - *outline* (dashed, theme accent): the assembly overview — one per
+    - *outline* (theme accent): the assembly overview — one per
       top-level part, draggable to position it (the move commits into a
       translate node so assemblies are ordinary tree structure);
     - *silhouette* (solid amber): the true projected shape of the
       selected object, shown alone so you see exactly that part in its
       real orientation.
+
+    Both are built from a projected triangle soup, so neither may be
+    *stroked*: a pen would trace every internal facet and the part
+    would read as a hatched wireframe. They are filled instead, the
+    overview lightly and the selected silhouette solidly. Only a
+    single editable primitive (*blue*) has a real outline — its path
+    is simplified into one.
     """
 
     def __init__(self, node, scene, path, label, movable=True,
@@ -431,9 +438,8 @@ class PartItem(QGraphicsPathItem):
         from .style import tokens
         if dashed:
             color = QColor(tokens()["select"])
-            pen = QPen(color, 1.4, Qt.DashLine)
-            pen.setCosmetic(True)
-            fill_alpha = 26
+            pen = QPen(Qt.NoPen)
+            fill_alpha = 64
         elif blue:
             # an editable primitive: a crisp blue outline + light fill,
             # like a 2D sketch shape, with its size handles on top. The
@@ -454,9 +460,9 @@ class PartItem(QGraphicsPathItem):
         fill = QColor(color)
         fill.setAlpha(fill_alpha)
         self.setBrush(QBrush(fill))
-        if not dashed and not blue:
-            # the silhouette is a heavy static path; cache its raster
-            # so panning/redraw stay smooth (re-rasters only on zoom)
+        if not blue:
+            # a soup path is heavy and static; cache its raster so
+            # panning/redraw stay smooth (re-rasters only on zoom)
             self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
         self.setPath(path)
         rect = path.boundingRect()

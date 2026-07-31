@@ -374,7 +374,10 @@ into a new module and import.
                        (`_projected_path`, a winding-fill union of the
                        projected triangles at `OUTLINE_DETAIL`), not a
                        convex hull, so a cross tube reads as a cross
-                       and the 2D view matches the 3D one; dropping
+                       and the 2D view matches the 3D one. A soup path
+                       is **filled, never stroked** — a pen traces
+                       every internal facet and the part reads as
+                       hatching (`PartItem`); dropping
                        commits into a
                        translate node ("Position (...)"). Everything
                        reads in mm: scale bar, live size while
