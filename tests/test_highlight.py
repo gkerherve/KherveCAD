@@ -733,3 +733,38 @@ def test_drag_inside_a_part_that_has_anchors(window):
     window.scene.commit_part_move(move, QPointF(12.0, -4.0))
     assert move.params["x"] == 12.0
     assert move.params["z"] == -4.0
+
+
+def test_dragged_part_follows_the_cursor_under_a_rotation(window):
+    """The whole point of the mapping: whichever way you drag, the part
+    goes that way ON SCREEN. Under a 180° ancestor it went the opposite
+    way, because the view drew the part in one frame and the drag
+    mapped it in another."""
+    from PyQt5.QtCore import QPointF
+    from PyQt5.QtWidgets import QApplication
+    m = window.model
+    comp = m.new_component("Part", visible=False)     # hidden: a definition
+    comp.params.update(x=7.0, z=40.0, rx=180.0)       # placed by a mate
+    flip = m.add_node("union", parent=comp, name="Flipped")
+    flip.params.update(rx=180.0, rz=180.0)
+    move = m.add_node("translate", dict(x=0.0, y=0.0, z=0.0),
+                      parent=flip, name="Move")
+    m.add_node("cube", dict(width=10.0, depth=10.0, height=10.0),
+               parent=move)
+    m.structure_changed.emit()
+    window.builder.open_component(comp)
+    window._set_plane("Front (XZ)")
+    window.builder.object_tab.tree.select_nodes([move])
+
+    def centre():
+        rect = window.scene._part_items[move.id].sceneBoundingRect()
+        return (round(rect.center().x(), 3), round(rect.center().y(), 3))
+
+    for dx, dy in ((10.0, 0.0), (0.0, 6.0), (-4.0, 0.0), (0.0, -3.0)):
+        before = centre()
+        window.scene.commit_part_move(move, QPointF(dx, dy))
+        QApplication.processEvents()
+        after = centre()
+        assert (round(after[0] - before[0], 3),
+                round(after[1] - before[1], 3)) == (dx, dy), \
+            f"drag ({dx}, {dy}) moved the part to {after} from {before}"

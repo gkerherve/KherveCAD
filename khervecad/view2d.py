@@ -37,6 +37,9 @@ FEATURE_SNAP_PX = 12.0
 #: every change, so the shape matters and the resolution does not.
 OUTLINE_DETAIL = 14
 
+#: the placement a part carries (and the isolated view zeroes).
+_PLACEMENT = ("x", "y", "z", "rx", "ry", "rz")
+
 #: assembly view planes: name -> (horizontal axis, vertical axis)
 #: as indices into (x, y, z) and the translate-param keys they map to.
 PLANES = {
@@ -596,6 +599,7 @@ class SketchScene(QGraphicsScene):
     node_created = pyqtSignal(object)         # CadNode
     measure_changed = pyqtSignal(str)         # live mm readout
     plane_changed = pyqtSignal(str)           # view auto-switched plane
+    status = pyqtSignal(str)                  # note for the status bar
 
     def __init__(self, model: DocumentModel, parent=None):
         super().__init__(-2000, -2000, 4000, 4000, parent)
@@ -656,6 +660,38 @@ class SketchScene(QGraphicsScene):
                 env.setdefault(var, values[0] if values else 0.0)
             ancestor = ancestor.parent
         return env
+
+    def scope_frame(self):
+        """Context manager: while the Object tab isolates the scene,
+        show the active Object **in its own local frame** — forced
+        visible (a definition is hidden in Main) and its assembly
+        placement zeroed, exactly as the 3D view does. Without the
+        force-visible, tessellating a hidden Object yields nothing and
+        `selected_world_tris` falls back to the selected node's own
+        subtree, drawing it with none of its ancestor transforms — so
+        the view and the drag mapping disagreed about which way is
+        which, and a part dragged left went right."""
+        from contextlib import contextmanager
+
+        @contextmanager
+        def ctx():
+            scope = self.isolation_resolver() if self.isolation_resolver \
+                else None
+            if scope is None:
+                yield
+                return
+            saved = {k: scope.params.get(k, 0.0) for k in _PLACEMENT
+                     if k in scope.params}
+            was_visible = scope.visible
+            for key in saved:
+                scope.params[key] = 0.0
+            scope.visible = True
+            try:
+                yield
+            finally:
+                scope.params.update(saved)
+                scope.visible = was_visible
+        return ctx()
 
     def scope_root(self):
         """The node the scene draws: the active Object while the Object
@@ -937,9 +973,10 @@ class SketchScene(QGraphicsScene):
             # winding-fill union of the projected triangles is the real
             # filled shape (holes and concavities included), built
             # instantly — no simplify() (it explodes on helical threads).
-            tris = mesh_mod.selected_world_tris(
-                self.scope_root(), {node.id}, detail=14,
-                fn=self.model.effective_fn())
+            with self.scope_frame():
+                tris = mesh_mod.selected_world_tris(
+                    self.scope_root(), {node.id}, detail=OUTLINE_DETAIL,
+                    fn=self.model.effective_fn())
         path = self._projected_path(tris)
         if path is None:
             return None
@@ -977,15 +1014,22 @@ class SketchScene(QGraphicsScene):
         return path
 
     def _world_matrix(self, node):
-        """4x4 transform mapping *node*'s local coordinates to world —
-        the product of its ancestor transforms, with expressions
+        """4x4 transform mapping *node*'s local coordinates to the
+        frame **this view draws in** — the product of its ancestor
+        transforms up to the scope root (exclusive), with expressions
         resolved (loop vars at their first value). A Group, Object or
         instance is a transform too: it carries its own placement
-        (x/y/z + rx/ry/rz), exactly as the tessellator applies it."""
+        (x/y/z + rx/ry/rz), exactly as the tessellator applies it.
+
+        Stopping at the scope root is what keeps the drag honest: the
+        Object tab shows an Object at its own origin, so its assembly
+        placement must not enter the mapping. In Main the scope root
+        is the document root and nothing is skipped."""
         from . import mesh as mesh_mod
+        stop = self.scope_root()
         chain = []
         probe = node.parent
-        while probe is not None:
+        while probe is not None and probe is not stop:
             chain.append(probe)
             probe = probe.parent
         mat = mesh_mod.mat_identity()
@@ -1164,6 +1208,20 @@ class SketchScene(QGraphicsScene):
         # screen — the drag is the user taking control back
         if mate_of(node) is not None:
             detach(self.model, node)
+        else:
+            # ...but a mate on an ANCESTOR still holds: moving content
+            # inside a snapped part shifts that part's anchors, so the
+            # mate re-solves and slides it back. Nothing appears to
+            # move, which reads as a broken drag unless we say why.
+            stop, probe = self.scope_root(), node.parent
+            while probe is not None and probe is not stop:
+                if mate_of(probe) is not None:
+                    self.status.emit(
+                        f"{probe.name} is snapped to "
+                        f"{mate_of(probe)['parent']}, so it follows that "
+                        f"mate — detach it to move this freely.")
+                    break
+                probe = probe.parent
         if node.type == "component" and self.snap_enabled:
             delta = self._anchor_snap(node, delta)
         move = self._local_move(node, delta)

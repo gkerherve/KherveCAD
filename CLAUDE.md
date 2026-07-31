@@ -401,7 +401,14 @@ into a new module and import.
                        node's own frame (`_local_move`, the inverse of
                        the ancestor chain's linear part) so a Move under
                        a rotated group follows the cursor instead of
-                       shooting off sideways. The drop is committed on
+                       shooting off sideways. Drawing and mapping share
+                       ONE frame: `scope_frame()` force-shows the active
+                       Object (a definition is hidden, and tessellating
+                       a hidden node falls back to drawing the selection
+                       with no ancestor transforms at all) with its
+                       assembly placement zeroed, and `_world_matrix`
+                       stops at the same scope root — when the two
+                       disagreed, dragging left moved the part right. The drop is committed on
                        the **next event-loop turn** (`queue_commit`):
                        committing rebuilds the scene, and deleting the
                        item mid-release crashed the process

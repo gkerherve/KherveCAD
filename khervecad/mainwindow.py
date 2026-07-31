@@ -144,6 +144,8 @@ class MainWindow(QMainWindow):
         self.view2d.zoom_changed.connect(
             lambda ppm: self._zoom_label.setText(
                 f"1 mm = {ppm:.2f} px"))
+        self.scene.status.connect(
+            lambda text: self.statusBar().showMessage(text, 6000))
         self.scene.measure_changed.connect(
             lambda text: self._measure_label.setText(text))
         self.view2d.clipboard_op.connect(
