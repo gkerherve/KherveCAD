@@ -19,7 +19,8 @@ import math
 
 from PyQt5.QtCore import QPointF, QRectF, QSettings, Qt, QTimer
 from PyQt5.QtGui import (QColor, QImage, QPainter, QPen, QPolygonF)
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import (QGridLayout, QLabel, QSlider, QToolButton,
+                             QWidget)
 
 _SETTINGS = ("Kherve", "KherveCAD")
 
@@ -37,6 +38,78 @@ BACKGROUNDS = {
     "Dark": ("#2b2f33", "#16181b"),
     "Blueprint": ("#123a6b", "#0a1f3d"),
 }
+
+
+#: how far the sliders can push the shading: the value offset at full
+#: brightness, and the contrast gain at full contrast (2** the slider,
+#: so -100 halves the spread and +100 doubles it, symmetrically).
+LIGHT_RANGE = 0.45
+
+
+def _clamp_light(value) -> float:
+    """A slider setting as a float in [-1, 1] (QSettings hands back
+    strings, and an absent key is None)."""
+    try:
+        return min(max(float(value), -1.0), 1.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+class LightingBar(QWidget):
+    """Floating brightness / contrast sliders over the 3D view.
+
+    Every face is shaded from one fixed light, so depending on the
+    render style, the part's own colour and the background, a model can
+    come out flatter or darker than you want to read it. These two
+    sliders adjust the *finished* face colours — a value offset and a
+    contrast gain about mid-grey — so nothing about the geometry, the
+    theme or the exported program changes."""
+
+    ROWS = (("brightness", "Bright",
+             "Lighten or darken every face (the model only — the "
+             "background and the theme are untouched)."),
+            ("contrast", "Contrast",
+             "Spread or flatten the shading between the lit and "
+             "unlit faces, about mid-grey."))
+
+    def __init__(self, view):
+        super().__init__(view)
+        self.view = view
+        self.setObjectName("lightingBar")
+        self.setAttribute(Qt.WA_StyledBackground, True)
+        self.setStyleSheet(
+            "#lightingBar { background: rgba(24, 27, 31, 175);"
+            " border: 1px solid rgba(255, 255, 255, 40);"
+            " border-radius: 6px; }"
+            "#lightingBar QLabel { color: #e6e9ec; font-size: 10px; }"
+            "#lightingBar QToolButton { color: #e6e9ec;"
+            " background: transparent; border: none; font-size: 13px; }"
+            "#lightingBar QToolButton:hover { color: #ffffff; }")
+        grid = QGridLayout(self)
+        grid.setContentsMargins(8, 5, 6, 5)
+        grid.setHorizontalSpacing(6)
+        grid.setVerticalSpacing(1)
+        self.sliders = {}
+        for row, (key, label, tip) in enumerate(self.ROWS):
+            slider = QSlider(Qt.Horizontal, self)
+            slider.setRange(-100, 100)
+            slider.setValue(int(round(getattr(view, key) * 100)))
+            slider.setFixedWidth(96)
+            slider.setToolTip(tip)
+            slider.valueChanged.connect(
+                lambda value, k=key: self.view.set_light(k, value / 100.0))
+            grid.addWidget(QLabel(label, self), row, 0)
+            grid.addWidget(slider, row, 1)
+            self.sliders[key] = slider
+        reset = QToolButton(self)
+        reset.setText("⟲")
+        reset.setToolTip("Back to the default lighting")
+        reset.clicked.connect(self.reset)
+        grid.addWidget(reset, 0, 2, 2, 1)
+
+    def reset(self):
+        for slider in self.sliders.values():
+            slider.setValue(0)
 
 
 class View3D(QWidget):
@@ -102,8 +175,53 @@ class View3D(QWidget):
         self.style = saved if saved in RENDER_STYLES else "Shaded"
         bg = settings.value("render_bg", "Slate")
         self.background = bg if bg in BACKGROUNDS else "Slate"
+        self.brightness = _clamp_light(settings.value("render_brightness"))
+        self.contrast = _clamp_light(settings.value("render_contrast"))
         self.setMinimumHeight(160)
         self.setMouseTracking(False)
+        self.lighting_bar = LightingBar(self)
+        self.lighting_bar.show()
+
+    # ------------------------------------------------------- lighting
+    def set_light(self, key: str, value: float):
+        """Move one of the floating lighting sliders (brightness /
+        contrast), persist it and repaint."""
+        if key not in ("brightness", "contrast"):
+            return
+        setattr(self, key, _clamp_light(value))
+        QSettings(*_SETTINGS).setValue(f"render_{key}",
+                                       float(getattr(self, key)))
+        self.update()
+
+    def _light(self):
+        """(gain, offset) for the finished face colours, or None when
+        the sliders are centred — the hot paint loop then skips the
+        adjustment entirely."""
+        if not self.brightness and not self.contrast:
+            return None
+        return 2.0 ** self.contrast, self.brightness * LIGHT_RANGE
+
+    @staticmethod
+    def _adjust(color, gain, offset):
+        """Contrast about mid-grey, then the brightness offset — value
+        only, so hue and saturation (a part's own colour) survive."""
+        hue, sat, val, alpha = color.getHsvF()
+        val = min(max((val - 0.5) * gain + 0.5 + offset, 0.0), 1.0)
+        out = QColor.fromHsvF(max(hue, 0.0), sat, val)
+        out.setAlphaF(alpha)
+        return out
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._place_lighting_bar()
+
+    def _place_lighting_bar(self):
+        """Bottom-right corner: the source badge sits bottom-left and
+        the pick banner across the top, so nothing collides."""
+        bar = self.lighting_bar
+        bar.adjustSize()
+        bar.move(max(6, self.width() - bar.width() - 8),
+                 max(6, self.height() - bar.height() - 8))
 
     def set_style(self, style: str):
         if style in RENDER_STYLES:
@@ -196,6 +314,7 @@ class View3D(QWidget):
         self._pick_banner = banner
         self._pick_labeler = labeler
         self._pick_hover = None
+        self.lighting_bar.hide()             # nothing between you and the pick
         self.setCursor(Qt.CrossCursor)
         self.setMouseTracking(True)          # hover pre-highlight
         self.setFocus(Qt.OtherFocusReason)   # so Esc reaches us
@@ -210,6 +329,7 @@ class View3D(QWidget):
         self._hover_timer.stop()
         self.setMouseTracking(False)
         self.unsetCursor()
+        self.lighting_bar.show()
         self.update()
 
     def cancel_pick(self):
@@ -534,6 +654,7 @@ class View3D(QWidget):
                                        QPointF(p2[0], p2[1])]))
 
         faces.sort(key=lambda fc: -fc[0])
+        lighting = self._light()                # sliders, None when centred
         edge = QColor(t["border"])
         edge.setAlpha(60)
         pen = QPen(edge)
@@ -557,6 +678,8 @@ class View3D(QWidget):
                 alpha = 1.0
             color, use_pen = self._style_color(
                 style, hue, sat, val, shade, spec, base)
+            if color is not None and lighting is not None:
+                color = self._adjust(color, *lighting)
             if color is None:                   # wireframe: edges only
                 painter.setPen(wire_pen)
                 painter.setBrush(Qt.NoBrush)

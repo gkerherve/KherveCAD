@@ -385,7 +385,13 @@ into a new module and import.
                        no OpenGL dependency); render styles (shaded,
                        brushed metal with specular, matte, wireframe,
                        x-ray) selectable in View > 3D Render Style and
-                       persisted via QSettings. Backface-culls, hoists
+                       persisted via QSettings. A floating **`LightingBar`**
+                       (bottom-right of the frame, hidden during a pick)
+                       carries **brightness / contrast** sliders that
+                       adjust the finished face colours only — value
+                       offset + gain about mid-grey (`_light()` returns
+                       None when centred, so the per-face hot path pays
+                       nothing), also persisted. Backface-culls, hoists
                        the projection constants out of the per-vertex
                        loop, and — past `DRAFT_ABOVE` triangles — draws a
                        decimated **draft mesh while orbiting/zooming**

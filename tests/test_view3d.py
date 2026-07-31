@@ -390,3 +390,88 @@ def test_describe_pick_reports_highlight_geometry(app):
     assert desc["kind"] == "edge"
     a, b = desc["seg"]
     assert sorted([a[0], b[0]]) == [0.0, 10.0]
+
+
+# ------------------------------------------------------- lighting bar
+
+@pytest.fixture
+def neutral_light():
+    """The sliders persist in QSettings and every View3D reads them at
+    construction, so a test that moves one would otherwise re-shade
+    every later test (and the user's own app)."""
+    from PyQt5.QtCore import QSettings
+
+    from khervecad.view3d import _SETTINGS
+    keys = ("render_brightness", "render_contrast")
+    settings = QSettings(*_SETTINGS)
+    saved = [settings.value(k) for k in keys]
+    for key in keys:
+        settings.setValue(key, 0.0)
+    yield
+    for key, value in zip(keys, saved):
+        settings.setValue(key, 0.0 if value is None else value)
+
+
+def test_brightness_slider_lightens_the_model(app, neutral_light):
+    """The floating Bright slider changes the rendered faces, and
+    centring it restores exactly the default look."""
+    view = View3D()
+    view.resize(300, 300)
+    view.set_mesh(_cube(), "test")
+    view.fit()
+    default = _central_avg(view)
+
+    view.lighting_bar.sliders["brightness"].setValue(80)
+    assert view.brightness == pytest.approx(0.8)
+    brighter = _central_avg(view)
+    view.lighting_bar.sliders["brightness"].setValue(-80)
+    darker = _central_avg(view)
+    assert sum(brighter) > sum(default) + 30
+    assert sum(darker) < sum(default) - 30
+
+    view.lighting_bar.reset()
+    assert view._light() is None                # hot path skipped again
+    assert _central_avg(view) == default
+
+
+def test_contrast_slider_spreads_the_shading(app, neutral_light):
+    """Contrast pivots about mid-grey: the spread between the lit and
+    the unlit faces widens, without simply brightening everything."""
+    view = View3D()
+    view.resize(300, 300)
+    view.set_mesh(_cube(), "test")
+    view.fit()
+
+    def spread():
+        shades = sorted(r for r, _g, _b in _selection_pixels(view))
+        if not shades:
+            return 0.0
+        cut = max(len(shades) // 10, 1)
+        return shades[-cut] - shades[cut]
+
+    flat = spread()
+    view.lighting_bar.sliders["contrast"].setValue(100)
+    assert view.contrast == pytest.approx(1.0)
+    assert spread() > flat
+
+
+def test_lighting_settings_persist_and_survive_junk(app, neutral_light):
+    from PyQt5.QtCore import QSettings
+
+    from khervecad.view3d import _SETTINGS
+    view = View3D()
+    view.set_light("brightness", 0.5)
+    assert View3D().brightness == pytest.approx(0.5)
+    QSettings(*_SETTINGS).setValue("render_brightness", "nonsense")
+    assert View3D().brightness == 0.0           # never crashes on junk
+    view.set_light("brightness", 0.0)
+
+
+def test_lighting_bar_steps_aside_for_a_pick(app, neutral_light):
+    view = View3D()
+    view.resize(300, 300)
+    view.set_mesh(_cube(), "test")
+    view.start_pick(lambda d: None, banner="Click a face")
+    assert view.lighting_bar.isHidden()
+    view.cancel_pick()
+    assert not view.lighting_bar.isHidden()
