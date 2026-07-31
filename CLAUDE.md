@@ -271,11 +271,17 @@ into a new module and import.
                        "secondary" anchors that build a part). `parts(
                        model, scope)` enumerates the mateable parts —
                        Objects+instances when `scope is None`, the
-                       Object's group/Object/**instance** children when
-                       `scope` is that Object (a part built from library
-                       Objects holds nothing but instances, so leaving
-                       them out left Snap with one part and it refused
-                       to arm). A **colour wrapper is seen through**
+                       the Object's own sub-parts when `scope` is that
+                       Object — every child that renders geometry, not
+                       just groups (a part built from library Objects
+                       holds nothing but **instances**; one built by
+                       Make Object is a single group holding **Moves**,
+                       and `_object_parts` looks inside that lone body
+                       group). Whatever moves must be able to hold a
+                       mate, so `ensure_part()` wraps a Move (which
+                       emits `translate([x,y,z])` and would drop the
+                       rotation) in a Group first. A **colour wrapper is
+                       seen through**
                        (`unwrap`) on both paths — colouring a part used
                        to drop it out of the assembly entirely; a
                        transform wrapper is deliberately not, since the

@@ -982,12 +982,15 @@ class MainWindow(QMainWindow):
         scope = self._snap_scope()
         groups = self._snap_groups(scope)
         if len(groups) < 2:
-            where = ("two visible groups inside this Object"
-                     if scope is not None
-                     else "two visible Objects in the Main assembly")
+            where = (f"inside {scope.name}" if scope is not None
+                     else "in the Main assembly")
+            found = ", ".join(part.name for part, _tris in groups) \
+                or "none"
             self.statusBar().showMessage(
-                f"Snap needs at least {where} (hidden ones don't "
-                f"count).", 5000)
+                f"Snap needs two visible parts {where} — found "
+                f"{len(groups)} ({found}). Hidden parts don't count; "
+                f"select loose geometry and Group it (Ctrl+G) to make "
+                f"it a part.", 8000)
             return
         if scope is None:
             self.builder.setCurrentIndex(0)      # the assembly view
@@ -1000,8 +1003,17 @@ class MainWindow(QMainWindow):
             if desc is None:
                 self.statusBar().showMessage("Snap cancelled.", 3000)
                 return
+            # the part that MOVES has to hold the mate: a Move or a
+            # bare boolean has nowhere to put the rotation, so it is
+            # promoted to a Group first (geometry unchanged, undoable)
+            promoted = mates.ensure_part(self.model, comp)
+            if promoted is not comp:
+                self.statusBar().showMessage(
+                    f"{comp.name} is now in '{promoted.name}' so it can "
+                    f"carry the snap.", 6000)
+                comp = promoted
             child_anchor = self._anchor_for_pick(comp, desc)
-            self.builder.tree.select_nodes([comp])
+            self.builder.active_tree().select_nodes([comp])
             # keep the first pick visibly marked while the second is
             # aimed, so you never lose track of what will move
             self.view3d.set_pick_pinned(

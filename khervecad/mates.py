@@ -155,6 +155,69 @@ def _scope_parts(container, types=_MATEABLE):
     return out
 
 
+def makes_geometry(node) -> bool:
+    """True if the subtree renders a solid — the test for "this is a
+    thing in the Object, not just bookkeeping"."""
+    from .model import SHAPE_3D
+    return any(n.category == SHAPE_3D
+               or n.type in ("linear_extrude", "rotate_extrude",
+                             "reference")
+               for n in node.walk())
+
+
+def _snappable(container, model=None):
+    """The things inside *container* a user would call its parts: the
+    mateable ones, plus any other child that renders geometry (a Move
+    holding a solid, say — `ensure_part` promotes it when it actually
+    has to carry a mate)."""
+    out = []
+    for child in container.children:
+        part = unwrap(child)
+        if part is None:
+            continue
+        if part.type == "reference" and model is not None \
+                and definition_of(model, part) is None:
+            continue                          # dangling instance
+        if part.type in _MATEABLE or makes_geometry(part):
+            out.append(part)
+    return out
+
+
+def _object_parts(model, scope):
+    """The sub-parts of an Object. Normally its own children — but when
+    the whole body sits in ONE group (the usual shape after Make
+    Object, and what `CF40_Spacer` looks like), that group *is* the
+    Object's body rather than a sub-part, so its children are the parts
+    the tree shows and the ones to snap together."""
+    candidates = _snappable(scope, model)
+    if len(candidates) == 1 and candidates[0].type == "union":
+        inner = _snappable(candidates[0], model)
+        if len(inner) > 1:
+            return inner
+    return candidates
+
+
+def ensure_part(model, node):
+    """A node that can carry a mate, promoting *node* if it cannot.
+
+    A mate writes a position **and** a rotation, and most containers
+    have nowhere to put the rotation — a `translate` emits
+    ``translate([x,y,z])`` and would silently drop it. Wrapping the
+    node in a Group (which carries both, and changes no geometry) is
+    what the user would do by hand before snapping."""
+    if node.type in _MATEABLE:
+        return node
+    wrapper = model.wrap_nodes([node], "union")
+    if wrapper is None:
+        return node
+    # name it after what it holds, so the new row reads as that part
+    taken = {n.name for n in model.root.walk() if n is not wrapper}
+    name = f"{node.name} part"
+    if name not in taken:
+        wrapper.name = name
+    return wrapper
+
+
 def _container_of(node):
     """The assembly scope a part belongs to: its parent, or what that
     parent is wrapped in (a colour is not a container of its own)."""
@@ -180,9 +243,7 @@ def parts(model, scope=None):
     Snap tool with one part to work with, so it refused.
     """
     if scope is not None:
-        return [p for p in _scope_parts(scope)
-                if p.type != "reference"
-                or definition_of(model, p) is not None]
+        return _object_parts(model, scope)
     out = []
     for part in _scope_parts(model.root, ("component", "reference")):
         if part.type == "component" \
@@ -192,13 +253,17 @@ def parts(model, scope=None):
 
 
 def _mate_siblings(node):
-    """The parts a *node*'s mate may reference — the other mateable
-    parts in the same container (the assembly root, or the Object being
-    built), colour wrappers on either side seen through."""
+    """The parts a *node*'s mate may reference — the other parts in the
+    same container (the assembly root, or the group being built inside
+    an Object), colour wrappers on either side seen through. Inside an
+    Object anything that renders geometry counts, matching what the
+    Snap tool offered."""
     container = _container_of(node)
     if container is None:
         return []
-    return [p for p in _scope_parts(container) if p is not node]
+    if container.type == "root":
+        return [p for p in _scope_parts(container) if p is not node]
+    return [p for p in _snappable(container) if p is not node]
 
 
 def find_anchor(definition, name, env=None, fn=None):

@@ -23,6 +23,7 @@ import pytest
 from PyQt5.QtWidgets import QApplication
 
 from khervecad.mainwindow import MainWindow
+from khervecad import mesh
 from khervecad.model import CadNode
 
 
@@ -260,3 +261,71 @@ def test_snapping_two_instances_inside_an_object(app):
     pos, _d = anchors.anchor_world(
         b, mates.find_anchor(mates.definition_of(m, b), "Bottom"))
     assert pos == pytest.approx([5.0, 5.0, 4.0])
+
+
+def test_snap_inside_an_object_whose_body_is_one_group(app):
+    """An Object built as ONE group holding the halves (what Make
+    Object produces, and what CF40_Spacer looks like) must snap those
+    halves: the group is the Object's body, not a sub-part, so the
+    parts are what the tree shows inside it."""
+    from khervecad import mates
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    m = w.model
+    comp = m.new_component("Spacer", visible=False)
+    body = m.add_node("union", parent=comp, name="Body")
+    left = m.add_node("translate", dict(x=0.0, y=0.0, z=0.0),
+                      parent=body, name="Left")
+    m.add_node("cube", dict(width=20.0, depth=20.0, height=20.0),
+               parent=left)
+    right = m.add_node("translate", dict(x=0.0, y=0.0, z=80.0),
+                       parent=body, name="Right")
+    m.add_node("cube", dict(width=10.0, depth=10.0, height=10.0),
+               parent=right)
+    m.structure_changed.emit()
+    w.builder.open_component(comp)
+
+    assert [p.name for p in mates.parts(m, comp)] == ["Left", "Right"]
+    assert len(w._snap_groups(comp)) == 2
+
+
+def test_a_move_is_promoted_to_a_group_to_hold_the_snap(app):
+    """A Move has nowhere to put a mate's rotation (it emits
+    translate([x,y,z])), so the part that moves is wrapped in a Group
+    first — geometry unchanged, and the mate lands on the Group."""
+    from khervecad import mates
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    m = w.model
+    comp = m.new_component("Spacer", visible=False)
+    body = m.add_node("union", parent=comp, name="Body")
+    base = m.add_node("union", parent=body, name="Base")
+    m.add_node("cube", dict(width=20.0, depth=20.0, height=20.0),
+               parent=base)
+    move = m.add_node("translate", dict(x=0.0, y=0.0, z=90.0),
+                      parent=body, name="Lid move")
+    m.add_node("cube", dict(width=10.0, depth=10.0, height=10.0),
+               parent=move)
+    m.structure_changed.emit()
+
+    part = mates.ensure_part(m, move)
+    assert part is not move
+    assert part.type == "union" and part.name == "Lid move part"
+    assert move.parent is part
+    assert part.parent is body                  # slotted in place
+
+    mates.attach(m, part, "Base", "Bottom", "Top")
+    assert part.params["z"] == pytest.approx(-70.0)   # 20 - 90
+    # the lid really sits on the base: its cube spans z 20..30
+    tris = mesh.tessellate(part)
+    assert min(v[2] for t in tris for v in t) == pytest.approx(20.0)
+
+
+def test_a_group_is_never_double_wrapped(app):
+    from khervecad import mates
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    m = w.model
+    group = m.add_node("union", name="Already a part")
+    m.add_node("cube", parent=group)
+    assert mates.ensure_part(m, group) is group
