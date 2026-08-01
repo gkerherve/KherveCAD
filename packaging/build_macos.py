@@ -103,38 +103,49 @@ def freeze() -> None:
 # ------------------------------------------------------------ openscad
 
 def _version_of(dmg_name: str) -> str:
-    """``OpenSCAD-2021.01-arm64.dmg`` -> ``2021.01``."""
-    match = re.match(r"OpenSCAD-(.+?)-(?:arm64|x86[-_]64)\.dmg$", dmg_name)
+    """``OpenSCAD-2021.01.dmg`` -> ``2021.01``, arch suffix optional."""
+    match = re.match(r"OpenSCAD-(.+?)(?:-(?:arm64|x86[-_]64))?\.dmg$", dmg_name)
     return match.group(1) if match else ""
 
 
 def resolve_openscad(arch: str) -> tuple[str, str]:
-    """Return ``(dmg_url, src_url)`` for the newest build for *arch*.
+    """Return ``(dmg_url, src_url)`` for the newest usable macOS build.
 
     Both are discovered from OpenSCAD's directory index rather than
     hard-coded, because the snapshot filenames carry a build date and a
     revision that change under us. The chosen pair is printed, so a
     release can be reproduced later by feeding the two URLs back in
     through ``KHERVECAD_OPENSCAD_DMG`` / ``KHERVECAD_OPENSCAD_SRC``.
+
+    The filename is *not* treated as proof of architecture. OpenSCAD's
+    macOS images are mostly untagged (a single universal binary), so an
+    arch-tagged name is only preferred, never required —
+    ``_check_arch()`` on the extracted binary is what actually decides
+    whether the build is usable.
     """
     if _URL_OVERRIDE and _SRC_OVERRIDE:
         return _URL_OVERRIDE, _SRC_OVERRIDE
 
     tokens = _ARCH_TOKENS[arch]
+    other = [t for a, ts in _ARCH_TOKENS.items() if a != arch for t in ts]
     for index in _OPENSCAD_INDEXES:
         page = _fetch(index)
         names = re.findall(r'href="([^"?/]+)"', page)
-        dmgs = sorted({n for n in names if n.endswith(".dmg")
-                       and any(t in n for t in tokens)})
-        print(f"{index}: {len(names)} entries, "
-              f"{len(dmgs)} {arch} disk images", flush=True)
-        if not dmgs:
+        dmgs = sorted({n for n in names if n.endswith(".dmg")})
+        tagged = [n for n in dmgs if any(t in n for t in tokens)]
+        # Anything explicitly built for the *other* architecture is out.
+        untagged = [n for n in dmgs if not any(t in n for t in other + list(tokens))]
+        usable = tagged or untagged
+        print(f"{index}: {len(names)} entries, {len(dmgs)} disk images "
+              f"({len(tagged)} tagged {arch}, {len(untagged)} untagged)",
+              flush=True)
+        for name in usable[-5:]:
+            print(f"  {name}", flush=True)
+        if not usable:
             continue
         # Snapshot names sort chronologically (OpenSCAD-YYYY.MM.DD.aiNNNNN),
         # so the last one is the newest build.
-        for name in dmgs[-5:]:
-            print(f"  {name}", flush=True)
-        dmg = dmgs[-1]
+        dmg = usable[-1]
         version = _version_of(dmg)
         srcs = [n for n in names if n.endswith(".src.tar.gz")]
         wanted = f"openscad-{version}.src.tar.gz"
@@ -154,7 +165,7 @@ def resolve_openscad(arch: str) -> tuple[str, str]:
             )
         return _URL_OVERRIDE or (index + dmg), src_url
 
-    raise SystemExit(f"no {arch} OpenSCAD disk image found in "
+    raise SystemExit("no usable macOS OpenSCAD disk image found in "
                      + ", ".join(_OPENSCAD_INDEXES))
 
 
