@@ -38,6 +38,35 @@ jobs:
           # clone would silently ship the wrong build number.
           fetch-depth: 0
 
+      - name: Probe what OpenSCAD publishes
+        # A build machine can reach files.openscad.org; a laptop behind a
+        # filtering proxy may not. This prints what is actually there —
+        # which architecture the newest macOS image is, and where the
+        # matching source lives — so the bundling rules can be based on
+        # fact rather than on guessed filenames. Runs first and stops the
+        # job, so its output is the whole log and nothing scrolls it away.
+        if: inputs.probe
+        run: |
+          set -x
+          INDEX=https://files.openscad.org/snapshots/
+          curl -s "$INDEX" -o index.html
+          echo "=== directories and non-binaries in the index ==="
+          grep -oE 'href="[^"]+"' index.html | sed 's/href="//;s/"//' \
+            | grep -vE '\.(exe|zip|AppImage|msi|deb|rpm|dmg)$' | tail -30
+          echo "=== anything source-shaped ==="
+          grep -oiE 'href="[^"]*(src|source|tar\.gz|tar\.xz)[^"]*"' index.html \
+            | sort -u | tail -20
+          NEWEST=$(grep -oE 'OpenSCAD-[0-9.]+\.dmg' index.html | sort -u | tail -1)
+          echo "=== newest snapshot image: $NEWEST ==="
+          curl -sL -o probe.dmg "$INDEX$NEWEST"
+          hdiutil attach probe.dmg -nobrowse -readonly -mountpoint probe-mnt
+          ls probe-mnt
+          file probe-mnt/*.app/Contents/MacOS/*
+          plutil -p probe-mnt/*.app/Contents/Info.plist | head -30
+          hdiutil detach probe-mnt -force
+          echo "probe only — stopping before the build"
+          exit 1
+
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
@@ -56,27 +85,6 @@ jobs:
           QT_QPA_PLATFORM: offscreen
           KHERVECAD_DISABLE_ENGINE: "1"
         run: python -m pytest tests/ -q
-
-      - name: Probe what OpenSCAD publishes
-        # A build machine can reach files.openscad.org; a laptop behind a
-        # filtering proxy may not. This prints what is actually there —
-        # which architecture the newest macOS image is, and where the
-        # matching source lives — so the bundling rules can be based on
-        # fact rather than on guessed filenames.
-        if: inputs.probe
-        run: |
-          set -x
-          INDEX=https://files.openscad.org/snapshots/
-          curl -s "$INDEX" | grep -oE 'href="[^"]+"' | sed 's/href="//;s/"//' \
-            | grep -vE '\.(exe|zip|AppImage|msi|deb|rpm)$' | tail -40
-          NEWEST=$(curl -s "$INDEX" | grep -oE 'OpenSCAD-[0-9.]+\.dmg' \
-            | sort -u | tail -1)
-          echo "newest snapshot image: $NEWEST"
-          curl -sL -o probe.dmg "$INDEX$NEWEST"
-          hdiutil attach probe.dmg -nobrowse -readonly -mountpoint probe-mnt
-          find probe-mnt -maxdepth 1
-          file probe-mnt/*.app/Contents/MacOS/* | head
-          hdiutil detach probe-mnt -force
 
       - name: Build the .app and the DMG
         run: python packaging/build_macos.py
