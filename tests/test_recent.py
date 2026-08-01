@@ -20,6 +20,13 @@ from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QApplication
 
 
+def _p(name: str) -> str:
+    """A native absolute path — the recents list stores whatever it is
+    given, so a hard-coded ``C:\\tmp\\a.kcad`` is one string on Windows and
+    a filename with backslashes in it everywhere else."""
+    return os.path.join(os.sep + "tmp", name)
+
+
 @pytest.fixture(scope="session")
 def app():
     return QApplication.instance() or QApplication([])
@@ -37,9 +44,9 @@ def window(app):
 
 
 def test_add_moves_to_front_without_duplicates(window):
-    window._add_recent(r"C:\tmp\alpha.kcad")
-    window._add_recent(r"C:\tmp\beta.kcad")
-    window._add_recent(r"C:\tmp\alpha.kcad")   # re-open jumps to front
+    window._add_recent(_p("alpha.kcad"))
+    window._add_recent(_p("beta.kcad"))
+    window._add_recent(_p("alpha.kcad"))   # re-open jumps to front
     files = window._recent_files()
     assert len(files) == 2
     assert files[0].endswith("alpha.kcad")
@@ -48,7 +55,7 @@ def test_add_moves_to_front_without_duplicates(window):
 
 def test_list_is_capped(window):
     for i in range(window._MAX_RECENT + 5):
-        window._add_recent(rf"C:\tmp\file{i}.kcad")
+        window._add_recent(_p(f"file{i}.kcad"))
     assert len(window._recent_files()) == window._MAX_RECENT
     # The most recently added is first.
     newest = window._MAX_RECENT + 4
@@ -62,17 +69,17 @@ def test_empty_string_is_ignored(window):
 
 
 def test_forget_and_clear(window):
-    window._add_recent(r"C:\tmp\a.kcad")
-    window._add_recent(r"C:\tmp\b.kcad")
-    window._forget_recent(r"C:\tmp\a.kcad")
+    window._add_recent(_p("a.kcad"))
+    window._add_recent(_p("b.kcad"))
+    window._forget_recent(_p("a.kcad"))
     assert [Path(f).name for f in window._recent_files()] == ["b.kcad"]
     window._clear_recent()
     assert window._recent_files() == []
 
 
 def test_menu_reflects_the_list(window):
-    window._add_recent(r"C:\tmp\alpha.kcad")
-    window._add_recent(r"C:\tmp\beta.kcad")
+    window._add_recent(_p("alpha.kcad"))
+    window._add_recent(_p("beta.kcad"))
     window._rebuild_recent_menu()
     texts = [a.text() for a in window.recent_menu.actions() if a.text()]
     # Newest first: beta was added last, so it heads the list.
