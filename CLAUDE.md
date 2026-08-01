@@ -211,7 +211,16 @@ into a new module and import.
                        right, toggled Ctrl+/): Claude/Mistral/Ollama
                        Cloud via urllib, keys in QSettings or env vars,
                        slash commands, and `scad` reply blocks applied to
-                       the tree via scadparse.
+                       the tree via scadparse. The reply lands in the
+                       scope the user is working in (`active_object()`):
+                       **inside the Object** while the Object tab is
+                       open, so the part's construction shows step by
+                       step in the Object tree, else in the document.
+                       Every message states the mode and ships that
+                       scope's program (`_scope_context`); a
+                       module-plus-call answer is unwrapped
+                       (`_object_contents`) or the part would nest
+                       inside itself.
   - `git_backend.py` — **per-document Git** (pygit2, ported from the
                        Kherve family): init/commit/push/pull, remotes and
                        history for the folder holding the current

@@ -381,3 +381,72 @@ def test_send_passes_images_to_worker(window, monkeypatch):
     assert panel._pending_images == []                 # queue drained
     # the image rode along with the request, not the persisted history
     assert panel.history[-1]["content"] == "copy this"
+
+
+# ------------------------------------------- building inside an Object
+
+def _object_window(window, name="Bracket"):
+    """A window with the Object tab open on an empty part."""
+    comp = window.model.new_component(name, visible=False)
+    window.builder.open_component(comp)
+    return comp
+
+
+def test_reply_builds_inside_the_active_object(window):
+    """With the Object tab open, the assistant's program becomes that
+    part's contents — so the Object tree shows how it is made — instead
+    of replacing the whole document."""
+    panel = window.chat
+    other = window.model.new_component("Untouched")
+    comp = _object_window(window)
+    panel._replied("A plate with a bore.\n```scad\n"
+                   "difference() {\n cube([20, 20, 4]);\n"
+                   " cylinder(h=10, r=3, $fn=16);\n}\n```")
+
+    assert [n.type for n in comp.children] == ["difference"]
+    bore = comp.children[0]
+    assert [n.type for n in bore.children] == ["cube", "cylinder"]
+    assert other in window.model.root.children     # document untouched
+    assert comp in window.model.root.children
+    assert "inside 'Bracket'" in panel.transcript.toPlainText()
+
+
+def test_reply_in_main_still_builds_the_document(window):
+    """Main mode is unchanged — and the note points at the Object tab
+    for building the inside of a part."""
+    panel = window.chat
+    window.model.add_node("cube")
+    panel._replied("```scad\nsphere(r=9, $fn=16);\n```")
+    assert [n.type for n in window.model.root.children] == ["sphere"]
+    transcript = panel.transcript.toPlainText()
+    assert "Object tab" in transcript
+
+
+def test_a_module_plus_call_is_unwrapped_into_the_object(window):
+    """The assistant is shown the Object as `module P() {...} P();`
+    (what subtree_scad emits) and usually answers in kind. Applied
+    literally that would nest the part inside itself every time."""
+    panel = window.chat
+    comp = _object_window(window, "Spacer")
+    panel._replied("```scad\nwall = 3;\nmodule Spacer() {\n"
+                   "  cylinder(h=10, r=6, $fn=16);\n}\nSpacer();\n```")
+    types = [n.type for n in comp.children]
+    assert "component" not in types            # not nested in itself
+    assert "cylinder" in types
+    assert "assign" in types                   # the variable came too
+
+
+def test_scope_context_names_the_mode(window):
+    """Every message tells the model which mode it is writing for."""
+    panel = window.chat
+    window.model.add_node("cube")
+    main = panel._scope_context()
+    assert "MODE: Main" in main
+    assert "Object tab" in main
+
+    comp = _object_window(window, "Widget")
+    window.model.add_node("sphere", parent=comp)
+    scoped = panel._scope_context()
+    assert "MODE: Object" in scoped
+    assert "'Widget'" in scoped
+    assert "sphere" in scoped                  # the part's own program

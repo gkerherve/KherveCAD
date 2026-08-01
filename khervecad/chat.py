@@ -92,7 +92,11 @@ AI_PROVIDERS = {
 #: Upper bound on the reply length we ask the model for. Set high so
 #: long programs and explanations are never truncated; providers clamp
 #: it to whatever the chosen model actually supports.
-MAX_TOKENS = 8000
+#: Room for the reply. A whole part program plus its explanation runs
+#: long, and a truncated reply is a broken `scad` block that will not
+#: parse — so this is set well above what a normal answer needs, but
+#: inside the output ceiling of every model offered above.
+MAX_TOKENS = 16000
 TEMPERATURE = 0.7
 
 #: Rough English chars-per-token, used only to keep the running
@@ -153,6 +157,22 @@ Units are millimetres. Prefer named variables (and vectors like
 size=[x,y,z]) for key dimensions so parts stay parametric. The user's
 current program is provided with every message — modify it rather than
 starting over, unless asked.
+
+KherveCAD splits **parts from assemblies**, and which one you are
+writing is stated with every message:
+- **Object mode** (the Object tab is open on one part): your program is
+  the CONTENTS of that part. Build it out of ordinary shapes,
+  transforms and booleans so every step shows as a row in the Object
+  tree — that tree IS how the user reads and edits the part, so keep
+  the structure explicit, one step per node, rather than collapsing
+  everything into one clever expression. Do not wrap the
+  result in a module or place copies of it; the app supplies the
+  part's own placement in the assembly.
+- **Main mode** (the Main tab): your program is the whole assembly —
+  parts and their placements. A part built here lands as one row; to
+  work on how a part is MADE, the user must switch to the Object tab
+  (Object mode) first. Say so when they ask you to change the inside
+  of a part while Main is current.
 
 If the user attaches an image or screenshot, study it and reproduce the
 object as faithfully as you can in 3D: identify the primitive shapes,
@@ -826,6 +846,10 @@ class ChatPanel(QWidget):
                               f"{html.escape(str(exc))}")
             return
         model = self.window.model
+        comp = self.active_object()
+        if comp is not None:
+            self._apply_into_object(comp, root, warnings)
+            return
         answer = QMessageBox.question(
             self, "Apply program",
             "Replace the current document with this program?\n"
@@ -842,7 +866,50 @@ class ChatPanel(QWidget):
         model.group_variables()
         model.structure_changed.emit()
         self.window.view3d.fit()
-        note = "Program applied."
+        note = ("Program applied to the assembly. To build *inside* a "
+                "part — so the Object tree shows how it is made — open "
+                "it in the Object tab and ask again.")
+        if warnings:
+            note += " Skipped: " + "; ".join(warnings[:5])
+        self._append_note(html.escape(note))
+
+    @staticmethod
+    def _object_contents(root):
+        """The nodes to put inside an Object. A program that is one
+        module plus its call (what `subtree_scad` emits, so what the
+        assistant is shown and usually mirrors) re-imports as a single
+        Object — unwrap it, or applying it would nest a part inside
+        itself every time."""
+        children = list(root.children)
+        solid = [n for n in children if n.type != "assign"]
+        if len(solid) == 1 and solid[0].type == "component":
+            return [n for n in children if n.type == "assign"] \
+                + list(solid[0].children)
+        return children
+
+    def _apply_into_object(self, comp, root, warnings):
+        """Apply the program inside the Object being edited, so its
+        construction shows in the Object tree."""
+        model = self.window.model
+        answer = QMessageBox.question(
+            self, "Apply program",
+            f"Replace the contents of '{comp.name}' with this "
+            f"program?\n(No = add it alongside what is already "
+            f"inside.)",
+            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+        if answer == QMessageBox.Cancel:
+            return
+        nodes = self._object_contents(root)
+        for node in list(nodes):
+            node.parent.remove(node)
+        if answer == QMessageBox.Yes:
+            for child in list(comp.children):
+                comp.remove(child)
+        for node in nodes:
+            comp.add(node)
+        model.structure_changed.emit()
+        self.window.builder.open_component(comp)   # keep it in view
+        note = f"Applied inside '{comp.name}' — see the Object tree."
         if warnings:
             note += " Skipped: " + "; ".join(warnings[:5])
         self._append_note(html.escape(note))
@@ -873,6 +940,34 @@ class ChatPanel(QWidget):
         parts.append(html.escape(text).replace("\n", "<br>"))
         self._append("user", "".join(parts))
 
+    def active_object(self):
+        """The Object the user is editing, or None when Main is
+        current. Everything the assistant makes lands in this scope, so
+        a part it builds is built *inside* the Object and the Object
+        tree shows how it is made."""
+        return self.window.builder.isolated_component()
+
+    def _scope_context(self):
+        """The program the assistant works on, plus which mode it is:
+        one Object's contents in Object mode, the whole assembly in
+        Main."""
+        model = self.window.model
+        comp = self.active_object()
+        if comp is not None:
+            return (f"\n\nMODE: Object — the user is editing the part "
+                    f"'{comp.name}'. Your program is the CONTENTS of "
+                    f"that part; it is applied inside it, and each step "
+                    f"becomes a row in the Object tree.\n"
+                    f"Current Object program:\n```scad\n"
+                    + model.subtree_scad(comp) + "\n```")
+        return ("\n\nMODE: Main — the user is in the assembly. Your "
+                "program is the whole document. To change how one part "
+                "is MADE, they must open it in the Object tab first "
+                "(Object mode) — say so rather than rebuilding the "
+                "part from the assembly.\n"
+                "Current document program:\n```scad\n"
+                + model.to_scad() + "\n```")
+
     def _ask(self, text, images=()):
         settings = QSettings(*_SETTINGS)
         provider = settings.value("chat/provider", "Claude")
@@ -891,9 +986,7 @@ class ChatPanel(QWidget):
             return
         self.history.append({"role": "user", "content": text})
         self._trim_history()
-        system = (SYSTEM_PROMPT
-                  + "\n\nCurrent document program:\n```scad\n"
-                  + self.window.model.to_scad() + "\n```")
+        system = SYSTEM_PROMPT + self._scope_context()
         self.send_btn.setEnabled(False)
         note = f"asking {provider} ({model})…"
         if images:
@@ -939,7 +1032,12 @@ class ChatPanel(QWidget):
 
     def _auto_apply(self, code):
         """Parse the assistant's program straight into the object tree
-        (undoable with Ctrl+Z) instead of printing it in the chat."""
+        (undoable with Ctrl+Z) instead of printing it in the chat.
+
+        It lands in whatever the user is working in: **inside the
+        Object** while the Object tab is open — so the part's
+        construction shows step by step in the Object tree — else the
+        document."""
         from .scadparse import parse_scad
         try:
             root, warnings = parse_scad(code)
@@ -948,11 +1046,27 @@ class ChatPanel(QWidget):
                               + html.escape(str(exc)))
             return
         count = sum(1 for n in root.walk() if n.type != "root")
-        self.window.model.root = root
-        self.window.model.group_variables()
-        self.window.model.structure_changed.emit()
+        comp = self.active_object()
+        if comp is not None:
+            nodes = self._object_contents(root)
+            for node in list(nodes):
+                node.parent.remove(node)
+            for child in list(comp.children):
+                comp.remove(child)
+            for node in nodes:
+                comp.add(node)
+            self.window.model.structure_changed.emit()
+            self.window.builder.open_component(comp)
+            where = f"inside '{comp.name}' — open the Object tree to " \
+                    f"see how it is built"
+        else:
+            self.window.model.root = root
+            self.window.model.group_variables()
+            self.window.model.structure_changed.emit()
+            where = ("in the document (Main). To build *inside* a "
+                     "part, open it in the Object tab first")
         self.window.view3d.fit()
-        note = (f"✓ Built in the document — {count} object"
+        note = (f"✓ Built {where} — {count} object"
                 f"{'s' if count != 1 else ''}. Press Ctrl+Z to undo.")
         if warnings:
             note += " Skipped: " + "; ".join(warnings[:4])
