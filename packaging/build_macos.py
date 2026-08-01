@@ -116,6 +116,12 @@ def freeze() -> None:
 
 # ------------------------------------------------------------ openscad
 
+def _version_of(dmg_name: str) -> str:
+    """``OpenSCAD-2026.06.12.dmg`` -> ``2026.06.12``, '' if unrecognised."""
+    match = _DATED_DMG.match(dmg_name)
+    return match.group(1) if match else ""
+
+
 def _find_source(index: str, names: list[str], version: str) -> str:
     """URL of the source archive matching *version*, or '' if absent."""
     exact = f"openscad-{version}.src.tar.gz"
