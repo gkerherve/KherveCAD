@@ -413,6 +413,12 @@ into a new module and import.
                        committing rebuilds the scene, and deleting the
                        item mid-release crashed the process
                        (0xC0000409). Dragging a mated part detaches it.
+                       The plane's two axes are named and
+                       colour-coded with the **3D gizmo's colours**
+                       (`AXIS_COLORS`: X red, Y green, Z blue) — tinted
+                       axis lines, corner letters, and a labelled arrow
+                       gizmo at the origin (`_draw_origin_gizmo`, screen
+                       space, skipped when the origin is off view).
                        Everything
                        reads in mm: scale bar, live size while
                        drawing, zoom indicator, Fit Sketch / Zoom to

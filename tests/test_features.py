@@ -382,3 +382,81 @@ def test_linked_copy_cycle_is_safe(model):
     ref.name = "Loop"                                   # points at itself
     assert mesh.tessellate(model.root) == []            # no hang
     assert model.to_scad()                               # no hang either
+
+
+# ------------------------------------------------ 2D axis indicators
+
+@pytest.fixture
+def window(app):
+    from khervecad.mainwindow import MainWindow
+    return MainWindow()
+
+
+
+def _axis_pixels(view, color, tol=40):
+    """How many pixels of the rendered view are close to *color*."""
+    from PyQt5.QtCore import QSize
+    from PyQt5.QtGui import QColor, QImage, QPainter
+    want = QColor(color)
+    img = QImage(QSize(view.width(), view.height()),
+                 QImage.Format_ARGB32)
+    img.fill(0)
+    painter = QPainter(img)
+    view.render(painter)
+    painter.end()
+    count = 0
+    for x in range(0, view.width(), 2):
+        for y in range(0, view.height(), 2):
+            c = img.pixelColor(x, y)
+            if (abs(c.red() - want.red()) < tol
+                    and abs(c.green() - want.green()) < tol
+                    and abs(c.blue() - want.blue()) < tol):
+                count += 1
+    return count
+
+
+def test_2d_view_marks_the_plane_axes_in_colour(window):
+    """Each sketch plane shows its two axes — coloured the same as the
+    3D gizmo — so you can see which axis is which. The third axis, the
+    one pointing into the screen, must not appear."""
+    from khervecad.view2d import AXIS_COLORS
+    from khervecad.view3d import View3D
+    m = window.model
+    m.add_node("cube", dict(width=30.0, depth=30.0, height=30.0))
+    m.structure_changed.emit()
+    window.resize(900, 700)
+    window.show()
+    view = window.view2d
+    red, green, blue = AXIS_COLORS
+
+    for plane, present, absent in (("Top (XY)", (red, green), blue),
+                                   ("Front (XZ)", (red, blue), green),
+                                   ("Side (YZ)", (green, blue), red)):
+        window._set_plane(plane)
+        view.fit_content()
+        for color in present:
+            assert _axis_pixels(view, color) > 10, (plane, color)
+        assert _axis_pixels(view, absent) == 0, (plane, absent)
+
+    # and the 2D colours are the 3D gizmo's, not a second scheme
+    assert AXIS_COLORS == ("#d64545", "#3f9e4d", "#3a6fd8")
+    assert View3D is not None
+
+
+def test_origin_gizmo_only_drawn_when_the_origin_is_in_view(window):
+    """The arrows mark the origin; scrolled far away they would be
+    drawn off-screen anyway, so they are skipped (the corner letters
+    still name the axes)."""
+    from khervecad.view2d import AXIS_COLORS
+    m = window.model
+    m.add_node("cube", dict(width=10.0, depth=10.0, height=10.0))
+    m.structure_changed.emit()
+    window.resize(700, 600)
+    window.show()
+    window._set_plane("Front (XZ)")
+    view = window.view2d
+    view.centerOn(0.0, 0.0)
+    near = _axis_pixels(view, AXIS_COLORS[0])
+    view.centerOn(5000.0, 5000.0)          # origin far off screen
+    far = _axis_pixels(view, AXIS_COLORS[0])
+    assert near > far

@@ -40,6 +40,10 @@ OUTLINE_DETAIL = 14
 #: the placement a part carries (and the isolated view zeroes).
 _PLACEMENT = ("x", "y", "z", "rx", "ry", "rz")
 
+#: axis colours, the same ones the 3D view's gizmo uses — so X is the
+#: same red in both views and the sketch plane reads at a glance.
+AXIS_COLORS = ("#d64545", "#3f9e4d", "#3a6fd8")     # X, Y, Z
+
 #: assembly view planes: name -> (horizontal axis, vertical axis)
 #: as indices into (x, y, z) and the translate-param keys they map to.
 PLANES = {
@@ -1625,14 +1629,66 @@ class SketchView(QGraphicsView):
             painter.setPen(major if j % 5 == 0 else minor)
             painter.drawLine(QPointF(rect.left(), j * g),
                              QPointF(rect.right(), j * g))
-        axis = QPen(QColor(t["gutter"]))
-        axis.setCosmetic(True)
-        axis.setWidthF(1.4)
-        painter.setPen(axis)
-        painter.drawLine(QPointF(rect.left(), 0),
-                         QPointF(rect.right(), 0))
-        painter.drawLine(QPointF(0, rect.top()),
-                         QPointF(0, rect.bottom()))
+        # the two axis lines through the origin, each tinted with its
+        # own axis colour (the 3D gizmo's), so which axis runs which way
+        # reads at a glance even when the origin is off screen
+        (ai, bi), _keys = PLANES[scene.plane]
+        for index, (start, end) in ((ai, (QPointF(rect.left(), 0),
+                                          QPointF(rect.right(), 0))),
+                                    (bi, (QPointF(0, rect.top()),
+                                          QPointF(0, rect.bottom())))):
+            color = QColor(AXIS_COLORS[index])
+            color.setAlpha(150)
+            axis = QPen(color)
+            axis.setCosmetic(True)
+            axis.setWidthF(1.4)
+            painter.setPen(axis)
+            painter.drawLine(start, end)
+
+    #: length of the origin gizmo's arrows, in pixels (screen space, so
+    #: it stays the same size at every zoom).
+    GIZMO_PX = 34.0
+
+    def _draw_origin_gizmo(self, painter, ai, bi):
+        """A small labelled cross at the sketch origin: one arrow per
+        axis, in the axis colour, pointing the POSITIVE way — the 2D
+        answer to the 3D view's gizmo. Drawn in screen space, and only
+        when the origin is actually on screen (the corner letters cover
+        the rest)."""
+        origin = self.mapFromScene(QPointF(0.0, 0.0))
+        w, h = self.viewport().width(), self.viewport().height()
+        margin = self.GIZMO_PX + 18
+        if not (-margin < origin.x() < w + margin
+                and -margin < origin.y() < h + margin):
+            return
+        ox, oy = float(origin.x()), float(origin.y())
+        font = painter.font()
+        font.setPointSize(9)
+        font.setBold(True)
+        painter.setFont(font)
+        # screen y grows downward while the sketch's vertical axis grows
+        # up, so the vertical arrow points to -y on screen
+        for index, (dx, dy) in ((ai, (1.0, 0.0)), (bi, (0.0, -1.0))):
+            color = QColor(AXIS_COLORS[index])
+            tip = QPointF(ox + dx * self.GIZMO_PX,
+                          oy + dy * self.GIZMO_PX)
+            painter.setPen(QPen(color, 1.8))
+            painter.drawLine(QPointF(ox, oy), tip)
+            # arrow head
+            head = QPolygonF([
+                tip,
+                QPointF(tip.x() - dx * 7 - dy * 3.5,
+                        tip.y() - dy * 7 - dx * 3.5),
+                QPointF(tip.x() - dx * 7 + dy * 3.5,
+                        tip.y() - dy * 7 + dx * 3.5)])
+            painter.setBrush(QBrush(color))
+            painter.setPen(Qt.NoPen)
+            painter.drawPolygon(head)
+            painter.setPen(QPen(color, 1.4))
+            painter.drawText(QPointF(tip.x() + (5 if dx else 4),
+                                     tip.y() + (13 if dy >= 0 else -5)),
+                             "XYZ"[index])
+        painter.setBrush(Qt.NoBrush)
 
     def drawForeground(self, painter, rect):
         super().drawForeground(painter, rect)
@@ -1647,13 +1703,17 @@ class SketchView(QGraphicsView):
         font.setBold(True)
         painter.setFont(font)
 
-        # axis letters for the active plane (X/Y/Z)
+        # axis letters for the active plane (X/Y/Z), in the axis colour
         (ai, bi), _keys = PLANES[self.scene().plane]
         h_axis, v_axis = "XYZ"[ai], "XYZ"[bi]
         w, h = self.viewport().width(), self.viewport().height()
+        painter.setPen(QPen(QColor(AXIS_COLORS[ai]), 1.4))
         painter.drawText(w - 46, h - 12, f"{h_axis} →")
+        painter.setPen(QPen(QColor(AXIS_COLORS[bi]), 1.4))
         painter.drawText(10, 34, f"{v_axis}")
         painter.drawText(8, 46, "↑")
+        painter.setPen(QPen(color, 1.4))
+        self._draw_origin_gizmo(painter, ai, bi)
 
         # scale bar (everything is millimetres)
         ppm = self.px_per_mm()
