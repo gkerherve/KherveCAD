@@ -606,7 +606,63 @@ _PLACEMENT_KEYS = ("x", "y", "z", "rx", "ry", "rz", "color", "alpha",
                    "mate", "anchors")
 
 
+#: {content key: triangles} — OpenSCAD's EXACT local mesh for a part,
+#: rendered one part at a time in the background. An assembly is parts
+#: placed next to each other, not booleaned together, so each part can
+#: be rendered on its own and the assembly assembled from the results:
+#: booleans are really cut (bolt holes appear), per-part colours
+#: survive (an STL of the whole document could only carry one), and a
+#: part is re-rendered only when its own contents change — moving,
+#: snapping or colouring it costs nothing.
+_EXACT = {}
+_EXACT_MAX = 64
+
+
 def clear_component_cache():
+    _COMP_CACHE.clear()
+
+
+def exact_key(node, env=None, fn=None):
+    """The content key an exact mesh for *node* would be stored under,
+    or None when the subtree cannot be keyed (it pulls in a Linked copy
+    whose master lives outside it).
+
+    *fn* must be the same segment count the preview tessellates with —
+    it is part of the key, so computing it outside a tessellation
+    (where the global override is unset) would produce a key the
+    lookup never matches, and every part would render for nothing."""
+    global _DETAIL
+    saved_detail = _DETAIL
+    _DETAIL = None
+    _set_fn(fn)
+    try:
+        return _component_key(node, dict(env or {}))
+    finally:
+        _set_fn(None)
+        _DETAIL = saved_detail
+
+
+def set_exact_mesh(key, tris):
+    """Store OpenSCAD's exact mesh for one part. A late result is
+    harmless: the key is the part's *content*, so a mesh for an old
+    version simply lands under a key nothing asks for."""
+    if not key:
+        return
+    if len(_EXACT) >= _EXACT_MAX:
+        _EXACT.clear()
+    _EXACT[key] = tris
+    # the local (approximate) tessellation of that part is now stale
+    for node_id, cached in list(_COMP_CACHE.items()):
+        if cached[0] == key:
+            del _COMP_CACHE[node_id]
+
+
+def has_exact_mesh(key) -> bool:
+    return bool(key) and key in _EXACT
+
+
+def clear_exact_meshes():
+    _EXACT.clear()
     _COMP_CACHE.clear()
 
 
@@ -687,6 +743,12 @@ def _component_mesh(node, env, color, sel, selected):
         local = cached[1]
         if cached[2] == placed_key:            # nothing moved: free
             return cached[3]
+    elif key is not None and key in _EXACT:
+        CACHE_STATS["misses"] += 1
+        # OpenSCAD has rendered this exact part: use its mesh (holes
+        # really cut) instead of the approximate tessellation, still
+        # colour-neutral so the part's own colour applies below
+        local = [(tri, None, False) for tri in _EXACT[key]]
     else:
         CACHE_STATS["misses"] += 1
         # children tessellated colour-neutral, so the Object's own

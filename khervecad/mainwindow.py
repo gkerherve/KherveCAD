@@ -161,6 +161,7 @@ class MainWindow(QMainWindow):
         self.view3d.lighting_bar.refresh_requested.connect(
             self.force_refresh)
         self.engine.mesh_ready.connect(self._engine_mesh)
+        self.engine.part_ready.connect(self._part_mesh_ready)
         self.engine.render_failed.connect(self._engine_failed)
         self.engine.busy_changed.connect(self._engine_busy)
 
@@ -1124,6 +1125,42 @@ class MainWindow(QMainWindow):
             return mesh.selected_world_tris(
                 root, ids, fn=self.model.effective_fn())
 
+    def _queue_part_renders(self, root):
+        """Ask OpenSCAD for an exact mesh of every part in view that
+        doesn't have one yet, one part at a time in the background.
+
+        An assembly is parts placed side by side, not booleaned
+        together, so each part can be rendered on its own and the
+        preview assembled from the results: bolt holes are really cut,
+        every part keeps its own colour (a single STL of the whole
+        document could carry only one, which is why a coloured document
+        used to stay approximate), and a part is re-rendered only when
+        its own contents change. Returns (exact, total) for the badge."""
+        if not self.engine.available:
+            return 0, 0
+        from . import anchors
+        env = anchors.doc_env(self.model)
+        exact = total = 0
+        for node in root.walk():
+            if node.type != "component" or not node.children:
+                continue
+            key = mesh.exact_key(node, env, fn=self.model.effective_fn())
+            if key is None:                 # holds a Linked copy: unkeyable
+                continue
+            total += 1
+            if mesh.has_exact_mesh(key):
+                exact += 1
+            else:
+                self.engine.request_part_render(
+                    key, self.model.subtree_scad(node))
+        return exact, total
+
+    def _part_mesh_ready(self, key, tris):
+        """One part finished rendering: keep its exact mesh and redraw
+        (cheap — every other part comes from the cache)."""
+        mesh.set_exact_mesh(key, tris)
+        self._refresh_preview()
+
     def _refresh_preview(self):
         fn = self.model.effective_fn()
         root, scad = self._render_scope()
@@ -1134,12 +1171,14 @@ class MainWindow(QMainWindow):
         tris = [t for t, _c in colored]
         colors = [c for _t, c in colored]
         has_colors = any(c is not None for c in colors)
+        exact, total = self._queue_part_renders(root)
         label = "built-in preview"
         if iso is not None:
             label += f" — Object: {root.name}"
-        if booleans:
-            label += (" (booleans approximated)"
-                      if not self.engine.available else "")
+        if total:
+            label += f" — {exact}/{total} parts exact"
+        if booleans and not self.engine.available:
+            label += " (booleans approximated)"
         self.view3d.set_mesh(tris, label,
                              colors if has_colors else None)
         if getattr(self, "_selected_ids", set()):

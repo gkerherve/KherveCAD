@@ -591,7 +591,23 @@ it) open/import it; imported files land in Open Recent.
 
 **Render pipeline**: any model change re-tessellates instantly
 (built-in preview) and schedules a debounced exact OpenSCAD render
-that replaces the preview when it lands. A render only lands if it
+that replaces the preview when it lands.
+
+**Exact meshes are rendered per PART**, not per document
+(`engine.request_part_render(key, code)` -> `part_ready` ->
+`mesh.set_exact_mesh`). An assembly is parts placed side by side, not
+booleaned together, so each Object is rendered alone
+(`subtree_scad`) and `_component_mesh` uses that mesh in place of its
+own tessellation. This is what makes an exact preview affordable and
+correct: bolt holes are really cut, **every part keeps its own colour**
+(one STL of the whole document could carry only one, which is why a
+coloured document used to stay approximate), parts pop in
+progressively (the badge reads "n/m parts exact"), and the key is the
+part's *content* — moving, snapping or colouring it re-renders
+nothing. `mesh.exact_key(node, env, fn)` must be given the same `fn`
+the preview tessellates with, or the key never matches. Port
+Tube.kcad: 55 s for the whole document, 0.2-16 s per part, and only
+once each. A render only lands if it
 still matches what is on screen: `ScadEngine` carries a **generation
 counter** bumped by `request_render()` and `cancel()`, and `_finished`
 drops the mesh when the running generation is stale. Without it a
@@ -663,8 +679,10 @@ automatically undoable — nothing to register.
 Per-object colour is OpenSCAD's own `color()` node (picker in the
 tree context menu and properties). The **built-in preview renders
 per-face colours** (`mesh.tessellate_colored`); engine STL is
-geometry-only, so the exact-render swap pauses while the document
-is coloured (F5 still forces it).
+geometry-only, so the *whole-document* exact render pauses while the
+document is coloured (F5 still forces it) — but the **per-part exact
+meshes carry on**, and each part is tinted as it is placed, so a
+coloured assembly is still exact (see the render pipeline above).
 
 ## Persistence policy
 

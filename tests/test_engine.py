@@ -137,3 +137,45 @@ def test_completed_render_reaches_the_view(scad_engine, tmp_path):
     scad_engine.mesh_ready.connect(got.append)
     _run(scad_engine, "cube(1);", path)
     assert len(got) == 1 and len(got[0]) == 2
+
+
+# --------------------------------------------- per-part render queue
+
+def test_part_renders_are_queued_once_and_keyed(scad_engine):
+    """Parts are queued by content key: the same part asked for twice
+    runs once, and a key already running is not queued again."""
+    scad_engine.request_part_render("key-a", "cube(1);")
+    scad_engine.request_part_render("key-a", "cube(1);")
+    scad_engine.request_part_render("key-b", "sphere(1);")
+    assert list(scad_engine._part_queue) == ["key-a", "key-b"]
+
+    scad_engine._timer.stop()
+    scad_engine._start_part()                    # key-a is now running
+    assert scad_engine._running_part == "key-a"
+    scad_engine.request_part_render("key-a", "cube(1);")
+    assert list(scad_engine._part_queue) == ["key-b"]
+
+
+def test_part_result_is_emitted_with_its_key(scad_engine, tmp_path):
+    path = tmp_path / "part.stl"
+    engine.write_stl(TRIS, str(path))
+    got = []
+    scad_engine.part_ready.connect(lambda k, m: got.append((k, len(m))))
+    scad_engine.request_part_render("key-a", "cube(1);")
+    scad_engine._timer.stop()
+    scad_engine._start_part()
+    scad_engine._process = _FakeProcess()
+    scad_engine._part_finished("key-a", str(path))
+    assert got == [("key-a", 2)]
+
+
+def test_cancelling_the_document_render_keeps_part_renders(scad_engine):
+    """A multi-coloured document cancels the whole-document render —
+    the per-part renders are exactly what makes it exact, so they must
+    survive (and stay scheduled)."""
+    scad_engine.request_render("cube(1);")
+    scad_engine.request_part_render("key-a", "cube(1);")
+    scad_engine.cancel()
+    assert scad_engine._pending_code is None
+    assert list(scad_engine._part_queue) == ["key-a"]
+    assert scad_engine._timer.isActive()

@@ -230,6 +230,7 @@ class ScadEngine(QObject):
     """Debounced background renders through the OpenSCAD binary."""
 
     mesh_ready = pyqtSignal(list)      # exact mesh from OpenSCAD
+    part_ready = pyqtSignal(str, list)  # (content key, exact part mesh)
     render_failed = pyqtSignal(str)    # compiler message
     busy_changed = pyqtSignal(bool)
 
@@ -245,6 +246,10 @@ class ScadEngine(QObject):
         #: in flight; _finished then drops that render's result.
         self._generation = 0
         self._running_generation = 0
+        #: {content key: program} for per-part exact renders, and the
+        #: key of the one running (so it is never queued twice)
+        self._part_queue = {}
+        self._running_part = None
         self._timer = QTimer(self)
         self._timer.setSingleShot(True)
         self._timer.setInterval(self.DEBOUNCE_MS)
@@ -269,6 +274,27 @@ class ScadEngine(QObject):
         self._generation += 1
         self._timer.start()
 
+    def request_part_render(self, key: str, scad_code: str):
+        """Queue an exact render of ONE part, identified by its content
+        *key*. Parts are rendered one at a time in the background and
+        the result is emitted as `part_ready(key, mesh)`.
+
+        This is what makes an exact preview affordable: a whole-document
+        render redoes the CSG of every part on every change (a minute on
+        a real assembly), while a part is re-rendered only when its own
+        contents change — never when it is moved, snapped or coloured.
+        A stale result cannot mislead: the key IS the content."""
+        if not self.available or not key:
+            return
+        if key in self._part_queue or key == self._running_part:
+            return
+        self._part_queue[key] = scad_code
+        self._timer.start()
+
+    def cancel_parts(self):
+        """Drop queued part renders (the document changed wholesale)."""
+        self._part_queue.clear()
+
     def cancel(self):
         """Drop the pending render and disown one in flight — the
         built-in preview is authoritative from here (the document is
@@ -278,13 +304,16 @@ class ScadEngine(QObject):
         self._timer.stop()
         self._pending_code = None
         self._generation += 1
+        if self._part_queue:            # per-part renders still stand
+            self._timer.start()
 
     def _start(self):
-        if self._pending_code is None:
-            return
         if self._process is not None:
             # A render is running: keep the code pending; _finished
             # restarts the timer so the newest code wins.
+            return
+        if self._pending_code is None:
+            self._start_part()
             return
         code = self._pending_code
         self._pending_code = None
@@ -299,6 +328,43 @@ class ScadEngine(QObject):
                             ["-o", str(stl_path), str(scad_path)])
         self.busy_changed.emit(True)
 
+    def _start_part(self):
+        """Run the next queued part render (only when no whole-document
+        render is waiting — that one is what the user is looking at)."""
+        if not self._part_queue:
+            return
+        key, code = next(iter(self._part_queue.items()))
+        del self._part_queue[key]
+        self._running_part = key
+        scad_path = self._dir / "part.scad"
+        stl_path = self._dir / "part.stl"
+        scad_path.write_text(code, encoding="utf-8")
+        self._process = QProcess(self)
+        self._process.finished.connect(
+            lambda _c, _s, k=key, p=str(stl_path): self._part_finished(k, p))
+        self._process.start(self.binary,
+                            ["-o", str(stl_path), str(scad_path)])
+        self.busy_changed.emit(True)
+
+    def _part_finished(self, key: str, stl_path: str):
+        process = self._process
+        self._process = None
+        self._running_part = None
+        self.busy_changed.emit(False)
+        exit_ok = (process.exitStatus() == QProcess.NormalExit
+                   and process.exitCode() == 0)
+        if exit_ok and Path(stl_path).exists():
+            try:
+                mesh = parse_stl(stl_path)
+            except Exception:
+                mesh = None
+            if mesh:
+                # keyed by content, so a late result is never wrong —
+                # it just lands under a key nothing is asking for
+                self.part_ready.emit(key, mesh)
+        if self._pending_code is not None or self._part_queue:
+            self._timer.start()
+
     def _finished(self, stl_path: str):
         process = self._process
         self._process = None
@@ -306,7 +372,7 @@ class ScadEngine(QObject):
         if self._running_generation != self._generation:
             # superseded or cancelled while it ran: its mesh is of the
             # old model, so it must not reach the view
-            if self._pending_code is not None:
+            if self._pending_code is not None or self._part_queue:
                 self._timer.start()
             return
         exit_ok = (process.exitStatus() == QProcess.NormalExit
@@ -322,7 +388,7 @@ class ScadEngine(QObject):
             stderr = bytes(process.readAllStandardError()) \
                 .decode(errors="replace").strip()
             self.render_failed.emit(stderr or "render failed")
-        if self._pending_code is not None:
+        if self._pending_code is not None or self._part_queue:
             self._timer.start()
 
     # ---------------------------------------------------------- export
