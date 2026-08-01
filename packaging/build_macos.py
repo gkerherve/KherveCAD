@@ -82,6 +82,20 @@ _SRC_OVERRIDE = os.environ.get("KHERVECAD_OPENSCAD_SRC", "")
 #: What the arch is called in an OpenSCAD filename.
 _ARCH_TOKENS = {"arm64": ("arm64",), "x86_64": ("x86_64", "x86-64")}
 
+#: A *dated* macOS image: ``OpenSCAD-2026.06.12.dmg``, optionally with a
+#: build suffix and an architecture. The date is what makes this
+#: trustworthy — the snapshots index also carries branch builds
+#: (``OpenSCAD-tests2.dmg``, ``OpenSCAD-c++11.dmg``) which sort *after*
+#: every real snapshot and would otherwise win.
+#: The day is optional so the stable ``OpenSCAD-2021.01.dmg`` matches too.
+_DATED_DMG = re.compile(
+    r"^OpenSCAD-(\d{4}\.\d{2}(?:\.\d{2})?(?:\.[A-Za-z0-9]+)?)"
+    r"(?:-(arm64|x86[-_]64))?\.dmg$")
+
+#: What a source archive can be called. The stable index uses
+#: ``openscad-<ver>.src.tar.gz``; snapshots have varied.
+_SOURCE_SUFFIXES = (".src.tar.gz", ".tar.gz", ".tar.xz", ".tgz")
+
 
 def _run(cmd, **kwargs):
     print("+", " ".join(str(c) for c in cmd), flush=True)
@@ -102,10 +116,20 @@ def freeze() -> None:
 
 # ------------------------------------------------------------ openscad
 
-def _version_of(dmg_name: str) -> str:
-    """``OpenSCAD-2021.01.dmg`` -> ``2021.01``, arch suffix optional."""
-    match = re.match(r"OpenSCAD-(.+?)(?:-(?:arm64|x86[-_]64))?\.dmg$", dmg_name)
-    return match.group(1) if match else ""
+def _find_source(index: str, names: list[str], version: str) -> str:
+    """URL of the source archive matching *version*, or '' if absent."""
+    exact = f"openscad-{version}.src.tar.gz"
+    if exact in names:
+        return index + exact
+    # Snapshot sources have not always used the .src infix, so fall back to
+    # anything that carries the same version and is plainly a source
+    # tarball. The version match is what keeps this honest: the GPL
+    # obligation is the source *corresponding* to the binary we ship.
+    pattern = re.compile(rf"(?i)^openscad[-_]{re.escape(version)}\b.*$")
+    for name in sorted(names):
+        if pattern.match(name) and name.endswith(_SOURCE_SUFFIXES):
+            return index + name
+    return ""
 
 
 def resolve_openscad(arch: str) -> tuple[str, str]:
@@ -127,46 +151,44 @@ def resolve_openscad(arch: str) -> tuple[str, str]:
         return _URL_OVERRIDE, _SRC_OVERRIDE
 
     tokens = _ARCH_TOKENS[arch]
-    other = [t for a, ts in _ARCH_TOKENS.items() if a != arch for t in ts]
+    tried = []
     for index in _OPENSCAD_INDEXES:
         page = _fetch(index)
         names = re.findall(r'href="([^"?/]+)"', page)
-        dmgs = sorted({n for n in names if n.endswith(".dmg")})
-        tagged = [n for n in dmgs if any(t in n for t in tokens)]
-        # Anything explicitly built for the *other* architecture is out.
-        untagged = [n for n in dmgs if not any(t in n for t in other + list(tokens))]
-        usable = tagged or untagged
-        print(f"{index}: {len(names)} entries, {len(dmgs)} disk images "
-              f"({len(tagged)} tagged {arch}, {len(untagged)} untagged)",
+        # (version, name) for every dated image not built for another arch.
+        dated = []
+        for name in names:
+            match = _DATED_DMG.match(name)
+            if match and (match.group(2) is None
+                          or any(t in match.group(2) for t in tokens)):
+                dated.append((match.group(1), name))
+        dated.sort()
+        print(f"{index}: {len(names)} entries, {len(dated)} dated macOS images",
               flush=True)
-        for name in usable[-5:]:
+        for _, name in dated[-3:]:
             print(f"  {name}", flush=True)
-        if not usable:
+        if not dated:
+            tried.append(f"{index} (no dated image)")
             continue
-        # Snapshot names sort chronologically (OpenSCAD-YYYY.MM.DD.aiNNNNN),
-        # so the last one is the newest build.
-        dmg = usable[-1]
-        version = _version_of(dmg)
-        srcs = [n for n in names if n.endswith(".src.tar.gz")]
-        wanted = f"openscad-{version}.src.tar.gz"
-        if _SRC_OVERRIDE:
-            src_url = _SRC_OVERRIDE
-        elif wanted in srcs:
-            src_url = index + wanted
-        else:
-            # The GPL obligation is the *corresponding* source for the
-            # binary we ship. Guessing a near-miss would be worse than
-            # stopping, and the fix is one environment variable.
-            raise SystemExit(
-                f"no source archive for {dmg} at {index}\n"
-                f"  looked for: {wanted}\n"
-                f"  available:  {', '.join(sorted(srcs)[-5:]) or 'none'}\n"
-                "Set KHERVECAD_OPENSCAD_SRC to the matching source archive."
-            )
+
+        version, dmg = dated[-1]
+        src_url = _SRC_OVERRIDE or _find_source(index, names, version)
+        if not src_url:
+            sources = [n for n in sorted(names)
+                       if n.endswith(_SOURCE_SUFFIXES)][-6:]
+            print(f"  source archives here: {', '.join(sources) or 'none'}",
+                  flush=True)
+            tried.append(f"{index} (no source for {version})")
+            continue
         return _URL_OVERRIDE or (index + dmg), src_url
 
-    raise SystemExit("no usable macOS OpenSCAD disk image found in "
-                     + ", ".join(_OPENSCAD_INDEXES))
+    # The GPL obligation is the *corresponding* source for the binary we
+    # ship, so a build with no source to attach stops rather than guesses.
+    raise SystemExit(
+        "no macOS OpenSCAD build with a matching source archive:\n  "
+        + "\n  ".join(tried)
+        + "\nSet KHERVECAD_OPENSCAD_DMG and KHERVECAD_OPENSCAD_SRC to pin both."
+    )
 
 
 def _download(url: str, dest: Path) -> Path:
