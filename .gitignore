@@ -7,3 +7,8 @@ venv/
 build/
 dist/
 *.kcad.bak
+# written by packaging/build_installer.py so the frozen build knows its
+# version; the checkout derives it from git instead.
+khervecad/VERSION
+# cached OpenSCAD portable ZIP (~21 MB), re-downloaded on demand
+packaging/vendor/
