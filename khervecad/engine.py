@@ -19,6 +19,7 @@ the Free Software Foundation, either version 3 of the License, or
 import os
 import shutil
 import struct
+import sys
 import tempfile
 import xml.etree.ElementTree as ET
 import zipfile
@@ -27,6 +28,9 @@ from pathlib import Path
 from PyQt5.QtCore import QObject, QProcess, QSettings, QTimer, pyqtSignal
 
 _SETTINGS = ("Kherve", "KherveCAD")
+
+#: name of the binary inside a bundled ``openscad/`` folder.
+_OPENSCAD_EXE = "openscad.exe" if os.name == "nt" else "openscad"
 
 #: places to look for the binary besides PATH.
 _CANDIDATES = [
@@ -39,6 +43,31 @@ _CANDIDATES = [
 ]
 
 
+def bundled_openscad() -> str:
+    """Path of the OpenSCAD shipped beside the app, or '' if there is none.
+
+    The Windows installer drops the official portable build into an
+    ``openscad/`` subfolder of the application directory, so the engine
+    is guaranteed present. Looks next to the executable when frozen
+    (PyInstaller one-folder: ``sys.executable``'s directory, and
+    ``sys._MEIPASS`` for a one-file build) and next to the project root
+    when running from a checkout, so a manually-dropped copy works there
+    too.
+    """
+    roots = []
+    if getattr(sys, "frozen", False):
+        roots.append(Path(sys.executable).resolve().parent)
+        meipass = getattr(sys, "_MEIPASS", "")
+        if meipass:
+            roots.append(Path(meipass))
+    roots.append(Path(__file__).resolve().parent.parent)
+    for root in roots:
+        exe = root / "openscad" / _OPENSCAD_EXE
+        if exe.exists():
+            return str(exe)
+    return ""
+
+
 def find_openscad() -> str:
     """Path of the OpenSCAD binary, or '' when not installed.
 
@@ -46,12 +75,21 @@ def find_openscad() -> str:
     (Edit > Locate OpenSCAD in the GUI). Setting the environment
     variable ``KHERVECAD_DISABLE_ENGINE`` forces the built-in preview
     (used by the test suite so no background renders are spawned).
+
+    Order: the user's explicit choice, then the copy bundled beside the
+    app, then PATH and the usual install locations. The bundle beats
+    discovery — it is the one copy we know is there and know works — but
+    not a path the user deliberately pointed us at, or Locate OpenSCAD
+    would silently do nothing in an installed build.
     """
     if os.environ.get("KHERVECAD_DISABLE_ENGINE"):
         return ""
     custom = QSettings(*_SETTINGS).value("openscad_path", "")
     if custom and Path(custom).exists():
         return str(custom)
+    bundled = bundled_openscad()
+    if bundled:
+        return bundled
     path = shutil.which("openscad")
     if path:
         return path

@@ -179,3 +179,35 @@ def test_cancelling_the_document_render_keeps_part_renders(scad_engine):
     assert scad_engine._pending_code is None
     assert list(scad_engine._part_queue) == ["key-a"]
     assert scad_engine._timer.isActive()
+
+
+def test_bundled_openscad_is_found_beside_a_frozen_app(tmp_path, monkeypatch):
+    """The installer ships OpenSCAD in an openscad/ subfolder of the app
+    directory. If this lookup breaks, an installed copy silently falls
+    back to the approximate built-in preview — the exact thing bundling
+    it is meant to prevent."""
+    app = tmp_path / "app"
+    (app / "openscad").mkdir(parents=True)
+    exe = app / "openscad" / engine._OPENSCAD_EXE
+    exe.write_bytes(b"")
+    monkeypatch.setattr(engine.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(engine.sys, "executable", str(app / "KherveCAD.exe"))
+    assert engine.bundled_openscad() == str(exe)
+
+
+def test_no_bundle_means_no_bundled_path(tmp_path, monkeypatch):
+    monkeypatch.setattr(engine.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(engine.sys, "executable", str(tmp_path / "KherveCAD.exe"))
+    monkeypatch.setattr(engine, "__file__", str(tmp_path / "khervecad" / "engine.py"))
+    assert engine.bundled_openscad() == ""
+
+
+def test_a_located_binary_still_wins_over_the_bundle(tmp_path, monkeypatch):
+    """Edit > Locate OpenSCAD must keep working in an installed build."""
+    chosen = tmp_path / "custom-openscad.exe"
+    chosen.write_bytes(b"")
+    monkeypatch.setattr(engine, "bundled_openscad", lambda: str(tmp_path / "bundled.exe"))
+    monkeypatch.delenv("KHERVECAD_DISABLE_ENGINE", raising=False)
+    monkeypatch.setattr(engine.QSettings, "value",
+                        lambda self, key, default="": str(chosen))
+    assert engine.find_openscad() == str(chosen)
