@@ -355,11 +355,14 @@ into a new module and import.
                        transform wrappers show as their own rows so the
                        whole structure is visible. A **placed part**
                        (Object, instance, or mated group) additionally
-                       shows synthetic **Position/Rotation child rows**
-                       mirroring its placement params — the translate/
-                       rotate a snap, drag or Properties edit wrote, so
-                       the tree matches the `translate(...) rotate(...)`
-                       the code emits. They carry `ROLE_PLACEMENT`,
+                       shows synthetic **Position/Rotation/Color child
+                       rows** mirroring the params it carries — the
+                       translate/rotate a snap, drag or Properties edit
+                       wrote, so the tree matches the
+                       `translate(...) rotate(...)` the code emits, and
+                       its own colour (with a painted swatch as the
+                       icon, `_swatch_icon`, and the opacity when
+                       translucent). They carry `ROLE_PLACEMENT`,
                        share the part's node id (clicking selects the
                        part), are read-only/undraggable, refresh live
                        on every mate re-solve, and their tooltip names

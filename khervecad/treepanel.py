@@ -17,10 +17,11 @@ the Free Software Foundation, either version 3 of the License, or
 import json
 import re
 
-from PyQt5.QtCore import QEvent, QRect, QSize, Qt, pyqtSignal
-from PyQt5.QtGui import (QBrush, QColor, QFont, QKeySequence, QPainter,
-                         QPen, QSyntaxHighlighter, QTextCharFormat,
-                         QTextCursor)
+from PyQt5.QtCore import (QEvent, QRect, QRectF, QSize, Qt,
+                          pyqtSignal)
+from PyQt5.QtGui import (QBrush, QColor, QFont, QIcon, QKeySequence,
+                         QPainter, QPen, QPixmap, QSyntaxHighlighter,
+                         QTextCharFormat, QTextCursor)
 from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QCheckBox,
                              QHBoxLayout, QMenu, QMessageBox,
                              QPlainTextEdit, QPushButton, QSpinBox,
@@ -50,6 +51,30 @@ ROLE_PLACEMENT = Qt.UserRole + 2   # True -> synthetic Position/Rotation
 #                                    row under a part (selects the part)
 
 CLIPBOARD_FORMAT = "kcad-clipboard"
+
+
+def _swatch_icon(color: str, size: int = 12) -> QIcon:
+    """A small filled square of *color* — the icon for a part's Color
+    row, so the tree shows the colour itself rather than a generic
+    palette glyph. Falls back to the palette icon for an unusable
+    value, so a typed colour never leaves a blank row."""
+    value = QColor(color)
+    if not value.isValid():
+        return icons.icon(NODE_TYPES["color"]["icon"])
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.transparent)
+    painter = QPainter(pixmap)
+    try:
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setBrush(QBrush(value))
+        painter.setPen(QPen(QColor(0, 0, 0, 90)))
+        # QRectF, not six floats: PyQt has no float x/y overload, and
+        # the TypeError would escape mid-paint and take the app down
+        painter.drawRoundedRect(
+            QRectF(0.5, 0.5, size - 1.0, size - 1.0), 2.5, 2.5)
+    finally:
+        painter.end()
+    return QIcon(pixmap)
 
 
 class _RowDelegate(QStyledItemDelegate):
@@ -228,10 +253,12 @@ class ObjectTree(QTreeWidget):
 
     @staticmethod
     def _placement_texts(node):
-        """``[(text, icon node type)]`` describing *node*'s non-zero
-        placement — the translate/rotate that snapping, dragging or
-        Properties wrote, mirrored as tree rows so the tree matches
-        the ``translate(...) rotate(...)`` the code emits."""
+        """``[(text, icon node type, kind)]`` describing what *node*
+        carries as a part: its non-zero placement — the translate/
+        rotate that snapping, dragging or Properties wrote, mirrored as
+        tree rows so the tree matches the ``translate(...) rotate(...)``
+        the code emits — and its own colour, which the part carries the
+        same way and which `color(...)` emits alongside them."""
         def fmt(value):
             if isinstance(value, str):
                 return value.strip() or "0"
@@ -253,7 +280,17 @@ class ObjectTree(QTreeWidget):
             vals = [node.params.get(k, 0.0) for k in keys]
             if any(nonzero(v) for v in vals):
                 out.append((f"{label} ({', '.join(fmt(v) for v in vals)})",
-                            icon_type))
+                            icon_type, "placement"))
+        color = str(node.params.get("color", "")).strip()
+        if color:
+            try:
+                opacity = float(node.params.get("alpha", 1.0))
+            except (TypeError, ValueError):
+                opacity = 1.0
+            text = f"Color ({color}"
+            if opacity < 1.0:
+                text += f", {opacity:g} opacity"
+            out.append((text + ")", "color", "color"))
         return out
 
     def _insert_placement_rows(self, item, node):
@@ -263,22 +300,28 @@ class ObjectTree(QTreeWidget):
         mate = node.params.get("mate") \
             if node.type in self._PLACED_TYPES else None
         mated = isinstance(mate, dict) and mate.get("parent")
-        for index, (text, icon_type) in enumerate(
+        for index, (text, icon_type, kind) in enumerate(
                 self._placement_texts(node)):
             row = QTreeWidgetItem()
             row.setText(0, text)
-            row.setIcon(0, icons.icon(NODE_TYPES[icon_type]["icon"]))
+            if kind == "color":
+                row.setIcon(0, _swatch_icon(
+                    str(node.params.get("color", ""))))
+                row.setToolTip(0, "The part's colour — change it in "
+                                  "Properties or right-click > Colour")
+            else:
+                row.setIcon(0, icons.icon(NODE_TYPES[icon_type]["icon"]))
+                row.setToolTip(0, (
+                    f"Solved from the mate to {mate['parent']} — adjust "
+                    f"via Attach / snap to..." if mated else
+                    "The part's placement — edit x/y/z and rotation in "
+                    "Properties"))
             row.setData(0, Qt.UserRole, node.id)
             row.setData(0, ROLE_PLACEMENT, True)
             row.setFlags((row.flags() | Qt.ItemNeverHasChildren)
                          & ~(Qt.ItemIsEditable | Qt.ItemIsDropEnabled
                              | Qt.ItemIsDragEnabled
                              | Qt.ItemIsUserCheckable))
-            row.setToolTip(0, (
-                f"Solved from the mate to {mate['parent']} — adjust "
-                f"via Attach / snap to..." if mated else
-                "The part's placement — edit x/y/z and rotation in "
-                "Properties"))
             item.insertChild(index, row)
 
     def _refresh_placement_rows(self, item, node):

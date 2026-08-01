@@ -158,3 +158,50 @@ def test_instance_shows_placement_rows(model):
     assert tree.node_of(item) is ref
     rows = _placement_children(item)
     assert [r.text(0) for r in rows] == ["Position (30, 0, 0)"]
+
+
+def test_part_shows_a_colour_row_with_a_swatch(model):
+    """A part carries its colour the same way it carries its
+    placement, so the tree lists it beside Position/Rotation — with
+    the colour itself as the icon."""
+    comp = model.new_component("Shell")
+    model.add_node("cube", parent=comp)
+    comp.params.update(z=12.0, color="#20e0c0")
+    tree = ObjectTree(model)
+    item = tree.topLevelItem(0)
+    rows = _placement_children(item)
+    assert [r.text(0) for r in rows] == ["Position (0, 0, 12)",
+                                         "Color (#20e0c0)"]
+    color_row = rows[-1]
+    assert not color_row.icon(0).isNull()          # a swatch, not blank
+    assert "colour" in color_row.toolTip(0).lower()
+    assert tree.node_of(color_row) is comp         # selects the part
+    assert not (color_row.flags() & Qt.ItemIsEditable)
+
+
+def test_colour_row_shows_opacity_when_translucent(model):
+    comp = model.new_component("Glass")
+    model.add_node("cube", parent=comp)
+    comp.params.update(color="#88ccff", alpha=0.4)
+    tree = ObjectTree(model)
+    rows = _placement_children(tree.topLevelItem(0))
+    assert [r.text(0) for r in rows] == ["Color (#88ccff, 0.4 opacity)"]
+
+
+def test_no_colour_row_when_the_part_has_no_colour(model):
+    comp = model.new_component("Plain")
+    model.add_node("cube", parent=comp)
+    comp.params.update(x=3.0)
+    tree = ObjectTree(model)
+    rows = _placement_children(tree.topLevelItem(0))
+    assert [r.text(0) for r in rows] == ["Position (3, 0, 0)"]
+
+
+def test_colour_row_updates_when_the_colour_changes(model):
+    comp = model.new_component("Shell")
+    model.add_node("cube", parent=comp)
+    comp.params["color"] = "#ff0000"
+    tree = ObjectTree(model)
+    model.set_param(comp, "color", "#0000ff")
+    rows = _placement_children(tree.topLevelItem(0))
+    assert [r.text(0) for r in rows] == ["Color (#0000ff)"]
