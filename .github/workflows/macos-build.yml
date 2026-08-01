@@ -16,6 +16,10 @@ on:
         description: "Publish a GitHub release with the DMG"
         type: boolean
         default: true
+      probe:
+        description: "Report what OpenSCAD publishes, before building"
+        type: boolean
+        default: false
   push:
     tags:
       - "macos-v*"
@@ -52,6 +56,27 @@ jobs:
           QT_QPA_PLATFORM: offscreen
           KHERVECAD_DISABLE_ENGINE: "1"
         run: python -m pytest tests/ -q
+
+      - name: Probe what OpenSCAD publishes
+        # A build machine can reach files.openscad.org; a laptop behind a
+        # filtering proxy may not. This prints what is actually there —
+        # which architecture the newest macOS image is, and where the
+        # matching source lives — so the bundling rules can be based on
+        # fact rather than on guessed filenames.
+        if: inputs.probe
+        run: |
+          set -x
+          INDEX=https://files.openscad.org/snapshots/
+          curl -s "$INDEX" | grep -oE 'href="[^"]+"' | sed 's/href="//;s/"//' \
+            | grep -vE '\.(exe|zip|AppImage|msi|deb|rpm)$' | tail -40
+          NEWEST=$(curl -s "$INDEX" | grep -oE 'OpenSCAD-[0-9.]+\.dmg' \
+            | sort -u | tail -1)
+          echo "newest snapshot image: $NEWEST"
+          curl -sL -o probe.dmg "$INDEX$NEWEST"
+          hdiutil attach probe.dmg -nobrowse -readonly -mountpoint probe-mnt
+          find probe-mnt -maxdepth 1
+          file probe-mnt/*.app/Contents/MacOS/* | head
+          hdiutil detach probe-mnt -force
 
       - name: Build the .app and the DMG
         run: python packaging/build_macos.py
