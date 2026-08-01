@@ -682,6 +682,25 @@ Shipping OpenSCAD's binary is a redistribution: its licence installs
 alongside and its **source archive must be attached to the release**.
 Full detail, and why each step exists, in `docs/INSTALLER.md`.
 
+**macOS (Apple Silicon), one command** — on a Mac:
+
+```
+python packaging/build_macos.py
+```
+
+Same first step (write `khervecad/VERSION`), then the platform's own
+container: the spec ends in `BUNDLE` so PyInstaller yields
+`dist/KherveCAD.app`, OpenSCAD is mounted from its disk image into
+`Contents/Resources/openscad/OpenSCAD.app`, the finished tree is ad-hoc
+signed (Apple Silicon will not run an unsigned Mach-O, and dropping
+OpenSCAD in invalidates PyInstaller's signature, so signing goes last)
+and sealed into a DMG. **arm64 only** — stable OpenSCAD 2021.01 has no
+Apple Silicon binary, so the engine comes from a snapshot the build
+discovers at run time. `.github/workflows/macos-build.yml` does the
+whole thing on a `macos-14` runner and publishes a `macos-v<ver>`
+release with `--latest=false`, so `releases/latest` stays on the Windows
+release the website links to. See `README.macos.md`.
+
 ## Roadmap
 
 - Undo/redo on a shared `QUndoStack` (node add/remove/move/param

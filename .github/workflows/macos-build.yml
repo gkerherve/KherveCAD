@@ -1,0 +1,124 @@
+name: macOS build
+
+# PyInstaller cannot cross-compile, so the .app has to be produced on a
+# Mac. macos-14 is the Apple Silicon (arm64) runner.
+#
+# arm64 only, deliberately. The engine we bundle is OpenSCAD's own macOS
+# build, and the last stable OpenSCAD (2021.01) predates Apple Silicon —
+# only the snapshots ship an arm64 binary. An Intel KherveCAD would
+# therefore have to carry an Intel OpenSCAD and run the whole thing under
+# Rosetta on the machines most people actually have.
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Publish a GitHub release with the DMG"
+        type: boolean
+        default: true
+  push:
+    tags:
+      - "macos-v*"
+
+permissions:
+  contents: write          # needed to create the release
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The version is `git rev-list --count HEAD`, so a shallow
+          # clone would silently ship the wrong build number.
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Run the test suite
+        # Offscreen Qt, and the engine forced off so no background
+        # OpenSCAD renders are spawned on a headless runner.
+        env:
+          QT_QPA_PLATFORM: offscreen
+          KHERVECAD_DISABLE_ENGINE: "1"
+        run: python -m pytest tests/ -q
+
+      - name: Build the .app and the DMG
+        run: python packaging/build_macos.py
+
+      - name: Read the version back
+        run: echo "VERSION=$(cut -d+ -f1 khervecad/VERSION)" >> "$GITHUB_ENV"
+
+      - name: Check the bundle
+        # Not a launch test — a GUI app on a headless runner would just
+        # hang. These are the things that can actually be wrong in a
+        # finished bundle: no Info.plist, a broken signature, or the
+        # bundled engine missing, which surfaces to users as silently
+        # approximate booleans.
+        run: |
+          APP=dist/KherveCAD.app
+          test -x "$APP/Contents/MacOS/KherveCAD"
+          plutil -p "$APP/Contents/Info.plist" \
+            | grep -E 'CFBundleIdentifier|CFBundleShortVersionString'
+          codesign --verify --deep --strict "$APP"
+          test -x "$APP/Contents/Resources/openscad/OpenSCAD.app/Contents/MacOS/OpenSCAD"
+          test -f "$APP/Contents/Resources/openscad/COPYING.txt"
+          ls -1 dist/openscad-*.src.tar.gz
+
+      - name: Upload the DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: KherveCAD-${{ env.VERSION }}-macOS-arm64
+          path: |
+            dist/*.dmg
+            dist/openscad-*.src.tar.gz
+          if-no-files-found: error
+
+      - name: Publish the release
+        if: github.event_name == 'push' || inputs.release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="macos-v${VERSION}"
+
+          # sed strips the YAML block indentation; without it every line of
+          # the release notes would arrive with ten leading spaces and
+          # render as a code block.
+          sed 's/^          //' > notes.md <<'EOF'
+          The macOS build of KherveCAD, for **Apple Silicon (arm64)**.
+
+          Open the DMG and drag KherveCAD to Applications. The app is *ad-hoc
+          signed, not notarized*: macOS quarantines anything downloaded through
+          a browser, so on first launch right-click the app and choose **Open**,
+          then **Open** again — or run
+
+              xattr -dr com.apple.quarantine /Applications/KherveCAD.app
+
+          The **OpenSCAD engine is bundled inside the app**, so exact renders,
+          booleans and STL export work with nothing else installed. OpenSCAD is
+          GPL-2.0-or-later and KherveCAD runs it as a separate process; the
+          corresponding source archive is attached to this release.
+
+          Windows builds are released separately, under the `v*` tags.
+          EOF
+
+          # --latest=false keeps `releases/latest` pointing at the Windows
+          # release: the website's download button is
+          # releases/latest/download/KherveCAD-Setup.exe, and a macOS-only
+          # release taking over "latest" would 404 that link.
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" \
+            --latest=false \
+            --title "KherveCAD v${VERSION} — macOS (Apple Silicon)" \
+            --notes-file notes.md
+          gh release upload "$TAG" dist/*.dmg dist/openscad-*.src.tar.gz --clobber

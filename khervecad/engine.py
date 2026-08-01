@@ -43,28 +43,44 @@ _CANDIDATES = [
 ]
 
 
+#: layouts of a bundled ``openscad/`` folder, relative to a root. Windows
+#: and Linux get the portable tree (the binary sits at the top); macOS
+#: ships the official ``OpenSCAD.app``, whose binary is buried inside it.
+_BUNDLE_LAYOUTS = [
+    ("openscad", _OPENSCAD_EXE),
+    ("openscad", "OpenSCAD.app", "Contents", "MacOS", "OpenSCAD"),
+]
+
+
 def bundled_openscad() -> str:
     """Path of the OpenSCAD shipped beside the app, or '' if there is none.
 
     The Windows installer drops the official portable build into an
     ``openscad/`` subfolder of the application directory, so the engine
-    is guaranteed present. Looks next to the executable when frozen
-    (PyInstaller one-folder: ``sys.executable``'s directory, and
-    ``sys._MEIPASS`` for a one-file build) and next to the project root
-    when running from a checkout, so a manually-dropped copy works there
-    too.
+    is guaranteed present; the macOS DMG does the same with the official
+    ``OpenSCAD.app`` inside the bundle's ``Contents/Resources/``. Looks
+    next to the executable when frozen (PyInstaller one-folder:
+    ``sys.executable``'s directory, and ``sys._MEIPASS`` for a one-file
+    build) and next to the project root when running from a checkout, so
+    a manually-dropped copy works there too.
     """
     roots = []
     if getattr(sys, "frozen", False):
-        roots.append(Path(sys.executable).resolve().parent)
+        exe_dir = Path(sys.executable).resolve().parent
+        roots.append(exe_dir)
+        # In a .app the executable lives in Contents/MacOS/; everything
+        # that is not code belongs one level over in Contents/Resources/.
+        if exe_dir.name == "MacOS" and exe_dir.parent.name == "Contents":
+            roots.append(exe_dir.parent / "Resources")
         meipass = getattr(sys, "_MEIPASS", "")
         if meipass:
             roots.append(Path(meipass))
     roots.append(Path(__file__).resolve().parent.parent)
     for root in roots:
-        exe = root / "openscad" / _OPENSCAD_EXE
-        if exe.exists():
-            return str(exe)
+        for layout in _BUNDLE_LAYOUTS:
+            exe = root.joinpath(*layout)
+            if exe.exists():
+                return str(exe)
     return ""
 
 
