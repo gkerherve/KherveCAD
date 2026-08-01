@@ -659,14 +659,25 @@ compatible.
 
 ## Packaging / installer
 
-**No installer yet — KherveCAD is not a finished product.** The
-decision and the full plan live in `docs/INSTALLER.md`: when the
-time comes, freeze with PyInstaller and bundle the official
-OpenSCAD portable ZIP in an `openscad/` subfolder (Inno Setup on
-Windows; GPL compliance = ship OpenSCAD's licence + attach its
-source ZIP to the release). Do not add packaging files before that
-decision is revisited. The one change welcome early: teach
-`engine.find_openscad()` to look next to the application first.
+**Windows installer, one command** — from the project root, with the
+interpreter that has PyInstaller:
+
+```
+python packaging/build_installer.py
+```
+
+It writes `khervecad/VERSION` (a frozen build has no `.git` and would
+otherwise report the `0.1.0` fallback), freezes with PyInstaller
+one-folder, unpacks the official **OpenSCAD portable ZIP** into an
+`openscad/` subfolder so the engine is guaranteed present, then makes
+the portable zip, the per-user Inno installer, and the stable-name
+`KherveCAD-Setup.exe` the website links to — all in `dist/`.
+
+`engine.bundled_openscad()` finds that subfolder beside the executable;
+`find_openscad()` still lets Edit > Locate OpenSCAD win over it.
+Shipping OpenSCAD's binary is a redistribution: its licence installs
+alongside and its **source archive must be attached to the release**.
+Full detail, and why each step exists, in `docs/INSTALLER.md`.
 
 ## Roadmap
 
