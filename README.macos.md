@@ -30,23 +30,32 @@ replaces the whole bundle atomically, so the upgrade problems
 
 ## Apple Silicon only
 
-The DMG is arm64, and there is no Intel build. The reason is the engine,
-not the app: KherveCAD bundles OpenSCAD so no user lands silently in
-approximate-boolean preview mode, and the last *stable* OpenSCAD
-(2021.01) predates Apple Silicon — only the snapshot builds ship an
-arm64 binary. An Intel KherveCAD would have to carry an Intel OpenSCAD
-and then run the whole thing under Rosetta on the machines most people
-now have. `build_macos.py` verifies the bundled binary's architecture
-with `file` and refuses to build a mismatched pair.
+The DMG is arm64, and the engine decides that, not the app. KherveCAD
+bundles OpenSCAD so no user lands silently in approximate-boolean preview
+mode, and the last *stable* OpenSCAD (2021.01) predates Apple Silicon: it
+is x86_64 only, so bundling it would mean Rosetta on the machines most
+people now have. The nightly snapshots ship a **universal** binary that
+runs natively on Apple Silicon, so the engine comes from there.
+`build_macos.py` reads the extracted binary with `file` and refuses to
+build a pair that is not native — the filename is never taken as proof.
 
-Which OpenSCAD snapshot gets bundled is **discovered at build time** from
-`https://files.openscad.org/snapshots/` (newest arm64 disk image), not
-hard-coded, because the snapshot filenames carry a build date and
-revision. The chosen URLs are printed in the build log; feed them back
+Which snapshot gets bundled is **discovered at build time** from
+`https://files.openscad.org/snapshots/`, not hard-coded, because the
+filenames carry a build date. Only *dated* names are eligible: that index
+also holds branch builds (`OpenSCAD-tests2.dmg`) which would otherwise
+sort newest. The chosen URLs are printed in the build log; feed them back
 through `KHERVECAD_OPENSCAD_DMG` and `KHERVECAD_OPENSCAD_SRC` to
 reproduce an exact earlier release. The engine lands in
 `KherveCAD.app/Contents/Resources/openscad/OpenSCAD.app`, where
 `engine.bundled_openscad()` looks for it.
+
+**Where the source comes from.** files.openscad.org publishes an
+`openscad-<ver>.src.tar.gz` only for stable releases — there is no source
+archive beside the nightlies. Since the GPL obligation is the source
+corresponding to the binary we ship, the build resolves the snapshot's
+build date to the last commit on `openscad/openscad` master that day and
+attaches that commit's tarball. That names one exact tree rather than a
+moving branch.
 
 ## Gatekeeper
 

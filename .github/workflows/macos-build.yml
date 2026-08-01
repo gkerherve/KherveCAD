@@ -3,11 +3,11 @@ name: macOS build
 # PyInstaller cannot cross-compile, so the .app has to be produced on a
 # Mac. macos-14 is the Apple Silicon (arm64) runner.
 #
-# arm64 only, deliberately. The engine we bundle is OpenSCAD's own macOS
-# build, and the last stable OpenSCAD (2021.01) predates Apple Silicon —
-# only the snapshots ship an arm64 binary. An Intel KherveCAD would
-# therefore have to carry an Intel OpenSCAD and run the whole thing under
-# Rosetta on the machines most people actually have.
+# arm64, because the engine we bundle decides it. The last stable
+# OpenSCAD (2021.01) predates Apple Silicon and is x86_64 only; the
+# nightly snapshots ship a universal binary that runs natively on both.
+# So the engine is taken from a snapshot, and the app is built for the
+# architecture people actually have.
 
 on:
   workflow_dispatch:
@@ -87,6 +87,11 @@ jobs:
         run: python -m pytest tests/ -q
 
       - name: Build the .app and the DMG
+        env:
+          # Used only to resolve the OpenSCAD commit through the GitHub
+          # API — runners share outbound IPs and the anonymous allowance
+          # is small enough to fail a busy afternoon.
+          GITHUB_TOKEN: ${{ github.token }}
         run: python packaging/build_macos.py
 
       - name: Read the version back
@@ -106,7 +111,7 @@ jobs:
           codesign --verify --deep --strict "$APP"
           test -x "$APP/Contents/Resources/openscad/OpenSCAD.app/Contents/MacOS/OpenSCAD"
           test -f "$APP/Contents/Resources/openscad/COPYING.txt"
-          ls -1 dist/openscad-*.src.tar.gz
+          ls -1 dist/openscad-*.tar.gz
 
       - name: Upload the DMG
         uses: actions/upload-artifact@v4
@@ -114,7 +119,7 @@ jobs:
           name: KherveCAD-${{ env.VERSION }}-macOS-arm64
           path: |
             dist/*.dmg
-            dist/openscad-*.src.tar.gz
+            dist/openscad-*.tar.gz
           if-no-files-found: error
 
       - name: Publish the release
@@ -154,4 +159,4 @@ jobs:
             --latest=false \
             --title "KherveCAD v${VERSION} — macOS (Apple Silicon)" \
             --notes-file notes.md
-          gh release upload "$TAG" dist/*.dmg dist/openscad-*.src.tar.gz --clobber
+          gh release upload "$TAG" dist/*.dmg dist/openscad-*.tar.gz --clobber

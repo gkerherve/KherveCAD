@@ -48,6 +48,7 @@ the Free Software Foundation, either version 3 of the License, or
 """
 
 import argparse
+import json
 import os
 import platform
 import re
@@ -96,6 +97,11 @@ _DATED_DMG = re.compile(
 #: ``openscad-<ver>.src.tar.gz``; snapshots have varied.
 _SOURCE_SUFFIXES = (".src.tar.gz", ".tar.gz", ".tar.xz", ".tgz")
 
+#: Where the snapshots are built from. files.openscad.org publishes no
+#: source archive beside the nightly disk images, so the corresponding
+#: source for a snapshot has to come from upstream git.
+_OPENSCAD_REPO = "openscad/openscad"
+
 
 def _run(cmd, **kwargs):
     print("+", " ".join(str(c) for c in cmd), flush=True)
@@ -136,6 +142,39 @@ def _find_source(index: str, names: list[str], version: str) -> str:
         if pattern.match(name) and name.endswith(_SOURCE_SUFFIXES):
             return index + name
     return ""
+
+
+def _github_source(version: str) -> tuple[str, str]:
+    """``(tarball_url, commit_sha)`` for the snapshot dated *version*.
+
+    The nightlies are built from upstream master, and files.openscad.org
+    keeps no source archive beside them — only the stable releases get an
+    ``openscad-<ver>.src.tar.gz``. So the corresponding source for a
+    snapshot is fetched from git instead: the last commit on master on the
+    snapshot's build date. Returning the resolved commit (rather than just
+    a branch tarball) is what makes the archive we attach identify one
+    exact tree.
+    """
+    match = re.match(r"^(\d{4})\.(\d{2})\.(\d{2})", version)
+    if not match:
+        return "", ""
+    date = "-".join(match.groups())
+    api = (f"https://api.github.com/repos/{_OPENSCAD_REPO}/commits"
+           f"?sha=master&until={date}T23:59:59Z&per_page=1")
+    request = urllib.request.Request(
+        api, headers={"Accept": "application/vnd.github+json",
+                      "User-Agent": "khervecad-build"})
+    # Runners share outbound IPs and the anonymous API allowance is small,
+    # so use the workflow token when there is one.
+    token = os.environ.get("GITHUB_TOKEN", "")
+    if token:
+        request.add_header("Authorization", f"Bearer {token}")
+    with urllib.request.urlopen(request, timeout=60) as response:
+        commits = json.load(response)
+    if not commits:
+        return "", ""
+    sha = commits[0]["sha"]
+    return f"https://github.com/{_OPENSCAD_REPO}/archive/{sha}.tar.gz", sha
 
 
 def resolve_openscad(arch: str) -> tuple[str, str]:
@@ -180,10 +219,12 @@ def resolve_openscad(arch: str) -> tuple[str, str]:
         version, dmg = dated[-1]
         src_url = _SRC_OVERRIDE or _find_source(index, names, version)
         if not src_url:
-            sources = [n for n in sorted(names)
-                       if n.endswith(_SOURCE_SUFFIXES)][-6:]
-            print(f"  source archives here: {', '.join(sources) or 'none'}",
-                  flush=True)
+            print("  no source archive published here — resolving the "
+                  "corresponding commit from git", flush=True)
+            src_url, sha = _github_source(version)
+            if src_url:
+                print(f"  {_OPENSCAD_REPO}@{sha[:12]}", flush=True)
+        if not src_url:
             tried.append(f"{index} (no source for {version})")
             continue
         return _URL_OVERRIDE or (index + dmg), src_url
@@ -215,8 +256,13 @@ def bundle_openscad(app: Path, arch: str) -> str:
     version = _version_of(dmg.name) or "unknown"
 
     # The source archive is a release asset, not part of the bundle: it
-    # goes to dist/ for whoever uploads the release to attach.
-    src = _download(src_url, _DIST / src_url.rsplit("/", 1)[-1])
+    # goes to dist/ for whoever uploads the release to attach. A git
+    # tarball is named after the bare commit, which says nothing on a
+    # release page, so name it after what it is.
+    src_name = src_url.rsplit("/", 1)[-1]
+    if not src_name.startswith("openscad"):
+        src_name = f"openscad-{version}-source-{src_name[:12]}.tar.gz"
+    src = _download(src_url, _DIST / src_name)
 
     target = app / "Contents" / "Resources" / "openscad"
     if target.exists():
@@ -248,12 +294,12 @@ def bundle_openscad(app: Path, arch: str) -> str:
     # with it and the release carries the matching source archive.
     shutil.copy2(_HERE / "openscad-COPYING.txt", target / "COPYING.txt")
     (target / "README-OpenSCAD.txt").write_text(
-        f"OpenSCAD {version} ({arch} macOS build)\n{dmg_url}\n\n"
+        f"OpenSCAD {version}, the official macOS build (runs natively on "
+        f"{arch}).\n{dmg_url}\n\n"
         "OpenSCAD is free software licensed GPL-2.0-or-later; its licence is\n"
         "in COPYING.txt beside this file. KherveCAD runs it as a separate\n"
         "process and does not link against it. The corresponding source is\n"
-        f"attached to the KherveCAD release as {src.name} and available at\n"
-        f"{src_url}\n",
+        f"attached to the KherveCAD release as {src.name}, from\n{src_url}\n",
         encoding="utf-8",
     )
     size = sum(f.stat().st_size for f in target.rglob("*") if f.is_file())
@@ -262,7 +308,11 @@ def bundle_openscad(app: Path, arch: str) -> str:
 
 
 def _check_arch(binary: Path, arch: str) -> None:
-    """Fail if the engine is not native — the whole point is no Rosetta."""
+    """Fail if the engine is not native — the whole point is no Rosetta.
+
+    A universal binary satisfies this: ``file`` names every slice it
+    carries, so the substring test passes when one of them is ours.
+    """
     out = subprocess.run(["file", "-b", str(binary)],
                          capture_output=True, text=True, check=True).stdout
     print(f"engine: {out.strip()}")

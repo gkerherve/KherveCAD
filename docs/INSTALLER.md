@@ -91,10 +91,13 @@ then diverges where the platform does:
   mounts it and `ditto`s `OpenSCAD.app` into
   `KherveCAD.app/Contents/Resources/openscad/`. `bundled_openscad()`
   knows both layouts.
-- **arm64 only**, because the last stable OpenSCAD (2021.01) has no
-  Apple Silicon binary — the engine has to come from a snapshot, which
-  the build discovers from OpenSCAD's index rather than pinning. The
-  build verifies the architecture and refuses a Rosetta-only pair.
+- **arm64**, because the last stable OpenSCAD (2021.01) is x86_64 only —
+  the engine has to come from a snapshot, whose macOS image is universal.
+  The build discovers which snapshot from OpenSCAD's index rather than
+  pinning it, and verifies the extracted binary's architecture rather
+  than trusting its name. The snapshots ship no source archive, so the
+  GPL's corresponding source is resolved to the upstream commit for that
+  build date and attached from git.
 - **Ad-hoc signing is mandatory and goes last.** Apple Silicon will not
   execute an unsigned Mach-O, and dropping OpenSCAD in invalidates the
   signature PyInstaller applied.
