@@ -902,6 +902,12 @@ def _tess(node, env, color, sel, selected):
             str(node.params.get("ref", "")).strip())
         if target is None or node.id in _REF_STACK:
             return []
+        col = str(node.params.get("color", "")).strip()
+        if col:
+            # the instance's own colour: two copies of one Object can
+            # wear different colours (a colour inside the master still
+            # wins, as OpenSCAD's innermost color() does)
+            color = (col, rv(node.params.get("alpha", 1.0), env, 1.0))
         _REF_STACK.add(node.id)
         try:
             if target.type == "component":

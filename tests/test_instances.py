@@ -221,3 +221,55 @@ def test_kcad_roundtrip_instance_mate(model, tmp_path):
     loaded[0].params["y"] = 44.0
     mates.refresh(other)
     assert loaded[1].params["y"] == 44.0
+
+
+def test_instance_carries_its_own_colour(model):
+    """An instance is a part like any other: it can be coloured on its
+    own, so two copies of one Object can differ in the assembly. The
+    Main tab offers no other way to colour a part."""
+    from khervecad.model import NODE_TYPES
+    comp = _definition(model, "Bracket", size=10.0)
+    a = model.add_instance(comp)
+    b = model.add_instance(comp)
+    assert "color" in a.params and "alpha" in a.params
+    keys = [row[0] for row in NODE_TYPES["reference"]["schema"]]
+    assert keys[-2:] == ["color", "alpha"]      # editable in Properties
+
+    a.params["color"] = "#ff0000"
+    b.params.update(color="#0000ff", alpha=0.5)
+    colored = mesh.tessellate_colored(model.root)
+    seen = {c for _t, c in colored}
+    assert ("#ff0000", 1.0) in seen
+    assert ("#0000ff", 0.5) in seen
+
+    code = model.to_scad()
+    assert 'color("#ff0000") Bracket();' in code
+    assert 'color("#0000ff", 0.5)' in code
+
+
+def test_instance_colour_round_trips(model, tmp_path):
+    comp = _definition(model, "Bracket")
+    inst = model.add_instance(comp)
+    inst.params.update(color="#12ab34", alpha=0.25)
+    path = tmp_path / "coloured.kcad"
+    document.save_kcad(model, str(path))
+    other = DocumentModel()
+    document.load_kcad(other, str(path))
+    loaded = [c for c in other.root.children if c.type == "reference"][0]
+    assert loaded.params["color"] == "#12ab34"
+    assert loaded.params["alpha"] == 0.25
+
+
+def test_properties_survives_a_param_saved_before_it_existed(app):
+    """An instance from an older file has no colour keys at all —
+    the panel must fall back to the type's defaults, not feed None to
+    a spin box (which aborts the app through the Qt slot)."""
+    from khervecad.properties import PropertiesPanel
+    model = DocumentModel()
+    comp = _definition(model, "Bracket")
+    inst = model.add_instance(comp)
+    del inst.params["alpha"]                    # as an old .kcad loads
+    del inst.params["color"]
+    panel = PropertiesPanel(model)
+    panel.set_node(inst)                        # must not raise
+    assert panel.node is inst

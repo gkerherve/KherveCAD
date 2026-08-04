@@ -509,9 +509,11 @@ into a new module and import.
   Object (`DocumentModel.add_instance`) drops a `reference` whose
   `ref` is the Object's name; that instance compiles to **one placed
   module call** (`translate(...) Part();`, see
-  `CadNode._emit_reference`) and carries its own placement + `mate`.
-  The same Object can be instanced many times, each placed and mated
-  independently. Anchors/mates operate on the instance but resolve
+  `CadNode._emit_reference`) and carries its own placement, `mate`
+  **and colour** (Main lists instances, so without `color`/`alpha` on
+  the instance there was no way to colour a part there at all).
+  The same Object can be instanced many times, each placed, mated and
+  coloured independently. Anchors/mates operate on the instance but resolve
   the Object **definition** for the anchor geometry
   (`mates.definition_of`), so a picked anchor stored on the
   definition is shared by every instance. `mesh._set_refs` indexes

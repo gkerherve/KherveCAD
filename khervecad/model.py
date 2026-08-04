@@ -257,15 +257,20 @@ NODE_TYPES = {
         # whatever the master contains, so editing the master updates
         # every reference. Carries its own position/rotation.
         label="Linked copy", category=CONTROL, icon="mdi.link-variant",
+        # an instance is a part like any other: it can be moved,
+        # rotated and **coloured** on its own, so two copies of one
+        # Object can wear different colours in the assembly
         params=dict(ref="", x=0.0, y=0.0, z=0.0, rx=0.0, ry=0.0,
-                    rz=0.0),
+                    rz=0.0, color="", alpha=1.0),
         schema=[("ref", "Master (object name)", "str", None, None),
                 ("x", "Move X", "float", -1e6, 1e6),
                 ("y", "Move Y", "float", -1e6, 1e6),
                 ("z", "Move Z", "float", -1e6, 1e6),
                 ("rx", "Rotate X°", "float", -360.0, 360.0),
                 ("ry", "Rotate Y°", "float", -360.0, 360.0),
-                ("rz", "Rotate Z°", "float", -360.0, 360.0)]),
+                ("rz", "Rotate Z°", "float", -360.0, 360.0),
+                ("color", "Color", "color", None, None),
+                ("alpha", "Opacity (0-1)", "float", 0.0, 1.0)]),
     # ----- external geometry ------------------------------------------
     "stl_import": dict(
         label="Import STL", category=SHAPE_3D,

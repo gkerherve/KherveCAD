@@ -354,8 +354,15 @@ class PropertiesPanel(QScrollArea):
 
     def _load_values(self):
         self._updating = True
+        defaults = NODE_TYPES.get(self.node.type, {}).get("params", {})
         for key, editor in self._editors.items():
-            value = self.node.params.get(key)
+            # fall back to the type's default: a node saved before a
+            # param existed has no value for it, and feeding None to a
+            # spin box raises straight through a Qt slot (which PyQt
+            # turns into abort())
+            value = self.node.params.get(key, defaults.get(key))
+            if value is None:
+                continue
             if isinstance(editor, VarOrValueEdit):
                 editor.set_value(value)
             elif isinstance(editor, QDoubleSpinBox):
