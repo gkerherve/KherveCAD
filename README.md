@@ -70,6 +70,24 @@ Going further:
 Documents save as `.kcad` (JSON object tree) and export as `.scad`
 programs or `.stl` meshes.
 
+## Any AI assistant (MCP)
+
+**Tools ▸ MCP Server…** lets *any* MCP-compatible assistant that runs on
+your machine — Claude Desktop, Claude Code, Cursor, Cline, VS Code,
+LM Studio — drive KherveCAD directly. It gets the whole app as **32
+tools**: read and edit the object tree, apply an OpenSCAD program as real
+editable nodes, insert library parts, build Objects and mate them into
+assemblies, export STL — and `render_view`, which hands the model a
+**picture of the 3D preview** so it can check its own work from any
+angle.
+
+Each call is one undo step, so **Ctrl+Z takes your model back**. The
+bridge is off until you switch it on, listens on 127.0.0.1 only, and
+needs a per-session token. KherveCAD writes its own entry into the host's
+config — no JSON to edit by hand.
+
+See [docs/MCP.md](docs/MCP.md).
+
 ## Run
 
 ```

@@ -481,6 +481,58 @@ into a new module and import.
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.
+  - `mcp_schema.py`  — the **MCP tool table**: 32 JSON-Schema tool
+                       definitions. Qt-free and import-free — it is the
+                       contract, so it can be inspected and tested
+                       without a window, and the stdio server never
+                       drags PyQt5 into the host's subprocess.
+  - `mcp_tools.py`   — `McpToolExecutor`: runs one named tool against
+                       the live `MainWindow`. Nodes are addressed by
+                       `CadNode.id` (no parallel identity scheme), and
+                       nothing here re-implements an editing operation
+                       — everything goes through `DocumentModel`,
+                       `scadparse`, `library` and `mates`, so an MCP
+                       edit and a mouse edit are the same edit.
+                       Parameter names are checked against `NODE_TYPES`
+                       (a typo would otherwise sit in the node doing
+                       nothing), `apply_code` **refuses a parse that
+                       yielded no objects** (the parser skips bad
+                       statements by design — right for importing
+                       someone else's file, wrong for a program a
+                       client just wrote), and an approximated STL
+                       export says so loudly.
+  - `mcp_bridge.py`  — `McpBridge`: loopback JSON server on 127.0.0.1
+                       exposing those tools, token-authenticated from
+                       the endpoint file, off until Tools ▸ MCP Server.
+                       Forces the model's deferred undo snapshot around
+                       each mutating call (`_flush_snapshot`) so one
+                       call is one Ctrl+Z. Access levels read/edit/full
+                       — the edit→full line is the **filesystem**
+                       (`_names_a_path`: `save_document` with no path is
+                       Ctrl+S and stays at edit).
+  - `mcp_server.py`  — the half an MCP host launches: JSON-RPC over
+                       stdio, no Qt, no third-party imports. Forwards
+                       each `tools/call` over the bridge socket and
+                       reconnects on its own, so either side may
+                       restart. `tool_content` turns a result carrying
+                       `IMAGE_KEY` into a real MCP **image block**.
+  - `mcp_http.py`    — the same bridge over Streamable HTTP at
+                       `http://127.0.0.1:<port>/mcp`, for clients that
+                       only take a URL. Same token, same access level;
+                       validates `Origin` (a local server needs no CORS
+                       preflight, so a web page could otherwise drive
+                       the model).
+  - `mcp_hosts.py`   — writes KherveCAD's entry into an MCP host's own
+                       config (Claude Desktop, Claude Code via its CLI,
+                       Cursor, Windsurf, VS Code, Cline, LM Studio).
+                       Backs up, writes atomically, touches no other
+                       key; Zed is refused because its settings hold
+                       comments.
+  - `mcp_dialog.py`  — Tools ▸ MCP Server…: enable/disable, access
+                       level, one-click host connect, hand-config
+                       snippets and a live activity log.
+- `docs/MCP.md` — how to connect an assistant, what the 32 tools do,
+  access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
 
@@ -702,6 +754,58 @@ discovers at run time. `.github/workflows/macos-build.yml` does the
 whole thing on a `macos-14` runner and publishes a `macos-v<ver>`
 release with `--latest=false`, so `releases/latest` stays on the Windows
 release the website links to. See `README.macos.md`.
+
+## MCP (Model Context Protocol)
+
+KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
+Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
+chat. The chat answers with a program the user then applies; an MCP
+client gets the whole app as **32 tools**: the object tree, OpenSCAD in
+and out, the part library, Objects/instances/mates, the document, and
+`render_view`, which hands back a **PNG of the 3D preview** from any of
+the seven camera presets.
+
+Two halves, because they run in different processes:
+
+```
+ host ──stdio──▶ khervecad.mcp_server ──loopback TCP──▶ McpBridge ──▶ window
+ host ──HTTP POST──────────────────────────────────────▶ McpHttpServer ──┘
+```
+
+The stdio server is the subprocess the host owns (no Qt, no deps, so it
+starts instantly and works from any Python); the bridge lives in the
+app, where the tools can touch the live model on the GUI thread. Either
+side may restart without the other noticing. `--mcp-server` on the
+frozen executable takes the same path, checked **before** any GUI work.
+
+Load-bearing details:
+
+- **`apply_code` is the headline tool.** It parses an OpenSCAD program
+  into real nodes through `scadparse`, so an assistant can write fifty
+  lines and the user can still drag one corner afterwards. It reuses
+  `ChatPanel._object_contents` to unwrap a module-plus-call program, or
+  a part applied into an Object would nest inside itself.
+- **One call is one undo step, and two calls are two.**
+  `DocumentModel` captures snapshots on a 0 ms timer, so a QUndoStack
+  macro around a tool call wraps *nothing* and pushes an empty
+  do-nothing step — the user presses Ctrl+Z and sees nothing happen.
+  The bridge forces the capture instead (`_flush_snapshot`), with
+  `UNDO_MERGE_S` neutralised on the way out so two tool calls do not
+  fold together the way a drag's scrubs should.
+- **Access levels** (Tools ▸ MCP Server, persisted in QSettings):
+  read / edit / full. The edit→full line is the filesystem, not the
+  model — at *edit* a client can do anything to the open document
+  (worst case: you undo it), while naming a path to read or write waits
+  for *full*.
+- **127.0.0.1 only**, random per-session token in the endpoint file
+  (`mcp-bridge.json` in the platform state dir), bridge off until the
+  user turns it on, endpoint removed when the window closes.
+
+Adding a tool: define it in `mcp_schema.TOOLS`, implement `_t_<name>`
+on `McpToolExecutor`, and decide whether it belongs in
+`_READ_ONLY_TOOLS` / `_NO_SNAPSHOT_TOOLS` / `_FILE_TOOLS`. The two test
+modules assert the schema and the implementations stay in step, so a
+half-added tool fails the suite.
 
 ## Roadmap
 

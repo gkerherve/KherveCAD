@@ -156,7 +156,34 @@ API key in the settings or an environment variable; slash commands cover
 common actions.</p>
 ''')}
 
-{_section("10. Files, undo &amp; import/export", f'''
+{_section("10. Any AI assistant &mdash; the MCP server", '''
+<p>The built-in chat is not the only assistant that can build here.
+<b>Tools &rsaquo; MCP Server&hellip;</b> opens KherveCAD to any program on
+your machine that speaks the <b>Model Context Protocol</b> &mdash;
+<b>Claude Desktop, Claude Code, Cursor, Cline, VS Code, LM Studio</b> and
+others.</p>
+<ol>
+<li>Tick <b>Enable MCP server</b> (remembered next time you start).</li>
+<li>Choose what connected assistants may do: <b>Read only</b> (inspect
+the model and look at the 3D view), <b>Edit</b> (build, assemble and save
+over the open file) or <b>Full</b> (also open, save and export files it
+chooses itself).</li>
+<li>Pick your assistant under <b>Connect a host</b> and press
+<b>Connect</b> &mdash; KherveCAD writes the entry into that
+application's own settings, so there is no config file to edit by hand.
+Restart it afterwards.</li>
+</ol>
+<p>A connected assistant gets the whole app rather than a chat reply: it
+reads and edits the object tree, applies OpenSCAD programs as real
+editable nodes, inserts library parts, makes Objects and mates them into
+assemblies, and <b>looks at the 3D view</b> from any angle to check its
+own work. Each call is a single undo step, so <b>Ctrl+Z</b> takes your
+model back exactly as it does for your own edits. The connection is local
+only (127.0.0.1), needs a token that changes every session, and is off
+until you tick the box.</p>
+''')}
+
+{_section("11. Files, undo &amp; import/export", f'''
 <ul>
 <li>Documents save as <b>.kcad</b> &mdash; plain JSON that round-trips
 every node, parameter, colour and visibility flag.</li>
