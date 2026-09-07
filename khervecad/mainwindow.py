@@ -468,6 +468,13 @@ class MainWindow(QMainWindow):
             theme_group.addAction(act)
             theme_menu.addAction(act)
 
+        tools_menu = m.addMenu("&Tools")
+        mcp_act = tools_menu.addAction("&MCP Server\u2026",
+                                       self._open_mcp_dialog)
+        mcp_act.setIcon(icons.icon("mdi.lan-connect"))
+        mcp_act.setToolTip("Let Claude and other MCP assistants build "
+                           "in this document")
+
         git_menu = m.addMenu("&Git")
         git_menu.addAction(icons.icon("mdi.source-commit"),
                            "&Commit...", self._git_commit, "Ctrl+K")
@@ -1752,6 +1759,37 @@ class MainWindow(QMainWindow):
                 "Exported with the built-in tessellator: booleans are "
                 "approximated. Install OpenSCAD for exact geometry.")
 
+    # -------------------------------------------------------------- MCP
+    def mcp_bridge(self):
+        """The MCP bridge for this window, created on first use."""
+        if getattr(self, "_mcp_bridge", None) is None:
+            from PyQt5.QtCore import QSettings
+            from .mcp_bridge import (ACCESS_LEVELS, DEFAULT_ACCESS,
+                                     McpBridge)
+            self._mcp_bridge = McpBridge(self)
+            level = QSettings("Kherve", "KherveCAD").value(
+                "mcp/access", DEFAULT_ACCESS)
+            self._mcp_bridge.set_access(
+                level if level in ACCESS_LEVELS else DEFAULT_ACCESS)
+            self._mcp_bridge.tool_invoked.connect(
+                lambda name, _s: self.statusBar().showMessage(
+                    f"MCP: {name}", 3000))
+        return self._mcp_bridge
+
+    def start_mcp_if_enabled(self):
+        """Re-open the bridge when the user left it on last session."""
+        from PyQt5.QtCore import QSettings
+        if QSettings("Kherve", "KherveCAD").value(
+                "mcp/enabled", False, type=bool):
+            self.mcp_bridge().start()
+
+    def _open_mcp_dialog(self):
+        """Open the MCP server control panel (non-modal)."""
+        from .mcp_dialog import McpServerDialog
+        dlg = McpServerDialog(self.mcp_bridge(), self)
+        dlg.setAttribute(Qt.WA_DeleteOnClose)
+        dlg.show()
+
     # ------------------------------------------------------------- misc
     def _update_title(self):
         name = Path(self._path).name if self._path else "Untitled"
@@ -1776,6 +1814,10 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         if self._confirm_discard():
+            # The bridge holds a listening socket and an endpoint file
+            # naming this process; both have to go with the window.
+            if getattr(self, "_mcp_bridge", None) is not None:
+                self._mcp_bridge.stop()
             if self in MainWindow._windows:    # let a closed window GC
                 MainWindow._windows.remove(self)
             event.accept()

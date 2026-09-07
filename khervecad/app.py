@@ -19,6 +19,13 @@ CRASH_LOG = Path(tempfile.gettempdir()) / "khervecad_crash.log"
 
 
 def main():
+    # An MCP host launches us as a plain stdio subprocess it owns.  That
+    # half must not build a QApplication (or a window), so it forks off
+    # before anything Qt happens.
+    if "--mcp-server" in sys.argv[1:]:
+        from .mcp_server import main as mcp_main
+        sys.exit(mcp_main([a for a in sys.argv[1:] if a != "--mcp-server"]))
+
     crash_file = open(CRASH_LOG, "w")
     faulthandler.enable(file=crash_file)
 
@@ -32,4 +39,5 @@ def main():
     from .mainwindow import MainWindow
     win = MainWindow()
     win.show()
+    win.start_mcp_if_enabled()
     sys.exit(app.exec_())
