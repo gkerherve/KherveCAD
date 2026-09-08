@@ -83,12 +83,16 @@ def _names_a_path(name: str, tool_input: dict) -> bool:
     return name in _FILE_TOOLS and bool((tool_input or {}).get("path"))
 
 
-#: What a connected client is allowed to do, weakest first.  "edit" is
-#: the default: an MCP client can draw, restyle and rearrange, but
-#: reaching the filesystem at a path of its own choosing is a separate,
-#: explicit decision the user makes in AI ▸ Connect to Claude (Simple).
+#: What a connected client is allowed to do, weakest first.  "full" is
+#: the default, because the levels below it break the workflow people
+#: actually came for: an assistant that cannot open the file you are
+#: talking about, or save the part it just built, sends you back to the
+#: File menu between every step.  The connection is loopback-only,
+#: token-authenticated and off until the user turns it on, so the trust
+#: decision has already been made by the time a tool runs; "read" and
+#: "edit" stay for anyone who wants a narrower grant.
 ACCESS_LEVELS = ("read", "edit", "full")
-DEFAULT_ACCESS = "edit"
+DEFAULT_ACCESS = "full"
 
 #: How many recent calls the dialog's activity log shows.
 _LOG_LEN = 200

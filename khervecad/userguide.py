@@ -156,31 +156,37 @@ API key in the settings or an environment variable; slash commands cover
 common actions.</p>
 ''')}
 
-{_section("10. Any AI assistant &mdash; the MCP server", '''
-<p>The built-in chat is not the only assistant that can build here.
-<b>AI &rsaquo; Connect to Claude (Simple)&hellip;</b> opens KherveCAD to any program on
-your machine that speaks the <b>Model Context Protocol</b> &mdash;
-<b>Claude Desktop, Claude Code, Cursor, Cline, VS Code, LM Studio</b> and
-others.</p>
+{_section("10. Connect to Claude &mdash; no API key", '''
+<p>The built-in chat is not the only assistant that can build here, and
+it is not the easy one. <b>AI &rsaquo; Connect to Claude (Simple)&hellip;</b>
+hands this document to <b>Claude Desktop</b> or <b>Claude Code</b>
+&mdash; no API key, it uses the login you already have. Cursor, Cline,
+VS Code and LM Studio work the same way.</p>
 <ol>
-<li>Tick <b>Enable MCP server</b> (remembered next time you start).</li>
-<li>Choose what connected assistants may do: <b>Read only</b> (inspect
-the model and look at the 3D view), <b>Edit</b> (build, assemble and save
-over the open file) or <b>Full</b> (also open, save and export files it
-chooses itself).</li>
-<li>Pick your assistant under <b>Connect a host</b> and press
-<b>Connect</b> &mdash; KherveCAD writes the entry into that
-application's own settings, so there is no config file to edit by hand.
-Restart it afterwards.</li>
+<li>Tick <b>Let assistants connect to this document</b> (remembered next
+time you start).</li>
+<li>Leave what the assistant may do on <b>Full</b> &mdash; the
+recommended setting, and the one where it can open the file you are
+talking about and export the part it just built. <b>Edit</b> keeps it
+inside the open document; <b>Read only</b> lets it look and say nothing
+back.</li>
+<li>Pick your application under <b>Connect an application</b> and press
+<b>Connect</b> &mdash; KherveCAD writes itself into that application's
+own settings, so there is no config file to edit by hand. Restart it
+afterwards.</li>
+<li><b>Then mention KherveCAD in the chat.</b> This is the step people
+miss: Claude only reaches for this document when you point it here.
+Say <i>&quot;in KherveCAD, build a 40&nbsp;mm bracket with two M6
+holes&quot;</i> and it carries on in the open document from there.</li>
 </ol>
 <p>A connected assistant gets the whole app rather than a chat reply: it
 reads and edits the object tree, applies OpenSCAD programs as real
 editable nodes, inserts library parts, makes Objects and mates them into
 assemblies, and <b>looks at the 3D view</b> from any angle to check its
 own work. Each call is a single undo step, so <b>Ctrl+Z</b> takes your
-model back exactly as it does for your own edits. The connection is local
-only (127.0.0.1), needs a token that changes every session, and is off
-until you tick the box.</p>
+model back exactly as it does for your own edits. The connection never
+leaves this machine (127.0.0.1), needs a token that changes every
+session, and is off until you tick the box.</p>
 ''')}
 
 {_section("11. Files, undo &amp; import/export", f'''

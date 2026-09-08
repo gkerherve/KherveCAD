@@ -207,7 +207,7 @@ def test_a_dead_app_is_reported_in_plain_words(tmp_path):
     lonely = mcp_server.McpServer(
         mcp_server.BridgeClient(str(tmp_path / "absent.json")))
     reply = _rpc(lonely, "tools/call", {"name": "list_tree"})
-    assert "Tools" in reply["error"]["message"]
+    assert "Connect to Claude" in reply["error"]["message"]
 
 
 def test_valid_png_b64_rejects_something_that_is_not_a_png():
@@ -227,7 +227,7 @@ def test_read_only_allows_looking_and_refuses_building():
 
 
 def test_the_default_level_can_build():
-    assert DEFAULT_ACCESS == "edit"
+    assert DEFAULT_ACCESS == "full"
     for name in ("add_node", "wrap_nodes", "apply_code", "insert_part",
                  "new_document"):
         assert tool_allowed(name, "edit"), name
@@ -331,6 +331,7 @@ def test_read_only_shortens_the_tool_list_and_refuses_the_rest(live):
 
 def test_a_path_is_refused_below_the_full_level(live, tmp_path):
     _win, bridge, _path = live
+    bridge.set_access("edit")
     _ask(bridge, "call_tool", {"name": "add_node",
                                "input": {"type": "cube"}})
     reply = _ask(bridge, "call_tool",

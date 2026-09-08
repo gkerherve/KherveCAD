@@ -70,21 +70,27 @@ Going further:
 Documents save as `.kcad` (JSON object tree) and export as `.scad`
 programs or `.stl` meshes.
 
-## Any AI assistant (MCP)
+## Connect to Claude — no API key
 
-**AI ▸ Connect to Claude (Simple)…** lets *any* MCP-compatible assistant that runs on
-your machine — Claude Desktop, Claude Code, Cursor, Cline, VS Code,
-LM Studio — drive KherveCAD directly. It gets the whole app as **32
-tools**: read and edit the object tree, apply an OpenSCAD program as real
-editable nodes, insert library parts, build Objects and mate them into
-assemblies, export STL — and `render_view`, which hands the model a
-**picture of the 3D preview** so it can check its own work from any
-angle.
+**AI ▸ Connect to Claude (Simple)…** hands this document to **Claude
+Desktop** or **Claude Code**, using the login you already have. Cursor,
+Cline, VS Code and LM Studio work the same way.
+
+Claude gets the whole app as **32 tools**: read and edit the object tree,
+apply an OpenSCAD program as real editable nodes, insert library parts,
+build Objects and mate them into assemblies, export STL — and
+`render_view`, which hands it a **picture of the 3D preview** so it can
+check its own work from any angle.
+
+Press **Connect** and KherveCAD writes itself into that application's own
+settings — no JSON to edit by hand. Restart it, then **mention
+KherveCAD in the chat** (*"in KherveCAD, build a 40 mm bracket with two
+M6 holes"*); that is the one step with no visible cue, and Claude will
+not touch the document without it.
 
 Each call is one undo step, so **Ctrl+Z takes your model back**. The
-bridge is off until you switch it on, listens on 127.0.0.1 only, and
-needs a per-session token. KherveCAD writes its own entry into the host's
-config — no JSON to edit by hand.
+connection is off until you switch it on, never leaves 127.0.0.1, and
+needs a per-session token.
 
 See [docs/MCP.md](docs/MCP.md).
 

@@ -1,12 +1,20 @@
-"""Control panel for the MCP (Model Context Protocol) bridge.
+"""Control panel for the assistant connection.
 
-Shows whether the bridge is listening and connects MCP hosts to it.
+Shows whether the connection is open and wires Claude Desktop, Claude
+Code and their relatives up to it.
+
+Nothing here says "MCP" unless the user has to type it somewhere: the
+protocol is our problem, not theirs.  What a person needs to know is
+which application to connect, that it must be restarted afterwards, and
+that they then say "KherveCAD" in the chat -- that last step is
+invisible, and skipping it makes a correctly connected assistant look
+broken.
 
 Editing ``claude_desktop_config.json`` by hand is the step that stops
-people using the bridge at all, so the dialog detects the hosts on this
-machine and writes the entry itself (see ``mcp_hosts``).  The snippet
-and its Copy button stay for the hosts we refuse to rewrite and for
-anyone configuring a machine by hand.
+people connecting at all, so the dialog detects the applications on
+this machine and writes the entry itself (see ``mcp_hosts``).  The
+snippet and its Copy button stay for the ones we refuse to rewrite and
+for anyone configuring a machine by hand.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -36,17 +44,22 @@ from .mcp_server import endpoint_path
 
 SETTINGS = ("Kherve", "KherveCAD")
 
+#: A literal double quote cannot appear inside an f-string before
+#: Python 3.12, and the messages below quote what to type in the chat.
+DQ = '"'
+
 #: Access level → (label, what it means).  Order matches ACCESS_LEVELS.
 _ACCESS_LABELS = [
     ("Read only",
      "Inspect the model, read its OpenSCAD and look at the 3D view; "
      "no changes."),
-    ("Edit (recommended)",
-     "Build and edit objects, assemble parts, run code — and save over "
-     "the open file."),
-    ("Full",
-     "Everything, including opening, saving and exporting files of its "
-     "own choosing."),
+    ("Edit",
+     "Build and edit objects, assemble parts, run code — and save "
+     "over the open file, but not open or export another one."),
+    ("Full (recommended)",
+     "Everything, including opening, saving and exporting files it "
+     "names itself, so 'open my bracket and add a hole' works in "
+     "one go."),
 ]
 
 
@@ -56,7 +69,7 @@ class McpServerDialog(QDialog):
     def __init__(self, bridge, parent=None):
         super().__init__(parent)
         self._bridge = bridge
-        self.setWindowTitle("MCP Server")
+        self.setWindowTitle("Connect to Claude")
         self.setMinimumWidth(620)
         self._build_ui()
         self._refresh()
@@ -73,15 +86,18 @@ class McpServerDialog(QDialog):
         lay = QVBoxLayout(self)
 
         blurb = QLabel(
-            "Let any MCP-compatible assistant — Claude Desktop, Claude "
-            "Code, Cursor, Zed — build in this document directly.\n"
-            "It gets the whole app: the object tree, OpenSCAD in and "
-            "out, the part library, assemblies and mates, and a look at "
-            "the 3D view. Everything it does is undoable with Ctrl+Z.")
+            "Let Claude build in this document directly — no API key, "
+            "it uses the login you already have. Works with <b>Claude "
+            "Desktop</b> and <b>Claude Code</b>, and with Cursor, "
+            "Cline, VS Code and LM Studio.<br><br>"
+            "Claude gets the whole app rather than a chat reply: the "
+            "object tree, OpenSCAD in and out, the part library, "
+            "assemblies and mates, and a look at the 3D view to check "
+            "its own work. Everything it does is undoable with Ctrl+Z.")
         blurb.setWordWrap(True)
         lay.addWidget(blurb)
 
-        self._enable = QCheckBox("Enable MCP server")
+        self._enable = QCheckBox("Let assistants connect to this document")
         self._enable.toggled.connect(self._on_toggled)
         lay.addWidget(self._enable)
 
@@ -90,7 +106,7 @@ class McpServerDialog(QDialog):
         lay.addWidget(self._status)
 
         acc_row = QHBoxLayout()
-        acc_row.addWidget(QLabel("Clients may:"))
+        acc_row.addWidget(QLabel("The assistant may:"))
         self._access = QComboBox()
         for label, tip in _ACCESS_LABELS:
             self._access.addItem(label)
@@ -104,11 +120,12 @@ class McpServerDialog(QDialog):
         self._access_hint.setWordWrap(True)
         lay.addWidget(self._access_hint)
 
-        host_box = QGroupBox("Connect a host")
+        host_box = QGroupBox("Connect an application")
         host_lay = QVBoxLayout(host_box)
         host_lay.addWidget(QLabel(
-            "KherveCAD can write its entry into these applications' "
-            "own settings — no config file to edit by hand."))
+            "Pick yours and press Connect — KherveCAD writes itself "
+            "into that application's own settings, so there is no "
+            "config file to edit by hand."))
         self._hosts = QListWidget()
         self._hosts.setMaximumHeight(120)
         self._hosts.currentRowChanged.connect(self._refresh_host_buttons)
@@ -122,8 +139,8 @@ class McpServerDialog(QDialog):
         hrow.addWidget(self._disconnect_btn)
         other = QPushButton("Other application…")
         other.setToolTip(
-            "Pick any MCP client's JSON config file and add KherveCAD "
-            "to it.")
+            "Point at another assistant's JSON config file and add "
+            "KherveCAD to it.")
         other.clicked.connect(self._on_other_host)
         hrow.addWidget(other)
         hrow.addStretch(1)
@@ -135,7 +152,7 @@ class McpServerDialog(QDialog):
         lay.addWidget(host_box)
 
         row = QHBoxLayout()
-        row.addWidget(QLabel("Or configure by hand:"))
+        row.addWidget(QLabel("Or set it up by hand:"))
         self._flavour = QComboBox()
         self._flavour.addItems([
             "Claude Desktop / Cursor / Zed (JSON)",
@@ -157,9 +174,14 @@ class McpServerDialog(QDialog):
         lay.addWidget(self._snippet)
 
         hint = QLabel(
-            "KherveCAD must be running with the box above ticked for "
-            "the tools to work. Hosts read their tool list once at "
-            "startup, so restart the host after connecting.")
+            "<b>Then say &quot;KherveCAD&quot; in the chat.</b> Claude "
+            "only reaches for this document when you point it here "
+            "&mdash; <i>&quot;in KherveCAD, build a 40&nbsp;mm bracket "
+            "with two M6 holes&quot;</i>. After that it carries on in "
+            "the open document.<br><br>"
+            "Restart the application after connecting &mdash; it reads "
+            "its tool list once at startup &mdash; and leave KherveCAD "
+            "running with the box above ticked.")
         hint.setWordWrap(True)
         lay.addWidget(hint)
 
@@ -210,9 +232,8 @@ class McpServerDialog(QDialog):
         idx = self._access.currentIndex()
         text = _ACCESS_LABELS[idx][1]
         if ACCESS_LEVELS[idx] == "full":
-            text += (" A connected assistant can then read and overwrite "
-                     "files anywhere you can — grant it only to hosts "
-                     "you trust.")
+            text += (" It can read and overwrite files anywhere you can, "
+                     "so connect only applications you trust.")
         self._access_hint.setText(text)
 
     def _refresh(self):
@@ -238,8 +259,8 @@ class McpServerDialog(QDialog):
                 f"endpoint file: {endpoint_path()}")
         else:
             self._status.setText(
-                "<b style='color:#b71c1c'>Stopped</b> — MCP clients "
-                "cannot reach this document.")
+                "<b style='color:#b71c1c'>Stopped</b> — no assistant "
+                "can reach this document.")
         self._refresh_snippet()
         self._refresh_hosts()
 
@@ -292,7 +313,7 @@ class McpServerDialog(QDialog):
         """Show what a connect/disconnect actually did."""
         host = result.get("host", "host")
         if not result.get("ok"):
-            QMessageBox.warning(self, "MCP host", result.get(
+            QMessageBox.warning(self, "Connect to Claude", result.get(
                 "error", f"Could not configure {host}."))
             self._refresh_hosts()
             return
@@ -302,16 +323,27 @@ class McpServerDialog(QDialog):
             lines.append(f"Previous version saved as {result['backup']}")
         if result.get("restart"):
             lines.append(f"\nRestart {host} for it to take effect.")
-        QMessageBox.information(self, "MCP host", "\n".join(lines))
+        if result.get("action") != "removed":
+            # The step with no visible cue: a correctly connected
+            # assistant sits there doing nothing until a chat names
+            # this application.
+            lines.append(
+                f"\nThen mention KherveCAD in your chat with {host} "
+                f"— say {DQ}in KherveCAD, build a 40 mm "
+                f"bracket{DQ} — and it will work in this "
+                f"document.")
+        QMessageBox.information(self, "Connect to Claude",
+                                "\n".join(lines))
         self._refresh_hosts()
 
     def _require_running(self) -> bool:
         if self._bridge.is_running():
             return True
         QMessageBox.information(
-            self, "MCP host",
-            "Tick 'Enable MCP server' first — the entry is only useful "
-            "while KherveCAD is serving.")
+            self, "Connect to Claude",
+            "Tick 'Let assistants connect to this document' "
+            "first — the entry is only useful while "
+            "KherveCAD is listening.")
         return False
 
     def _on_connect(self):
@@ -355,7 +387,7 @@ class McpServerDialog(QDialog):
         if host is None:
             return
         if QMessageBox.question(
-                self, "MCP host",
+                self, "Connect to Claude",
                 f"Remove KherveCAD from {host.label}'s configuration?\n"
                 "Other servers are left untouched.",
                 QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
@@ -376,7 +408,7 @@ class McpServerDialog(QDialog):
         url = self._bridge.http_url()
         if not url:
             return ("The HTTP endpoint is not listening.\n"
-                    "Tick 'Enable MCP server' above.")
+                    "Tick the box above.")
         return (
             f"URL      {url}\n"
             f"Transport  Streamable HTTP (POST JSON-RPC)\n"

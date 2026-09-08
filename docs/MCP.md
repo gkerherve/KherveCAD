@@ -110,10 +110,13 @@ precisely:
 ## Turning it on
 
 1. **AI ▸ Connect to Claude (Simple)…**
-2. Tick **Enable MCP server**. The setting is remembered, so the
-   bridge comes back automatically next launch.
-3. Choose what clients may do (see **Access levels** below).
-4. Pick your host under **Connect a host** and press **Connect**.
+2. Tick **Let assistants connect to this document**. The setting is
+   remembered, so the bridge comes back automatically next launch.
+3. Leave the access level on **Full** — the recommended setting (see
+   **Access levels** below).
+4. Pick your application under **Connect an application** and press
+   **Connect**.
+5. Restart it, then **mention KherveCAD in the chat**.
 
 KherveCAD writes the entry into the host's own settings, so there is no
 config file to edit by hand — it knows its own executable path, which
@@ -133,6 +136,21 @@ copy the snippet in by hand.
 Restart the host afterwards: hosts read their tool list once at
 startup, so a newly connected one shows no tools until it reconnects.
 
+## Then say "KherveCAD" in the chat
+
+This is the step with no visible cue, and the one that makes a correct
+setup look broken. Claude does not go looking for a CAD document on its
+own — the tools are there, but nothing points at them until the
+conversation does:
+
+> in KherveCAD, build a 40 mm bracket with two M6 holes
+
+From that first mention it keeps working in the document you have open,
+so the rest of the conversation is ordinary — *"make it 5 mm thicker"*,
+*"show me the front view"*. If it answers with a code block instead of
+building anything, it has not connected: check the box above is ticked
+and that the host was restarted.
+
 The dialog also shows a running log of what connected clients have
 actually called.
 
@@ -141,15 +159,23 @@ actually called.
 | Level | A connected client can |
 | --- | --- |
 | **Read only** | Inspect the model, read its OpenSCAD, look at the 3D view, select nodes. No changes. |
-| **Edit** (default) | Build and edit objects, apply code, assemble parts, insert library parts — and save over the file already open. |
-| **Full** | Everything, including opening, saving and exporting to paths of its own choosing. |
+| **Edit** | Build and edit objects, apply code, assemble parts, insert library parts — and save over the file already open. |
+| **Full** (default, recommended) | Everything, including opening, saving and exporting to paths of its own choosing. |
 
 The line between **Edit** and **Full** is the filesystem. At **Edit** a
 client can do anything to the model in the window, and the worst case
 is a change you undo. `save_document` with no path is the same act as
 Ctrl+S, so it stays there too. Naming a path is different: it reads or
-writes a file outside the open document, with your permissions, so it
-waits for **Full**.
+writes a file outside the open document, with your permissions.
+
+**Full is the default**, because the levels below it break the workflow
+people came for. An assistant that cannot open the file you are talking
+about, or export the part it just built, sends you back to the File menu
+between every step — and the trust decision has already been made by the
+time a tool runs: the connection is loopback-only, token-authenticated,
+off until you turn it on, and connected to one application you chose by
+name. **Read only** and **Edit** stay for anyone who wants a narrower
+grant — a shared machine, or a client you are still sizing up.
 
 Tools above the current level are withheld from `tools/list` and
 refused if called anyway, with an error naming the setting. Hosts cache

@@ -508,7 +508,9 @@ into a new module and import.
                        Claude (Simple).
                        Forces the model's deferred undo snapshot around
                        each mutating call (`_flush_snapshot`) so one
-                       call is one Ctrl+Z. Access levels read/edit/full
+                       call is one Ctrl+Z. Access levels read/edit/**full**
+                       (the default — the narrower levels send the
+                       user back to the File menu between steps)
                        — the edit→full line is the **filesystem**
                        (`_names_a_path`: `save_document` with no path is
                        Ctrl+S and stays at edit).
@@ -797,7 +799,8 @@ Load-bearing details:
   fold together the way a drag's scrubs should.
 - **Access levels** (AI ▸ Connect to Claude (Simple), persisted in
   QSettings):
-  read / edit / full. The edit→full line is the filesystem, not the
+  read / edit / full, defaulting to **full**. The edit→full line is the
+  filesystem, not the
   model — at *edit* a client can do anything to the open document
   (worst case: you undo it), while naming a path to read or write waits
   for *full*.
