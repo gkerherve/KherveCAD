@@ -73,10 +73,17 @@ def write_version() -> str:
 
     The file holds the full ``0.1.N+sha`` string (what the title bar and
     About box show); the number alone names the artifacts and the tag.
+
+    The previous build's ``VERSION`` is deleted before resolving, because
+    ``get_version()`` reads that file *first* — it has to, so the frozen
+    app can report a version with no ``.git`` beside it. Left in place it
+    answers with the version it was written for and every later build
+    ships the first one's number.
     """
     sys.path.insert(0, str(_ROOT))
     from khervecad._version import get_version
 
+    (_ROOT / "khervecad" / "VERSION").unlink(missing_ok=True)
     get_version.cache_clear()
     full = get_version()
     if full == "0.1.0":
