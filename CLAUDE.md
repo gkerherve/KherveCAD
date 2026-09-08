@@ -208,7 +208,8 @@ into a new module and import.
                        side-effect import from the bottom of `examples.py`
                        so neither load order deadlocks).
   - `chat.py`        — **Assistant chat box** (family assistant, docked
-                       right, toggled Ctrl+/): Claude/Mistral/Ollama
+                       right, **hidden by default**, opened from AI ▸ ChatBox or
+                       Ctrl+/): Claude/Mistral/Ollama
                        Cloud via urllib, keys in QSettings or env vars,
                        slash commands, and `scad` reply blocks applied to
                        the tree via scadparse. The reply lands in the
@@ -503,7 +504,8 @@ into a new module and import.
                        export says so loudly.
   - `mcp_bridge.py`  — `McpBridge`: loopback JSON server on 127.0.0.1
                        exposing those tools, token-authenticated from
-                       the endpoint file, off until Tools ▸ MCP Server.
+                       the endpoint file, off until AI ▸ Connect to
+                       Claude (Simple).
                        Forces the model's deferred undo snapshot around
                        each mutating call (`_flush_snapshot`) so one
                        call is one Ctrl+Z. Access levels read/edit/full
@@ -528,7 +530,8 @@ into a new module and import.
                        Backs up, writes atomically, touches no other
                        key; Zed is refused because its settings hold
                        comments.
-  - `mcp_dialog.py`  — Tools ▸ MCP Server…: enable/disable, access
+  - `mcp_dialog.py`  — AI ▸ Connect to Claude (Simple)…:
+                       enable/disable, access
                        level, one-click host connect, hand-config
                        snippets and a live activity log.
 - `docs/MCP.md` — how to connect an assistant, what the 32 tools do,
@@ -792,7 +795,8 @@ Load-bearing details:
   The bridge forces the capture instead (`_flush_snapshot`), with
   `UNDO_MERGE_S` neutralised on the way out so two tool calls do not
   fold together the way a drag's scrubs should.
-- **Access levels** (Tools ▸ MCP Server, persisted in QSettings):
+- **Access levels** (AI ▸ Connect to Claude (Simple), persisted in
+  QSettings):
   read / edit / full. The edit→full line is the filesystem, not the
   model — at *edit* a client can do anything to the open document
   (worst case: you undo it), while naming a path to read or write waits

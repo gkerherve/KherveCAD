@@ -97,7 +97,7 @@ _NOT_RUNNING = (
     "The MCP server drives a live KherveCAD window, so the "
     "application must be running with its bridge enabled:\n"
     "  1. Start KherveCAD.\n"
-    "  2. Enable Tools ▸ MCP Server.\n"
+    "  2. Enable AI ▸ Connect to Claude (Simple).\n"
     "Then retry — no need to restart this MCP connection."
 )
 

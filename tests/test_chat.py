@@ -247,8 +247,10 @@ def test_history_trims_only_when_over_budget(window):
     assert len(panel.history) >= 2             # but never wiped out
 
 
-def test_chat_dock_visible_by_default(window):
-    assert not window._chat_dock.isHidden()
+def test_chat_dock_hidden_by_default(window):
+    # The ChatBox needs the user's own API key, so it is opt-in
+    # (AI > ChatBox, Ctrl+/) rather than taking a third of the window.
+    assert window._chat_dock.isHidden()
 
 
 def _press(widget, key):

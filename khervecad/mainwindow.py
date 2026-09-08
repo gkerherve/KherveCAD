@@ -180,7 +180,10 @@ class MainWindow(QMainWindow):
         self._chat_dock.setObjectName("chat_dock")
         self._chat_dock.setWidget(self.chat)
         self.addDockWidget(Qt.RightDockWidgetArea, self._chat_dock)
-        self._chat_dock.show()               # visible by default (Ctrl+/)
+        # Hidden by default: the ChatBox needs the user's own API key,
+        # so it stays folded away until they ask for it (AI > ChatBox,
+        # Ctrl+/).
+        self._chat_dock.hide()
 
     # ------------------------------------------------------------ chrome
     def _build_tool_bar(self):
@@ -398,12 +401,6 @@ class MainWindow(QMainWindow):
         self._build_examples_menu(m)
 
         view_menu = m.addMenu("&View")
-        chat_act = self._chat_dock.toggleViewAction()
-        chat_act.setText("&Assistant")
-        chat_act.setIcon(icons.icon("mdi.robot-outline"))
-        chat_act.setShortcut("Ctrl+/")
-        view_menu.addAction(chat_act)
-        view_menu.addSeparator()
         view_menu.addAction(self._grid_act)
         view_menu.addAction(self._snap_act)
         from PyQt5.QtCore import QSettings
@@ -468,12 +465,22 @@ class MainWindow(QMainWindow):
             theme_group.addAction(act)
             theme_menu.addAction(act)
 
-        tools_menu = m.addMenu("&Tools")
-        mcp_act = tools_menu.addAction("&MCP Server\u2026",
-                                       self._open_mcp_dialog)
+        ai_menu = m.addMenu("&AI")
+        mcp_act = ai_menu.addAction("&Connect to Claude (Simple)\u2026",
+                                    self._open_mcp_dialog)
         mcp_act.setIcon(icons.icon("mdi.lan-connect"))
-        mcp_act.setToolTip("Let Claude and other MCP assistants build "
-                           "in this document")
+        mcp_act.setToolTip("Let Claude Desktop, Claude Code or "
+                           "another assistant build in this "
+                           "document \u2014 no API key, it uses the "
+                           "login you already have")
+        chat_act = self._chat_dock.toggleViewAction()
+        chat_act.setText("Chat&Box (requires API key)")
+        chat_act.setIcon(icons.icon("mdi.robot-outline"))
+        chat_act.setShortcut("Ctrl+/")
+        chat_act.setToolTip("A chat box docked in the window; it "
+                            "needs your own Claude, Mistral or "
+                            "Ollama API key")
+        ai_menu.addAction(chat_act)
 
         git_menu = m.addMenu("&Git")
         git_menu.addAction(icons.icon("mdi.source-commit"),

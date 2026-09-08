@@ -109,7 +109,7 @@ precisely:
 
 ## Turning it on
 
-1. **Tools ▸ MCP Server…**
+1. **AI ▸ Connect to Claude (Simple)…**
 2. Tick **Enable MCP server**. The setting is remembered, so the
    bridge comes back automatically next launch.
 3. Choose what clients may do (see **Access levels** below).
@@ -239,10 +239,10 @@ reach over your files as you have.
 
 | Symptom | Cause |
 | --- | --- |
-| "KherveCAD is not reachable" | The app is not running, or Tools ▸ MCP Server is unticked. Fix and retry — no host restart needed. |
+| "KherveCAD is not reachable" | The app is not running, or AI ▸ Connect to Claude (Simple) is unticked. Fix and retry — no host restart needed. |
 | "Invalid bridge token" | A stale endpoint file from a previous run. Toggle the checkbox off and on. |
 | Host shows no tools | The host caches `tools/list` from startup; restart the host once with KherveCAD already running. |
-| "Refused: … access is set to …" | The access level in Tools ▸ MCP Server is below what the tool needs. |
+| "Refused: … access is set to …" | The access level in AI ▸ Connect to Claude (Simple) is below what the tool needs. |
 | "No node with id N" | Ids are rebuilt by undo and by opening a file. Call `list_tree` again. |
 | "That program produced no objects" | `apply_code` refuses a parse that yielded nothing rather than reporting a success that changed nothing. The warnings say which statements were skipped. |
 | "cube has no parameter 'widht'" | Parameter names are checked against the registry, so a typo is refused instead of being stored and ignored. `list_node_types` has the real ones. |

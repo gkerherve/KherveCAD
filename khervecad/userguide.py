@@ -158,7 +158,7 @@ common actions.</p>
 
 {_section("10. Any AI assistant &mdash; the MCP server", '''
 <p>The built-in chat is not the only assistant that can build here.
-<b>Tools &rsaquo; MCP Server&hellip;</b> opens KherveCAD to any program on
+<b>AI &rsaquo; Connect to Claude (Simple)&hellip;</b> opens KherveCAD to any program on
 your machine that speaks the <b>Model Context Protocol</b> &mdash;
 <b>Claude Desktop, Claude Code, Cursor, Cline, VS Code, LM Studio</b> and
 others.</p>

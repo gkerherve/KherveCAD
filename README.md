@@ -72,7 +72,7 @@ programs or `.stl` meshes.
 
 ## Any AI assistant (MCP)
 
-**Tools ▸ MCP Server…** lets *any* MCP-compatible assistant that runs on
+**AI ▸ Connect to Claude (Simple)…** lets *any* MCP-compatible assistant that runs on
 your machine — Claude Desktop, Claude Code, Cursor, Cline, VS Code,
 LM Studio — drive KherveCAD directly. It gets the whole app as **32
 tools**: read and edit the object tree, apply an OpenSCAD program as real
