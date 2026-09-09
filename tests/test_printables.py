@@ -93,6 +93,25 @@ def test_description_reports_size_and_parameters(cube_window):
     assert printables.TOOLS_URL in text
 
 
+def test_the_description_opens_with_prose_not_a_placeholder(
+        cube_window):
+    """The opening line used to be a note to the author, and it went
+    out unedited. It has to read as a finished sentence."""
+    text = printables.default_description(cube_window, "Cube")
+    assert "One or two sentences" not in text
+    first = text.splitlines()[2]
+    assert first.startswith("Cube is a 20 x 20 x 20 mm part")
+    assert first.endswith(".")
+
+
+def test_the_opening_counts_what_the_model_is_made_of(cube_window):
+    from khervecad.model import CadNode
+    cube_window.model.root.add(CadNode("difference", "Difference"))
+    text = printables.opening(cube_window, "Cube")
+    assert "1 boolean" in text
+    assert "1 dimension is named" in text
+
+
 def test_description_is_plain_text_not_markdown(cube_window):
     """Printables' description box shows Markdown back as literal
     hashes and backticks, so the draft must not contain any."""
@@ -324,3 +343,25 @@ def test_a_full_frame_render_is_left_alone(tmp_path):
     image.save(str(path))
     assert not printables.trim_to_content(str(path))
     assert QImage(str(path)).width() == 800
+
+
+def test_print_settings_can_be_overridden(cube_window, tmp_path):
+    """The block is an answer on the form, so a model that wants PETG
+    has to be able to say PETG rather than shipping the default."""
+    import json
+    bundle = printables.build_bundle(
+        cube_window, tmp_path / "out", title="Cube",
+        formats=("scad",), views=(),
+        print_settings={"Filament": "PETG", "Supports": "yes"})
+    form = Path(bundle["form"]).read_text()
+    assert "Filament: PETG" in form
+    assert "Supports: yes" in form
+    assert "Infill: 20%" in form            # the rest still defaults
+    meta = json.loads((tmp_path / "out" / "printables.json")
+                      .read_text())
+    assert meta["print_settings"]["Filament"] == "PETG"
+
+
+def test_the_form_never_tells_the_author_to_fill_it_in(cube_window):
+    text = printables.form_answers(cube_window, title="Cube")
+    assert "adjust to what you actually printed" not in text.lower()

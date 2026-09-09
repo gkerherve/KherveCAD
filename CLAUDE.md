@@ -497,8 +497,12 @@ into a new module and import.
                        Printables' box reads back as literal hashes),
                        `upload-form.txt` — every field of the
                        add-a-model form (name, the 120-char summary,
-                       main category, tags, origin, licence, print
-                       settings) already answered — and
+                       main category, tags, origin, licence,
+                       overridable print settings) already answered,
+                       none of them left as a note telling the author
+                       to fill it in (`opening()` writes the first
+                       paragraph from the model's own size, structure
+                       and named dimensions) — and
                        `printables.json`. Printables has **no upload
                        API** — this prepares the folder and opens the
                        upload page; the user does the last click, and

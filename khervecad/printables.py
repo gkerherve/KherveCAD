@@ -143,9 +143,24 @@ def default_summary(window, title: str = "") -> str:
     return text
 
 
+#: What the form's print-settings block says when the caller does not
+#: say otherwise.  Declarative, because the field is answered here: a
+#: note reading "adjust to what you actually printed" is an instruction
+#: to the author sitting in a field the reader sees.
+PRINT_SETTINGS = {
+    "Rafts": "no",
+    "Supports": "no",
+    "Resolution": "0.2 mm layer height",
+    "Infill": "20%",
+    "Filament": "PLA",
+    "Notes": "a starting point rather than a tested profile",
+}
+
+
 def form_answers(window, *, title, summary="", tags=(),
                  category=DEFAULT_CATEGORY, license=DEFAULT_LICENSE,
-                 origin=DEFAULT_ORIGIN, formats=FORMATS) -> str:
+                 origin=DEFAULT_ORIGIN, formats=FORMATS,
+                 print_settings=None) -> str:
     """The upload form, field by field, already filled in.
 
     Printables' "add a model" page asks the same questions every time
@@ -183,12 +198,11 @@ def form_answers(window, *, title, summary="", tags=(),
         "  Paste description.txt (plain text, no Markdown).",
         "",
         "Print settings",
-        "  Rafts: no",
-        "  Supports: no",
-        "  Resolution: 0.2 mm layer height",
-        "  Infill: 20%",
-        "  Filament: PLA",
-        "  Notes: adjust to what you actually printed.",
+    ]
+    settings = dict(PRINT_SETTINGS)
+    settings.update(print_settings or {})
+    lines += [f"  {key}: {value}" for key, value in settings.items()]
+    lines += [
         "",
         "Files to upload",
         "  " + ", ".join(f".{f}" for f in formats) +
@@ -199,6 +213,79 @@ def form_answers(window, *, title, summary="", tags=(),
         lines += ["", "Bounding box (for your own check against the "
                   "bed)", "  %g x %g x %g mm" % tuple(size)]
     return "\n".join(lines) + "\n"
+
+
+def _shape_of(model) -> tuple:
+    """How the model is built, as (objects, booleans, extrusions).
+
+    Not a classification — nothing here guesses what a part is *for*.
+    It is the arithmetic a reader would otherwise do by opening the
+    file, and it is the honest half of an opening paragraph.
+    """
+    objects = booleans = extrusions = 0
+    for node in model.root.walk():
+        if node.type in ("root", "variables", "masters", "assign"):
+            continue
+        objects += 1
+        if node.type in ("difference", "intersection", "hull",
+                         "minkowski"):
+            booleans += 1
+        elif node.type in ("linear_extrude", "rotate_extrude"):
+            extrusions += 1
+    return objects, booleans, extrusions
+
+
+def opening(window, title: str = "") -> str:
+    """The paragraph the description opens with.
+
+    This used to be the line "one or two sentences on what this is for
+    and why you made it", which is a note to the author sitting where
+    the reader's first sentence belongs — and it went out unedited more
+    often than not.  So it is written instead, from what the model
+    actually says about itself: its size, how it is built, and how many
+    dimensions are named rather than baked in.  Everything in it is
+    true of any model; the *why* is the one thing only the author can
+    add, and a real paragraph is far easier to add a sentence to than a
+    placeholder is to replace.
+    """
+    model = window.model
+    name = (title or "This").strip()
+    size = _bounds(model, fn=(model.global_fn if model.global_fn_on
+                              else None))
+    first = name
+    if size:
+        first += " is a %g x %g x %g mm part" % tuple(size)
+    else:
+        first += " is a part"
+    first += " designed in KherveCAD and exported straight from the "
+    first += "object tree that defines it."
+
+    objects, booleans, extrusions = _shape_of(model)
+    built = []
+    if extrusions:
+        built.append("%d extrusion%s" % (extrusions,
+                                         "" if extrusions == 1 else "s"))
+    if booleans:
+        built.append("%d boolean%s" % (booleans,
+                                       "" if booleans == 1 else "s"))
+    second = ""
+    if objects:
+        second = "It is built from %d object%s" % (
+            objects, "" if objects == 1 else "s")
+        if built:
+            second += " (" + " and ".join(built) + ")"
+        second += "."
+
+    variables = _variables(model)
+    third = ""
+    if variables:
+        third = ("%d dimension%s %s named rather than baked in, so it "
+                 "can be resized without redrawing it." % (
+                     len(variables),
+                     "" if len(variables) == 1 else "s",
+                     "is" if len(variables) == 1 else "are"))
+
+    return " ".join(part for part in (first, second, third) if part)
 
 
 def default_description(window, title: str = "",
@@ -217,8 +304,7 @@ def default_description(window, title: str = "",
     lines = []
     if title:
         lines += [title.upper(), ""]
-    lines += ["One or two sentences on what this is for and why you "
-              "made it.", ""]
+    lines += [opening(window, title), ""]
 
     if size:
         lines += [
@@ -244,7 +330,9 @@ def default_description(window, title: str = "",
         "Supports: none",
         "Material: PLA",
         "",
-        "Adjust to what you actually printed.",
+        "A starting point rather than a tested profile - if you "
+        "printed it differently, say so in a comment and I will "
+        "update this.",
         "",
         credit(formats),
     ]
@@ -255,7 +343,7 @@ def build_bundle(window, folder, *, title, description="", tags=(),
                  license=DEFAULT_LICENSE, formats=FORMATS,
                  views=DEFAULT_VIEWS, image_size=(2000, 1500),
                  summary="", category=DEFAULT_CATEGORY,
-                 origin=DEFAULT_ORIGIN) -> dict:
+                 origin=DEFAULT_ORIGIN, print_settings=None) -> dict:
     """Write the upload folder. Returns what was written and what wasn't.
 
     Never raises for a missing engine or a format OpenSCAD declined —
@@ -341,7 +429,9 @@ def build_bundle(window, folder, *, title, description="", tags=(),
     form.write_text(form_answers(window, title=title, summary=summary,
                                  tags=tags, category=category,
                                  license=license, origin=origin,
-                                 formats=formats), encoding="utf-8")
+                                 formats=formats,
+                                 print_settings=print_settings),
+                    encoding="utf-8")
     wrote(form)
 
     meta = folder / "printables.json"
@@ -353,9 +443,8 @@ def build_bundle(window, folder, *, title, description="", tags=(),
         "tags": list(tags),
         "license": license,
         "description_format": "plain text",
-        "print_settings": {"rafts": False, "supports": False,
-                           "resolution": "0.2 mm", "infill": "20%",
-                           "filament": "PLA"},
+        "print_settings": dict(PRINT_SETTINGS,
+                               **(print_settings or {})),
         "upload_url": UPLOAD_URL,
         "made_with": {"app": "KherveCAD", "url": TOOLS_URL,
                       "engine": "OpenSCAD",
