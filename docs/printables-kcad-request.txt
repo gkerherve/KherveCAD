@@ -1,0 +1,88 @@
+A request to Printables: please allow .kcad source files
+========================================================
+
+A draft, ready to send. Printables takes support requests through
+the contact form at https://www.printables.com/contact and through
+info@printables.com; there is also the Prusa forum, where feature
+requests for the site get read. Send it as plain text — the form
+does not render Markdown.
+
+Nothing here is sent automatically. Read it, make it yours, and send
+it yourself.
+
+----------------------------------------------------------------
+
+Subject: Please add .kcad to the accepted source-file types
+
+Hello,
+
+I publish parametric models on Printables and I would like to ask
+you to add one more extension to the list of files an upload can
+carry: .kcad.
+
+What it is
+----------
+
+.kcad is the project format of KherveCAD, a free and open-source
+(GPL-3.0) desktop CAD application I develop. It is a small, plain
+JSON file — a tree of named objects, each one a primitive, a
+transform, a boolean or a loop — and it maps one-to-one onto an
+OpenSCAD program. There is no binary blob, no proprietary kernel,
+no licence server: you can open a .kcad in a text editor and read
+it, and KherveCAD exports the same model as .scad at any time.
+
+A typical file is a few tens of kilobytes, far smaller than the STL
+it produces.
+
+Why it belongs next to the mesh
+-------------------------------
+
+Printables already accepts .scad, and for the same reason I am
+asking about .kcad: a mesh is the output of a design, not the
+design. Someone who downloads an STL can print it; someone who
+downloads the source can change the wall thickness, fit the part to
+their own hardware, and re-export. That is the difference between
+sharing a print and sharing a design, and it is what makes a
+remix-friendly platform worth publishing on.
+
+.kcad carries what a .scad export cannot: the object names, the
+part/assembly structure, per-object colours and visibility, and the
+anchors and mates that hold an assembly together. A downloader with
+KherveCAD gets the model back exactly as it was drawn, editable by
+dragging a corner rather than by editing code — which matters for
+the many people who want to adjust a model but do not want to write
+OpenSCAD.
+
+What I am asking for
+--------------------
+
+Simply that .kcad be added to the allowed extensions for model
+files, alongside .scad and the other source formats you already
+accept. I am not asking for a viewer, a thumbnailer, or any
+integration work — the format needs no rendering support from
+Printables, because every listing that includes a .kcad also
+includes STL and 3MF for the printer and .scad for anyone without
+KherveCAD.
+
+If it helps your review:
+
+- Format: UTF-8 JSON, versioned, documented in the project.
+- Source: https://khervetools.com  (KherveCAD, GPL-3.0)
+- Risk: none beyond any other text file — .kcad holds geometry
+  parameters and names; it cannot execute anything, and KherveCAD
+  does not run code from it.
+- Precedent: you already accept .scad, .f3d, .step and .blend, all
+  of which are editable sources rather than printable meshes.
+
+In the meantime I have been working around it by zipping the .kcad,
+which hides it from search and from anyone browsing the file list.
+Allowing the extension directly would make these models genuinely
+remixable on Printables.
+
+Thank you for reading, and for running a site that encourages
+sharing sources at all — it is the reason I publish here rather
+than somewhere else.
+
+Kind regards,
+Gwilherm Kerherve
+KherveCAD — https://khervetools.com
