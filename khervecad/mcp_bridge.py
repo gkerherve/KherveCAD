@@ -61,7 +61,7 @@ _READ_ONLY_TOOLS = frozenset({
 #: ``export_document`` can drive OpenSCAD for a minute, but neither
 #: leaves an edit behind).
 _NO_SNAPSHOT_TOOLS = _READ_ONLY_TOOLS | {
-    "save_document", "export_document",
+    "save_document", "export_document", "publish_to_printables",
 }
 
 #: Tools that can read or write a file the client names.  Everything
@@ -70,6 +70,7 @@ _NO_SNAPSHOT_TOOLS = _READ_ONLY_TOOLS | {
 #: back until the user raises the access level.
 _FILE_TOOLS = frozenset({
     "open_document", "save_document", "export_document",
+    "publish_to_printables",
 })
 
 
@@ -79,7 +80,13 @@ def _names_a_path(name: str, tool_input: dict) -> bool:
     ``save_document`` with no path saves over the file the user already
     has open, which is the same thing Ctrl+S does — that stays allowed
     at the ordinary level.  A path is a different act.
+
+    ``publish_to_printables`` always writes a folder of exports, and
+    picks one itself when the client names none, so it counts either
+    way.
     """
+    if name == "publish_to_printables":
+        return True
     return name in _FILE_TOOLS and bool((tool_input or {}).get("path"))
 
 

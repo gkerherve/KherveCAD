@@ -6,7 +6,7 @@ Cursor, Zed, Continue, or anything else that speaks the Model Context
 Protocol — can build in an open document directly.
 
 The built-in chat replies with an OpenSCAD program you then apply. An
-MCP client gets the **whole application** instead: 32 tools over the
+MCP client gets the **whole application** instead: 33 tools over the
 object tree, the code, the part library, assemblies, the document —
 and a **picture of the 3D preview**.
 
@@ -43,7 +43,11 @@ and a **picture of the 3D preview**.
   components, ISO-threaded fasteners, chemistry glassware, furniture.
 - **Documents** — `set_render_options`, `load_example`,
   `new_document`, `open_document` (.kcad, .scad, or a mesh),
-  `save_document` and `export_document` (.scad or .stl).
+  `save_document` and `export_document` (.scad, .stl or .3mf).
+- **Sharing** — `publish_to_printables` assembles a Printables upload
+  folder from the open model: STL, 3MF, the parametric .scad, the
+  .kcad project, preview renders and a description the assistant
+  writes. See below — it prepares the upload, it does not perform it.
 
 Each call is **one undo step**, so **Ctrl+Z in KherveCAD reverts a
 remote assistant's change** just like your own — and two calls are two
@@ -106,6 +110,38 @@ precisely:
   OpenSCAD when it is installed and through the built-in tessellator
   otherwise. The result says which, and an approximated export is
   flagged loudly — it is not one to send to a printer.
+
+## Publishing to Printables
+
+Printables has **no public upload API**. Prusa has never shipped one,
+and the reason given in their own forum is partly to keep automated
+uploads out. So `publish_to_printables` does not post anything, and
+its result says `"published": false` so an assistant cannot honestly
+claim otherwise.
+
+What it does instead is everything up to that point, in one call:
+
+- **Geometry** — `.stl` and `.3mf` through OpenSCAD, exact.
+- **Source** — the `.scad` program and the `.kcad` project, so the
+  listing ships something editable rather than a frozen mesh. That is
+  the point of publishing from a parametric tool.
+- **Previews** — an OpenSCAD still per camera angle at 1600×1200,
+  framed with `--viewall`. Without the binary these fall back to a
+  screen grab of the built-in preview, and the result says so.
+- **`description.md`** — the assistant writes the body; the bundle
+  appends a credit naming KherveCAD (khervetools.com), OpenSCAD and
+  Claude, and never twice. Passing no description falls back to a
+  skeleton built from the model's real size and variables.
+- **`printables.json`** — title, tags, licence, and what is in the
+  folder.
+
+The last step is a person: open the upload page while signed in, drag
+the folder in, paste the description. `open_browser` opens that page
+and reveals the folder, and is **off unless asked for** — publishing
+something in the user's name is theirs to trigger.
+
+File ▸ Publish to Printables… is the same builder behind a dialog, for
+when no assistant is connected.
 
 ## Turning it on
 

@@ -343,6 +343,11 @@ class MainWindow(QMainWindow):
         file_menu.addAction("Export S&TL...", self.export_stl,
                             "Ctrl+Shift+E")
         file_menu.addSeparator()
+        file_menu.addAction(icons.icon("mdi.cloud-upload-outline"),
+                            "&Publish to Printables...",
+                            self.publish_to_printables,
+                            "Ctrl+Shift+P")
+        file_menu.addSeparator()
         file_menu.addAction("E&xit", self.close, "Ctrl+Q")
 
         edit_menu = m.addMenu("&Edit")
@@ -1765,6 +1770,11 @@ class MainWindow(QMainWindow):
                 self, APP_NAME,
                 "Exported with the built-in tessellator: booleans are "
                 "approximated. Install OpenSCAD for exact geometry.")
+
+    def publish_to_printables(self):
+        """Build the Printables upload bundle for the open model."""
+        from .printables import PublishDialog
+        PublishDialog(self).exec_()
 
     # -------------------------------------------------------------- MCP
     def mcp_bridge(self):

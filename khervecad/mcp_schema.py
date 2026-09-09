@@ -23,6 +23,24 @@ from __future__ import annotations
 ORIENTATIONS = ["Isometric", "Top", "Bottom", "Front", "Back", "Right",
                 "Left"]
 
+#: `publish_to_printables` choices.  They live here rather than in
+#: `printables.py` because that module imports PyQt5 and this one must
+#: not — the stdio server reads this table in a bare interpreter.
+LICENSES = [
+    "CC BY-SA 4.0", "CC BY 4.0", "CC0 1.0", "CC BY-NC 4.0",
+    "CC BY-NC-SA 4.0", "CC BY-ND 4.0", "CC BY-NC-ND 4.0",
+    "GPL-3.0", "Standard Digital File License",
+]
+DEFAULT_LICENSE = "CC BY-SA 4.0"
+
+#: What the bundle can contain, by extension.
+FORMATS = ("stl", "3mf", "scad", "kcad")
+
+#: Camera angles rendered unless the caller says otherwise.  Four reads
+#: as a listing without burying the first image, which gets the click.
+DEFAULT_VIEWS = ("Isometric", "Front", "Right", "Top")
+
+
 #: Operations `wrap_nodes` can apply.  Every one of them wraps the
 #: nodes it is given — that is how an extrude, a transform or a
 #: boolean is applied in this app.
@@ -549,9 +567,68 @@ TOOLS = [
         ),
         "input_schema": _obj({
             "path": {"type": "string",
-                     "description": "Absolute path ending in .scad or "
-                                    ".stl."},
+                     "description": "Absolute path ending in .scad, "
+                                    ".stl or .3mf (3MF needs "
+                                    "OpenSCAD)."},
         }, ["path"]),
+    },
+    {
+        "name": "publish_to_printables",
+        "description": (
+            "Build a complete Printables upload bundle for the open "
+            "model in one call: the mesh (STL and 3MF), the "
+            "parametric .scad source, the .kcad project, preview "
+            "renders from several camera angles, and description.md. "
+            "Printables has NO upload API, so this does not and "
+            "cannot post the model — it prepares everything and the "
+            "user drops the folder into printables.com themselves. "
+            "Say that plainly rather than claiming the model is "
+            "published.\n"
+            "WRITE THE DESCRIPTION YOURSELF and pass it in: look at "
+            "the model first (get_document_info, list_tree, "
+            "render_view) and describe what the thing actually is, "
+            "what it is for, its size in mm, which variables are "
+            "worth changing, and suggested print settings. Markdown. "
+            "Leaving `description` out falls back to a generated "
+            "skeleton, which is worse. Whatever you write, the "
+            "bundle appends a credit naming KherveCAD "
+            "(khervetools.com), OpenSCAD and Claude — do not strip "
+            "or duplicate that, and do not claim the model is human-"
+            "designed if you designed it."
+        ),
+        "input_schema": _obj({
+            "title": {"type": "string",
+                      "description": "Listing title, also the file "
+                                     "stem."},
+            "description": {"type": "string",
+                            "description": "The listing body, in "
+                                           "Markdown. Write this."},
+            "tags": {"type": "array", "items": {"type": "string"},
+                     "description": "Printables tags, lowercase."},
+            "license": {"type": "string", "enum": LICENSES,
+                        "description": "Defaults to %s." %
+                                       DEFAULT_LICENSE},
+            "folder": {"type": "string",
+                       "description": "Absolute path for the bundle "
+                                      "folder. Defaults to a folder "
+                                      "beside the document."},
+            "formats": {"type": "array",
+                        "items": {"type": "string", "enum": list(FORMATS)},
+                        "description": "Defaults to all four."},
+            "views": {"type": "array",
+                      "items": {"type": "string", "enum": ORIENTATIONS},
+                      "description": "Camera angles to render. "
+                                     "Defaults to %s." %
+                                     ", ".join(DEFAULT_VIEWS)},
+            "open_browser": {"type": "boolean",
+                             "description": "Open the Printables "
+                                            "upload page and reveal "
+                                            "the folder. Off by "
+                                            "default — turn it on "
+                                            "when the user has said "
+                                            "they want to upload "
+                                            "now."},
+        }, ["title"]),
     },
 ]
 

@@ -52,6 +52,20 @@ _BUNDLE_LAYOUTS = [
 ]
 
 
+#: OpenSCAD gimbal camera rotations, by the name the 3D view uses for
+#: the same viewpoint.  Paired with ``--viewall --autocenter`` these are
+#: all a still needs: the distance is computed from the model.
+CAMERA_ROTATIONS = {
+    "Isometric": (55, 0, 25),
+    "Top": (0, 0, 0),
+    "Bottom": (180, 0, 0),
+    "Front": (90, 0, 0),
+    "Back": (90, 0, 180),
+    "Right": (90, 0, 90),
+    "Left": (90, 0, 270),
+}
+
+
 def bundled_openscad() -> str:
     """Path of the OpenSCAD shipped beside the app, or '' if there is none.
 
@@ -446,17 +460,53 @@ class ScadEngine(QObject):
             self._timer.start()
 
     # ---------------------------------------------------------- export
-    def export_stl(self, scad_code: str, out_path: str) -> str:
-        """Export *scad_code* to *out_path* synchronously via the
-        binary. Returns '' on success, an error message otherwise."""
+    def _run_export(self, scad_code: str, out_path: str,
+                    extra=(), timeout_ms: int = 120000) -> str:
+        """Run the binary once with ``-o out_path``. '' on success."""
         scad_path = self._dir / "export.scad"
         scad_path.write_text(scad_code, encoding="utf-8")
         process = QProcess()
-        process.start(self.binary, ["-o", out_path, str(scad_path)])
-        process.waitForFinished(120000)
+        process.start(self.binary,
+                      ["-o", out_path, *extra, str(scad_path)])
+        process.waitForFinished(timeout_ms)
         if process.exitStatus() == QProcess.NormalExit and \
                 process.exitCode() == 0:
             return ""
         stderr = bytes(process.readAllStandardError()) \
             .decode(errors="replace").strip()
         return stderr or "OpenSCAD export failed"
+
+    def export_mesh(self, scad_code: str, out_path: str) -> str:
+        """Export to whatever format the extension asks for.
+
+        OpenSCAD picks the writer from the suffix, so .stl, .3mf, .off
+        and .amf all go down this one path.
+        """
+        return self._run_export(scad_code, out_path)
+
+    def export_stl(self, scad_code: str, out_path: str) -> str:
+        """Export *scad_code* to *out_path* synchronously via the
+        binary. Returns '' on success, an error message otherwise."""
+        return self.export_mesh(scad_code, out_path)
+
+    def export_png(self, scad_code: str, out_path: str,
+                   rotation=CAMERA_ROTATIONS["Isometric"],
+                   size=(1600, 1200),
+                   colorscheme: str = "Tomorrow") -> str:
+        """Render a still to *out_path*.
+
+        The camera is given as a gimbal rotation; ``--viewall
+        --autocenter`` then frames the model, so the same rotation
+        works for a 2 mm part and a 2 m one.  ``--camera`` must carry
+        all seven gimbal values — six is a different form entirely
+        (eye + centre), and reading a rotation as a look-at point
+        points the camera at nothing.
+        """
+        extra = [
+            "--render",
+            "--viewall", "--autocenter",
+            "--imgsize=%d,%d" % (int(size[0]), int(size[1])),
+            "--camera=0,0,0,%g,%g,%g,0" % tuple(rotation),
+            "--colorscheme=%s" % colorscheme,
+        ]
+        return self._run_export(scad_code, out_path, extra)

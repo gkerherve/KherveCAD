@@ -482,7 +482,22 @@ into a new module and import.
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.
-  - `mcp_schema.py`  — the **MCP tool table**: 32 JSON-Schema tool
+  - `printables.py`  — **File ▸ Publish to Printables…** and the
+                       `publish_to_printables` MCP tool share one
+                       builder: STL / 3MF / .scad / .kcad exports,
+                       OpenSCAD preview stills (`engine.export_png`,
+                       one per camera angle), a generated or
+                       assistant-written `description.md` and
+                       `printables.json`. Printables has **no upload
+                       API** — this prepares the folder and opens the
+                       upload page; the user does the last click, and
+                       the tool result says `published: false` so an
+                       assistant cannot claim otherwise. The credit
+                       block naming KherveCAD / khervetools.com /
+                       Claude is appended to whatever description
+                       comes in, once, and names only the source files
+                       actually shipped.
+  - `mcp_schema.py`  — the **MCP tool table**: 33 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -536,7 +551,7 @@ into a new module and import.
                        enable/disable, access
                        level, one-click host connect, hand-config
                        snippets and a live activity log.
-- `docs/MCP.md` — how to connect an assistant, what the 32 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 33 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -765,7 +780,7 @@ release the website links to. See `README.macos.md`.
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **32 tools**: the object tree, OpenSCAD in
+client gets the whole app as **33 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

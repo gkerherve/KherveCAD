@@ -33,7 +33,8 @@ from pathlib import Path
 from PyQt5.QtCore import QBuffer, QByteArray, Qt
 
 from . import anchors, document, mates, mesh
-from .mcp_schema import ORIENTATIONS, WRAP_TYPES
+from .mcp_schema import (DEFAULT_LICENSE, DEFAULT_VIEWS, FORMATS,
+                         ORIENTATIONS, WRAP_TYPES)
 from .mcp_server import IMAGE_KEY
 from .model import CONTAINER_TYPES, NODE_TYPES, validate
 
@@ -801,14 +802,21 @@ class McpToolExecutor:
         if suffix == ".scad":
             document.export_scad(self._model, path)
             return {"exported": path, "format": "scad"}
-        if suffix != ".stl":
-            raise ToolError("Export path must end in .scad or .stl.")
+        if suffix not in (".stl", ".3mf"):
+            raise ToolError(
+                "Export path must end in .scad, .stl or .3mf.")
         if self._w.engine.available:
-            error = self._w.engine.export_stl(self._model.to_scad(),
-                                              path)
+            error = self._w.engine.export_mesh(self._model.to_scad(),
+                                               path)
             if error:
                 raise ToolError(f"OpenSCAD export failed:\n{error}")
-            return {"exported": path, "format": "stl", "exact": True}
+            return {"exported": path, "format": suffix[1:],
+                    "exact": True}
+        if suffix == ".3mf":
+            raise ToolError(
+                "3MF is written by OpenSCAD and it was not found. "
+                "Export .stl, or point the app at OpenSCAD "
+                "(Edit > Locate OpenSCAD).")
         write_stl(mesh.tessellate(self._model.root, fn=self._fn()), path)
         return {
             "exported": path, "format": "stl", "exact": False,
@@ -823,3 +831,51 @@ class McpToolExecutor:
                 "found). This model uses no booleans, so the geometry "
                 "is faithful."),
         }
+
+    def _t_publish_to_printables(self, params) -> dict:
+        from . import printables
+        title = str(params.get("title", "")).strip()
+        if not title:
+            raise ToolError("A title is required — it names the "
+                            "listing and every file in the bundle.")
+        folder = params.get("folder")
+        if not folder:
+            base = (Path(self._w._path).parent if self._w._path
+                    else Path.home() / "Documents")
+            folder = base / f"{printables.slug(title)}-printables"
+        formats = tuple(params.get("formats") or FORMATS)
+        views = tuple(params.get("views") or DEFAULT_VIEWS)
+        unknown = [v for v in views if v not in ORIENTATIONS]
+        if unknown:
+            raise ToolError(
+                f"Unknown view(s) {', '.join(unknown)}. Choose from: "
+                f"{', '.join(ORIENTATIONS)}.")
+        bad = [f for f in formats if f not in FORMATS]
+        if bad:
+            raise ToolError(
+                f"Unknown format(s) {', '.join(bad)}. Choose from: "
+                f"{', '.join(FORMATS)}.")
+        bundle = printables.build_bundle(
+            self._w, folder, title=title,
+            description=str(params.get("description", "")),
+            tags=params.get("tags") or [],
+            license=str(params.get("license") or DEFAULT_LICENSE),
+            formats=formats, views=views)
+        if params.get("open_browser"):
+            printables.reveal(bundle["folder"])
+            printables.open_upload_page()
+        return {
+            "folder": bundle["folder"],
+            "files": [Path(f).name for f in bundle["files"]],
+            "images": [Path(f).name for f in bundle["images"]],
+            "warnings": bundle["warnings"],
+            "published": False,
+            "next_step": (
+                "Nothing has been uploaded. Printables has no upload "
+                "API, so the user finishes it: open "
+                f"{printables.UPLOAD_URL} while signed in, drag in the "
+                "files from the folder above, and paste "
+                "description.md. Tell them that, and do not describe "
+                "the model as published."),
+        }
+
