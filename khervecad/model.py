@@ -330,6 +330,11 @@ _REF_STACK = set()
 #: unique; None when emitting a loose subtree (sanitised name only).
 _MODULE_NAMES = None
 
+#: {node id} of Objects whose ``module`` is emitted at the top of the
+#: program instead of where the node sits, because OpenSCAD forbids a
+#: module definition inside an instantiation's child block.
+_HOISTED = None
+
 #: identifiers a component's module must not shadow: OpenSCAD keywords
 #: and built-in calls.
 _SCAD_RESERVED = {
@@ -354,6 +359,31 @@ def module_name(name: str) -> str:
     if ident in _SCAD_RESERVED:
         ident += "_"
     return ident
+
+
+def _nested_components(node, nested=False, out=None):
+    """Objects that sit inside an operation's child block. OpenSCAD
+    accepts a ``module`` definition at file level or inside a module
+    body, but *not* as a child of an instantiation: emitting one there
+    (an Object used as the cutter of a `difference()`, say) is a parser
+    error, and export died on it. Those definitions are hoisted to the
+    top of the program instead, leaving only the placed call behind.
+    Masters are skipped — that store emits nothing."""
+    out = [] if out is None else out
+    for child in node.children:
+        if child.type == "masters":
+            continue
+        if child.type == "component":
+            if nested:
+                out.append(child)
+            # a module body may legally hold further definitions
+            _nested_components(child, False, out)
+        else:
+            _nested_components(
+                child,
+                nested or child.type not in ("root", "variables"),
+                out)
+    return out
 
 
 def _referenced_modules(only):
@@ -628,7 +658,8 @@ class CadNode:
         star = "" if self.visible else "*"
         name = (_MODULE_NAMES or {}).get(self.id) \
             or module_name(self.name)
-        self.emit_module(lines, indent, spans)
+        if self.id not in (_HOISTED or ()):
+            self.emit_module(lines, indent, spans)
         lines.append((pad + star + _group_prefix(self.params)
                       + f"{name}();", self))
 
@@ -972,7 +1003,7 @@ class DocumentModel(QObject):
                   f"// regenerated from the object tree.\n")
         offset = header.count("\n") + 1          # + the blank line
         lines, spans = [], {}
-        global _FN_OVERRIDE, _REF_INDEX, _MODULE_NAMES
+        global _FN_OVERRIDE, _REF_INDEX, _MODULE_NAMES, _HOISTED
         _FN_OVERRIDE = self.effective_fn()
         _REF_INDEX = {}                          # by name: masters persist
         _MODULE_NAMES = {}                       # unique per document
@@ -987,8 +1018,13 @@ class DocumentModel(QObject):
                     candidate = f"{base}_{k}"
                 taken.add(candidate)
                 _MODULE_NAMES[n.id] = candidate
+        scope = self.root if only is None else only
+        hoisted = _nested_components(scope)
+        _HOISTED = {n.id for n in hoisted}
         _REF_STACK.clear()
         try:
+            for definition in hoisted:
+                definition.emit_module(lines, 0, spans)
             if only is None:
                 self.root.emit(lines, 0, spans)
             else:
@@ -1002,6 +1038,7 @@ class DocumentModel(QObject):
             _FN_OVERRIDE = None
             _REF_INDEX = None
             _MODULE_NAMES = None
+            _HOISTED = None
             _REF_STACK.clear()
         body = "\n".join(text for text, _n in lines)
         code = header + "\n" + body + ("\n" if body else "")

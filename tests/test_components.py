@@ -211,3 +211,22 @@ def test_enclose_import_wraps_loose_geometry_only(model):
 def test_enclose_import_with_nothing_loose_is_a_no_op(model):
     model.new_component("Only")
     assert model.enclose_import_as_part("x") is None
+
+
+def test_nested_object_module_is_hoisted_to_top_level(model):
+    """OpenSCAD refuses a `module` definition inside an instantiation's
+    child block, so an Object used as (say) a difference's cutter must
+    be *defined* at the top of the program and only *called* in place —
+    otherwise the whole export dies with a parser error."""
+    cut = model.add_node("difference", name="Legs")
+    model.add_node("cube", parent=cut)
+    part = CadNode("component", "Floor")
+    part.add(CadNode("cube", "Slab"))
+    cut.add(part)
+    model.structure_changed.emit()
+    code = model.to_scad()
+    body = code.split("regenerated from the object tree.\n", 1)[1]
+    assert body.lstrip().startswith("module Floor()")
+    assert "    module Floor()" not in code
+    assert code.count("module Floor()") == 1
+    assert "    Floor();" in code
