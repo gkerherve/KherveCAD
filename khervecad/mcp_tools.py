@@ -33,8 +33,10 @@ from pathlib import Path
 from PyQt5.QtCore import QBuffer, QByteArray, Qt
 
 from . import anchors, document, mates, mesh
-from .mcp_schema import (DEFAULT_LICENSE, DEFAULT_VIEWS, FORMATS,
-                         ORIENTATIONS, WRAP_TYPES)
+from .mcp_schema import (CATEGORIES, DEFAULT_CATEGORY,
+                         DEFAULT_LICENSE, DEFAULT_ORIGIN,
+                         DEFAULT_VIEWS, FORMATS, ORIENTATIONS,
+                         ORIGINS, WRAP_TYPES)
 from .mcp_server import IMAGE_KEY
 from .model import CONTAINER_TYPES, NODE_TYPES, validate
 
@@ -855,12 +857,24 @@ class McpToolExecutor:
             raise ToolError(
                 f"Unknown format(s) {', '.join(bad)}. Choose from: "
                 f"{', '.join(FORMATS)}.")
+        category = params.get("category") or DEFAULT_CATEGORY
+        if category not in CATEGORIES:
+            raise ToolError(
+                f"Unknown category {category!r}. Choose from: "
+                f"{', '.join(CATEGORIES)}.")
+        origin = params.get("origin") or DEFAULT_ORIGIN
+        if origin not in ORIGINS:
+            raise ToolError(
+                f"Unknown origin {origin!r}. Choose from: "
+                f"{', '.join(ORIGINS)}.")
         bundle = printables.build_bundle(
             self._w, folder, title=title,
             description=str(params.get("description", "")),
             tags=params.get("tags") or [],
             license=str(params.get("license") or DEFAULT_LICENSE),
-            formats=formats, views=views)
+            formats=formats, views=views,
+            summary=str(params.get("summary", "")),
+            category=category, origin=origin)
         if params.get("open_browser"):
             printables.reveal(bundle["folder"])
             printables.open_upload_page()
@@ -868,14 +882,17 @@ class McpToolExecutor:
             "folder": bundle["folder"],
             "files": [Path(f).name for f in bundle["files"]],
             "images": [Path(f).name for f in bundle["images"]],
+            "summary": bundle["summary"],
+            "category": bundle["category"],
             "warnings": bundle["warnings"],
             "published": False,
             "next_step": (
                 "Nothing has been uploaded. Printables has no upload "
                 "API, so the user finishes it: open "
                 f"{printables.UPLOAD_URL} while signed in, drag in the "
-                "files from the folder above, and paste "
-                "description.md. Tell them that, and do not describe "
-                "the model as published."),
+                "files from the folder above, paste "
+                "description.txt, and copy the remaining form fields "
+                "from upload-form.txt. Tell them that, and do not "
+                "describe the model as published."),
         }
 

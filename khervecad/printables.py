@@ -38,8 +38,10 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
 
 from . import document, mesh
 from .engine import CAMERA_ROTATIONS, write_stl
-from .mcp_schema import (DEFAULT_LICENSE, DEFAULT_VIEWS, FORMATS,
-                         LICENSES)
+from .mcp_schema import (CATEGORIES, DEFAULT_CATEGORY,
+                         DEFAULT_LICENSE, DEFAULT_ORIGIN,
+                         DEFAULT_VIEWS, FORMATS, LICENSES, ORIGINS,
+                         SUMMARY_LIMIT)
 
 #: The page the user finishes on.  Printables' own "add a model" form.
 UPLOAD_URL = "https://www.printables.com/model/add"
@@ -53,25 +55,29 @@ TOOLS_URL = "https://khervetools.com"
 #: the parametric source, which is the point of publishing from a CAD
 #: tool rather than a mesh.
 
+#: The blocks are single long lines on purpose: Printables re-wraps
+#: the description box to its own width, and text hard-wrapped at 70
+#: columns comes out ragged there.
 _CREDIT_HEAD = """\
-## Made with
+MADE WITH
 
-Designed in [KherveCAD]({tools}) — a free, open-source parametric CAD
-app with OpenSCAD as its engine — and described with the help of
-Claude (Anthropic).
+Designed in KherveCAD ({tools}) - a free, open-source parametric CAD app with OpenSCAD as its engine - and described with the help of Claude (Anthropic).
 """
 
 #: Added only when the source really is in the folder.  A listing that
 #: promises an editable source it does not ship is worse than one that
 #: promises nothing.
 _CREDIT_SOURCE = """
-The {files} in the download {verb} the real, editable source, not an
-export of a mesh: open it, change a dimension, re-export.
+The {files} in the download {verb} the real, editable source, not an export of a mesh: open it, change a dimension, re-export.
 """
 
 _CREDIT_TAIL = """
-KherveCAD and the rest of the Kherve tools are at <{tools}>.
+KherveCAD and the rest of the Kherve tools are at {tools}
 """
+
+#: The credit block's heading.  One place, because `build_bundle` looks
+#: for it to avoid appending the block twice.
+CREDIT_HEADING = "MADE WITH"
 
 
 def credit(formats=FORMATS) -> str:
@@ -80,7 +86,7 @@ def credit(formats=FORMATS) -> str:
     text = _CREDIT_HEAD.format(tools=TOOLS_URL)
     if source:
         text += _CREDIT_SOURCE.format(
-            files=" and ".join(f"`{s}`" for s in source),
+            files=" and ".join(source),
             verb="is" if len(source) == 1 else "are")
     return text + _CREDIT_TAIL.format(tools=TOOLS_URL)
 
@@ -117,10 +123,90 @@ def _bounds(model, fn=None):
     return [round(hi[i] - lo[i], 2) for i in range(3)]
 
 
+def default_summary(window, title: str = "") -> str:
+    """The one-line summary Printables makes required, under its cap.
+
+    Read off the model rather than invented: what it is, that it was
+    drawn parametrically, and its footprint if that still fits.
+    """
+    name = (title or "This model").strip()
+    text = f"{name} - parametric model designed in KherveCAD"
+    size = _bounds(window.model, fn=(window.model.global_fn
+                                     if window.model.global_fn_on
+                                     else None))
+    if size:
+        with_size = text + ", %g x %g x %g mm" % tuple(size)
+        if len(with_size) <= SUMMARY_LIMIT:
+            text = with_size
+    if len(text) > SUMMARY_LIMIT:
+        text = text[:SUMMARY_LIMIT - 1].rstrip(" ,-") + "…"
+    return text
+
+
+def form_answers(window, *, title, summary="", tags=(),
+                 category=DEFAULT_CATEGORY, license=DEFAULT_LICENSE,
+                 origin=DEFAULT_ORIGIN, formats=FORMATS) -> str:
+    """The upload form, field by field, already filled in.
+
+    Printables' "add a model" page asks the same questions every time
+    and none of the answers are in the STL, so the bundle carries them
+    as copy-and-paste text: the user reads down the page and pastes,
+    rather than inventing a category and a summary at upload time.
+    """
+    model = window.model
+    size = _bounds(model, fn=(model.global_fn if model.global_fn_on
+                              else None))
+    lines = [
+        "PRINTABLES UPLOAD FORM - answers to copy across",
+        "=" * 46,
+        "",
+        "Model name (required)",
+        f"  {title}",
+        "",
+        "Summary (required, max %d characters)" % SUMMARY_LIMIT,
+        f"  {summary or default_summary(window, title)}",
+        "",
+        "Main category (required)",
+        f"  {category}",
+        "",
+        "Additional tags (space separated on the form)",
+        "  " + (" ".join(tags) if tags else
+                "parametric openscad cad 3dprint"),
+        "",
+        "Model origin - this is a...",
+        f"  {origin}",
+        "",
+        "Licence",
+        f"  {license}",
+        "",
+        "Description",
+        "  Paste description.txt (plain text, no Markdown).",
+        "",
+        "Print settings",
+        "  Rafts: no",
+        "  Supports: no",
+        "  Resolution: 0.2 mm layer height",
+        "  Infill: 20%",
+        "  Filament: PLA",
+        "  Notes: adjust to what you actually printed.",
+        "",
+        "Files to upload",
+        "  " + ", ".join(f".{f}" for f in formats) +
+        " plus every .png in this folder (the isometric render is "
+        "first, so it becomes the cover image).",
+    ]
+    if size:
+        lines += ["", "Bounding box (for your own check against the "
+                  "bed)", "  %g x %g x %g mm" % tuple(size)]
+    return "\n".join(lines) + "\n"
+
+
 def default_description(window, title: str = "",
                         formats=FORMATS) -> str:
     """A description worth editing rather than one worth deleting.
 
+    Plain text, because that is what Printables' description box shows
+    back: Markdown pasted in reads as literal hashes and backticks.
     Everything here is read off the model, so it is right by
     construction: the size someone needs to check against their bed,
     the parameters they can change, and where the thing came from.
@@ -130,36 +216,35 @@ def default_description(window, title: str = "",
                               else None))
     lines = []
     if title:
-        lines += [f"# {title}", ""]
-    lines += ["_One or two sentences on what this is for and why you "
-              "made it._", ""]
+        lines += [title.upper(), ""]
+    lines += ["One or two sentences on what this is for and why you "
+              "made it.", ""]
 
     if size:
         lines += [
-            "## Size",
+            "SIZE",
             "",
-            f"**{size[0]} × {size[1]} × {size[2]} mm** as modelled "
-            "(X × Y × Z).",
+            "%g x %g x %g mm as modelled (X x Y x Z)." % tuple(size),
             "",
         ]
 
     variables = _variables(model)
     if variables:
-        lines += ["## Parameters", "",
-                  "The model is parametric — these are the values to "
-                  "change in the `.scad` or `.kcad` file:", ""]
-        lines += [f"- `{name}` = {value}" for name, value in variables]
+        lines += ["PARAMETERS", "",
+                  "The model is parametric - these are the values to "
+                  "change in the .scad or .kcad file:", ""]
+        lines += [f"  {name} = {value}" for name, value in variables]
         lines.append("")
 
     lines += [
-        "## Print settings",
+        "PRINT SETTINGS",
         "",
-        "- Layer height: 0.2 mm",
-        "- Infill: 20%",
-        "- Supports: none",
-        "- Material: PLA",
+        "Layer height: 0.2 mm",
+        "Infill: 20%",
+        "Supports: none",
+        "Material: PLA",
         "",
-        "_Adjust to what you actually printed._",
+        "Adjust to what you actually printed.",
         "",
         credit(formats),
     ]
@@ -168,7 +253,9 @@ def default_description(window, title: str = "",
 
 def build_bundle(window, folder, *, title, description="", tags=(),
                  license=DEFAULT_LICENSE, formats=FORMATS,
-                 views=DEFAULT_VIEWS, image_size=(1600, 1200)) -> dict:
+                 views=DEFAULT_VIEWS, image_size=(2000, 1500),
+                 summary="", category=DEFAULT_CATEGORY,
+                 origin=DEFAULT_ORIGIN) -> dict:
     """Write the upload folder. Returns what was written and what wasn't.
 
     Never raises for a missing engine or a format OpenSCAD declined —
@@ -241,15 +328,34 @@ def build_bundle(window, folder, *, title, description="", tags=(),
         # description written elsewhere (the MCP tool, the user) has no
         # reason to have carried it.
         body = body.rstrip() + "\n\n" + credit(formats)
-    notes = folder / "description.md"
+    notes = folder / "description.txt"
     notes.write_text(body, encoding="utf-8")
     wrote(notes)
+
+    summary = (summary or default_summary(window, title)).strip()
+    if len(summary) > SUMMARY_LIMIT:
+        summary = summary[:SUMMARY_LIMIT - 1].rstrip() + "…"
+        warnings.append("The summary was trimmed to Printables' %d "
+                        "character limit." % SUMMARY_LIMIT)
+    form = folder / "upload-form.txt"
+    form.write_text(form_answers(window, title=title, summary=summary,
+                                 tags=tags, category=category,
+                                 license=license, origin=origin,
+                                 formats=formats), encoding="utf-8")
+    wrote(form)
 
     meta = folder / "printables.json"
     meta.write_text(json.dumps({
         "title": title,
+        "summary": summary,
+        "category": category,
+        "origin": origin,
         "tags": list(tags),
         "license": license,
+        "description_format": "plain text",
+        "print_settings": {"rafts": False, "supports": False,
+                           "resolution": "0.2 mm", "infill": "20%",
+                           "filament": "PLA"},
         "upload_url": UPLOAD_URL,
         "made_with": {"app": "KherveCAD", "url": TOOLS_URL,
                       "engine": "OpenSCAD",
@@ -260,24 +366,91 @@ def build_bundle(window, folder, *, title, description="", tags=(),
 
     return {"folder": str(folder), "files": files,
             "images": [str(p) for p in images],
-            "description": body, "warnings": warnings}
+            "description": body, "summary": summary,
+            "category": category, "form": str(form),
+            "warnings": warnings}
+
+
+def trim_to_content(path, margin=0.06, aspect=4 / 3.0) -> bool:
+    """Crop *path* down to the model, keeping *aspect*.
+
+    OpenSCAD's ``--viewall`` frames the bounding SPHERE, so a long thin
+    part lying on a diagonal is rendered correct and tiny — most of the
+    canvas is empty background, and on Printables that is the thumbnail
+    people decide on.  The background is flat, so the model's real
+    extent is just the pixels that differ from the corner colour;
+    cropping to that with a margin turns the same render into a picture
+    of the part.  Returns False and leaves the file alone if there is
+    nothing to crop.
+    """
+    from PyQt5.QtGui import QImage
+    image = QImage(str(path))
+    if image.isNull():
+        return False
+    image = image.convertToFormat(QImage.Format_RGB32)
+    width, height = image.width(), image.height()
+    background = image.pixel(0, 0)
+
+    def differs(x, y):
+        pixel = image.pixel(x, y)
+        return (abs(((pixel >> 16) & 255) - ((background >> 16) & 255))
+                + abs(((pixel >> 8) & 255) - ((background >> 8) & 255))
+                + abs((pixel & 255) - (background & 255))) > 12
+
+    step = max(1, min(width, height) // 400)   # a scan, not a survey
+    xs, ys = [], []
+    for y in range(0, height, step):
+        for x in range(0, width, step):
+            if differs(x, y):
+                xs.append(x)
+                ys.append(y)
+    if not xs:
+        return False
+    x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
+    span = max(x1 - x0, (y1 - y0) * aspect) * (1 + 2 * margin)
+    if span >= width * 0.92:
+        return False                    # already fills the frame
+    cx, cy = (x0 + x1) / 2.0, (y0 + y1) / 2.0
+    # never crop past this: a front view of a flat part is a sliver,
+    # and trimming to it exactly would hand Printables a 200 px image.
+    box_w = min(width, max(span, width * 0.45))
+    box_h = min(height, box_w / aspect)
+    box_w = box_h * aspect
+    left = int(max(0, min(width - box_w, cx - box_w / 2)))
+    top = int(max(0, min(height - box_h, cy - box_h / 2)))
+    crop = image.copy(left, top, int(box_w), int(box_h))
+    return bool(crop.save(str(path), "PNG"))
 
 
 def _render_previews(window, folder, stem, code, views, size,
                      warnings) -> list:
     """Preview stills, from OpenSCAD where it is installed and from the
-    3D widget where it is not."""
+    3D widget where it is not.
+
+    Printables shows the FIRST image as the cover, and a listing is
+    judged on it, so the isometric is rendered first and larger than
+    the rest.  The names are numbered because the upload page keeps
+    the order the files arrive in, which is the order the file dialog
+    lists them.
+    """
+    ordered = list(views)
+    for hero in ("Isometric",):          # the one that gets the click
+        if hero in ordered:
+            ordered.insert(0, ordered.pop(ordered.index(hero)))
+
     out = []
-    for name in views:
+    for index, name in enumerate(ordered, 1):
         rotation = CAMERA_ROTATIONS.get(name)
         if rotation is None:
             warnings.append(f"Skipped unknown view {name!r}.")
             continue
-        path = folder / f"{stem}-{name.lower()}.png"
+        path = folder / f"{stem}-{index}-{name.lower()}.png"
+        shot = (int(size[0] * 1.3), int(size[1] * 1.3)) if index == 1 \
+            else size
         if window.engine.available:
             error = window.engine.export_png(code, str(path),
                                              rotation=rotation,
-                                             size=size)
+                                             size=shot)
             if error:
                 warnings.append(f"{name} preview failed: {error}")
                 continue
@@ -291,6 +464,10 @@ def _render_previews(window, folder, stem, code, views, size,
             warnings.append(
                 f"{name} preview is a screen grab of the built-in "
                 "preview, not an OpenSCAD render.")
+        try:
+            trim_to_content(path)
+        except Exception as exc:                     # cosmetic, never fatal
+            warnings.append(f"{name} preview was not cropped: {exc}")
         out.append(path)
     return out
 
@@ -329,7 +506,21 @@ class PublishDialog(QDialog):
 
         form = QFormLayout()
         self.title_edit = QLineEdit(stem or "Untitled model")
-        form.addRow("Title", self.title_edit)
+        form.addRow("Model name", self.title_edit)
+        self.summary_edit = QLineEdit(
+            default_summary(window, self.title_edit.text()))
+        self.summary_edit.setMaxLength(SUMMARY_LIMIT)
+        self.summary_edit.setToolTip(
+            "Printables' required one-liner, max %d characters."
+            % SUMMARY_LIMIT)
+        form.addRow("Summary", self.summary_edit)
+        self.category_combo = QComboBox()
+        self.category_combo.addItems(CATEGORIES)
+        self.category_combo.setCurrentText(DEFAULT_CATEGORY)
+        form.addRow("Main category", self.category_combo)
+        self.origin_combo = QComboBox()
+        self.origin_combo.addItems(ORIGINS)
+        form.addRow("Model origin", self.origin_combo)
         self.tags_edit = QLineEdit()
         self.tags_edit.setPlaceholderText(
             "comma separated — printed, functional, parametric, openscad")
@@ -367,8 +558,9 @@ class PublishDialog(QDialog):
             self._view_boxes[name] = box
         layout.addWidget(views_box)
 
-        layout.addWidget(QLabel("Description — Markdown, as Printables "
-                                "takes it:"))
+        layout.addWidget(QLabel(
+            "Description — plain text, so it pastes into Printables' "
+            "box exactly as written:"))
         self.description_edit = QPlainTextEdit(
             default_description(window, self.title_edit.text(),
                                 self._selected(self._format_boxes)))
@@ -418,6 +610,8 @@ class PublishDialog(QDialog):
         self.description_edit.setPlainText(
             default_description(self._w, self.title_edit.text(),
                                 self._selected(self._format_boxes)))
+        self.summary_edit.setText(
+            default_summary(self._w, self.title_edit.text()))
 
     def _selected(self, boxes) -> tuple:
         return tuple(k for k, b in boxes.items() if b.isChecked())
@@ -439,7 +633,10 @@ class PublishDialog(QDialog):
                 self._w, self.folder_edit.text(), title=title,
                 description=self.description_edit.toPlainText(),
                 tags=tags, license=self.license_combo.currentText(),
-                formats=formats, views=views)
+                formats=formats, views=views,
+                summary=self.summary_edit.text(),
+                category=self.category_combo.currentText(),
+                origin=self.origin_combo.currentText())
         except Exception as exc:
             QMessageBox.warning(self, "Publish to Printables",
                                 f"Could not build the bundle:\n{exc}")
@@ -452,14 +649,17 @@ class PublishDialog(QDialog):
         text = ["Bundle ready in:", bundle["folder"], "",
                 "%d file(s), %d preview image(s)."
                 % (len(bundle["files"]), len(bundle["images"])),
-                "The description is on your clipboard."]
+                "The description is on your clipboard, and "
+                "upload-form.txt answers every field on the upload "
+                "page."]
         if bundle["warnings"]:
             text += ["", "Warnings:"] + ["• " + w
                                          for w in bundle["warnings"]]
         if self.open_box.isChecked():
-            text += ["", "Sign in to Printables in the browser tab that "
-                     "just opened, drag the files in, and paste the "
-                     "description."]
+            text += ["", "Sign in to Printables in the browser tab "
+                     "that just opened, drag the files in, paste the "
+                     "description, and copy the rest of the fields "
+                     "from upload-form.txt."]
             reveal(bundle["folder"])
             open_upload_page()
         QMessageBox.information(self, "Publish to Printables",

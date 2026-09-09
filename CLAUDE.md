@@ -486,8 +486,19 @@ into a new module and import.
                        `publish_to_printables` MCP tool share one
                        builder: STL / 3MF / .scad / .kcad exports,
                        OpenSCAD preview stills (`engine.export_png`,
-                       one per camera angle), a generated or
-                       assistant-written `description.md` and
+                       one per camera angle, isometric first and
+                       larger since Printables makes the first image
+                       the cover, each **cropped to the model** by
+                       `trim_to_content` — `--viewall` frames the
+                       bounding *sphere*, so a long diagonal part
+                       renders correct and tiny), a generated or
+                       assistant-written **plain-text**
+                       `description.txt` (Markdown pasted into
+                       Printables' box reads back as literal hashes),
+                       `upload-form.txt` — every field of the
+                       add-a-model form (name, the 120-char summary,
+                       main category, tags, origin, licence, print
+                       settings) already answered — and
                        `printables.json`. Printables has **no upload
                        API** — this prepares the folder and opens the
                        upload page; the user does the last click, and

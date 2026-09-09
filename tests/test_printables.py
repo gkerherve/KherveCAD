@@ -75,7 +75,7 @@ def test_credit_names_the_app_and_the_site():
 
 def test_credit_only_promises_source_it_ships():
     both = printables.credit(("stl", "scad", "kcad"))
-    assert "`.scad` and `.kcad`" in both
+    assert ".scad and .kcad" in both
     mesh_only = printables.credit(("stl",))
     assert ".scad" not in mesh_only
     assert ".kcad" not in mesh_only
@@ -86,11 +86,20 @@ def test_credit_only_promises_source_it_ships():
 
 def test_description_reports_size_and_parameters(cube_window):
     text = printables.default_description(cube_window, "Cube")
-    assert "# Cube" in text
-    assert "## Size" in text
-    assert "`wall` = 3" in text
-    assert "Print settings" in text
+    assert "CUBE" in text
+    assert "SIZE" in text
+    assert "wall = 3" in text
+    assert "PRINT SETTINGS" in text
     assert printables.TOOLS_URL in text
+
+
+def test_description_is_plain_text_not_markdown(cube_window):
+    """Printables' description box shows Markdown back as literal
+    hashes and backticks, so the draft must not contain any."""
+    text = printables.default_description(cube_window, "Cube")
+    assert "#" not in text
+    assert "`" not in text
+    assert "](" not in text
 
 
 # ── the bundle ──────────────────────────────────────────────────
@@ -101,7 +110,8 @@ def test_bundle_writes_every_requested_file(cube_window, tmp_path):
         formats=("stl", "scad", "kcad"), views=("Isometric", "Front"))
     names = {Path(f).name for f in bundle["files"]}
     assert {"My-Cube.stl", "My-Cube.scad", "My-Cube.kcad",
-            "description.md", "printables.json"} <= names
+            "description.txt", "upload-form.txt",
+            "printables.json"} <= names
     assert len(bundle["images"]) == 2
     for path in bundle["files"]:
         assert Path(path).stat().st_size > 0
@@ -121,11 +131,11 @@ def test_bundle_keeps_a_supplied_description_and_adds_the_credit(
         cube_window, tmp_path):
     bundle = printables.build_bundle(
         cube_window, tmp_path / "out", title="Cube",
-        description="# Mine\n\nA cube.", formats=("scad",), views=())
+        description="Mine\n\nA cube.", formats=("scad",), views=())
     body = bundle["description"]
-    assert body.startswith("# Mine")
+    assert body.startswith("Mine")
     assert printables.TOOLS_URL in body
-    assert body.count("## Made with") == 1
+    assert body.count(printables.CREDIT_HEADING) == 1
 
 
 def test_credit_is_not_duplicated(cube_window, tmp_path):
@@ -133,7 +143,8 @@ def test_credit_is_not_duplicated(cube_window, tmp_path):
     bundle = printables.build_bundle(
         cube_window, tmp_path / "out", title="Cube",
         description=once, formats=("scad",), views=())
-    assert bundle["description"].count("## Made with") == 1
+    assert bundle["description"].count(
+        printables.CREDIT_HEADING) == 1
 
 
 def test_metadata_records_where_it_came_from(cube_window, tmp_path):
@@ -170,7 +181,7 @@ def test_tool_is_in_the_schema():
 def test_tool_builds_a_bundle(cube_window, tmp_path):
     result = McpToolExecutor(cube_window).execute(
         "publish_to_printables",
-        {"title": "Cube", "description": "# Cube\n\nA cube.",
+        {"title": "Cube", "description": "CUBE\n\nA cube.",
          "folder": str(tmp_path / "out"), "formats": ["scad"],
          "views": []})
     assert "error" not in result
@@ -216,3 +227,100 @@ def test_tool_never_opens_the_browser_unasked(cube_window, tmp_path,
 
 def test_the_bundle_formats_match_the_schema():
     assert set(FORMATS) == {"stl", "3mf", "scad", "kcad"}
+
+
+# ── the upload form ─────────────────────────────────────────────
+
+def test_summary_fits_printables_limit(cube_window):
+    text = printables.default_summary(cube_window, "A cube with a "
+                                                   "very long name " * 4)
+    assert len(text) <= printables.SUMMARY_LIMIT
+
+
+def test_summary_names_the_model_and_its_size(cube_window):
+    text = printables.default_summary(cube_window, "Cube")
+    assert text.startswith("Cube")
+    assert "20 x 20 x 20 mm" in text
+
+
+def test_form_answers_every_required_field(cube_window):
+    text = printables.form_answers(
+        cube_window, title="Cube", summary="A cube",
+        tags=["cube", "test"], category="Household",
+        license="CC BY 4.0")
+    for field in ("Model name", "Summary", "Main category",
+                  "Additional tags", "Model origin", "Licence"):
+        assert field in text
+    assert "Cube" in text and "A cube" in text
+    assert "Household" in text
+    assert "cube test" in text
+    assert printables.DEFAULT_ORIGIN in text
+
+
+def test_bundle_records_the_form_answers(cube_window, tmp_path):
+    import json
+    bundle = printables.build_bundle(
+        cube_window, tmp_path / "out", title="Cube", summary="A cube",
+        category="Household", formats=("scad",), views=())
+    meta = json.loads((tmp_path / "out" / "printables.json")
+                      .read_text())
+    assert meta["summary"] == "A cube"
+    assert meta["category"] == "Household"
+    assert meta["origin"] == printables.DEFAULT_ORIGIN
+    assert bundle["summary"] == "A cube"
+    assert "Household" in Path(bundle["form"]).read_text()
+
+
+def test_a_long_summary_is_trimmed_with_a_warning(cube_window,
+                                                  tmp_path):
+    bundle = printables.build_bundle(
+        cube_window, tmp_path / "out", title="Cube", summary="x" * 300,
+        formats=("scad",), views=())
+    assert len(bundle["summary"]) <= printables.SUMMARY_LIMIT
+    assert any("summary" in w for w in bundle["warnings"])
+
+
+def test_the_cover_render_comes_first(cube_window, tmp_path):
+    bundle = printables.build_bundle(
+        cube_window, tmp_path / "out", title="Cube", formats=("scad",),
+        views=("Front", "Isometric"))
+    names = [Path(p).name for p in bundle["images"]]
+    assert names[0] == "Cube-1-isometric.png"
+
+
+def test_tool_rejects_an_unknown_category(cube_window, tmp_path):
+    result = McpToolExecutor(cube_window).execute(
+        "publish_to_printables",
+        {"title": "Cube", "folder": str(tmp_path / "out"),
+         "category": "Spaceships"})
+    assert "Spaceships" in result["error"]
+
+
+def test_a_render_is_cropped_to_the_model(tmp_path):
+    """OpenSCAD frames the bounding sphere, so a small part sits in a
+    sea of background — the cover has to be trimmed to it."""
+    from PyQt5.QtGui import QColor, QImage
+    image = QImage(800, 600, QImage.Format_RGB32)
+    image.fill(QColor("white"))
+    for y in range(290, 310):
+        for x in range(390, 410):
+            image.setPixelColor(x, y, QColor("black"))
+    path = tmp_path / "shot.png"
+    image.save(str(path))
+
+    assert printables.trim_to_content(str(path))
+    out = QImage(str(path))
+    assert out.width() < 800
+    assert out.width() >= 800 * 0.45      # never trimmed to a stamp
+    assert abs(out.width() / out.height() - 4 / 3.0) < 0.05
+
+
+def test_a_full_frame_render_is_left_alone(tmp_path):
+    from PyQt5.QtGui import QColor, QImage
+    image = QImage(800, 600, QImage.Format_RGB32)
+    image.fill(QColor("black"))
+    image.setPixelColor(0, 0, QColor("white"))
+    path = tmp_path / "full.png"
+    image.save(str(path))
+    assert not printables.trim_to_content(str(path))
+    assert QImage(str(path)).width() == 800

@@ -33,6 +33,23 @@ LICENSES = [
 ]
 DEFAULT_LICENSE = "CC BY-SA 4.0"
 
+#: Printables' add-a-model form asks for a main category, a one-line
+#: summary and where the design came from, and none of those are in the
+#: geometry — so the bundle answers them and the tool takes them.
+CATEGORIES = [
+    "3D Printing", "Art & Design", "Costumes & Accessories", "Fashion",
+    "Gadgets", "Healthcare", "Hobby & Makers", "Household", "Learning",
+    "Models", "Seasonal Designs", "Sports & Outdoor", "Tools",
+    "Toys & Games", "World & Scans",
+]
+DEFAULT_CATEGORY = "Hobby & Makers"
+ORIGINS = ["My own design", "A remix", "A scan",
+           "Someone else's design"]
+DEFAULT_ORIGIN = ORIGINS[0]
+
+#: Printables caps the summary field.
+SUMMARY_LIMIT = 120
+
 #: What the bundle can contain, by extension.
 FORMATS = ("stl", "3mf", "scad", "kcad")
 
@@ -578,7 +595,9 @@ TOOLS = [
             "Build a complete Printables upload bundle for the open "
             "model in one call: the mesh (STL and 3MF), the "
             "parametric .scad source, the .kcad project, preview "
-            "renders from several camera angles, and description.md. "
+            "renders from several camera angles, description.txt "
+            "and upload-form.txt (every field of Printables' add-a-"
+            "model form, already answered). "
             "Printables has NO upload API, so this does not and "
             "cannot post the model — it prepares everything and the "
             "user drops the folder into printables.com themselves. "
@@ -588,7 +607,9 @@ TOOLS = [
             "the model first (get_document_info, list_tree, "
             "render_view) and describe what the thing actually is, "
             "what it is for, its size in mm, which variables are "
-            "worth changing, and suggested print settings. Markdown. "
+            "worth changing, and suggested print settings. PLAIN "
+            "TEXT, not Markdown — Printables' description box shows "
+            "hashes and backticks back as literal characters. "
             "Leaving `description` out falls back to a generated "
             "skeleton, which is worse. Whatever you write, the "
             "bundle appends a credit naming KherveCAD "
@@ -602,7 +623,20 @@ TOOLS = [
                                      "stem."},
             "description": {"type": "string",
                             "description": "The listing body, in "
-                                           "Markdown. Write this."},
+                                           "plain text. Write this."},
+            "summary": {"type": "string",
+                        "description": "Printables' required one-line "
+                                       "summary, max %d characters. "
+                                       "Write this too." %
+                                       SUMMARY_LIMIT},
+            "category": {"type": "string", "enum": CATEGORIES,
+                         "description": "Printables' required main "
+                                        "category. Defaults to %s." %
+                                        DEFAULT_CATEGORY},
+            "origin": {"type": "string", "enum": ORIGINS,
+                       "description": "Where the model came from. "
+                                      "Defaults to %s." %
+                                      DEFAULT_ORIGIN},
             "tags": {"type": "array", "items": {"type": "string"},
                      "description": "Printables tags, lowercase."},
             "license": {"type": "string", "enum": LICENSES,
