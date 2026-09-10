@@ -821,6 +821,69 @@ class McpToolExecutor:
                 "re-solve.")
         return result
 
+    def _t_set_pose(self, params) -> dict:
+        from . import expr
+        wanted = params.get("joints")
+        if not isinstance(wanted, dict):
+            raise ToolError("'joints' must be an object: "
+                            "{\"<joint name or id>\": {\"rx\": deg}}.")
+        model, env = self._model, self._env()
+        joints = [n for n in model.root.walk() if n.type == "joint"]
+        index = {}
+        for joint in joints:
+            index.setdefault(str(joint.id), joint)
+            index.setdefault(joint.name.lower(), joint)
+
+        def num(node, key, default):
+            try:
+                return float(expr.resolve(node.params.get(key, default),
+                                          env, default))
+            except Exception:
+                return default
+        # check everything first: a typo halfway must not leave half
+        # a pose applied
+        plan, clamped = [], []
+        for key, angles in wanted.items():
+            joint = index.get(str(key).lower())
+            if joint is None:
+                names = ", ".join(j.name for j in joints) or \
+                    "none yet — wrap a part in a joint node first"
+                raise ToolError(f"No joint called {key!r}. Joints: {names}.")
+            if not isinstance(angles, dict) or not angles or \
+                    set(angles) - {"rx", "ry", "rz"}:
+                raise ToolError(f"The pose for {joint.name} must be an "
+                                "object of rx / ry / rz angles in degrees.")
+            lo = num(joint, "min_angle", -180.0)
+            hi = num(joint, "max_angle", 180.0)
+            for axis, value in angles.items():
+                try:
+                    angle = float(value)
+                except (TypeError, ValueError):
+                    raise ToolError(f"{joint.name}.{axis} must be a "
+                                    "number of degrees.")
+                kept = min(max(angle, lo), hi)
+                if kept != angle:
+                    clamped.append({"joint": joint.name, "axis": axis,
+                                    "asked": angle, "set": kept})
+                plan.append((joint, axis, kept))
+        for joint, axis, angle in plan:
+            model.set_param(joint, axis, angle)
+        result = {
+            "posed": list(dict.fromkeys(j.name for j, _a, _v in plan)),
+            "joints": [{"id": j.id, "name": j.name,
+                        "angles": [round(num(j, k, 0.0), 3)
+                                   for k in ("rx", "ry", "rz")],
+                        "pivot": [round(num(j, k, 0.0), 3)
+                                  for k in ("px", "py", "pz")],
+                        "limits": [num(j, "min_angle", -180.0),
+                                   num(j, "max_angle", 180.0)]}
+                       for j in joints]}
+        if clamped:
+            result["clamped"] = clamped
+            result["note"] = ("Some angles were past a joint's limits "
+                              "and were clamped to them.")
+        return result
+
     def _t_wrap_nodes(self, params) -> dict:
         op = str(params.get("operation", ""))
         if op not in WRAP_TYPES:

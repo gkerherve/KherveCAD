@@ -821,6 +821,8 @@ class CadNode:
             return (f"translate([{fmt(p['x'])}, {fmt(p['y'])}, "
                     f"{fmt(p['z'])}]) "
                     f"import({scad_str(p['path'])}, convexity=10)")
+        if t in _organic.TYPES:
+            return _organic.statement(self, fmt, _fn)
         raise ValueError(f"no codegen for type: {t}")   # pragma: no cover
 
 
@@ -1023,6 +1025,9 @@ class DocumentModel(QObject):
         _HOISTED = {n.id for n in hoisted}
         _REF_STACK.clear()
         try:
+            # helper modules for organic nodes, defined once up top
+            for text in _organic.preamble(self.root):
+                lines.append((text, None))
             for definition in hoisted:
                 definition.emit_module(lines, 0, spans)
             if only is None:
@@ -1538,6 +1543,10 @@ def _check_node(node, env, errors):
             except expr.ExprError as exc:
                 return f"values: {exc}"
 
+    if t in _organic.TYPES:
+        message = _organic.check(node, env)
+        if message:
+            return message
     if t == "polygon" and len(p.get("points", [])) < 3:
         return "polygon needs at least 3 points"
     if t == "stl_import":
@@ -1583,3 +1592,11 @@ def _contains_3d(node) -> bool:
                 n.type in ("linear_extrude", "rotate_extrude"):
             return True
     return False
+
+
+# Organic node types (capsule, ellipsoid, rounded box, symmetry, joint)
+# live in organic.py. Registered last, so that module needs nothing
+# from this one at import time.
+from . import organic as _organic  # noqa: E402
+
+_organic.register(NODE_TYPES, CONTAINER_TYPES)

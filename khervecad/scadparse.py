@@ -887,6 +887,10 @@ _BUILDERS = {
     "hull": _simple("hull", "Hull"),
     "minkowski": _simple("minkowski", "Minkowski"),
 }
+# kcad_* helper-module calls rebuild the organic nodes they came from
+from . import organic as _organic  # noqa: E402
+
+_BUILDERS.update(_organic.BUILDERS)
 
 #: shape types whose x/y(/z) a wrapping translate can be folded into.
 _FOLDABLE = {"circle", "rect", "polygon", "text", "cube", "sphere",
@@ -968,6 +972,7 @@ def _is_zero(value):
 _GEOMETRY_LEAVES = {
     "cube", "sphere", "cylinder", "stl_import", "circle", "rect",
     "polygon", "text", "line", "scad_raw", "reference",
+    "capsule", "ellipsoid", "rounded_box",
 }
 #: Container/operation types that are meaningless when they wrap no
 #: geometry — pruned on import so a skipped ``children()`` does not leave
@@ -976,7 +981,7 @@ _PRUNE_WHEN_DEAD = {
     "translate", "rotate", "scale", "mirror", "offset", "color",
     "linear_extrude", "rotate_extrude", "projection",
     "union", "difference", "intersection", "hull", "minkowski",
-    "if_else",
+    "if_else", "symmetry", "joint",
 }
 
 

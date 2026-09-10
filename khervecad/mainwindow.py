@@ -57,13 +57,15 @@ MEASURE_TOOLS = [
 ]
 
 #: 3D primitives added with one click.
-PRIMITIVES = ["cube", "sphere", "cylinder"]
+PRIMITIVES = ["cube", "sphere", "cylinder", "capsule", "ellipsoid",
+              "rounded_box"]
 
 #: operations in the horizontal toolbar (applied to the selection —
 #: control-flow tools insert standalone when nothing is selected).
 OPERATIONS = ["linear_extrude", "rotate_extrude", "translate", "rotate",
-              "scale", "mirror", "union", "difference", "intersection",
-              "for_loop", "while_loop", "if_else"]
+              "scale", "mirror", "symmetry", "joint", "union",
+              "difference", "intersection", "for_loop", "while_loop",
+              "if_else"]
 
 
 class MainWindow(QMainWindow):

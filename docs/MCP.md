@@ -6,7 +6,7 @@ Cursor, Zed, Continue, or anything else that speaks the Model Context
 Protocol — can build in an open document directly.
 
 The built-in chat replies with an OpenSCAD program you then apply. An
-MCP client gets the **whole application** instead: 37 tools over the
+MCP client gets the **whole application** instead: 38 tools over the
 object tree, the code, the part library, assemblies, the document —
 and a **picture of the 3D preview**.
 
@@ -93,6 +93,27 @@ Practical consequences:
 - Node ids come from `list_tree`. They live as long as the node does,
   but undo and open rebuild the tree from a snapshot — re-read them
   afterwards.
+
+## Characters and organic shapes
+
+Five node types exist for soft, symmetric, posable models — the
+things a cube and a `difference()` do not give you:
+
+| Node | What it is | In OpenSCAD |
+| --- | --- | --- |
+| `capsule` | a rod with round ends between two points | `kcad_capsule(a, b, r)` |
+| `ellipsoid` | a sphere with three radii | `kcad_ellipsoid(c, r = [rx, ry, rz])` |
+| `rounded_box` | a box with a fillet radius on every edge | `kcad_rounded_box(p, size, r, center)` |
+| `symmetry` | its children **plus** their mirror image — edit one half | `kcad_symmetry(n, c) { ... }` |
+| `joint` | rotates its children about a pivot, within limits | `kcad_joint(pivot, a, limits) { ... }` |
+
+They compile to calls of small `kcad_*` helper modules, defined once at
+the top of any program that uses them, so an exported `.scad` is still
+plain OpenSCAD — and `apply_code` understands the calls directly, so a
+limb is one line instead of a chain of hulls. Joints nest (a hand in a
+forearm in an upper arm), which makes the tree the armature:
+**`set_pose`** then bends any number of joints by name in one call,
+clamped to each joint's limits.
 
 ## What the preview is showing
 

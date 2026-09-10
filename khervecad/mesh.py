@@ -21,6 +21,7 @@ from pathlib import Path
 
 from . import expr
 from .model import SHAPE_2D, CadNode
+from . import organic
 
 #: a mesh is a list of triangles; a triangle is 3 (x, y, z) tuples.
 
@@ -51,7 +52,8 @@ def rv(value, env=None, default=0.0) -> float:
 #: round object types whose segment count the document-wide $fn
 #: override replaces (linear_extrude's "segments" means slices, so it
 #: is deliberately excluded).
-_FN_TYPES = {"circle", "cylinder", "sphere", "rotate_extrude"}
+_FN_TYPES = {"circle", "cylinder", "sphere", "rotate_extrude",
+             "capsule", "ellipsoid", "rounded_box"}
 _FN_OVERRIDE = None
 
 #: {str(node id): node} for Linked-copy references + cycle-guard stack;
@@ -1021,6 +1023,8 @@ def _tess(node, env, color, sel, selected):
         return _emit(cylinder_mesh(rp(node, env)), color, selected)
     if t == "stl_import":
         return _emit(stl_mesh(rp(node, env)), color, selected)
+    if t in organic.TYPES:
+        return organic.tess(node, env, color, sel, selected)
     if node.category == SHAPE_2D:
         return _emit(flat_mesh(node, env), color, selected)
     return []                                 # pragma: no cover

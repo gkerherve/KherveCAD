@@ -512,6 +512,27 @@ into a new module and import.
                        Claude is appended to whatever description
                        comes in, once, and names only the source files
                        actually shipped.
+  - `organic.py`     — **organic nodes** for characters: `capsule`,
+                       `ellipsoid`, `rounded_box`, `symmetry` (its
+                       children plus their mirror image — edit one
+                       half) and `joint` (rotate children about a
+                       pivot; joints nest, so the tree is the
+                       armature — `set_pose` MCP tool). Each compiles
+                       to ONE call of a `kcad_*` helper module whose
+                       definition `preamble()` puts at the top of any
+                       program using it (`to_scad_map`), so exported
+                       .scad stays standalone OpenSCAD; `BUILDERS`
+                       teach scadparse the `kcad_*` names, so import
+                       rebuilds the same node (lossless, and an
+                       assistant can write the calls directly). No
+                       package imports at module level: registered
+                       from the BOTTOM of model.py (`register()`
+                       updates NODE_TYPES and CONTAINER_TYPES in
+                       place).
+  - `geom3d.py`     — 3D **convex hull** (quickhull with conflict
+                       lists, Qt-free): the capsule and rounded box
+                       are hulls of spheres, so they preview as
+                       what they are.
   - `section.py`     — planar **cross-sections** of a mesh (Qt-free):
                        `cut()` orients every segment with the solid
                        on its left, so outer outlines run CCW, holes
@@ -519,7 +540,7 @@ into a new module and import.
                        `chain()` joins them (an outline that cannot
                        close = the mesh leaks there); `draw()` paints
                        the hatched section. Behind the `section` tool.
-  - `mcp_schema.py`  — the **MCP tool table**: 37 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 38 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -573,7 +594,7 @@ into a new module and import.
                        enable/disable, access
                        level, one-click host connect, hand-config
                        snippets and a live activity log.
-- `docs/MCP.md` — how to connect an assistant, what the 37 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 38 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -629,6 +650,10 @@ into a new module and import.
   nothing for it (`mesh._tess` returns `[]`). Hidden ⇒ emits nothing
   (raw code can't take the `*` modifier). Insert via Insert > OpenSCAD
   code.
+- Organic nodes (`capsule`, `ellipsoid`, `rounded_box`,
+  `symmetry`, `joint`) — see `organic.py`: they compile to
+  `kcad_*` helper-module calls with the helpers emitted once at the
+  top of the program, and re-import losslessly.
 - Control flow (`for_loop`, `while_loop`, `if_else`, `assign`).
   `while` has no OpenSCAD equivalent, so codegen unrolls it into a
   value-list `for` (capped at 1000 iterations); it re-imports as a
@@ -802,7 +827,7 @@ release the website links to. See `README.macos.md`.
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **37 tools**: the object tree, OpenSCAD in
+client gets the whole app as **38 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

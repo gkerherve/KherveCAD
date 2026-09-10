@@ -69,7 +69,7 @@ WRAP_TYPES = [
     "union", "difference", "intersection", "hull", "minkowski",
     "linear_extrude", "rotate_extrude", "translate", "rotate", "scale",
     "mirror", "offset", "projection", "color", "for_loop",
-    "while_loop", "if_else", "component",
+    "while_loop", "if_else", "component", "symmetry", "joint",
 ]
 
 
@@ -485,6 +485,27 @@ TOOLS = [
                 }, ["id"]),
             },
         }, ["changes"]),
+    },
+    {
+        "name": "set_pose",
+        "description": (
+            "Pose a character in one call: set the bend angles of any "
+            "number of `joint` nodes, by name or id. A joint rotates "
+            "everything inside it about its pivot, and joints nest — a "
+            "hand in a forearm in an upper arm — so the tree IS the "
+            "armature and a pose is a handful of angles. Angles past a "
+            "joint's min/max limits are clamped (and reported). The "
+            "result lists every joint with its pivot and angles; pass "
+            "{} to just list them."
+        ),
+        "input_schema": _obj({
+            "joints": {
+                "type": "object",
+                "description": "{\"<joint name or id>\": {\"rx\": deg, "
+                               "\"ry\": deg, \"rz\": deg}, ...}. An "
+                               "axis left out keeps its angle.",
+            },
+        }, ["joints"]),
     },
     {
         "name": "wrap_nodes",
