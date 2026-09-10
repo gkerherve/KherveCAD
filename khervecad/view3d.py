@@ -150,6 +150,10 @@ class View3D(QWidget):
     #: object turns red while keeping its own shading and its holes.
     HIGHLIGHT_COLOR = "#ff2d2d"
 
+    #: the camera's near clipping distance (mm). Geometry closer than
+    #: this is cut away at the plane, never dropped whole (paintEvent).
+    NEAR_PLANE = 0.1
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.mesh = []                  # [(v0, v1, v2)] world space
@@ -549,7 +553,7 @@ class View3D(QWidget):
         cx = dx * right[0] + dy * right[1] + dz * right[2]
         cy = dx * up[0] + dy * up[1] + dz * up[2]
         cz = dx * forward[0] + dy * forward[1] + dz * forward[2]
-        if cz < 0.1:
+        if cz < self.NEAR_PLANE:
             return None
         f = self._focal()
         return (self.width() / 2 + f * cx / cz,
@@ -607,15 +611,57 @@ class View3D(QWidget):
         lx, ly, lz = light
         hax, hay, haz = half
 
-        def proj(v):
-            dx = v[0] - ex
-            dy = v[1] - ey
-            dz = v[2] - ez
-            cz = dx * fxa + dy * fya + dz * fza
-            if cz < 0.1:
+        near = self.NEAR_PLANE
+
+        def clip_proj(tri):
+            """Screen points of *tri*, clipped to the near plane.
+
+            A triangle reaching behind the camera is cut at the plane,
+            not dropped: OpenSCAD meshes are full of long slivers that
+            run the length of an edge, and in a close-up one far vertex
+            slips behind the eye first — dropping the whole sliver
+            opened a strip of background across the surface (the
+            "white seams"). Returns 3-4 (x, y, depth) points, or None
+            when the triangle lies wholly behind the camera."""
+            a, b, c = tri
+            ax = a[0] - ex; ay = a[1] - ey; az = a[2] - ez
+            bx = b[0] - ex; by = b[1] - ey; bz = b[2] - ez
+            cx = c[0] - ex; cy = c[1] - ey; cz = c[2] - ez
+            z0 = ax * fxa + ay * fya + az * fza
+            z1 = bx * fxa + by * fya + bz * fza
+            z2 = cx * fxa + cy * fya + cz * fza
+            if z0 >= near and z1 >= near and z2 >= near:
+                return ((hw + f * (ax * rx + ay * ry + az * rz) / z0,
+                         hh - f * (ax * uxa + ay * uya + az * uza) / z0,
+                         z0),
+                        (hw + f * (bx * rx + by * ry + bz * rz) / z1,
+                         hh - f * (bx * uxa + by * uya + bz * uza) / z1,
+                         z1),
+                        (hw + f * (cx * rx + cy * ry + cz * rz) / z2,
+                         hh - f * (cx * uxa + cy * uya + cz * uza) / z2,
+                         z2))
+            if z0 < near and z1 < near and z2 < near:
                 return None
-            return (hw + f * (dx * rx + dy * ry + dz * rz) / cz,
-                    hh - f * (dx * uxa + dy * uya + dz * uza) / cz, cz)
+            ring = ((ax * rx + ay * ry + az * rz,
+                     ax * uxa + ay * uya + az * uza, z0),
+                    (bx * rx + by * ry + bz * rz,
+                     bx * uxa + by * uya + bz * uza, z1),
+                    (cx * rx + cy * ry + cz * rz,
+                     cx * uxa + cy * uya + cz * uza, z2))
+            out = []
+            for i in range(3):              # Sutherland-Hodgman, 1 plane
+                p = ring[i]
+                q = ring[(i + 1) % 3]
+                p_in = p[2] >= near
+                if p_in:
+                    out.append((hw + f * p[0] / p[2],
+                                hh - f * p[1] / p[2], p[2]))
+                if p_in != (q[2] >= near):
+                    t = (near - p[2]) / (q[2] - p[2])
+                    out.append((hw + f * (p[0] + (q[0] - p[0]) * t) / near,
+                                hh - f * (p[1] + (q[1] - p[1]) * t) / near,
+                                near))
+            return out
 
         faces = []
         append = faces.append
@@ -633,24 +679,18 @@ class View3D(QWidget):
             l2 = nx * nx + ny * ny + nz * nz
             if l2 < 1e-24:
                 continue
-            p0 = proj(a)
-            if p0 is None:
-                continue
-            p1 = proj(b)
-            if p1 is None:
-                continue
-            p2 = proj(c)
-            if p2 is None:
+            pts = clip_proj(tri)
+            if pts is None:
                 continue
             inv = 1.0 / math.sqrt(l2)
             nx *= inv
             ny *= inv
             nz *= inv
-            depth = (p0[2] + p1[2] + p2[2]) / 3
+            depth = sum(p[2] for p in pts) / len(pts)
             shade = abs(nx * lx + ny * ly + nz * lz)
             spec = max(nx * hax + ny * hay + nz * haz, 0.0)
             face_color = colors[index] if colors else None
-            append((depth, (p0, p1, p2), shade, spec, face_color))
+            append((depth, pts, shade, spec, face_color))
 
         # The selected object is NOT drawn into the depth sort: its
         # triangles come from the built-in tessellator while `mesh` may
@@ -661,18 +701,10 @@ class View3D(QWidget):
         # a flat tint mask once the model is painted.
         hi_polys = []
         for tri in hmesh:
-            p0 = proj(tri[0])
-            if p0 is None:
-                continue
-            p1 = proj(tri[1])
-            if p1 is None:
-                continue
-            p2 = proj(tri[2])
-            if p2 is None:
-                continue
-            hi_polys.append(QPolygonF([QPointF(p0[0], p0[1]),
-                                       QPointF(p1[0], p1[1]),
-                                       QPointF(p2[0], p2[1])]))
+            pts = clip_proj(tri)
+            if pts is not None:
+                hi_polys.append(QPolygonF([QPointF(p[0], p[1])
+                                           for p in pts]))
 
         faces.sort(key=lambda fc: -fc[0])
         lighting = self._light()                # sliders, None when centred

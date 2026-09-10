@@ -515,3 +515,70 @@ def test_colouring_cancels_a_render_that_would_wipe_it(app):
     assert window.engine._pending_code is None       # coloured: cancelled
     colors = window.view3d.colors
     assert colors and any(c is not None for c in colors)
+
+
+def _render(view):
+    """The view painted into a pixel-addressable image."""
+    from PyQt5.QtCore import QSize
+    from PyQt5.QtGui import QImage, QPainter
+    img = QImage(QSize(view.width(), view.height()), QImage.Format_ARGB32)
+    img.fill(0)
+    painter = QPainter(img)
+    view.render(painter)
+    painter.end()
+    return img
+
+
+def _close_up(view):
+    """Park the camera 5 mm above a point on the floor."""
+    view.yaw, view.pitch = 35.0, 22.0
+    view.target, view.distance = [0.0, 0.0, 0.0], 5.0
+
+
+def test_close_up_clips_faces_instead_of_dropping_them(app):
+    """A face reaching behind the camera is clipped at the near plane,
+    not dropped whole. Dropping it opened strips of background across
+    a close-up of an OpenSCAD mesh — the long edge slivers lose one
+    vertex behind the eye first — which read as white seams."""
+    floor = [((-500, -500, 0), (500, -500, 0), (500, 500, 0)),
+             ((-500, -500, 0), (500, 500, 0), (-500, 500, 0))]
+    view = View3D()
+    view.resize(300, 300)
+    view.set_style("Shaded")
+    view.set_mesh([], "test")
+    _close_up(view)
+    empty = _render(view)
+    view.set_mesh(floor, "test")
+    _close_up(view)
+    # the premise: every face has a corner behind the eye
+    eye, _right, _up, forward = view._camera()
+    for tri in floor:
+        assert any(sum((v[i] - eye[i]) * forward[i] for i in range(3))
+                   < view.NEAR_PLANE for v in tri)
+    drawn = _render(view)
+    probes = [(x, y) for x in range(40, 261, 20)
+              for y in range(120, 261, 20)]
+    covered = 0
+    for x, y in probes:
+        a, b = empty.pixelColor(x, y), drawn.pixelColor(x, y)
+        if (abs(a.red() - b.red()) + abs(a.green() - b.green())
+                + abs(a.blue() - b.blue())) > 20:
+            covered += 1
+    # a few probes may land on the axis gizmo, drawn over both images
+    assert covered >= 0.9 * len(probes), \
+        f"{len(probes) - covered}/{len(probes)} px show the background"
+
+
+def test_near_clip_keeps_faces_in_front_untouched(app):
+    """Clipping must not bend a face that is wholly in front: the
+    ordinary path still paints a fitted cube solid."""
+    view = View3D()
+    view.resize(200, 200)
+    view.set_mesh(_cube(), "test")
+    view.fit()
+    img = _render(view)
+    view.set_mesh([], "test")
+    bg = _render(view)
+    a, b = img.pixelColor(100, 100), bg.pixelColor(100, 100)
+    assert (abs(a.red() - b.red()) + abs(a.green() - b.green())
+            + abs(a.blue() - b.blue())) > 20
