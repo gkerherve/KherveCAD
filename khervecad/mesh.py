@@ -890,10 +890,11 @@ def _tess(node, env, color, sel, selected):
         # flattens 3D to a 2D outline — a 2D result the mesh preview
         # can't represent; the OpenSCAD engine renders it.
         return []
-    if t in ("root", "hull", "variables"):
-        # 3D hull is approximated as the union of its children;
+    if t in ("root", "variables"):
         # "variables" only holds assignments, so it adds no geometry.
         return _children_mesh(node, env, color, sel, selected)
+    if t == "hull":
+        return _hull_mesh(node, env, color, sel, selected)
     if t == "reference":
         # a Linked copy renders its master's geometry, moved/rotated.
         # When the master is an **Object**, this is an assembly
@@ -1028,6 +1029,33 @@ def _tess(node, env, color, sel, selected):
     if node.category == SHAPE_2D:
         return _emit(flat_mesh(node, env), color, selected)
     return []                                 # pragma: no cover
+
+
+#: past this many points a hull previews as the union of its children
+#: rather than stall the GUI thread (the exact render is still exact)
+HULL_POINT_LIMIT = 60000
+
+
+def _hull_mesh(node, env, color, sel, selected):
+    """A 3D hull is the convex hull of its children (geom3d) — a chain
+    of hulled spheres previews as the capsule it is, not as a string of
+    beads. A flat (2D) hull has no volume to hull and keeps the union
+    of its children, as before."""
+    from . import geom3d
+    parts = _children_mesh(node, env, color, sel, selected)
+    pts = [v for tri, _c, _s in parts for v in tri]
+    if not 4 <= len(pts) <= HULL_POINT_LIMIT:
+        return parts
+    tris = geom3d.convex_hull(pts)
+    if not tris:
+        return parts                            # coplanar: a 2D hull
+    own = color if color is not None else next(
+        (c for _t, c, _s in parts if c is not None), None)
+    out = _emit(tris, own, selected)
+    if sel and not selected:
+        # a selected operand still needs its own triangles to glow
+        out.extend(item for item in parts if item[2])
+    return out
 
 
 def _transform_colored(matrix, marked):

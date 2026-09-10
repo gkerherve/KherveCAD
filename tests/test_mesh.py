@@ -162,3 +162,58 @@ def test_rp_survives_a_list_param_that_is_not_points():
     poly = CadNode("polygon", "P", dict(points=[[0, 0], [10, 0], ["5*2", 8]]))
     assert mesh.rp(poly)["points"] == [[0.0, 0.0], [10.0, 0.0],
                                        [10.0, 8.0]]
+
+
+# ── hull: a real convex hull in the built-in preview ───────────────
+
+def _hull_bounds(tris):
+    pts = [v for tri in tris for v in tri]
+    return ([min(p[i] for p in pts) for i in range(3)],
+            [max(p[i] for p in pts) for i in range(3)])
+
+
+def test_hull_of_two_spheres_is_one_convex_capsule():
+    """Previously drawn as the two spheres (a union); now the hull."""
+    from khervecad.model import DocumentModel
+    from khervecad import mesh as _mesh
+    doc = DocumentModel()
+    a = doc.add_node("sphere", dict(radius=5.0, segments=24))
+    b = doc.add_node("sphere", dict(z=30.0, radius=5.0, segments=24))
+    doc.wrap_nodes([a, b], "hull")
+    tris = _mesh.tessellate(doc.root)
+    lo, hi = _hull_bounds(tris)
+    assert lo == pytest.approx([-5, -5, -5], abs=0.05)
+    assert hi == pytest.approx([5, 5, 35], abs=0.05)
+    # the waist between the spheres is filled: a point there is inside
+    # every face plane of the (convex) result
+    mid = (4.5, 0.0, 15.0)
+    for p, q, r in tris:
+        u = [q[i] - p[i] for i in range(3)]
+        v = [r[i] - p[i] for i in range(3)]
+        n = (u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2],
+             u[0] * v[1] - u[1] * v[0])
+        assert sum(n[i] * (mid[i] - p[i]) for i in range(3)) < 1e-6
+
+
+def test_a_flat_hull_keeps_its_2d_union():
+    """A 2D hull (two circles) has no volume: the flat preview stays."""
+    from khervecad.model import DocumentModel
+    from khervecad import mesh as _mesh
+    doc = DocumentModel()
+    a = doc.add_node("circle", dict(radius=3.0))
+    b = doc.add_node("circle", dict(x=20.0, radius=3.0))
+    doc.wrap_nodes([a, b], "hull")
+    tris = _mesh.tessellate(doc.root)
+    assert tris and all(abs(v[2]) < 1e-9 for t in tris for v in t)
+
+
+def test_a_selected_operand_inside_a_hull_still_highlights():
+    from khervecad.model import DocumentModel
+    from khervecad import mesh as _mesh
+    doc = DocumentModel()
+    a = doc.add_node("sphere", dict(radius=5.0, segments=16))
+    b = doc.add_node("sphere", dict(z=30.0, radius=5.0, segments=16))
+    doc.wrap_nodes([a, b], "hull")
+    lit = _mesh.selected_world_tris(doc.root, {b.id})
+    lo, hi = _hull_bounds(lit)
+    assert lo[2] == pytest.approx(25.0, abs=0.05)   # just the top sphere
