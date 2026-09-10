@@ -63,7 +63,8 @@ PRIMITIVES = ["cube", "sphere", "cylinder", "capsule", "ellipsoid",
 #: operations in the horizontal toolbar (applied to the selection —
 #: control-flow tools insert standalone when nothing is selected).
 OPERATIONS = ["linear_extrude", "rotate_extrude", "translate", "rotate",
-              "scale", "mirror", "symmetry", "joint", "blend", "union",
+              "scale", "mirror", "symmetry", "joint", "blend", "bend",
+              "twist", "taper", "lattice", "subdivide", "union",
               "difference", "intersection", "for_loop", "while_loop",
               "if_else"]
 

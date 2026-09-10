@@ -55,11 +55,62 @@ NODE_TYPES = {
         params=dict(radius=4.0, detail=40),
         schema=[("radius", "Blend radius", "float", 0.0, 1e4),
                 ("detail", "Detail (cells across)", "int", 8, 160)]),
+    "bend": dict(
+        label="Bend", category=OPERATION, icon="mdi.arrow-u-right-top",
+        params=dict(axis="z", toward="x", angle=45.0, detail=2.0),
+        schema=[("axis", "Length axis", "choice", ["x", "y", "z"], None),
+                ("toward", "Bend toward", "choice", ["x", "y", "z"], None),
+                ("angle", "Angle°", "float", -720.0, 720.0),
+                ("detail", "Max edge (mm)", "float", 0.05, 1e4)]),
+    "twist": dict(
+        label="Twist", category=OPERATION, icon="mdi.rotate-3d",
+        params=dict(axis="z", angle=90.0, detail=2.0),
+        schema=[("axis", "Axis", "choice", ["x", "y", "z"], None),
+                ("angle", "Angle° (over the length)", "float",
+                 -3600.0, 3600.0),
+                ("detail", "Max edge (mm)", "float", 0.05, 1e4)]),
+    "taper": dict(
+        label="Taper", category=OPERATION, icon="mdi.triangle-outline",
+        params=dict(axis="z", factor=0.5, detail=5.0),
+        schema=[("axis", "Axis", "choice", ["x", "y", "z"], None),
+                ("factor", "Scale at the far end", "float", 0.01, 100.0),
+                ("detail", "Max edge (mm)", "float", 0.05, 1e4)]),
+    "lattice": dict(
+        label="Lattice (free-form)", category=OPERATION, icon="mdi.grid",
+        params=dict(offsets=[[0.0, 0.0, 0.0] for _ in range(8)],
+                    detail=2.0),
+        schema=[("offsets", "Corner offsets (x fastest, then y, z)",
+                 "rows", ["dX", "dY", "dZ"], None),
+                ("detail", "Max edge (mm)", "float", 0.05, 1e4)]),
+    "subdivide": dict(
+        label="Subdivide (smooth)", category=OPERATION,
+        icon="mdi.circle-multiple-outline",
+        params=dict(levels=2),
+        schema=[("levels", "Levels", "int", 1, 4)]),
 }
 
 TYPES = frozenset(NODE_TYPES)
 LEAVES = frozenset({"polyhedron", "loft"})
-WRAPPERS = frozenset({"blend"})
+WRAPPERS = frozenset({"blend", "bend", "twist", "taper", "lattice",
+                      "subdivide"})
+
+#: wrappers whose surface is computed here and baked into the program,
+#: with their helper module's parameters (besides points and faces)
+_BAKED = {
+    "blend": [("radius", 0), ("detail", 40)],
+    "bend": [("axis", "z"), ("toward", "x"), ("angle", 0), ("detail", 2)],
+    "twist": [("axis", "z"), ("angle", 0), ("detail", 2)],
+    "taper": [("axis", "z"), ("factor", 1), ("detail", 5)],
+    "lattice": [("offsets", []), ("detail", 2)],
+    "subdivide": [("levels", 1)],
+}
+#: parameters written as quoted OpenSCAD strings
+_CHOICES = {"axis", "toward"}
+#: what a deformer cannot take from the preview mesh: booleans and the
+#: rest are only approximated there, so baking them would bake a wrong
+#: shape into the program
+_INEXACT = {"difference", "intersection", "minkowski", "offset",
+            "projection", "scad_raw"}
 
 #: set while generating code for reading rather than rendering
 #: (get_code): baked point/face arrays are summarised, not written out.
@@ -136,21 +187,33 @@ module kcad_loft(sections = [], sides = 24, smooth = 3, caps = "round") {
         polyhedron(points = pts, faces = faces, convexity = 10);
     }
 }""",
-    # the surface is computed in Python (sdf.py) and baked in; the
-    # children are kept in the call so the node round-trips, and the
-    # module simply never instantiates them
-    "blend": """\
-module kcad_blend(radius = 0, detail = 40, points = [], faces = []) {
-    polyhedron(points = points, faces = faces, convexity = 10);
-}""",
 }
+
+
+def _literal(value) -> str:
+    if isinstance(value, str):
+        return f'"{value}"'
+    if isinstance(value, list):
+        return "[]"
+    return str(value)
+
+
+# A baked node's surface is computed in Python and written into its
+# call; the children stay in the call's block so the node round-trips,
+# and the module simply never instantiates them.
+for _t, _args in _BAKED.items():
+    HELPERS[_t] = (
+        f"module kcad_{_t}("
+        + ", ".join(f"{k} = {_literal(v)}" for k, v in _args)
+        + ", points = [], faces = []) {\n"
+        "    polyhedron(points = points, faces = faces, convexity = 10);\n}")
 
 
 def preamble(root) -> list:
     """Helper-module source lines this module's nodes need."""
     used = {n.type for n in root.walk()}
     lines = []
-    for t in ("loft", "blend"):
+    for t in ("loft",) + tuple(_BAKED):
         if t in used:
             lines.extend(HELPERS[t].split("\n"))
     return lines
@@ -227,17 +290,46 @@ def _codegen_env(node) -> dict:
     return env
 
 
-def baked_blend(node, env):
-    """(points, faces, triangles) of a blend, cached by its content."""
-    from . import document, mesh, sdf
+def _compute(node, env) -> list:
+    """The triangles of a baked node, from scratch."""
+    from . import deform, mesh, sdf
+    p = node.params
+
+    def num(key, default):
+        return mesh.rv(p.get(key, default), env, default)
+    t = node.type
+    if t == "blend":
+        return sdf.blend(node, env, num("radius", 4.0),
+                         int(num("detail", 40.0)))
+    src = [tri for tri, _c, _s in
+           mesh._children_mesh(node, env, None, frozenset(), False)]
+    if t == "subdivide":
+        return deform.loop_subdivide(src, int(num("levels", 1.0)))
+    src = deform.split_long_edges(src, num("detail", 2.0))
+    axis = str(p.get("axis", "z"))
+    if t == "bend":
+        return deform.bend(src, axis, str(p.get("toward", "x")),
+                           num("angle", 0.0))
+    if t == "twist":
+        return deform.twist(src, axis, num("angle", 0.0))
+    if t == "taper":
+        return deform.taper(src, axis, num("factor", 1.0))
+    if t == "lattice":
+        rows = [[mesh.rv(v, env) for v in row]
+                for row in p.get("offsets") or []]
+        return deform.lattice(src, rows)
+    return src                                     # pragma: no cover
+
+
+def baked(node, env):
+    """(points, faces, triangles) of a baked node, cached by content."""
+    from . import document
     key = json.dumps([document.node_to_dict(node),
                       sorted((k, repr(v)) for k, v in env.items())],
                      sort_keys=True, default=str)
     hit = _CACHE.get(key)
     if hit is None:
-        p = node.params
-        tris = sdf.blend(node, env, mesh.rv(p.get("radius", 4.0), env, 4.0),
-                         int(mesh.rv(p.get("detail", 40), env, 40.0)))
+        tris = _compute(node, env)
         points, faces = to_polyhedron(tris)
         hit = _CACHE[key] = (points, faces, tris)
         while len(_CACHE) > _CACHE_SIZE:
@@ -252,14 +344,21 @@ def statement(node, fmt, fn) -> str:
     if node.type == "polyhedron":
         return (f"polyhedron(points = {_rows(p['points'], fmt)}, "
                 f"faces = {_rows(p['faces'], fmt)}, convexity = 10)")
-    if node.type == "blend":
-        from . import sdf
+    if node.type in _BAKED:
         try:
-            points, faces, _tris = baked_blend(node, _codegen_env(node))
-        except sdf.Unsupported:
+            points, faces, _tris = baked(node, _codegen_env(node))
+        except Exception:
             points, faces = [], []          # validation has flagged it
-        return (f"kcad_blend(radius = {fmt(p['radius'])}, "
-                f"detail = {fmt(p['detail'])},\n"
+
+        def arg(key, default):
+            value = p.get(key, default)
+            if key in _CHOICES:
+                return f'"{value}"'
+            if isinstance(value, list):
+                return _rows(value, fmt)
+            return fmt(value)
+        args = ", ".join(f"{k} = {arg(k, d)}" for k, d in _BAKED[node.type])
+        return (f"kcad_{node.type}({args},\n"
                 f"    points = {_rows_wrapped(points, fmt)},\n"
                 f"    faces = {_rows_wrapped(faces, fmt)})")
     if node.type == "loft":
@@ -311,21 +410,39 @@ def _b_loft(parser, positional, named):
         caps="flat" if caps == "flat" else "round"))
 
 
-def _b_blend(parser, positional, named):
-    from .model import CadNode
-    from .scadparse import _num
-    try:
-        detail = int(_num(named.get("detail", 40), 40))
-    except (TypeError, ValueError):
-        detail = 40
-    # the baked points/faces are ignored: the surface is recomputed from
-    # the children, which follow in the call's block
-    return CadNode("blend", "Smooth blend", dict(
-        radius=_num(named.get("radius", 4.0), 4.0), detail=detail))
+def _b_baked(kind):
+    """Builder for kcad_<kind>: the parameters come back; the baked
+    points/faces are ignored, since the surface is recomputed from the
+    children that follow in the call's block."""
+    def build(parser, positional, named):
+        from .model import CadNode
+        from .scadparse import _num
+        defaults = NODE_TYPES[kind]["params"]
+        params = {}
+        for key, _default in _BAKED[kind]:
+            value = named.get(key, defaults[key])
+            if key in _CHOICES:
+                params[key] = value if value in ("x", "y", "z") \
+                    else defaults[key]
+            elif key == "offsets":
+                params[key] = ([[_num(v) for v in row] for row in value
+                                if isinstance(row, list)]
+                               if isinstance(value, list)
+                               else [list(r) for r in defaults[key]])
+            elif (kind, key) in (("blend", "detail"),
+                                 ("subdivide", "levels")):
+                try:
+                    params[key] = int(_num(value, defaults[key]))
+                except (TypeError, ValueError):
+                    params[key] = defaults[key]
+            else:
+                params[key] = _num(value, defaults[key])
+        return CadNode(kind, NODE_TYPES[kind]["label"], params)
+    return build
 
 
-BUILDERS = {"polyhedron": _b_polyhedron, "kcad_loft": _b_loft,
-            "kcad_blend": _b_blend}
+BUILDERS = {"polyhedron": _b_polyhedron, "kcad_loft": _b_loft}
+BUILDERS.update({f"kcad_{t}": _b_baked(t) for t in _BAKED})
 
 
 # -------------------------------------------------------- validation
@@ -386,26 +503,46 @@ def check(node, env):
         return _check_polyhedron(node.params)
     if node.type == "loft":
         return _check_loft(node.params, env)
-    if node.type == "blend":
-        return _check_blend(node, env)
+    if node.type in _BAKED:
+        return _check_baked(node, env)
     return None
 
 
-def _check_blend(node, env):
+def _check_baked(node, env):
     from . import sdf
+    t = node.type
+    word = "blend" if t == "blend" else t
     parent = node.parent
     while parent is not None:
         if parent.type in ("for_loop", "while_loop", "if_else"):
             kind = parent.type.replace("_", " ").replace(" loop", "")
-            return (f"a blend is baked into one mesh, so it can't sit "
-                    f"inside a {kind} — put the {kind} inside the blend")
+            return (f"a {word} is baked into one mesh, so it can't sit "
+                    f"inside a {kind} — put the {kind} inside the {word}")
         parent = parent.parent
-    try:
-        sdf.leaves(node, env)
-    except sdf.Unsupported as exc:
-        return ("a blend merges spheres, cubes, cylinders, capsules, "
-                "ellipsoids and rounded boxes (and the transforms, groups, "
-                f"loops and joints around them) — {exc} is not one")
+    if t == "blend":
+        try:
+            sdf.leaves(node, env)
+        except sdf.Unsupported as exc:
+            return ("a blend merges spheres, cubes, cylinders, capsules, "
+                    "ellipsoids and rounded boxes (and the transforms, "
+                    f"groups, loops and joints around them) — {exc} is "
+                    "not one")
+        return None
+    bad = next((n for n in node.walk() if n is not node and n.visible
+                and n.type in _INEXACT), None)
+    if bad is not None:
+        return (f"a {word} reshapes the preview mesh, which cannot cut "
+                f"booleans — {bad.name} ({bad.type}) would be baked "
+                "wrong. Deform primitives, extrusions, lofts and groups")
+    p = node.params
+    if t == "bend" and p.get("axis") == p.get("toward"):
+        return "bend: the length axis and the bend direction must differ"
+    if t == "lattice":
+        rows = p.get("offsets") or []
+        if len(rows) != 8 or any(not isinstance(r, list) or len(r) != 3
+                                 for r in rows):
+            return ("lattice: give 8 corner offsets [dx, dy, dz] — x "
+                    "fastest, then y, then z")
     return None
 
 
@@ -429,11 +566,10 @@ def tess(node, env, color, sel, selected):
             for k in range(1, len(ring) - 1):
                 tris.append((pts[ring[0]], pts[ring[k]], pts[ring[k + 1]]))
         return mesh._emit(tris, color, selected)
-    if node.type == "blend":
-        from . import sdf
+    if node.type in _BAKED:
         try:
-            _points, _faces, tris = baked_blend(node, env)
-        except sdf.Unsupported:
+            _points, _faces, tris = baked(node, env)
+        except Exception:                  # validation has flagged it
             tris = []
         out = mesh._emit(tris, color, selected)
         if sel and not selected:

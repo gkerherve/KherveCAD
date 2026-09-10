@@ -573,6 +573,17 @@ into a new module and import.
                        arrays (`bake.ELIDE`) unless `full`, and a
                        statement may span lines (`CadNode.emit` splits
                        it so the line spans stay exact).
+  - `deform.py`      — **deformers and subdivision** (Qt-free): `bend`
+                       (neutral-axis arc, base fixed), `twist`, `taper`,
+                       `lattice` (trilinear FFD of the bounding box's 8
+                       corners) and Loop `subdivide`. Deformers first
+                       `split_long_edges` — decided per EDGE, so both
+                       triangles split alike: no T-junctions, the
+                       surface stays closed. The nodes (bake.py) bake
+                       like `blend` (one `_BAKED` table drives helper,
+                       codegen, builder, cache, validation) and read
+                       the children's PREVIEW mesh, so a boolean inside
+                       one is refused (it would bake a wrong shape).
   - `rowsedit.py`    — property editors for the `rows` schema kind (a
                        table: fixed columns, or free-length index lists
                        typed `0, 1, 2`; a non-numeric cell is kept as an

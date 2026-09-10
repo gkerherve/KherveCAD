@@ -27,7 +27,7 @@ from . import organic
 
 #: params that stay strings (never resolved to numbers).
 _TEXT_PARAMS = {"text", "path", "variable", "condition", "update",
-                "values", "value", "caps", "axis"}
+                "values", "value", "caps", "axis", "toward"}
 
 #: ops the fallback can only approximate (engine renders exactly).
 APPROXIMATED = {"difference", "intersection", "minkowski", "hull",

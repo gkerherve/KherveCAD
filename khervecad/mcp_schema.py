@@ -70,6 +70,7 @@ WRAP_TYPES = [
     "linear_extrude", "rotate_extrude", "translate", "rotate", "scale",
     "mirror", "offset", "projection", "color", "for_loop",
     "while_loop", "if_else", "component", "symmetry", "joint", "blend",
+    "bend", "twist", "taper", "lattice", "subdivide",
 ]
 
 
