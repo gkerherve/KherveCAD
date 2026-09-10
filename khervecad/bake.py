@@ -36,15 +36,100 @@ NODE_TYPES = {
         schema=[("points", "Points", "rows", ["X", "Y", "Z"], None),
                 ("faces", "Faces (point indices, clockwise from "
                           "outside)", "rows", None, None)]),
+    "loft": dict(
+        label="Loft (tube through sections)", category=SHAPE_3D,
+        icon="mdi.vector-curve",
+        params=dict(sections=[[0.0, 0.0, 0.0, 6.0, 6.0],
+                              [0.0, 0.0, 30.0, 4.0, 4.0],
+                              [12.0, 0.0, 50.0, 3.0, 3.0]],
+                    sides=24, smooth=3, caps="round"),
+        schema=[("sections", "Sections (centre, radii)", "rows",
+                 ["X", "Y", "Z", "Width r", "Height r"], None),
+                ("sides", "Sides", "int", 3, 256),
+                ("smooth", "Smoothing steps", "int", 0, 12),
+                ("caps", "Ends", "choice", ["round", "flat"], None)]),
 }
 
 TYPES = frozenset(NODE_TYPES)
-LEAVES = frozenset({"polyhedron"})
+LEAVES = frozenset({"polyhedron", "loft"})
 WRAPPERS = frozenset()
+
+#: OpenSCAD for kcad_loft: the tube computed from the sections at
+#: render time — the same formulas as loft.py (keep them in step), so
+#: expressions and loop variables in the sections just work.
+HELPERS = {
+    "loft": """\
+function kcad_unit(v) = let(l = norm(v)) l > 1e-12 ? v / l : [0, 0, 1];
+function kcad_cr(p0, p1, p2, p3, t) =
+    0.5 * (2 * p1 + (p2 - p0) * t
+           + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t
+           + (3 * p1 - p0 - 3 * p2 + p3) * t * t * t);
+function kcad_loft_path(s, smooth) =
+    let(n = len(s))
+    smooth <= 0 || n < 2 ? s :
+    let(ext = concat([2 * s[0] - s[1]], s, [2 * s[n - 1] - s[n - 2]]))
+    concat([for (k = [0 : n - 2], j = [0 : smooth])
+                kcad_cr(ext[k], ext[k + 1], ext[k + 2], ext[k + 3],
+                        j / (smooth + 1))],
+           [s[n - 1]]);
+function kcad_rmf(c, t, i, acc) =
+    i >= len(c) - 1 ? acc :
+    let(nrm = acc[len(acc) - 1],
+        v1 = c[i + 1] - c[i], c1 = v1 * v1,
+        rl = c1 < 1e-18 ? nrm : nrm - (2 / c1) * (v1 * nrm) * v1,
+        tl = c1 < 1e-18 ? t[i] : t[i] - (2 / c1) * (v1 * t[i]) * v1,
+        v2 = t[i + 1] - tl, c2 = v2 * v2,
+        nn = c2 < 1e-18 ? rl : rl - (2 / c2) * (v2 * rl) * v2)
+    kcad_rmf(c, t, i + 1, concat(acc, [nn]));
+module kcad_loft(sections = [], sides = 24, smooth = 3, caps = "round") {
+    s = kcad_loft_path(sections, smooth);
+    n = len(s);
+    if (n >= 2) {
+        S = max(floor(sides + 0.5), 3);
+        c = [for (row = s) [row[0], row[1], row[2]]];
+        t = [for (i = [0 : n - 1])
+                kcad_unit(c[min(i + 1, n - 1)] - c[max(i - 1, 0)])];
+        ref = abs(t[0][2]) > 0.99 ? [1, 0, 0] : [0, 0, 1];
+        nrm = kcad_rmf(c, t, 0, [kcad_unit(ref - (ref * t[0]) * t[0])]);
+        bin = [for (i = [0 : n - 1]) cross(t[i], nrm[i])];
+        rad = [for (row = s) [max(row[3], 0.001), max(row[4], 0.001)]];
+        domed = caps != "flat";
+        m = max(2, floor(S / 4 + 0.5));
+        d0 = (rad[0][0] + rad[0][1]) / 2;
+        d1 = (rad[n - 1][0] + rad[n - 1][1]) / 2;
+        head = domed ? [for (j = [m - 1 : -1 : 1]) let(phi = 90 * j / m)
+            [c[0] - t[0] * d0 * sin(phi), nrm[0], bin[0],
+             rad[0][0] * cos(phi), rad[0][1] * cos(phi)]] : [];
+        body = [for (i = [0 : n - 1])
+            [c[i], nrm[i], bin[i], rad[i][0], rad[i][1]]];
+        tail = domed ? [for (j = [1 : m - 1]) let(phi = 90 * j / m)
+            [c[n - 1] + t[n - 1] * d1 * sin(phi), nrm[n - 1], bin[n - 1],
+             rad[n - 1][0] * cos(phi), rad[n - 1][1] * cos(phi)]] : [];
+        rings = concat(head, body, tail);
+        R = len(rings);
+        pts = concat([domed ? c[0] - t[0] * d0 : c[0]],
+            [for (r = rings, k = [0 : S - 1]) let(a = 360 * k / S)
+                r[0] + r[3] * cos(a) * r[2] + r[4] * sin(a) * r[1]],
+            [domed ? c[n - 1] + t[n - 1] * d1 : c[n - 1]]);
+        last = len(pts) - 1;
+        faces = concat(
+            [for (r = [0 : R - 2], k = [0 : S - 1], f = [0, 1])
+                let(a0 = 1 + r * S, b0 = 1 + (r + 1) * S, k1 = (k + 1) % S)
+                f == 0 ? [a0 + k, a0 + k1, b0 + k1]
+                       : [a0 + k, b0 + k1, b0 + k]],
+            [for (k = [0 : S - 1], f = [0, 1]) let(k1 = (k + 1) % S)
+                f == 0 ? [0, 1 + k1, 1 + k]
+                       : [last, 1 + (R - 1) * S + k, 1 + (R - 1) * S + k1]]);
+        polyhedron(points = pts, faces = faces, convexity = 10);
+    }
+}""",
+}
 
 
 def preamble(root) -> list:
     """Helper-module source lines this module's nodes need."""
+    if any(n.type == "loft" for n in root.walk()):
+        return HELPERS["loft"].split("\n")
     return []
 
 
@@ -83,6 +168,11 @@ def statement(node, fmt, fn) -> str:
     if node.type == "polyhedron":
         return (f"polyhedron(points = {_rows(p['points'], fmt)}, "
                 f"faces = {_rows(p['faces'], fmt)}, convexity = 10)")
+    if node.type == "loft":
+        caps = "flat" if str(p.get("caps", "round")) == "flat" else "round"
+        return (f"kcad_loft(sections = {_rows(p['sections'], fmt)}, "
+                f"sides = {fmt(p['sides'])}, smooth = {fmt(p['smooth'])}, "
+                f'caps = "{caps}")')
     raise ValueError(f"not a mesh node: {node.type}")  # pragma: no cover
 
 
@@ -105,7 +195,29 @@ def _b_polyhedron(parser, positional, named):
     return CadNode("polyhedron", "Polyhedron", dict(points=pts, faces=fcs))
 
 
-BUILDERS = {"polyhedron": _b_polyhedron}
+def _b_loft(parser, positional, named):
+    from .model import CadNode
+    from .scadparse import _num
+    sections = named.get("sections",
+                         positional[0] if positional else None)
+    if not isinstance(sections, list):
+        parser.warn("kcad_loft without sections skipped")
+        return None
+    rows = [[_num(v) for v in row] for row in sections
+            if isinstance(row, list)]
+
+    def whole(key, default):
+        try:
+            return int(_num(named.get(key, default), default))
+        except (TypeError, ValueError):
+            return default
+    caps = named.get("caps", "round")
+    return CadNode("loft", "Loft", dict(
+        sections=rows, sides=whole("sides", 24), smooth=whole("smooth", 3),
+        caps="flat" if caps == "flat" else "round"))
+
+
+BUILDERS = {"polyhedron": _b_polyhedron, "kcad_loft": _b_loft}
 
 
 # -------------------------------------------------------- validation
@@ -141,9 +253,31 @@ def _check_polyhedron(p):
     return None
 
 
+def _check_loft(p, env):
+    from . import expr
+    rows = p.get("sections") or []
+    if len(rows) < 2:
+        return "a loft needs at least 2 sections"
+    for number, row in enumerate(rows):
+        if not isinstance(row, list) or len(row) != 5:
+            return (f"section {number} needs 5 values: x, y, z, width "
+                    "radius, height radius")
+        for value in row:
+            if isinstance(value, str):
+                try:
+                    expr.evaluate(value, env)
+                except expr.ExprError as exc:
+                    return f"section {number}: {exc}"
+    if str(p.get("caps", "round")) not in ("round", "flat"):
+        return "ends must be 'round' or 'flat'"
+    return None
+
+
 def check(node, env):
     if node.type == "polyhedron":
         return _check_polyhedron(node.params)
+    if node.type == "loft":
+        return _check_loft(node.params, env)
     return None
 
 
@@ -167,4 +301,15 @@ def tess(node, env, color, sel, selected):
             for k in range(1, len(ring) - 1):
                 tris.append((pts[ring[0]], pts[ring[k]], pts[ring[k + 1]]))
         return mesh._emit(tris, color, selected)
+    if node.type == "loft":
+        from . import loft
+        p = node.params
+        rows = [[mesh.rv(v, env) for v in row]
+                for row in p.get("sections") or []
+                if isinstance(row, list) and len(row) == 5]
+        points, faces = loft.loft(
+            rows, sides=mesh.rv(p.get("sides", 24), env, 24.0),
+            smooth=int(mesh.rv(p.get("smooth", 3), env, 3.0)),
+            caps=str(p.get("caps", "round")))
+        return mesh._emit(loft.triangles(points, faces), color, selected)
     return []                                     # pragma: no cover

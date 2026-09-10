@@ -58,7 +58,7 @@ MEASURE_TOOLS = [
 
 #: 3D primitives added with one click.
 PRIMITIVES = ["cube", "sphere", "cylinder", "capsule", "ellipsoid",
-              "rounded_box"]
+              "rounded_box", "loft"]
 
 #: operations in the horizontal toolbar (applied to the selection —
 #: control-flow tools insert standalone when nothing is selected).

@@ -104,6 +104,7 @@ things a cube and a `difference()` do not give you:
 | `capsule` | a rod with round ends between two points | `kcad_capsule(a, b, r)` |
 | `ellipsoid` | a sphere with three radii | `kcad_ellipsoid(c, r = [rx, ry, rz])` |
 | `rounded_box` | a box with a fillet radius on every edge | `kcad_rounded_box(p, size, r, center)` |
+| `loft` | a smooth tube through sections `[x, y, z, w, h]` — limbs, tails, horns | `kcad_loft(sections, sides, smooth, caps)` |
 | `symmetry` | its children **plus** their mirror image — edit one half | `kcad_symmetry(n, c) { ... }` |
 | `joint` | rotates its children about a pivot, within limits | `kcad_joint(pivot, a, limits) { ... }` |
 

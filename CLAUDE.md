@@ -541,6 +541,17 @@ into a new module and import.
                        `to_polyhedron()`, which welds counter-clockwise
                        triangles into OpenSCAD points/faces for the
                        nodes that bake a computed surface.
+  - `loft.py`        — **loft** geometry (Qt-free): sections [x, y, z,
+                       w, h] joined by a Catmull-Rom path, rings in a
+                       rotation-minimising frame (no self-twist),
+                       round or flat ends. The `loft` node (bake.py)
+                       compiles to `kcad_loft(...)`, whose OpenSCAD
+                       helper runs the SAME formulas at render time —
+                       so loop variables/expressions work and nothing
+                       is baked; this module is the preview's copy.
+                       Keep the two in step (rounding: floor(x+0.5),
+                       never Python's round-half-even); the engine
+                       parity test compares extent and volume.
   - `rowsedit.py`    — property editors for the `rows` schema kind (a
                        table: fixed columns, or free-length index lists
                        typed `0, 1, 2`; a non-numeric cell is kept as an
