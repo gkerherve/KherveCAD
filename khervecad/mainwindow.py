@@ -437,6 +437,16 @@ class MainWindow(QMainWindow):
         for name in self.view3d.VIEWS:
             views_menu.addAction(
                 name, lambda _=False, n=name: self.view3d.set_view(n))
+        from .view3d import PROJECTIONS
+        proj_menu = view_menu.addMenu("3D &Projection")
+        self._proj_group = QActionGroup(self)
+        for name in PROJECTIONS:
+            act = QAction(name, self, checkable=True)
+            act.setChecked(name == self.view3d.projection)
+            act.triggered.connect(
+                lambda _, n=name: self.set_projection(n))
+            self._proj_group.addAction(act)
+            proj_menu.addAction(act)
         view_menu.addSeparator()
         from .view3d import BACKGROUNDS, RENDER_STYLES
         style_menu = view_menu.addMenu("3D &Render Style")
@@ -1225,6 +1235,13 @@ class MainWindow(QMainWindow):
                 # was coloured) would land on top of the colour preview
                 # and quietly wipe it — the "3D forgot my colours" bug.
                 self.engine.cancel()
+
+    def set_projection(self, name: str):
+        """Perspective or orthographic 3D view, with the View menu's
+        tick kept in step (an MCP client can change it too)."""
+        self.view3d.set_projection(name)
+        for act in self._proj_group.actions():
+            act.setChecked(act.text() == self.view3d.projection)
 
     def force_refresh(self):
         """Redraw everything from the object tree: drop the mesh caches

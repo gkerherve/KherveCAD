@@ -410,3 +410,135 @@ def test_set_render_options_changes_the_segment_count(ex, window):
     out = call(ex, "set_render_options", segments=120)
     assert out["global_segments"] == 120
     assert window.model.global_fn == 120
+
+
+# ── render_view: waiting and camera control ────────────────────────
+
+class _StubEngine:
+    """An OpenSCAD engine that is 'busy' for a while. Every method the
+    window might call during the event pump is a harmless no-op — a
+    missing one would raise inside a Qt slot and abort the run."""
+    available = True
+
+    def __init__(self, busy_polls):
+        self.busy_polls = busy_polls
+        self.polls = 0
+
+    def is_idle(self):
+        self.polls += 1
+        return self.polls > self.busy_polls
+
+    def __getattr__(self, name):
+        return lambda *args, **kwargs: None
+
+
+def test_render_view_waits_for_the_exact_render(ex, window, monkeypatch):
+    cube(ex)
+    window.show()
+    stub = _StubEngine(busy_polls=5)
+    monkeypatch.setattr(window, "engine", stub)
+    shot = call(ex, "render_view", max_width=160)
+    assert shot["render_complete"] is True
+    assert stub.polls > 5                      # it really waited
+    assert "note" not in shot
+
+
+def test_render_view_gives_up_at_the_timeout(ex, window, monkeypatch):
+    import time
+    cube(ex)
+    window.show()
+    monkeypatch.setattr(window, "engine", _StubEngine(busy_polls=10**9))
+    started = time.monotonic()
+    shot = call(ex, "render_view", timeout=0.3, max_width=160)
+    assert time.monotonic() - started < 5
+    assert shot["render_complete"] is False
+    assert "built-in preview" in shot["note"]
+    assert valid_png_b64(shot[IMAGE_KEY])      # still a picture
+
+
+def test_render_view_can_skip_the_wait(ex, window, monkeypatch):
+    cube(ex)
+    window.show()
+    stub = _StubEngine(busy_polls=10**9)
+    monkeypatch.setattr(window, "engine", stub)
+    shot = call(ex, "render_view", wait_for_exact=False, max_width=160)
+    assert shot["render_complete"] is False and stub.polls == 1
+
+
+def test_camera_parameters_leave_the_users_view_alone(ex, window):
+    cube(ex)
+    window.show()
+    before = window.view3d.camera_state()
+    shot = call(ex, "render_view", azimuth=0, elevation=90,
+                projection="Orthographic", max_width=200)
+    assert window.view3d.camera_state() == before
+    assert shot["camera"]["projection"] == "Orthographic"
+    assert shot["camera"]["elevation"] == 90
+    assert shot["width"] == 200 and valid_png_b64(shot[IMAGE_KEY])
+
+
+def test_orientation_with_camera_parameters_aims_offscreen(ex, window):
+    cube(ex)
+    window.show()
+    before = window.view3d.camera_state()
+    shot = call(ex, "render_view", orientation="Right", zoom=2,
+                max_width=160)
+    assert window.view3d.camera_state() == before
+    assert shot["camera"]["azimuth"] == 0.0     # the Right preset
+
+
+def test_target_node_frames_one_part(ex, window):
+    cube(ex, width=10.0, depth=10.0, height=10.0)
+    far = cube(ex, x=300.0, width=10.0, depth=10.0, height=10.0)
+    window.show()
+    shot = call(ex, "render_view", target_node=far, max_width=200)
+    assert shot["camera"]["target"][0] == pytest.approx(305.0, abs=3.0)
+
+
+def test_orientations_come_back_as_one_contact_sheet(ex, window):
+    cube(ex)
+    window.show()
+    names = ["Front", "Top", "Right", "Isometric"]
+    shot = call(ex, "render_view", orientations=names, max_width=400)
+    assert [t["orientation"] for t in shot["tiles"]] == names
+    assert (shot["width"], shot["height"]) == (400, 300)   # 2 x 2 tiles
+    assert "error" in ex.execute("render_view",
+                                 {"orientations": ["Sideways"]})
+
+
+def test_region_crops_a_sharp_detail(ex, window):
+    cube(ex)
+    window.show()
+    shot = call(ex, "render_view", region=[0.25, 0.25, 0.75, 0.75],
+                fit=True, max_width=300)
+    assert shot["region"] == [0.25, 0.25, 0.75, 0.75]
+    assert shot["width"] == 300                # rendered big, not upscaled
+    for bad in ([0.5, 0.5, 0.4, 0.9], [0, 0, 2, 1], [1, 2, 3]):
+        assert "error" in ex.execute("render_view", {"region": bad})
+
+
+def test_bad_camera_values_are_refused(ex, window):
+    cube(ex)
+    window.show()
+    for bad in ({"projection": "Fisheye"}, {"zoom": 0},
+                {"target": [1, 2]}, {"distance": -5},
+                {"target_node": 999999}):
+        assert "error" in ex.execute("render_view", bad), bad
+
+
+def test_set_render_options_switches_the_projection(ex, window):
+    from PyQt5.QtCore import QSettings
+    settings = QSettings("Kherve", "KherveCAD")
+    saved = settings.value("render_projection", "Perspective")
+    try:
+        out = call(ex, "set_render_options", projection="Orthographic")
+        assert out["projection"] == "Orthographic"
+        assert window.view3d.projection == "Orthographic"
+        ticked = [a.text() for a in window._proj_group.actions()
+                  if a.isChecked()]
+        assert ticked == ["Orthographic"]
+        assert "error" in ex.execute("set_render_options",
+                                     {"projection": "Fisheye"})
+    finally:
+        window.set_projection("Perspective")
+        settings.setValue("render_projection", saved)

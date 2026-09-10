@@ -23,6 +23,10 @@ from __future__ import annotations
 ORIENTATIONS = ["Isometric", "Top", "Bottom", "Front", "Back", "Right",
                 "Left"]
 
+#: 3D projections (view3d.PROJECTIONS — repeated here because this
+#: module must not import Qt).
+PROJECTIONS = ["Perspective", "Orthographic"]
+
 #: `publish_to_printables` choices.  They live here rather than in
 #: `printables.py` because that module imports PyQt5 and this one must
 #: not — the stdio server reads this table in a bare interpreter.
@@ -175,21 +179,28 @@ TOOLS = [
     {
         "name": "render_view",
         "description": (
-            "A PNG of the 3D preview as it stands, returned as an image "
-            "you can look at. Do this after building anything "
-            "non-trivial, and again from another `orientation` — a part "
+            "A PNG of the 3D preview, returned as an image you can look "
+            "at. Do this after building anything non-trivial — a part "
             "that is wrong is obvious in the picture and invisible in "
-            "the tree. Note it shows what is on screen NOW: the "
-            "built-in preview, replaced by the exact OpenSCAD render as "
-            "parts finish, and the built-in one only approximates "
-            "booleans."
+            "the tree. By default it first WAITS for OpenSCAD to finish "
+            "the exact render, so booleans are really cut in what you "
+            "see; `render_complete` says whether it finished in time. "
+            "Camera parameters (azimuth, elevation, distance, zoom, "
+            "target, target_node, projection, region, orientations) "
+            "render from an offscreen camera and leave the user's view "
+            "alone — `orientation` and `fit` alone move the user's own "
+            "camera, as before. Pass the returned `camera` back to "
+            "reproduce or adjust a view."
         ),
         "input_schema": _obj({
             "orientation": {
                 "type": "string",
                 "enum": ORIENTATIONS,
-                "description": "Move the camera here first. Omit to "
-                               "leave the user's view alone.",
+                "description": "Camera preset. On its own (or with "
+                               "fit) it moves the USER'S camera; with "
+                               "any camera parameter it only aims the "
+                               "offscreen one. Omit to leave their view "
+                               "alone.",
             },
             "view": {
                 "type": "string",
@@ -205,6 +216,80 @@ TOOLS = [
                 "type": "integer",
                 "description": "Scale the picture down to at most this "
                                "many pixels wide (default 900).",
+            },
+            "wait_for_exact": {
+                "type": "boolean",
+                "description": "Wait for OpenSCAD's exact render before "
+                               "taking the picture (default true). "
+                               "False takes whatever is on screen now.",
+            },
+            "timeout": {
+                "type": "number",
+                "description": "Seconds to wait for the exact render "
+                               "(default 30, max 300). On timeout you "
+                               "still get the picture, with "
+                               "render_complete false.",
+            },
+            "azimuth": {
+                "type": "number",
+                "description": "Camera angle around Z, degrees: 0 looks "
+                               "from +X, -90 from the front (-Y), 90 "
+                               "from the back, 180 from -X.",
+            },
+            "elevation": {
+                "type": "number",
+                "description": "Camera height above the XY plane, "
+                               "degrees: 90 looks straight down, "
+                               "negative looks up from below.",
+            },
+            "distance": {
+                "type": "number",
+                "description": "Camera distance from the target in mm "
+                               "(the scale, in orthographic). Usually "
+                               "leave it to target_node/fit and use "
+                               "zoom.",
+            },
+            "zoom": {
+                "type": "number",
+                "description": "After framing, move in (2 = twice as "
+                               "close) or out (0.5).",
+            },
+            "target": {
+                "type": "array",
+                "items": {"type": "number"},
+                "minItems": 3, "maxItems": 3,
+                "description": "World point [x, y, z] in mm the camera "
+                               "looks at.",
+            },
+            "target_node": {
+                "type": "integer",
+                "description": "Frame this node from list_tree: aim at "
+                               "it and fit it to the picture — a "
+                               "close-up of one part.",
+            },
+            "projection": {
+                "type": "string",
+                "enum": PROJECTIONS,
+                "description": "Orthographic shows true proportions (no "
+                               "perspective shrink) — best for checking "
+                               "alignment and symmetry.",
+            },
+            "region": {
+                "type": "array",
+                "items": {"type": "number"},
+                "minItems": 4, "maxItems": 4,
+                "description": "Crop to [x0, y0, x1, y1] as fractions "
+                               "of the picture (0-1, origin top-left). "
+                               "Rendered at a higher resolution, so a "
+                               "small detail comes back sharp.",
+            },
+            "orientations": {
+                "type": "array",
+                "items": {"type": "string", "enum": ORIENTATIONS},
+                "description": "Several presets in ONE picture: a "
+                               "labelled contact sheet, each view "
+                               "framed on its own. One call instead of "
+                               "one per angle.",
             },
         }),
     },
@@ -520,6 +605,9 @@ TOOLS = [
             "orientation": {"type": "string", "enum": ORIENTATIONS},
             "fit": {"type": "boolean",
                     "description": "Frame the whole model."},
+            "projection": {"type": "string", "enum": PROJECTIONS,
+                           "description": "The user's 3D projection: "
+                                          "perspective or orthographic."},
         }),
     },
     {

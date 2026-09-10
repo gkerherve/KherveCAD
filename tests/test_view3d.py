@@ -582,3 +582,90 @@ def test_near_clip_keeps_faces_in_front_untouched(app):
     a, b = img.pixelColor(100, 100), bg.pixelColor(100, 100)
     assert (abs(a.red() - b.red()) + abs(a.green() - b.green())
             + abs(a.blue() - b.blue())) > 20
+
+
+def test_orthographic_projection_keeps_true_size(app):
+    """Orthographic rays are parallel: an edge far away projects the
+    same length as one near by. Perspective shrinks the far one."""
+    view = View3D()
+    view.resize(300, 300)
+    view.yaw, view.pitch = 0.0, 0.0          # from +X, looking along -X
+    view.target, view.distance = [0.0, 0.0, 0.0], 100.0
+    near, far = (0.0, 10.0, 0.0), (-50.0, 10.0, 0.0)
+
+    def offset(v):
+        eye, right, up, forward = view._camera()
+        return view._project(eye, right, up, forward, v)[0] - 150
+
+    view.projection = "Perspective"
+    assert abs(offset(near)) > abs(offset(far)) + 1
+    view.projection = "Orthographic"
+    assert offset(near) == pytest.approx(offset(far))
+
+
+def test_fit_frames_the_model_in_orthographic_too(app):
+    view = View3D()
+    view.resize(400, 300)
+    view.projection = "Orthographic"
+    view.set_mesh(_cube(30.0), "test")
+    view.fit()
+    eye, right, up, forward = view._camera()
+    ys = [view._project(eye, right, up, forward, v)[1]
+          for tri in _cube(30.0) for v in tri]
+    assert 0.7 < (max(ys) - min(ys)) / view.height() <= 1.0
+
+
+def test_snapshot_leaves_the_users_camera_alone(app):
+    """An assistant inspecting from another angle must not move the
+    view the user is working in."""
+    view = View3D()
+    view.resize(300, 200)
+    view.set_mesh(_cube(), "test")
+    view.fit()
+    before = view.camera_state()
+    img, state = view.snapshot(240, 160, yaw=0.0, pitch=0.0,
+                               projection="Orthographic", frame=True)
+    assert view.camera_state() == before
+    assert (img.width(), img.height()) == (240, 160)
+    assert state["azimuth"] == 0.0 and state["elevation"] == 0.0
+    assert state["projection"] == "Orthographic"
+
+
+def test_snapshot_frames_just_the_points_it_is_given(app):
+    """frame=<points> aims at one part: the camera targets its centre,
+    not the middle of the whole scene."""
+    far = [tuple((x + 200, y, z) for x, y, z in tri) for tri in _cube(10)]
+    view = View3D()
+    view.resize(300, 300)
+    view.set_mesh(_cube(10) + far, "test")
+    _img, state = view.snapshot(300, 300, frame=[v for t in far for v in t])
+    assert state["target"][0] == pytest.approx(205.0, abs=2.0)
+    _img, whole = view.snapshot(300, 300, frame=True)
+    # perspective fit centres the projected outline, so the whole-scene
+    # target sits somewhere between the two cubes — not on the far one
+    assert 20.0 < whole["target"][0] < 190.0
+    assert state["distance"] < whole["distance"]
+
+
+def test_zoom_moves_the_snapshot_camera_in(app):
+    view = View3D()
+    view.resize(200, 200)
+    view.set_mesh(_cube(), "test")
+    _img, base = view.snapshot(200, 200, frame=True)
+    _img, close = view.snapshot(200, 200, frame=True, zoom=2.0)
+    # camera_state rounds to the micrometre
+    assert close["distance"] == pytest.approx(base["distance"] / 2,
+                                              abs=1e-2)
+
+
+def test_projection_persists(app):
+    from PyQt5.QtCore import QSettings
+    settings = QSettings("Kherve", "KherveCAD")
+    saved = settings.value("render_projection", "Perspective")
+    try:
+        View3D().set_projection("Orthographic")
+        assert View3D().projection == "Orthographic"
+        View3D().set_projection("Sideways")       # unknown: ignored
+        assert View3D().projection == "Orthographic"
+    finally:
+        settings.setValue("render_projection", saved)

@@ -29,6 +29,11 @@ _SETTINGS = ("Kherve", "KherveCAD")
 RENDER_STYLES = ["Shaded", "Matte", "Clay", "Toon", "Brushed metal",
                  "Gold", "Copper", "Wireframe", "X-ray"]
 
+#: how the camera maps depth: perspective (things shrink with distance)
+#: or orthographic (parallel rays, true proportions — the way Blender's
+#: numpad-5 view lines a model up against a reference).
+PROJECTIONS = ["Perspective", "Orthographic"]
+
 #: 3D viewport backgrounds. "Theme" tracks the app theme; the rest are
 #: explicit (top, bottom) pairs painted as a vertical gradient.
 BACKGROUNDS = {
@@ -201,6 +206,8 @@ class View3D(QWidget):
         self.style = saved if saved in RENDER_STYLES else "Shaded"
         bg = settings.value("render_bg", "Slate")
         self.background = bg if bg in BACKGROUNDS else "Slate"
+        proj = settings.value("render_projection", "Perspective")
+        self.projection = proj if proj in PROJECTIONS else "Perspective"
         self.brightness = _clamp_light(settings.value("render_brightness"))
         self.contrast = _clamp_light(settings.value("render_contrast"))
         self.setMinimumHeight(160)
@@ -260,6 +267,12 @@ class View3D(QWidget):
             QSettings(*_SETTINGS).setValue("render_bg", name)
             self.update()
 
+    def set_projection(self, name: str):
+        if name in PROJECTIONS:
+            self.projection = name
+            QSettings(*_SETTINGS).setValue("render_projection", name)
+            self.update()
+
     def _fill_background(self, painter, tokens):
         pair = BACKGROUNDS.get(self.background)
         if pair is None:                       # "Theme": follow the app
@@ -283,6 +296,58 @@ class View3D(QWidget):
         if name in self.VIEWS:
             self.yaw, self.pitch = self.VIEWS[name]
             self.fit()
+
+    def camera_state(self) -> dict:
+        """The camera as plain numbers — enough to reproduce a view."""
+        return {"azimuth": round(self.yaw, 3),
+                "elevation": round(self.pitch, 3),
+                "distance": round(self.distance, 3),
+                "target": [round(v, 3) for v in self.target],
+                "projection": self.projection}
+
+    def snapshot(self, width, height, *, yaw=None, pitch=None,
+                 distance=None, target=None, projection=None,
+                 frame=None, zoom=1.0):
+        """Paint the scene from another camera into a QImage, leaving
+        this view — the user's camera — exactly where it is.
+
+        An offscreen twin gets the same mesh, colours, selection, style,
+        background and lighting; only the camera differs. *frame* is a
+        list of world points to fit the view to (``[]`` or ``True``
+        means the whole mesh); *zoom* then moves in (>1) or out (<1).
+        Returns ``(image, camera_state)``."""
+        from PyQt5.QtCore import QSize
+        from PyQt5.QtGui import QImage, QPainter
+        twin = View3D()
+        twin.lighting_bar.hide()
+        twin.resize(max(int(width), 2), max(int(height), 2))
+        twin.style, twin.background = self.style, self.background
+        twin.brightness, twin.contrast = self.brightness, self.contrast
+        twin.projection = projection if projection in PROJECTIONS \
+            else self.projection
+        twin.set_mesh(self.mesh, self.source, self.colors)
+        twin.set_highlight_mesh(self.highlight_mesh)
+        twin.set_anchor_markers(list(self.anchor_markers))
+        twin.yaw = self.yaw if yaw is None else float(yaw)
+        twin.pitch = self.pitch if pitch is None else float(pitch)
+        twin.distance, twin.target = self.distance, list(self.target)
+        if frame is not None and frame is not False:
+            twin.fit(None if frame is True or not frame else list(frame))
+        if target is not None:
+            twin.target = [float(v) for v in target]
+        if distance is not None:
+            twin.distance = max(float(distance), 1e-3)
+        if zoom and float(zoom) != 1.0:
+            twin.distance /= max(float(zoom), 1e-3)
+        img = QImage(QSize(twin.width(), twin.height()),
+                     QImage.Format_ARGB32)
+        img.fill(0)
+        painter = QPainter(img)
+        twin.render(painter)
+        painter.end()
+        state = twin.camera_state()
+        twin.deleteLater()
+        return img, state
 
     # ------------------------------------------------------------- API
     def _decimate(self, mesh, colors=None):
@@ -464,14 +529,16 @@ class View3D(QWidget):
             self._fast = False
             self.update()                 # repaint the full, crisp mesh
 
-    def fit(self):
-        """Frame the whole mesh: centre it in the pane and size it to
-        fill most of the view. Projects the bounding box in the current
-        camera orientation, then adjusts distance and recentres the
-        target so the model sits squarely in the middle (not low)."""
-        if not self.mesh:
+    def fit(self, verts=None):
+        """Frame the whole mesh — or only the world points *verts* (one
+        part, say): centre it in the pane and size it to fill most of
+        the view. Projects the bounding box in the current camera
+        orientation, then adjusts distance and recentres the target so
+        the model sits squarely in the middle (not low)."""
+        if verts is None:
+            verts = [v for tri in self.mesh for v in tri]
+        if not verts:
             return
-        verts = [v for tri in self.mesh for v in tri]
         if len(verts) > 3000:                     # sample: fit is exact
             verts = verts[::len(verts) // 3000]   # enough at this scale
         xs = [v[0] for v in verts]
@@ -484,6 +551,10 @@ class View3D(QWidget):
         size = max(mx[0] - mn[0], mx[1] - mn[1], mx[2] - mn[2], 1.0)
         self.distance = size * 2.0
         f = self._focal()
+        ortho = self.projection == "Orthographic"
+
+        def depth(cf):          # what the on-screen scale divides by
+            return self.distance if ortho else self.distance + cf
         halfw = self.width() / 2 or 1.0
         halfh = self.height() / 2 or 1.0
         margin = 0.9
@@ -502,15 +573,15 @@ class View3D(QWidget):
                 cam.append((cr, cu, cf))
             need = 0.0
             for cr, cu, cf in cam:
-                z = self.distance + cf
+                z = depth(cf)
                 if z < 0.1:
                     continue
                 need = max(need, abs(f * cr / z) / (halfw * margin),
                            abs(f * cu / z) / (halfh * margin))
             if need > 0:
                 self.distance *= need
-            sx = [f * cr / (self.distance + cf) for cr, _cu, cf in cam]
-            sy = [f * cu / (self.distance + cf) for _cr, cu, cf in cam]
+            sx = [f * cr / depth(cf) for cr, _cu, cf in cam]
+            sy = [f * cu / depth(cf) for _cr, cu, cf in cam]
             ox = (min(sx) + max(sx)) / 2          # projected outline mid
             oy = (min(sy) + max(sy)) / 2
             self.target = [self.target[i]
@@ -553,6 +624,10 @@ class View3D(QWidget):
         cx = dx * right[0] + dy * right[1] + dz * right[2]
         cy = dx * up[0] + dy * up[1] + dz * up[2]
         cz = dx * forward[0] + dy * forward[1] + dz * forward[2]
+        if self.projection == "Orthographic":
+            s = self._focal() / max(self.distance, 1e-6)
+            return (self.width() / 2 + s * cx,
+                    self.height() / 2 - s * cy, cz)
         if cz < self.NEAR_PLANE:
             return None
         f = self._focal()
@@ -612,6 +687,8 @@ class View3D(QWidget):
         hax, hay, haz = half
 
         near = self.NEAR_PLANE
+        ortho = self.projection == "Orthographic"
+        scale = f / max(self.distance, 1e-6)       # orthographic px/mm
 
         def clip_proj(tri):
             """Screen points of *tri*, clipped to the near plane.
@@ -630,6 +707,16 @@ class View3D(QWidget):
             z0 = ax * fxa + ay * fya + az * fza
             z1 = bx * fxa + by * fya + bz * fza
             z2 = cx * fxa + cy * fya + cz * fza
+            if ortho:                  # parallel rays: nothing to clip
+                return ((hw + scale * (ax * rx + ay * ry + az * rz),
+                         hh - scale * (ax * uxa + ay * uya + az * uza),
+                         z0),
+                        (hw + scale * (bx * rx + by * ry + bz * rz),
+                         hh - scale * (bx * uxa + by * uya + bz * uza),
+                         z1),
+                        (hw + scale * (cx * rx + cy * ry + cz * rz),
+                         hh - scale * (cx * uxa + cy * uya + cz * uza),
+                         z2))
             if z0 >= near and z1 >= near and z2 >= near:
                 return ((hw + f * (ax * rx + ay * ry + az * rz) / z0,
                          hh - f * (ax * uxa + ay * uya + az * uza) / z0,

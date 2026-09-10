@@ -96,8 +96,22 @@ Practical consequences:
 
 ## What the preview is showing
 
-`render_view` shows what is on screen *now*, and that is worth knowing
-precisely:
+`render_view` **waits for the picture to be final** before taking it:
+while OpenSCAD is still rendering, the call pumps the app until the
+engine is idle (up to `timeout`, 30 s by default) and says so in
+`render_complete`. Pass `wait_for_exact: false` for whatever is on
+screen this instant.
+
+It can also **look from anywhere without moving the user's view**:
+`azimuth`/`elevation`/`distance`/`target`, `target_node` (a close-up
+framed on one part), `zoom`, `projection: "Orthographic"` (true
+proportions, no perspective shrink), `region` (crop a detail, rendered
+at higher resolution so it comes back sharp) and `orientations` (a
+labelled contact sheet of several presets in one image). Those render
+an offscreen twin of the view; only `orientation`/`fit` on their own
+move the user's camera. The result's `camera` reproduces the shot.
+
+What the picture contains is worth knowing precisely:
 
 - The **built-in tessellator** draws immediately, and it only
   *approximates* booleans — a `difference()` shows its first operand

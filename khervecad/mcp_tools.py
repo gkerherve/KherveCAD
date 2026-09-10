@@ -36,12 +36,25 @@ from . import anchors, document, mates, mesh
 from .mcp_schema import (CATEGORIES, DEFAULT_CATEGORY,
                          DEFAULT_LICENSE, DEFAULT_ORIGIN,
                          DEFAULT_VIEWS, FORMATS, ORIENTATIONS,
-                         ORIGINS, WRAP_TYPES)
+                         ORIGINS, PROJECTIONS, WRAP_TYPES)
 from .mcp_server import IMAGE_KEY
 from .model import CONTAINER_TYPES, NODE_TYPES, validate
 
 #: Cap on a rendered preview, so one look at the model stays cheap.
 _DEFAULT_RENDER_WIDTH = 900
+
+#: How long render_view waits for OpenSCAD by default, and at most.
+_DEFAULT_WAIT_S = 30.0
+_MAX_WAIT_S = 300.0
+
+#: render_view parameters that call for the offscreen camera, which
+#: leaves the user's own view where it is.
+_CAMERA_KEYS = ("azimuth", "elevation", "distance", "zoom", "target",
+                "target_node", "projection", "region", "orientations")
+
+#: The largest side an offscreen render paints — a region crop renders
+#: the whole picture bigger, then cuts the detail out of it.
+_MAX_RENDER_SIDE = 4096
 
 
 class ToolError(Exception):
@@ -268,34 +281,242 @@ class McpToolExecutor:
     def _t_render_view(self, params) -> dict:
         win = self._w
         which = str(params.get("view", "3d")).lower()
-        if params.get("orientation"):
-            name = params["orientation"]
+        try:
+            timeout = float(params.get("timeout", _DEFAULT_WAIT_S))
+        except (TypeError, ValueError):
+            raise ToolError("'timeout' must be a number of seconds.")
+        timeout = min(max(timeout, 0.0), _MAX_WAIT_S)
+        if which == "3d" and params.get("wait_for_exact", True):
+            complete = self._wait_for_render(timeout)
+        else:
+            complete = self._render_settled()
+        offscreen = which == "3d" and any(
+            params.get(k) is not None for k in _CAMERA_KEYS)
+        limit = max(int(params.get("max_width")
+                        or _DEFAULT_RENDER_WIDTH), 16)
+        if offscreen:
+            image, extra = self._offscreen(params, limit)
+        else:
+            if params.get("orientation"):
+                name = params["orientation"]
+                if name not in ORIENTATIONS:
+                    raise ToolError(
+                        f"Unknown orientation {name!r}. Choose one of: "
+                        f"{', '.join(ORIENTATIONS)}.")
+                win.view3d.set_view(name)
+            elif params.get("fit"):
+                win.view3d.fit()
+            widget = win.view2d if which == "2d" else win.view3d
+            image = widget.grab()
+            if image.isNull() or image.width() < 2:
+                raise ToolError(
+                    "The view has no size to render — the window may "
+                    "be minimised.")
+            if image.width() > limit:
+                image = image.scaledToWidth(limit,
+                                            Qt.SmoothTransformation)
+            extra = ({"camera": win.view3d.camera_state()}
+                     if which == "3d" else {})
+        result = {IMAGE_KEY: self._png(image), "view": which,
+                  "showing": (win.view3d.source if which == "3d" else
+                              "sketch / assembly view"),
+                  "width": image.width(), "height": image.height(),
+                  "render_complete": complete}
+        result.update(extra)
+        if not complete:
+            result["note"] = (
+                "OpenSCAD was still rendering when the timeout ran out, "
+                "so this is (partly) the built-in preview, where "
+                "booleans are approximated. Call again, or raise "
+                "timeout, for the exact render.")
+        return result
+
+    # ── render_view helpers ─────────────────────────────────────
+
+    @staticmethod
+    def _png(image) -> str:
+        """A QImage/QPixmap as base64 PNG."""
+        data = QByteArray()
+        buffer = QBuffer(data)
+        buffer.open(QBuffer.WriteOnly)
+        image.save(buffer, "PNG")
+        buffer.close()
+        return base64.b64encode(bytes(data)).decode("ascii")
+
+    def _render_settled(self) -> bool:
+        engine = self._w.engine
+        return not engine.available or engine.is_idle()
+
+    def _wait_for_render(self, timeout_s: float) -> bool:
+        """Pump the event loop until OpenSCAD is idle with nothing
+        queued, so the picture shows the exact render and not the
+        built-in approximation of it. True when it settled in time.
+
+        Re-entry is safe: the bridge refuses a second tool call while
+        this one runs — the guard an STL export already relies on."""
+        import time
+
+        from PyQt5.QtCore import QCoreApplication, QEventLoop, QThread
+        engine = self._w.engine
+        if not engine.available:
+            return True           # the built-in preview IS the final word
+        deadline = time.monotonic() + timeout_s
+        calm = 0
+        while True:
+            QCoreApplication.processEvents(QEventLoop.AllEvents, 50)
+            # idle on two passes in a row: a finished part that queues
+            # the next render has had its chance to do so
+            calm = calm + 1 if engine.is_idle() else 0
+            if calm >= 2:
+                return True
+            if time.monotonic() >= deadline:
+                return False
+            QThread.msleep(15)
+
+    def _world_points(self, node) -> list:
+        """World-space vertices of *node* as the 3D view draws it (in
+        the Object tab, in that Object's own frame)."""
+        win = self._w
+        root = win._render_scope()[0]
+        iso = root if root is not self._model.root else None
+        with win._isolated_frame(iso):
+            tris = mesh.selected_world_tris(root, {node.id},
+                                            env=self._env(), fn=self._fn())
+        return [v for tri in tris for v in tri]
+
+    @staticmethod
+    def _number(params, key, positive=False):
+        value = params.get(key)
+        if value is None:
+            return None
+        try:
+            value = float(value)
+        except (TypeError, ValueError):
+            raise ToolError(f"'{key}' must be a number.")
+        if positive and value <= 0:
+            raise ToolError(f"'{key}' must be greater than 0.")
+        return value
+
+    def _aim(self, params):
+        """(yaw, pitch) for the offscreen camera: a preset, then any
+        explicit azimuth/elevation on top."""
+        view = self._w.view3d
+        yaw, pitch = view.yaw, view.pitch
+        name = params.get("orientation")
+        if name:
             if name not in ORIENTATIONS:
                 raise ToolError(
                     f"Unknown orientation {name!r}. Choose one of: "
                     f"{', '.join(ORIENTATIONS)}.")
-            win.view3d.set_view(name)
+            yaw, pitch = view.VIEWS[name]
+        az = self._number(params, "azimuth")
+        el = self._number(params, "elevation")
+        return (yaw if az is None else az, pitch if el is None else el)
+
+    def _offscreen(self, params, limit):
+        """render_view from a camera of its own (View3D.snapshot)."""
+        from PyQt5.QtCore import QRect
+        view = self._w.view3d
+        projection = params.get("projection")
+        if projection is not None and projection not in PROJECTIONS:
+            raise ToolError(f"Unknown projection {projection!r}. Choose "
+                            f"one of: {', '.join(PROJECTIONS)}.")
+        frame = None
+        if params.get("target_node") is not None:
+            node = self._node(params["target_node"])
+            frame = self._world_points(node)
+            if not frame:
+                raise ToolError(
+                    f"{node.name} has no geometry in the 3D view to "
+                    "frame — it is hidden, empty, or 2D-only.")
         elif params.get("fit"):
-            win.view3d.fit()
-        widget = win.view2d if which == "2d" else win.view3d
-        pixmap = widget.grab()
-        if pixmap.isNull() or pixmap.width() < 2:
-            raise ToolError(
-                "The view has no size to render — the window may be "
-                "minimised.")
-        limit = int(params.get("max_width") or _DEFAULT_RENDER_WIDTH)
-        if pixmap.width() > limit:
-            pixmap = pixmap.scaledToWidth(limit, Qt.SmoothTransformation)
-        data = QByteArray()
-        buffer = QBuffer(data)
-        buffer.open(QBuffer.WriteOnly)
-        pixmap.save(buffer, "PNG")
-        buffer.close()
-        return {IMAGE_KEY: base64.b64encode(bytes(data)).decode("ascii"),
-                "view": which,
-                "showing": (win.view3d.source if which == "3d" else
-                            "sketch / assembly view"),
-                "width": pixmap.width(), "height": pixmap.height()}
+            frame = True
+        target = params.get("target")
+        if target is not None:
+            try:
+                target = [float(v) for v in target]
+            except (TypeError, ValueError):
+                target = None
+            if target is None or len(target) != 3:
+                raise ToolError("'target' must be [x, y, z] in mm.")
+        common = dict(distance=self._number(params, "distance", True),
+                      target=target, projection=projection,
+                      zoom=self._number(params, "zoom", True) or 1.0)
+        if params.get("orientations"):
+            return self._contact_sheet(params["orientations"], limit,
+                                       frame, common)
+        yaw, pitch = self._aim(params)
+        vw, vh = view.width(), view.height()
+        aspect = vh / vw if vw > 1 and vh > 1 else 0.75
+        w, h = limit, max(int(round(limit * aspect)), 16)
+        region = params.get("region")
+        if region is None:
+            image, cam = view.snapshot(w, h, yaw=yaw, pitch=pitch,
+                                       frame=frame, **common)
+            return image, {"camera": cam}
+        try:
+            x0, y0, x1, y1 = (float(v) for v in region)
+        except (TypeError, ValueError):
+            raise ToolError("'region' must be [x0, y0, x1, y1].")
+        if not (0.0 <= x0 < x1 <= 1.0 and 0.0 <= y0 < y1 <= 1.0):
+            raise ToolError("'region' is [x0, y0, x1, y1] as fractions "
+                            "of the picture: 0 <= x0 < x1 <= 1 and "
+                            "0 <= y0 < y1 <= 1.")
+        # Same aspect as the whole picture, only bigger, so the framing
+        # is the one the caller would see without a region.
+        k = min(1.0 / (x1 - x0), 1.0 / (y1 - y0),
+                _MAX_RENDER_SIDE / max(w, h))
+        bw, bh = int(round(w * k)), int(round(h * k))
+        image, cam = view.snapshot(bw, bh, yaw=yaw, pitch=pitch,
+                                   frame=frame, **common)
+        crop = image.copy(QRect(int(x0 * bw), int(y0 * bh),
+                                max(int((x1 - x0) * bw), 1),
+                                max(int((y1 - y0) * bh), 1)))
+        if crop.width() > limit:
+            crop = crop.scaledToWidth(limit, Qt.SmoothTransformation)
+        return crop, {"camera": cam, "region": [x0, y0, x1, y1]}
+
+    def _contact_sheet(self, names, limit, frame, common):
+        """Several presets tiled into one labelled picture, each view
+        framed on its own."""
+        from PyQt5.QtCore import QRectF
+        from PyQt5.QtGui import QColor, QImage, QPainter
+        if not isinstance(names, (list, tuple)):
+            raise ToolError("'orientations' must be a list of presets.")
+        bad = [n for n in names if n not in ORIENTATIONS]
+        if bad:
+            raise ToolError(f"Unknown orientation {bad[0]!r}. Choose "
+                            f"from: {', '.join(ORIENTATIONS)}.")
+        names = list(dict.fromkeys(names))
+        view = self._w.view3d
+        cols = 1 if len(names) == 1 else 2 if len(names) <= 4 else 3
+        rows = (len(names) + cols - 1) // cols
+        tw = max(limit // cols, 64)
+        th = max(int(tw * 0.75), 48)
+        sheet = QImage(tw * cols, th * rows, QImage.Format_ARGB32)
+        sheet.fill(QColor("#1e2226"))
+        painter = QPainter(sheet)
+        font = painter.font()
+        font.setBold(True)
+        painter.setFont(font)
+        tiles = []
+        for i, name in enumerate(names):
+            yaw, pitch = view.VIEWS[name]
+            image, cam = view.snapshot(
+                tw, th, yaw=yaw, pitch=pitch,
+                frame=True if frame is None else frame, **common)
+            x, y = (i % cols) * tw, (i // cols) * th
+            painter.drawImage(x, y, image)
+            painter.setPen(QColor("#1e2226"))
+            painter.drawRect(x, y, tw - 1, th - 1)
+            box = QRectF(x + 6, y + 6,
+                         painter.fontMetrics().width(name) + 12, 20)
+            painter.fillRect(box, QColor(0, 0, 0, 150))
+            painter.setPen(QColor("#ffffff"))
+            painter.drawText(box, Qt.AlignCenter, name)
+            tiles.append({"orientation": name, "camera": cam})
+        painter.end()
+        return sheet, {"tiles": tiles}
 
     def _t_list_parts(self, params) -> dict:
         from . import library
@@ -700,8 +921,15 @@ class McpToolExecutor:
             win.view3d.set_view(name)
         elif params.get("fit"):
             win.view3d.fit()
+        if params.get("projection"):
+            name = params["projection"]
+            if name not in PROJECTIONS:
+                raise ToolError(f"Unknown projection {name!r}. Choose "
+                                f"one of: {', '.join(PROJECTIONS)}.")
+            win.set_projection(name)
         return {"global_segments": int(model.global_fn),
-                "global_segments_on": bool(model.global_fn_on)}
+                "global_segments_on": bool(model.global_fn_on),
+                "projection": win.view3d.projection}
 
     def _guard_unsaved(self, params, tool: str):
         if self._w._dirty and not params.get("discard_unsaved_changes"):

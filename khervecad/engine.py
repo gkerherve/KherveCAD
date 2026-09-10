@@ -360,6 +360,12 @@ class ScadEngine(QObject):
         self._part_queue[key] = scad_code
         self._timer.start()
 
+    def is_idle(self) -> bool:
+        """Nothing rendering and nothing waiting: what the 3D view shows
+        is final until the model changes again."""
+        return (self._process is None and self._pending_code is None
+                and not self._part_queue and not self._timer.isActive())
+
     def cancel_parts(self):
         """Drop queued part renders (the document changed wholesale)."""
         self._part_queue.clear()
