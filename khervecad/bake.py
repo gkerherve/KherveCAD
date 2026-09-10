@@ -20,6 +20,8 @@ the Free Software Foundation, either version 3 of the License, or
 
 from __future__ import annotations
 
+import json
+
 SHAPE_3D = "3d"
 OPERATION = "op"
 
@@ -48,11 +50,22 @@ NODE_TYPES = {
                 ("sides", "Sides", "int", 3, 256),
                 ("smooth", "Smoothing steps", "int", 0, 12),
                 ("caps", "Ends", "choice", ["round", "flat"], None)]),
+    "blend": dict(
+        label="Smooth blend", category=OPERATION, icon="mdi.blur-radial",
+        params=dict(radius=4.0, detail=40),
+        schema=[("radius", "Blend radius", "float", 0.0, 1e4),
+                ("detail", "Detail (cells across)", "int", 8, 160)]),
 }
 
 TYPES = frozenset(NODE_TYPES)
 LEAVES = frozenset({"polyhedron", "loft"})
-WRAPPERS = frozenset()
+WRAPPERS = frozenset({"blend"})
+
+#: set while generating code for reading rather than rendering
+#: (get_code): baked point/face arrays are summarised, not written out.
+#: The importer ignores those arrays anyway — it rebuilds the node from
+#: its parameters and children — so an elided program still round-trips.
+ELIDE = False
 
 #: OpenSCAD for kcad_loft: the tube computed from the sections at
 #: render time — the same formulas as loft.py (keep them in step), so
@@ -123,14 +136,24 @@ module kcad_loft(sections = [], sides = 24, smooth = 3, caps = "round") {
         polyhedron(points = pts, faces = faces, convexity = 10);
     }
 }""",
+    # the surface is computed in Python (sdf.py) and baked in; the
+    # children are kept in the call so the node round-trips, and the
+    # module simply never instantiates them
+    "blend": """\
+module kcad_blend(radius = 0, detail = 40, points = [], faces = []) {
+    polyhedron(points = points, faces = faces, convexity = 10);
+}""",
 }
 
 
 def preamble(root) -> list:
     """Helper-module source lines this module's nodes need."""
-    if any(n.type == "loft" for n in root.walk()):
-        return HELPERS["loft"].split("\n")
-    return []
+    used = {n.type for n in root.walk()}
+    lines = []
+    for t in ("loft", "blend"):
+        if t in used:
+            lines.extend(HELPERS[t].split("\n"))
+    return lines
 
 
 # ------------------------------------------------------------ baking
@@ -161,6 +184,67 @@ def _rows(rows, fmt) -> str:
                            for row in rows) + "]"
 
 
+def _rows_wrapped(rows, fmt, per_line: int = 8) -> str:
+    """Like _rows, over several lines (a baked mesh is thousands of
+    rows, and one physical line of it would choke the code editor)."""
+    if not rows:
+        return "[]"
+    if ELIDE:
+        return f"[/* {len(rows)} baked rows */]"
+    chunks = [", ".join("[" + ", ".join(fmt(v) for v in row) + "]"
+                        for row in rows[i:i + per_line])
+              for i in range(0, len(rows), per_line)]
+    return "[\n        " + ",\n        ".join(chunks) + "\n    ]"
+
+
+# ------------------------------------------------ baked-mesh cache
+
+#: {content key: (points, faces, triangles)} — baking a blend samples a
+#: grid, far too slow to repeat on every regeneration of the program
+_CACHE = {}
+_CACHE_SIZE = 16
+
+
+def _codegen_env(node) -> dict:
+    """The variables in scope at *node*: every assignment in each
+    enclosing container, outermost first (what the tessellator has in
+    hand when it reaches the node)."""
+    from . import mesh
+    chain = []
+    parent = node.parent
+    while parent is not None:
+        chain.append(parent)
+        parent = parent.parent
+    env = {}
+    for container in reversed(chain):
+        for child in container.children:
+            if child.type == "assign":
+                mesh._apply_assign(child, env)
+            elif child.type == "variables":
+                for grandchild in child.children:
+                    if grandchild.type == "assign":
+                        mesh._apply_assign(grandchild, env)
+    return env
+
+
+def baked_blend(node, env):
+    """(points, faces, triangles) of a blend, cached by its content."""
+    from . import document, mesh, sdf
+    key = json.dumps([document.node_to_dict(node),
+                      sorted((k, repr(v)) for k, v in env.items())],
+                     sort_keys=True, default=str)
+    hit = _CACHE.get(key)
+    if hit is None:
+        p = node.params
+        tris = sdf.blend(node, env, mesh.rv(p.get("radius", 4.0), env, 4.0),
+                         int(mesh.rv(p.get("detail", 40), env, 40.0)))
+        points, faces = to_polyhedron(tris)
+        hit = _CACHE[key] = (points, faces, tris)
+        while len(_CACHE) > _CACHE_SIZE:
+            _CACHE.pop(next(iter(_CACHE)))
+    return hit
+
+
 # ----------------------------------------------------------- codegen
 
 def statement(node, fmt, fn) -> str:
@@ -168,6 +252,16 @@ def statement(node, fmt, fn) -> str:
     if node.type == "polyhedron":
         return (f"polyhedron(points = {_rows(p['points'], fmt)}, "
                 f"faces = {_rows(p['faces'], fmt)}, convexity = 10)")
+    if node.type == "blend":
+        from . import sdf
+        try:
+            points, faces, _tris = baked_blend(node, _codegen_env(node))
+        except sdf.Unsupported:
+            points, faces = [], []          # validation has flagged it
+        return (f"kcad_blend(radius = {fmt(p['radius'])}, "
+                f"detail = {fmt(p['detail'])},\n"
+                f"    points = {_rows_wrapped(points, fmt)},\n"
+                f"    faces = {_rows_wrapped(faces, fmt)})")
     if node.type == "loft":
         caps = "flat" if str(p.get("caps", "round")) == "flat" else "round"
         return (f"kcad_loft(sections = {_rows(p['sections'], fmt)}, "
@@ -217,7 +311,21 @@ def _b_loft(parser, positional, named):
         caps="flat" if caps == "flat" else "round"))
 
 
-BUILDERS = {"polyhedron": _b_polyhedron, "kcad_loft": _b_loft}
+def _b_blend(parser, positional, named):
+    from .model import CadNode
+    from .scadparse import _num
+    try:
+        detail = int(_num(named.get("detail", 40), 40))
+    except (TypeError, ValueError):
+        detail = 40
+    # the baked points/faces are ignored: the surface is recomputed from
+    # the children, which follow in the call's block
+    return CadNode("blend", "Smooth blend", dict(
+        radius=_num(named.get("radius", 4.0), 4.0), detail=detail))
+
+
+BUILDERS = {"polyhedron": _b_polyhedron, "kcad_loft": _b_loft,
+            "kcad_blend": _b_blend}
 
 
 # -------------------------------------------------------- validation
@@ -278,6 +386,26 @@ def check(node, env):
         return _check_polyhedron(node.params)
     if node.type == "loft":
         return _check_loft(node.params, env)
+    if node.type == "blend":
+        return _check_blend(node, env)
+    return None
+
+
+def _check_blend(node, env):
+    from . import sdf
+    parent = node.parent
+    while parent is not None:
+        if parent.type in ("for_loop", "while_loop", "if_else"):
+            kind = parent.type.replace("_", " ").replace(" loop", "")
+            return (f"a blend is baked into one mesh, so it can't sit "
+                    f"inside a {kind} — put the {kind} inside the blend")
+        parent = parent.parent
+    try:
+        sdf.leaves(node, env)
+    except sdf.Unsupported as exc:
+        return ("a blend merges spheres, cubes, cylinders, capsules, "
+                "ellipsoids and rounded boxes (and the transforms, groups, "
+                f"loops and joints around them) — {exc} is not one")
     return None
 
 
@@ -301,6 +429,18 @@ def tess(node, env, color, sel, selected):
             for k in range(1, len(ring) - 1):
                 tris.append((pts[ring[0]], pts[ring[k]], pts[ring[k + 1]]))
         return mesh._emit(tris, color, selected)
+    if node.type == "blend":
+        from . import sdf
+        try:
+            _points, _faces, tris = baked_blend(node, env)
+        except sdf.Unsupported:
+            tris = []
+        out = mesh._emit(tris, color, selected)
+        if sel and not selected:
+            # a selected primitive inside still glows on its own
+            out.extend(item for item in mesh._children_mesh(
+                node, env, color, sel, selected) if item[2])
+        return out
     if node.type == "loft":
         from . import loft
         p = node.params

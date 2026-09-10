@@ -268,14 +268,23 @@ class McpToolExecutor:
         return info
 
     def _t_get_code(self, params) -> dict:
+        from . import bake
         model = self._model
-        if params.get("node_id"):
-            node = self._node(params["node_id"])
-            code = model.subtree_scad(node)
-            scope = node.name
-        else:
-            code = model.to_scad()
-            scope = "whole document"
+        # a baked mesh (a blend) is thousands of rows of numbers nobody
+        # reads: summarise them unless asked, so the program fits in a
+        # client's context. Import ignores those rows, so the summarised
+        # program still round-trips through apply_code.
+        bake.ELIDE = not params.get("full")
+        try:
+            if params.get("node_id"):
+                node = self._node(params["node_id"])
+                code = model.subtree_scad(node)
+                scope = node.name
+            else:
+                code = model.to_scad()
+                scope = "whole document"
+        finally:
+            bake.ELIDE = False
         return {"scope": scope, "lines": len(code.splitlines()),
                 "code": code}
 

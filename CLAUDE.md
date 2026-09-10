@@ -552,6 +552,27 @@ into a new module and import.
                        Keep the two in step (rounding: floor(x+0.5),
                        never Python's round-half-even); the engine
                        parity test compares extent and volume.
+  - `sdf.py`         — **smooth blend** geometry (Qt-free): the
+                       primitives under a `blend` (sphere, cube,
+                       cylinder, capsule, ellipsoid, rounded box —
+                       through transforms, groups, loops, joints and
+                       symmetry) become signed distance functions; a
+                       polynomial smooth-min merges them (a part out of
+                       the blend's reach is skipped unevaluated);
+                       marching tetrahedra (Kuhn 6-tet split:
+                       conforming, no ambiguous cases, shared edge
+                       vertices -> watertight) extracts the surface.
+                       The `blend` node (bake.py) BAKES it:
+                       `kcad_blend(radius, detail, points=, faces=)
+                       { children }` — the helper renders only the
+                       polyhedron; import ignores the arrays and
+                       rebuilds from the children (lossless); bakes
+                       are cached by content (`bake._CACHE`). A blend
+                       inside a loop/if is refused (one mesh cannot
+                       vary per iteration). `get_code` summarises baked
+                       arrays (`bake.ELIDE`) unless `full`, and a
+                       statement may span lines (`CadNode.emit` splits
+                       it so the line spans stay exact).
   - `rowsedit.py`    — property editors for the `rows` schema kind (a
                        table: fixed columns, or free-length index lists
                        typed `0, 1, 2`; a non-numeric cell is kept as an

@@ -610,7 +610,14 @@ class CadNode:
         elif self.type == "if_else":
             self._emit_if_else(lines, indent, spans)
         else:
-            head = pad + star + self._statement()
+            # a statement may span lines (a baked mesh's arrays): every
+            # physical line is its own entry, or the line spans that map
+            # code back to nodes would drift for everything after it
+            head, *more = (pad + star + self._statement()).split("\n")
+            if more:
+                lines.append((head, self))
+                lines.extend((pad + ln, self) for ln in more[:-1])
+                head = pad + more[-1]
             if not self.is_container():
                 lines.append((head + ";", self))
             elif not self.children:

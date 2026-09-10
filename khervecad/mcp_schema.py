@@ -69,7 +69,7 @@ WRAP_TYPES = [
     "union", "difference", "intersection", "hull", "minkowski",
     "linear_extrude", "rotate_extrude", "translate", "rotate", "scale",
     "mirror", "offset", "projection", "color", "for_loop",
-    "while_loop", "if_else", "component", "symmetry", "joint",
+    "while_loop", "if_else", "component", "symmetry", "joint", "blend",
 ]
 
 
@@ -171,6 +171,8 @@ TOOLS = [
             "local frame. Read this before apply_code."
         ),
         "input_schema": _obj({
+            "full": {"type": "boolean",
+                     "description": "Write baked meshes (a blend's points and faces) out in full. Off by default: they are summarised, since only the node's parameters matter to read or re-apply it."},
             "node_id": dict(_ID, description=(
                 "Emit just this Object/subtree as a standalone "
                 "program.")),

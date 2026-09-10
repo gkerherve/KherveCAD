@@ -105,6 +105,7 @@ things a cube and a `difference()` do not give you:
 | `ellipsoid` | a sphere with three radii | `kcad_ellipsoid(c, r = [rx, ry, rz])` |
 | `rounded_box` | a box with a fillet radius on every edge | `kcad_rounded_box(p, size, r, center)` |
 | `loft` | a smooth tube through sections `[x, y, z, w, h]` — limbs, tails, horns | `kcad_loft(sections, sides, smooth, caps)` |
+| `blend` | melts its children together with a fillet of the given radius — a head onto a neck onto a body | `kcad_blend(radius, detail, …) { … }` |
 | `symmetry` | its children **plus** their mirror image — edit one half | `kcad_symmetry(n, c) { ... }` |
 | `joint` | rotates its children about a pivot, within limits | `kcad_joint(pivot, a, limits) { ... }` |
 
@@ -119,6 +120,13 @@ limb is one line instead of a chain of hulls. Joints nest (a hand in a
 forearm in an upper arm), which makes the tree the armature:
 **`set_pose`** then bends any number of joints by name in one call,
 clamped to each joint's limits.
+
+A **blend** is computed by KherveCAD (signed distance fields,
+marching tetrahedra) and baked into the program as one polyhedron,
+so it cannot sit inside a `for` loop — put the loop inside the
+blend. `get_code` summarises those baked arrays unless you pass
+`full: true`; the summary still re-applies, because the importer
+rebuilds a blend from its children.
 
 ## What the preview is showing
 
