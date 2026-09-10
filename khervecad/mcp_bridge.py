@@ -53,7 +53,8 @@ _MAX_LINE = 8 * 1024 * 1024
 _READ_ONLY_TOOLS = frozenset({
     "get_document_info", "list_node_types", "list_tree", "get_node",
     "get_code", "render_view", "list_parts", "list_examples",
-    "list_anchors", "select_nodes",
+    "list_anchors", "select_nodes", "get_node_bounds", "measure",
+    "section", "check_code",
 })
 
 #: Tools that never change the document, so there is no snapshot to

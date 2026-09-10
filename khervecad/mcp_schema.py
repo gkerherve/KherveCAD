@@ -342,6 +342,110 @@ TOOLS = [
 
     # ── Building ───────────────────────────────────────────────────
     {
+        "name": "get_node_bounds",
+        "description": (
+            "World-space bounding box of one or more nodes — min, max, "
+            "size and centre in mm, where the object really sits in "
+            "the assembly (every ancestor transform applied). Use it to "
+            "check a part's size or position without reading the tree "
+            "by hand. `approximate` flags a subtree whose booleans the "
+            "built-in tessellator only approximates."
+        ),
+        "input_schema": _obj({"node_ids": _IDS}, ["node_ids"]),
+    },
+    {
+        "name": "measure",
+        "description": (
+            "Distance between two points — explicit coordinates, a "
+            "node's centre / min / max corner, or a named anchor on an "
+            "Object. Between two nodes it also gives the per-axis `gap` "
+            "between their boxes (> 0 clearance, < 0 overlap), "
+            "`overlap` and `clearance`: is this pin clear of that wall?"
+        ),
+        "input_schema": _obj({"a": {
+                "type": "object",
+                "description": "{\"point\": [x, y, z]} or {\"node\": "
+                               "id, \"at\": \"center\" | \"min\" | "
+                               "\"max\" | <anchor name>}. Anchor names "
+                               "(Objects/instances) come from "
+                               "list_anchors.",
+                "properties": {
+                    "point": {"type": "array",
+                              "items": {"type": "number"},
+                              "minItems": 3, "maxItems": 3},
+                    "node": {"type": "integer"},
+                    "at": {"type": "string"},
+                },
+            }, "b": {
+                "type": "object",
+                "description": "{\"point\": [x, y, z]} or {\"node\": "
+                               "id, \"at\": \"center\" | \"min\" | "
+                               "\"max\" | <anchor name>}. Anchor names "
+                               "(Objects/instances) come from "
+                               "list_anchors.",
+                "properties": {
+                    "point": {"type": "array",
+                              "items": {"type": "number"},
+                              "minItems": 3, "maxItems": 3},
+                    "node": {"type": "integer"},
+                    "at": {"type": "string"},
+                },
+            }}, ["a", "b"]),
+    },
+    {
+        "name": "section",
+        "description": (
+            "Cut the model with a plane and get the cross-section: a "
+            "hatched PNG with a mm grid, plus the outlines — each "
+            "closed or not, its area (holes negative) and extent. Shows "
+            "what a shaded render cannot: wall thickness, whether a "
+            "bore goes through, what is inside a closed shell. By "
+            "default it cuts what the 3D view shows after waiting for "
+            "the exact render; with node_id it cuts that node's "
+            "built-in tessellation. An outline that does not close "
+            "means the mesh leaks on that plane."
+        ),
+        "input_schema": _obj({
+            "axis": {"type": "string", "enum": ["x", "y", "z"],
+                     "description": "The plane's normal: 'z' cuts "
+                                    "horizontally (a plan), 'y' a "
+                                    "front section, 'x' a side one."},
+            "offset": {"type": "number",
+                       "description": "Where along the axis, in mm. "
+                                      "Defaults to the model's middle."},
+            "node_id": {"type": "integer",
+                        "description": "Cut just this node instead of "
+                                       "the whole view."},
+            "include_points": {"type": "boolean",
+                               "description": "Also return each "
+                                              "outline's (u, v) points."},
+            "max_width": {"type": "integer",
+                          "description": "Picture width (default 700)."},
+            "wait_for_exact": {"type": "boolean",
+                               "description": "Wait for OpenSCAD's "
+                                              "exact render first "
+                                              "(default true)."},
+            "timeout": {"type": "number",
+                        "description": "Seconds to wait (default 30)."},
+        }, ["axis"]),
+    },
+    {
+        "name": "check_code",
+        "description": (
+            "Dry-run an OpenSCAD program: parse and validate it exactly "
+            "as apply_code would, WITHOUT touching the model. Returns "
+            "what it would create (node types and counts), every "
+            "statement the importer skipped (`warnings`) and every "
+            "node that would turn red (`problems`). Use it before a "
+            "big apply_code, or to learn whether a construct is in the "
+            "importable subset."
+        ),
+        "input_schema": _obj({
+            "code": {"type": "string",
+                     "description": "The OpenSCAD program."},
+        }, ["code"]),
+    },
+    {
         "name": "add_node",
         "description": (
             "Create a node. Without a parent it lands in the scope the "

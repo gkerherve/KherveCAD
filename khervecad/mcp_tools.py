@@ -28,6 +28,7 @@ the Free Software Foundation, either version 3 of the License, or
 from __future__ import annotations
 
 import base64
+import math
 from pathlib import Path
 
 from PyQt5.QtCore import QBuffer, QByteArray, Qt
@@ -373,16 +374,19 @@ class McpToolExecutor:
                 return False
             QThread.msleep(15)
 
-    def _world_points(self, node) -> list:
-        """World-space vertices of *node* as the 3D view draws it (in
-        the Object tab, in that Object's own frame)."""
+    def _world_tris(self, node) -> list:
+        """World-space triangles of *node* as the 3D view draws it (in
+        the Object tab, in that Object's own frame) — the built-in
+        tessellation, so booleans are approximated."""
         win = self._w
         root = win._render_scope()[0]
         iso = root if root is not self._model.root else None
         with win._isolated_frame(iso):
-            tris = mesh.selected_world_tris(root, {node.id},
+            return mesh.selected_world_tris(root, {node.id},
                                             env=self._env(), fn=self._fn())
-        return [v for tri in tris for v in tri]
+
+    def _world_points(self, node) -> list:
+        return [v for tri in self._world_tris(node) for v in tri]
 
     @staticmethod
     def _number(params, key, positive=False):
@@ -569,6 +573,204 @@ class McpToolExecutor:
             out["can_attach_to"] = [p.name for p
                                     in mates._mate_siblings(node)]
         return out
+
+    # ── Measuring ───────────────────────────────────────────────
+
+    def _node_box(self, node):
+        pts = self._world_points(node)
+        if not pts:
+            raise ToolError(
+                f"{node.name} has no geometry in the 3D view — it is "
+                "hidden, empty, or 2D-only.")
+        return ([min(p[i] for p in pts) for i in range(3)],
+                [max(p[i] for p in pts) for i in range(3)])
+
+    @staticmethod
+    def _box_dict(lo, hi) -> dict:
+        return {"min": [round(v, 3) for v in lo],
+                "max": [round(v, 3) for v in hi],
+                "size": [round(hi[i] - lo[i], 3) for i in range(3)],
+                "center": [round((lo[i] + hi[i]) / 2, 3)
+                           for i in range(3)]}
+
+    def _t_get_node_bounds(self, params) -> dict:
+        nodes = self._nodes(params.get("node_ids"))
+        out, los, his = [], [], []
+        for node in nodes:
+            lo, hi = self._node_box(node)
+            los.append(lo)
+            his.append(hi)
+            out.append({"id": node.id, "name": node.name,
+                        **self._box_dict(lo, hi),
+                        "approximate": mesh.uses_booleans(node)})
+        result = {"nodes": out}
+        if len(out) > 1:
+            result["combined"] = self._box_dict(
+                [min(lo[i] for lo in los) for i in range(3)],
+                [max(hi[i] for hi in his) for i in range(3)])
+        if any(e["approximate"] for e in out):
+            result["note"] = (
+                "Bounds come from the built-in tessellator, which "
+                "approximates booleans (a difference shows its first "
+                "operand). A cut never grows a part, so a difference's "
+                "box is right; an intersection or minkowski can be off.")
+        return result
+
+    def _where(self, spec, label):
+        """One end of a measurement: ``{"point": [x, y, z]}`` or
+        ``{"node": id, "at": "center" | "min" | "max" | <anchor>}``.
+        Returns (world point, (node, lo, hi) or None, description)."""
+        if not isinstance(spec, dict):
+            raise ToolError(
+                f"'{label}' must be {{\"point\": [x, y, z]}} or "
+                f"{{\"node\": id, \"at\": ...}}.")
+        if spec.get("point") is not None:
+            try:
+                point = [float(v) for v in spec["point"]]
+            except (TypeError, ValueError):
+                point = []
+            if len(point) != 3:
+                raise ToolError(f"'{label}.point' must be [x, y, z].")
+            return point, None, "point"
+        if spec.get("node") is None:
+            raise ToolError(f"'{label}' needs a 'point' or a 'node'.")
+        node = self._node(spec["node"])
+        lo, hi = self._node_box(node)
+        box = (node, lo, hi)
+        at = str(spec.get("at") or "center").strip()
+        if at.lower() in ("center", "centre"):
+            return ([(lo[i] + hi[i]) / 2 for i in range(3)], box,
+                    f"{node.name} · centre")
+        if at.lower() == "min":
+            return lo, box, f"{node.name} · min corner"
+        if at.lower() == "max":
+            return hi, box, f"{node.name} · max corner"
+        if node.type not in ("component", "reference"):
+            raise ToolError(
+                f"Anchors belong to Objects and their instances; "
+                f"{node.name} is a {node.type}. Use at: center, min or "
+                "max, or measure its Object.")
+        definition = mates.definition_of(self._model, node) or node
+        found = anchors.anchors_of(definition, env=self._env(),
+                                   fn=self._fn())
+        match = [a for a in found if a["name"].lower() == at.lower()]
+        if not match:
+            raise ToolError(
+                f"{node.name} has no anchor {at!r}. Use center, min, max "
+                f"or one of: {', '.join(a['name'] for a in found[:40])}.")
+        pos, _direction = anchors.anchor_world(node, match[0], self._env())
+        return pos, box, f"{node.name} · {match[0]['name']}"
+
+    def _t_measure(self, params) -> dict:
+        pa, box_a, la = self._where(params.get("a"), "a")
+        pb, box_b, lb = self._where(params.get("b"), "b")
+        delta = [pb[i] - pa[i] for i in range(3)]
+        out = {"a": {"at": la, "point": [round(v, 3) for v in pa]},
+               "b": {"at": lb, "point": [round(v, 3) for v in pb]},
+               "delta": [round(v, 3) for v in delta],
+               "distance": round(math.sqrt(sum(d * d for d in delta)), 3)}
+        if box_a and box_b and box_a[0] is not box_b[0]:
+            _na, alo, ahi = box_a
+            _nb, blo, bhi = box_b
+            # per axis: > 0 is clearance between the boxes, < 0 how far
+            # they run into each other
+            gap = [max(blo[i] - ahi[i], alo[i] - bhi[i]) for i in range(3)]
+            out["gap"] = [round(g, 3) for g in gap]
+            out["overlap"] = all(g < 0 for g in gap)
+            out["clearance"] = round(
+                math.sqrt(sum(max(g, 0.0) ** 2 for g in gap)), 3)
+        return out
+
+    def _t_section(self, params) -> dict:
+        from . import section
+        axis = str(params.get("axis", "")).lower()
+        if axis not in section.PLANES:
+            raise ToolError("'axis' must be 'x', 'y' or 'z'.")
+        offset = self._number(params, "offset")
+        try:
+            timeout = float(params.get("timeout", _DEFAULT_WAIT_S))
+        except (TypeError, ValueError):
+            raise ToolError("'timeout' must be a number of seconds.")
+        timeout = min(max(timeout, 0.0), _MAX_WAIT_S)
+        if params.get("node_id") is not None:
+            node = self._node(params["node_id"])
+            tris = self._world_tris(node)
+            complete = True
+            source = f"built-in tessellation of {node.name}"
+            if mesh.uses_booleans(node):
+                source += " (booleans approximated)"
+        else:
+            complete = (self._wait_for_render(timeout)
+                        if params.get("wait_for_exact", True)
+                        else self._render_settled())
+            tris = list(self._w.view3d.mesh)
+            source = self._w.view3d.source
+        if not tris:
+            raise ToolError("There is nothing in the 3D view to cut.")
+        sec = section.section(tris, axis, offset)
+        limit = max(int(params.get("max_width") or 700), 120)
+        image = section.draw(sec, limit, int(limit * 0.72))
+        u_name, v_name = sec["plane"]
+        outlines = []
+        for o in sec["outlines"]:
+            entry = {"closed": o["closed"], "vertices": len(o["points"]),
+                     "area_mm2": round(o["area"], 3),
+                     "hole": o["closed"] and o["area"] < 0}
+            if params.get("include_points"):
+                entry["points"] = [[round(u, 3), round(v, 3)]
+                                   for u, v in o["points"]]
+            outlines.append(entry)
+        result = {IMAGE_KEY: self._png(image), "axis": axis,
+                  "offset": round(sec["offset"], 3),
+                  "plane": {"u": u_name, "v": v_name},
+                  "outlines": outlines,
+                  "area_mm2": round(sec["area"], 3),
+                  "source": source, "render_complete": complete}
+        if sec["bounds"]:
+            u0, v0, u1, v1 = sec["bounds"]
+            result["bounds"] = {u_name: [round(u0, 3), round(u1, 3)],
+                                v_name: [round(v0, 3), round(v1, 3)]}
+        else:
+            k = section.PLANES[axis][0]
+            vals = [v[k] for tri in tris for v in tri]
+            result["note"] = (
+                f"The plane misses the model: it spans {axis} = "
+                f"{min(vals):g} to {max(vals):g} mm.")
+        if any(not o["closed"] for o in sec["outlines"]):
+            result["note"] = (
+                "An outline did not close (drawn dashed red): the mesh "
+                "has a gap on this plane — it is not watertight there.")
+        return result
+
+    def _t_check_code(self, params) -> dict:
+        from .scadparse import parse_scad
+        code = params.get("code")
+        if not isinstance(code, str) or not code.strip():
+            raise ToolError("'code' must be an OpenSCAD program.")
+        try:
+            root, warnings = parse_scad(code)
+        except Exception as exc:
+            raise ToolError(f"Could not parse that program: {exc}")
+        types = {}
+        for node in root.walk():
+            if node is not root:
+                types[node.type] = types.get(node.type, 0) + 1
+        try:
+            problems = validate(root)
+        except Exception:
+            problems = {}
+        names = {n.id: n for n in root.walk()}
+        return {
+            "would_apply": bool(root.children),
+            "top_level": len(root.children),
+            "nodes": sum(types.values()),
+            "types": dict(sorted(types.items())),
+            "warnings": list(warnings),
+            "problems": [{"node": names[i].name if i in names else i,
+                          "type": names[i].type if i in names else "",
+                          "message": msg}
+                         for i, msg in problems.items()],
+        }
 
     # ── Building ────────────────────────────────────────────────
 

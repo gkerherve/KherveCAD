@@ -542,3 +542,105 @@ def test_set_render_options_switches_the_projection(ex, window):
     finally:
         window.set_projection("Perspective")
         settings.setValue("render_projection", saved)
+
+
+# ── measuring: bounds, measure, section, check_code ────────────────
+
+def test_get_node_bounds_is_in_world_space(ex):
+    ident = cube(ex, x=5.0, width=10.0, depth=20.0, height=30.0)
+    out = call(ex, "get_node_bounds", node_ids=[ident])["nodes"][0]
+    assert out["min"] == pytest.approx([5, 0, 0])
+    assert out["max"] == pytest.approx([15, 20, 30])
+    assert out["center"] == pytest.approx([10, 10, 15])
+    assert out["approximate"] is False
+
+
+def test_get_node_bounds_combines_several_and_flags_booleans(ex):
+    a = cube(ex, width=10.0, depth=10.0, height=10.0)
+    b = cube(ex, x=50.0, width=10.0, depth=10.0, height=10.0)
+    out = call(ex, "get_node_bounds", node_ids=[a, b])
+    assert out["combined"]["size"] == pytest.approx([60, 10, 10])
+    call(ex, "apply_code", code="difference() { cube(10); cube(5); }")
+    diff = [n["id"] for n in call(ex, "list_tree")["nodes"]
+            if n["type"] == "difference"]
+    flagged = call(ex, "get_node_bounds", node_ids=diff)
+    assert flagged["nodes"][0]["approximate"] is True
+    assert "note" in flagged
+    assert "error" in ex.execute("get_node_bounds", {"node_ids": [987654]})
+
+
+def test_measure_between_points_and_nodes(ex):
+    out = call(ex, "measure", a={"point": [0, 0, 0]},
+               b={"point": [3, 4, 0]})
+    assert out["distance"] == pytest.approx(5.0)
+    left = cube(ex, width=10.0, depth=10.0, height=10.0)
+    right = cube(ex, x=20.0, width=10.0, depth=10.0, height=10.0)
+    apart = call(ex, "measure", a={"node": left}, b={"node": right})
+    assert apart["distance"] == pytest.approx(20.0)     # centre to centre
+    assert apart["gap"][0] == pytest.approx(10.0)       # 10 mm of air
+    assert apart["overlap"] is False
+    assert apart["clearance"] == pytest.approx(10.0)
+    touching = call(ex, "measure", a={"node": left, "at": "max"},
+                    b={"node": right, "at": "min"})
+    assert touching["delta"] == pytest.approx([10.0, -10.0, -10.0])
+
+
+def test_measure_reports_an_overlap(ex):
+    a = cube(ex, width=10.0, depth=10.0, height=10.0)
+    b = cube(ex, x=6.0, width=10.0, depth=10.0, height=10.0)
+    out = call(ex, "measure", a={"node": a}, b={"node": b})
+    assert out["overlap"] is True and out["gap"][0] == pytest.approx(-4.0)
+    assert out["clearance"] == 0.0
+
+
+def test_measure_to_a_named_anchor_on_an_object(ex):
+    ident = cube(ex, width=10.0, depth=10.0, height=10.0)
+    obj = call(ex, "make_object", ids=[ident], name="Block")["object"]
+    names = [a["name"] for a in call(ex, "list_anchors",
+                                     node_id=obj)["anchors"]]
+    assert names
+    out = call(ex, "measure", a={"node": obj, "at": names[0]},
+               b={"point": [0, 0, 0]})
+    assert out["a"]["at"].endswith(names[0])
+    bad = ex.execute("measure", {"a": {"node": obj, "at": "Nowhere"},
+                                 "b": {"point": [0, 0, 0]}})
+    assert "Nowhere" in bad["error"]
+    assert "error" in ex.execute("measure", {"a": {"point": [1, 2]},
+                                             "b": {"point": [0, 0, 0]}})
+
+
+def test_section_cuts_the_view_into_outlines(ex, window):
+    cube(ex, width=20.0, depth=10.0, height=30.0)
+    window.show()
+    out = call(ex, "section", axis="z", offset=15.0, max_width=300)
+    assert valid_png_b64(out[IMAGE_KEY])
+    assert out["plane"] == {"u": "x", "v": "y"}
+    assert out["area_mm2"] == pytest.approx(200.0)
+    assert len(out["outlines"]) == 1 and out["outlines"][0]["closed"]
+    assert out["bounds"]["x"] == pytest.approx([0.0, 20.0])
+
+
+def test_section_of_one_node_and_a_plane_that_misses(ex, window):
+    ident = cube(ex, width=10.0, depth=10.0, height=10.0)
+    window.show()
+    out = call(ex, "section", axis="x", node_id=ident,
+               include_points=True)
+    assert out["offset"] == pytest.approx(5.0)          # the middle
+    assert len(out["outlines"][0]["points"]) >= 4
+    missed = call(ex, "section", axis="z", offset=500.0)
+    assert missed["outlines"] == [] and "misses" in missed["note"]
+    assert "error" in ex.execute("section", {"axis": "w"})
+
+
+def test_check_code_is_a_dry_run(ex):
+    before = call(ex, "get_document_info")["node_count"]
+    out = call(ex, "check_code",
+               code="translate([1, 2, 3]) cube(5); sphere(r = 2);")
+    assert out["would_apply"] is True and out["top_level"] == 2
+    assert out["types"].get("cube") == 1
+    assert out["types"].get("sphere") == 1
+    assert call(ex, "get_document_info")["node_count"] == before
+    skipped = call(ex, "check_code", code="children(); cube(1);")
+    assert skipped["warnings"]
+    empty = call(ex, "check_code", code="// nothing here")
+    assert empty["would_apply"] is False

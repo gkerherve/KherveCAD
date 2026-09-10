@@ -512,7 +512,14 @@ into a new module and import.
                        Claude is appended to whatever description
                        comes in, once, and names only the source files
                        actually shipped.
-  - `mcp_schema.py`  — the **MCP tool table**: 33 JSON-Schema tool
+  - `section.py`     — planar **cross-sections** of a mesh (Qt-free):
+                       `cut()` orients every segment with the solid
+                       on its left, so outer outlines run CCW, holes
+                       CW and signed areas sum to the net area;
+                       `chain()` joins them (an outline that cannot
+                       close = the mesh leaks there); `draw()` paints
+                       the hatched section. Behind the `section` tool.
+  - `mcp_schema.py`  — the **MCP tool table**: 37 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -566,7 +573,7 @@ into a new module and import.
                        enable/disable, access
                        level, one-click host connect, hand-config
                        snippets and a live activity log.
-- `docs/MCP.md` — how to connect an assistant, what the 33 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 37 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -795,7 +802,7 @@ release the website links to. See `README.macos.md`.
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **33 tools**: the object tree, OpenSCAD in
+client gets the whole app as **37 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.
