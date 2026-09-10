@@ -6,7 +6,7 @@ Cursor, Zed, Continue, or anything else that speaks the Model Context
 Protocol — can build in an open document directly.
 
 The built-in chat replies with an OpenSCAD program you then apply. An
-MCP client gets the **whole application** instead: 38 tools over the
+MCP client gets the **whole application** instead: 39 tools over the
 object tree, the code, the part library, assemblies, the document —
 and a **picture of the 3D preview**.
 
@@ -136,6 +136,12 @@ rebuilds a blend from its children.
 Gold, Emissive and more — which the 3D view shades per object
 (Glass is see-through). OpenSCAD has no materials, so the choice
 is kept in the file and survives export and import.
+
+**`set_reference_image`** puts a photo or sketch on an axis plane
+(Top, Front, Side) at a width in millimetres — the 2D view shows it
+on that plane and the 3D view draws it in place behind the model —
+so a character can be sculpted to its sheet or a part checked
+against its photo. It is saved with the document.
 
 ## What the preview is showing
 

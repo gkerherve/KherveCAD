@@ -635,6 +635,7 @@ class SketchScene(QGraphicsScene):
         model.structure_changed.connect(self.rebuild)
         model.node_changed.connect(self._node_changed)
         model.dimensions_changed.connect(self.update)
+        model.references_changed.connect(self.update)
         # repaint the overlay so auto size-on-selection follows the pick
         self.selectionChanged.connect(self.update)
         self.rebuild()
@@ -1606,6 +1607,11 @@ class SketchView(QGraphicsView):
     def drawBackground(self, painter, rect):
         super().drawBackground(painter, rect)
         scene = self.scene()
+        refs = getattr(getattr(scene, "model", None), "reference_images",
+                       None)
+        if refs:                        # under the grid, like a backdrop
+            from . import refimage
+            refimage.draw_2d(painter, refs, scene.plane)
         if not scene.show_grid:
             return
         from .style import tokens

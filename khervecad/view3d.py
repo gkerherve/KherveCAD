@@ -176,6 +176,8 @@ class View3D(QWidget):
         #: anchor markers [{pos, dir, name, kind}] in world space —
         #: the selected Object's attachment points
         self.anchor_markers = []
+        #: pictures drawn on their planes behind the model (refimage.py)
+        self.reference_images = []
         #: pick mode: a callable fed the picked face/edge description
         #: (see anchors.describe_pick); left click picks, right cancels
         self._pick_cb = None
@@ -337,6 +339,7 @@ class View3D(QWidget):
         twin.set_mesh(self.mesh, self.source, self.colors)
         twin.set_highlight_mesh(self.highlight_mesh)
         twin.set_anchor_markers(list(self.anchor_markers))
+        twin.reference_images = list(self.reference_images)
         twin.yaw = self.yaw if yaw is None else float(yaw)
         twin.pitch = self.pitch if pitch is None else float(pitch)
         twin.distance, twin.target = self.distance, list(self.target)
@@ -384,6 +387,11 @@ class View3D(QWidget):
         """Triangles of the selected object, drawn glowing on top."""
         self.highlight_mesh = tris or []
         self._draft_hi, _ = self._decimate(self.highlight_mesh)
+        self.update()
+
+    def set_reference_images(self, refs):
+        """Pictures to draw on their planes, behind the model."""
+        self.reference_images = [dict(r) for r in refs or []]
         self.update()
 
     def set_anchor_markers(self, markers):
@@ -656,6 +664,11 @@ class View3D(QWidget):
 
         eye, right, up, forward = self._camera()
         self._draw_ground(painter, t, eye, right, up, forward)
+        if self.reference_images:
+            from . import refimage
+            refimage.draw_3d(painter, self.reference_images,
+                             lambda v: self._project(eye, right, up,
+                                                     forward, v))
 
         base = QColor(t["select"])
         light = (0.35, -0.5, 0.75)

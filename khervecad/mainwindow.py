@@ -157,6 +157,7 @@ class MainWindow(QMainWindow):
             lambda step: self._tree_command("step", step))
         self.model.structure_changed.connect(self._model_edited)
         self.model.node_changed.connect(lambda _n: self._model_edited())
+        self.model.references_changed.connect(self._model_edited)
         self.model.mate_released.connect(
             lambda n: self.statusBar().showMessage(
                 f"{n.name} detached — its position is now yours to "
@@ -424,6 +425,11 @@ class MainWindow(QMainWindow):
         view_menu.addAction(self._dims_act)
         view_menu.addAction("Clear &Dimensions",
                             self.model.clear_dimensions)
+        view_menu.addAction(icons.icon("mdi.image-outline"),
+                            "Add &Reference Image…",
+                            self._add_reference_image)
+        view_menu.addAction("Clear Reference &Images",
+                            self.model.clear_reference_images)
         view_menu.addSeparator()
         view_menu.addAction("Zoom &In", lambda: self.view2d.zoom(1.25),
                             "Ctrl++")
@@ -786,6 +792,7 @@ class MainWindow(QMainWindow):
         mates.refresh(self.model)
         self._dirty = True
         self._update_title()
+        self.view3d.set_reference_images(self.model.reference_images)
         self._refresh_preview()
 
     def _isolation_changed(self):
@@ -1238,6 +1245,36 @@ class MainWindow(QMainWindow):
                 # was coloured) would land on top of the colour preview
                 # and quietly wipe it — the "3D forgot my colours" bug.
                 self.engine.cancel()
+
+    def _add_reference_image(self):
+        """A picture to model against, on the plane the 2D view shows,
+        centred on the origin at the width the user gives."""
+        from PyQt5.QtWidgets import QFileDialog, QInputDialog
+        from . import refimage
+        path, _filter = QFileDialog.getOpenFileName(
+            self, "Reference image", "",
+            "Images (*.png *.jpg *.jpeg *.bmp *.gif *.webp)")
+        if not path:
+            return
+        ratio = refimage.aspect(path)
+        if ratio is None:
+            QMessageBox.warning(self, "Reference image",
+                                f"Could not read an image from {path}.")
+            return
+        width, ok = QInputDialog.getDouble(
+            self, "Reference image", "Width on the plane (mm):", 100.0,
+            0.1, 1e6, 1)
+        if not ok:
+            return
+        height = width * ratio
+        self.model.add_reference_image(dict(
+            path=path, plane=self.scene.plane, x=-width / 2,
+            y=-height / 2, width=width, height=height, offset=0.0,
+            opacity=0.5, visible=True))
+        self.statusBar().showMessage(
+            f"Reference image on the {self.scene.plane} plane — the MCP "
+            "tool set_reference_image can place and size it exactly.",
+            6000)
 
     def set_projection(self, name: str):
         """Perspective or orthographic 3D view, with the View menu's

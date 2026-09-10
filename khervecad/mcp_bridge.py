@@ -71,7 +71,7 @@ _NO_SNAPSHOT_TOOLS = _READ_ONLY_TOOLS | {
 #: back until the user raises the access level.
 _FILE_TOOLS = frozenset({
     "open_document", "save_document", "export_document",
-    "publish_to_printables",
+    "publish_to_printables", "set_reference_image",
 })
 
 

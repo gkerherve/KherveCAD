@@ -191,6 +191,7 @@ class McpToolExecutor:
                          "holes look uncut. Edit > Locate OpenSCAD."),
             },
             "bounds_mm": self._bbox(),
+            "reference_images": self._references(),
             "errors": [{"id": nid, "message": msg}
                        for nid, msg in errors.items()],
         }
@@ -1230,6 +1231,53 @@ class McpToolExecutor:
         win.view3d.user_moved = False
         win.view3d.fit()
         win._update_title()
+
+    def _references(self) -> list:
+        return [{"index": i, "path": r.get("path"),
+                 "plane": r.get("plane"),
+                 "at": [r.get("x"), r.get("y")],
+                 "size": [r.get("width"), r.get("height")],
+                 "offset": r.get("offset", 0.0),
+                 "opacity": r.get("opacity")}
+                for i, r in enumerate(self._model.reference_images)]
+
+    def _t_set_reference_image(self, params) -> dict:
+        from . import refimage
+        model = self._model
+        if params.get("clear"):
+            model.clear_reference_images()
+        elif params.get("remove") is not None:
+            index = int(params["remove"])
+            if not 0 <= index < len(model.reference_images):
+                raise ToolError(f"No reference image {index}; there are "
+                                f"{len(model.reference_images)}.")
+            model.remove_reference_image(index)
+        else:
+            path = str(params.get("path") or "")
+            if not path:
+                raise ToolError("Pass 'path' (an image file), or clear / "
+                                "remove.")
+            ratio = refimage.aspect(path)
+            if ratio is None:
+                raise ToolError(f"Could not read an image at {path!r}.")
+            plane = {"Top": "Top (XY)", "Front": "Front (XZ)",
+                     "Side": "Side (YZ)"}.get(params.get("plane") or "Top")
+            if plane is None:
+                raise ToolError("'plane' must be Top, Front or Side.")
+            width = self._number(params, "width", True) or 100.0
+            height = width * ratio
+            x, y = self._number(params, "x"), self._number(params, "y")
+            opacity = self._number(params, "opacity")
+            model.add_reference_image(dict(
+                path=path, plane=plane,
+                x=-width / 2 if x is None else x,
+                y=-height / 2 if y is None else y,
+                width=width, height=height,
+                offset=self._number(params, "offset") or 0.0,
+                opacity=0.5 if opacity is None
+                else min(max(opacity, 0.0), 1.0),
+                visible=True))
+        return {"reference_images": self._references()}
 
     def _t_load_example(self, params) -> dict:
         from . import examples

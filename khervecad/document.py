@@ -49,6 +49,7 @@ def save_kcad(model: DocumentModel, path: str):
             "global_fn": int(model.global_fn),
             "global_fn_on": bool(model.global_fn_on),
             "dimensions": model.dimensions,
+            "references": model.reference_images,
             "tree": node_to_dict(model.root)}
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=1)
@@ -64,9 +65,11 @@ def load_kcad(model: DocumentModel, path: str):
     model.global_fn = int(data.get("global_fn", 45))
     model.global_fn_on = bool(data.get("global_fn_on", True))
     model.dimensions = [dict(d) for d in data.get("dimensions", [])]
+    model.reference_images = [dict(r) for r in data.get("references", [])]
     model.group_variables()               # gather loose top-level vars
     model.structure_changed.emit()
     model.dimensions_changed.emit()
+    model.references_changed.emit()
 
 
 def export_scad(model: DocumentModel, path: str):

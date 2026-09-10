@@ -859,6 +859,8 @@ class DocumentModel(QObject):
     node_changed = pyqtSignal(object)
     #: the drawing's dimension annotations were added/removed.
     dimensions_changed = pyqtSignal()
+    #: the reference images (refimage.py) were added/removed/changed.
+    references_changed = pyqtSignal()
     #: a mate was dropped because its placement was edited by hand.
     mate_released = pyqtSignal(object)
 
@@ -880,6 +882,9 @@ class DocumentModel(QObject):
         #: engineering-drawing dimension annotations, each a dict
         #: {"a": [x, y], "b": [x, y], "plane": <2D view plane>}.
         self.dimensions = []
+        #: pictures to model against, each {"path", "plane", "x", "y",
+        #: "width", "height", "offset", "opacity", "visible"}
+        self.reference_images = []
         self.undo_stack = QUndoStack(self)
         self._restoring = False
         self._last_state = self._serialize()
@@ -890,12 +895,14 @@ class DocumentModel(QObject):
         self.structure_changed.connect(self._schedule_capture)
         self.node_changed.connect(lambda _n: self._schedule_capture())
         self.dimensions_changed.connect(self._schedule_capture)
+        self.references_changed.connect(self._schedule_capture)
 
     # ------------------------------------------------------ undo/redo
     def _serialize(self) -> str:
         from .document import node_to_dict
         return json.dumps({"tree": node_to_dict(self.root),
-                           "dimensions": self.dimensions})
+                           "dimensions": self.dimensions,
+                           "references": self.reference_images})
 
     def _schedule_capture(self):
         """Capture one undo snapshot per event-loop cycle, so a
@@ -920,6 +927,8 @@ class DocumentModel(QObject):
             data = json.loads(state)
             self.root = node_from_dict(data["tree"])
             self.dimensions = [dict(d) for d in data.get("dimensions", [])]
+            self.reference_images = [dict(r) for r in
+                                     data.get("references", [])]
             self._last_state = state
             self.structure_changed.emit()
         finally:
@@ -937,6 +946,24 @@ class DocumentModel(QObject):
         if 0 <= index < len(self.dimensions):
             del self.dimensions[index]
             self.dimensions_changed.emit()
+
+    # ------------------------------------------------ reference images
+    def add_reference_image(self, ref: dict) -> int:
+        """Add a picture to model against (see refimage.py); returns
+        its index."""
+        self.reference_images.append(dict(ref))
+        self.references_changed.emit()
+        return len(self.reference_images) - 1
+
+    def remove_reference_image(self, index: int):
+        if 0 <= index < len(self.reference_images):
+            del self.reference_images[index]
+            self.references_changed.emit()
+
+    def clear_reference_images(self):
+        if self.reference_images:
+            self.reference_images = []
+            self.references_changed.emit()
 
     def clear_dimensions(self):
         if self.dimensions:
@@ -1439,6 +1466,7 @@ class DocumentModel(QObject):
         return copy
 
     def clear(self):
+        self.reference_images = []
         self.root = CadNode("root")
         self.structure_changed.emit()
 

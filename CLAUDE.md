@@ -595,7 +595,18 @@ into a new module and import.
                        `chain()` joins them (an outline that cannot
                        close = the mesh leaks there); `draw()` paints
                        the hatched section. Behind the `section` tool.
-  - `mcp_schema.py`  — the **MCP tool table**: 38 JSON-Schema tool
+  - `refimage.py`    — **reference images**: a picture on an axis plane
+                       (lower-left (x, y), width mm, height from the
+                       aspect, offset along the normal, opacity),
+                       stored in `DocumentModel.reference_images`
+                       (undoable, saved in .kcad as "references").
+                       The sketch view draws it under the grid while
+                       its plane shows (flipped: the scene is Y-up);
+                       the 3D view draws it on its plane behind the
+                       model via a projective `quadToQuad`. View >
+                       Add Reference Image…, and the
+                       `set_reference_image` MCP tool (file access).
+  - `mcp_schema.py`  — the **MCP tool table**: 39 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -649,7 +660,7 @@ into a new module and import.
                        enable/disable, access
                        level, one-click host connect, hand-config
                        snippets and a live activity log.
-- `docs/MCP.md` — how to connect an assistant, what the 38 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 39 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -883,7 +894,7 @@ release the website links to. See `README.macos.md`.
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **38 tools**: the object tree, OpenSCAD in
+client gets the whole app as **39 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

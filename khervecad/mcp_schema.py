@@ -728,6 +728,44 @@ TOOLS = [
 
     # ── Document ───────────────────────────────────────────────────
     {
+        "name": "set_reference_image",
+        "description": (
+            "Put a reference picture — a photo, a sketch, a character "
+            "sheet — on one of the axis planes, to model against it "
+            "(Blender's reference images). It shows in the 2D view "
+            "while that plane is shown and in the 3D view on its plane, "
+            "behind the model, and is saved with the document. Pass "
+            "clear to remove them all, or remove with an index."
+        ),
+        "input_schema": _obj({
+            "path": {"type": "string",
+                     "description": "Absolute path of a PNG/JPEG."},
+            "plane": {"type": "string", "enum": ["Top", "Front", "Side"],
+                      "description": "Top = XY (default), Front = XZ, "
+                                     "Side = YZ."},
+            "x": {"type": "number",
+                  "description": "The picture's lower-left corner along "
+                                 "the plane's horizontal axis, mm "
+                                 "(default: centred on the origin)."},
+            "y": {"type": "number",
+                  "description": "... along the plane's vertical axis."},
+            "width": {"type": "number",
+                      "description": "Width in mm (default 100); the "
+                                     "height follows the picture."},
+            "offset": {"type": "number",
+                       "description": "The plane's distance along its "
+                                      "normal, mm — e.g. a Front picture "
+                                      "set behind the model."},
+            "opacity": {"type": "number",
+                        "description": "0-1 (default 0.5)."},
+            "remove": {"type": "integer",
+                       "description": "Remove the picture at this index "
+                                      "instead."},
+            "clear": {"type": "boolean",
+                      "description": "Remove every reference picture."},
+        }),
+    },
+    {
         "name": "set_render_options",
         "description": (
             "The document-wide segment count ($fn) for round objects, "
