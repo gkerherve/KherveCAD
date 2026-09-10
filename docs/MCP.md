@@ -107,6 +107,10 @@ things a cube and a `difference()` do not give you:
 | `symmetry` | its children **plus** their mirror image — edit one half | `kcad_symmetry(n, c) { ... }` |
 | `joint` | rotates its children about a pivot, within limits | `kcad_joint(pivot, a, limits) { ... }` |
 
+OpenSCAD's own `polyhedron` (points and faces) is a node as well —
+validation names the exact edge that leaves it open or wound the
+wrong way, which is otherwise the hardest polyhedron bug to find.
+
 They compile to calls of small `kcad_*` helper modules, defined once at
 the top of any program that uses them, so an exported `.scad` is still
 plain OpenSCAD — and `apply_code` understands the calls directly, so a

@@ -972,8 +972,7 @@ def _is_zero(value):
 _GEOMETRY_LEAVES = {
     "cube", "sphere", "cylinder", "stl_import", "circle", "rect",
     "polygon", "text", "line", "scad_raw", "reference",
-    "capsule", "ellipsoid", "rounded_box",
-}
+} | _organic.LEAVES
 #: Container/operation types that are meaningless when they wrap no
 #: geometry — pruned on import so a skipped ``children()`` does not leave
 #: an empty red node behind.
@@ -981,8 +980,8 @@ _PRUNE_WHEN_DEAD = {
     "translate", "rotate", "scale", "mirror", "offset", "color",
     "linear_extrude", "rotate_extrude", "projection",
     "union", "difference", "intersection", "hull", "minkowski",
-    "if_else", "symmetry", "joint",
-}
+    "if_else",
+} | _organic.WRAPPERS
 
 
 def _has_geometry(node) -> bool:

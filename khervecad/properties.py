@@ -23,6 +23,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDoubleSpinBox,
                              QVBoxLayout, QWidget)
 
 from . import icons
+from .rowsedit import ChoiceBox, RowsEditor
 from .model import NODE_TYPES, DocumentModel, fmt
 
 
@@ -333,6 +334,14 @@ class PropertiesPanel(QScrollArea):
             button.clicked.connect(lambda _=False, k=key, b=button:
                                    self._pick_color(k, b))
             return button
+        if kind == "rows":
+            return RowsEditor(self.node.params.get(key) or [], minimum,
+                              lambda rows, k=key: self._set_param(k, rows))
+        if kind == "choice":
+            box = ChoiceBox(minimum)
+            box.currentTextChanged.connect(
+                lambda v, k=key: self._set_param(k, v))
+            return box
         return None
 
     def _pick_color(self, key, button):
@@ -371,6 +380,10 @@ class PropertiesPanel(QScrollArea):
                 editor.setValue(int(value))
             elif isinstance(editor, QCheckBox):
                 editor.setChecked(bool(value))
+            elif isinstance(editor, RowsEditor):
+                editor.set_rows(value)
+            elif isinstance(editor, ChoiceBox):
+                editor.set_value(value)
             elif isinstance(editor, QPushButton):
                 self._swatch(editor, str(value))
             elif isinstance(editor, MultilineEdit):

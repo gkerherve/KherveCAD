@@ -533,6 +533,18 @@ into a new module and import.
                        lists, Qt-free): the capsule and rounded box
                        are hulls of spheres, so they preview as
                        what they are.
+  - `bake.py`        — **mesh nodes**, aggregated into the registry by
+                       organic.py: `polyhedron` (OpenSCAD's own points +
+                       faces; validation names the edge that is open or
+                       wound the wrong way; faces are clockwise from
+                       outside, reversed for the preview) and
+                       `to_polyhedron()`, which welds counter-clockwise
+                       triangles into OpenSCAD points/faces for the
+                       nodes that bake a computed surface.
+  - `rowsedit.py`    — property editors for the `rows` schema kind (a
+                       table: fixed columns, or free-length index lists
+                       typed `0, 1, 2`; a non-numeric cell is kept as an
+                       expression) and the `choice` kind (drop-down).
   - `section.py`     — planar **cross-sections** of a mesh (Qt-free):
                        `cut()` orients every segment with the solid
                        on its left, so outer outlines run CCW, holes
@@ -607,7 +619,8 @@ into a new module and import.
   compiles to `hull()` of two circles so it is a real extrudable
   solid; `circle` has an `angle` param (90 = quarter, 180 = semi)
   that compiles to a polygon fan when partial.
-- 3D primitives (`cube`, `sphere`, `cylinder`) and `stl_import`.
+- 3D primitives (`cube`, `sphere`, `cylinder`), `polyhedron`
+  (bake.py) and `stl_import`.
 - Operations wrap their children (`linear_extrude`,
   `rotate_extrude`, `translate`, `rotate`, `scale`, `mirror`,
   `offset` for corner rounding).

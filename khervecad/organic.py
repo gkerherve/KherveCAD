@@ -25,7 +25,9 @@ lossless round trip with no pattern guessing.
 
 No package imports at module level: model.py imports this from its
 bottom to register the types, so whatever needs the tree, the
-tessellator or the parser is imported when called.
+tessellator or the parser is imported when called. It also aggregates
+bake.py (polyhedron and the baked-mesh nodes), which keeps the same
+rule, so model, mesh and the parser each hook in exactly once.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -36,6 +38,8 @@ the Free Software Foundation, either version 3 of the License, or
 """
 
 from __future__ import annotations
+
+from . import bake
 
 #: model.SHAPE_3D / model.OPERATION (not imported: see the docstring)
 SHAPE_3D = "3d"
@@ -101,9 +105,12 @@ NODE_TYPES = {
            ("max_angle", "Max angle°", "float", -360.0, 360.0)]),
 }
 
+#: this module's own types; bake.py's join the registry below
+_OWN = frozenset(NODE_TYPES)
+NODE_TYPES.update(bake.NODE_TYPES)
 TYPES = frozenset(NODE_TYPES)
-LEAVES = frozenset({"capsule", "ellipsoid", "rounded_box"})
-WRAPPERS = frozenset({"symmetry", "joint"})
+LEAVES = frozenset({"capsule", "ellipsoid", "rounded_box"}) | bake.LEAVES
+WRAPPERS = frozenset({"symmetry", "joint"}) | bake.WRAPPERS
 
 #: helper module per type, emitted in this order above the program
 _ORDER = ("capsule", "ellipsoid", "rounded_box", "symmetry", "joint")
@@ -153,16 +160,16 @@ def register(node_types: dict, container_types: set):
 
 def preamble(root) -> list:
     """Source lines defining the helper modules *root*'s tree uses."""
-    used = {n.type for n in root.walk() if n.type in TYPES}
-    if not used:
-        return []
-    lines = ["// KherveCAD organic helpers — capsule, ellipsoid, "
-             "rounded box, symmetry, joint"]
+    used = {n.type for n in root.walk() if n.type in _OWN}
+    lines = []
     for t in _ORDER:
         if t in used:
             lines.extend(HELPERS[t].split("\n"))
-    lines.append("")
-    return lines
+    lines.extend(bake.preamble(root))
+    if not lines:
+        return []
+    return (["// KherveCAD helper modules (organic and mesh nodes)"]
+            + lines + [""])
 
 
 # ---------------------------------------------------------------- codegen
@@ -170,6 +177,8 @@ def preamble(root) -> list:
 def statement(node, fmt, fn) -> str:
     """The node's one OpenSCAD statement (head only, for wrappers).
     *fmt* and *fn* are model's formatter and effective-$fn helpers."""
+    if node.type in bake.TYPES:
+        return bake.statement(node, fmt, fn)
     p = node.params
     t = node.type
 
@@ -279,6 +288,7 @@ BUILDERS = {
     "kcad_rounded_box": _b_rounded_box, "kcad_symmetry": _b_symmetry,
     "kcad_joint": _b_joint,
 }
+BUILDERS.update(bake.BUILDERS)
 
 
 # -------------------------------------------------------- validation
@@ -286,6 +296,8 @@ BUILDERS = {
 def check(node, env):
     """An error message for a broken organic node, else None."""
     from . import expr
+    if node.type in bake.TYPES:
+        return bake.check(node, env)
     p = node.params
 
     def val(key, default=0.0):
@@ -322,6 +334,8 @@ def tess(node, env, color, sel, selected):
     """The built-in tessellation of an organic node, as mesh._tess
     returns it: a list of (triangle, colour, selected)."""
     from . import geom3d, mesh
+    if node.type in bake.TYPES:
+        return bake.tess(node, env, color, sel, selected)
     t = node.type
     p = mesh.rp(node, env)
     if t in WRAPPERS:

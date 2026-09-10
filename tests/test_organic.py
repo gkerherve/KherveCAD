@@ -264,7 +264,8 @@ def test_organic_nodes_round_trip_losslessly(model, tmp_path):
     warnings = scadparse.import_scad(other, str(path))
     assert not warnings
     assert _body(other.to_scad()) == _body(code1)
-    assert organic.TYPES <= {n.type for n in other.root.walk()}
+    assert {"capsule", "ellipsoid", "rounded_box", "symmetry",
+            "joint"} <= {n.type for n in other.root.walk()}
 
 
 def test_kcad_calls_import_without_the_helper_definitions(app):
