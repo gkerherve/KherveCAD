@@ -904,6 +904,9 @@ def _fold_container(node: CadNode):
     - hull of exactly two equal circles -> a line node (that is how
       KherveCAD compiles lines).
     """
+    folded = _organic.fold_material(node)
+    if folded is not None:
+        return folded
     if node.type == "translate" and len(node.children) == 1:
         child = node.children[0]
         if child.type in _FOLDABLE and \

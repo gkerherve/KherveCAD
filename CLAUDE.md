@@ -963,6 +963,18 @@ document is coloured (F5 still forces it) — but the **per-part exact
 meshes carry on**, and each part is tinted as it is placed, so a
 coloured assembly is still exact (see the render pipeline above).
 
+**Materials.** A `color` node also carries a `material`
+(`model.MATERIALS`: Plastic, Metal, Matte, Clay, Glass, Rubber, Skin,
+Gold, Copper, Emissive; "Default" follows the render style). It rides
+the preview's colour tuple as a third element — `(colour, alpha,
+material)` — and the 3D view shades each such face with
+`view3d.MATERIAL_STYLES[material]` (Glass is translucent), except in
+Wireframe/X-ray. OpenSCAD has no materials, so codegen writes a
+`kcad_material("Metal") color(...)` prefix whose helper renders its
+children unchanged; the importer folds it back into the colour node
+(`organic.fold_material`, only the wrapper its own builder made).
+`set_color` takes a `material`. FORMAT_VERSION 6.
+
 ## Persistence policy
 
 **All node properties must round-trip through `.kcad`.** When adding

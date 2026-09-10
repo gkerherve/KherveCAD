@@ -23,6 +23,10 @@ from __future__ import annotations
 ORIENTATIONS = ["Isometric", "Top", "Bottom", "Front", "Back", "Right",
                 "Left"]
 
+#: colour materials (model.MATERIALS — repeated for the same reason).
+MATERIALS = ["Default", "Plastic", "Metal", "Matte", "Clay", "Glass",
+             "Rubber", "Skin", "Gold", "Copper", "Emissive"]
+
 #: 3D projections (view3d.PROJECTIONS — repeated here because this
 #: module must not import Qt).
 PROJECTIONS = ["Perspective", "Orthographic"]
@@ -573,6 +577,12 @@ TOOLS = [
                                      "name."},
             "alpha": {"type": "number",
                       "description": "0 (clear) to 1 (opaque)."},
+            "material": {"type": "string", "enum": MATERIALS,
+                         "description": "How the surface shades in the "
+                                        "3D view: Metal, Glass, Rubber, "
+                                        "Skin... (OpenSCAD itself has no "
+                                        "materials; the choice is kept "
+                                        "in the file)."},
         }, ["ids", "color"]),
     },
     {

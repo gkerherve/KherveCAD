@@ -27,7 +27,8 @@ from . import organic
 
 #: params that stay strings (never resolved to numbers).
 _TEXT_PARAMS = {"text", "path", "variable", "condition", "update",
-                "values", "value", "caps", "axis", "toward"}
+                "values", "value", "caps", "axis", "toward",
+                "material"}
 
 #: ops the fallback can only approximate (engine renders exactly).
 APPROXIMATED = {"difference", "intersection", "minkowski", "hull",
@@ -877,6 +878,9 @@ def _tess(node, env, color, sel, selected):
     if t == "color":
         color = (str(node.params.get("color", "#4a90d9")),
                  rv(node.params.get("alpha", 1.0), env, 1.0))
+        material = str(node.params.get("material") or "Default")
+        if material != "Default":
+            color += (material,)        # (colour, alpha, material)
         return _children_mesh(node, env, color, sel, selected)
     if t == "masters":
         # definitions store: masters render only through Linked copies,

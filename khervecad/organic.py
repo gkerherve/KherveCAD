@@ -147,6 +147,12 @@ module kcad_symmetry(n = [1, 0, 0], c = [0, 0, 0]) {
 module kcad_joint(pivot = [0, 0, 0], a = [0, 0, 0], limits = [-180, 180]) {
     translate(pivot) rotate(a) translate(-pivot) children();
 }""",
+    # OpenSCAD has no materials: this renders its children unchanged
+    # and exists so a colour's material survives export and import
+    "material": """\
+module kcad_material(name = "") {
+    children();
+}""",
 }
 
 
@@ -165,6 +171,10 @@ def preamble(root) -> list:
     for t in _ORDER:
         if t in used:
             lines.extend(HELPERS[t].split("\n"))
+    if any(n.type == "color" and
+           str(n.params.get("material") or "Default") != "Default"
+           for n in root.walk()):
+        lines.extend(HELPERS["material"].split("\n"))
     lines.extend(bake.preamble(root))
     if not lines:
         return []
@@ -289,6 +299,40 @@ BUILDERS = {
     "kcad_joint": _b_joint,
 }
 BUILDERS.update(bake.BUILDERS)
+
+
+def _b_material(parser, positional, named):
+    """kcad_material("Metal") color(...) { ... } parses as a colour
+    wrapper around the colour node; fold_material merges the two."""
+    from .model import MATERIALS, CadNode
+    name = str(named.get("name", positional[0] if positional
+                         else "Default"))
+    if name not in MATERIALS:
+        parser.warn(f"unknown material {name!r} — kept as Default")
+        name = "Default"
+    node = CadNode("color", "Color", dict(color="#c8c8c8", alpha=1.0,
+                                          material=name))
+    node._kcad_material = True        # this parse only; not persisted
+    return node
+
+
+BUILDERS["kcad_material"] = _b_material
+
+
+def fold_material(node):
+    """Fold a parsed kcad_material wrapper into the colour node it
+    holds (scadparse._fold_container calls this first). Only the
+    wrapper the builder made is folded, so genuinely nested colours
+    stay two nodes."""
+    if not getattr(node, "_kcad_material", False):
+        return None
+    if len(node.children) == 1 and node.children[0].type == "color":
+        child = node.children[0]
+        child.params["material"] = node.params.get("material", "Default")
+        node.remove(child)
+        child.visible = node.visible and child.visible
+        return child
+    return None
 
 
 # -------------------------------------------------------- validation

@@ -972,9 +972,18 @@ class McpToolExecutor:
         if not color:
             raise ToolError("Pass a colour, e.g. '#4a90d9'.")
         alpha = float(params.get("alpha", 1.0))
-        wrappers = self._model.set_color(nodes, color, alpha)
-        return {"colored": [w.id for w in wrappers], "color": color,
-                "alpha": alpha}
+        material = params.get("material")
+        if material is not None:
+            from .model import MATERIALS
+            if material not in MATERIALS:
+                raise ToolError(f"Unknown material {material!r}. Choose "
+                                f"one of: {', '.join(MATERIALS)}.")
+        wrappers = self._model.set_color(nodes, color, alpha, material)
+        result = {"colored": [w.id for w in wrappers], "color": color,
+                  "alpha": alpha}
+        if material is not None:
+            result["material"] = material
+        return result
 
     def _t_round_edges(self, params) -> dict:
         nodes = self._nodes(params.get("ids"))

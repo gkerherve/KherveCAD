@@ -17,9 +17,11 @@ import json
 
 from .model import NODE_TYPES, CadNode, DocumentModel
 
-FORMAT_VERSION = 5          # 4: "component" (Object) node type
+FORMAT_VERSION = 6          # 4: "component" (Object) node type
                             # 5: instances (reference->component) may
                             #    carry a "mate" record
+                            # 6: organic/mesh node types; color nodes
+                            #    carry a "material" (absent = Default)
 
 
 def node_to_dict(node: CadNode) -> dict:

@@ -132,6 +132,11 @@ inside it. Deformers work on the preview mesh, so they refuse a
 `full: true`; the summary still re-applies, because the importer
 rebuilds a blend from its children.
 
+`set_color` also takes a **material** — Metal, Glass, Rubber, Skin,
+Gold, Emissive and more — which the 3D view shades per object
+(Glass is see-through). OpenSCAD has no materials, so the choice
+is kept in the file and survives export and import.
+
 ## What the preview is showing
 
 `render_view` **waits for the picture to be final** before taking it:

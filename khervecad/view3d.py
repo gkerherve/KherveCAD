@@ -34,6 +34,15 @@ RENDER_STYLES = ["Shaded", "Matte", "Clay", "Toon", "Brushed metal",
 #: numpad-5 view lines a model up against a reference).
 PROJECTIONS = ["Perspective", "Orthographic"]
 
+#: a color node's material (model.MATERIALS) -> how its faces shade.
+#: A material wins over the global render style, except Wireframe and
+#: X-ray, which exist to see through everything.
+MATERIAL_STYLES = {
+    "Plastic": "Shaded", "Metal": "Brushed metal", "Matte": "Matte",
+    "Clay": "Clay", "Glass": "Glass", "Rubber": "Rubber", "Skin": "Skin",
+    "Gold": "Gold", "Copper": "Copper", "Emissive": "Emissive",
+}
+
 #: 3D viewport backgrounds. "Theme" tracks the app theme; the rest are
 #: explicit (top, bottom) pairs painted as a vertical gradient.
 BACKGROUNDS = {
@@ -816,8 +825,12 @@ class View3D(QWidget):
                 sat = base.saturationF() * 0.75
                 val = 1.0
                 alpha = 1.0
+            face_style = style
+            if face_color is not None and len(face_color) > 2 \
+                    and style not in ("Wireframe", "X-ray"):
+                face_style = MATERIAL_STYLES.get(face_color[2], style)
             color, use_pen = self._style_color(
-                style, hue, sat, val, shade, spec, base)
+                face_style, hue, sat, val, shade, spec, base)
             if color is not None and lighting is not None:
                 color = self._adjust(color, *lighting)
             if color is None:                   # wireframe: edges only
@@ -931,6 +944,25 @@ class View3D(QWidget):
             v = min((0.30 + 0.5 * shade) + 0.65 * highlight, 1.0)
             return QColor.fromHsvF(0.045, 0.68 * (1.0 - highlight * 0.6),
                                    v), None
+        if style == "Glass":
+            # see-through, with a sharp glint where the light catches
+            glint = spec ** 24
+            c = QColor.fromHsvF(hue, sat * 0.55,
+                                min((0.55 + 0.35 * shade) * val
+                                    + 0.6 * glint, 1.0))
+            c.setAlphaF(0.35 + 0.4 * glint)
+            return c, None
+        if style == "Rubber":
+            # dark and dull: no highlight, deep shadows
+            return QColor.fromHsvF(hue, min(sat * 0.85, 1.0),
+                                   (0.12 + 0.38 * shade) * val), None
+        if style == "Skin":
+            # soft and warm: low contrast, a faint sheen
+            v = min((0.58 + 0.32 * shade) * val + 0.08 * spec ** 4, 1.0)
+            return QColor.fromHsvF(hue, min(sat * 0.9 + 0.04, 1.0), v), None
+        if style == "Emissive":
+            # lights itself: its own colour at full strength, unshaded
+            return QColor.fromHsvF(hue, sat, max(val, 0.9)), None
         # Shaded (default): rich, glossy — the reference look
         gloss = spec ** 10
         v = min((0.30 + 0.70 * shade) * val + 0.45 * gloss, 1.0)

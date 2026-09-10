@@ -35,6 +35,13 @@ CONTROL = "ctl"          # loops / conditionals / assignments
 #: hard cap when unrolling while loops into an OpenSCAD value list.
 MAX_WHILE_ITERATIONS = 1000
 
+#: surface materials a color node can carry. The built-in preview
+#: shades each face with its own (view3d.MATERIAL_STYLES); OpenSCAD has
+#: no materials, so codegen records it as a kcad_material() prefix that
+#: renders as nothing but brings the material back on import.
+MATERIALS = ["Default", "Plastic", "Metal", "Matte", "Clay", "Glass",
+             "Rubber", "Skin", "Gold", "Copper", "Emissive"]
+
 #: param schema entry: (key, label, kind, minimum, maximum)
 #: kinds: "float", "int", "bool", "str", "points" (list of [x, y]).
 NODE_TYPES = {
@@ -168,9 +175,10 @@ NODE_TYPES = {
         schema=[("cut", "Cut (section slice)", "bool", None, None)]),
     "color": dict(
         label="Color", category=OPERATION, icon="mdi.palette-outline",
-        params=dict(color="#4a90d9", alpha=1.0),
+        params=dict(color="#4a90d9", alpha=1.0, material="Default"),
         schema=[("color", "Color", "color", None, None),
-                ("alpha", "Opacity (0-1)", "float", 0.0, 1.0)]),
+                ("alpha", "Opacity (0-1)", "float", 0.0, 1.0),
+                ("material", "Material", "choice", MATERIALS, None)]),
     # ----- booleans / grouping ---------------------------------------
     "union": dict(
         label="Group (union)", category=BOOLEAN, icon="mdi.group",
@@ -800,9 +808,12 @@ class CadNode:
             return f"projection(cut = {fmt(bool(p.get('cut', False)))})"
         if t == "color":
             alpha = p.get("alpha", 1.0)
+            material = str(p.get("material") or "Default")
+            prefix = (f"kcad_material({scad_str(material)}) "
+                      if material != "Default" else "")
             if isinstance(alpha, float) and alpha >= 1.0:
-                return f"color({scad_str(p['color'])})"
-            return f"color({scad_str(p['color'])}, {fmt(alpha)})"
+                return prefix + f"color({scad_str(p['color'])})"
+            return prefix + f"color({scad_str(p['color'])}, {fmt(alpha)})"
         if t == "for_loop":
             var = str(p.get("variable", "i")) or "i"
             values = str(p.get("values", "")).strip()
@@ -1186,9 +1197,11 @@ class DocumentModel(QObject):
         self.structure_changed.emit()
         return wrapper
 
-    def set_color(self, nodes, color: str, alpha: float = 1.0):
+    def set_color(self, nodes, color: str, alpha: float = 1.0,
+                  material: str = None):
         """Colour *nodes*: reuse an existing color wrapper (the node
-        itself or its parent) or wrap in a new one."""
+        itself or its parent) or wrap in a new one. *material* (one of
+        MATERIALS) is set too when given."""
         wrappers = []
         for node in nodes:
             if node.type == "color":
@@ -1201,6 +1214,8 @@ class DocumentModel(QObject):
             if wrapper is not None:
                 wrapper.params["color"] = color
                 wrapper.params["alpha"] = alpha
+                if material is not None:
+                    wrapper.params["material"] = material
                 wrappers.append(wrapper)
                 self.node_changed.emit(wrapper)
         return wrappers
