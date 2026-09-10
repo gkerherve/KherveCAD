@@ -1835,6 +1835,9 @@ class MainWindow(QMainWindow):
             # naming this process; both have to go with the window.
             if getattr(self, "_mcp_bridge", None) is not None:
                 self._mcp_bridge.stop()
+            # an OpenSCAD render still running must not outlive the
+            # window that asked for it
+            self.engine.shutdown()
             if self in MainWindow._windows:    # let a closed window GC
                 MainWindow._windows.remove(self)
             event.accept()

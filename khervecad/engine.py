@@ -21,6 +21,7 @@ import shutil
 import struct
 import sys
 import tempfile
+import weakref
 import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
@@ -375,6 +376,44 @@ class ScadEngine(QObject):
         if self._part_queue:            # per-part renders still stand
             self._timer.start()
 
+    def _watch(self, process, done):
+        """Call *done(engine)* when *process* finishes — without the
+        signal holding the engine.
+
+        A slot that captures ``self`` makes a cycle (engine -> process
+        -> connection -> slot -> engine). When its window is dropped
+        with a render still running, the garbage collector clears the
+        slot's ``self`` and destroys the engine; Qt then kills the
+        QProcess and fires ``finished`` into the cleared slot — a
+        NameError inside a Qt slot, which PyQt5 answers with abort().
+        A weak reference is cleared *before* the collector breaks the
+        cycle, so the late signal finds no engine and does nothing."""
+        ref = weakref.ref(self)
+
+        def finished(_code, _status):
+            engine = ref()
+            if engine is not None:
+                done(engine)
+        process.finished.connect(finished)
+
+    def shutdown(self):
+        """Stop rendering for good: drop everything queued and kill the
+        render in flight, so no OpenSCAD process outlives the window
+        that asked for it."""
+        self._timer.stop()
+        self._pending_code = None
+        self._part_queue.clear()
+        self._generation += 1
+        process, self._process = self._process, None
+        self._running_part = None
+        if process is not None:
+            try:
+                process.finished.disconnect()
+            except TypeError:                 # nothing connected
+                pass
+            process.kill()
+            process.waitForFinished(2000)
+
     def _start(self):
         if self._process is not None:
             # A render is running: keep the code pending; _finished
@@ -390,8 +429,8 @@ class ScadEngine(QObject):
         stl_path = self._dir / "model.stl"
         scad_path.write_text(code, encoding="utf-8")
         self._process = QProcess(self)
-        self._process.finished.connect(
-            lambda _code, _status: self._finished(str(stl_path)))
+        path = str(stl_path)
+        self._watch(self._process, lambda eng: eng._finished(path))
         self._process.start(self.binary,
                             ["-o", str(stl_path), str(scad_path)])
         self.busy_changed.emit(True)
@@ -408,8 +447,9 @@ class ScadEngine(QObject):
         stl_path = self._dir / "part.stl"
         scad_path.write_text(code, encoding="utf-8")
         self._process = QProcess(self)
-        self._process.finished.connect(
-            lambda _c, _s, k=key, p=str(stl_path): self._part_finished(k, p))
+        self._watch(self._process,
+                    lambda eng, k=key, p=str(stl_path):
+                    eng._part_finished(k, p))
         self._process.start(self.binary,
                             ["-o", str(stl_path), str(scad_path)])
         self.busy_changed.emit(True)

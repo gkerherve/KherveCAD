@@ -211,3 +211,68 @@ def test_a_located_binary_still_wins_over_the_bundle(tmp_path, monkeypatch):
     monkeypatch.setattr(engine.QSettings, "value",
                         lambda self, key, default="": str(chosen))
     assert engine.find_openscad() == str(chosen)
+
+
+#: run in a child interpreter: if the engine regresses, PyQt5 aborts the
+#: whole process, and that must fail one test, not kill the session
+_DROPPED_MID_RENDER = r'''
+import gc, os, sys, tempfile
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
+sys.path.insert(0, sys.argv[1])
+from PyQt5.QtCore import QCoreApplication
+from khervecad import engine
+app = QCoreApplication([])
+fake = os.path.join(tempfile.mkdtemp(), "slow-openscad")
+with open(fake, "w") as fh:
+    fh.write("#!/bin/sh\nsleep 30\n")
+os.chmod(fake, 0o755)
+eng = engine.ScadEngine()
+eng.binary = fake
+eng.request_part_render("part", "cube(1);")
+eng._timer.stop()
+eng._start()
+assert eng._process.waitForStarted(5000), "fake OpenSCAD did not start"
+del eng                 # its window is gone; the render is still running
+gc.collect()
+app.processEvents()
+print("survived")
+'''
+
+
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason="the fake OpenSCAD is a POSIX shell script")
+def test_engine_dropped_mid_render_does_not_abort():
+    """Dropping an engine while OpenSCAD runs must not kill the app.
+
+    The process's finished slot used to capture ``self``; the garbage
+    collector cleared it, Qt then destroyed the still-running QProcess
+    and fired ``finished`` into the cleared slot, and the NameError
+    inside a Qt slot made PyQt5 abort() — which is how the whole test
+    session died on a machine with OpenSCAD installed."""
+    import subprocess
+    root = str(Path(__file__).resolve().parent.parent)
+    out = subprocess.run([sys.executable, "-c", _DROPPED_MID_RENDER, root],
+                         capture_output=True, text=True, timeout=120)
+    assert out.returncode == 0, out.stderr[-2000:]
+    assert "survived" in out.stdout
+
+
+def test_shutdown_kills_the_render_in_flight(qt_app, tmp_path):
+    """shutdown() empties the queue and ends a running render."""
+    if sys.platform == "win32":
+        pytest.skip("the fake OpenSCAD is a POSIX shell script")
+    fake = tmp_path / "slow-openscad"
+    fake.write_text("#!/bin/sh\nsleep 30\n")
+    fake.chmod(0o755)
+    eng = engine.ScadEngine()
+    eng.binary = str(fake)
+    eng.request_part_render("a", "cube(1);")
+    eng.request_part_render("b", "cube(2);")
+    eng._timer.stop()
+    eng._start()
+    process = eng._process
+    assert process.waitForStarted(5000)
+    eng.shutdown()
+    assert eng._process is None and not eng._part_queue
+    from PyQt5.QtCore import QProcess
+    assert process.state() == QProcess.NotRunning
