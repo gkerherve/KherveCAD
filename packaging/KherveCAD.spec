@@ -52,6 +52,12 @@ _version_file = os.path.join(_ROOT, "khervecad", "VERSION")
 if os.path.isfile(_version_file):
     datas.append((_version_file, "khervecad"))
 
+# The User Guide's screenshots (packaging/make_help_screenshots.py).
+# userguide.py finds them beside itself, as khervecad/help/*.png.
+_help_dir = os.path.join(_ROOT, "khervecad", "help")
+if os.path.isdir(_help_dir):
+    datas.append((_help_dir, os.path.join("khervecad", "help")))
+
 # The whole app package. Several modules are imported lazily inside
 # functions or purely for their import side effects (examples_flowers /
 # examples_trees extend examples.EXAMPLES on import, the library_* modules

@@ -411,6 +411,23 @@ into a new module and import.
                        A shortcut a menu already owns is shown in the
                        tip but not bound (`bind=False`) — two actions on
                        one key make Qt fire neither.
+  - `userguide.py`   — Help ▸ User Guide (F1, non-modal): chapter
+                       list + search + one HTML document. Screenshots
+                       come from `khervecad/help/*.png` via `figure()`
+                       (a missing one is dropped, and
+                       `test_userguide` fails on it); the **Tool
+                       reference** chapter is generated from
+                       `tooltips.TIPS` with each tool's real icon, so
+                       manual and tooltips cannot drift.
+  - `userguide_content.py` — the 22 chapters, `(anchor, title, html)`.
+                       After a UI change re-run
+                       `packaging/make_help_screenshots.py`: it drives
+                       the real window offscreen, stages each scene
+                       (the plate-with-a-hole tutorial, every tab, the
+                       dialogs, render styles) and paints numbered
+                       call-outs. The help folder ships via the spec's
+                       `datas`. Never screenshot the Connect-to-Claude
+                       dialog — its config snippet shows local paths.
   - `tooltips.py`    — what every toolbar icon does and how to use it:
                        `TIPS[key] = (title, what, steps, tip)`, rendered
                        by `rich()` as a fixed-width HTML tooltip and by

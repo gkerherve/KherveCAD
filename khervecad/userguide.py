@@ -1,4 +1,13 @@
-"""The Help > User Guide window: a detailed, scrollable HTML guide.
+"""Help ▸ User Guide: the full manual, with screenshots.
+
+A chapter list on the left, the manual on the right, a search box on
+top. The chapters (userguide_content.py) are one HTML document, so
+search finds a word anywhere and the list just scrolls to an anchor.
+Screenshots live in ``khervecad/help/`` — regenerate them with
+``packaging/make_help_screenshots.py`` after a UI change — and the
+Tool reference chapter is built from the very table the toolbar
+tooltips use (tooltips.py), with each tool's real icon, so the manual
+and the tooltips cannot drift apart.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -8,224 +17,214 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QTextBrowser,
-                             QVBoxLayout)
+from pathlib import Path
 
-from . import APP_NAME
+from PyQt5.QtCore import QSize, Qt, QUrl
+from PyQt5.QtGui import QKeySequence, QTextDocument
+from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QHBoxLayout,
+                             QLabel, QLineEdit, QListWidget,
+                             QListWidgetItem, QShortcut, QSplitter,
+                             QTextBrowser, QVBoxLayout)
 
+from . import APP_NAME, __version__
 
-def _section(title, body):
-    return f"<h2 style='color:#3776ab'>{title}</h2>\n{body}\n"
+#: screenshots shipped with the package (PyInstaller datas: see the spec)
+HELP_DIR = Path(__file__).resolve().parent / "help"
 
+#: the widest a screenshot is shown, in pixels
+IMAGE_WIDTH = 760
 
-def _kbd(keys):
-    return (f"<code style='background:#eee;padding:1px 5px;"
-            f"border-radius:3px'>{keys}</code>")
-
-
-GUIDE_HTML = f"""
-<h1><span style='color:#3776ab'>Kherve</span><span
- style='color:#e07b39'>CAD</span> &mdash; User Guide</h1>
-<p>KherveCAD is an easy-to-use CAD program with <b>OpenSCAD as the
-engine</b>. Your model is a <b>tree of objects</b> &mdash; 2D shapes, 3D
-primitives, extrusions, transforms and booleans &mdash; that maps
-one-to-one to an OpenSCAD program. Every tool just creates or edits nodes
-in that tree, and the <b>Code</b> tab is regenerated from it, so the two
-can never disagree.</p>
-
-{_section("1. The layout", '''
-<p>The window has four panels:</p>
-<ul>
-<li><b>Objects / Code</b> (top-left) &mdash; the object tree, and a
-read-only view of the generated OpenSCAD program.</li>
-<li><b>Properties</b> (bottom-left) &mdash; the editable parameters of the
-selected object.</li>
-<li><b>2D Sketch</b> (top-right) &mdash; a millimetre grid where you draw
-profiles and lay out (assemble) parts.</li>
-<li><b>3D Preview</b> (bottom-right) &mdash; the shaded result you can
-orbit, pan and zoom.</li>
-</ul>
-<p>Selection is shared: pick an object in any panel and the tree, the
-properties, the sketch outline and the 3D geometry all highlight it (in
-amber).</p>
-''')}
-
-{_section("2. Drawing 2D shapes", f'''
-<p>The <b>vertical toolbar</b> holds the sketch tools: <b>Select</b>,
-<b>Line</b>, <b>Rectangle</b>, <b>Circle</b>, <b>Polygon</b> and
-<b>Text</b>. Pick one and draw in the 2D view; the size is shown live as
-you drag, and everything reads in <b>millimetres</b>.</p>
-<ul>
-<li>The <b>grid</b> and <b>snap</b> toggles (main toolbar) keep points on
-round coordinates.</li>
-<li>Drag a shape to move it; drag its handles to resize; a polygon's
-points are editable as a table in the Properties panel.</li>
-<li>A <b>circle</b> has an <i>angle</i> (90 = quarter, 180 = semicircle)
-that compiles to a partial fan.</li>
-<li>Middle-mouse drag pans, the wheel zooms; use <b>Fit Sketch</b> or
-<b>Zoom to Selection</b> to reframe.</li>
-</ul>
-''')}
-
-{_section("3. Making solids &mdash; extrude &amp; revolve", '''
-<p>2D profiles become solids through the operations on the main toolbar,
-which <b>wrap</b> the selected object:</p>
-<ul>
-<li><b>Linear Extrude</b> &mdash; push a profile up by a height (with
-optional twist, scale and a draft angle).</li>
-<li><b>Rotate Extrude</b> &mdash; revolve a profile around the Y axis to
-make lathe-turned shapes (flanges, cups, cones).</li>
-</ul>
-<p>You can also drop in <b>3D primitives</b> directly &mdash; <b>Cube</b>,
-<b>Sphere</b> and <b>Cylinder</b> &mdash; from the vertical toolbar, or
-<b>import an STL</b>.</p>
-''')}
-
-{_section("4. Transforms &amp; booleans", '''
-<p>Operations that reshape or combine objects wrap the current selection:</p>
-<ul>
-<li><b>Translate / Rotate / Scale / Mirror</b> &mdash; move objects in
-space.</li>
-<li><b>Union</b> (group), <b>Difference</b> (cut) and
-<b>Intersection</b> &mdash; the boolean operations. Difference subtracts
-every later child from the first.</li>
-<li><b>Hull</b> and <b>Minkowski</b> &mdash; convex wrapping and
-offsetting; <b>Round Edges</b> uses a small Minkowski sphere to fillet a
-finished solid.</li>
-<li><b>Offset</b> rounds or insets 2D corners before extruding.</li>
-</ul>
-<p>Select several objects and apply an operation, or select one and wrap
-it, then drag more objects in via the tree.</p>
-''')}
-
-{_section("5. The object tree", f'''
-<p>The <b>Objects</b> tab is the model. Right-click a node for
-<b>Hide/Show</b>, <b>Apply operation</b>, <b>Group / Ungroup</b>,
-<b>Rename</b>, <b>Set Colour</b>, <b>Duplicate</b> and <b>Delete</b>.</p>
-<ul>
-<li><b>Drag &amp; drop</b> reparents and reorders nodes.</li>
-<li>{_kbd("Ctrl+X / Ctrl+C / Ctrl+V")} cut, copy and paste subtrees &mdash;
-even between two running copies of the app.</li>
-<li>{_kbd("Ctrl+&uarr; / Ctrl+&darr;")} reorder within the parent; the
-arrow keys walk the tree.</li>
-<li>Hidden objects stay in the program (emitted with OpenSCAD's
-<code>*</code> modifier) so visibility round-trips.</li>
-</ul>
-<p>Control-flow nodes &mdash; <b>for</b>, <b>while</b>, <b>if/else</b> and
-<b>assign</b> &mdash; let a model repeat and branch; numeric fields accept
-expressions like <code>i * 10</code>, so loop variables work everywhere.</p>
-''')}
-
-{_section("6. Assembling parts", '''
-<p>The 2D view doubles as an <b>assembly view</b>. Pick a plane &mdash;
-<b>Top (XY)</b>, <b>Front (XZ)</b> or <b>Side (YZ)</b> &mdash; and every
-top-level 3D part appears as a draggable projected outline. Drop a part
-where you want it and KherveCAD commits the move into a translate node
-(<i>Position (&hellip;)</i>).</p>
-''')}
-
-{_section("7. The Part Library", '''
-<p><b>Insert &rarr; Part Library</b> opens a non-modal catalogue of
-parametric parts &mdash; so it stays open while you edit. It includes
-vacuum hardware (CF and KF flanges, blanks, nipples, tees, crosses,
-turbo-pump shells, gate and right-angle valves) and fasteners (M3&ndash;M20
-hex bolts, socket screws and nuts with real helical ISO threads). Every
-part is an ordinary node subtree you can edit further.</p>
-''')}
-
-{_section("8. Rendering &amp; the OpenSCAD engine", f'''
-<p>Any change re-tessellates instantly with the <b>built-in preview</b>.
-If the <b>OpenSCAD binary</b> is found (on PATH, a common install dir, or
-via <b>Edit &rarr; Locate OpenSCAD</b>), an exact render replaces the
-preview a moment later &mdash; with proper booleans &mdash; and STL export
-uses it too.</p>
-<ul>
-<li>{_kbd("F5")} forces a render; <b>Fit 3D</b> reframes the preview.</li>
-<li><b>View &rarr; 3D Render Style</b> switches between shaded, brushed
-metal, matte, wireframe and x-ray.</li>
-<li>Broken nodes turn <b>red</b> in the tree (hover for the reason) and
-their lines are tinted red in the Code tab.</li>
-</ul>
-''')}
-
-{_section("9. KherveAI &mdash; the chat assistant", '''
-<p>The <b>KherveAI</b> box (toolbar robot button) chats with Claude,
-Mistral or Ollama Cloud. It knows your model and can reply with
-<code>scad</code> blocks that are applied straight into the tree. Put your
-API key in the settings or an environment variable; slash commands cover
-common actions.</p>
-''')}
-
-{_section("10. Connect to Claude &mdash; no API key", '''
-<p>The built-in chat is not the only assistant that can build here, and
-it is not the easy one. <b>AI &rsaquo; Connect to Claude (Simple)&hellip;</b>
-hands this document to <b>Claude Desktop</b> or <b>Claude Code</b>
-&mdash; no API key, it uses the login you already have. Cursor, Cline,
-VS Code and LM Studio work the same way.</p>
-<ol>
-<li>Tick <b>Let assistants connect to this document</b> (remembered next
-time you start).</li>
-<li>Leave what the assistant may do on <b>Full</b> &mdash; the
-recommended setting, and the one where it can open the file you are
-talking about and export the part it just built. <b>Edit</b> keeps it
-inside the open document; <b>Read only</b> lets it look and say nothing
-back.</li>
-<li>Pick your application under <b>Connect an application</b> and press
-<b>Connect</b> &mdash; KherveCAD writes itself into that application's
-own settings, so there is no config file to edit by hand. Restart it
-afterwards.</li>
-<li><b>Then mention KherveCAD in the chat.</b> This is the step people
-miss: Claude only reaches for this document when you point it here.
-Say <i>&quot;in KherveCAD, build a 40&nbsp;mm bracket with two M6
-holes&quot;</i> and it carries on in the open document from there.</li>
-</ol>
-<p>A connected assistant gets the whole app rather than a chat reply: it
-reads and edits the object tree, applies OpenSCAD programs as real
-editable nodes, inserts library parts, makes Objects and mates them into
-assemblies, and <b>looks at the 3D view</b> from any angle to check its
-own work. Each call is a single undo step, so <b>Ctrl+Z</b> takes your
-model back exactly as it does for your own edits. The connection never
-leaves this machine (127.0.0.1), needs a token that changes every
-session, and is off until you tick the box.</p>
-''')}
-
-{_section("11. Files, undo &amp; import/export", f'''
-<ul>
-<li>Documents save as <b>.kcad</b> &mdash; plain JSON that round-trips
-every node, parameter, colour and visibility flag.</li>
-<li><b>Export</b> to <b>.scad</b> (OpenSCAD) or <b>.stl</b>; <b>import</b>
-a <b>.scad</b> file back in (the export &rarr; import round-trip is
-lossless), or a mesh (<b>.stl / .obj / .off / .3mf</b>) &mdash; drag any
-of these onto the window or use File &rsaquo; Open.</li>
-<li><b>Undo / Redo</b> ({_kbd("Ctrl+Z")} / {_kbd("Ctrl+Shift+Z")}) covers
-every edit as whole-document snapshots, so drags and spinbox scrubs stay a
-single step.</li>
-</ul>
-''')}
-
-<hr>
-<p style='color:gray'>KherveCAD by Gwilherm Kerherve &mdash; Imperial
-College London. Part of the Kherve family of native scientific apps.</p>
+_CSS = """
+h1 { color: #3776ab; }
+h2 { color: #3776ab; margin-top: 18px; }
+h3 { color: #b35f22; margin-top: 12px; }
+p, li { line-height: 135%; }
+td { padding: 3px 6px; vertical-align: top; }
+.cap { color: #777777; font-size: small; }
+.key { background: #eeeeee; font-family: monospace; }
+.tip { color: #555555; }
 """
 
 
-class UserGuideDialog(QDialog):
-    """A scrollable, link-enabled window showing the user guide."""
+def figure(name, caption="", width=IMAGE_WIDTH):
+    """A screenshot with a caption. A missing image is left out rather
+    than drawn as a broken box (a source checkout that never ran the
+    screenshot script)."""
+    path = HELP_DIR / f"{name}.png"
+    if not path.is_file():
+        return ""
+    from PyQt5.QtGui import QImageReader
+    size = QImageReader(str(path)).size()
+    w = min(width, size.width()) if size.isValid() else width
+    cap = f"<br><span class='cap'>{caption}</span>" if caption else ""
+    return (f"<p align='center'><img src='{name}.png' width='{w}'>"
+            f"{cap}</p>")
 
-    def __init__(self, parent=None):
+
+def kbd(keys):
+    return f"<span class='key'>&nbsp;{keys}&nbsp;</span>"
+
+
+def _tool_reference():
+    """The Tool reference chapter: every toolbar tool, its icon, what it
+    does, how to use it — straight from tooltips.TIPS."""
+    from . import tooltips, toolbars
+    from .model import NODE_TYPES
+    sections = [
+        ("Drawing tools (left toolbar, top)",
+         [(t[0], t[1], t[3]) for t in toolbars.TOOLS
+          + toolbars.MEASURE_TOOLS]),
+        ("3D solids (left toolbar, bottom)",
+         [(p, NODE_TYPES[p]["icon"], "") for p in toolbars.PRIMITIVES]),
+    ]
+    for key, ops in toolbars.OPERATION_GROUPS:
+        title, blurb = tooltips.GROUPS[key]
+        sections.append((f"{title} — {blurb} (main toolbar)",
+                         [(op, NODE_TYPES[op]["icon"],
+                           "Ctrl+G" if op == "union" else "")
+                          for op in ops]))
+    sections.append(("The rest of the main toolbar", [
+        ("new", "mdi.file-outline", "Ctrl+N"),
+        ("open", "mdi.folder-open-outline", "Ctrl+O"),
+        ("save", "mdi.content-save-outline", "Ctrl+S"),
+        ("undo", "mdi.undo", "Ctrl+Z"), ("redo", "mdi.redo", "Ctrl+Y"),
+        ("snap_objects", "mdi.magnet-on", "J"),
+        ("grid", "mdi.grid", "Ctrl+'"),
+        ("grid_snap", "mdi.magnet", "Ctrl+Shift+'"),
+        ("grid_size", None, ""), ("plane", None, ""),
+        ("fit_sketch", "mdi.fit-to-page-outline", "Ctrl+Shift+F"),
+        ("render", "mdi.play-outline", "F5"),
+        ("fit_3d", "mdi.arrow-expand-all", "Ctrl+F"),
+        ("assistant", "mdi.robot-outline", "Ctrl+/")]))
+    out, icons_used = [], []
+    for heading, items in sections:
+        out.append(f"<h3>{heading}</h3><table width='100%'>")
+        for key, glyph, keys in items:
+            title, what, steps, tip = tooltips.entry(key)
+            icon = f"<img src='icon:{glyph}' width='24'>" if glyph else ""
+            if glyph:
+                icons_used.append(glyph)
+            body = [f"<b>{title}</b>" + (f" &nbsp;{kbd(keys)}" if keys
+                                         else ""), f"<br>{what}"]
+            if steps:
+                body.append("<ol style='margin-top:2px'>" + "".join(
+                    f"<li>{s}</li>" for s in steps) + "</ol>")
+            if tip:
+                body.append(f"<span class='tip'><i>Tip:</i> {tip}</span>")
+            out.append(f"<tr><td width='34'>{icon}</td>"
+                       f"<td>{''.join(body)}</td></tr>")
+        out.append("</table>")
+    return "".join(out), icons_used
+
+
+def build_html():
+    """(title, anchor) chapters and the whole manual as one HTML page,
+    plus the icon names the page references."""
+    from .userguide_content import chapters
+    reference, icons_used = _tool_reference()
+    parts = [f"<h1><span style='color:#3776ab'>Kherve</span><span "
+             f"style='color:#e07b39'>CAD</span> User Guide</h1>"
+             f"<p class='cap'>Version {__version__}</p>"]
+    toc = []
+    for n, (anchor, title, html) in enumerate(chapters(), 1):
+        if html == "@reference":
+            html = reference
+        toc.append((f"{n}. {title}", anchor))
+        parts.append(f"<a name='{anchor}'></a><h2>{n}. {title}</h2>"
+                     f"{html}")
+    parts.append("<hr><p class='cap'>KherveCAD by Gwilherm Kerherve "
+                 "&mdash; part of the Kherve family of native scientific "
+                 "apps. GPL-3.0.</p>")
+    return toc, "".join(parts), icons_used
+
+
+class UserGuideDialog(QDialog):
+    """The manual: chapters, search, screenshots."""
+
+    def __init__(self, parent=None, chapter=None):
         super().__init__(parent)
         self.setWindowTitle(f"{APP_NAME} — User Guide")
-        self.resize(720, 640)
+        self.resize(1120, 800)
+        toc, html, icons_used = build_html()
+
+        self.search = QLineEdit()
+        self.search.setPlaceholderText("Search the guide (Enter = next "
+                                       "match)")
+        self.search.setClearButtonEnabled(True)
+        self.search.returnPressed.connect(self.find_next)
+        self.search.textChanged.connect(lambda _t: self.find_next(True))
+        self.status = QLabel("")
+
+        self.chapters = QListWidget()
+        self.chapters.setMinimumWidth(290)
+        for title, anchor in toc:
+            item = QListWidgetItem(title)
+            item.setData(Qt.UserRole, anchor)
+            self.chapters.addItem(item)
+        self.chapters.currentItemChanged.connect(
+            lambda item, _old: item and self.browser.scrollToAnchor(
+                item.data(Qt.UserRole)))
+
+        self.browser = QTextBrowser()
+        self.browser.setOpenExternalLinks(True)
+        self.browser.setSearchPaths([str(HELP_DIR)])
+        doc = self.browser.document()
+        doc.setDefaultStyleSheet(_CSS)
+        from . import icons
+        for glyph in set(icons_used):
+            pix = icons.icon(glyph).pixmap(QSize(48, 48))
+            doc.addResource(QTextDocument.ImageResource,
+                            QUrl(f"icon:{glyph}"), pix)
+        self.browser.setHtml(html)
+
+        top = QHBoxLayout()
+        top.addWidget(self.search, 1)
+        top.addWidget(self.status)
+        split = QSplitter(Qt.Horizontal)
+        split.addWidget(self.chapters)
+        split.addWidget(self.browser)
+        split.setStretchFactor(1, 1)
+        split.setSizes([300, 820])
         layout = QVBoxLayout(self)
-        browser = QTextBrowser()
-        browser.setOpenExternalLinks(True)
-        browser.setHtml(GUIDE_HTML)
-        layout.addWidget(browser)
+        layout.addLayout(top)
+        layout.addWidget(split, 1)
         buttons = QDialogButtonBox(QDialogButtonBox.Close)
         buttons.rejected.connect(self.reject)
-        buttons.accepted.connect(self.accept)
         layout.addWidget(buttons)
+        QShortcut(QKeySequence.Find, self, self.search.setFocus)
+        QShortcut(QKeySequence.FindNext, self, self.find_next)
+        if chapter:
+            self.show_chapter(chapter)
+
+    def show_chapter(self, anchor):
+        for row in range(self.chapters.count()):
+            if self.chapters.item(row).data(Qt.UserRole) == anchor:
+                self.chapters.setCurrentRow(row)
+                return
+
+    def find_next(self, restart=False):
+        """Jump to the next match of the search text, wrapping round."""
+        text = self.search.text().strip()
+        if not text:
+            self.status.setText("")
+            return
+        if restart:
+            cursor = self.browser.textCursor()
+            cursor.movePosition(cursor.Start)
+            self.browser.setTextCursor(cursor)
+        if not self.browser.find(text):
+            cursor = self.browser.textCursor()
+            cursor.movePosition(cursor.Start)
+            self.browser.setTextCursor(cursor)
+            if not self.browser.find(text):
+                self.status.setText("not found")
+                return
+        self.status.setText("")
 
 
-def show_user_guide(parent=None):
-    UserGuideDialog(parent).exec_()
+def show_user_guide(parent=None, chapter=None):
+    """Non-modal, so the guide can stay open beside the model."""
+    dlg = UserGuideDialog(parent, chapter)
+    dlg.setAttribute(Qt.WA_DeleteOnClose)
+    dlg.show()
+    return dlg
