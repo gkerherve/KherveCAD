@@ -1153,6 +1153,33 @@ half-added tool fails the suite.
 
 ## Roadmap
 
+**Tool queue** (asked for 2026-09-11, in order; each closes a gap
+against Blender/SolidWorks that matters to a user *and* an assistant):
+
+1. **Fillet / chamfer by clicking an edge** — SolidWorks' Fillet
+   ("round objects"): pick an edge or a face in the 3D view (the Snap
+   tool's `anchors.pick`/`describe_pick` already find edges), give a
+   radius, and only that edge is rounded. `round_edges` (Minkowski +
+   sphere) rounds *every* edge alike and stays as the whole-part
+   option. OpenSCAD has no edge, so this bakes like `sweep`/`blend`
+   (a polyhedron the importer rebuilds from parameters): the edge is
+   remembered as geometry (its two endpoints in the part's local
+   frame, re-found by nearest match after edits), the mesh is
+   re-triangulated with a rolling-ball fillet along it. Hardest and
+   highest-value item.
+2. **Shell / hollow** (Blender Solidify): "make this 2 mm thick" for
+   printing — an offset surface of an arbitrary mesh; the SDF/marching
+   tetrahedra in `sdf.py` are the starting point.
+3. **Pattern** (Blender Array): linear / polar / grid copies as a UI
+   over `for_loop`.
+4. **3D-print check** (Blender 3D-Print Toolbox): watertight, overhangs
+   > 45°, thinnest wall, volume, time/cost estimate — `section.py` and
+   the mesh helpers do most of it.
+5. **Mass properties & interference**: volume, area, centre of mass,
+   "do these parts overlap?" — what an assistant needs to check its
+   own work (an MCP tool as much as a menu item).
+6. Ambient occlusion / edge lines in the preview.
+
 - Undo/redo on a shared `QUndoStack` (node add/remove/move/param
   changes), mirroring KherveSheet's `undo_commands.py`.
 - OpenSCAD `$fn`/`$fa`/`$fs` global settings panel.
