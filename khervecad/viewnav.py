@@ -31,6 +31,7 @@ _STYLE = (
     " border: none; border-radius: 4px; padding: 2px; font-size: 13px; }"
     "#navBar QToolButton:hover { background: rgba(255, 255, 255, 30); }"
     "#navBar QToolButton:pressed { background: rgba(255, 255, 255, 55); }"
+    "#navBar QToolButton:checked { background: rgba(224, 123, 57, 170); }"
     "#navBar QFrame { color: rgba(255, 255, 255, 45); }")
 
 #: pan step, as a fraction of the view
@@ -219,6 +220,16 @@ def attach_3d(view):
         ("fit", "mdi.arrow-expand-all", "⤢",
          "Fit all: frame the whole model (Ctrl+F, or double-click)",
          lambda: (view.fit(), view.update()), False),
+        None,
+        ("stage", "mdi.box-shadow", "◐",
+         "Platform & shadow: stand the model on a round platform lit "
+         "from the far top left (also View ▸ 3D Platform & Shadow)",
+         lambda: view.set_stage(not view.stage), False),
     ])
+    # the button shows the stage's state, whoever switched it
+    stage = bar.buttons["stage"]
+    stage.setCheckable(True)
+    stage.setChecked(bool(getattr(view, "stage", False)))
+    view.stage_toggled.connect(stage.setChecked)
     view.nav_bar = bar
     return bar

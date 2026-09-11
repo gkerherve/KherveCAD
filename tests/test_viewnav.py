@@ -58,6 +58,28 @@ def test_3d_bar_zooms_pans_turns_and_focuses(app):
     assert 0 < view.target[0] < 200
 
 
+def test_3d_bar_toggles_the_platform_stage(app):
+    from PyQt5.QtCore import QSettings
+    from khervecad.view3d import View3D
+    settings = QSettings("Kherve", "KherveCAD")
+    saved = settings.value("render_stage")
+    try:
+        view = View3D()
+        view.set_stage(False)
+        bar = viewnav.attach_3d(view)
+        button = bar.buttons["stage"]
+        assert not button.isChecked()
+        button.click()
+        assert view.stage and button.isChecked()
+        view.set_stage(False)                   # the menu, say
+        assert not button.isChecked()
+    finally:
+        if saved is None:
+            settings.remove("render_stage")
+        else:
+            settings.setValue("render_stage", saved)
+
+
 def test_3d_bar_sits_top_right_and_hides_for_a_pick(app):
     from khervecad.view3d import View3D
     view = View3D()
