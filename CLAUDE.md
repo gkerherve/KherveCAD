@@ -401,6 +401,21 @@ into a new module and import.
                        Object and writes edited globals back by name).
   - `properties.py`  — bottom-left panel; editors generated from each
                        node type's schema, polygon points table.
+  - `toolbars.py`    — both toolbars and their tool tables (`TOOLS`,
+                       `PRIMITIVES`, `OPERATION_GROUPS`). The twenty
+                       operations sit in six **`GroupButton`** families
+                       (Extrude, Move & transform, Combine, Deform &
+                       sculpt, Character, Repeat & logic): a click runs
+                       the family's last-used tool (QSettings
+                       `toolbar/<family>`), the chevron opens the rest.
+                       A shortcut a menu already owns is shown in the
+                       tip but not bound (`bind=False`) — two actions on
+                       one key make Qt fire neither.
+  - `tooltips.py`    — what every toolbar icon does and how to use it:
+                       `TIPS[key] = (title, what, steps, tip)`, rendered
+                       by `rich()` as a fixed-width HTML tooltip and by
+                       `summary()` as the status-bar line. A new tool
+                       with no entry falls back to its node label.
   - `view2d.py`      — top-right sketch view: Y-up QGraphicsScene,
                        draw tools (line/rect/circle/polygon/text),
                        select/move, resize handles, grid + snap, zoom.
@@ -908,8 +923,10 @@ compatible.
 - Left column: Objects/Code tabs on top, Properties below. Right
   column: 2D sketch view on top, 3D preview below.
 - Vertical toolbar = shape tools (exclusive checkable group) + 3D
-  primitives; horizontal toolbar = file ops, operations applied to
-  the selection, grid/snap, Render (F5), Fit 3D.
+  primitives; horizontal toolbar = file | undo | operation families
+  (drop-down `GroupButton`s) | Snap objects | grid/snap/plane | Render
+  (F5), Fit 3D | assistant — see `toolbars.py`. Every icon gets a
+  how-to tooltip from `tooltips.py`; add one when adding a tool.
 - Every command that acts on the **selection** (operations, group/
   ungroup, delete, duplicate, clipboard, reorder) goes through
   `BuilderPanel.active_tree()` — the Object tab's tree while that tab

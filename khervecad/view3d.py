@@ -130,7 +130,9 @@ class LightingBar(QWidget):
         grid.addWidget(
             self._button("mdi.refresh", "⟳",
                          "Redraw: rebuild both views from the object "
-                         "tree, dropping the mesh caches",
+                         "tree, dropping the mesh caches. Rarely needed "
+                         "— the view finishes its exact drawing order "
+                         "by itself a moment after each change.",
                          self.refresh_requested.emit),
             0, 3, 2, 1)
 

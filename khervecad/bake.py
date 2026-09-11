@@ -56,7 +56,7 @@ NODE_TYPES = {
         schema=[("radius", "Blend radius", "float", 0.0, 1e4),
                 ("detail", "Detail (cells across)", "int", 8, 160)]),
     "bend": dict(
-        label="Bend", category=OPERATION, icon="mdi.arrow-u-right-top",
+        label="Bend", category=OPERATION, icon="mdi.redo-variant",
         params=dict(axis="z", toward="x", angle=45.0, detail=2.0),
         schema=[("axis", "Length axis", "choice", ["x", "y", "z"], None),
                 ("toward", "Bend toward", "choice", ["x", "y", "z"], None),

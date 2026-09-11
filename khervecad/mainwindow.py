@@ -21,12 +21,10 @@ the Free Software Foundation, either version 3 of the License, or
 
 from pathlib import Path
 
-from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtWidgets import (QAbstractSpinBox, QAction, QActionGroup,
-                             QApplication, QComboBox, QDockWidget,
-                             QDoubleSpinBox, QFileDialog, QLabel,
-                             QMainWindow, QMessageBox, QSplitter,
-                             QToolBar)
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QAction, QActionGroup, QApplication,
+                             QDockWidget, QFileDialog, QLabel,
+                             QMainWindow, QMessageBox, QSplitter)
 
 from . import APP_NAME, __version__, document, icons, mesh
 from .engine import ScadEngine, set_openscad_path
@@ -34,39 +32,9 @@ from .model import NODE_TYPES, DocumentModel
 from .properties import PropertiesPanel
 from .style import THEMES, apply_style, current_theme
 from .treepanel import BuilderPanel
-from .view2d import (CIRCLE, DIMENSION, LINE, MEASURE, PLANES, POLYGON,
-                     RECT, SELECT, TEXT, SketchScene, SketchView)
+from .toolbars import build_options_bar, build_tool_bar
+from .view2d import PLANES, SketchScene, SketchView
 from .view3d import View3D
-
-ICON_SIZE = QSize(28, 28)
-
-#: (tool id, mdi icon, label, shortcut) for the 2D drawing tools.
-TOOLS = [
-    (SELECT, "mdi.cursor-default-outline", "Select", "V"),
-    (LINE, "mdi.vector-line", "Line", "L"),
-    (RECT, "mdi.rectangle-outline", "Rectangle", "R"),
-    (CIRCLE, "mdi.circle-outline", "Circle", "C"),
-    (POLYGON, "mdi.vector-polygon", "Polygon", "P"),
-    (TEXT, "mdi.format-text", "Text", "T"),
-]
-
-#: measure / annotation tools (grouped after a separator in the bar).
-MEASURE_TOOLS = [
-    (MEASURE, "mdi.tape-measure", "Measure distance", "M"),
-    (DIMENSION, "mdi.ruler-square", "Add dimension", "D"),
-]
-
-#: 3D primitives added with one click.
-PRIMITIVES = ["cube", "sphere", "cylinder", "capsule", "ellipsoid",
-              "rounded_box", "loft"]
-
-#: operations in the horizontal toolbar (applied to the selection —
-#: control-flow tools insert standalone when nothing is selected).
-OPERATIONS = ["linear_extrude", "rotate_extrude", "translate", "rotate",
-              "scale", "mirror", "symmetry", "joint", "blend", "bend",
-              "twist", "taper", "lattice", "subdivide", "union",
-              "difference", "intersection", "for_loop", "while_loop",
-              "if_else"]
 
 
 class MainWindow(QMainWindow):
@@ -193,133 +161,10 @@ class MainWindow(QMainWindow):
 
     # ------------------------------------------------------------ chrome
     def _build_tool_bar(self):
-        bar = QToolBar("Tools")
-        bar.setIconSize(ICON_SIZE)
-        bar.setMovable(False)
-        self.addToolBar(Qt.LeftToolBarArea, bar)
-        self._tool_group = QActionGroup(self)
-        for tool, glyph, label, shortcut in TOOLS:
-            act = QAction(icons.icon(glyph), label, self)
-            act.setCheckable(True)
-            act.setShortcut(shortcut)
-            act.setToolTip(f"{label} ({shortcut})")
-            act.triggered.connect(lambda _, t=tool: self._set_tool(t))
-            self._tool_group.addAction(act)
-            bar.addAction(act)
-        self._tool_group.actions()[0].setChecked(True)
-        bar.addSeparator()
-        for tool, glyph, label, shortcut in MEASURE_TOOLS:
-            act = QAction(icons.icon(glyph), label, self)
-            act.setCheckable(True)
-            act.setShortcut(shortcut)
-            act.setToolTip(f"{label} ({shortcut})")
-            act.triggered.connect(lambda _, t=tool: self._set_tool(t))
-            self._tool_group.addAction(act)
-            bar.addAction(act)
-        bar.addSeparator()
-        for prim in PRIMITIVES:
-            spec = NODE_TYPES[prim]
-            bar.addAction(icons.icon(spec["icon"]), spec["label"],
-                          lambda _=False, t=prim: self._add_primitive(t))
+        self._tools_bar = build_tool_bar(self)
 
     def _build_options_bar(self):
-        bar = QToolBar("Options")
-        bar.setIconSize(ICON_SIZE)
-        bar.setMovable(False)
-        self.addToolBar(Qt.TopToolBarArea, bar)
-
-        bar.addAction(icons.icon("mdi.file-outline"), "New",
-                      self.new_document)
-        bar.addAction(icons.icon("mdi.folder-open-outline"), "Open",
-                      self.open_file)
-        bar.addAction(icons.icon("mdi.content-save-outline"), "Save",
-                      self.save_file)
-        bar.addSeparator()
-
-        undo_act = self.model.undo_stack.createUndoAction(self)
-        undo_act.setIcon(icons.icon("mdi.undo"))
-        undo_act.setText("Undo")
-        undo_act.setToolTip("Undo (Ctrl+Z)")
-        bar.addAction(undo_act)
-        redo_act = self.model.undo_stack.createRedoAction(self)
-        redo_act.setIcon(icons.icon("mdi.redo"))
-        redo_act.setText("Redo")
-        redo_act.setToolTip("Redo (Ctrl+Y)")
-        bar.addAction(redo_act)
-        bar.addSeparator()
-
-        for op in OPERATIONS:
-            spec = NODE_TYPES[op]
-            bar.addAction(icons.icon(spec["icon"]), spec["label"],
-                          lambda _=False, o=op: self._apply_operation(o))
-        bar.addSeparator()
-
-        snap_join = QAction(icons.icon("mdi.magnet-on"),
-                            "Snap objects", self)
-        snap_join.setToolTip(
-            "Snap two Objects together — click the face/edge of the "
-            "object to move, then the target face on another object (J)")
-        snap_join.setShortcut("J")
-        snap_join.triggered.connect(self._start_snap)
-        bar.addAction(snap_join)
-        bar.addSeparator()
-
-        self._grid_act = QAction(icons.icon("mdi.grid"), "Grid", self)
-        self._grid_act.setCheckable(True)
-        self._grid_act.setChecked(self.scene.show_grid)
-        self._grid_act.setToolTip("Show grid (Ctrl+')")
-        self._grid_act.setShortcut("Ctrl+'")
-        self._grid_act.toggled.connect(self._set_show_grid)
-        bar.addAction(self._grid_act)
-
-        self._snap_act = QAction(icons.icon("mdi.magnet"), "Snap", self)
-        self._snap_act.setCheckable(True)
-        self._snap_act.setChecked(self.scene.snap_enabled)
-        self._snap_act.setToolTip("Snap to grid (Ctrl+Shift+')")
-        self._snap_act.setShortcut("Ctrl+Shift+'")
-        self._snap_act.toggled.connect(self._set_snap)
-        bar.addAction(self._snap_act)
-
-        bar.addWidget(QLabel(" Grid "))
-        self._grid_spin = QDoubleSpinBox()
-        self._grid_spin.setDecimals(2)                  # down to 0.01 mm
-        self._grid_spin.setRange(0.01, 1000.0)
-        self._grid_spin.setSingleStep(0.5)
-        # step in proportion to the value (0.6, 0.7… near 0.5; 6, 7…
-        # near 5) where the Qt build supports it
-        self._grid_spin.setStepType(
-            QAbstractSpinBox.AdaptiveDecimalStepType)
-        self._grid_spin.setSuffix(" mm")
-        self._grid_spin.setValue(self.scene.grid_size)
-        self._grid_spin.valueChanged.connect(self._set_grid_size)
-        bar.addWidget(self._grid_spin)
-        bar.addSeparator()
-
-        bar.addWidget(QLabel(" Plane "))
-        self._plane_combo = QComboBox()
-        self._plane_combo.addItems(list(PLANES))
-        self._plane_combo.setToolTip(
-            "Assembly view plane — drag part outlines to position "
-            "them along the chosen axes")
-        self._plane_combo.currentTextChanged.connect(self._set_plane)
-        bar.addWidget(self._plane_combo)
-        bar.addSeparator()
-
-        bar.addAction(icons.icon("mdi.fit-to-page-outline"),
-                      "Fit sketch (Ctrl+Shift+F)",
-                      self.view2d.fit_content)
-
-        bar.addAction(icons.icon("mdi.play-outline"), "Render (F5)",
-                      self._render_now).setShortcut("F5")
-        bar.addAction(icons.icon("mdi.arrow-expand-all"), "Fit 3D",
-                      self.view3d.fit)
-        bar.addSeparator()
-        chat_btn = QAction(icons.icon("mdi.robot-outline"),
-                           "Assistant (Ctrl+/)", self)
-        chat_btn.triggered.connect(
-            lambda: self._chat_dock.setVisible(
-                not self._chat_dock.isVisible()))
-        bar.addAction(chat_btn)
+        self._options_bar = build_options_bar(self)
 
     def _build_menus(self):
         m = self.menuBar()
