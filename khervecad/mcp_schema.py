@@ -465,7 +465,8 @@ TOOLS = [
             "params": _PARAMS,
             "name": {"type": "string",
                      "description": "Shown in the tree; auto-named if "
-                                    "omitted."},
+                                    "omitted. Say what it is, in the "
+                                    "form \"Cube [Body]\"."},
             "parent_id": dict(_ID, description="Where to put it."),
             "index": {"type": "integer",
                       "description": "Position among the parent's "
@@ -606,7 +607,9 @@ TOOLS = [
             "editable tree. It lands in the scope the user is working "
             "in unless you name one. Constructs outside the importable "
             "subset come back as warnings; for a library the parser "
-            "cannot read (BOSL2…), add a scad_raw node instead."
+            "cannot read (BOSL2…), add a scad_raw node instead. End "
+            "each statement with a `// Label` comment (`cube(10);  // "
+            "Body`): the node is named \"Cube [Body]\" in the tree."
         ),
         "input_schema": _obj({
             "code": {"type": "string",

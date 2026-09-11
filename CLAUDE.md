@@ -86,6 +86,16 @@ into a new module and import.
                        airfoil — imports as concrete points). Import never
                        crashes a file: an unparseable statement is skipped
                        with a warning and parsing resumes.
+                       **Comments name nodes**: a trailing `// Body`
+                       labels the innermost statement starting on that
+                       line, and a lone comment line directly above
+                       labels the next statement (comment blocks, long
+                       prose and commented-out code don't), giving
+                       "Cube [Body]" (`model.name_tag`/`with_tag`).
+                       Codegen writes the label back as a trailing
+                       comment, so it round-trips; the chat prompt and
+                       MCP instructions ask assistants to label every
+                       part this way.
                        `expr.py` evaluates the extra syntax (a scalar
                        reads as `[s,s,s]` so `cube(size)` works either
                        way). Constructs still outside the subset

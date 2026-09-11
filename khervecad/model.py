@@ -17,6 +17,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 import itertools
 import json
+import re
 import time
 
 from PyQt5.QtCore import QObject, QTimer, pyqtSignal
@@ -456,6 +457,33 @@ def _group_prefix(p) -> str:
 
 # ------------------------------------------------------------------ node
 
+#: "Cube [Body]" — a node's generic name plus the label that says what
+#: it IS. The label travels through the program as a trailing comment
+#: (`cube(...);  // Body`), which scadparse reads back, so an assistant
+#: that comments its code names every row of the tree.
+_TAG_RE = re.compile(r"^(.*?\S)\s+\[([^\[\]\n]+)\]$")
+
+#: types whose name is structural (module name, variable, reference
+#: target) or that never emit a statement line of their own
+UNTAGGED_TYPES = frozenset({"root", "variables", "masters", "component",
+                            "reference", "assign", "if_else",
+                            "scad_raw"})
+
+
+def name_tag(name) -> str:
+    """The bracketed label of "Cube [Body]" -> "Body", else ""."""
+    match = _TAG_RE.match(str(name or ""))
+    return match.group(2).strip() if match else ""
+
+
+def with_tag(name, tag) -> str:
+    """*name* labelled *tag* — an existing label is replaced."""
+    match = _TAG_RE.match(str(name or ""))
+    base = match.group(1) if match else str(name or "").strip()
+    tag = str(tag).replace("[", "(").replace("]", ")").strip()
+    return f"{base} [{tag}]" if tag else base
+
+
 class CadNode:
     """One object in the tree: a shape, an operation or a boolean."""
 
@@ -626,12 +654,15 @@ class CadNode:
                 lines.append((head, self))
                 lines.extend((pad + ln, self) for ln in more[:-1])
                 head = pad + more[-1]
+            tag = "" if self.type in UNTAGGED_TYPES \
+                else name_tag(self.name)
+            note = f"  // {tag}" if tag else ""
             if not self.is_container():
-                lines.append((head + ";", self))
+                lines.append((head + ";" + note, self))
             elif not self.children:
-                lines.append((head + " { }", self))
+                lines.append((head + " { }" + note, self))
             else:
-                lines.append((head + " {", self))
+                lines.append((head + " {" + note, self))
                 for child in self.children:
                     child.emit(lines, indent + 1, spans)
                 lines.append((pad + "}", self))

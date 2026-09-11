@@ -49,7 +49,9 @@ class ScadParseError(ValueError):
     pass
 
 
-def _tokenize(text):
+def _tokenize(text, comments=None):
+    """Tokens of *text*; comments are dropped from the stream but, when
+    a *comments* list is given, collected there as (start, text)."""
     tokens = []
     pos = 0
     while pos < len(text):
@@ -58,17 +60,40 @@ def _tokenize(text):
             raise ScadParseError(
                 f"unexpected character {text[pos]!r} at offset {pos}")
         kind = match.lastgroup
-        if kind not in ("space", "comment"):
+        if kind == "comment":
+            if comments is not None:
+                comments.append((match.start(), match.group()))
+        elif kind != "space":
             tokens.append((kind, match.group(), match.start(),
                            match.end()))
         pos = match.end()
     return tokens
 
 
+#: a comment label longer than this is prose, not a name
+_LABEL_MAX = 48
+
+
+def _comment_label(text):
+    """The label a `// Body` comment gives, or "" — block comments,
+    long prose and commented-out code name nothing."""
+    if not text.startswith("//"):
+        return ""
+    label = text[2:].strip().strip("/").strip()
+    if not label or len(label) > _LABEL_MAX \
+            or any(c in label for c in ";{}") or label.endswith(")"):
+        return ""
+    return label
+
+
 class Parser:
     def __init__(self, text: str):
         self.text = text
-        self.tokens = _tokenize(text)
+        #: [(offset, "// text")] — read back as node labels
+        self.comments = []
+        self.tokens = _tokenize(text, self.comments)
+        #: [(offset of a statement's first token, node it produced)]
+        self._heads = []
         self.i = 0
         self.warnings = []
         #: name -> (params, body_start_i, body_end_i) for user modules,
@@ -263,7 +288,56 @@ class Parser:
                 continue
             if node is not None:
                 root.add(node)
+        self._apply_comment_labels()
         return root
+
+    def _apply_comment_labels(self):
+        """Name nodes after their comments: "Cube" becomes "Cube [Body]".
+
+        A trailing ``// Body`` labels the innermost statement that
+        starts on its line (``color("red") cube(10);  // Body`` names
+        the cube, which is what codegen writes back). A lone comment
+        line directly above a statement labels that statement — unless
+        it is part of a comment block (the program header, prose)."""
+        import bisect
+        from collections import defaultdict
+        from .model import UNTAGGED_TYPES, with_tag
+        text = self.text
+        starts = [0] + [k + 1 for k, c in enumerate(text) if c == "\n"]
+
+        def line_of(offset):
+            return bisect.bisect_right(starts, offset) - 1
+
+        heads = defaultdict(lambda: defaultdict(list))  # line -> off -> nodes
+        for offset, node in self._heads:
+            if node.type not in UNTAGGED_TYPES:
+                heads[line_of(offset)][offset].append(node)
+        comment_lines = set()
+        for offset, body in self.comments:
+            if not text[starts[line_of(offset)]:offset].strip():
+                comment_lines.add(line_of(offset))
+        labelled = set()
+        standalone = []
+        for offset, body in self.comments:
+            label = _comment_label(body)
+            if not label:
+                continue
+            line = line_of(offset)
+            if line not in comment_lines:          # trailing comment
+                before = [o for o in heads.get(line, {}) if o < offset]
+                if before:
+                    for node in heads[line][max(before)]:
+                        node.name = with_tag(node.name, label)
+                        labelled.add(id(node))
+            elif line - 1 not in comment_lines:
+                standalone.append((line, label))
+        for line, label in standalone:
+            below = heads.get(line + 1)
+            if not below:
+                continue
+            for node in below[min(below)]:
+                if id(node) not in labelled:
+                    node.name = with_tag(node.name, label)
 
     def _recover(self, start):
         """After a failed statement, advance to the next top-level ';' or
@@ -283,6 +357,13 @@ class Parser:
                 break
 
     def parse_statement(self):
+        token = self.peek()
+        node = self._parse_statement()
+        if node is not None and token is not None:
+            self._heads.append((token[2], node))
+        return node
+
+    def _parse_statement(self):
         token = self.peek()
         if token is None:
             return None

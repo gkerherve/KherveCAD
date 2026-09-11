@@ -146,6 +146,12 @@ Constructs outside the importable subset come back as warnings; if a \
 library (BOSL2…) is genuinely needed, add a scad_raw node instead, and \
 say that the built-in preview cannot show it (only the OpenSCAD engine \
 renders it).
+- NAME WHAT YOU BUILD. End every shape or operation line with a short \
+comment saying what it is — `cube([50, 80, 40], center=true);  // Body`, \
+`for (i = [0:3]) {  // Legs` — and the tree row reads "Cube [Body]" \
+instead of a wall of identical "Cube" rows. A comment alone on the line \
+above a statement labels it too. Keep labels to a few words; with \
+add_node, pass name="Cube [Body]" in the same form.
 
 Parts and assemblies — this is the part KherveCAD cares most about:
 - An **Object** (node type "component") is a part DEFINITION: it \
