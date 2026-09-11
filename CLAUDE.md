@@ -691,6 +691,47 @@ into a new module and import.
                        enable/disable, access
                        level, one-click host connect, hand-config
                        snippets and a live activity log.
+  - `updater.py`     — **automatic updates from the GitHub releases**
+                       (Help ▸ Check for Updates… and the checkable
+                       Help ▸ Check for Updates Automatically). A
+                       `CheckWorker` QThread asks the releases API
+                       (urllib, 10 s timeout) for the newest published
+                       release **for this platform** — Windows `v0.1.N`
+                       + `KherveCAD-Setup-0.1.N.exe`, macOS
+                       `macos-v0.1.N` + the arm64 DMG; drafts,
+                       prereleases and releases missing the asset are
+                       skipped — and compares on **N, the commit
+                       count** (`_version.py`). "What changed" is the
+                       release notes of every newer release (plus the
+                       main-line `v` notes on macOS, whose own bodies
+                       are install boilerplate) and the commit subjects
+                       from the compare API (`running sha...tag`),
+                       grouped feat → New, fix → Fixed,
+                       perf/style/refactor → Improved, docs/test
+                       dropped. Dialog: Download and install / Later /
+                       Skip this version (`update_skip_version`). The
+                       `DownloadWorker` streams to a temp dir (cancellable,
+                       size-checked); then `install_mode()` decides:
+                       **Windows** (an Inno install — `unins*.exe` beside
+                       the exe) closes every window and runs the
+                       installer detached with `/SILENT
+                       /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS`,
+                       and `khervecad.iss`'s `Check: WizardSilent`
+                       `[Run]` entry relaunches the app; **macOS** mounts
+                       the DMG (`hdiutil attach -nobrowse`) and a
+                       detached `/bin/sh` script (`mac_install_script`)
+                       waits for this PID, `ditto`s the new bundle beside
+                       the old one, swaps them by rename, detaches,
+                       strips quarantine and `open`s it — or, when the
+                       bundle's folder is not writable / translocated,
+                       opens the DMG in Finder. A source checkout or a
+                       portable copy just gets the release page. The
+                       automatic check runs 5 s after startup **only
+                       when frozen**, at most once a day
+                       (`update_last_check`, `update_auto`), and fails
+                       silently; workers are C++-owned (`_launch`) so
+                       closing the window mid-check cannot destroy a
+                       running QThread.
 - `docs/MCP.md` — how to connect an assistant, what the 39 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
@@ -878,6 +919,9 @@ compatible.
   (OpenSCAD found / built-in preview).
 - **Window style**: Fusion as default; themes shared with the family
   (View > Theme).
+- **Help menu**: User Guide (F1), **Check for Updates…**, a checkable
+  **Check for Updates Automatically** (on by default; only an installed
+  build checks by itself), About. See `updater.py`.
 
 ## Packaging / installer
 

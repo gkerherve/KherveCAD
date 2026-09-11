@@ -176,6 +176,8 @@ class MainWindow(QMainWindow):
         self._build_status_bar()
         self._update_title()
         self._refresh_preview()
+        # an installed build looks for a new release once a day
+        self.updater.schedule_startup_check()
 
     def _build_chat_dock(self):
         from .chat import ChatPanel
@@ -520,6 +522,10 @@ class MainWindow(QMainWindow):
 
         help_menu = m.addMenu("&Help")
         help_menu.addAction("&User Guide", self._user_guide, "F1")
+        help_menu.addSeparator()
+        from .updater import Updater
+        self.updater = Updater(self)
+        self.updater.add_menu_actions(help_menu)
         help_menu.addSeparator()
         help_menu.addAction("&About", self._about)
 

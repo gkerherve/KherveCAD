@@ -69,4 +69,10 @@ Root: HKCU; Subkey: "Software\Classes\KherveCAD.Document\DefaultIcon"; ValueType
 Root: HKCU; Subkey: "Software\Classes\KherveCAD.Document\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExe}"" ""%1"""
 
 [Run]
+; Interactive install: the usual "Launch KherveCAD" checkbox on the last page.
 Filename: "{app}\{#AppExe}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent
+; Silent install: that is how Help > Check for Updates runs this installer
+; (khervecad/updater.py) after closing the app, so bring the new build back
+; up. The postinstall entry above is skipped in silent mode and this one is
+; skipped in interactive mode, so neither path launches the app twice.
+Filename: "{app}\{#AppExe}"; WorkingDir: "{app}"; Flags: nowait runasoriginaluser; Check: WizardSilent

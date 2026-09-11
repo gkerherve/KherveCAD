@@ -110,6 +110,37 @@ runner and publishes the DMG plus OpenSCAD's source archive under a
 stays on the Windows release the website's download button points at.
 Full detail in `README.macos.md`.
 
+## Updates
+
+`khervecad/updater.py` updates an installed copy from the GitHub
+releases (Help > Check for Updates..., and by itself once a day a few
+seconds after startup when frozen). It relies on three things the build
+already provides, so keep them stable:
+
+- **Tags and asset names.** Windows releases are `v0.1.N` carrying
+  `KherveCAD-Setup-0.1.N.exe` (or the stable `KherveCAD-Setup.exe`);
+  macOS releases are `macos-v0.1.N` carrying
+  `KherveCAD-0.1.N-macOS-arm64.dmg`. A release without its platform's
+  asset is ignored, so an upload still in progress is never offered.
+- **`khervecad/VERSION` holds `0.1.N+sha`.** N is compared with the tag;
+  the sha is the base of the compare API call that lists every commit
+  since the running build.
+- **The silent relaunch in `khervecad.iss`.** The updater closes the app
+  and runs the installer with `/SILENT /SUPPRESSMSGBOXES /NORESTART
+  /CLOSEAPPLICATIONS`. The interactive "Launch KherveCAD" entry is
+  `skipifsilent`, so a second `[Run]` entry with `Check: WizardSilent`
+  starts the new build. A copy installed by an installer older than this
+  entry updates fine but has to be started by hand once.
+
+On macOS the DMG is mounted and a detached shell script waits for the app
+to exit, copies the new bundle beside the old one with `ditto`, swaps the
+two by rename (a failed copy leaves the old app in place), detaches the
+image, strips quarantine and reopens the app. An app that cannot be
+replaced in place — a read-only folder, or App Translocation because it
+was never moved out of Downloads — gets the DMG opened in Finder instead.
+A portable Windows copy or a source checkout is only told about the new
+version and pointed at the release page.
+
 ## Not done yet
 
 - Both builds are **unsigned** in the sense that matters: SmartScreen

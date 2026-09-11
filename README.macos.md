@@ -76,6 +76,12 @@ xattr -dr com.apple.quarantine /Applications/KherveCAD.app
 or right-click the app → **Open** → **Open** in the dialog. A DMG copied
 over by AirDrop or a USB stick is not quarantined and just opens.
 
+Only the first install needs this. Later versions arrive through
+**Help > Check for Updates...** (or the daily automatic check): the app
+downloads the new DMG itself, and a file fetched that way carries no
+quarantine flag; the updater strips it anyway after swapping the bundle.
+See "Updates" in `docs/INSTALLER.md`.
+
 Removing this friction requires an Apple Developer Program membership
 (99 USD/yr) to sign with a Developer ID and notarize through Apple. Once
 you have one, add `codesign --options runtime` with the identity plus
