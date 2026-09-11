@@ -448,7 +448,13 @@ into a new module and import.
                        (convex bodies would chain O(n²)). `build()`
                        returns None past `MAX_TRIS`, the time budget or
                        the growth cap (curved petals shred) and the view
-                       falls back to the centroid sort.
+                       falls back to the centroid sort. The budget is
+                       the worker's **CPU** time (`time.thread_time`):
+                       a wall-clock budget ran out while the GUI thread
+                       held the GIL, so the exact order only ever landed
+                       after a manual Redraw. A newer mesh `cancel`s a
+                       stale build, and only the current serial's tree
+                       may be posted to the view.
   - `view3d.py`      — bottom-right preview: software-rendered shaded
                        mesh viewer (orbit/pan/zoom, painter's algo in
                        BSP order via `bsp.py` — centroid sort only for

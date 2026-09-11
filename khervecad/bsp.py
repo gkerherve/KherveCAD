@@ -38,8 +38,13 @@ EPS = 1e-4
 #: pure Python and must stay well under a frame's worth of time)
 MAX_TRIS = 12000
 
-#: seconds the build may take before giving up
-TIME_BUDGET = 0.4
+#: CPU seconds the build may spend before giving up. Charged to the
+#: worker thread's own clock (time.thread_time), not the wall: the build
+#: shares the GIL with the GUI thread, and while that is busy
+#: tessellating and painting, a wall-clock budget ran out with the tree
+#: half built — the view then kept the centroid sort until a manual
+#: Redraw happened to run it while the app was idle.
+TIME_BUDGET = 2.5
 
 #: give up when splitting has grown the mesh past this many times its
 #: input size — every piece is one more polygon to paint per frame.
@@ -249,13 +254,15 @@ def _choose_plane(indices, tris):
 
 
 def build(tris, colors=None, *, max_tris=MAX_TRIS, budget=TIME_BUDGET,
-          max_growth=MAX_GROWTH):
+          max_growth=MAX_GROWTH, cancel=None):
     """Partition *tris* (per-face *colors* ride along). None when the
-    mesh is empty, too big, or a budget ran out."""
+    mesh is empty, too big, a budget ran out, or *cancel()* turned true
+    (a newer mesh superseded this one: stop competing for the GIL)."""
     n = len(tris)
     if n == 0 or n > max_tris:
         return None
-    deadline = time.monotonic() + budget
+    clock = time.thread_time
+    deadline = clock() + budget
     limit = min(max(n * max_growth, MIN_PIECES), MAX_PIECES)
     out_tris = list(tris)
     out_colors = list(colors) if colors else None
@@ -267,7 +274,9 @@ def build(tris, colors=None, *, max_tris=MAX_TRIS, budget=TIME_BUDGET,
     stack = [([i for i in range(n) if _plane(out_tris[i]) is not None],
               None, None)]
     while stack:
-        if time.monotonic() > deadline or len(out_tris) > limit:
+        if clock() >= deadline or len(out_tris) > limit:
+            return None
+        if cancel is not None and cancel():
             return None
         indices, parent, slot = stack.pop()
         if not indices:

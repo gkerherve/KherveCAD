@@ -214,6 +214,35 @@ def test_stale_tree_is_not_adopted(app):
     assert len(tree.tris) >= 12
 
 
+def test_build_can_be_cancelled():
+    tris, colors, _ = _pupil_scene()
+    assert bsp.build(tris, colors, budget=10, cancel=lambda: True) is None
+    assert bsp.build(tris, colors, budget=10,
+                     cancel=lambda: False) is not None
+
+
+def test_budget_is_cpu_time_not_wall_clock(monkeypatch):
+    """A worker starved of the GIL by a busy GUI thread must not give
+    up: the wall clock is not what the budget is charged to."""
+    tris, colors, _ = _pupil_scene()
+    ticks = iter(range(0, 10 ** 9, 1000))
+    monkeypatch.setattr(bsp.time, "monotonic", lambda: next(ticks))
+    assert bsp.build(tris, colors, budget=10) is not None
+
+
+def test_rapid_meshes_end_on_the_last_tree(app):
+    """Edits in quick succession: whatever order the workers finish in,
+    the view must end up with the exact order for the LAST mesh (a stale
+    result overwrote the fresh one, and only Redraw brought it back)."""
+    tris, colors, _ = _pupil_scene()
+    view = View3D()
+    for k in range(12, len(tris) + 1, 2):
+        view.set_mesh(tris[:k], "edit", colors[:k])
+    tree = view.wait_for_bsp()
+    assert tree is not None
+    assert len(tree.tris) >= len(tris)
+
+
 def test_snapshot_reuses_the_tree(app):
     tris, colors, _ = _pupil_scene()
     view = View3D()

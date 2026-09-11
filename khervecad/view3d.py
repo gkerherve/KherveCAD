@@ -204,6 +204,7 @@ class View3D(QWidget):
         self._bsp = None                # bsp.Tree of self.mesh, or None
         self._bsp_pending = None        # (serial, tree) left by the worker
         self._bsp_thread = None
+        self._bsp_lock = threading.Lock()
         self._mesh_serial = 0           # bumps per set_mesh: stale trees
         self._bsp_ready.connect(self._take_bsp)
         self._fast = False              # currently interacting
@@ -399,15 +400,28 @@ class View3D(QWidget):
         # It is built on a worker thread so a parameter edit repaints at
         # once (centroid-sorted, as before) and snaps to the exact order
         # when the tree lands; None for a mesh too big to partition.
-        self._mesh_serial += 1
+        with self._bsp_lock:
+            self._mesh_serial += 1
+            self._bsp_pending = None
         self._bsp = bsp
-        self._bsp_pending = None
         if bsp is None and self.mesh:
             serial, tris, colors_ = self._mesh_serial, self.mesh, self.colors
 
+            def stale():
+                return serial != self._mesh_serial
+
             def work():
-                tree = bsp_mod.build(tris, colors_)
-                self._bsp_pending = (serial, tree)
+                # a superseded build stops at once rather than competing
+                # with the current one (and the GUI) for the GIL
+                tree = bsp_mod.build(tris, colors_, cancel=stale)
+                with self._bsp_lock:
+                    # only the current mesh's tree may be posted: a late
+                    # stale one used to overwrite the fresh result before
+                    # the GUI thread took it, and the view then kept the
+                    # centroid sort until a manual Redraw
+                    if stale():
+                        return
+                    self._bsp_pending = (serial, tree)
                 self._bsp_ready.emit()
 
             self._bsp_thread = threading.Thread(target=work, daemon=True)
@@ -418,7 +432,8 @@ class View3D(QWidget):
     def _take_bsp(self):
         """Adopt the tree the worker left, if it is for the current
         mesh (a newer set_mesh may have superseded it)."""
-        pending, self._bsp_pending = self._bsp_pending, None
+        with self._bsp_lock:
+            pending, self._bsp_pending = self._bsp_pending, None
         if pending is None:
             return
         serial, tree = pending
@@ -749,6 +764,12 @@ class View3D(QWidget):
         tree = self._bsp
         if self._fast and self._draft_mesh is not None:
             mesh, colors = self._draft_mesh, self._draft_colors
+            tree = None
+        elif tree is not None and self._fast \
+                and len(tree.tris) > self.DRAFT_ABOVE:
+            # splitting grew the tree past the draft threshold: orbit on
+            # the lighter unsplit mesh, the exact order returns on release
+            mesh, colors = self.mesh, self.colors
             tree = None
         elif tree is not None:
             mesh, colors = tree.tris, tree.colors
