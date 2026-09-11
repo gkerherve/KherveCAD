@@ -146,6 +146,14 @@ Constructs outside the importable subset come back as warnings; if a \
 library (BOSL2…) is genuinely needed, add a scad_raw node instead, and \
 say that the built-in preview cannot show it (only the OpenSCAD engine \
 renders it).
+- Beyond OpenSCAD's own shapes, apply_code understands KherveCAD's \
+helpers, which parse into editable nodes: `kcad_sweep(path = [[x, y, \
+z], ...], smooth = 3, twist = 0, scale = 1, wall = 0, closed = false) \
+{ <2D profile> }` drives a flat profile along a 3D path — pipes (wall > \
+0 hollows it), handrails, cable runs, springs, O-rings (closed = true); \
+`kcad_loft(sections = [[x, y, z, rx, ry], ...])` is a tube through \
+elliptical sections; kcad_capsule / kcad_ellipsoid / kcad_rounded_box \
+are the organic solids. Prefer a sweep to a chain of hull()s.
 - NAME EVERY PIECE YOU BUILD. End EVERY shape line — each cube(), \
 sphere(), cylinder(), capsule… — with a short comment saying which part \
 of the model it is: `cube([4, 4, 12]);  // Front-left leg`, \

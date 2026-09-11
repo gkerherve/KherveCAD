@@ -222,6 +222,36 @@ def pillow_block() -> CadNode:
     return root
 
 
+def pipe_run() -> CadNode:
+    """A pipe run and a handrail, both swept along a path: a hollow
+    round pipe (Wall thickness) through two smoothed bends, a square
+    rail through mitred corners, and a closed O-ring."""
+    pipe = CadNode("sweep", "Pipe [Ø12, 1.5 mm wall]", dict(
+        path=[[0.0, 0.0, 0.0], [0.0, 0.0, 40.0], [40.0, 0.0, 60.0],
+              [80.0, 30.0, 60.0]],
+        smooth=4, twist=0.0, scale=1.0, wall=1.5, closed=False))
+    pipe.add(CadNode("circle", "Circle [Pipe section]",
+                     dict(x=0.0, y=0.0, radius=6.0, angle=360.0,
+                          start_angle=0.0, segments=32)))
+    rail = CadNode("sweep", "Rail [10 x 4 mitred]", dict(
+        path=[[-30.0, 0.0, 0.0], [-30.0, 0.0, 45.0], [-30.0, 40.0, 45.0],
+              [-30.0, 40.0, 0.0]],
+        smooth=0, twist=0.0, scale=1.0, wall=0.0, closed=False))
+    rail.add(CadNode("rect", "Rectangle [Rail section]",
+                     dict(x=-5.0, y=-2.0, width=10.0, height=4.0)))
+    ring = CadNode("sweep", "O-ring [closed loop]", dict(
+        path=[[20 * math.cos(math.radians(a)) + 40.0,
+               20 * math.sin(math.radians(a)) - 40.0, 3.0]
+              for a in range(0, 360, 45)],
+        smooth=3, twist=0.0, scale=1.0, wall=0.0, closed=True))
+    ring.add(CadNode("circle", "Circle [Cord section]",
+                     dict(x=0.0, y=0.0, radius=3.0, angle=360.0,
+                          start_angle=0.0, segments=20)))
+    return _root(_color("Pipe", "#b0b8c0", pipe),
+                 _color("Rail", "#c9a227", rail),
+                 _color("O-ring", "#333333", ring))
+
+
 def spur_gear() -> CadNode:
     """A single spur gear (module 3, 24 teeth) with a keyed-style bore —
     a for-loop stamps the teeth round a root disc."""
@@ -1199,6 +1229,7 @@ EXAMPLES = [
     ("V-belt pulley", "Mechanical", vbelt_pulley),
     ("Threaded rod & nuts", "Mechanical", threaded_rod),
     ("Fan impeller", "Mechanical", fan_impeller),
+    ("Pipe run & handrail (sweep)", "Mechanical", pipe_run),
     ("Bolt circle (Masters demo)", "Mechanical", bolt_circle),
     ("Ch.2 · Wall anchor", "Projects", project_02_wall_anchor),
     ("Ch.3 · Window stopper", "Projects", project_03_window_stopper),

@@ -148,6 +148,11 @@ supported subset:
   min max floor ceil round sign norm len (trig in degrees).
 - user module(){} definitions with parameters ARE supported — the app
   inlines each call; nested modules too. import("file.stl") works.
+- KherveCAD helpers: kcad_sweep(path=[[x,y,z],...], smooth=3, twist=0,
+  scale=1, wall=0, closed=false) { 2D profile } drives a profile along
+  a 3D path (pipes with wall>0, handrails, springs, O-rings with
+  closed=true); kcad_loft(sections=[[x,y,z,rx,ry],...]) is a tube
+  through elliptical sections. Prefer these to chains of hull().
 Avoid: function definitions, children()/$children, use/include,
 recursion, and list comprehensions [for ...]. If the user needs those,
 tell them to open the file directly (KherveCAD keeps it as a raw

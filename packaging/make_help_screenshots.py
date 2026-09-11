@@ -481,9 +481,20 @@ def shot_stage(win):
     view.stage = False
 
 
+def shot_sweep(win):
+    load(win, "Pipe run & handrail (sweep)")
+    wait_exact(win)
+    view = win.view3d
+    view.user_moved = False
+    view.yaw, view.pitch = 30.0, 22.0
+    view.fit()
+    finish_3d(win)
+    save(view.grab(), "sweep", 900)
+
+
 SHOTS = [shot_window, shot_toolbars, shot_tutorial, shot_tabs,
          shot_named_rows, shot_sketch, shot_styles, shot_character,
-         shot_attach, shot_dialogs, shot_vibe, shot_stage]
+         shot_attach, shot_dialogs, shot_vibe, shot_stage, shot_sweep]
 
 
 def main(only=()):

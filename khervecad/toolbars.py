@@ -57,7 +57,7 @@ PRIMITIVES = ["cube", "sphere", "cylinder", "capsule", "ellipsoid",
 #: the selection — Group and the control-flow tools insert an empty
 #: node when nothing is selected).
 OPERATION_GROUPS = [
-    ("extrude", ["linear_extrude", "rotate_extrude"]),
+    ("extrude", ["linear_extrude", "rotate_extrude", "sweep"]),
     ("transform", ["translate", "rotate", "scale", "mirror"]),
     ("combine", ["union", "difference", "intersection"]),
     ("deform", ["blend", "bend", "twist", "taper", "lattice",

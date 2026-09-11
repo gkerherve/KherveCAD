@@ -265,6 +265,20 @@ you extrude.</p>
 lathe. Draw <i>half</i> the cross-section, to the right of the Y axis:
 its X becomes the radius and its Y the height. A profile that crosses
 X&nbsp;=&nbsp;0 turns red. An <i>Angle</i> below 360 makes a slice.</p>
+<p><b>Sweep along path</b> drives a profile along a 3D path &mdash; the
+tool for pipes, handrails, cable runs, springs and chain links (what
+Blender does with a curve and a bevel object). Draw the cross-section
+around the origin (a circle for a pipe, a rectangle for a rail), apply
+the sweep, then type the <b>Path points</b> in Properties. Corners are
+mitred; <b>Smoothing</b> rounds them into a fair curve that still passes
+through every point. <b>Wall thickness</b> hollows it into a pipe,
+<b>Closed loop</b> joins the end to the start (an O-ring), and
+<b>Twist</b> / <b>Scale</b> act over the length. Seen with the path
+coming towards you and Z up, the profile's x is right and y is up, just
+like Linear extrude. Examples &rsaquo; Mechanical &rsaquo; <i>Pipe run
+&amp; handrail</i> shows all three.</p>
+{figure("sweep", "A hollow pipe through smoothed bends, a mitred square "
+        "rail and a closed O-ring — three sweeps.")}
 <h3>Ready-made solids</h3>
 <p>The bottom of the left toolbar adds a solid with one click:
 <b>Cube</b>, <b>Sphere</b>, <b>Cylinder</b> (a different top radius makes

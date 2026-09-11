@@ -50,6 +50,19 @@ NODE_TYPES = {
                 ("sides", "Sides", "int", 3, 256),
                 ("smooth", "Smoothing steps", "int", 0, 12),
                 ("caps", "Ends", "choice", ["round", "flat"], None)]),
+    "sweep": dict(
+        label="Sweep along path", category=OPERATION, icon="mdi.pipe",
+        params=dict(path=[[0.0, 0.0, 0.0], [0.0, 0.0, 30.0],
+                          [30.0, 0.0, 50.0]],
+                    smooth=3, twist=0.0, scale=1.0, wall=0.0,
+                    closed=False),
+        schema=[("path", "Path points", "rows", ["X", "Y", "Z"], None),
+                ("smooth", "Smoothing steps", "int", 0, 12),
+                ("twist", "Twist° (over the path)", "float",
+                 -3600.0, 3600.0),
+                ("scale", "Scale at the far end", "float", 0.01, 100.0),
+                ("wall", "Wall thickness (0 = solid)", "float", 0.0, 1e4),
+                ("closed", "Closed loop", "bool", None, None)]),
     "blend": dict(
         label="Smooth blend", category=OPERATION, icon="mdi.blur-radial",
         params=dict(radius=4.0, detail=40),
@@ -91,12 +104,14 @@ NODE_TYPES = {
 
 TYPES = frozenset(NODE_TYPES)
 LEAVES = frozenset({"polyhedron", "loft"})
-WRAPPERS = frozenset({"blend", "bend", "twist", "taper", "lattice",
-                      "subdivide"})
+WRAPPERS = frozenset({"sweep", "blend", "bend", "twist", "taper",
+                      "lattice", "subdivide"})
 
 #: wrappers whose surface is computed here and baked into the program,
 #: with their helper module's parameters (besides points and faces)
 _BAKED = {
+    "sweep": [("path", []), ("smooth", 3), ("twist", 0), ("scale", 1),
+              ("wall", 0), ("closed", False)],
     "blend": [("radius", 0), ("detail", 40)],
     "bend": [("axis", "z"), ("toward", "x"), ("angle", 0), ("detail", 2)],
     "twist": [("axis", "z"), ("angle", 0), ("detail", 2)],
@@ -191,6 +206,8 @@ module kcad_loft(sections = [], sides = 24, smooth = 3, caps = "round") {
 
 
 def _literal(value) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
     if isinstance(value, str):
         return f'"{value}"'
     if isinstance(value, list):
@@ -301,6 +318,16 @@ def _compute(node, env) -> list:
     if t == "blend":
         return sdf.blend(node, env, num("radius", 4.0),
                          int(num("detail", 40.0)))
+    if t == "sweep":
+        from . import sweep
+        path = [[mesh.rv(v, env) for v in row]
+                for row in p.get("path") or []
+                if isinstance(row, list) and len(row) == 3]
+        return sweep.sweep(
+            mesh._children_outlines(node, env), path,
+            smooth=int(num("smooth", 3.0)), twist=num("twist", 0.0),
+            scale=num("scale", 1.0), wall=num("wall", 0.0),
+            closed=bool(p.get("closed", False)))
     src = [tri for tri, _c, _s in
            mesh._children_mesh(node, env, None, frozenset(), False)]
     if t == "subdivide":
@@ -354,6 +381,8 @@ def statement(node, fmt, fn) -> str:
             value = p.get(key, default)
             if key in _CHOICES:
                 return f'"{value}"'
+            if isinstance(value, bool):
+                return "true" if value else "false"
             if isinstance(value, list):
                 return _rows(value, fmt)
             return fmt(value)
@@ -424,13 +453,16 @@ def _b_baked(kind):
             if key in _CHOICES:
                 params[key] = value if value in ("x", "y", "z") \
                     else defaults[key]
-            elif key == "offsets":
+            elif key in ("offsets", "path"):
                 params[key] = ([[_num(v) for v in row] for row in value
                                 if isinstance(row, list)]
                                if isinstance(value, list)
                                else [list(r) for r in defaults[key]])
+            elif key == "closed":
+                params[key] = value is True or value == "true"
             elif (kind, key) in (("blend", "detail"),
-                                 ("subdivide", "levels")):
+                                 ("subdivide", "levels"),
+                                 ("sweep", "smooth")):
                 try:
                     params[key] = int(_num(value, defaults[key]))
                 except (TypeError, ValueError):
@@ -528,6 +560,8 @@ def _check_baked(node, env):
                     f"groups, loops and joints around them) — {exc} is "
                     "not one")
         return None
+    if t == "sweep":
+        return _check_sweep(node, env)
     bad = next((n for n in node.walk() if n is not node and n.visible
                 and n.type in _INEXACT), None)
     if bad is not None:
@@ -543,6 +577,40 @@ def _check_baked(node, env):
                                  for r in rows):
             return ("lattice: give 8 corner offsets [dx, dy, dz] — x "
                     "fastest, then y, then z")
+    return None
+
+
+def _check_sweep(node, env):
+    from . import expr
+    from .model import _contains_3d
+    if _contains_3d(node):
+        return ("a sweep drives a flat 2D profile along its path — this "
+                "contains 3D. Put rectangles, circles or polygons inside")
+    if not node.has_2d_content():
+        return "a sweep needs a 2D profile inside it — draw one, or add one"
+    bad = next((n for n in node.walk() if n is not node and n.visible
+                and n.type in _INEXACT), None)
+    if bad is not None:
+        return (f"a sweep reads its profile from the preview, which cannot "
+                f"cut a {bad.type} — for a hollow tube set Wall thickness "
+                "instead")
+    p = node.params
+    rows = p.get("path") or []
+    if not isinstance(rows, list):
+        return "path: give points as rows of x, y, z"
+    for number, row in enumerate(rows):
+        if not isinstance(row, list) or len(row) != 3:
+            return f"path point {number} needs 3 values: x, y, z"
+        for value in row:
+            if isinstance(value, str):
+                try:
+                    expr.evaluate(value, env)
+                except expr.ExprError as exc:
+                    return f"path point {number}: {exc}"
+    needed = 3 if p.get("closed") else 2
+    if len(rows) < needed:
+        return (f"a {'closed ' if needed == 3 else ''}sweep needs at "
+                f"least {needed} path points")
     return None
 
 

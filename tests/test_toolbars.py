@@ -33,7 +33,7 @@ def window(app):
 def test_every_operation_is_in_exactly_one_family():
     ops = [op for _key, family in toolbars.OPERATION_GROUPS
            for op in family]
-    assert len(ops) == len(set(ops)) == 20
+    assert len(ops) == len(set(ops)) == 21
     assert all(op in NODE_TYPES for op in ops)
     assert all(key in tooltips.GROUPS
                for key, _family in toolbars.OPERATION_GROUPS)

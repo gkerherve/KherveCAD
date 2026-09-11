@@ -686,6 +686,29 @@ into a new module and import.
                        Keep the two in step (rounding: floor(x+0.5),
                        never Python's round-half-even); the engine
                        parity test compares extent and volume.
+  - `sweep.py`       — **sweep along a path** geometry (Qt-free): any
+                       2D outline(s) driven along a 3D polyline —
+                       pipes, handrails, cable runs, springs, chain
+                       links (Blender's curve + bevel object; OpenSCAD
+                       has nothing native, the hull-chain idiom
+                       convexifies). Catmull-Rom `densify` (given
+                       points stay on the curve; closed loops wrap),
+                       a rotation-minimising `frames` (double
+                       reflection, holonomy spread round a closed
+                       loop so the seam matches), mitred rings at
+                       corners, `twist`/`scale` over the arc length,
+                       `wall` > 0 hollows it (inner outline from
+                       `mesh.offset_outline`, annulus caps — a pipe
+                       without a 2D difference), `closed` drops the
+                       caps. Profile axes follow linear_extrude: path
+                       towards you, Z up → x right, y up. The `sweep`
+                       node (bake.py, in `_BAKED`: `kcad_sweep(path=,
+                       smooth=, twist=, scale=, wall=, closed=,
+                       points=, faces=) { 2D profile }`) BAKES the
+                       polyhedron like `blend`, so it is refused
+                       inside a loop and its profile cannot hold a 2D
+                       difference (use wall). Extrude toolbar group;
+                       Examples ▸ Mechanical ▸ Pipe run & handrail.
   - `sdf.py`         — **smooth blend** geometry (Qt-free): the
                        primitives under a `blend` (sphere, cube,
                        cylinder, capsule, ellipsoid, rounded box —

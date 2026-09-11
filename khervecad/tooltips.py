@@ -174,6 +174,23 @@ TIPS = {
          "Select it and click Rotate extrude.",
          "Angle below 360 makes a partial revolve (a slice)."],
         "A profile crossing X = 0 turns red — keep it on one side."),
+    "sweep": (
+        "Sweep along path",
+        "Drives a flat 2D profile along a 3D path — pipes, handrails, "
+        "cable runs, springs, chain links. Corners are mitred and the "
+        "path can be smoothed into a curve.",
+        ["Draw the cross-section as 2D shapes (a circle for a pipe, a "
+         "rectangle for a rail) around the origin: seen with the path "
+         "coming towards you, x is right and y is up.",
+         "Select it and click Sweep along path.",
+         "In Properties, type the Path points (X, Y, Z) the profile "
+         "should follow; Smoothing rounds the corners into a curve.",
+         "Wall thickness > 0 makes it hollow (a pipe); Closed loop "
+         "joins the end to the start (an O-ring); Twist and Scale act "
+         "over the length."],
+        "Only 2D shapes go inside. The result is baked into the "
+        "program, so a sweep cannot sit inside a loop — put the loop "
+        "inside the sweep instead."),
     "translate": (
         "Translate (move)",
         "Moves the selection by X, Y and Z millimetres.",
@@ -395,7 +412,8 @@ TIPS = {
 
 #: the operation families of the main toolbar: key -> (title, blurb)
 GROUPS = {
-    "extrude": ("Extrude", "turn 2D shapes into solids"),
+    "extrude": ("Extrude", "turn 2D shapes into solids — straight up, "
+                "round an axis, or along a path"),
     "transform": ("Move & transform", "move, turn, resize or mirror"),
     "combine": ("Combine", "group, cut and intersect solids"),
     "deform": ("Deform & sculpt", "melt, bend, twist and reshape"),
