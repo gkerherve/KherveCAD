@@ -65,6 +65,31 @@ def test_block_header_comment_labels_the_container():
     assert all(not name_tag(n.name) for n in loop.walk() if n is not loop)
 
 
+def test_block_header_on_one_line_labels_the_outermost():
+    root, _ = scadparse.parse_scad(
+        "for (px = [-1, 1]) for (py = [-1, 1])  // Legs\n"
+        "    translate([px * 10, py * 10, 0]) cylinder(h=5, r=1);  // Leg\n")
+    outer = root.children[0]
+    inner = outer.children[0]
+    assert name_tag(outer.name) == "Legs"
+    assert not name_tag(inner.name)
+    assert [n.name for n in outer.walk()
+            if n.type == "cylinder"] == ["Cylinder [Leg]"]
+
+
+def test_labelled_block_round_trips(app):
+    code = ('color("pink") translate([0, 50, 0]) {  // Head\n'
+            '    cube(10);\n'
+            '    sphere(3);  // Eye\n'
+            '}\n')
+    root, _ = scadparse.parse_scad(code)
+    assert name_tag(root.children[0].name) == "Head"
+    model = DocumentModel()
+    model.root = root
+    again, _ = scadparse.parse_scad(model.to_scad())
+    assert [n.name for n in again.walk()] == [n.name for n in root.walk()]
+
+
 def test_comment_line_above_labels_the_next_statement():
     root, _ = scadparse.parse_scad(
         "// Tail\n"

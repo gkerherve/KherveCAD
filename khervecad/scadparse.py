@@ -294,11 +294,14 @@ class Parser:
     def _apply_comment_labels(self):
         """Name nodes after their comments: "Cube" becomes "Cube [Body]".
 
-        A trailing ``// Body`` labels the innermost statement that
-        starts on its line (``color("red") cube(10);  // Body`` names
-        the cube, which is what codegen writes back). A lone comment
-        line directly above a statement labels that statement — unless
-        it is part of a comment block (the program header, prose)."""
+        A trailing ``// Body`` after a statement that ends on its line
+        labels the innermost one (``color("red") cube(10);  // Body``
+        names the cube, which is what codegen writes back). On a block
+        header whose body runs on below (``for (..) for (..) {  //
+        Legs``) it labels the outermost — the whole block. A lone
+        comment line directly above a statement labels that statement —
+        unless it is part of a comment block (the program header,
+        prose)."""
         import bisect
         from collections import defaultdict
         from .model import UNTAGGED_TYPES, with_tag
@@ -308,10 +311,11 @@ class Parser:
         def line_of(offset):
             return bisect.bisect_right(starts, offset) - 1
 
-        heads = defaultdict(lambda: defaultdict(list))  # line -> off -> nodes
-        for offset, node in self._heads:
+        # line -> start offset -> [(node, end offset)]
+        heads = defaultdict(lambda: defaultdict(list))
+        for offset, end, node in self._heads:
             if node.type not in UNTAGGED_TYPES:
-                heads[line_of(offset)][offset].append(node)
+                heads[line_of(offset)][offset].append((node, end))
         comment_lines = set()
         for offset, body in self.comments:
             if not text[starts[line_of(offset)]:offset].strip():
@@ -326,7 +330,11 @@ class Parser:
             if line not in comment_lines:          # trailing comment
                 before = [o for o in heads.get(line, {}) if o < offset]
                 if before:
-                    for node in heads[line][max(before)]:
+                    complete = [o for o in before
+                                if any(line_of(end) == line
+                                       for _n, end in heads[line][o])]
+                    pick = max(complete) if complete else min(before)
+                    for node, _end in heads[line][pick]:
                         node.name = with_tag(node.name, label)
                         labelled.add(id(node))
             elif line - 1 not in comment_lines:
@@ -335,7 +343,7 @@ class Parser:
             below = heads.get(line + 1)
             if not below:
                 continue
-            for node in below[min(below)]:
+            for node, _end in below[min(below)]:
                 if id(node) not in labelled:
                     node.name = with_tag(node.name, label)
 
@@ -360,7 +368,8 @@ class Parser:
         token = self.peek()
         node = self._parse_statement()
         if node is not None and token is not None:
-            self._heads.append((token[2], node))
+            end = self.tokens[self.i - 1][3] if self.i else token[3]
+            self._heads.append((token[2], end, node))
         return node
 
     def _parse_statement(self):
