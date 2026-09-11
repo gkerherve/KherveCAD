@@ -148,7 +148,12 @@ two axes are coloured like the 3D gizmo (X red, Y green, Z blue).
 Shapes are drawn here; a selected shape shows its size with dimension
 arrows and square handles to resize it. 3D parts appear as filled
 outlines you can drag. Middle-drag pans, the wheel zooms, and the scale
-bar at the bottom left tells you how big a grid square is.</p>
+bar at the bottom left tells you how big a grid square is. The small
+bar in the top-right corner does the same without the mouse: the arrows
+scroll, the magnifiers zoom (hold a button to repeat), <b>Focus</b>
+(&#x25CE;) frames the selected part wherever it is &mdash; handy when a
+part is nowhere near the origin &mdash; and <b>Fit all</b> shows
+everything.</p>
 {figure("sketch", "The 2D sketch: a selected rectangle with its "
         "automatic dimensions, and a circle.")}
 
@@ -157,7 +162,9 @@ bar at the bottom left tells you how big a grid square is.</p>
 middle-drag</b> pans, the <b>wheel</b> zooms and a <b>double-click</b>
 frames the whole model. The floating bar at the top left sets
 <b>brightness</b> and <b>contrast</b> (&#x27F2; resets them) and has
-<b>Redraw</b> (&#x27F3;). The label at the bottom says what you are
+<b>Redraw</b> (&#x27F3;). The bar at the top right turns the model,
+pans, zooms, frames the selected part (<b>Focus</b>) or the whole model
+(<b>Fit all</b>). The label at the bottom says what you are
 looking at: <i>built-in preview</i> (instant, approximate) or
 <i>OpenSCAD</i> (exact), and how many parts are exact already.</p>
 {figure("view3d_plate", "The 3D preview with the lighting bar.")}
@@ -517,6 +524,9 @@ way &mdash; open one and look at its tree to see how.</p>
 <tr><td>Zoom</td><td>mouse wheel</td></tr>
 <tr><td>Frame everything</td><td>double-click, {K("Ctrl+F")} or the Fit
 3D button</td></tr>
+<tr><td>Buttons</td><td>the bar in the top-right corner: turn left /
+right, pan, zoom in / out (hold to repeat), <b>Focus</b> on the selected
+part, <b>Fit all</b></td></tr>
 <tr><td>Standard views</td><td>View &rsaquo; 3D Camera: Isometric, Top,
 Bottom, Front, Back, Left, Right</td></tr>
 </table>
@@ -607,6 +617,18 @@ writes OpenSCAD that arrives as editable rows (labelled, e.g. <b>Cube
 [Body]</b>), inserts library parts, assembles Objects and looks at the 3D
 view to check its work. Each of its steps is one {K("Ctrl+Z")}. The
 connection stays on this computer.</p>
+<p>The assistant labels every piece it builds (<b>Cube [Front-left
+leg]</b>, <b>Sphere [Left eye]</b>), and when it makes a part an
+<b>Object</b> or a <b>Master</b> it tells you what it made, why, and in
+which tab to find it.</p>
+<h3>Vibe Model</h3>
+<p>Building by conversation? Click <b>Vibe Model</b> at the right end
+of the main toolbar ({K("Ctrl+Shift+M")}, or View &rsaquo; Vibe Model):
+the tree, Properties, the 2D sketch and the drawing tools fold away and
+the 3D model fills the window, so you can describe the part and watch it
+build. Click again to bring everything back and edit by hand. The name
+borrows from <i>vibe coding</i> &mdash; building software by describing
+it to an AI.</p>
 <h3>The ChatBox</h3>
 <p><b>AI &rsaquo; ChatBox</b> {K("Ctrl+/")} (or the robot button) docks a
 chat on the right that works with your own <b>Claude, Mistral or

@@ -87,6 +87,11 @@ class MainWindow(QMainWindow):
         # "seat_w - inset - leg_t") are readable
         split.setSizes([430, 970])
         self.setCentralWidget(split)
+        self._left_column = left              # folded away by Vibe Model
+        # zoom / pan / focus buttons floating on both views
+        from . import viewnav
+        viewnav.attach_2d(self.view2d)
+        viewnav.attach_3d(self.view3d)
 
         # ---- wiring
         self.builder.tree.selection_changed.connect(self._tree_selected)
@@ -259,6 +264,7 @@ class MainWindow(QMainWindow):
         view_menu = m.addMenu("&View")
         view_menu.addAction(self._grid_act)
         view_menu.addAction(self._snap_act)
+        view_menu.addAction(self._vibe_act)
         from PyQt5.QtCore import QSettings
         show_dims = QSettings("Kherve", "KherveCAD").value(
             "show_dims", True, type=bool)
@@ -1133,6 +1139,25 @@ class MainWindow(QMainWindow):
         self.view3d.set_projection(name)
         for act in self._proj_group.actions():
             act.setChecked(act.text() == self.view3d.projection)
+
+    def set_vibe_model(self, on: bool):
+        """Vibe Model: the object tree, Properties, the 2D sketch and the
+        drawing tools fold away and the 3D model fills the window — for
+        building by talking to an assistant and watching the result.
+        Toggling back restores the panels exactly as they were."""
+        on = bool(on)
+        self._left_column.setVisible(not on)
+        self.view2d.setVisible(not on)
+        self._tools_bar.setVisible(not on)
+        act = getattr(self, "_vibe_act", None)
+        if act is not None and act.isChecked() != on:
+            act.blockSignals(True)
+            act.setChecked(on)
+            act.blockSignals(False)
+        self.statusBar().showMessage(
+            "Vibe Model — describe the part to your assistant (AI menu) "
+            "and watch it build; Ctrl+Shift+M brings the panels back."
+            if on else "Panels back — edit by hand.", 6000)
 
     def force_refresh(self):
         """Redraw everything from the object tree: drop the mesh caches

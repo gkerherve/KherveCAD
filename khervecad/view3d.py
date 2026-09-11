@@ -493,6 +493,8 @@ class View3D(QWidget):
         self._pick_labeler = labeler
         self._pick_hover = None
         self.lighting_bar.hide()             # nothing between you and the pick
+        if getattr(self, "nav_bar", None) is not None:
+            self.nav_bar.hide()
         self.setCursor(Qt.CrossCursor)
         self.setMouseTracking(True)          # hover pre-highlight
         self.setFocus(Qt.OtherFocusReason)   # so Esc reaches us
@@ -508,6 +510,8 @@ class View3D(QWidget):
         self.setMouseTracking(False)
         self.unsetCursor()
         self.lighting_bar.show()
+        if getattr(self, "nav_bar", None) is not None:
+            self.nav_bar.show()
         self.update()
 
     def cancel_pick(self):

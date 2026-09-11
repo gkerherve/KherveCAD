@@ -428,6 +428,16 @@ into a new module and import.
                        call-outs. The help folder ships via the spec's
                        `datas`. Never screenshot the Connect-to-Claude
                        dialog — its config snippet shows local paths.
+  - `viewnav.py`     — the floating **navigation bars** in the top-right
+                       corner of the 2D sketch and the 3D preview: pan
+                       arrows and zoom (auto-repeat while held),
+                       **Focus** (frame the selection — the 3D one uses
+                       `View3D.highlight_mesh` — else everything) and Fit
+                       all; the 3D bar also orbits. Children of the
+                       views placed by an event filter, attached once by
+                       `MainWindow` (`attach_2d`/`attach_3d`, stored as
+                       `view.nav_bar`); pick mode hides the 3D one like
+                       the lighting bar. Snapshot twins get none.
   - `tooltips.py`    — what every toolbar icon does and how to use it:
                        `TIPS[key] = (title, what, steps, tip)`, rendered
                        by `rich()` as a fixed-width HTML tooltip and by
@@ -942,8 +952,13 @@ compatible.
 - Vertical toolbar = shape tools (exclusive checkable group) + 3D
   primitives; horizontal toolbar = file | undo | operation families
   (drop-down `GroupButton`s) | Snap objects | grid/snap/plane | Render
-  (F5), Fit 3D | assistant — see `toolbars.py`. Every icon gets a
-  how-to tooltip from `tooltips.py`; add one when adding a tool.
+  (F5), Fit 3D | assistant, **Vibe Model** — see `toolbars.py`. Every
+  icon gets a how-to tooltip from `tooltips.py`; add one when adding a
+  tool.
+- **Vibe Model** (Ctrl+Shift+M, `MainWindow.set_vibe_model`) folds away
+  the left column (tree + Properties), the 2D sketch and the drawing
+  toolbar so the 3D view fills the window while an assistant builds;
+  not persisted, so the app always starts with every panel.
 - Every command that acts on the **selection** (operations, group/
   ungroup, delete, duplicate, clipboard, reorder) goes through
   `BuilderPanel.active_tree()` — the Object tab's tree while that tab

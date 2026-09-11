@@ -95,7 +95,8 @@ def _tool_reference():
         ("fit_sketch", "mdi.fit-to-page-outline", "Ctrl+Shift+F"),
         ("render", "mdi.play-outline", "F5"),
         ("fit_3d", "mdi.arrow-expand-all", "Ctrl+F"),
-        ("assistant", "mdi.robot-outline", "Ctrl+/")]))
+        ("assistant", "mdi.robot-outline", "Ctrl+/"),
+        ("vibe_model", "mdi.creation", "Ctrl+Shift+M")]))
     out, icons_used = [], []
     for heading, items in sections:
         out.append(f"<h3>{heading}</h3><table width='100%'>")
