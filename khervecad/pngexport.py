@@ -248,8 +248,11 @@ class PngExportDialog(QDialog):
         self.current_radio = QRadioButton(
             "Current view — exactly the camera on screen")
         self.all_radio = QRadioButton(
-            "All standard views — one file per view (%d), framed on "
-            "the model" % len(STILL_VIEWS))
+            "All standard views — %d files, one per side"
+            % len(STILL_VIEWS))
+        self.all_radio.setToolTip(
+            "Front-right and back-left isometric, front, back, left, "
+            "right, top and bottom — each framed on the whole model")
         self._what = QButtonGroup(self)
         for button in (self.current_radio, self.all_radio):
             self._what.addButton(button)
