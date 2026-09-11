@@ -449,9 +449,41 @@ def shot_attach(win):
     dlg.reject()
 
 
+def shot_vibe(win):
+    """Vibe Model: the 3D view alone, the toggle lit on the toolbar."""
+    match = [b for n, _c, b in examples.EXAMPLES if n == "Tulip"]
+    if not match:
+        return
+    examples.load_example(win.model, match[0])
+    win._dirty = False
+    win.set_vibe_model(True)
+    settle(300)
+    win.view3d.user_moved = False
+    win.view3d.yaw, win.view3d.pitch = 35.0, 18.0
+    win.view3d.fit()
+    finish_3d(win)
+    save(win.grab(), "vibe_model", WIDE)
+    win.set_vibe_model(False)
+    settle(200)
+
+
+def shot_stage(win):
+    """The platform & shadow stage, set on the widget so the user's
+    persisted setting is untouched."""
+    load(win, "Desk setup")
+    view = win.view3d
+    view.stage = True
+    view.user_moved = False
+    view.yaw, view.pitch = 35.0, 25.0
+    view.fit()
+    finish_3d(win)
+    save(view.grab(), "stage", 900)
+    view.stage = False
+
+
 SHOTS = [shot_window, shot_toolbars, shot_tutorial, shot_tabs,
          shot_named_rows, shot_sketch, shot_styles, shot_character,
-         shot_attach, shot_dialogs]
+         shot_attach, shot_dialogs, shot_vibe, shot_stage]
 
 
 def main(only=()):

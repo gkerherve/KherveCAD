@@ -536,6 +536,16 @@ Clay, Toon, Brushed metal, Gold, Copper, Wireframe, X-ray);
 orthographic) are next to it. The floating bar sets brightness and
 contrast. None of these change the model.</p>
 {figure("render_styles", "Four of the render styles.")}
+<h3>Platform and shadow</h3>
+<p><b>View &rsaquo; 3D Platform &amp; Shadow</b> (or the platform button on
+the 3D view's bar) stands the model on a round platform and casts a
+soft shadow from a light far away at the top left, the way a product
+photo is lit. The light follows the camera, so the shadow always falls
+towards the bottom right as you turn the model. It is a look only
+&mdash; nothing is added to the model or the exported files &mdash; and
+it is remembered between sessions. Exported pictures (File &rsaquo;
+Export PNG) include it.</p>
+{figure("stage", "The platform and its shadow.")}
 <h3>Preview and exact render</h3>
 <p>Every change redraws instantly with the <b>built-in preview</b>. If
 OpenSCAD is installed (it is included with the installer), an
@@ -629,6 +639,8 @@ the 3D model fills the window, so you can describe the part and watch it
 build. Click again to bring everything back and edit by hand. The name
 borrows from <i>vibe coding</i> &mdash; building software by describing
 it to an AI.</p>
+{figure("vibe_model", "Vibe Model: only the 3D view, with its "
+        "navigation bar; the toggle is lit at the end of the toolbar.")}
 <h3>The ChatBox</h3>
 <p><b>AI &rsaquo; ChatBox</b> {K("Ctrl+/")} (or the robot button) docks a
 chat on the right that works with your own <b>Claude, Mistral or
