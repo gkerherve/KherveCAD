@@ -436,9 +436,24 @@ into a new module and import.
                        reads in mm: scale bar, live size while
                        drawing, zoom indicator, Fit Sketch / Zoom to
                        Selection. Middle-mouse drag pans; wheel zooms.
+  - `bsp.py`         — **BSP tree** for the 3D preview's painter's
+                       algorithm: built once per mesh (on a worker
+                       thread, see `View3D.set_mesh`), it splits
+                       straddling triangles and `Tree.order()` walks
+                       them back-to-front from any eye — exact, where a
+                       centroid sort painted a big face over a small
+                       feature 1 mm in front of it (a pupil vanished into
+                       a head). Splitters are facet planes, or an
+                       axis-median plane when facets balance badly
+                       (convex bodies would chain O(n²)). `build()`
+                       returns None past `MAX_TRIS`, the time budget or
+                       the growth cap (curved petals shred) and the view
+                       falls back to the centroid sort.
   - `view3d.py`      — bottom-right preview: software-rendered shaded
-                       mesh viewer (orbit/pan/zoom, painter's algo,
-                       no OpenGL dependency); render styles (shaded,
+                       mesh viewer (orbit/pan/zoom, painter's algo in
+                       BSP order via `bsp.py` — centroid sort only for
+                       the interaction draft and meshes too big to
+                       partition; no OpenGL dependency); render styles (shaded,
                        brushed metal with specular, matte, wireframe,
                        x-ray) selectable in View > 3D Render Style and
                        persisted via QSettings. A floating **`LightingBar`**

@@ -16,12 +16,15 @@ the Free Software Foundation, either version 3 of the License, or
 """
 
 import math
+import threading
 
 from PyQt5.QtCore import (QPointF, QRectF, QSettings, Qt, QTimer,
                           pyqtSignal)
 from PyQt5.QtGui import (QColor, QImage, QPainter, QPen, QPolygonF)
 from PyQt5.QtWidgets import (QGridLayout, QLabel, QSlider, QToolButton,
                              QWidget)
+
+from . import bsp as bsp_mod
 
 _SETTINGS = ("Kherve", "KherveCAD")
 
@@ -151,6 +154,9 @@ class LightingBar(QWidget):
 class View3D(QWidget):
     """Orbiting shaded view of a triangle mesh."""
 
+    #: emitted from the BSP worker thread; queued to the GUI thread
+    _bsp_ready = pyqtSignal()
+
     #: past this many triangles, orbiting/panning/zooming draws a
     #: decimated "draft" mesh for a snappy frame rate, then the full
     #: mesh snaps back the moment you stop — OpenSCAD's preview/render
@@ -195,6 +201,11 @@ class View3D(QWidget):
         self._draft_mesh = None         # decimated mesh for interaction
         self._draft_colors = None
         self._draft_hi = None
+        self._bsp = None                # bsp.Tree of self.mesh, or None
+        self._bsp_pending = None        # (serial, tree) left by the worker
+        self._bsp_thread = None
+        self._mesh_serial = 0           # bumps per set_mesh: stale trees
+        self._bsp_ready.connect(self._take_bsp)
         self._fast = False              # currently interacting
         self.source = "no model"
         self.yaw = 35.0                 # degrees around Z
@@ -336,7 +347,9 @@ class View3D(QWidget):
         twin.brightness, twin.contrast = self.brightness, self.contrast
         twin.projection = projection if projection in PROJECTIONS \
             else self.projection
-        twin.set_mesh(self.mesh, self.source, self.colors)
+        # a snapshot must be exact: wait for a tree still being built
+        twin.set_mesh(self.mesh, self.source, self.colors,
+                      bsp=self.wait_for_bsp())
         twin.set_highlight_mesh(self.highlight_mesh)
         twin.set_anchor_markers(list(self.anchor_markers))
         twin.reference_images = list(self.reference_images)
@@ -372,16 +385,57 @@ class View3D(QWidget):
         stride = (n + self.DRAFT_TARGET - 1) // self.DRAFT_TARGET
         return mesh[::stride], (colors[::stride] if colors else None)
 
-    def set_mesh(self, mesh, source: str, colors=None):
+    def set_mesh(self, mesh, source: str, colors=None, bsp=None):
         """*colors* is an optional per-face list of (colorstring,
-        alpha) — colours from color() nodes shown by the preview."""
+        alpha) — colours from color() nodes shown by the preview.
+        *bsp* hands over a `bsp.Tree` already built for this very mesh
+        (the snapshot twin), otherwise one is built here."""
         self.mesh = mesh or []
         self.colors = colors if colors and len(colors) == len(self.mesh) \
             else None
         self._draft_mesh, self._draft_colors = self._decimate(
             self.mesh, self.colors)
+        # A BSP tree gives an exact back-to-front order (see bsp.py).
+        # It is built on a worker thread so a parameter edit repaints at
+        # once (centroid-sorted, as before) and snaps to the exact order
+        # when the tree lands; None for a mesh too big to partition.
+        self._mesh_serial += 1
+        self._bsp = bsp
+        self._bsp_pending = None
+        if bsp is None and self.mesh:
+            serial, tris, colors_ = self._mesh_serial, self.mesh, self.colors
+
+            def work():
+                tree = bsp_mod.build(tris, colors_)
+                self._bsp_pending = (serial, tree)
+                self._bsp_ready.emit()
+
+            self._bsp_thread = threading.Thread(target=work, daemon=True)
+            self._bsp_thread.start()
         self.source = source
         self.update()
+
+    def _take_bsp(self):
+        """Adopt the tree the worker left, if it is for the current
+        mesh (a newer set_mesh may have superseded it)."""
+        pending, self._bsp_pending = self._bsp_pending, None
+        if pending is None:
+            return
+        serial, tree = pending
+        if serial == self._mesh_serial and tree is not None:
+            self._bsp = tree
+            self.update()
+
+    def wait_for_bsp(self, timeout=None):
+        """Block until the tree for the current mesh is built (or the
+        build has given up) and adopt it — for snapshots and tests,
+        which paint without an event loop to deliver the signal."""
+        thread = self._bsp_thread
+        if thread is not None and thread.is_alive():
+            thread.join(bsp_mod.TIME_BUDGET + 1.0 if timeout is None
+                        else timeout)
+        self._take_bsp()
+        return self._bsp
 
     def set_highlight_mesh(self, tris):
         """Triangles of the selected object, drawn glowing on top."""
@@ -688,9 +742,16 @@ class View3D(QWidget):
         cull = style not in ("Wireframe", "X-ray")
         tex, tey, tez = to_eye
 
-        # while interacting with a big model, draw the decimated draft
+        # while interacting with a big model, draw the decimated draft;
+        # otherwise walk the BSP tree, whose order is exact, and paint
+        # its (split) triangles — the centroid sort below is only the
+        # fallback for a mesh too big to partition
+        tree = self._bsp
         if self._fast and self._draft_mesh is not None:
             mesh, colors = self._draft_mesh, self._draft_colors
+            tree = None
+        elif tree is not None:
+            mesh, colors = tree.tris, tree.colors
         else:
             mesh, colors = self.mesh, self.colors
         hmesh = self._draft_hi if (self._fast and self._draft_hi
@@ -774,7 +835,12 @@ class View3D(QWidget):
 
         faces = []
         append = faces.append
-        for index, tri in enumerate(mesh):
+        if tree is not None:
+            order = tree.order(eye, forward, ortho)
+            sequence = ((i, mesh[i]) for i in order)
+        else:
+            sequence = enumerate(mesh)
+        for index, tri in sequence:
             a, b, c = tri
             ux = b[0] - a[0]; uy = b[1] - a[1]; uz = b[2] - a[2]
             vx = c[0] - a[0]; vy = c[1] - a[1]; vz = c[2] - a[2]
@@ -815,7 +881,8 @@ class View3D(QWidget):
                 hi_polys.append(QPolygonF([QPointF(p[0], p[1])
                                            for p in pts]))
 
-        faces.sort(key=lambda fc: -fc[0])
+        if tree is None:                        # BSP order is already exact
+            faces.sort(key=lambda fc: -fc[0])
         lighting = self._light()                # sliders, None when centred
         edge = QColor(t["border"])
         edge.setAlpha(60)
@@ -858,9 +925,11 @@ class View3D(QWidget):
             elif color.alphaF() >= 0.99:
                 # opaque: outline each facet in its own fill colour, so
                 # there are no facet lines and no anti-aliasing gaps
-                # between neighbouring triangles — a smooth surface
+                # between neighbouring triangles — a smooth surface.
+                # A full pixel: at 0.8 the seams of BSP-split facets
+                # still let a contrasting face behind show through
                 face_pen = QPen(color)
-                face_pen.setWidthF(0.8)
+                face_pen.setWidthF(1.0)
             else:
                 face_pen = pen              # translucent: faint edges help
             painter.setPen(face_pen)
