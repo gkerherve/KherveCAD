@@ -787,6 +787,12 @@ TOOLS = [
             "projection": {"type": "string", "enum": PROJECTIONS,
                            "description": "The user's 3D projection: "
                                           "perspective or orthographic."},
+            "stage": {"type": "boolean",
+                      "description": "Stand the model on a round "
+                                     "platform with a soft shadow from "
+                                     "a top-left light, instead of the "
+                                     "ground grid (also what "
+                                     "render_view shows)."},
         }),
     },
     {

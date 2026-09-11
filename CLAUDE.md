@@ -540,7 +540,33 @@ into a new module and import.
                        `HOVER_DESCRIBE_LIMIT`); an instruction banner,
                        a pinned first-pick marker
                        (`set_pick_pinned`) and Esc-to-cancel complete
-                       the pick-mode feedback.
+                       the pick-mode feedback. With `stage` on (View ▸
+                       3D Platform & Shadow, QSettings `render_stage`,
+                       MCP `set_render_options stage`) `_draw_stage`
+                       paints `stage.py`'s platform + shadow instead of
+                       the grid, a whole-model `fit()` frames the
+                       platform too, and `snapshot()` copies it.
+  - `stage.py`       — the **platform & shadow** stage (Qt only, no
+                       view import at module level): a round slab whose
+                       top is the mesh's lowest Z, centred under the XY
+                       bbox (radius 0.7 x diagonal, more for a tall
+                       model so its shadow lands on it), coloured to
+                       suit the background, and a soft shadow from a
+                       light **tied to the camera** — up, to the
+                       viewer's left, a little behind (`light_dir`) —
+                       so it always falls bottom-right on screen. Drawn
+                       before the model and never depth-sorted against
+                       it (the model stands inside the disc, on top);
+                       skipped from below the plane. Cheap: the shadow
+                       is cast from a **vertex-clustered** copy (≤
+                       `SHADOW_TARGET` tris, closed, so no holes —
+                       unlike the strided draft), light-facing faces
+                       projected in ground coords into ONE winding-fill
+                       path cached per yaw; a projective `QTransform`
+                       (Qt near-clips) maps it to a low-res mask that
+                       is box-blurred and scaled up smoothly. ~2-7 ms a
+                       frame on a 36k-triangle model whose own paint is
+                       ~115 ms.
   - `mesh.py`        — pure-Python fallback tessellator (primitives,
                        linear/rotate extrude with twist/scale/angle,
                        transforms, ear-clipping triangulation). Objects

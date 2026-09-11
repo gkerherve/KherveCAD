@@ -158,6 +158,8 @@ class View3D(QWidget):
 
     #: emitted from the BSP worker thread; queued to the GUI thread
     _bsp_ready = pyqtSignal()
+    #: the platform & shadow stage was switched on/off (set_stage)
+    stage_toggled = pyqtSignal(bool)
 
     #: past this many triangles, orbiting/panning/zooming draws a
     #: decimated "draft" mesh for a snappy frame rate, then the full
@@ -235,6 +237,9 @@ class View3D(QWidget):
         self.projection = proj if proj in PROJECTIONS else "Perspective"
         self.brightness = _clamp_light(settings.value("render_brightness"))
         self.contrast = _clamp_light(settings.value("render_contrast"))
+        #: platform & shadow instead of the grid (stage.py)
+        self.stage = settings.value("render_stage", False, type=bool)
+        self._stage_cache = None        # stage.Stage, made on first use
         self.setMinimumHeight(160)
         self.setMouseTracking(False)
         self.lighting_bar = LightingBar(self)
@@ -298,6 +303,30 @@ class View3D(QWidget):
             QSettings(*_SETTINGS).setValue("render_projection", name)
             self.update()
 
+    def set_stage(self, on: bool):
+        """Stand the model on a platform with a soft shadow (stage.py)
+        instead of the ground grid; persisted."""
+        self.stage = bool(on)
+        QSettings(*_SETTINGS).setValue("render_stage", self.stage)
+        self.stage_toggled.emit(self.stage)
+        if not self.user_moved:         # a camera the user never moved
+            self.fit()                  # takes the platform in (or out)
+        self.update()
+
+    def _stage_obj(self):
+        if self._stage_cache is None:
+            from .stage import Stage
+            self._stage_cache = Stage()
+        return self._stage_cache
+
+    def _draw_stage(self, painter, t, eye, right, up, forward):
+        """The platform & shadow when on; False (the caller draws the
+        grid) when off, empty, or seen from below."""
+        if not self.stage:
+            return False
+        return self._stage_obj().draw(self, painter, t, eye, right, up,
+                                      forward)
+
     def _fill_background(self, painter, tokens):
         pair = BACKGROUNDS.get(self.background)
         if pair is None:                       # "Theme": follow the app
@@ -348,6 +377,8 @@ class View3D(QWidget):
         twin.resize(max(int(width), 2), max(int(height), 2))
         twin.style, twin.background = self.style, self.background
         twin.brightness, twin.contrast = self.brightness, self.contrast
+        # the stage, and its per-mesh cache (the twin gets the same list)
+        twin.stage, twin._stage_cache = self.stage, self._stage_cache
         twin.projection = projection if projection in PROJECTIONS \
             else self.projection
         # a snapshot must be exact: wait for a tree still being built
@@ -627,12 +658,15 @@ class View3D(QWidget):
         the view. Projects the bounding box in the current camera
         orientation, then adjusts distance and recentres the target so
         the model sits squarely in the middle (not low)."""
-        if verts is None:
+        whole = verts is None
+        if whole:
             verts = [v for tri in self.mesh for v in tri]
         if not verts:
             return
         if len(verts) > 3000:                     # sample: fit is exact
             verts = verts[::len(verts) // 3000]   # enough at this scale
+        if whole and self.stage:                  # frame the platform too
+            verts = verts + self._stage_obj().rim_points(self.mesh)
         xs = [v[0] for v in verts]
         ys = [v[1] for v in verts]
         zs = [v[2] for v in verts]
@@ -738,7 +772,8 @@ class View3D(QWidget):
         self._fill_background(painter, t)
 
         eye, right, up, forward = self._camera()
-        self._draw_ground(painter, t, eye, right, up, forward)
+        if not self._draw_stage(painter, t, eye, right, up, forward):
+            self._draw_ground(painter, t, eye, right, up, forward)
         if self.reference_images:
             from . import refimage
             refimage.draw_3d(painter, self.reference_images,

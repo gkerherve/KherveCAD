@@ -544,6 +544,25 @@ def test_set_render_options_switches_the_projection(ex, window):
         settings.setValue("render_projection", saved)
 
 
+def test_set_render_options_switches_the_stage(ex, window):
+    """The platform & shadow toggle, with the View menu kept in step."""
+    from PyQt5.QtCore import QSettings
+    settings = QSettings("Kherve", "KherveCAD")
+    saved = settings.value("render_stage")
+    try:
+        out = call(ex, "set_render_options", stage=True)
+        assert out["stage"] is True and window.view3d.stage is True
+        assert window._stage_act.isChecked()
+        out = call(ex, "set_render_options", stage=False)
+        assert out["stage"] is False and not window._stage_act.isChecked()
+    finally:
+        window.view3d.set_stage(False)
+        if saved is None:
+            settings.remove("render_stage")
+        else:
+            settings.setValue("render_stage", saved)
+
+
 # ── measuring: bounds, measure, section, check_code ────────────────
 
 def test_get_node_bounds_is_in_world_space(ex):
