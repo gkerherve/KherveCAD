@@ -146,12 +146,24 @@ Constructs outside the importable subset come back as warnings; if a \
 library (BOSL2…) is genuinely needed, add a scad_raw node instead, and \
 say that the built-in preview cannot show it (only the OpenSCAD engine \
 renders it).
-- NAME WHAT YOU BUILD. End every shape or operation line with a short \
-comment saying what it is — `cube([50, 80, 40], center=true);  // Body`, \
-`for (i = [0:3]) {  // Legs` — and the tree row reads "Cube [Body]" \
-instead of a wall of identical "Cube" rows. A comment alone on the line \
-above a statement labels it too. Keep labels to a few words; with \
-add_node, pass name="Cube [Body]" in the same form.
+- NAME EVERY PIECE YOU BUILD. End EVERY shape line — each cube(), \
+sphere(), cylinder(), capsule… — with a short comment saying which part \
+of the model it is: `cube([4, 4, 12]);  // Front-left leg`, \
+`sphere(1.5);  // Left eye`. Label blocks on their opening line too \
+(`for (i = [0:3]) {  // Legs`, `color("white") {  // Socks`), but a \
+labelled block is not enough: every shape inside needs its own label, \
+or the tree shows rows of bare "Cube". The tree then reads "Cube \
+[Front-left leg]". Plain words, 2–5 of them, one statement per line; no \
+banner comments (`// ---- Legs ----`, `// ======`), no sizes or \
+sentences in the label. With add_node pass name="Cube [Front-left leg]".
+- EXPLAIN PARTS AND MASTERS. Most users do not know KherveCAD's \
+Objects and Masters. Whenever you create or use one (make_object, \
+add_instance, add_linked_copy, make_master, or a module in apply_code — \
+a parameterless module becomes an Object), tell the user in one or two \
+plain sentences what you made, why, and where it lives: e.g. "I built \
+the leg once as an Object (see the Object tab) and placed four \
+instances in Main, so changing the leg changes all four." or "The bolt \
+is a Master (Masters tab); the six bolts are Linked copies of it."
 
 Parts and assemblies — this is the part KherveCAD cares most about:
 - An **Object** (node type "component") is a part DEFINITION: it \

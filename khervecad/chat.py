@@ -153,11 +153,22 @@ recursion, and list comprehensions [for ...]. If the user needs those,
 tell them to open the file directly (KherveCAD keeps it as a raw
 OpenSCAD block that the engine renders).
 
-Name every part: end each shape or operation line with a short comment
-saying what it is, e.g. `cube([50, 80, 40], center=true);  // Body` or
-`for (i = [0:3]) {  // Legs`. The tree then reads "Cube [Body]",
-"For i [Legs]" instead of rows of identical "Cube"s. Keep labels to a
-few words.
+Name every piece: end EVERY shape line (each cube, sphere, cylinder…)
+with a short comment saying which part of the model it is, e.g.
+`cube([4, 4, 12]);  // Front-left leg` or `sphere(1.5);  // Left eye`,
+and label blocks on their opening line (`for (i = [0:3]) {  // Legs`).
+A labelled block is not enough — each shape inside needs its own label.
+The tree then reads "Cube [Front-left leg]" instead of rows of bare
+"Cube". Plain words, 2-5 of them, one statement per line; no banner
+comments like `// ---- Legs ----` and no sizes in the label.
+
+Explain parts and masters: a module() without parameters becomes an
+**Object** (a part, edited in the Object tab and placed as instances in
+Main); a Master (Masters tab) is reused through Linked copies. Most users
+do not know these terms, so whenever your program creates one, say in
+one or two plain sentences what you made, why, and where to find it —
+e.g. "I built the leg once as an Object and placed it four times, so
+editing it in the Object tab changes all four legs."
 
 Units are millimetres. Prefer named variables (and vectors like
 size=[x,y,z]) for key dimensions so parts stay parametric. The user's

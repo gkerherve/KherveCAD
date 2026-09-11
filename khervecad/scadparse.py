@@ -74,14 +74,21 @@ def _tokenize(text, comments=None):
 _LABEL_MAX = 48
 
 
+#: commented-out code: a call glued to its bracket (`cube([1, 2, 3])`)
+#: or an assignment (`wall = 2`) — a label reads "Body (12 x 18)"
+_CODE_LIKE = re.compile(r"^[A-Za-z_$][\w$.]*(\(|\s*=[^=])")
+
+
 def _comment_label(text):
     """The label a `// Body` comment gives, or "" — block comments,
-    long prose and commented-out code name nothing."""
+    long prose and commented-out code name nothing. Banner dressing
+    (`// ---- Legs ----`, `// === Body ===`) is stripped, so the tree
+    reads "For i [Legs]", not "For i [---- Legs ----]"."""
     if not text.startswith("//"):
         return ""
-    label = text[2:].strip().strip("/").strip()
+    label = " ".join(text[2:].split()).strip(" -=*#~_/+|")
     if not label or len(label) > _LABEL_MAX \
-            or any(c in label for c in ";{}") or label.endswith(")"):
+            or any(c in label for c in ";{}") or _CODE_LIKE.match(label):
         return ""
     return label
 
@@ -343,7 +350,14 @@ class Parser:
             below = heads.get(line + 1)
             if not below:
                 continue
-            for node, _end in below[min(below)]:
+            # same rule as a trailing comment: a one-line statement is
+            # named by its shape (`color() cube();` -> the Cube), a
+            # block by its header
+            complete = [o for o in below
+                        if any(line_of(end) == line + 1
+                               for _n, end in below[o])]
+            pick = max(complete) if complete else min(below)
+            for node, _end in below[pick]:
                 if id(node) not in labelled:
                     node.name = with_tag(node.name, label)
 
