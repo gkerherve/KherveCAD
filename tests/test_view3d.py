@@ -257,6 +257,44 @@ def test_backface_culling_keeps_the_solid_opaque(app):
     assert diff > 20                          # a face is drawn, not the bg
 
 
+def test_perspective_culling_keeps_the_rim_of_a_torus(app):
+    """Faces were culled against one constant view direction; in
+    perspective the near inner rim of a ring then vanished in a
+    saw-tooth and the far wall showed through. Every visible face must
+    be tested against the ray from that face to the eye."""
+    import math
+    from khervecad import sweep
+    ring = [[20 * math.cos(math.radians(a)), 20 * math.sin(math.radians(a)),
+             0.0] for a in range(0, 360, 45)]
+    circ = [(3 * math.cos(2 * math.pi * k / 20),
+             3 * math.sin(2 * math.pi * k / 20)) for k in range(20)]
+    tris = sweep.sweep([circ], ring, smooth=3, closed=True)
+    view = View3D()
+    view.resize(800, 600)
+    view.background = "Light"
+    view.style = "Matte"                  # not set_style: that persists
+    view.set_mesh(tris, "test")
+    view.wait_for_bsp()
+    view.yaw, view.pitch = 30.0, 22.0     # the near side is at 30°
+    view.fit()
+    view.distance *= 0.85                 # closer: stronger perspective
+    img = view.grab().toImage()
+    eye, right, up, forward = view._camera()
+    # the top-inner quadrant of the cord on the near side of the ring:
+    # visible surface, so every sample must be the model's colour —
+    # the culled band let the pale background show through
+    seen = []
+    for angle in range(-30, 91, 10):
+        for phi in range(96, 113, 2):
+            t, p = math.radians(angle), math.radians(phi)
+            r = 20 + 3 * math.cos(p)
+            world = (r * math.cos(t), r * math.sin(t), 3 * math.sin(p))
+            x, y, _ = view._project(eye, right, up, forward, world)
+            assert 0 <= x < 800 and 0 <= y < 600
+            seen.append(img.pixelColor(int(x), int(y)).lightnessF())
+    assert max(seen) < 0.86, max(seen)
+
+
 def test_fit_centers_the_model(app):
     """fit() frames the mesh centred in the pane and filling most of
     the height, so it never sits low with dead space above."""

@@ -938,9 +938,19 @@ class View3D(QWidget):
             ny = uz * vx - ux * vz
             nz = ux * vy - uy * vx
             # cull on the raw normal (its sign is scale-independent)
-            # before paying for the sqrt normalisation
-            if cull and nx * tex + ny * tey + nz * tez < 0.0:
-                continue
+            # before paying for the sqrt normalisation. In perspective
+            # the test is against the ray from THIS face to the eye —
+            # one constant view direction is only right in orthographic,
+            # and threw away visible faces at the silhouette of a
+            # torus's hole, leaving a saw-tooth of the far wall showing
+            if cull:
+                if ortho:
+                    facing = nx * tex + ny * tey + nz * tez
+                else:
+                    facing = (nx * (ex - a[0]) + ny * (ey - a[1])
+                              + nz * (ez - a[2]))
+                if facing < 0.0:
+                    continue
             l2 = nx * nx + ny * ny + nz * nz
             if l2 < 1e-24:
                 continue

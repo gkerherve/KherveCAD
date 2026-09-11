@@ -23,9 +23,11 @@ import pytest  # noqa: E402
 
 #: persisted view options that change what a fresh View3D paints or how
 #: fit() frames — a platform switched on in the real app made pixel and
-#: framing tests fail on that machine only. Neutral for the session,
-#: then put back exactly as they were.
-_NEUTRAL_SETTINGS = ("render_stage",)
+#: framing tests fail on that machine only, and a saved Matte style
+#: flattened the shading the contrast test measures. Neutral for the
+#: session, then put back exactly as they were.
+_NEUTRAL_SETTINGS = ("render_stage", "render_style", "render_bg",
+                     "render_projection")
 
 
 @pytest.fixture(autouse=True, scope="session")
