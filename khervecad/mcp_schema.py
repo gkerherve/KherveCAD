@@ -61,9 +61,22 @@ SUMMARY_LIMIT = 120
 #: What the bundle can contain, by extension.
 FORMATS = ("stl", "3mf", "scad", "kcad")
 
-#: Camera angles rendered unless the caller says otherwise.  Four reads
-#: as a listing without burying the first image, which gets the click.
-DEFAULT_VIEWS = ("Isometric", "Front", "Right", "Top")
+#: Every standard still — what a Printables bundle renders and what
+#: File > Export PNG > All standard views writes — cover first: the
+#: front-right isometric, then the opposite corner, then the six faces.
+#: `engine.CAMERA_ROTATIONS` holds the camera for each.
+STILL_VIEWS = ("Isometric", "Isometric back", "Front", "Back", "Left",
+               "Right", "Top", "Bottom")
+
+#: Camera angles rendered unless the caller says otherwise: all of
+#: them.  Someone deciding whether to print a part wants to see every
+#: side of it, and the upload page keeps the files in order, so the
+#: front-right isometric still gets the cover.
+DEFAULT_VIEWS = STILL_VIEWS
+
+#: A PNG of a named view, when no size is given (File > Export PNG,
+#: export_document).
+PNG_DEFAULT_SIZE = (1920, 1080)
 
 
 #: Operations `wrap_nodes` can apply.  Every one of them wraps the
@@ -849,17 +862,40 @@ TOOLS = [
         "name": "export_document",
         "description": (
             "Export by the path's extension: .scad writes the program, "
-            ".stl writes the mesh. An STL goes through OpenSCAD when it "
-            "is installed (exact, booleans really cut) and through the "
-            "built-in tessellator otherwise — the result says which, "
-            "and an approximated export is not one to send to a "
-            "printer. A big model can take a while."
+            ".stl writes the mesh, .png writes a picture of the 3D "
+            "view. An STL goes through OpenSCAD when it is installed "
+            "(exact, booleans really cut) and through the built-in "
+            "tessellator otherwise — the result says which, and an "
+            "approximated export is not one to send to a printer. A "
+            "big model can take a while. A PNG is the model alone (no "
+            "grid or badge) in the user's render style, colours and "
+            "lighting: `view` 'current' keeps the user's camera, a "
+            "preset name frames the whole model from that side, and "
+            "'all' writes one numbered file per standard view beside "
+            "the path, the front-right isometric first."
         ),
         "input_schema": _obj({
             "path": {"type": "string",
                      "description": "Absolute path ending in .scad, "
-                                    ".stl or .3mf (3MF needs "
-                                    "OpenSCAD)."},
+                                    ".stl, .3mf (3MF needs OpenSCAD) "
+                                    "or .png."},
+            "view": {"type": "string",
+                     "enum": ["current", *STILL_VIEWS, "all"],
+                     "description": "PNG only: which camera. Default "
+                                    "'current'."},
+            "width": {"type": "integer",
+                      "description": "PNG only: pixels wide. Default "
+                                     "twice the 3D view's width for "
+                                     "'current', else %d." %
+                                     PNG_DEFAULT_SIZE[0]},
+            "height": {"type": "integer",
+                       "description": "PNG only: pixels high. Default "
+                                      "twice the 3D view's height for "
+                                      "'current', else %d." %
+                                      PNG_DEFAULT_SIZE[1]},
+            "transparent": {"type": "boolean",
+                            "description": "PNG only: leave the "
+                                           "background transparent."},
         }, ["path"]),
     },
     {
@@ -868,7 +904,8 @@ TOOLS = [
             "Build a complete Printables upload bundle for the open "
             "model in one call: the mesh (STL and 3MF), the "
             "parametric .scad source, the .kcad project, preview "
-            "renders from several camera angles, description.txt "
+            "renders of every side (the front-right isometric "
+            "first, as the cover), description.txt "
             "and upload-form.txt (every field of Printables' add-a-"
             "model form, already answered). "
             "Printables has NO upload API, so this does not and "
@@ -923,9 +960,11 @@ TOOLS = [
                         "items": {"type": "string", "enum": list(FORMATS)},
                         "description": "Defaults to all four."},
             "views": {"type": "array",
-                      "items": {"type": "string", "enum": ORIENTATIONS},
+                      "items": {"type": "string", "enum": list(STILL_VIEWS)},
                       "description": "Camera angles to render. "
-                                     "Defaults to %s." %
+                                     "Defaults to every one: %s — the "
+                                     "front-right Isometric is always "
+                                     "first, as the cover." %
                                      ", ".join(DEFAULT_VIEWS)},
             "open_browser": {"type": "boolean",
                              "description": "Open the Printables "

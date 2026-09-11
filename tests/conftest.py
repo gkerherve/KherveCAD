@@ -18,3 +18,26 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 os.environ.setdefault("KHERVECAD_DISABLE_ENGINE", "1")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import pytest  # noqa: E402
+
+#: persisted view options that change what a fresh View3D paints or how
+#: fit() frames — a platform switched on in the real app made pixel and
+#: framing tests fail on that machine only. Neutral for the session,
+#: then put back exactly as they were.
+_NEUTRAL_SETTINGS = ("render_stage",)
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _neutral_view_settings():
+    from PyQt5.QtCore import QSettings
+    settings = QSettings("Kherve", "KherveCAD")
+    saved = {key: settings.value(key) for key in _NEUTRAL_SETTINGS}
+    for key in _NEUTRAL_SETTINGS:
+        settings.remove(key)
+    yield
+    for key, value in saved.items():
+        if value is None:
+            settings.remove(key)
+        else:
+            settings.setValue(key, value)

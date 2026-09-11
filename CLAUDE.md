@@ -584,13 +584,27 @@ into a new module and import.
   - `printables.py`  — **File ▸ Publish to Printables…** and the
                        `publish_to_printables` MCP tool share one
                        builder: STL / 3MF / .scad / .kcad exports,
-                       OpenSCAD preview stills (`engine.export_png`,
-                       one per camera angle, isometric first and
-                       larger since Printables makes the first image
-                       the cover, each **cropped to the model** by
-                       `trim_to_content` — `--viewall` frames the
-                       bounding *sphere*, so a long diagonal part
-                       renders correct and tiny), a generated or
+                       preview stills of **every side** — `STILL_VIEWS`
+                       (mcp_schema): front-right isometric, back-left
+                       isometric, front, back, left, right, top,
+                       bottom, all by default — the front-right
+                       isometric first and larger since Printables
+                       makes the first image the cover. OpenSCAD
+                       renders them (`engine.export_png`); without it
+                       the built-in renderer does (`pngexport.render`,
+                       an offscreen snapshot, never the user's camera).
+                       Both aim from ONE table, `engine.CAMERA_ROTATIONS`
+                       (`engine.view_angles`: yaw = rz - 90, pitch =
+                       90 - rx). The fallback used to aim with
+                       `View3D.VIEWS`, whose "Isometric" (35, 25) looked
+                       from the BACK-right while OpenSCAD's (55,0,25)
+                       looks from the front-right, so a bundle built
+                       without OpenSCAD led with the back of the model;
+                       the preset is now (-65, 35) and a test pins the
+                       two tables together. Each still is **cropped to
+                       the model** by `trim_to_content` (`--viewall`
+                       frames the bounding *sphere*, so a long diagonal
+                       part renders correct and tiny); a generated or
                        assistant-written **plain-text**
                        `description.txt` (Markdown pasted into
                        Printables' box reads back as literal hashes),
@@ -611,6 +625,27 @@ into a new module and import.
                        Claude is appended to whatever description
                        comes in, once, and names only the source files
                        actually shipped.
+  - `pngexport.py`   — **File ▸ Export PNG…** (Ctrl+Alt+E): pictures
+                       of the 3D view from the built-in renderer via
+                       `View3D.snapshot(..., clean=True)` — the model
+                       alone (no grid, axes, badge, selection tint or
+                       anchors) in the user's colours, materials, style
+                       and lighting, from an offscreen twin so the
+                       user's camera never moves. **Current view**
+                       keeps the on-screen camera exactly; **All
+                       standard views** writes `<stem>-<n>-<view>.png`
+                       per `STILL_VIEWS` entry, framed, cover first —
+                       the same set and cameras as the Printables
+                       stills (`printables` falls back to `render`).
+                       Size presets up to 4K plus window size × 2 (the
+                       on-screen framing); **transparent** is a
+                       snapshot flag, not post-processing (skip the
+                       background fill AND pass `render()` DrawChildren
+                       only, or Qt paints the palette colour under it).
+                       Last choices in QSettings `png_export/*`.
+                       `export_request` is the `export_document` MCP
+                       tool's `.png` branch (`view` current / a preset /
+                       all, `width`, `height`, `transparent`).
   - `organic.py`     — **organic nodes** for characters: `capsule`,
                        `ellipsoid`, `rounded_box`, `symmetry` (its
                        children plus their mirror image — edit one

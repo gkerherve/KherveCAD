@@ -43,7 +43,11 @@ and a **picture of the 3D preview**.
   components, ISO-threaded fasteners, chemistry glassware, furniture.
 - **Documents** — `set_render_options`, `load_example`,
   `new_document`, `open_document` (.kcad, .scad, or a mesh),
-  `save_document` and `export_document` (.scad, .stl or .3mf).
+  `save_document` and `export_document` (.scad, .stl, .3mf, or a
+  .png of the 3D view: `view` is `current` — the user's camera — one
+  of the standard views, or `all`, one numbered file per view with
+  the front-right isometric first; optional `width`, `height`,
+  `transparent`).
 - **Sharing** — `publish_to_printables` assembles a Printables upload
   folder from the open model: STL, 3MF, the parametric .scad, the
   .kcad project, preview renders and a description the assistant
@@ -188,9 +192,12 @@ What it does instead is everything up to that point, in one call:
 - **Source** — the `.scad` program and the `.kcad` project, so the
   listing ships something editable rather than a frozen mesh. That is
   the point of publishing from a parametric tool.
-- **Previews** — an OpenSCAD still per camera angle at 1600×1200,
-  framed with `--viewall`. Without the binary these fall back to a
-  screen grab of the built-in preview, and the result says so.
+- **Previews** — a still of **every side** by default: the front-right
+  isometric (always first, so it is the cover), the back-left
+  isometric, then front, back, left, right, top and bottom, each
+  framed with `--viewall`. Without the binary the built-in renderer
+  draws the same views from the same cameras (an offscreen snapshot:
+  the user's view does not move), and the result says so.
 - **`description.md`** — the assistant writes the body; the bundle
   appends a credit naming KherveCAD (khervetools.com), OpenSCAD and
   Claude, and never twice. Passing no description falls back to a

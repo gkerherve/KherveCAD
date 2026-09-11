@@ -37,7 +37,8 @@ from . import anchors, document, mates, mesh
 from .mcp_schema import (CATEGORIES, DEFAULT_CATEGORY,
                          DEFAULT_LICENSE, DEFAULT_ORIGIN,
                          DEFAULT_VIEWS, FORMATS, ORIENTATIONS,
-                         ORIGINS, PROJECTIONS, WRAP_TYPES)
+                         ORIGINS, PROJECTIONS, STILL_VIEWS,
+                         WRAP_TYPES)
 from .mcp_server import IMAGE_KEY
 from .model import CONTAINER_TYPES, NODE_TYPES, validate
 
@@ -1366,9 +1367,24 @@ class McpToolExecutor:
         if suffix == ".scad":
             document.export_scad(self._model, path)
             return {"exported": path, "format": "scad"}
+        if suffix == ".png":
+            from . import pngexport
+            # the picture should show holes cut, as render_view does
+            complete = self._wait_for_render(_DEFAULT_WAIT_S)
+            try:
+                result = pngexport.export_request(
+                    self._w.view3d, path,
+                    view=params.get("view") or "current",
+                    width=params.get("width"),
+                    height=params.get("height"),
+                    transparent=bool(params.get("transparent")))
+            except (ValueError, OSError) as exc:
+                raise ToolError(str(exc))
+            result["render_complete"] = complete
+            return result
         if suffix not in (".stl", ".3mf"):
             raise ToolError(
-                "Export path must end in .scad, .stl or .3mf.")
+                "Export path must end in .scad, .stl, .3mf or .png.")
         if self._w.engine.available:
             error = self._w.engine.export_mesh(self._model.to_scad(),
                                                path)
@@ -1409,11 +1425,11 @@ class McpToolExecutor:
             folder = base / f"{printables.slug(title)}-printables"
         formats = tuple(params.get("formats") or FORMATS)
         views = tuple(params.get("views") or DEFAULT_VIEWS)
-        unknown = [v for v in views if v not in ORIENTATIONS]
+        unknown = [v for v in views if v not in STILL_VIEWS]
         if unknown:
             raise ToolError(
                 f"Unknown view(s) {', '.join(unknown)}. Choose from: "
-                f"{', '.join(ORIENTATIONS)}.")
+                f"{', '.join(STILL_VIEWS)}.")
         bad = [f for f in formats if f not in FORMATS]
         if bad:
             raise ToolError(

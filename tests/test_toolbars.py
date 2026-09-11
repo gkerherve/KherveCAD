@@ -96,3 +96,4 @@ def test_group_action_wraps_the_selection(window):
     tree.select_nodes([node])
     window._op_groups["combine"].family[0].trigger()        # Group
     assert node.parent.type == "union"
+    QSettings("Kherve", "KherveCAD").remove("toolbar/combine")

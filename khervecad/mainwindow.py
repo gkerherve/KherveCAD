@@ -198,6 +198,11 @@ class MainWindow(QMainWindow):
                             "Ctrl+E")
         file_menu.addAction("Export S&TL...", self.export_stl,
                             "Ctrl+Shift+E")
+        from .pngexport import open_dialog as export_png_dialog
+        file_menu.addAction(icons.icon("mdi.image-outline"),
+                            "Export PN&G...",
+                            lambda: export_png_dialog(self),
+                            "Ctrl+Alt+E")
         file_menu.addSeparator()
         file_menu.addAction(icons.icon("mdi.cloud-upload-outline"),
                             "&Publish to Printables...",

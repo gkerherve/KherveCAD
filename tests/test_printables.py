@@ -1,8 +1,8 @@
 """The Printables upload bundle.
 
 The engine is disabled in the suite (KHERVECAD_DISABLE_ENGINE), so
-these run the no-OpenSCAD path: the tessellated STL, the screen-grab
-previews, and the warnings that say so.
+these run the no-OpenSCAD path: the tessellated STL, the built-in
+renderer's previews, and the warnings that say so.
 
 Run with: python -m pytest tests/  (offscreen Qt).
 

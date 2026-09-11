@@ -339,12 +339,23 @@ class View3D(QWidget):
         grad.setColorAt(1.0, QColor(bottom))
         painter.fillRect(self.rect(), grad)
 
-    #: standard camera orientations (yaw, pitch) in degrees.
+    #: standard camera orientations (yaw, pitch) in degrees — the eye
+    #: directions of OpenSCAD's presets of the same names
+    #: (`engine.view_angles` converts them).  Isometric is OpenSCAD's
+    #: default view, from the FRONT-right.  It used to be (35, 25): the
+    #: back-right corner, so an "isometric" picture from here led with
+    #: the back of the part while OpenSCAD's showed its front.
     VIEWS = {
-        "Isometric": (35.0, 25.0), "Top": (-90.0, 89.0),
+        "Isometric": (-65.0, 35.0), "Top": (-90.0, 89.0),
         "Bottom": (-90.0, -89.0), "Front": (-90.0, 2.0),
         "Back": (90.0, 2.0), "Right": (0.0, 2.0), "Left": (180.0, 2.0),
     }
+
+    #: set on a snapshot's offscreen twin only: an exported picture is
+    #: the model and nothing else — no grid, axes, badge, selection or
+    #: anchors — optionally on a transparent ground.
+    _clean = False
+    _transparent = False
 
     def set_view(self, name: str):
         if name in self.VIEWS:
@@ -361,7 +372,7 @@ class View3D(QWidget):
 
     def snapshot(self, width, height, *, yaw=None, pitch=None,
                  distance=None, target=None, projection=None,
-                 frame=None, zoom=1.0):
+                 frame=None, zoom=1.0, clean=False, transparent=False):
         """Paint the scene from another camera into a QImage, leaving
         this view — the user's camera — exactly where it is.
 
@@ -369,11 +380,16 @@ class View3D(QWidget):
         background and lighting; only the camera differs. *frame* is a
         list of world points to fit the view to (``[]`` or ``True``
         means the whole mesh); *zoom* then moves in (>1) or out (<1).
+        *clean* paints the model alone — no grid, axes, badge,
+        selection tint, anchors or reference images — as an exported
+        picture should; *transparent* leaves the background out, so the
+        pixels around the model have alpha 0.
         Returns ``(image, camera_state)``."""
-        from PyQt5.QtCore import QSize
-        from PyQt5.QtGui import QImage, QPainter
+        from PyQt5.QtCore import QPoint, QSize
+        from PyQt5.QtGui import QImage, QPainter, QRegion
         twin = View3D()
         twin.lighting_bar.hide()
+        twin._clean, twin._transparent = bool(clean), bool(transparent)
         twin.resize(max(int(width), 2), max(int(height), 2))
         twin.style, twin.background = self.style, self.background
         twin.brightness, twin.contrast = self.brightness, self.contrast
@@ -384,9 +400,10 @@ class View3D(QWidget):
         # a snapshot must be exact: wait for a tree still being built
         twin.set_mesh(self.mesh, self.source, self.colors,
                       bsp=self.wait_for_bsp())
-        twin.set_highlight_mesh(self.highlight_mesh)
-        twin.set_anchor_markers(list(self.anchor_markers))
-        twin.reference_images = list(self.reference_images)
+        if not clean:
+            twin.set_highlight_mesh(self.highlight_mesh)
+            twin.set_anchor_markers(list(self.anchor_markers))
+            twin.reference_images = list(self.reference_images)
         twin.yaw = self.yaw if yaw is None else float(yaw)
         twin.pitch = self.pitch if pitch is None else float(pitch)
         twin.distance, twin.target = self.distance, list(self.target)
@@ -402,7 +419,14 @@ class View3D(QWidget):
                      QImage.Format_ARGB32)
         img.fill(0)
         painter = QPainter(img)
-        twin.render(painter)
+        if transparent:
+            # render() lays the palette's window colour under the widget
+            # unless told not to — filling the very ground that is meant
+            # to stay see-through
+            twin.render(painter, QPoint(), QRegion(),
+                        QWidget.RenderFlags(QWidget.DrawChildren))
+        else:
+            twin.render(painter)
         painter.end()
         state = twin.camera_state()
         twin.deleteLater()
@@ -769,10 +793,14 @@ class View3D(QWidget):
         # is orbiting/panning for snappy feedback, then repaint crisp on
         # release (see mouseReleaseEvent)
         painter.setRenderHint(QPainter.Antialiasing, self._mode is None)
-        self._fill_background(painter, t)
+        if not self._transparent:
+            self._fill_background(painter, t)
 
         eye, right, up, forward = self._camera()
-        if not self._draw_stage(painter, t, eye, right, up, forward):
+        # the stage (platform & shadow) belongs in an exported picture;
+        # the grid is viewport furniture and does not
+        if not self._draw_stage(painter, t, eye, right, up, forward) \
+                and not self._clean:
             self._draw_ground(painter, t, eye, right, up, forward)
         if self.reference_images:
             from . import refimage
@@ -1002,6 +1030,9 @@ class View3D(QWidget):
             self._tint_selection(painter, hi_polys)
         self._draw_anchors(painter, eye, right, up, forward)
         self._draw_pick_overlays(painter, eye, right, up, forward)
+        if self._clean:                  # an exported picture: model only
+            painter.end()
+            return
         self._draw_axes(painter, t, eye, right, up, forward)
         pair = BACKGROUNDS.get(self.background)
         if pair is None:

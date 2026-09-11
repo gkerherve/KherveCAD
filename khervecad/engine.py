@@ -53,11 +53,15 @@ _BUNDLE_LAYOUTS = [
 ]
 
 
-#: OpenSCAD gimbal camera rotations, by the name the 3D view uses for
-#: the same viewpoint.  Paired with ``--viewall --autocenter`` these are
-#: all a still needs: the distance is computed from the model.
+#: OpenSCAD gimbal camera rotations for every standard still, named as
+#: the 3D view names the same viewpoint (plus the back-left isometric,
+#: which has no preset there).  Paired with ``--viewall --autocenter``
+#: these are all a still needs: the distance is computed from the
+#: model.  `view_angles` turns each into the 3D view's own camera, so
+#: the built-in renderer and OpenSCAD see the same side of the part.
 CAMERA_ROTATIONS = {
-    "Isometric": (55, 0, 25),
+    "Isometric": (55, 0, 25),          # OpenSCAD's default: front-right
+    "Isometric back": (55, 0, 205),    # the opposite corner: back-left
     "Top": (0, 0, 0),
     "Bottom": (180, 0, 0),
     "Front": (90, 0, 0),
@@ -65,6 +69,22 @@ CAMERA_ROTATIONS = {
     "Right": (90, 0, 90),
     "Left": (90, 0, 270),
 }
+
+
+def view_angles(rotation) -> tuple:
+    """The 3D view's (yaw, pitch) for an OpenSCAD gimbal *rotation*.
+
+    OpenSCAD's eye sits at (sin rx sin rz, -sin rx cos rz, cos rx) from
+    the target — Front (90,0,0) looks from -Y, Right (90,0,90) from +X
+    — and View3D's at (cos p cos y, cos p sin y, sin p).  Equating the
+    two gives yaw = rz - 90 and pitch = 90 - rx.  The pitch stops a
+    degree short of the poles, as View3D.VIEWS does, where the yaw
+    would stop meaning anything.
+    """
+    rx, _ry, rz = (float(v) for v in rotation)
+    yaw = (rz - 90.0 + 180.0) % 360.0 - 180.0
+    pitch = min(max(90.0 - rx, -89.0), 89.0)
+    return yaw, pitch
 
 
 def bundled_openscad() -> str:

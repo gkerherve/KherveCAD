@@ -648,6 +648,12 @@ variable, part and snap. Save {K("Ctrl+S")}, Save As
 .3mf); so does dragging a file onto the window.</li>
 <li><b>Export STL</b> {K("Ctrl+Shift+E")} for 3D printing (exact when
 OpenSCAD is installed); <b>Export OpenSCAD</b> {K("Ctrl+E")}.</li>
+<li><b>Export PNG</b> {K("Ctrl+Alt+E")} saves a picture of the 3D view in
+its colours, style and lighting: the <b>current view</b> exactly as the
+camera shows it, or <b>all standard views</b> (front-right and back-left
+isometric, front, back, left, right, top, bottom), one file each. Pick a
+size up to 4K, and tick <b>Transparent background</b> to drop the picture
+onto a slide or a web page. Your own camera never moves.</li>
 <li><b>File &rsaquo; Show in File Explorer</b> opens the document's
 folder; <b>New Window</b> {K("Ctrl+Shift+N")} opens a second document.</li>
 <li><b>View &rsaquo; Add Reference Image&hellip;</b> puts a photo or
@@ -661,8 +667,9 @@ GitHub / GitLab</b> sets up the remote.</p>
 <h3>Publishing to Printables</h3>
 <p><b>File &rsaquo; Publish to Printables&hellip;</b>
 {K("Ctrl+Shift+P")} prepares everything for an upload: STL and 3MF
-files, the .scad and .kcad, preview pictures from several angles, a
-description and the upload form's answers. It then opens the Printables
+files, the .scad and .kcad, preview pictures of every side (the
+front-right isometric first, as the cover), a description and the
+upload form's answers. It then opens the Printables
 upload page; the final upload is yours to click.</p>
 """),
 
@@ -710,6 +717,7 @@ Window)</td></tr>
 mesh</td></tr>
 <tr><td>{K("Ctrl+E")} {K("Ctrl+Shift+E")}</td><td>Export OpenSCAD, Export
 STL</td></tr>
+<tr><td>{K("Ctrl+Alt+E")}</td><td>Export PNG</td></tr>
 <tr><td>{K("Ctrl+Shift+P")}</td><td>Publish to Printables</td></tr>
 <tr><td colspan='2'><b>Edit</b></td></tr>
 <tr><td>{K("Ctrl+Z")} {K("Ctrl+Y")}</td><td>Undo, Redo (also

@@ -36,12 +36,12 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
                              QLabel, QLineEdit, QMessageBox, QPlainTextEdit,
                              QPushButton, QVBoxLayout)
 
-from . import document, mesh
+from . import document, mesh, pngexport
 from .engine import CAMERA_ROTATIONS, write_stl
 from .mcp_schema import (CATEGORIES, DEFAULT_CATEGORY,
                          DEFAULT_LICENSE, DEFAULT_ORIGIN,
                          DEFAULT_VIEWS, FORMATS, LICENSES, ORIGINS,
-                         SUMMARY_LIMIT)
+                         STILL_VIEWS, SUMMARY_LIMIT)
 
 #: The page the user finishes on.  Printables' own "add a model" form.
 UPLOAD_URL = "https://www.printables.com/model/add"
@@ -206,8 +206,9 @@ def form_answers(window, *, title, summary="", tags=(),
         "",
         "Files to upload",
         "  " + ", ".join(f".{f}" for f in formats) +
-        " plus every .png in this folder (the isometric render is "
-        "first, so it becomes the cover image).",
+        " plus every .png in this folder, in numbered order (the "
+        "front-right isometric is first, so it becomes the cover "
+        "image).",
     ]
     if size:
         lines += ["", "Bounding box (for your own check against the "
@@ -514,45 +515,55 @@ def trim_to_content(path, margin=0.06, aspect=4 / 3.0) -> bool:
 def _render_previews(window, folder, stem, code, views, size,
                      warnings) -> list:
     """Preview stills, from OpenSCAD where it is installed and from the
-    3D widget where it is not.
+    built-in renderer where it is not.
 
-    Printables shows the FIRST image as the cover, and a listing is
-    judged on it, so the isometric is rendered first and larger than
-    the rest.  The names are numbered because the upload page keeps
-    the order the files arrive in, which is the order the file dialog
-    lists them.
+    Every standard view by default (`STILL_VIEWS`): the front-right
+    isometric, the back-left one, and the six faces, so a listing shows
+    every side of the part.  Printables makes the FIRST image the
+    cover, and a listing is judged on it, so the front-right isometric
+    is rendered first and larger than the rest.  The names are numbered
+    because the upload page keeps the order the files arrive in, which
+    is the order the file dialog lists them.
+
+    Both renderers take their camera from `engine.CAMERA_ROTATIONS`
+    (the built-in one through `engine.view_angles`).  The fallback used
+    to aim with `View3D.VIEWS`, whose "Isometric" then looked from the
+    back-right — so a machine without OpenSCAD published the back of
+    the model as its cover — and it grabbed the user's own view,
+    moving their camera and photographing the grid and badge with it.
     """
-    ordered = list(views)
-    for hero in ("Isometric",):          # the one that gets the click
-        if hero in ordered:
-            ordered.insert(0, ordered.pop(ordered.index(hero)))
+    ordered, unknown = pngexport.ordered_views(views)
+    for name in unknown:
+        warnings.append(f"Skipped unknown view {name!r}.")
+    exact = window.engine.available
+    if ordered and not exact:
+        warnings.append(
+            "The preview images come from the built-in renderer "
+            "because OpenSCAD was not found." + (
+                " This model uses booleans, which it only approximates "
+                "— holes are not cut in the pictures."
+                if mesh.uses_booleans(window.model.root) else ""))
 
     out = []
     for index, name in enumerate(ordered, 1):
-        rotation = CAMERA_ROTATIONS.get(name)
-        if rotation is None:
-            warnings.append(f"Skipped unknown view {name!r}.")
-            continue
-        path = folder / f"{stem}-{index}-{name.lower()}.png"
+        path = folder / pngexport.file_name(stem, index, name)
         shot = (int(size[0] * 1.3), int(size[1] * 1.3)) if index == 1 \
             else size
-        if window.engine.available:
-            error = window.engine.export_png(code, str(path),
-                                             rotation=rotation,
-                                             size=shot)
+        if exact:
+            error = window.engine.export_png(
+                code, str(path), rotation=CAMERA_ROTATIONS[name],
+                size=shot)
             if error:
                 warnings.append(f"{name} preview failed: {error}")
                 continue
         else:
-            window.view3d.set_view(name)
-            pixmap = window.view3d.grab()
-            if pixmap.isNull() or pixmap.width() < 2 or \
-                    not pixmap.save(str(path), "PNG"):
-                warnings.append(f"{name} preview could not be grabbed.")
+            try:
+                image = pngexport.render(window.view3d, shot[0], shot[1],
+                                         name)
+                pngexport._save(image, path)
+            except (ValueError, OSError) as exc:
+                warnings.append(f"{name} preview failed: {exc}")
                 continue
-            warnings.append(
-                f"{name} preview is a screen grab of the built-in "
-                "preview, not an OpenSCAD render.")
         try:
             trim_to_content(path)
         except Exception as exc:                     # cosmetic, never fatal
@@ -637,13 +648,15 @@ class PublishDialog(QDialog):
                 "OpenSCAD writes 3MF and it was not found.")
         layout.addWidget(files_box)
 
-        views_box = QGroupBox("Preview images")
-        views_row = QHBoxLayout(views_box)
+        from PyQt5.QtWidgets import QGridLayout
+        views_box = QGroupBox("Preview images — the front-right "
+                              "Isometric is always first, as the cover")
+        views_grid = QGridLayout(views_box)
         self._view_boxes = {}
-        for name in CAMERA_ROTATIONS:
+        for index, name in enumerate(STILL_VIEWS):
             box = QCheckBox(name)
             box.setChecked(name in DEFAULT_VIEWS)
-            views_row.addWidget(box)
+            views_grid.addWidget(box, index // 4, index % 4)
             self._view_boxes[name] = box
         layout.addWidget(views_box)
 
