@@ -661,8 +661,12 @@ class View3D(QWidget):
             return dict(kind="face", pos=list(point),
                         dir=anchors._tri_normal(tri), name="Face",
                         tris=[tri]), key
-        return anchors.describe_pick(owner, index - start, point,
-                                     tol), key
+        desc = anchors.describe_pick(owner, index - start, point, tol)
+        # the raw hit too: describe_pick snaps pos to a face centre or
+        # an edge, but placing a brick needs where the click landed
+        desc["point"] = list(point)
+        desc["normal"] = anchors._tri_normal(owner[index - start])
+        return desc, key
 
     def _run_pick(self, x, y):
         callback, self._pick_cb = self._pick_cb, None

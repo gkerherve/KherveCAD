@@ -452,8 +452,11 @@ class MainWindow(QMainWindow):
             sub.addAction(
                 spec["label"],
                 lambda _=False, pid=part_id: self._insert_library_part(pid))
-        from . import lego_convert
+        from . import lego_builder, lego_convert
         menu.addSeparator()
+        menu.addAction(icons.icon("mdi.toy-brick-outline"),
+                       "Lego Builder...",
+                       lambda: lego_builder.open_builder(self))
         menu.addAction(icons.icon("mdi.toy-brick-plus-outline"),
                        "Convert Selection to Lego...",
                        lambda: lego_convert.convert_to_lego(self))
