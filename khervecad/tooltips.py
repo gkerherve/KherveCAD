@@ -435,22 +435,16 @@ TIPS = {
                [], None),
     "vibe_model": (
         "Vibe Model",
-        "Folds away the object tree, Properties, the 2D sketch and the "
-        "drawing tools so the 3D model fills the window — for building "
-        "by describing the part to an assistant and watching it appear.",
-        ["Connect an assistant (AI ▸ Connect to Claude) or open the "
-         "ChatBox.",
+        "Folds away the object tree, Properties, the 2D sketch, the "
+        "drawing tools and every toolbar button but file and undo, so "
+        "the 3D model fills the window — for building by describing the "
+        "part to an assistant and watching it appear.",
+        ["Connect an assistant (AI ▸ Connect to Claude).",
          "Click Vibe Model (Ctrl+Shift+M).",
          "Describe what you want; the model builds in 3D.",
          "Click again to bring the panels back and edit by hand."],
         "The buttons in the 3D view's corner zoom, pan, turn and focus "
         "without the mouse."),
-    "assistant": ("Assistant chat",
-                  "Opens the chat box: describe a part and the "
-                  "assistant builds it in the tree. Needs your own "
-                  "Claude, Mistral or Ollama API key.", [],
-                  "No key? AI ▸ Connect to Claude lets Claude Desktop "
-                  "or Claude Code build here instead."),
     "pattern": (
         "Pattern (linear / polar / grid)",
         "Repeats its contents as copies — in a row, round an axis, or "

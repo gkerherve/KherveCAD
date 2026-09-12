@@ -702,15 +702,16 @@ which tab to find it.</p>
 <h3>Vibe Model</h3>
 <p>Building by conversation? Click <b>Vibe Model</b> at the right end
 of the main toolbar ({K("Ctrl+Shift+M")}, or View &rsaquo; Vibe Model):
-the tree, Properties, the 2D sketch and the drawing tools fold away and
-the 3D model fills the window, so you can describe the part and watch it
-build. Click again to bring everything back and edit by hand. The name
+the tree, Properties, the 2D sketch and the drawing tools fold away, the
+toolbar keeps only New, Open, Save, Undo and Redo, and the 3D model
+fills the window, so you can describe the part and watch it build. Click
+again to bring everything back and edit by hand. The name
 borrows from <i>vibe coding</i> &mdash; building software by describing
 it to an AI.</p>
 {figure("vibe_model", "Vibe Model: only the 3D view, with its "
         "navigation bar; the toggle is lit at the end of the toolbar.")}
 <h3>The ChatBox</h3>
-<p><b>AI &rsaquo; ChatBox</b> {K("Ctrl+/")} (or the robot button) docks a
+<p><b>AI &rsaquo; ChatBox</b> {K("Ctrl+/")} docks a
 chat on the right that works with your own <b>Claude, Mistral or
 Ollama</b> API key (the gear button). Describe a part, or paste a
 picture of one; the reply is applied to the document &mdash; inside the

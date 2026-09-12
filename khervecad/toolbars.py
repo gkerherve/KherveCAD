@@ -204,6 +204,9 @@ def build_options_bar(win):
         tooltips.apply(act, key, keys)
         bar.addAction(act)
     bar.addSeparator()
+    # Vibe Model hides the rest of the bar: talking to an assistant
+    # needs file and undo, not the modelling tools
+    win._vibe_keep = set(bar.actions())
 
     # -- operations, one button per family
     win._op_groups = {}
@@ -267,15 +270,14 @@ def build_options_bar(win):
                           win.view3d.fit))
     bar.addSeparator()
 
-    # -- assistant, and the 3D-only layout for building with one
-    bar.addAction(_action(
-        win, "mdi.robot-outline", "Assistant", "assistant",
-        lambda: win._chat_dock.setVisible(not win._chat_dock.isVisible())))
+    # -- the 3D-only layout for building with an assistant (the ChatBox
+    # stays in the AI menu, Ctrl+/; it no longer earns a toolbar button)
     win._vibe_act = _action(win, "mdi.creation", "Vibe Model",
                             "vibe_model", shortcut="Ctrl+Shift+M",
                             checkable=True)
     win._vibe_act.toggled.connect(win.set_vibe_model)
     bar.addAction(win._vibe_act)
+    win._vibe_keep.add(win._vibe_act)
     # named on the bar: the only toggle that changes the whole window
     bar.widgetForAction(win._vibe_act).setToolButtonStyle(
         Qt.ToolButtonTextBesideIcon)

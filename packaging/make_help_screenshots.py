@@ -200,7 +200,7 @@ def shot_toolbars(win):
     bounds = [0] + [s + 1 for s in seps]
     ends = [s - 1 for s in seps] + [len(acts) - 1]
     names = ["File", "Undo", "Operations (drop-down groups)", "Assembly",
-             "Sketch: grid, snap, plane", "3D view", "AI"]
+             "Sketch: grid, snap, plane", "3D view", "Vibe"]
     p.setRenderHint(QPainter.Antialiasing)
     font = QFont(p.font())
     font.setPixelSize(12)

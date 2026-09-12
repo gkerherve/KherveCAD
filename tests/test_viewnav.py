@@ -134,9 +134,15 @@ def test_vibe_model_folds_the_panels_away_and_back(app):
         assert win._vibe_act.isChecked()
         assert win._left_column.isHidden() and win.view2d.isHidden()
         assert win._tools_bar.isHidden() and not win.view3d.isHidden()
+        # the main toolbar keeps file, undo and the toggle itself
+        shown = {a.text() for a in win._options_bar.actions()
+                 if a.isVisible() and not a.isSeparator()}
+        assert shown == {"New", "Open", "Save", "Undo", "Redo",
+                         "Vibe Model"}
         win._vibe_act.trigger()
         assert not win._left_column.isHidden()
         assert not win.view2d.isHidden() and not win._tools_bar.isHidden()
+        assert all(a.isVisible() for a in win._options_bar.actions())
         win.set_vibe_model(True)                # programmatic: tick follows
         assert win._vibe_act.isChecked()
         win.set_vibe_model(False)

@@ -1203,14 +1203,18 @@ class MainWindow(QMainWindow):
             act.setChecked(act.text() == self.view3d.projection)
 
     def set_vibe_model(self, on: bool):
-        """Vibe Model: the object tree, Properties, the 2D sketch and the
-        drawing tools fold away and the 3D model fills the window — for
+        """Vibe Model: the object tree, Properties, the 2D sketch, the
+        drawing tools and all of the main toolbar but file, undo and
+        this toggle fold away and the 3D model fills the window — for
         building by talking to an assistant and watching the result.
         Toggling back restores the panels exactly as they were."""
         on = bool(on)
         self._left_column.setVisible(not on)
         self.view2d.setVisible(not on)
         self._tools_bar.setVisible(not on)
+        for act in self._options_bar.actions():
+            if act not in self._vibe_keep:
+                act.setVisible(not on)
         act = getattr(self, "_vibe_act", None)
         if act is not None and act.isChecked() != on:
             act.blockSignals(True)
