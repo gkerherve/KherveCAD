@@ -1146,9 +1146,13 @@ PARTS = {
 
 # parts contributed by sibling modules (chemistry, room & furniture);
 # each entry carries its own `build` callable, dispatched by build_part.
-from . import library_chem, library_room       # noqa: E402
+from . import library_chem, library_lego, library_room  # noqa: E402
 PARTS.update(library_chem.PARTS)
 PARTS.update(library_room.PARTS)
+PARTS.update(library_lego.PARTS)
+
+#: dialog fields holding a count (integer spin box, no "mm" suffix)
+_COUNT_FIELDS = {"bolts"} | library_lego.COUNT_FIELDS
 
 
 def build_part(part_id: str, dims: dict) -> CadNode:
@@ -1294,6 +1298,9 @@ class PartLibraryDialog(QDialog):
 
         self._size = QComboBox()
         self._size.currentTextChanged.connect(self._size_changed)
+        # parts that come in colours (Lego) offer them here
+        self._color_label = QLabel("Colour:")
+        self._color = QComboBox()
 
         self._form = QFormLayout()
         self._fields = {}
@@ -1306,6 +1313,8 @@ class PartLibraryDialog(QDialog):
         right = QVBoxLayout()
         right.addWidget(QLabel("Standard size:"))
         right.addWidget(self._size)
+        right.addWidget(self._color_label)
+        right.addWidget(self._color)
         right.addLayout(self._form)
         right.addStretch()
 
@@ -1357,6 +1366,14 @@ class PartLibraryDialog(QDialog):
             self._size.setCurrentIndex(default)
         self._size.setEnabled(bool(sizes))
         self._size.blockSignals(False)
+        colors = PARTS[part_id].get("colors") or []
+        current = self._color.currentText()
+        self._color.clear()
+        self._color.addItems(colors)
+        if current in colors:                 # keep the colour across parts
+            self._color.setCurrentText(current)
+        self._color.setVisible(bool(colors))
+        self._color_label.setVisible(bool(colors))
         self._rebuild_form()
 
     def _size_changed(self, _text):
@@ -1376,7 +1393,7 @@ class PartLibraryDialog(QDialog):
             self._form.addRow(QLabel("Built-in dimensions"))
             return
         for key, label in spec["fields"]:
-            if key == "bolts":
+            if key in _COUNT_FIELDS:
                 box = QSpinBox()
                 box.setRange(1, 64)
             else:
@@ -1411,6 +1428,8 @@ class PartLibraryDialog(QDialog):
         dims = {key: box.value() for key, box in self._fields.items()}
         if self._size.isEnabled():
             dims["_size"] = self._size.currentText()
+        if PARTS[part_id].get("colors"):
+            dims["_color"] = self._color.currentText()
         node = build_part(part_id, dims)
         size = self._size.currentText().split(" ")[0] \
             if self._size.isEnabled() else ""

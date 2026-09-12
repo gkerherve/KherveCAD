@@ -548,6 +548,7 @@ class McpToolExecutor:
                           sizes.items()},
                 "dimensions": [{"name": k, "label": lbl}
                                for k, lbl in spec.get("fields", [])],
+                "colors": list(spec.get("colors") or []),
             }
         want = params.get("category")
         groups = {}
@@ -1172,6 +1173,16 @@ class McpToolExecutor:
         if not isinstance(overrides, dict):
             raise ToolError("'dims' must be an object of mm values.")
         dims.update(overrides)
+        colors = spec.get("colors") or []
+        if params.get("color"):
+            want = str(params["color"]).strip().lower()
+            match = [c for c in colors if c.lower() == want]
+            if not match:
+                raise ToolError(
+                    f"{part_id} does not come in {params['color']!r}"
+                    + (f". It offers: {', '.join(colors)}." if colors
+                       else " — it has no colour choice."))
+            dims["_color"] = match[0]
         node = library.build_part(part_id, dims)
         label = size_key.split(" ")[0] if size_key else ""
         if label and not node.name.startswith(label):

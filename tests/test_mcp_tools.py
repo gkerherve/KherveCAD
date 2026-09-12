@@ -332,6 +332,19 @@ def test_insert_part_arrives_as_one_object(ex, window):
     assert comp.type == "component" and comp.children
 
 
+def test_insert_part_takes_a_colour(ex, window):
+    out = call(ex, "insert_part", part_id="lego_brick", size="2x4",
+               color="blue")
+    comp = window.model.find(out["inserted"])
+    tints = {n.params["color"] for n in comp.walk() if n.type == "color"}
+    assert tints == {"#0055BF"}
+    assert "Yellow" in call(ex, "list_parts",
+                            part_id="lego_brick")["colors"]
+    result = ex.execute("insert_part", {"part_id": "lego_brick",
+                                        "color": "Plaid"})
+    assert "Red" in result["error"]
+
+
 def test_an_unknown_part_size_lists_the_real_ones(ex):
     result = ex.execute("insert_part", {"part_id": "cf_flange",
                                         "size": "CF999"})

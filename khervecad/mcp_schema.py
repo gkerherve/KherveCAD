@@ -319,10 +319,12 @@ TOOLS = [
         "description": (
             "The parametric part library: vacuum components (CF/KF "
             "flanges, fittings, valves, pumps, analysers, "
-            "manipulators), ISO-threaded fasteners, chemistry glassware "
-            "and room furniture — with each part's standard sizes and "
-            "the dimensions you may override. Use a library part rather "
-            "than modelling a CF flange from scratch."
+            "manipulators), ISO-threaded fasteners, chemistry glassware, "
+            "room furniture and LEGO-compatible bricks, plates, tiles, "
+            "slopes and baseplates — with each part's standard sizes, "
+            "the dimensions you may override and, where it has them, "
+            "its colours. Use a library part rather than modelling a CF "
+            "flange or a brick from scratch."
         ),
         "input_schema": _obj({
             "category": {"type": "string",
@@ -730,6 +732,10 @@ TOOLS = [
                                     "table, e.g. 'CF40' or 'M6'."},
             "dims": {"type": "object",
                      "description": "Dimension overrides in mm."},
+            "color": {"type": "string",
+                      "description": "For parts that come in colours "
+                                     "(Lego): one of the names "
+                                     "list_parts gives, e.g. 'Red'."},
             "name": {"type": "string"},
         }, ["part_id"]),
     },
