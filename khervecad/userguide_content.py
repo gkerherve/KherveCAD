@@ -787,7 +787,10 @@ GitHub / GitLab</b> sets up the remote.</p>
 <h3>Publishing to Printables</h3>
 <p><b>File &rsaquo; Publish to Printables&hellip;</b>
 {K("Ctrl+Shift+P")} prepares everything for an upload: STL and 3MF
-files, the .scad and .kcad, preview pictures of every side (the
+files &mdash; and, for an assembly, <b>one STL per Object</b>
+(<code>name-Object.stl</code>, each at its own origin, ready to print
+apart) &mdash; the .scad and .kcad, a source ZIP, preview pictures of
+every side (the
 front-right isometric first, as the cover), a description and the
 upload form's answers. It then opens the Printables
 upload page; the final upload is yours to click.</p>

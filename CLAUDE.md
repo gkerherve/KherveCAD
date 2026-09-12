@@ -720,7 +720,10 @@ into a new module and import.
                        STL parse (binary + ASCII) and STL write.
   - `printables.py`  — **File ▸ Publish to Printables…** and the
                        `publish_to_printables` MCP tool share one
-                       builder: STL / 3MF / .scad / .kcad exports,
+                       builder: STL / 3MF / .scad / .kcad exports
+                       (plus `<stem>-<object>.stl` per visible Object
+                       at its own origin, via `subtree_scad` /
+                       `anchors.local_tris`, when there are 2+),
                        preview stills of **every side** — `STILL_VIEWS`
                        (mcp_schema): front-right isometric, back-left
                        isometric, front, back, left, right, top,

@@ -381,3 +381,32 @@ def test_print_settings_can_be_overridden(cube_window, tmp_path):
 def test_the_form_never_tells_the_author_to_fill_it_in(cube_window):
     text = printables.form_answers(cube_window, title="Cube")
     assert "adjust to what you actually printed" not in text.lower()
+
+
+def test_an_assembly_gets_one_stl_per_object(window, tmp_path):
+    from khervecad.model import CadNode
+    m = window.model
+    for name, x in (("Base plate", 0.0), ("Lid", 50.0)):
+        comp = m.new_component(name)
+        comp.params["x"] = x
+        m.add_node("cube", parent=comp)
+    hidden = m.new_component("Draft", visible=False)
+    m.add_node("sphere", parent=hidden)
+    bundle = printables.build_bundle(window, tmp_path / "out",
+                                     title="Box", formats=("stl",),
+                                     views=())
+    names = sorted(Path(f).name for f in bundle["files"]
+                   if f.endswith(".stl"))
+    assert names == ["Box-Base-plate.stl", "Box-Lid.stl", "Box.stl"]
+    # each part at its own origin, not where it sits in the assembly
+    from khervecad import engine
+    lid = engine.parse_mesh(str(tmp_path / "out" / "Box-Lid.stl"))
+    assert min(v[0] for t in lid for v in t) == pytest.approx(0.0)
+    # a single-Object document writes the whole-model STL only
+    m.clear()
+    m.add_node("cube")
+    single = printables.build_bundle(window, tmp_path / "one",
+                                     title="Cube", formats=("stl",),
+                                     views=())
+    assert not any(Path(f).name.startswith("Cube-") and f.endswith(".stl")
+                   for f in single["files"])

@@ -394,6 +394,28 @@ def build_bundle(window, folder, *, title, description="", tags=(),
                     " This model uses no booleans, so the geometry is "
                     "faithful."))
 
+    if "stl" in formats:
+        # an assembly prints part by part: each visible Object as its
+        # own STL at its own origin, the way a part file comes out
+        parts = [c for c in model.components() if c.visible and c.children]
+        if len(parts) > 1:
+            from . import anchors
+            env = anchors.doc_env(model)
+            for comp in parts:
+                path = folder / f"{stem}-{slug(comp.name)}.stl"
+                if engine.available:
+                    error = engine.export_mesh(model.subtree_scad(comp),
+                                               str(path))
+                    if error:
+                        warnings.append(f"{comp.name}: STL export failed: "
+                                        f"{error}")
+                        continue
+                else:
+                    fn = model.global_fn if model.global_fn_on else None
+                    write_stl(anchors.local_tris(comp, env=env, fn=fn),
+                              str(path), comp.name)
+                wrote(path)
+
     if "3mf" in formats:
         path = folder / f"{stem}.3mf"
         if not engine.available:
