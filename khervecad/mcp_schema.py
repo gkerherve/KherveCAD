@@ -713,6 +713,31 @@ TOOLS = [
                        "description": "mm along the mate axis."},
             "spin": {"type": "number",
                      "description": "Degrees about the mate axis."},
+            "kind": {"type": "string",
+                     "enum": ["coincident", "concentric", "angle"],
+                     "description": "coincident (default): the anchors "
+                                    "touch. concentric: axes aligned, "
+                                    "the part slides along the axis "
+                                    "(offset = the slide; a drag keeps "
+                                    "the mate). angle: a hinge, the "
+                                    "child turned by `angle` degrees "
+                                    "about the anchor's edge."},
+            "align": {"type": "string", "enum": ["opposed", "same"],
+                      "description": "opposed (default): face to face. "
+                                     "same: flush, both anchors "
+                                     "pointing the same way."},
+            "angle": {"type": "number",
+                      "description": "Hinge angle in degrees (kind "
+                                     "angle)."},
+            "ratio": {"type": "number",
+                      "description": "Gear mate: the child's spin "
+                                     "follows the parent's spin times "
+                                     "this ratio, the opposite way."},
+            "min_offset": {"type": "number",
+                           "description": "Limit mate: the offset / "
+                                          "slide never goes below this."},
+            "max_offset": {"type": "number",
+                           "description": "...nor above this."},
             "detach": {"type": "boolean",
                        "description": "Release the mate instead."},
         }, ["node_id"]),

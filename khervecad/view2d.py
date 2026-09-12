@@ -1207,11 +1207,14 @@ class SketchScene(QGraphicsScene):
         detaches it (the drag is the user taking control back)."""
         if abs(delta.x()) < 1e-9 and abs(delta.y()) < 1e-9:
             return
-        from .mates import detach, mate_of
+        from .mates import detach, mate_of, slide_to
         # a snapped part is driven by its mate, which re-solves on every
         # change and would overwrite the drop before it reached the
-        # screen — the drag is the user taking control back
-        if mate_of(node) is not None:
+        # screen — the drag is the user taking control back. A
+        # concentric mate is the exception: the part is free along its
+        # axis, so the drop becomes its new slide (see below)
+        slides = (mate_of(node) or {}).get("kind") == "concentric"
+        if mate_of(node) is not None and not slides:
             detach(self.model, node)
         else:
             # ...but a mate on an ANCESTOR still holds: moving content
@@ -1239,6 +1242,8 @@ class SketchScene(QGraphicsScene):
                 node.params[key] = round(
                     expr.resolve(node.params.get(key, 0.0), env, 0.0)
                     + value, 4)
+            if slides:
+                slide_to(self.model, node, env)   # keep the mate, slid
             self.model.node_changed.emit(node)
             return
         parent, index = node.parent, node.index()

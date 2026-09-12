@@ -374,7 +374,18 @@ into a new module and import.
                        about it) solved by `solve_mate()` into the
                        ordinary placement params — anchors coincide,
                        directions anti-aligned (BOSL2 attach() model,
-                       no constraint solver). A mate's parent is a
+                       no constraint solver). The record may carry the
+                       other common mates, all still deterministic:
+                       `align` "same" (flush), `kind` "concentric" (the
+                       part slides along the axis — `slide_to` measures
+                       a 2D drag along it and keeps the mate instead of
+                       detaching) or "angle" (a hinge: `angle` deg about
+                       `hinge_axis`, the anchor's horizontal edge),
+                       `ratio` (gear: spin = -ratio x the parent mate's
+                       spin, absolute) and `min`/`max` (limit:
+                       `clamp_offset`). `attach()` stores only the
+                       non-default extras, so a plain mate reads as
+                       before. A mate's parent is a
                        **sibling** (`_mate_siblings`): at the assembly
                        root an Object mates to another Object; inside an
                        Object a **group mates to a sibling group** (the

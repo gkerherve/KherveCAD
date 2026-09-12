@@ -503,7 +503,14 @@ coloured markers when the part is selected. Right-click a part &rsaquo;
 origin</b> to any anchor, or to remove one. Right-click &rsaquo;
 <b>Attach&hellip;</b> opens the Attach dialog, where you choose the two
 anchors by name; every change previews live and Cancel puts everything
-back.</p>
+back. Beyond the plain face-to-face mate it offers the mates other CAD
+programs have: <b>Flush</b> (both faces the same way), <b>Concentric</b>
+(the part sits on the other's axis and slides along it &mdash; dragging
+it in the sketch view moves the slide instead of breaking the mate),
+<b>Angle</b> (a hinge: the part turned by an angle about the anchor's
+edge), a <b>gear ratio</b> (the part's spin follows the parent's spin
+times the ratio, reversed) and an <b>offset range</b> (a limit mate:
+the offset or slide never leaves it).</p>
 {figure("dialog_attach", "The Attach dialog: which anchor of this part "
         "meets which anchor of the other.", 450)}
 <p>Inside the Object tab the same tools snap the <b>groups that make up

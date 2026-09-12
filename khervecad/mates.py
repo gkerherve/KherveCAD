@@ -27,9 +27,9 @@ the Free Software Foundation, either version 3 of the License, or
 
 import math
 
-from PyQt5.QtWidgets import (QComboBox, QDialog, QDialogButtonBox,
-                             QDoubleSpinBox, QFormLayout, QHBoxLayout,
-                             QLabel, QPushButton, QWidget)
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog,
+                             QDialogButtonBox, QDoubleSpinBox, QFormLayout,
+                             QHBoxLayout, QLabel, QPushButton, QWidget)
 
 from . import anchors
 
@@ -266,6 +266,58 @@ def _mate_siblings(node):
     return [p for p in _snappable(container) if p is not node]
 
 
+#: the mate kinds: coincident (anchors touch), concentric (the axes
+#: align and the part slides along it — dragging keeps the mate), angle
+#: (a hinge, the child turned by `angle` about the anchor's edge)
+KINDS = ("coincident", "concentric", "angle")
+ALIGNS = ("opposed", "same")
+
+
+def hinge_axis(p_dir):
+    """The horizontal edge an angle mate hinges on: perpendicular to the
+    anchor direction and to world Z (or to X when the anchor points
+    straight up or down)."""
+    ref = [0.0, 0.0, 1.0] if abs(p_dir[2]) < 0.9 else [1.0, 0.0, 0.0]
+    return _norm(_cross(p_dir, ref))
+
+
+def clamp_offset(mate, offset):
+    """*offset* held within the mate's limit range, when it has one."""
+    lo, hi = mate.get("min"), mate.get("max")
+    if lo is not None:
+        offset = max(offset, float(lo))
+    if hi is not None:
+        offset = min(offset, float(hi))
+    return offset
+
+
+def slide_to(model, comp, env=None, fn=None):
+    """For a concentric mate: measure where the part's anchor now sits
+    along the parent's axis and keep that as the mate's offset (within
+    its limits), so a drag along the axis is kept rather than breaking
+    the mate. Returns the new offset, or None when not concentric."""
+    mate = mate_of(comp)
+    if mate is None or mate.get("kind") != "concentric":
+        return None
+    parent = next((c for c in _mate_siblings(comp)
+                   if c.name == mate["parent"]), None)
+    if parent is None:
+        return None
+    p_anchor = find_anchor(definition_of(model, parent) or parent,
+                           mate.get("parent_anchor", ""), env, fn)
+    c_anchor = find_anchor(definition_of(model, comp) or comp,
+                           mate.get("anchor", ""), env, fn)
+    if p_anchor is None or c_anchor is None:
+        return None
+    p_pos, p_dir = anchors.anchor_world(parent, p_anchor, env)
+    p_dir = _norm(p_dir)
+    c_pos, _d = anchors.anchor_world(comp, c_anchor, env)
+    along = sum((c_pos[i] - p_pos[i]) * p_dir[i] for i in range(3))
+    mate["offset"] = round(clamp_offset(mate, along), 4)
+    comp.params["mate"] = mate
+    return mate["offset"]
+
+
 def find_anchor(definition, name, env=None, fn=None):
     for anchor in anchors.anchors_of(definition, env=env, fn=fn):
         if anchor["name"] == name:
@@ -287,12 +339,31 @@ def solve_mate(comp, parent, mate, env=None, fn=None,
         return None
     p_pos, p_dir = anchors.anchor_world(parent, p_anchor, env)
     p_dir = _norm(p_dir)
-    target_dir = [-c for c in p_dir]              # face against face
+    # align: "opposed" is face against face (the default), "same" is
+    # flush — both anchors pointing the same way (SolidWorks' aligned /
+    # anti-aligned flag)
+    if mate.get("align", "opposed") == "same":
+        target_dir = list(p_dir)
+    else:
+        target_dir = [-c for c in p_dir]
+    # an angle mate is a hinge: the child's direction is turned by the
+    # angle about the parent anchor's horizontal edge
+    angle = float(mate.get("angle", 0.0) or 0.0)
+    if mate.get("kind") == "angle" and abs(angle) > 1e-12:
+        target_dir = _mat_vec3(
+            _rot_axis_angle(hinge_axis(p_dir), math.radians(angle)),
+            target_dir)
     rot = _rot_between(_norm(list(c_anchor["dir"])), target_dir)
     spin = float(mate.get("spin", 0.0) or 0.0)
+    # a gear mate: the child's spin follows the parent's, times the ratio
+    # (opposite way, as meshing gears turn)
+    ratio = mate.get("ratio")
+    if ratio:
+        parent_mate = mate_of(parent) or {}
+        spin -= float(ratio) * float(parent_mate.get("spin", 0.0) or 0.0)
     if abs(spin) > 1e-12:
         rot = _mat_mul3(_rot_axis_angle(p_dir, math.radians(spin)), rot)
-    offset = float(mate.get("offset", 0.0) or 0.0)
+    offset = clamp_offset(mate, float(mate.get("offset", 0.0) or 0.0))
     anchor_target = [p_pos[i] + offset * p_dir[i] for i in range(3)]
     rotated = _mat_vec3(rot, list(c_anchor["pos"]))
     translation = [anchor_target[i] - rotated[i] for i in range(3)]
@@ -370,12 +441,27 @@ def refresh(model) -> bool:
 
 
 def attach(model, comp, parent_name, child_anchor, parent_anchor,
-           offset=0.0, spin=0.0):
-    """Create/replace the component's mate and solve it."""
-    comp.params["mate"] = dict(parent=str(parent_name),
-                               parent_anchor=str(parent_anchor),
-                               anchor=str(child_anchor),
-                               offset=float(offset), spin=float(spin))
+           offset=0.0, spin=0.0, kind="coincident", align="opposed",
+           angle=0.0, ratio=None, min_offset=None, max_offset=None):
+    """Create/replace the component's mate and solve it. Only the
+    non-default extras are stored, so a plain mate reads as it always
+    has."""
+    mate = dict(parent=str(parent_name), parent_anchor=str(parent_anchor),
+                anchor=str(child_anchor), offset=float(offset),
+                spin=float(spin))
+    if kind in KINDS and kind != "coincident":
+        mate["kind"] = kind
+    if align in ALIGNS and align != "opposed":
+        mate["align"] = align
+    if angle:
+        mate["angle"] = float(angle)
+    if ratio:
+        mate["ratio"] = float(ratio)
+    if min_offset is not None:
+        mate["min"] = float(min_offset)
+    if max_offset is not None:
+        mate["max"] = float(max_offset)
+    comp.params["mate"] = mate
     refresh(model)
     model.node_changed.emit(comp)
 
@@ -459,6 +545,50 @@ class AttachDialog(QDialog):
         row.addWidget(flip)
         form.addRow("Spin about axis:", spin_row)
 
+        # the other mate kinds (SolidWorks' concentric / angle / limit /
+        # gear mates), all deterministic extras on the same record
+        self.kind = QComboBox()
+        for name, label in (("coincident", "Coincident — anchors touch"),
+                            ("concentric", "Concentric — slides along "
+                                           "the axis"),
+                            ("angle", "Angle — a hinge about the edge")):
+            self.kind.addItem(label, name)
+        form.addRow("Mate:", self.kind)
+        self.align = QComboBox()
+        self.align.addItem("Face to face", "opposed")
+        self.align.addItem("Flush (same way)", "same")
+        form.addRow("Align:", self.align)
+        self.angle = QDoubleSpinBox()
+        self.angle.setRange(-360.0, 360.0)
+        self.angle.setDecimals(2)
+        self.angle.setSuffix(" °")
+        form.addRow("Hinge angle:", self.angle)
+        self.ratio = QDoubleSpinBox()
+        self.ratio.setRange(0.0, 1000.0)
+        self.ratio.setDecimals(3)
+        self.ratio.setSpecialValueText("none")
+        self.ratio.setToolTip("Gear mate: this part's spin follows the "
+                              "parent's spin times the ratio, reversed")
+        form.addRow("Gear ratio:", self.ratio)
+        limits = QWidget()
+        lrow = QHBoxLayout(limits)
+        lrow.setContentsMargins(0, 0, 0, 0)
+        self.limit_on = QCheckBox("Limit")
+        self.limit_min, self.limit_max = QDoubleSpinBox(), QDoubleSpinBox()
+        for box in (self.limit_min, self.limit_max):
+            box.setRange(-1e6, 1e6)
+            box.setDecimals(2)
+            box.setSuffix(" mm")
+            box.setEnabled(False)
+        self.limit_max.setValue(100.0)
+        self.limit_on.toggled.connect(self.limit_min.setEnabled)
+        self.limit_on.toggled.connect(self.limit_max.setEnabled)
+        lrow.addWidget(self.limit_on)
+        lrow.addWidget(self.limit_min)
+        lrow.addWidget(QLabel("to"))
+        lrow.addWidget(self.limit_max)
+        form.addRow("Offset range:", limits)
+
         buttons = QDialogButtonBox(QDialogButtonBox.Ok
                                    | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self._apply)
@@ -487,6 +617,16 @@ class AttachDialog(QDialog):
                 self.parent_anchor.setCurrentIndex(i)
             self.offset.setValue(float(mate.get("offset", 0.0)))
             self.spin.setValue(float(mate.get("spin", 0.0)))
+            i = self.kind.findData(mate.get("kind", "coincident"))
+            self.kind.setCurrentIndex(max(i, 0))
+            i = self.align.findData(mate.get("align", "opposed"))
+            self.align.setCurrentIndex(max(i, 0))
+            self.angle.setValue(float(mate.get("angle", 0.0) or 0.0))
+            self.ratio.setValue(float(mate.get("ratio", 0.0) or 0.0))
+            if mate.get("min") is not None or mate.get("max") is not None:
+                self.limit_on.setChecked(True)
+                self.limit_min.setValue(float(mate.get("min", -1e6)))
+                self.limit_max.setValue(float(mate.get("max", 1e6)))
         # live preview — connected after the pre-fill so opening the
         # dialog doesn't itself move anything
         self.parent_combo.currentIndexChanged.connect(self._preview)
@@ -494,6 +634,23 @@ class AttachDialog(QDialog):
         self.parent_anchor.currentIndexChanged.connect(self._preview)
         self.offset.valueChanged.connect(self._preview)
         self.spin.valueChanged.connect(self._preview)
+        self.kind.currentIndexChanged.connect(self._preview)
+        self.align.currentIndexChanged.connect(self._preview)
+        self.angle.valueChanged.connect(self._preview)
+        self.ratio.valueChanged.connect(self._preview)
+        self.limit_on.toggled.connect(self._preview)
+        self.limit_min.valueChanged.connect(self._preview)
+        self.limit_max.valueChanged.connect(self._preview)
+
+    def _extras(self):
+        """The mate options beyond the two anchors, as attach() kwargs."""
+        limited = self.limit_on.isChecked()
+        return dict(kind=self.kind.currentData(),
+                    align=self.align.currentData(),
+                    angle=self.angle.value(),
+                    ratio=self.ratio.value() or None,
+                    min_offset=self.limit_min.value() if limited else None,
+                    max_offset=self.limit_max.value() if limited else None)
 
     def _preview(self, *_args):
         """Apply the current choices immediately so the viewers show
@@ -505,7 +662,8 @@ class AttachDialog(QDialog):
                 or not target:
             return
         attach(self.model, self.comp, self.others[index].name,
-               child, target, self.offset.value(), self.spin.value())
+               child, target, self.offset.value(), self.spin.value(),
+               **self._extras())
 
     def _restore(self):
         """Put the original mate and placement back (Cancel)."""
@@ -546,7 +704,7 @@ class AttachDialog(QDialog):
                self.others[index].name,
                self.child_anchor.currentData(),
                self.parent_anchor.currentData(),
-               self.offset.value(), self.spin.value())
+               self.offset.value(), self.spin.value(), **self._extras())
         self.accept()
 
     def _detach(self):

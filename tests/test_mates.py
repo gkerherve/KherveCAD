@@ -297,3 +297,64 @@ def test_snap_tool_sees_a_coloured_instance(app):
     m.structure_changed.emit()
     names = [p.name for p, _tris in w._snap_groups(None)]
     assert names == [a.name, b.name]
+
+
+# ------------------------------------------------ the other mate kinds
+
+def test_flush_align_points_the_anchors_the_same_way(model):
+    base = _cube(model, "Base")
+    lid = _cube(model, "Lid", size=10.0)
+    mates.attach(model, lid, "Base", "Top", "Top", align="same")
+    pos, direction = _anchor_world(lid, "Top")
+    assert direction == pytest.approx([0.0, 0.0, 1.0], abs=1e-6)
+    assert pos == pytest.approx([10.0, 10.0, 20.0])     # flush on top
+
+
+def test_concentric_slides_and_a_drag_keeps_the_mate(model):
+    shaft = _cube(model, "Shaft")
+    ring = _cube(model, "Ring", size=10.0)
+    mates.attach(model, ring, "Shaft", "Bottom", "Top", kind="concentric",
+                 offset=5.0, min_offset=0.0, max_offset=30.0)
+    pos, _d = _anchor_world(ring, "Bottom")
+    assert pos == pytest.approx([10.0, 10.0, 25.0])
+    # the user drags it 12 mm up the axis: the slide follows, the mate
+    # stays, and the limit holds it at 30
+    ring.params["z"] = float(ring.params["z"]) + 12.0
+    assert mates.slide_to(model, ring) == pytest.approx(17.0)
+    ring.params["z"] = float(ring.params["z"]) + 100.0
+    assert mates.slide_to(model, ring) == pytest.approx(30.0)
+    mates.refresh(model)
+    assert mates.mate_of(ring) is not None
+    pos, _d = _anchor_world(ring, "Bottom")
+    assert pos[2] == pytest.approx(50.0)
+
+
+def test_angle_mate_hinges_about_the_edge(model):
+    base = _cube(model, "Base")
+    door = _cube(model, "Door", size=10.0)
+    mates.attach(model, door, "Base", "Bottom", "Front", kind="angle",
+                 angle=90.0)
+    # face to face on the front would point the door's bottom to +Y;
+    # turned a quarter about the front face's horizontal edge it points
+    # up or down instead
+    _pos, direction = _anchor_world(door, "Bottom")
+    assert abs(direction[1]) < 1e-6 and abs(abs(direction[2]) - 1) < 1e-6
+
+
+def test_gear_mate_follows_the_parent_spin(model):
+    frame = _cube(model, "Frame")
+    drive = _cube(model, "Drive", size=10.0)
+    driven = _cube(model, "Driven", size=10.0)
+    mates.attach(model, drive, "Frame", "Bottom", "Top", spin=30.0)
+    mates.attach(model, driven, "Drive", "Bottom", "Top", ratio=2.0)
+    assert driven.params["rz"] == pytest.approx(-60.0)   # 2 x 30, reversed
+    mates.attach(model, drive, "Frame", "Bottom", "Top", spin=45.0)
+    assert driven.params["rz"] == pytest.approx(-90.0)
+
+
+def test_plain_mates_store_no_extras(model):
+    base = _cube(model, "Base")
+    lid = _cube(model, "Lid")
+    mates.attach(model, lid, "Base", "Bottom", "Top")
+    assert set(mates.mate_of(lid)) == {"parent", "parent_anchor",
+                                       "anchor", "offset", "spin"}

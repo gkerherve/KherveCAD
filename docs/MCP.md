@@ -36,7 +36,10 @@ and a **picture of the 3D preview**.
   definition that compiles to its own OpenSCAD module; `add_instance`
   places another copy of it with its own placement and colour;
   `attach_parts` mates one part to another anchor-to-anchor, live, so
-  moving the parent moves the child. `list_anchors` gives the names —
+  moving the parent moves the child; `kind` concentric (slides along
+  the axis) or angle (a hinge), `align` same (flush), `ratio` (a gear
+  mate) and `min_offset`/`max_offset` (a limit) cover the other common
+  mates. `list_anchors` gives the names —
   every part has automatic bounding-box anchors plus any the user
   picked. `make_master` / `add_linked_copy` are the other kind of
   reuse. `insert_part` reaches the parametric library: CF/KF vacuum

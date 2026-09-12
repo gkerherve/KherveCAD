@@ -1138,9 +1138,23 @@ class McpToolExecutor:
                 raise ToolError(
                     f"'{part.name}' has no anchor {name!r} — call "
                     "list_anchors for its names.")
+        kind = params.get("kind") or "coincident"
+        align = params.get("align") or "opposed"
+        if kind not in mates.KINDS:
+            raise ToolError(f"Unknown mate kind {kind!r}: one of "
+                            f"{', '.join(mates.KINDS)}.")
+        if align not in mates.ALIGNS:
+            raise ToolError(f"Unknown align {align!r}: opposed or same.")
+
+        def number(key):
+            value = params.get(key)
+            return None if value is None else float(value)
         mates.attach(model, node, parent_name, child_anchor,
                      parent_anchor, float(params.get("offset", 0.0)),
-                     float(params.get("spin", 0.0)))
+                     float(params.get("spin", 0.0)), kind=kind,
+                     align=align, angle=float(params.get("angle", 0.0)),
+                     ratio=number("ratio"), min_offset=number("min_offset"),
+                     max_offset=number("max_offset"))
         return {"attached": node.name, "to": parent_name,
                 "placement": {k: node.params.get(k)
                               for k in model.PLACEMENT_KEYS}}
