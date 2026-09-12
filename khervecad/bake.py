@@ -100,6 +100,17 @@ NODE_TYPES = {
         icon="mdi.circle-multiple-outline",
         params=dict(levels=2),
         schema=[("levels", "Levels", "int", 1, 4)]),
+    "shell": dict(
+        label="Shell (hollow)", category=OPERATION,
+        icon="mdi.cup-outline",
+        params=dict(thickness=2.0, open="none", open_angle=30.0,
+                    detail=2.0),
+        schema=[("thickness", "Wall thickness (mm)", "float", 0.01, 1e4),
+                ("open", "Open side", "choice",
+                 ["none", "top", "bottom", "+x", "-x", "+y", "-y"], None),
+                ("open_angle", "Open faces within (°)", "float",
+                 1.0, 89.0),
+                ("detail", "Max edge (mm)", "float", 0.05, 1e4)]),
 }
 
 # the fillet (fillet.py) is a baked boolean rather than a baked mesh —
@@ -110,7 +121,7 @@ NODE_TYPES.update(_fillet.NODE_TYPES)
 TYPES = frozenset(NODE_TYPES)
 LEAVES = frozenset({"polyhedron", "loft"})
 WRAPPERS = frozenset({"sweep", "blend", "bend", "twist", "taper",
-                      "lattice", "subdivide", "fillet"})
+                      "lattice", "subdivide", "fillet", "shell"})
 
 #: wrappers whose surface is computed here and baked into the program,
 #: with their helper module's parameters (besides points and faces)
@@ -123,9 +134,11 @@ _BAKED = {
     "taper": [("axis", "z"), ("factor", 1), ("detail", 5)],
     "lattice": [("offsets", []), ("detail", 2)],
     "subdivide": [("levels", 1)],
+    "shell": [("thickness", 2), ("open", "none"), ("open_angle", 30),
+              ("detail", 2)],
 }
 #: parameters written as quoted OpenSCAD strings
-_CHOICES = {"axis", "toward"}
+_CHOICES = {"axis", "toward", "open"}
 #: what a deformer cannot take from the preview mesh: booleans and the
 #: rest are only approximated there, so baking them would bake a wrong
 #: shape into the program
@@ -340,6 +353,11 @@ def _compute(node, env) -> list:
     if t == "subdivide":
         return deform.loop_subdivide(src, int(num("levels", 1.0)))
     src = deform.split_long_edges(src, num("detail", 2.0))
+    if t == "shell":
+        from . import shell
+        return shell.shell(src, num("thickness", 2.0),
+                           str(p.get("open", "none")),
+                           num("open_angle", 30.0))
     axis = str(p.get("axis", "z"))
     if t == "bend":
         return deform.bend(src, axis, str(p.get("toward", "x")),
@@ -475,7 +493,11 @@ def _b_baked(kind):
         params = {}
         for key, _default in _BAKED[kind]:
             value = named.get(key, defaults[key])
-            if key in _CHOICES:
+            if key == "open":
+                from .shell import OPEN_CHOICES
+                params[key] = value if value in OPEN_CHOICES \
+                    else defaults[key]
+            elif key in _CHOICES:
                 params[key] = value if value in ("x", "y", "z") \
                     else defaults[key]
             elif key in ("offsets", "path"):
@@ -599,6 +621,19 @@ def _check_baked(node, env):
     p = node.params
     if t == "bend" and p.get("axis") == p.get("toward"):
         return "bend: the length axis and the bend direction must differ"
+    if t == "shell":
+        from . import mesh, shell
+        if str(p.get("open", "none")) not in shell.OPEN_CHOICES:
+            return "shell: open side must be one of " + ", ".join(
+                shell.OPEN_CHOICES)
+        thick = mesh.rv(p.get("thickness", 2.0), env, 2.0)
+        src = [tri for tri, _c, _s in
+               mesh._children_mesh(node, env, None, frozenset(), False)]
+        room = shell.smallest_extent(src)
+        if src and thick * 2 >= room:
+            return (f"shell: a {thick:g} mm wall each side needs more "
+                    f"than {room:g} mm, the part's smallest dimension "
+                    "— there is no room for a cavity")
     if t == "lattice":
         rows = p.get("offsets") or []
         if len(rows) != 8 or any(not isinstance(r, list) or len(r) != 3

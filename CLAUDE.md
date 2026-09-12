@@ -752,6 +752,22 @@ into a new module and import.
                        Pick edges re-enters it. MCP: `list_edges`
                        (chains with seed/ends/length/convex/closed) and
                        `fillet_edges` (by seed rows or chain indices).
+  - `shell.py`       — **shell / hollow** (Blender Solidify; Qt-free):
+                       `inner_surface` moves every welded vertex inward
+                       along its area-weighted normal by the wall
+                       thickness with the even-thickness 1/cos stretch
+                       (capped `MAX_STRETCH`), faces reversed; `shell`
+                       adds it to the outer surface or, with `open`
+                       (top/bottom/±x/±y within `open_angle`), drops
+                       the faces looking that way from both and bridges
+                       the rims — always one closed outward solid. A
+                       folded inner surface (no room) returns the solid;
+                       validation refuses `2·thickness ≥` the part's
+                       smallest extent first. Baked like the other
+                       `_BAKED` wrappers (`kcad_shell(thickness=, open=,
+                       open_angle=, detail=, points=, faces=)`), in the
+                       Deform & sculpt group; Examples ▸ Mechanical ▸
+                       Hollow cup.
   - `sdf.py`         — **smooth blend** geometry (Qt-free): the
                        primitives under a `blend` (sphere, cube,
                        cylinder, capsule, ellipsoid, rounded box —

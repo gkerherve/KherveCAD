@@ -156,7 +156,11 @@ supported subset:
   count=6, step=[dx,dy,dz], angle=360, axis="z", rise=0,
   counts=[nx,ny,nz]) { ... } repeats its children (a bolt circle: polar,
   angle 360 spreads count copies evenly, below 360 they span the angle;
-  a spiral stair: polar with rise). Prefer these to chains of hull().
+  a spiral stair: polar with rise); kcad_shell(thickness=2, open="top")
+  { ... } hollows a solid into an even-walled shell (open="none" for a
+  closed hollow); kcad_fillet(radius=2, kind="round",
+  edges=[[x1,y1,z1,x2,y2,z2],...]) { ... } rounds the edges listed
+  (their start and end points). Prefer these to chains of hull().
 Avoid: function definitions, children()/$children, use/include,
 recursion, and list comprehensions [for ...]. If the user needs those,
 tell them to open the file directly (KherveCAD keeps it as a raw

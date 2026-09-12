@@ -559,7 +559,15 @@ narrow the contents along an axis.</li>
 <li><b>Lattice</b> &mdash; move the eight corners of the bounding box and
 the shape follows smoothly.</li>
 <li><b>Subdivide</b> &mdash; smooths a blocky shape.</li>
+<li><b>Shell</b> &mdash; hollows a solid into a shell of even wall
+thickness (Blender's Solidify): set the <b>Wall thickness</b>, and
+<b>Open side</b> top / bottom / &plusmn;x / &plusmn;y to leave one side
+open &mdash; a cylinder with <i>open = top</i> is a cup. A wall too thick
+for the part leaves no room and turns the shell red. Examples &rsaquo;
+Mechanical &rsaquo; <i>Hollow cup</i>.</li>
 </ul>
+{figure("shell", "Shell: a cylinder hollowed to a 2 mm cup, open at "
+        "the top.")}
 <table><tr>
 <td>{figure("character_tulip", "Flowers &rsaquo; Tulip", 360)}</td>
 <td>{figure("character_oak", "Trees &rsaquo; Oak", 360)}</td>

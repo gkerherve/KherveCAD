@@ -158,8 +158,12 @@ are the organic solids; `kcad_pattern(kind = "linear" | "polar" | \
 0, counts = [nx, ny, nz]) { … }` repeats its children — a bolt circle \
 (polar, angle 360 spreads count copies evenly; below 360 they span the \
 angle), a row (linear), a spiral stair (polar with rise), a peg board \
-(grid) — with no loop variable to invent. Prefer a sweep to a chain of \
-hull()s.
+(grid) — with no loop variable to invent; `kcad_shell(thickness = 2, \
+open = "top") { … }` hollows a solid into an even-walled shell (a cup: \
+open = "top"; "none" for a closed hollow), and `kcad_fillet(radius = 2, \
+kind = "round", edges = [[x1, y1, z1, x2, y2, z2], ...]) { … }` rounds \
+the edges listed (get them from list_edges, or use fillet_edges). \
+Prefer a sweep to a chain of hull()s.
 - NAME EVERY PIECE YOU BUILD. End EVERY shape line — each cube(), \
 sphere(), cylinder(), capsule… — with a short comment saying which part \
 of the model it is: `cube([4, 4, 12]);  // Front-left leg`, \

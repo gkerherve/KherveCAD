@@ -283,6 +283,19 @@ TIPS = {
         [_SELECTION, "Click Subdivide.",
          "Levels 1–4: each level makes it smoother (and 4× heavier)."],
         None),
+    "shell": (
+        "Shell (hollow)",
+        "Turns a solid into a hollow shell of even wall thickness — a "
+        "cup, a case, a lid, a lighter print. One side can be left "
+        "open.",
+        [_SELECTION + " Pick the solid to hollow.",
+         "Click Shell.",
+         "Set the Wall thickness (mm).",
+         "Open side: none keeps it closed; top / bottom / ±x / ±y "
+         "removes the faces looking that way and joins the rims (a "
+         "cup: open = top)."],
+        "A wall thicker than half the part's smallest dimension leaves "
+        "no room for a cavity; the shell turns red and says so."),
     "union": (
         "Group (union)",
         "Joins the selection into one object, so it moves, colours and "

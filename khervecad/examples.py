@@ -282,6 +282,24 @@ def filleted_block() -> CadNode:
     return _root(block_part, boss_part)
 
 
+def hollow_cup() -> CadNode:
+    """A cup: a cylinder with a rounded lip, hollowed to a 2 mm wall and
+    left open at the top by one Shell node; and a closed hollow box."""
+    cup = CadNode("shell", "Shell [2 mm wall, open top]", dict(
+        thickness=2.0, open="top", open_angle=30.0, detail=4.0))
+    cup.add(_cyl("Cylinder [Cup body]", 30.0, 45.0, r2=26.0,
+                 segments=48))
+    box = CadNode("shell", "Shell [closed, 1.5 mm]", dict(
+        thickness=1.5, open="none", open_angle=30.0, detail=4.0))
+    box.add(_cube("Cube [Box]", 40.0, 30.0, 20.0))
+    cup_part = CadNode("component", "Cup", dict(color="#d9b382"))
+    cup_part.add(cup)
+    box_part = CadNode("component", "Box",
+                       dict(x=50.0, y=-15.0, color="#8fa9c9"))
+    box_part.add(box)
+    return _root(cup_part, box_part)
+
+
 def spur_gear() -> CadNode:
     """A single spur gear (module 3, 24 teeth) with a keyed-style bore —
     a for-loop stamps the teeth round a root disc."""
@@ -1304,6 +1322,7 @@ EXAMPLES = [
     ("Fan impeller", "Mechanical", fan_impeller),
     ("Pipe run & handrail (sweep)", "Mechanical", pipe_run),
     ("Filleted block (fillet edges)", "Mechanical", filleted_block),
+    ("Hollow cup (shell)", "Mechanical", hollow_cup),
     ("Bolt circle (Masters demo)", "Mechanical", bolt_circle),
     ("Bolt circle & stair (pattern)", "Mechanical", pattern_demo),
     ("Ch.2 · Wall anchor", "Projects", project_02_wall_anchor),
