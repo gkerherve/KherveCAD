@@ -851,6 +851,24 @@ into a new module and import.
                        `chain()` joins them (an outline that cannot
                        close = the mesh leaks there); `draw()` paints
                        the hatched section. Behind the `section` tool.
+  - `meshimport.py`  — **imported meshes** (`stl_import`, Qt-free):
+                       paths stay absolute in memory (preview,
+                       validation and the engine's temp-folder render
+                       all need that) but `relative_for_save` writes
+                       them relative to the `.kcad` when inside its
+                       folder, and `resolve_paths` (load_kcad, and
+                       import_scad — OpenSCAD reads import() beside the
+                       .scad) makes them absolute again, finding a
+                       missing file — even a Windows path read on a Mac
+                       — by name beside the document. `place` centres
+                       the mesh or stands it on the floor from its own
+                       bbox (rotation + scale applied); `set_scale` /
+                       `UNITS` fix a file drawn in cm, m or inches; the
+                       import shows `size_text` so wrong units are
+                       obvious. `mesh.stl_mesh` caches
+                       `STL_CACHE_FILES` parsed files (it used to keep
+                       one, so two imports re-parsed each other on every
+                       redraw).
   - `refimage.py`    — **reference images**: a picture on an axis plane
                        (lower-left (x, y), width mm, height from the
                        aspect, offset along the normal, opacity),
@@ -1115,7 +1133,12 @@ preview; the OpenSCAD engine's `import()` renders STL/OFF/3MF directly,
 while **OBJ is converted to a sibling `<stem>_from_obj.stl`** on import
 (OpenSCAD can't read OBJ) so the exact render works too. File > Open and
 **dragging** a file onto the window (or the Objects tree, which forwards
-it) open/import it; imported files land in Open Recent.
+it) open/import it; imported files land in Open Recent. The mesh node
+carries its own `rx/ry/rz` and uniform `scale` (compiled to
+`translate() rotate() scale() import()`, folded back by scadparse);
+paths are absolute in memory but saved relative to the `.kcad` when
+inside its folder, and right-click ▸ Imported mesh centres it, stands
+it on the floor or fixes its units — see `meshimport.py`.
 
 **Render pipeline**: any model change re-tessellates instantly
 (built-in preview) and schedules a debounced exact OpenSCAD render

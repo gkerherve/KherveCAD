@@ -295,7 +295,16 @@ default is the <b>Common segments ($fn)</b> box in the Main tab.</p>
 parametric flanges, fasteners with real threads, valves, glassware,
 furniture.</li>
 <li><b>File &rsaquo; Import Mesh</b> {K("Ctrl+Shift+I")} &mdash; STL, OBJ,
-OFF or 3MF files, or drag the file onto the window.</li>
+OFF or 3MF files, or drag the file onto the window. The part arrives as
+one Object and the status bar gives its size: an STL has no units, so a
+part drawn in inches or metres shows up far too small. Right-click it
+&rsaquo; <b>Imported mesh</b> to centre it, stand it on the floor, or
+say which unit the file was drawn in; its Properties also turn and scale
+it. It works like any other part: snap to its faces, colour it, and
+subtract it from a block (the OpenSCAD render cuts it exactly) to make a
+holder that fits it. Keep the mesh inside the document's folder and the
+.kcad stores it by a relative path, so the folder can be moved or shared
+as a whole.</li>
 <li><b>Insert &rsaquo; OpenSCAD code</b> &mdash; a block of raw OpenSCAD
 (e.g. a BOSL2 call) that the engine renders.</li>
 </ul>

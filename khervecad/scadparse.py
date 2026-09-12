@@ -30,6 +30,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
+import os
 import re
 
 from . import expr
@@ -1026,6 +1027,29 @@ def _fold_container(node: CadNode):
             node.remove(child)
             child.visible = node.visible and child.visible
             return child
+    if node.type in ("rotate", "scale") and len(node.children) == 1 \
+            and node.children[0].type == "stl_import":
+        # an import is emitted as `translate() rotate() scale() import()`
+        # — fold them back in innermost first, and only while what is
+        # already folded sits inside (a rotate of a translated mesh is
+        # not the same part)
+        child = node.children[0]
+        p, q = child.params, node.params
+        bare = all(_is_zero(p.get(k, 0.0))
+                   for k in ("x", "y", "z", "rx", "ry", "rz"))
+        folded = False
+        if bare and node.type == "rotate":
+            p["rx"], p["ry"], p["rz"] = (q.get(k, 0.0)
+                                         for k in ("x", "y", "z"))
+            folded = True
+        elif bare and p.get("scale", 1.0) == 1 and \
+                q.get("x") == q.get("y") == q.get("z"):
+            p["scale"] = q.get("x", 1.0)
+            folded = True
+        if folded:
+            node.remove(child)
+            child.visible = node.visible and child.visible
+            return child
     if len(node.children) == 1 and \
             node.children[0].type in ("component", "reference"):
         # a component's / instance's call is emitted as `color(...)
@@ -1128,6 +1152,10 @@ def import_scad(model, path: str):
     with open(path, encoding="utf-8") as fh:
         text = fh.read()
     root, warnings = parse_scad(text)
+    # OpenSCAD reads import("part.stl") beside the .scad, not beside
+    # wherever the app was started
+    from .meshimport import resolve_paths
+    resolve_paths(root, os.path.dirname(os.path.abspath(path)))
     model.root = root
     model.group_variables()               # gather loose top-level vars
     model.structure_changed.emit()

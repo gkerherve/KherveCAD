@@ -35,6 +35,8 @@ APPROXIMATED = {"difference", "intersection", "minkowski", "hull",
                 "offset", "fillet"}     # a fillet cuts convex edges
 
 _stl_cache = {}
+#: how many parsed mesh files stl_mesh keeps
+STL_CACHE_FILES = 8
 
 #: when set (int), primitive/revolve segment counts and extrude slices
 #: are capped to this — used for the fast, low-detail 2D silhouette.
@@ -468,21 +470,29 @@ def cylinder_mesh(p):
 
 
 def stl_mesh(p):
-    """Triangles of an imported mesh (STL/OBJ/OFF/3MF), cached by path
-    + mtime."""
+    """Triangles of an imported mesh (STL/OBJ/OFF/3MF) placed like
+    OpenSCAD's translate() rotate() scale() import(). The parsed files
+    are cached by path + mtime — several of them: with a one-file cache
+    a document holding two imports re-read both on every redraw."""
     path = str(p.get("path", "")).strip()
     if not path or not Path(path).exists():
         return []
     try:
         key = (path, Path(path).stat().st_mtime)
-        if key not in _stl_cache:
+        mesh = _stl_cache.pop(key, None)
+        if mesh is None:
             from .engine import parse_mesh
-            _stl_cache.clear()               # keep only the latest
-            _stl_cache[key] = parse_mesh(path)
-        mesh = _stl_cache[key]
+            mesh = parse_mesh(path)
+        _stl_cache[key] = mesh               # most recently used last
+        while len(_stl_cache) > STL_CACHE_FILES:
+            del _stl_cache[next(iter(_stl_cache))]
     except Exception:
         return []
-    m = mat_translate(p["x"], p["y"], p["z"])
+    s = p.get("scale", 1.0)
+    m = mat_mul(mat_translate(p["x"], p["y"], p["z"]),
+                mat_mul(mat_rotate(p.get("rx", 0.0), p.get("ry", 0.0),
+                                   p.get("rz", 0.0)),
+                        mat_scale(s, s, s)))
     return transform_mesh(m, mesh)
 
 

@@ -896,6 +896,31 @@ class ObjectTree(QTreeWidget):
                     lambda _=False, n=anchor["name"]:
                         anc.remove_user_anchor(self.model, comp, n))
 
+    def _mesh_menu(self, menu, meshes):
+        """Imported meshes — the Object row in Main or the mesh node
+        itself: centre it, stand it on the floor, fix its units."""
+        from . import meshimport as mi
+        from .anchors import doc_env
+        env = doc_env(self.model)
+        sub = menu.addMenu(icons.icon("mdi.file-import-outline"),
+                           "Imported mesh")
+        sub.addAction(
+            icons.icon("mdi.image-filter-center-focus"),
+            "Centre on origin",
+            lambda: [mi.place(self.model, n, env=env) for n in meshes])
+        sub.addAction(
+            icons.icon("mdi.arrow-collapse-down"),
+            "Centre and place on floor",
+            lambda: [mi.place(self.model, n, floor=True, env=env)
+                     for n in meshes])
+        units = sub.addMenu(icons.icon("mdi.ruler"),
+                            "File was drawn in")
+        for label, factor in mi.UNITS:
+            units.addAction(
+                label, lambda _=False, f=factor:
+                    [mi.set_scale(self.model, n, f) for n in meshes])
+        menu.addSeparator()
+
     def _masters_menu(self, menu, nodes, roots):
         """Context menu inside the Masters tab."""
         menu.addAction(
@@ -935,6 +960,10 @@ class ObjectTree(QTreeWidget):
             lambda: [self.model.set_visible(n, bool(hidden))
                      for n in nodes])
         menu.addSeparator()
+        from .meshimport import mesh_nodes
+        meshes = mesh_nodes(roots)
+        if meshes:
+            self._mesh_menu(menu, meshes)
         apply_menu = menu.addMenu(icons.icon("mdi.auto-fix"), "Apply")
         for op in APPLY_OPS:
             apply_menu.addAction(

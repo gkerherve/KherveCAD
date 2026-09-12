@@ -14,14 +14,19 @@ the Free Software Foundation, either version 3 of the License, or
 """
 
 import json
+import os
 
+from .meshimport import relative_for_save, resolve_paths
 from .model import NODE_TYPES, CadNode, DocumentModel
 
-FORMAT_VERSION = 6          # 4: "component" (Object) node type
+FORMAT_VERSION = 7          # 4: "component" (Object) node type
                             # 5: instances (reference->component) may
                             #    carry a "mate" record
                             # 6: organic/mesh node types; color nodes
                             #    carry a "material" (absent = Default)
+                            # 7: stl_import carries rx/ry/rz/scale, and
+                            #    its path is relative to the .kcad when
+                            #    the mesh is inside the document folder
 
 
 def node_to_dict(node: CadNode) -> dict:
@@ -51,6 +56,7 @@ def save_kcad(model: DocumentModel, path: str):
             "dimensions": model.dimensions,
             "references": model.reference_images,
             "tree": node_to_dict(model.root)}
+    relative_for_save(data["tree"], path)   # the folder travels whole
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=1)
 
@@ -61,6 +67,7 @@ def load_kcad(model: DocumentModel, path: str):
     if data.get("format") != "kcad":
         raise ValueError("not a KherveCAD document")
     model.root = node_from_dict(data["tree"])
+    resolve_paths(model.root, os.path.dirname(os.path.abspath(path)))
     # segment override — default on at 45 when the file predates it
     model.global_fn = int(data.get("global_fn", 45))
     model.global_fn_on = bool(data.get("global_fn_on", True))

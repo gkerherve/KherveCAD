@@ -1707,7 +1707,7 @@ class MainWindow(QMainWindow):
         # OpenSCAD's import() renders STL/OFF/3MF but not OBJ, so convert
         # an OBJ to a sibling STL (from the same triangles the preview
         # uses) and point the node at that, so the exact render works too.
-        use_path = path
+        use_path, note = path, ""
         if Path(path).suffix.lower() == ".obj":
             from .engine import parse_mesh, write_stl
             tris = parse_mesh(path)
@@ -1717,19 +1717,25 @@ class MainWindow(QMainWindow):
                 try:
                     write_stl(tris, str(stl_path), Path(path).stem)
                     use_path = str(stl_path)
-                    self.statusBar().showMessage(
-                        f"Converted OBJ → {stl_path.name} for rendering",
-                        6000)
+                    note = f" (converted to {stl_path.name} to render)"
                 except OSError:
                     pass                     # fall back to the .obj path
         # an imported mesh arrives as one Object holding the whole
         # structure — it moves, snaps and lists as a single part
         comp = self.model.new_component(Path(path).stem)
-        self.model.add_node("stl_import", dict(path=use_path),
-                            parent=comp, name=f"{Path(path).stem} mesh")
+        node = self.model.add_node("stl_import", dict(path=use_path),
+                                   parent=comp,
+                                   name=f"{Path(path).stem} mesh")
         self.builder.tree.select_nodes([comp])
         if not self.view3d.user_moved:
             self.view3d.fit()
+        # the size first: an STL has no units, and a part drawn in
+        # inches or metres is only obviously wrong once it is measured
+        from .meshimport import size_text
+        self.statusBar().showMessage(
+            f"Imported {Path(path).name}{size_text(node)}{note} — "
+            "right-click ▸ Imported mesh to centre it, stand it on the "
+            "floor or fix its units.", 12000)
 
     def export_scad(self):
         suggestion = str(Path(self._path).with_suffix(".scad")) \

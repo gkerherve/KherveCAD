@@ -284,11 +284,18 @@ NODE_TYPES = {
     "stl_import": dict(
         label="Import STL", category=SHAPE_3D,
         icon="mdi.file-import-outline",
-        params=dict(path="", x=0.0, y=0.0, z=0.0),
+        # translate([x,y,z]) rotate([rx,ry,rz]) scale(scale) import(path)
+        # — right-click ▸ Imported mesh centres it and fixes its units
+        params=dict(path="", x=0.0, y=0.0, z=0.0, rx=0.0, ry=0.0, rz=0.0,
+                    scale=1.0),
         schema=[("path", "STL file", "str", None, None),
                 ("x", "X", "float", -1e6, 1e6),
                 ("y", "Y", "float", -1e6, 1e6),
-                ("z", "Z", "float", -1e6, 1e6)]),
+                ("z", "Z", "float", -1e6, 1e6),
+                ("rx", "Rotate X°", "float", -360.0, 360.0),
+                ("ry", "Rotate Y°", "float", -360.0, 360.0),
+                ("rz", "Rotate Z°", "float", -360.0, 360.0),
+                ("scale", "Scale", "float", 1e-4, 1e4)]),
     "scad_raw": dict(
         # verbatim OpenSCAD, emitted straight into the program — for
         # library calls (BOSL2, ...) the built-in tessellator can't
@@ -867,9 +874,14 @@ class CadNode:
         if t == "assign":
             return f"{p['variable']} = {fmt(p['value'])}"
         if t == "stl_import":
-            return (f"translate([{fmt(p['x'])}, {fmt(p['y'])}, "
-                    f"{fmt(p['z'])}]) "
-                    f"import({scad_str(p['path'])}, convexity=10)")
+            out = (f"translate([{fmt(p['x'])}, {fmt(p['y'])}, "
+                   f"{fmt(p['z'])}]) ")
+            turn = [p.get(k, 0.0) for k in ("rx", "ry", "rz")]
+            if any(v != 0 for v in turn):       # an expression counts
+                out += f"rotate([{', '.join(fmt(v) for v in turn)}]) "
+            if p.get("scale", 1.0) != 1:
+                out += f"scale({fmt(p['scale'])}) "
+            return out + f"import({scad_str(p['path'])}, convexity=10)"
         if t in _organic.TYPES:
             return _organic.statement(self, fmt, _fn)
         raise ValueError(f"no codegen for type: {t}")   # pragma: no cover
@@ -1637,6 +1649,9 @@ def _check_node(node, env, errors):
             return "no STL file selected"
         if not Path(path).exists():
             return f"file not found: {path}"
+        scale = p.get("scale", 1.0)
+        if isinstance(scale, (int, float)) and scale <= 0:
+            return "scale must be above 0"
 
     if t in ("linear_extrude", "rotate_extrude"):
         if _contains_3d(node):
