@@ -40,6 +40,7 @@ the Free Software Foundation, either version 3 of the License, or
 from __future__ import annotations
 
 from . import bake
+from . import pattern
 
 #: model.SHAPE_3D / model.OPERATION (not imported: see the docstring)
 SHAPE_3D = "3d"
@@ -108,9 +109,11 @@ NODE_TYPES = {
 #: this module's own types; bake.py's join the registry below
 _OWN = frozenset(NODE_TYPES)
 NODE_TYPES.update(bake.NODE_TYPES)
+NODE_TYPES.update(pattern.NODE_TYPES)
 TYPES = frozenset(NODE_TYPES)
 LEAVES = frozenset({"capsule", "ellipsoid", "rounded_box"}) | bake.LEAVES
 WRAPPERS = frozenset({"symmetry", "joint"}) | bake.WRAPPERS
+WRAPPERS = WRAPPERS | pattern.WRAPPERS
 
 #: helper module per type, emitted in this order above the program
 _ORDER = ("capsule", "ellipsoid", "rounded_box", "symmetry", "joint")
@@ -176,6 +179,7 @@ def preamble(root) -> list:
            for n in root.walk()):
         lines.extend(HELPERS["material"].split("\n"))
     lines.extend(bake.preamble(root))
+    lines.extend(pattern.preamble(root))
     if not lines:
         return []
     return (["// KherveCAD helper modules (organic and mesh nodes)"]
@@ -189,6 +193,8 @@ def statement(node, fmt, fn) -> str:
     *fmt* and *fn* are model's formatter and effective-$fn helpers."""
     if node.type in bake.TYPES:
         return bake.statement(node, fmt, fn)
+    if node.type in pattern.TYPES:
+        return pattern.statement(node, fmt, fn)
     p = node.params
     t = node.type
 
@@ -299,6 +305,7 @@ BUILDERS = {
     "kcad_joint": _b_joint,
 }
 BUILDERS.update(bake.BUILDERS)
+BUILDERS.update(pattern.BUILDERS)
 
 
 def _b_material(parser, positional, named):
@@ -342,6 +349,8 @@ def check(node, env):
     from . import expr
     if node.type in bake.TYPES:
         return bake.check(node, env)
+    if node.type in pattern.TYPES:
+        return pattern.check(node, env)
     p = node.params
 
     def val(key, default=0.0):
@@ -380,6 +389,8 @@ def tess(node, env, color, sel, selected):
     from . import geom3d, mesh
     if node.type in bake.TYPES:
         return bake.tess(node, env, color, sel, selected)
+    if node.type in pattern.TYPES:
+        return pattern.tess(node, env, color, sel, selected)
     t = node.type
     p = mesh.rp(node, env)
     if t in WRAPPERS:

@@ -350,6 +350,9 @@ def collect_outlines(node: CadNode, env=None):
         for child in branch:
             outlines.extend(collect_outlines(child, env))
         return outlines
+    if node.type == "pattern":
+        from . import pattern
+        return pattern.outlines(node, env)
     outlines.extend(_children_outlines(node, env))
     return outlines
 

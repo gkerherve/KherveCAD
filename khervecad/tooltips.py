@@ -438,6 +438,21 @@ TIPS = {
                   "Claude, Mistral or Ollama API key.", [],
                   "No key? AI ▸ Connect to Claude lets Claude Desktop "
                   "or Claude Code build here instead."),
+    "pattern": (
+        "Pattern (linear / polar / grid)",
+        "Repeats its contents as copies — in a row, round an axis, or "
+        "on a grid — like Blender's Array or a SolidWorks pattern. A "
+        "bolt circle, a row of holes, a spiral stair, a peg board.",
+        ["Select what to repeat and click Pattern (or click with nothing "
+         "selected and drag objects into the empty pattern).",
+         "Choose the Kind: linear (Count copies at Step X/Y/Z), polar "
+         "(Count copies turned about the Axis over Angle°) or grid "
+         "(Count X/Y/Z at Step X/Y/Z).",
+         "Polar: Angle 360 spreads the copies evenly round the circle; "
+         "below 360 they span the angle, first at 0°, last at Angle. "
+         "Rise per copy lifts each one along the axis — a helix."],
+        "Every field takes an expression, so a pattern inside a loop can "
+        "read the loop variable. Capped at 1000 copies."),
 }
 
 #: the operation families of the main toolbar: key -> (title, blurb)

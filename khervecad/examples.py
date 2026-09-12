@@ -397,6 +397,49 @@ def bolt_circle() -> CadNode:
     return _root(masters, disc, ring)
 
 
+def _pattern(name, kind, child, **params) -> CadNode:
+    settings = dict(kind=kind, count=4, dx=20.0, dy=0.0, dz=0.0,
+                    angle=360.0, axis="z", count_x=3, count_y=3, count_z=1)
+    settings.update(params)
+    node = CadNode("pattern", name, settings)
+    node.add(child)
+    return node
+
+
+def pattern_demo() -> CadNode:
+    """The Pattern tool, one of each kind: a polar pattern drops six
+    library M6 bolts round a flange (no loop variable to invent), a
+    polar pattern with a rise winds a spiral stair up a column, a
+    linear pattern with a Z step makes a straight stair, and a grid
+    pattern stands pegs on a board."""
+    flange = CadNode("union", "Bolted flange")
+    flange.add(_color("Flange disc", "#8d97a3",
+                      _cyl("Cylinder [Flange disc]", 42, 6, segments=96)))
+    flange.add(_color("Bolts", "#c9a227", _pattern(
+        "Pattern [Bolt circle]", "polar",
+        _place(_bolt("M6", 16), x=30, z=6), count=6, angle=360.0,
+        axis="z")))
+    spiral = CadNode("union", "Spiral stair", dict(x=130.0))
+    spiral.add(_color("Column", "#7a9cc6",
+                      _cyl("Cylinder [Column]", 6, 80, segments=48)))
+    spiral.add(_color("Steps", "#d9b382", _pattern(
+        "Pattern [Spiral steps]", "polar",
+        _cube("Cube [Step]", 30, 10, 4, x=6, y=-5), count=10,
+        angle=360.0, axis="z", dz=7.5)))
+    straight = CadNode("union", "Straight stair", dict(y=90.0))
+    straight.add(_color("Steps", "#b8bcc2", _pattern(
+        "Pattern [Straight steps]", "linear",
+        _cube("Cube [Step]", 12, 30, 6), count=8, dx=10.0, dz=6.0)))
+    board = CadNode("union", "Peg board", dict(x=110.0, y=80.0))
+    board.add(_color("Board", "#a0785a",
+                     _cube("Cube [Board]", 60, 45, 4)))
+    board.add(_color("Pegs", "#e3d3b0", _pattern(
+        "Pattern [Pegs]", "grid",
+        _cyl("Cylinder [Peg]", 2, 12, x=7.5, y=7.5, z=4, segments=24),
+        count_x=4, count_y=3, count_z=1, dx=15.0, dy=15.0, dz=0.0)))
+    return _root(flange, spiral, straight, board)
+
+
 def _color(name, hex_color, child) -> CadNode:
     c = CadNode("color", name, dict(color=hex_color, alpha=1.0))
     c.add(child)
@@ -1262,6 +1305,7 @@ EXAMPLES = [
     ("Pipe run & handrail (sweep)", "Mechanical", pipe_run),
     ("Filleted block (fillet edges)", "Mechanical", filleted_block),
     ("Bolt circle (Masters demo)", "Mechanical", bolt_circle),
+    ("Bolt circle & stair (pattern)", "Mechanical", pattern_demo),
     ("Ch.2 · Wall anchor", "Projects", project_02_wall_anchor),
     ("Ch.3 · Window stopper", "Projects", project_03_window_stopper),
     ("Ch.4 · Clock movement", "Projects", project_04_clock_movement),

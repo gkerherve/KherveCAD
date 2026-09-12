@@ -152,7 +152,11 @@ supported subset:
   scale=1, wall=0, closed=false) { 2D profile } drives a profile along
   a 3D path (pipes with wall>0, handrails, springs, O-rings with
   closed=true); kcad_loft(sections=[[x,y,z,rx,ry],...]) is a tube
-  through elliptical sections. Prefer these to chains of hull().
+  through elliptical sections; kcad_pattern(kind="linear"|"polar"|"grid",
+  count=6, step=[dx,dy,dz], angle=360, axis="z", rise=0,
+  counts=[nx,ny,nz]) { ... } repeats its children (a bolt circle: polar,
+  angle 360 spreads count copies evenly, below 360 they span the angle;
+  a spiral stair: polar with rise). Prefer these to chains of hull().
 Avoid: function definitions, children()/$children, use/include,
 recursion, and list comprehensions [for ...]. If the user needs those,
 tell them to open the file directly (KherveCAD keeps it as a raw

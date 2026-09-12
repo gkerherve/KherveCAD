@@ -505,10 +505,23 @@ def shot_fillet(win):
     save(view.grab(), "fillet", 900)
 
 
+def shot_pattern(win):
+    load(win, "Bolt circle & stair (pattern)")
+    wait_exact(win)
+    view = win.view3d
+    view.stage = False
+    view.user_moved = False
+    view.yaw, view.pitch = 140.0, 26.0
+    view.fit()
+    view.distance *= 1.2          # the near stair overhangs a tight fit
+    finish_3d(win)
+    save(view.grab(), "pattern", 900)
+
+
 SHOTS = [shot_window, shot_toolbars, shot_tutorial, shot_tabs,
          shot_named_rows, shot_sketch, shot_styles, shot_character,
          shot_attach, shot_dialogs, shot_vibe, shot_stage, shot_sweep,
-         shot_fillet]
+         shot_fillet, shot_pattern]
 
 
 def main(only=()):

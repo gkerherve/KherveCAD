@@ -64,7 +64,7 @@ OPERATION_GROUPS = [
     ("deform", ["blend", "bend", "twist", "taper", "lattice",
                 "subdivide"]),
     ("character", ["symmetry", "joint"]),
-    ("logic", ["for_loop", "while_loop", "if_else"]),
+    ("logic", ["for_loop", "while_loop", "if_else", "pattern"]),
 ]
 OPERATIONS = [op for _key, ops in OPERATION_GROUPS for op in ops]
 

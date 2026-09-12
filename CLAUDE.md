@@ -901,6 +901,31 @@ into a new module and import.
                        silently; workers are C++-owned (`_launch`) so
                        closing the window mid-check cannot destroy a
                        running QThread.
+  - `pattern.py`     — the **Pattern** wrapper (Blender's Array,
+                       SolidWorks' linear/circular pattern; Repeat &
+                       logic family): `kind` linear (`count` copies at
+                       step `dx dy dz`), polar (`count` copies about
+                       `axis` through the origin over `angle` — 360 or
+                       more spreads them at `angle·i/count` so the last
+                       never lands on the first, below 360 they SPAN it
+                       at `angle·i/(count-1)`; `dz` is the rise per copy
+                       along the axis, so a spring or spiral stair is
+                       one pattern) or grid (`count_x/y/z` at the step).
+                       Registered from organic.py like bake.py; compiles
+                       to ONE `kcad_pattern(kind=, count=, step=, angle=,
+                       axis=, rise=, counts=) { children }` call whose
+                       helper is real OpenSCAD (`children()` + for
+                       loops, nothing baked), so every number may be an
+                       expression or loop variable and `build` re-imports
+                       it losslessly. `matrices()` is the preview's copy
+                       of the helper's rules (keep in step — the engine
+                       parity test compares extent and volume); `tess`
+                       unrolls the children's mesh per copy, `outlines`
+                       does the same for 2D content inside an extrude
+                       (hooked from `mesh.collect_outlines`). `check`
+                       caps a pattern at `MAX_COPIES` (1000) and needs
+                       every count ≥ 1. Examples ▸ Mechanical ▸ Bolt
+                       circle & stair (pattern).
 - `docs/MCP.md` — how to connect an assistant, what the 39 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).

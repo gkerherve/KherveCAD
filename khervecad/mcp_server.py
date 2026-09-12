@@ -153,7 +153,13 @@ z], ...], smooth = 3, twist = 0, scale = 1, wall = 0, closed = false) \
 0 hollows it), handrails, cable runs, springs, O-rings (closed = true); \
 `kcad_loft(sections = [[x, y, z, rx, ry], ...])` is a tube through \
 elliptical sections; kcad_capsule / kcad_ellipsoid / kcad_rounded_box \
-are the organic solids. Prefer a sweep to a chain of hull()s.
+are the organic solids; `kcad_pattern(kind = "linear" | "polar" | \
+"grid", count = 6, step = [dx, dy, dz], angle = 360, axis = "z", rise = \
+0, counts = [nx, ny, nz]) { … }` repeats its children — a bolt circle \
+(polar, angle 360 spreads count copies evenly; below 360 they span the \
+angle), a row (linear), a spiral stair (polar with rise), a peg board \
+(grid) — with no loop variable to invent. Prefer a sweep to a chain of \
+hull()s.
 - NAME EVERY PIECE YOU BUILD. End EVERY shape line — each cube(), \
 sphere(), cylinder(), capsule… — with a short comment saying which part \
 of the model it is: `cube([4, 4, 12]);  // Front-left leg`, \

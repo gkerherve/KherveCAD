@@ -88,6 +88,7 @@ WRAP_TYPES = [
     "mirror", "offset", "projection", "color", "for_loop",
     "while_loop", "if_else", "component", "symmetry", "joint", "sweep",
     "blend", "bend", "twist", "taper", "lattice", "subdivide",
+    "pattern",
 ]
 
 

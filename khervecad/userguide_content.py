@@ -425,7 +425,23 @@ update <code>x * 2</code>).</li>
 and its <i>Else</i> row otherwise &mdash; switch features on and off
 with a variable, or alternate parts inside a loop with <code>i % 2 ==
 0</code>.</li>
+<li><b>Pattern</b> repeats its contents as copies without a loop
+variable &mdash; Blender's Array modifier, SolidWorks' linear and
+circular patterns. <i>Linear</i> places <i>Count</i> copies at
+<i>Step X/Y/Z</i> (a row of holes; set Step Z too for a straight
+stair). <i>Polar</i> turns them about the <i>Axis</i>: with
+<i>Angle</i> 360 the copies are spread evenly round the circle
+(<code>360 &middot; i / count</code> &mdash; a bolt circle); below 360
+they <b>span</b> the angle, the first at 0&deg; and the last at
+<i>Angle</i> (<code>angle &middot; i / (count &minus; 1)</code> &mdash;
+five ribs over 90&deg;); <i>Rise per copy</i> lifts each copy along the
+axis, so a spring or a spiral stair is one pattern. <i>Grid</i> makes
+<i>Count X &times; Y &times; Z</i> copies at the step. Every field takes
+an expression. In the program it is one
+<code>kcad_pattern(&hellip;) {{ &hellip; }}</code> call.</li>
 </ul>
+{figure("pattern", "One pattern each: a polar bolt circle, a spiral "
+        "stair (polar with a rise), a straight stair and a peg grid.")}
 <p>With objects selected, these wrap them; with nothing selected they
 add an empty node to drag objects into. The <b>Examples &rsaquo;
 Learn</b> menu has a numbered tutorial for each.</p>
