@@ -452,6 +452,14 @@ class MainWindow(QMainWindow):
             sub.addAction(
                 spec["label"],
                 lambda _=False, pid=part_id: self._insert_library_part(pid))
+        from . import lego_convert
+        menu.addSeparator()
+        menu.addAction(icons.icon("mdi.toy-brick-plus-outline"),
+                       "Convert Selection to Lego...",
+                       lambda: lego_convert.convert_to_lego(self))
+        menu.addAction(icons.icon("mdi.cube-outline"),
+                       "Fuse Lego into One Solid",
+                       lambda: lego_convert.fuse_lego(self))
 
     def _build_examples_menu(self, menubar):
         """An Examples menu of complete demo models; picking one replaces

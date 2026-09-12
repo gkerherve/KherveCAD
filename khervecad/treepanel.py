@@ -1008,6 +1008,16 @@ class ObjectTree(QTreeWidget):
                        "Duplicate", lambda: [self.model.duplicate(n)
                                              for n in roots])
         win = self.window()
+        if hasattr(win, "view3d") and len(roots) == 1:     # lego_convert
+            from . import lego_convert
+            menu.addSeparator()
+            menu.addAction(
+                icons.icon("mdi.toy-brick-plus-outline"),
+                "Convert to Lego...",
+                lambda: lego_convert.convert_to_lego(win, roots[0]))
+            menu.addAction(
+                icons.icon("mdi.cube-outline"), "Fuse Lego into one solid",
+                lambda: lego_convert.fuse_lego(win, roots[0]))
         if hasattr(win, "view3d"):              # Analyse (analysis_dialog)
             from .analysis_dialog import open_analysis
             menu.addSeparator()
