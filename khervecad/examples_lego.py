@@ -294,7 +294,66 @@ def lego_house() -> CadNode:
     return _root(s.to_node("House"))
 
 
+# Figures in the Minecraft style, two studs to a Minecraft pixel: a 4x4
+# head, a 4x2 body, 2x2 arms and legs, the face on the front (-Y) row of
+# the head. They stand on a patch of grass, facing -Y.
+
+def _grass(s, w=10, d=6):
+    """A patch of grass plates under a figure; returns its top."""
+    base = {}
+    box(base, 0, w - 1, 0, d - 1, 0, 0, ("Bright green", "Grass"))
+    s.add_voxels(base, height=PLATE_H)
+    return PLATE_H
+
+
+def _face(v, k, colours):
+    """One row of the face, left to right as you look at it."""
+    for x, name in zip(range(3, 7), colours):
+        v[(x, 1, k)] = (name, "Face")
+
+
+def _legs(v, shoe, leg, top_k):
+    """Two 2x2 legs — separate bricks, so the seam between them shows —
+    on shoes, up to layer *top_k*."""
+    for x0, side in ((3, "Left leg"), (5, "Right leg")):
+        box(v, x0, x0 + 1, 2, 3, 0, 0, (shoe, side))
+        box(v, x0, x0 + 1, 2, 3, 1, top_k, (leg, side))
+
+
+def lego_man() -> CadNode:
+    """A brick-built man in the Minecraft Steve style, 14 bricks tall:
+    brown hair, a turquoise shirt with an open collar, blue trousers,
+    and a diamond pickaxe in his hand."""
+    s = Scene(seed=11)
+    z0 = _grass(s)
+    skin, hair, shirt = "Nougat", "Dark brown", "Dark turquoise"
+    v = {}
+    _legs(v, "Dark bluish grey", "Blue", 4)
+    box(v, 3, 6, 2, 3, 5, 9, (shirt, "Body"))
+    box(v, 4, 5, 2, 2, 9, 9, (skin, "Body"))               # the collar
+    for x0 in (1, 7):
+        box(v, x0, x0 + 1, 2, 3, 5, 7, (skin, "Arms"))
+        box(v, x0, x0 + 1, 2, 3, 8, 9, (shirt, "Arms"))     # sleeves
+    box(v, 3, 6, 1, 4, 10, 12, (skin, "Head"))
+    box(v, 3, 6, 1, 4, 13, 13, (hair, "Hair"))
+    box(v, 3, 6, 4, 4, 10, 12, (hair, "Hair"))             # the back
+    for x in (3, 6):
+        box(v, x, x, 2, 3, 12, 12, (hair, "Hair"))         # over the ears
+    _face(v, 12, [hair] * 4)
+    _face(v, 11, ["White", "Blue", "Blue", "White"])
+    _face(v, 10, [skin, "Reddish brown", "Reddish brown", skin])
+    # a diamond pickaxe, its handle just in front of the hand; the head
+    # sits against the bare forearm (at the sleeve its azure vanished
+    # into the turquoise shirt)
+    box(v, 8, 8, 1, 1, 2, 6, ("Reddish brown", "Pickaxe"))
+    box(v, 6, 9, 1, 1, 7, 7, ("Medium azure", "Pickaxe"))
+    v[(6, 1, 6)] = v[(9, 1, 6)] = ("Medium azure", "Pickaxe")
+    s.add_voxels(v, z0=z0)
+    return _root(s.to_node("Man"))
+
+
 EXAMPLES.extend([
     ("Minecraft tower", "Lego", lego_minecraft_tower),
     ("House", "Lego", lego_house),
+    ("Man (Minecraft style)", "Lego", lego_man),
 ])
