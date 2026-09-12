@@ -1008,6 +1008,17 @@ class ObjectTree(QTreeWidget):
                        "Duplicate", lambda: [self.model.duplicate(n)
                                              for n in roots])
         win = self.window()
+        if len(roots) == 1 and roots[0].type == "sheet_metal":
+            from . import sheetmetal_ui
+            menu.addSeparator()
+            menu.addAction(icons.icon("mdi.arrow-expand-horizontal"),
+                           "Unfold (flat pattern sketch)",
+                           lambda: sheetmetal_ui.unfold(self.window(),
+                                                        roots[0]))
+            menu.addAction(icons.icon("mdi.file-export-outline"),
+                           "Export flat pattern DXF...",
+                           lambda: sheetmetal_ui.export_flat(
+                               self.window(), roots[0]))
         if hasattr(win, "view3d") and len(roots) == 1:     # lego_convert
             from . import lego_convert
             menu.addSeparator()

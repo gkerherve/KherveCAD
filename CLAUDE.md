@@ -1142,6 +1142,26 @@ into a new module and import.
                        silently; workers are C++-owned (`_launch`) so
                        closing the window mid-check cannot destroy a
                        running QThread.
+  - `sheetmetal.py`  — **Sheet metal** (Insert ▸ Sheet metal part; Qt-
+                       free, registered from organic.py like pattern):
+                       a `sheet_metal` leaf — base plate, thickness,
+                       inside bend radius, K-factor, and a flange
+                       length + angle on each edge (n/e/s/w; a negative
+                       angle bends down). Compiles to ONE `kcad_sheet(
+                       size=, t=, r=, k=, flanges=[[len, angle] x4])`
+                       call whose helper is real OpenSCAD (the bend
+                       profile — outer arc, leg, inner arc — as a
+                       polygon, `rotate([90,0,0]) linear_extrude` along
+                       the edge, then the SAME per-edge translate/rotate
+                       the preview uses; a parity test pins the two).
+                       `flat_pattern` unfolds with the bend allowance
+                       `(r + K t)·θ` and the outer setback `(r + t)
+                       tan(θ/2)`, one cross-shaped outline plus bend
+                       lines; `flat_dxf` writes CUT/BEND layers.
+                       `sheetmetal_ui.py` is the tree's right-click
+                       Unfold (a flat blank Object beside the part) and
+                       Export flat pattern DXF. One bend per edge, no
+                       reliefs or hems — by design.
   - `pattern.py`     — the **Pattern** wrapper (Blender's Array,
                        SolidWorks' linear/circular pattern; Repeat &
                        logic family): `kind` linear (`count` copies at

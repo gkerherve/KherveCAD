@@ -448,6 +448,16 @@ axis, so a spring or a spiral stair is one pattern. <i>Grid</i> makes
 <i>Count X &times; Y &times; Z</i> copies at the step. Every field takes
 an expression. In the program it is one
 <code>kcad_pattern(&hellip;) {{ &hellip; }}</code> call.</li>
+<li><b>Sheet metal part</b> (Insert menu) is a plate with a bent
+<b>flange</b> on any of its four edges: give each edge a length and a
+bend angle (negative bends down), plus the sheet's thickness, inside
+bend radius and <b>K-factor</b>. Right-click it &rsaquo; <b>Unfold</b>
+lays the <b>flat pattern</b> out beside it &mdash; the blank with the
+bend allowance <code>(r + K&middot;t)&middot;&theta;</code> in each bend
+and the bend lines marked, and the status bar gives the blank size
+&mdash; and <b>Export flat pattern DXF</b> writes it (CUT and BEND
+layers) for a laser cutter or a press brake. One bend per edge; a box,
+a tray, a bracket, a channel or a U comes straight out of it.</li>
 </ul>
 {figure("pattern", "One pattern each: a polar bolt circle, a spiral "
         "stair (polar with a rise), a straight stair and a peg grid.")}

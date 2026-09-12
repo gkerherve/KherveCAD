@@ -269,7 +269,7 @@ class MainWindow(QMainWindow):
                               "Ctrl+L")
         insert_menu.addSeparator()
         for control in ("for_loop", "while_loop", "if_else", "assign",
-                        "stl_import", "scad_raw"):
+                        "stl_import", "scad_raw", "sheet_metal"):
             spec = NODE_TYPES[control]
             insert_menu.addAction(
                 icons.icon(spec["icon"]), spec["label"],
