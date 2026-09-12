@@ -978,6 +978,21 @@ class ObjectTree(QTreeWidget):
         menu.addAction(icons.icon("mdi.content-duplicate"),
                        "Duplicate", lambda: [self.model.duplicate(n)
                                              for n in roots])
+        win = self.window()
+        if hasattr(win, "view3d"):              # Analyse (analysis_dialog)
+            from .analysis_dialog import open_analysis
+            menu.addSeparator()
+            menu.addAction(icons.icon("mdi.scale-balance"),
+                           "Mass properties...",
+                           lambda: open_analysis(win, "mass", roots))
+            menu.addAction(icons.icon("mdi.printer-3d-nozzle-outline"),
+                           "Check for 3D printing...",
+                           lambda: open_analysis(win, "print", roots))
+            menu.addAction(icons.icon("mdi.set-center"),
+                           "Check interference...",
+                           lambda: open_analysis(win, "interference",
+                                                 roots))
+            menu.addSeparator()
         if len(roots) == 1:
             menu.addAction(
                 icons.icon("mdi.link-variant"),

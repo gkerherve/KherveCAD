@@ -770,6 +770,49 @@ is not replaced automatically: the update window offers the download
 page instead.</p>
 """),
 
+        ("checking", "Checking a part", f"""
+<p>The <b>Analyse</b> menu (and the right-click menu of the tree) checks a
+part the way a slicer or a CAD package would, before you print or
+send it. Each window stays open while you fix things; <b>Check again</b>
+re-runs it.</p>
+<h3>Mass properties</h3>
+<p>Volume, surface area, size, centre of mass and bounding box of the
+selected parts (or the whole document), plus the <b>mass</b> for a
+chosen material (PLA, PETG, ABS, resin, aluminium, steel&hellip;), its
+<b>cost</b> at your price per kilogram, and a <i>rough</i> print time.
+The mass is for a solid part; a print with infill weighs less.</p>
+<h3>Check for 3D printing</h3>
+<p>Four checks, each <span style='color:#2e8b57'><b>PASS</b></span>,
+<span style='color:#d08a00'><b>WARN</b></span> or
+<span style='color:#c0392b'><b>FAIL</b></span>:</p>
+<ul>
+<li><b>Watertight</b> &mdash; the surface is closed and consistently
+wound. An open edge means a slicer may fill the wrong side or drop the
+part; the report says where the first one is.</li>
+<li><b>Overhangs</b> &mdash; faces looking down more than the limit (45°
+by default) need supports. Re-orient the part, add a chamfer under the
+overhang, or accept supports.</li>
+<li><b>Wall thickness</b> &mdash; walls thinner than the minimum (0.8 mm,
+two extrusion widths) may not print or will snap. Thicken them, or use
+a finer nozzle.</li>
+<li><b>Footprint</b> &mdash; a tall part on a small base tips or peels
+off the plate: lay it flat or add a brim.</li>
+</ul>
+<p>Tick <b>Show overhangs and thin walls on the model</b> to see the
+offending faces tinted in the 3D view.</p>
+{figure("print_check", "Check for 3D printing on a T-shaped part: the "
+        "underside of the top is an overhang.")}
+<h3>Check interference</h3>
+<p>Do any two parts overlap? Select two or more parts (or nothing, for
+every part in Main) and each pair is reported as <b>clear</b>,
+<b>INTERSECT</b> (with a crossing point) or <b>INSIDE / CONTAINS</b>
+(one sits wholly inside the other). Two parts that only touch are
+clear. Run it after snapping or moving parts.</p>
+<p class='tip'><i>Tip:</i> all three work on the mesh the 3D view
+shows. Until the exact render lands, a part with a Difference shows its
+holes uncut and the figures say so.</p>
+"""),
+
         ("shortcuts", "Keyboard shortcuts", f"""
 <p>On a Mac, {K("Ctrl")} is the {K("&#8984; Cmd")} key.</p>
 <table>

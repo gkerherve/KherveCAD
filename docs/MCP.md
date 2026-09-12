@@ -52,6 +52,13 @@ and a **picture of the 3D preview**.
   folder from the open model: STL, 3MF, the parametric .scad, the
   .kcad project, preview renders and a description the assistant
   writes. See below — it prepares the upload, it does not perform it.
+- **Checking** — `mass_properties` (volume, area, centre of mass, box,
+  mass and cost for a material, a rough print time),
+  `check_printability` (watertight, overhangs, thin walls, footprint —
+  pass / warn / fail with plain messages), `check_interference` (which
+  parts overlap, contain each other, or are clear), and `list_edges` /
+  `fillet_edges` for rounding chosen edges. All read-only except
+  `fillet_edges`.
 
 Each call is **one undo step**, so **Ctrl+Z in KherveCAD reverts a
 remote assistant's change** just like your own — and two calls are two

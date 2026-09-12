@@ -1030,6 +1030,54 @@ TOOLS = [
                                       "default 6."},
         }, ["node_id"]),
     },
+
+    # ── Checking ───────────────────────────────────────────────────
+    {
+        "name": "mass_properties",
+        "description": (
+            "Volume, surface area, centre of mass and bounding box of "
+            "nodes (mm), plus mass and material cost for a material "
+            "and a print-time estimate (rough). Without node_ids: the "
+            "whole scope. `approximate` flags a preview mesh with "
+            "uncut booleans."
+        ),
+        "input_schema": _obj({
+            "node_ids": _IDS,
+            "material": {"type": "string",
+                         "description": "PLA (default), PETG, ABS, ASA, "
+                                        "TPU, Nylon, Resin, Aluminium, "
+                                        "Steel, Brass, Titanium."},
+            "price_per_kg": {"type": "number",
+                             "description": "Default 20."},
+        }),
+    },
+    {
+        "name": "check_printability",
+        "description": (
+            "Blender's 3D-Print Toolbox in one call: watertight, "
+            "overhangs beyond overhang_deg (needs supports), walls "
+            "thinner than min_wall, and the footprint on the build "
+            "plate — each pass / warn / fail with a plain-language "
+            "message. Run it after building anything meant to be "
+            "printed and fix what it names."
+        ),
+        "input_schema": _obj({
+            "node_ids": _IDS,
+            "overhang_deg": {"type": "number", "description": "Default 45."},
+            "min_wall": {"type": "number", "description": "mm; default 0.8."},
+        }),
+    },
+    {
+        "name": "check_interference",
+        "description": (
+            "Do parts overlap? Every pair of the given nodes (default: "
+            "every visible top-level part in the assembly) is reported "
+            "as intersect, contains / inside, or clear, with the "
+            "overlap box and crossing points. Run it after placing or "
+            "mating parts."
+        ),
+        "input_schema": _obj({"node_ids": _IDS}),
+    },
 ]
 
 #: Name -> definition, for the executor and the access-level checks.

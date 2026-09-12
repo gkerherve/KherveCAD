@@ -768,6 +768,28 @@ into a new module and import.
                        open_angle=, detail=, points=, faces=)`), in the
                        Deform & sculpt group; Examples ▸ Mechanical ▸
                        Hollow cup.
+  - `analysis.py`    — **checking a part** (Qt-free): `mass_properties`
+                       (divergence-theorem volume, area, centroid,
+                       box), `mass`/`cost`/`print_time` (material table,
+                       a rough mm³/s model), `print_check` (watertight
+                       by edge pairing; overhang faces beyond the angle,
+                       plate faces excluded; thin walls by a ray from
+                       sampled face centroids through a `_Grid`, only
+                       as far as min_wall; footprint vs height) each
+                       pass/warn/fail with the faulting triangles, and
+                       `interference` (box reject, grid, edge-crosses-
+                       triangle via Möller-Trumbore, containment by ray
+                       parity: intersect / contains / inside / clear).
+  - `analysis_dialog.py` — the three non-modal **Analyse** windows
+                       (menu + tree context menu): `part_tris` gives
+                       the world mesh the views show (exact per-part
+                       meshes where rendered, `approximate` when
+                       booleans are uncut); the print check can tint
+                       the faulting faces through
+                       `View3D.set_highlight_mesh` and restores the
+                       selection highlight on close. MCP:
+                       `mass_properties`, `check_printability`,
+                       `check_interference` (read-only).
   - `sdf.py`         — **smooth blend** geometry (Qt-free): the
                        primitives under a `blend` (sphere, cube,
                        cylinder, capsule, ellipsoid, rounded box —
@@ -1136,6 +1158,9 @@ compatible.
   (OpenSCAD found / built-in preview).
 - **Window style**: Fusion as default; themes shared with the family
   (View > Theme).
+- **Analyse menu**: Mass properties, Check for 3D printing, Check
+  interference — on the selection, else the whole document / every
+  part in Main (`analysis_dialog.open_analysis`).
 - **Help menu**: User Guide (F1), **Check for Updates…**, a checkable
   **Check for Updates Automatically** (on by default; only an installed
   build checks by itself), About. See `updater.py`.

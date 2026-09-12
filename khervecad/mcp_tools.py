@@ -1563,3 +1563,101 @@ class McpToolExecutor:
                        "preview cannot cut a convex edge.")
         return out
 
+    # ── Checking ────────────────────────────────────────────────
+
+    _APPROX_NOTE = ("The mesh is the built-in preview, which only "
+                    "approximates booleans (a difference shows its first "
+                    "operand, holes uncut) until the exact render lands.")
+
+    def _check_nodes(self, params):
+        from . import analysis_dialog
+        ids = params.get("node_ids")
+        if ids:
+            nodes = self._nodes(ids)
+        else:
+            nodes = [n for n in self._scope().children
+                     if n.visible and n.type not in ("variables",
+                                                     "masters", "assign")]
+            if not nodes:
+                raise ToolError("Nothing to check — the scope is empty.")
+        tris, approx = analysis_dialog.part_tris(self._w, nodes)
+        if not tris:
+            raise ToolError("Those nodes have no geometry to check.")
+        return nodes, tris, approx
+
+    def _t_mass_properties(self, params) -> dict:
+        from . import analysis
+        nodes, tris, approx = self._check_nodes(params)
+        material = str(params.get("material") or analysis.DEFAULT_MATERIAL)
+        if material not in analysis.MATERIALS:
+            raise ToolError("Unknown material. Choose one of: "
+                            + ", ".join(analysis.MATERIALS))
+        price = float(params.get("price_per_kg") or analysis.DEFAULT_PRICE)
+        p = analysis.mass_properties(tris)
+        grams = analysis.mass(p["volume"], material)
+        out = {"nodes": [n.id for n in nodes],
+               "volume_mm3": round(p["volume"], 3),
+               "area_mm2": round(p["area"], 3),
+               "centre_of_mass": [round(v, 3) for v in p["centroid"]],
+               "min": [round(v, 3) for v in p["min"]],
+               "max": [round(v, 3) for v in p["max"]],
+               "size": [round(v, 3) for v in p["size"]],
+               "material": material, "mass_g": round(grams, 2),
+               "cost": round(analysis.cost(grams, price), 2),
+               "price_per_kg": price,
+               "print_time_h_rough": round(analysis.print_time(
+                   p["volume"]), 2),
+               "approximate": approx}
+        if approx:
+            out["note"] = self._APPROX_NOTE
+        return out
+
+    def _t_check_printability(self, params) -> dict:
+        from . import analysis
+        nodes, tris, approx = self._check_nodes(params)
+        report = analysis.print_check(
+            tris,
+            overhang_deg=float(params.get("overhang_deg")
+                               or analysis.DEFAULT_OVERHANG),
+            min_wall=float(params.get("min_wall")
+                           or analysis.DEFAULT_MIN_WALL))
+        out = {"nodes": [n.id for n in nodes], "summary": report["summary"],
+               "checks": report["checks"],
+               "overhang_fraction": round(report["overhang_fraction"], 4),
+               "thinnest_wall_mm": (None if report["thinnest"] is None
+                                    else round(report["thinnest"], 3)),
+               "plate_area_mm2": round(report["plate_area"], 2),
+               "height_mm": round(report["height"], 3),
+               "approximate": approx}
+        if approx:
+            out["note"] = self._APPROX_NOTE
+        return out
+
+    def _t_check_interference(self, params) -> dict:
+        from . import analysis, analysis_dialog
+        ids = params.get("node_ids")
+        if ids:
+            nodes = self._nodes(ids)
+        else:
+            nodes = [n for _name, n in analysis_dialog.assembly_parts(
+                self._w)]
+        if len(nodes) < 2:
+            raise ToolError("Give at least two nodes (or have two "
+                            "visible parts in the assembly).")
+        parts = []
+        approx = False
+        for n in nodes:
+            tris, a = analysis_dialog.part_tris(self._w, [n])
+            approx = approx or a
+            parts.append((n.name, tris))
+        pairs = analysis.interference(parts)
+        by_name = {n.name: n.id for n in nodes}
+        for p in pairs:
+            p["a_id"], p["b_id"] = by_name.get(p["a"]), by_name.get(p["b"])
+        out = {"pairs": pairs,
+               "overlapping": sum(1 for p in pairs if p["status"] != "clear"),
+               "approximate": approx}
+        if approx:
+            out["note"] = self._APPROX_NOTE
+        return out
+

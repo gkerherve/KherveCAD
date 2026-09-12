@@ -530,10 +530,30 @@ def shot_shell(win):
     save(view.grab(), "shell", 900)
 
 
+def shot_print_check(win):
+    """The print check on a T: the top's underside is an overhang."""
+    from khervecad.analysis_dialog import open_analysis
+    win.model.clear()
+    win._dirty = False
+    win.builder.setCurrentIndex(0)
+    stem = win.model.add_node("cube", dict(width=6.0, depth=6.0,
+                                           height=30.0, x=12.0, y=12.0))
+    win.model.add_node("cube", dict(width=30.0, depth=30.0, height=5.0,
+                                    z=30.0))
+    settle(300)
+    dlg = open_analysis(win, "print", nodes=list(win.model.root.children))
+    settle(300)
+    dlg.show_box.setChecked(True)
+    settle(300)
+    save(dlg.grab(), "print_check")
+    dlg.close()
+    settle(100)
+
+
 SHOTS = [shot_window, shot_toolbars, shot_tutorial, shot_tabs,
          shot_named_rows, shot_sketch, shot_styles, shot_character,
          shot_attach, shot_dialogs, shot_vibe, shot_stage, shot_sweep,
-         shot_fillet, shot_pattern, shot_shell]
+         shot_fillet, shot_pattern, shot_shell, shot_print_check]
 
 
 def main(only=()):

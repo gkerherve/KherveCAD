@@ -357,6 +357,19 @@ class MainWindow(QMainWindow):
             theme_group.addAction(act)
             theme_menu.addAction(act)
 
+        analyse_menu = m.addMenu("A&nalyse")
+        from .analysis_dialog import open_analysis
+        analyse_menu.addAction(
+            icons.icon("mdi.scale-balance"), "&Mass properties...",
+            lambda: open_analysis(self, "mass"))
+        analyse_menu.addAction(
+            icons.icon("mdi.printer-3d-nozzle-outline"),
+            "Check for 3D &printing...",
+            lambda: open_analysis(self, "print"))
+        analyse_menu.addAction(
+            icons.icon("mdi.set-center"), "Check &interference...",
+            lambda: open_analysis(self, "interference"))
+
         ai_menu = m.addMenu("&AI")
         mcp_act = ai_menu.addAction("&Connect to Claude (Simple)\u2026",
                                     self._open_mcp_dialog)
