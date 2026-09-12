@@ -99,9 +99,13 @@ def test_profile_is_tangent_to_both_faces():
     assert len(pts) == 2 + 8                     # E, TL, 7 arc pts, TR
     # a 90° corner: tangent points one radius from the edge, the arc
     # midpoint at radius * (sqrt2 - 1) from it along the bisector
-    assert math.hypot(*pts[1]) == pytest.approx(4.0)
-    assert math.hypot(*pts[-1]) == pytest.approx(4.0)
-    assert math.hypot(*pts[1 + 4]) == pytest.approx(4.0 * (math.sqrt(2) - 1))
+    # (within GROW: the section is grown a hair so no face of the
+    # cutter is coplanar with the part)
+    assert math.hypot(*pts[1]) == pytest.approx(4.0, rel=0.01)
+    assert math.hypot(*pts[-1]) == pytest.approx(4.0, rel=0.01)
+    assert math.hypot(*pts[1 + 4]) == pytest.approx(4.0 * (math.sqrt(2) - 1),
+                                                    rel=0.03)
+    assert math.hypot(*pts[0]) > 0.0                # E pushed outward
     _u, _v, cham = fillet.profile(e, 4.0, "chamfer", 8)
     assert len(cham) == 3
 
@@ -118,7 +122,9 @@ def test_strips_are_closed_solids_and_cut_the_right_volume(app):
     ideal = (1 - math.pi / 4) * 25 * 40
     theta = math.pi / 2 / 6
     segments = 6 * 12.5 * (theta - math.sin(theta)) * 40
-    assert _volume(cut) == pytest.approx(ideal + segments, rel=0.005)
+    grown = (1 + fillet.GROW) ** 2                # the section is grown
+    assert _volume(cut) == pytest.approx((ideal + segments) * grown,
+                                         rel=0.003)
 
 
 def test_one_seed_takes_a_whole_rim_and_seeds_dedupe(app):

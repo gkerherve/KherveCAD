@@ -55,6 +55,10 @@ FIND_FRAC = 0.01
 
 KINDS = ("round", "chamfer")
 
+#: how much a cutter section is grown about its centroid so no face of
+#: it is coplanar with the part (see profile)
+GROW = 0.003
+
 OPERATION = "op"
 
 NODE_TYPES = {
@@ -287,6 +291,17 @@ def profile(edge, radius: float, kind: str, detail: int) -> tuple:
         pts.append(tr)
     if _area2d(pts) < 0:
         pts = [pts[0]] + pts[1:][::-1]
+    # Grow the section a hair about its centroid: its two straight
+    # sides would otherwise lie exactly IN the faces they trim, and a
+    # boolean on coplanar faces leaves slivers (a saw-tooth round a
+    # rim). Grown, the sides sit just outside a convex corner's faces
+    # (cut) or just inside a concave one's (filled) — the fillet moves
+    # by a few microns, the boolean becomes clean.
+    n = len(pts)
+    cx = sum(x for x, _y in pts) / n
+    cy = sum(y for _x, y in pts) / n
+    grow = 1.0 + GROW
+    pts = [(cx + (x - cx) * grow, cy + (y - cy) * grow) for x, y in pts]
     return u, v, pts
 
 
