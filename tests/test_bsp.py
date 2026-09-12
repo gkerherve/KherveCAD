@@ -176,6 +176,9 @@ def _oblique_view(app, tris, colors):
     view = View3D()
     view.resize(400, 300)
     view.background = "Light"
+    # pixel colours are asserted: not the user's saved sliders or stage
+    view.brightness = view.contrast = 0.0
+    view.stage = False
     view.set_style("Shaded")
     view.set_mesh(tris, "test", colors)
     view.yaw, view.pitch = -60.0, 20.0
@@ -205,6 +208,7 @@ def test_centroid_sort_alone_gets_it_wrong(app, monkeypatch):
 def test_stale_tree_is_not_adopted(app):
     tris, colors, _ = _pupil_scene()
     view = View3D()
+    view.brightness = view.contrast = 0.0   # not the user's sliders
     view.set_mesh(tris, "a", colors)
     first = view.wait_for_bsp()
     view.set_mesh(tris[:12], "b", colors[:12])

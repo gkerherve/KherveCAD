@@ -115,6 +115,8 @@ def test_styles_render_distinctly(app):
     """Each render style must produce a visibly different image — a
     regression guard against styles collapsing into look-alikes."""
     view = View3D()
+    # the user's saved Bright/Contrast sliders must not decide this
+    view.brightness = view.contrast = 0.0
     view.resize(300, 300)
     view.set_mesh(_cube(), "test")
     view.fit()
