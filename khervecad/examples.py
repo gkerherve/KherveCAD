@@ -1352,6 +1352,7 @@ EXAMPLES = [
 # deadlock the two modules.
 from . import examples_flowers  # noqa: E402,F401
 from . import examples_trees    # noqa: E402,F401
+from . import examples_lego     # noqa: E402,F401
 
 
 def load_example(model: DocumentModel, build) -> None:
