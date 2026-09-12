@@ -352,8 +352,40 @@ def lego_man() -> CadNode:
     return _root(s.to_node("Man"))
 
 
+def lego_woman() -> CadNode:
+    """A brick-built woman in the Minecraft Alex style: long orange hair
+    down her back and over her shoulders, a side-swept fringe, green
+    eyes, a green top, a flared lavender skirt and brown boots."""
+    s = Scene(seed=12)
+    z0 = _grass(s)
+    skin, hair, top = "Light nougat", "Orange", "Bright green"
+    v = {}
+    _legs(v, "Reddish brown", skin, 2)
+    box(v, 2, 7, 1, 4, 3, 3, ("Medium lavender", "Skirt"))  # flared hem
+    box(v, 3, 6, 1, 4, 4, 4, ("Medium lavender", "Skirt"))
+    box(v, 3, 6, 2, 3, 5, 9, (top, "Body"))
+    box(v, 4, 5, 2, 2, 9, 9, (skin, "Body"))               # the neckline
+    for x in (2, 7):                                        # slim arms
+        box(v, x, x, 2, 3, 5, 7, (skin, "Arms"))
+        box(v, x, x, 2, 3, 8, 9, (top, "Arms"))
+    box(v, 3, 6, 1, 4, 10, 12, (skin, "Head"))
+    box(v, 3, 6, 1, 4, 13, 13, (hair, "Hair"))
+    box(v, 3, 6, 4, 4, 6, 12, (hair, "Hair"))         # down her back
+    for x in (3, 6):
+        box(v, x, x, 2, 3, 10, 12, (hair, "Hair"))    # past the ears
+        box(v, x, x, 1, 1, 8, 9, (hair, "Hair"))      # over the shoulders
+    _face(v, 12, [hair, hair, hair, skin])            # side-swept fringe
+    _face(v, 11, ["White", "Green", "Green", "White"])
+    _face(v, 10, [skin, "Dark pink", "Dark pink", skin])
+    s.add_voxels(v, z0=z0)
+    s.add("brick", 5, 2, 1, 1, z0 + 14 * BRICK_H, "Dark pink", "Hair",
+          height=PLATE_H)                             # a hair clip
+    return _root(s.to_node("Woman"))
+
+
 EXAMPLES.extend([
     ("Minecraft tower", "Lego", lego_minecraft_tower),
     ("House", "Lego", lego_house),
     ("Man (Minecraft style)", "Lego", lego_man),
+    ("Woman (Minecraft style)", "Lego", lego_woman),
 ])

@@ -160,6 +160,21 @@ into a new module and import.
                        (colour chosen from the size list). Multi-colour
                        unions with no booleans, so each component keeps
                        its colour in the preview.
+  - `library_lego.py`— **Lego**: bricks, plates, tiles, 45° slopes and
+                       baseplates at the real dimensions (8 mm pitch,
+                       9.6 mm brick, 3.2 mm plate, 0.1 mm clearance a
+                       side — the same as the hand-built
+                       `lego_bricks.kcad`) in the official colours
+                       (`COLORS`; clear ones get the Glass material).
+                       Boolean-free: the hollow underside is walls + top,
+                       tubes are revolved rings, a slope is an extruded
+                       profile. Origin at the part's grid corner, not
+                       its centre, so bricks snap stud to stud on an
+                       8 mm grid. A spec may carry `colors`: the Part
+                       Library dialog then shows a colour combo and
+                       `insert_part` takes `color` (passed to the
+                       builder as `dims["_color"]`); `COUNT_FIELDS`
+                       get integer spin boxes.
   - `examples.py`    — ready-made **example models** for the Examples
                        menu: each `build()` returns a fresh `root` that
                        replaces the document. A **Learn** category of 21
@@ -217,6 +232,19 @@ into a new module and import.
                        `examples.EXAMPLES` in place on import (a
                        side-effect import from the bottom of `examples.py`
                        so neither load order deadlocks).
+  - `examples_lego.py` — the **Lego** category (Minecraft tower, house,
+                       Steve-style man, Alex-style woman), built from
+                       `library_lego` bricks. A model is sketched as
+                       voxels `{(i, j, k): (colour, group)}`; `pack()`
+                       covers each layer with standard bricks (2x8 ..
+                       1x1, one colour each), the long axis alternating
+                       by layer so joints do not stack; a colour tuple
+                       packs as one material and each brick draws one
+                       name (seeded: cobblestone, leaves). Slopes, tiles
+                       and plates are added directly. `Scene.to_node`
+                       drops studs another piece covers and the hidden
+                       undersides, which is what keeps a 171-piece tower
+                       at 17k triangles.
   - `chat.py`        — **Assistant chat box** (family assistant, docked
                        right, **hidden by default**, opened from AI ▸ ChatBox or
                        Ctrl+/): Claude/Mistral/Ollama
@@ -500,7 +528,14 @@ into a new module and import.
                        (convex bodies would chain O(n²)). `build()`
                        returns None past `MAX_TRIS`, the time budget or
                        the growth cap (curved petals shred) and the view
-                       falls back to the centroid sort. The budget is
+                       falls back to the centroid sort. Past
+                       `SMALL_MESH` (12k) a mesh up to `MAX_TRIS` (40k)
+                       gets a tree only if it grows by `BIG_GROWTH`
+                       (1.5x) at most: block models (a 28k-triangle Lego
+                       house splits 1.2x, 0.7 s) get the exact order,
+                       threads give up in well under a second — the
+                       centroid sort let a baseplate's one big face
+                       paint over the studs in front of it. The budget is
                        the worker's **CPU** time (`time.thread_time`):
                        a wall-clock budget ran out while the GUI thread
                        held the GIL, so the exact order only ever landed
