@@ -383,9 +383,126 @@ def lego_woman() -> CadNode:
     return _root(s.to_node("Woman"))
 
 
+# The same two figures at full resolution: ONE stud to a Minecraft
+# pixel, so the proportions are the game's own — an 8x8x8 head, an 8x4x12
+# body, 4x4x12 arms and legs (a brick layer is 9.6 mm to the stud's 8,
+# so they stand a fifth taller) — and the face is 8x8 bricks of pixel
+# art instead of 4x4. About 31 cm tall, on an 18x10 patch of grass.
+
+def _paint(v, rows, x0, y, k_top, legend, group):
+    """Pixel art on the plane y = *y*: *rows* from the top down, one
+    character per stud from x = *x0*; "." leaves a cell as it is."""
+    for r, row in enumerate(rows):
+        for c, ch in enumerate(row):
+            if ch != ".":
+                v[(x0 + c, y, k_top - r)] = (legend[ch], group)
+
+
+def _big_legs(v, shoe, shoe_top, leg, leg_top):
+    """Two 4x4 legs, separate bricks so the seam between them shows."""
+    for x0, side in ((5, "Left leg"), (9, "Right leg")):
+        box(v, x0, x0 + 3, 3, 6, 0, shoe_top, (shoe, side))
+        box(v, x0, x0 + 3, 3, 6, shoe_top + 1, leg_top, (leg, side))
+
+
+MAN_FACE = ["HHHHHHHH",
+            "HHHHHHHH",
+            "HSSSSSSH",
+            "SSSSSSSS",
+            "SWESSEWS",
+            "SSSNNSSS",
+            "SSMMMMSS",
+            "SSSSSSSS"]
+
+WOMAN_FACE = ["HHHHHHHH",
+              "HHHHHHHH",
+              "HHHHHHSH",
+              "HHSSSSSH",
+              "HWGSSGWH",
+              "HSSSSSSH",
+              "HSSPPSSH",
+              "HSSSSSSH"]
+
+COLLAR = ["..SSSS..",
+          "...SS..."]
+
+
+def lego_man_hd() -> CadNode:
+    """The Minecraft-style man at one stud per pixel: an 8x8 pixel-art
+    face (hairline, eyes, nose, mouth), a turquoise shirt with an open
+    collar, blue trousers, and a diamond pickaxe in front of his hand."""
+    s = Scene(seed=21)
+    z0 = _grass(s, 18, 10)
+    skin, hair, shirt = "Nougat", "Dark brown", "Dark turquoise"
+    v = {}
+    _big_legs(v, "Dark bluish grey", 1, "Blue", 11)
+    box(v, 5, 12, 3, 6, 12, 23, (shirt, "Body"))
+    _paint(v, COLLAR, 5, 3, 23, {"S": skin}, "Body")
+    for x0 in (1, 13):
+        box(v, x0, x0 + 3, 3, 6, 12, 19, (skin, "Arms"))
+        box(v, x0, x0 + 3, 3, 6, 20, 23, (shirt, "Arms"))   # sleeves
+    box(v, 5, 12, 1, 8, 24, 31, (skin, "Head"))
+    box(v, 5, 12, 1, 8, 30, 31, (hair, "Hair"))
+    box(v, 5, 12, 5, 8, 26, 29, (hair, "Hair"))    # the back of the head
+    for x in (5, 12):
+        box(v, x, x, 1, 4, 29, 29, (hair, "Hair"))  # the hairline's sides
+    _paint(v, MAN_FACE, 5, 1, 31,
+           {"H": hair, "S": skin, "W": "White", "E": "Blue",
+            "N": "Medium nougat", "M": "Reddish brown"}, "Face")
+    # a diamond pickaxe; the head sits against the bare forearm
+    box(v, 2, 2, 2, 2, 8, 17, ("Reddish brown", "Pickaxe"))
+    box(v, 0, 4, 2, 2, 18, 18, ("Medium azure", "Pickaxe"))
+    v[(0, 2, 17)] = v[(4, 2, 17)] = ("Medium azure", "Pickaxe")
+    s.add_voxels(v, z0=z0)
+    return _root(s.to_node("Man"))
+
+
+def lego_woman_hd() -> CadNode:
+    """The Minecraft-style woman at one stud per pixel: long streaked
+    orange hair framing an 8x8 face and falling down her back and over
+    her shoulders, green eyes, a green top with a pink belt, a flared
+    lavender skirt, brown boots and a flower clip in her hair."""
+    s = Scene(seed=22)
+    z0 = _grass(s, 18, 10)
+    skin, hair, top = "Light nougat", "Orange", "Bright green"
+    streaks = ("Orange",) * 3 + ("Dark orange",)    # 1 in 2 was blotchy
+    v = {}
+    _big_legs(v, "Reddish brown", 2, skin, 7)
+    skirt = ("Medium lavender", "Skirt")
+    box(v, 4, 13, 2, 7, 8, 9, skirt)                 # the flared hem
+    box(v, 5, 12, 2, 7, 10, 11, skirt)
+    box(v, 5, 12, 3, 6, 12, 13, skirt)
+    box(v, 5, 12, 3, 6, 14, 14, ("Dark pink", "Body"))     # the belt
+    box(v, 5, 12, 3, 6, 15, 23, (top, "Body"))
+    _paint(v, COLLAR, 5, 3, 23, {"S": skin}, "Body")
+    for x0 in (2, 13):                               # slim, 3-wide arms
+        box(v, x0, x0 + 2, 3, 6, 12, 19, (skin, "Arms"))
+        box(v, x0, x0 + 2, 3, 6, 20, 23, (top, "Arms"))
+    box(v, 5, 12, 1, 8, 24, 31, (skin, "Head"))
+    box(v, 5, 12, 1, 8, 30, 31, (streaks, "Hair"))
+    box(v, 5, 12, 4, 8, 24, 29, (streaks, "Hair"))   # the back of the head
+    for x in (5, 12):
+        box(v, x, x, 1, 3, 24, 29, (hair, "Hair"))   # framing the face
+    box(v, 5, 12, 7, 8, 16, 23, (streaks, "Hair"))   # down her back
+    for x0 in (5, 11):
+        box(v, x0, x0 + 1, 2, 2, 19, 23, (hair, "Hair"))   # over the chest
+    _paint(v, WOMAN_FACE, 5, 1, 31,
+           {"H": hair, "S": skin, "W": "White", "G": "Green",
+            "P": "Dark pink"}, "Face")
+    s.add_voxels(v, z0=z0)
+    top_z = z0 + 32 * BRICK_H                        # a flower hair clip
+    s.add("brick", 10, 2, 2, 2, top_z, "Dark pink", "Hair",
+          height=PLATE_H)
+    s.add("brick", 10, 2, 1, 1, top_z + PLATE_H, "Yellow", "Hair",
+          height=PLATE_H)
+    return _root(s.to_node("Woman"))
+
+
 EXAMPLES.extend([
     ("Minecraft tower", "Lego", lego_minecraft_tower),
     ("House", "Lego", lego_house),
-    ("Man (Minecraft style)", "Lego", lego_man),
-    ("Woman (Minecraft style)", "Lego", lego_woman),
+    ("Man (Minecraft style)", "Lego", lego_man_hd),
+    ("Woman (Minecraft style)", "Lego", lego_woman_hd),
+    ("Man (Minecraft style, small)", "Lego", lego_man),
+    ("Woman (Minecraft style, small)", "Lego", lego_woman),
 ])

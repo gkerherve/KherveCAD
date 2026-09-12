@@ -58,7 +58,8 @@ COLORS = {
     "Medium azure": "#36AEBF", "Dark turquoise": "#008F9B",
     "Dark blue": "#0A3463", "Medium lavender": "#AC78BA",
     "Dark pink": "#C870A0", "Light nougat": "#F6D7B3",
-    "Nougat": "#D09168", "Trans-clear": "#FCFCFC",
+    "Nougat": "#D09168", "Medium nougat": "#AA7D55",
+    "Trans-clear": "#FCFCFC",
     "Trans-light blue": "#AEEFEC",
 }
 #: colours cast in clear plastic: see-through in the preview

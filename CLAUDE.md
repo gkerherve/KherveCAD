@@ -234,7 +234,12 @@ into a new module and import.
                        so neither load order deadlocks).
   - `examples_lego.py` — the **Lego** category (Minecraft tower, house,
                        Steve-style man, Alex-style woman), built from
-                       `library_lego` bricks. A model is sketched as
+                       `library_lego` bricks. The figures are at ONE
+                       stud per Minecraft pixel (8x8x8 head, 8x4x12
+                       body, ~31 cm tall, the face 8x8 bricks of pixel
+                       art painted by `_paint`); the first 2-pixels-a-
+                       stud versions stay as "small" — at 4x4 bricks a
+                       face was too coarse. A model is sketched as
                        voxels `{(i, j, k): (colour, group)}`; `pack()`
                        covers each layer with standard bricks (2x8 ..
                        1x1, one colour each), the long axis alternating
