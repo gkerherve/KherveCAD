@@ -615,10 +615,102 @@ def lego_church() -> CadNode:
     return _root(s.to_node("Church"))
 
 
+def _car(s, i, j, body):
+    """A little car four studs long on X, on the road at (i, j): black
+    wheels two plates high, a chassis, the body, a clear cabin and a
+    roof."""
+    z = BASEPLATE_H
+    for di in (0, 3):
+        for dj in (0, 1):
+            s.add("brick", i + di, j + dj, 1, 1, z, "Black", "Cars",
+                  height=2 * PLATE_H)
+    z += 2 * PLATE_H
+    s.add("brick", i, j, 4, 2, z, "Dark bluish grey", "Cars",
+          height=PLATE_H)
+    s.add("brick", i, j, 4, 2, z + PLATE_H, body, "Cars")
+    s.add("brick", i + 1, j, 2, 2, z + PLATE_H + BRICK_H, "Trans-clear",
+          "Cars")
+    s.add("brick", i + 1, j, 2, 2, z + PLATE_H + 2 * BRICK_H, body,
+          "Cars", height=PLATE_H)
+
+
+def lego_building() -> CadNode:
+    """A seven-storey block on a city street: a glass lobby with doors
+    under a canopy, six floors of white bands and blue glass between
+    pillars (floors inside, seen through the glass), a roof with a
+    parapet, air conditioners, a water tank and an antenna; sidewalks
+    with trees and lamps, a road with lane markings and two cars."""
+    s = Scene(seed=41)
+    s.add("brick", 0, 0, 24, 18, 0.0, "Dark bluish grey", "Street",
+          height=BASEPLATE_H, seg=12)
+    z0 = BASEPLATE_H
+    x0, x1, y0, y1 = 8, 17, 6, 13                     # the block
+    walk = {(i, j, 0): ("Light bluish grey", "Sidewalk")
+            for i in range(6, 20) for j in range(4, 16)
+            if not (x0 <= i <= x1 and y0 <= j <= y1)}
+    s.add_voxels(walk, z0=z0, height=PLATE_H, kind="tile")
+    for i in range(1, 23, 4):                         # the lane markings
+        s.add("tile", i, 2, 2, 1, z0, "White", "Road", height=PLATE_H)
+
+    v = {}
+    for k in range(4):                                # the glass lobby
+        ring(v, x0, x1, y0, y1, k, ("Trans-clear", "Lobby"))
+        for corner in ((x0, y0), (x1, y0), (x0, y1), (x1, y1)):
+            v[(*corner, k)] = ("Dark bluish grey", "Lobby")
+    for k in range(3):                                # the door frame
+        for i in (11, 14):
+            v[(i, y0, k)] = ("Black", "Entrance")
+    box(v, 11, 14, y0, y0, 3, 3, ("Black", "Entrance"))
+    glass, band = ("Trans-light blue", "Windows"), ("White", "Floors")
+    for floor in range(6):
+        kb = 4 + 3 * floor
+        box(v, x0, x1, y0, y1, kb, kb, band)
+        for k in (kb + 1, kb + 2):
+            ring(v, x0, x1, y0, y1, k, glass)
+            for i in (8, 11, 14, 17):
+                v[(i, y0, k)] = v[(i, y1, k)] = band
+            for j in (6, 9, 10, 13):
+                v[(x0, j, k)] = v[(x1, j, k)] = band
+        # a smooth floor inside: the slab's studs would show through
+        # the glass, six hundred of them
+        inside = {(i, j, 0): ("Light bluish grey", "Floors")
+                  for i in range(x0 + 1, x1) for j in range(y0 + 1, y1)}
+        s.add_voxels(inside, z0=z0 + (kb + 1) * BRICK_H, height=PLATE_H,
+                     kind="tile")
+    kr = 22
+    box(v, x0, x1, y0, y1, kr, kr, ("Light bluish grey", "Roof"))
+    ring(v, x0, x1, y0, y1, kr + 1, ("White", "Roof"))
+    box(v, 10, 11, 8, 9, kr + 1, kr + 1, ("Light bluish grey", "Rooftop"))
+    box(v, 13, 14, 8, 9, kr + 1, kr + 1, ("Light bluish grey", "Rooftop"))
+    box(v, 14, 15, 10, 11, kr + 1, kr + 3, ("Reddish brown", "Rooftop"))
+    box(v, 10, 10, 11, 11, kr + 1, kr + 5, ("Black", "Antenna"))
+    s.add_voxels(v, z0=z0)
+    s.add("brick", 10, 11, 1, 1, z0 + (kr + 6) * BRICK_H, "Trans-red",
+          "Antenna", height=PLATE_H)
+    s.add("brick", 11, 5, 4, 1, z0 + 3 * BRICK_H, "Black", "Entrance",
+          height=PLATE_H)                             # the canopy
+
+    street, zw = {}, z0 + PLATE_H                     # on the sidewalk
+    for t in (6, 19):
+        box(street, t, t, 5, 5, 0, 1, ("Reddish brown", "Trees"))
+        box(street, t - 1, t + 1, 4, 6, 2, 2, (LEAVES, "Trees"))
+        box(street, t, t, 5, 5, 3, 3, (LEAVES, "Trees"))
+    for t in (10, 15):
+        box(street, t, t, 4, 4, 0, 3, ("Black", "Lamps"))
+    s.add_voxels(street, z0=zw)
+    for t in (10, 15):
+        s.add("brick", t, 4, 1, 1, zw + 4 * BRICK_H, "Trans-yellow",
+              "Lamps", height=PLATE_H)
+    _car(s, 1, 0, "Red")
+    _car(s, 18, 0, "Blue")
+    return _root(s.to_node("Apartment building"))
+
+
 EXAMPLES.extend([
     ("Minecraft tower", "Lego", lego_minecraft_tower),
     ("House", "Lego", lego_house),
     ("Church", "Lego", lego_church),
+    ("Apartment building", "Lego", lego_building),
     ("Man (Minecraft style)", "Lego", lego_man_hd),
     ("Woman (Minecraft style)", "Lego", lego_woman_hd),
     ("Man (Minecraft style, small)", "Lego", lego_man),
