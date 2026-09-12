@@ -1214,10 +1214,16 @@ class McpToolExecutor:
             win.set_projection(name)
         if params.get("stage") is not None:
             win.view3d.set_stage(bool(params["stage"]))
+        if params.get("cavity") is not None:
+            win.view3d.set_cavity(bool(params["cavity"]))
+        if params.get("edges") is not None:
+            win.view3d.set_edges(bool(params["edges"]))
         return {"global_segments": int(model.global_fn),
                 "global_segments_on": bool(model.global_fn_on),
                 "projection": win.view3d.projection,
-                "stage": bool(win.view3d.stage)}
+                "stage": bool(win.view3d.stage),
+                "cavity": bool(win.view3d.cavity),
+                "edges": bool(win.view3d.edges)}
 
     def _guard_unsaved(self, params, tool: str):
         if self._w._dirty and not params.get("discard_unsaved_changes"):

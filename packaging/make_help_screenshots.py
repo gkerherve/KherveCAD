@@ -550,10 +550,38 @@ def shot_print_check(win):
     settle(100)
 
 
+def shot_cavity_edges(win):
+    """Plain vs cavity + edge lines, side by side."""
+    load(win, "Pillow-block bearing")
+    wait_exact(win)
+    view = win.view3d
+    view.stage = False
+    tiles = []
+    for on in (False, True):
+        view.cavity = view.edges = on            # attributes: not persisted
+        view.user_moved = False
+        view.yaw, view.pitch = -50.0, 28.0
+        view.fit()
+        finish_3d(win)
+        img, _ = view.snapshot(520, 360, yaw=-50.0, pitch=28.0, frame=True,
+                               clean=True)
+        tiles.append(img)
+    view.cavity = view.edges = False
+    w, h = tiles[0].width(), tiles[0].height()
+    img = QImage(2 * w + 6, h, QImage.Format_ARGB32)
+    img.fill(QColor("white"))
+    p = QPainter(img)
+    for k, tile in enumerate(tiles):
+        p.drawImage(k * (w + 6), 0, tile)
+    p.end()
+    save(img, "cavity_edges", WIDE)
+
+
 SHOTS = [shot_window, shot_toolbars, shot_tutorial, shot_tabs,
          shot_named_rows, shot_sketch, shot_styles, shot_character,
          shot_attach, shot_dialogs, shot_vibe, shot_stage, shot_sweep,
-         shot_fillet, shot_pattern, shot_shell, shot_print_check]
+         shot_fillet, shot_pattern, shot_shell, shot_print_check,
+         shot_cavity_edges]
 
 
 def main(only=()):

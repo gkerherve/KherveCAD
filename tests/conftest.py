@@ -27,7 +27,7 @@ import pytest  # noqa: E402
 #: flattened the shading the contrast test measures. Neutral for the
 #: session, then put back exactly as they were.
 _NEUTRAL_SETTINGS = ("render_stage", "render_style", "render_bg",
-                     "render_projection")
+                     "render_projection", "render_cavity", "render_edges")
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -37,7 +37,12 @@ def _neutral_view_settings():
     saved = {key: settings.value(key) for key in _NEUTRAL_SETTINGS}
     for key in _NEUTRAL_SETTINGS:
         settings.remove(key)
+    settings.sync()
+    del settings
     yield
+    # a fresh object: the one above would be gone if the module that
+    # created the QApplication has been torn down by now
+    settings = QSettings("Kherve", "KherveCAD")
     for key, value in saved.items():
         if value is None:
             settings.remove(key)

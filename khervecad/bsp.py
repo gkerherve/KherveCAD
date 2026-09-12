@@ -81,12 +81,17 @@ class Node:
 
 class Tree:
     """`tris`/`colors` are the split mesh (a superset of the input,
-    same per-face colour format); `order()` walks them back to front."""
+    same per-face colour format); `order()` walks them back to front.
+    `parents[i]` is the index of the input triangle piece *i* came
+    from — per-face data computed on the input (cavity shading, crease
+    edges) is looked up through it."""
 
-    def __init__(self, root, tris, colors):
+    def __init__(self, root, tris, colors, parents=None):
         self.root = root
         self.tris = tris
         self.colors = colors
+        self.parents = parents if parents is not None \
+            else list(range(len(tris)))
 
     def order(self, eye, forward, ortho=False):
         """Triangle indices back to front as seen from *eye* (or, for
@@ -266,6 +271,7 @@ def build(tris, colors=None, *, max_tris=MAX_TRIS, budget=TIME_BUDGET,
     limit = min(max(n * max_growth, MIN_PIECES), MAX_PIECES)
     out_tris = list(tris)
     out_colors = list(colors) if colors else None
+    parents = list(range(n))
     root = None
     # work items: (indices to partition, parent node, 'back'/'front').
     # Degenerate (collinear) triangles paint nothing, yet a plane would
@@ -317,6 +323,7 @@ def build(tris, colors=None, *, max_tris=MAX_TRIS, budget=TIME_BUDGET,
                             first = False
                         else:
                             out_tris.append(piece)
+                            parents.append(parents[i])
                             if out_colors is not None:
                                 out_colors.append(color)
                             target.append(len(out_tris) - 1)
@@ -324,4 +331,4 @@ def build(tris, colors=None, *, max_tris=MAX_TRIS, budget=TIME_BUDGET,
         stack.append((back, node, "back"))
     if root is None:
         return None
-    return Tree(root, out_tris, out_colors)
+    return Tree(root, out_tris, out_colors, parents)

@@ -807,6 +807,13 @@ TOOLS = [
                                      "a top-left light, instead of the "
                                      "ground grid (also what "
                                      "render_view shows)."},
+            "cavity": {"type": "boolean",
+                       "description": "Cavity shading: valleys darker, "
+                                      "ridges lighter (Blender's Solid "
+                                      "view look)."},
+            "edges": {"type": "boolean",
+                      "description": "Draw crease and outline edges as "
+                                     "thin lines."},
         }),
     },
     {

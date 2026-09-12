@@ -344,6 +344,23 @@ class MainWindow(QMainWindow):
         self._stage_act.triggered.connect(self.view3d.set_stage)
         self.view3d.stage_toggled.connect(self._stage_act.setChecked)
         view_menu.addAction(self._stage_act)
+        # Blender-style looks (shading.py): valleys darker, edges drawn
+        self._cavity_act = QAction("3D &Cavity Shading", self,
+                                   checkable=True)
+        self._cavity_act.setChecked(self.view3d.cavity)
+        self._cavity_act.setStatusTip("Darken valleys and lighten ridges "
+                                      "so the shape reads at a glance")
+        self._cavity_act.triggered.connect(self.view3d.set_cavity)
+        self._edges_act = QAction("3D &Edge Lines", self, checkable=True)
+        self._edges_act.setChecked(self.view3d.edges)
+        self._edges_act.setStatusTip("Draw the model's edges and outline "
+                                     "as thin lines")
+        self._edges_act.triggered.connect(self.view3d.set_edges)
+        self.view3d.look_toggled.connect(
+            lambda key, on: (self._cavity_act if key == "cavity"
+                             else self._edges_act).setChecked(on))
+        view_menu.addAction(self._cavity_act)
+        view_menu.addAction(self._edges_act)
         view_menu.addSeparator()
         theme_menu = view_menu.addMenu("&Theme")
         theme_group = QActionGroup(self)

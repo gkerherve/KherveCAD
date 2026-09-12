@@ -768,6 +768,24 @@ into a new module and import.
                        open_angle=, detail=, points=, faces=)`), in the
                        Deform & sculpt group; Examples ▸ Mechanical ▸
                        Hollow cup.
+  - `shading.py`     — Blender-solid-view **cavity shading and edge
+                       lines** (Qt-free): `analyse(tris)` → `MeshInfo`
+                       with per-face normals, a signed `cavity` term
+                       (edge-neighbours bending towards the normal =
+                       valley, one ring smoothed), `creases` (edges
+                       over `EDGE_ANGLE`, per owning face) and
+                       `neighbours` for the per-frame `silhouette`.
+                       View3D keeps it per mesh serial (`_mesh_info`),
+                       the painter reaches it from a tree piece via
+                       `bsp.Tree.parents`, applies the value multiplier
+                       after the lighting sliders and strokes a face's
+                       creases + silhouette right after its polygon
+                       (occlusion without a depth buffer); skipped on
+                       the orbit draft and in Wireframe/X-ray. View ▸
+                       3D Cavity Shading / 3D Edge Lines
+                       (`render_cavity`/`render_edges`,
+                       `look_toggled`), `set_render_options` `cavity`/
+                       `edges`; the snapshot twin copies both.
   - `analysis.py`    — **checking a part** (Qt-free): `mass_properties`
                        (divergence-theorem volume, area, centroid,
                        box), `mass`/`cost`/`print_time` (material table,

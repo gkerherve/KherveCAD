@@ -160,6 +160,8 @@ class View3D(QWidget):
     _bsp_ready = pyqtSignal()
     #: the platform & shadow stage was switched on/off (set_stage)
     stage_toggled = pyqtSignal(bool)
+    #: ("cavity" | "edges", on) — set_cavity / set_edges, for the menu
+    look_toggled = pyqtSignal(str, bool)
 
     #: past this many triangles, orbiting/panning/zooming draws a
     #: decimated "draft" mesh for a snappy frame rate, then the full
@@ -240,6 +242,11 @@ class View3D(QWidget):
         #: platform & shadow instead of the grid (stage.py)
         self.stage = settings.value("render_stage", False, type=bool)
         self._stage_cache = None        # stage.Stage, made on first use
+        #: Blender-style cavity shading and edge lines (shading.py)
+        self.cavity = settings.value("render_cavity", False, type=bool)
+        self.edges = settings.value("render_edges", False, type=bool)
+        self._info = None               # shading.MeshInfo of self.mesh
+        self._info_serial = -1
         self.setMinimumHeight(160)
         self.setMouseTracking(False)
         self.lighting_bar = LightingBar(self)
@@ -312,6 +319,29 @@ class View3D(QWidget):
         if not self.user_moved:         # a camera the user never moved
             self.fit()                  # takes the platform in (or out)
         self.update()
+
+    def set_cavity(self, on: bool):
+        """Darken valleys and lighten ridges (shading.py); persisted."""
+        self.cavity = bool(on)
+        QSettings(*_SETTINGS).setValue("render_cavity", self.cavity)
+        self.look_toggled.emit("cavity", self.cavity)
+        self.update()
+
+    def set_edges(self, on: bool):
+        """Stroke crease and silhouette edges; persisted."""
+        self.edges = bool(on)
+        QSettings(*_SETTINGS).setValue("render_edges", self.edges)
+        self.look_toggled.emit("edges", self.edges)
+        self.update()
+
+    def _mesh_info(self):
+        """shading.MeshInfo for the current mesh — the worker's copy
+        when it built one, else computed here once and kept."""
+        if self._info is None or self._info_serial != self._mesh_serial:
+            from . import shading
+            self._info = shading.analyse(self.mesh) if self.mesh else None
+            self._info_serial = self._mesh_serial
+        return self._info
 
     def _stage_obj(self):
         if self._stage_cache is None:
@@ -395,11 +425,15 @@ class View3D(QWidget):
         twin.brightness, twin.contrast = self.brightness, self.contrast
         # the stage, and its per-mesh cache (the twin gets the same list)
         twin.stage, twin._stage_cache = self.stage, self._stage_cache
+        twin.cavity, twin.edges = self.cavity, self.edges
         twin.projection = projection if projection in PROJECTIONS \
             else self.projection
         # a snapshot must be exact: wait for a tree still being built
         twin.set_mesh(self.mesh, self.source, self.colors,
                       bsp=self.wait_for_bsp())
+        if self.cavity or self.edges:
+            twin._info, twin._info_serial = self._mesh_info(), \
+                twin._mesh_serial
         if not clean:
             twin.set_highlight_mesh(self.highlight_mesh)
             twin.set_anchor_markers(list(self.anchor_markers))
@@ -965,7 +999,7 @@ class View3D(QWidget):
             shade = abs(nx * lx + ny * ly + nz * lz)
             spec = max(nx * hax + ny * hay + nz * haz, 0.0)
             face_color = colors[index] if colors else None
-            append((depth, pts, shade, spec, face_color))
+            append((depth, pts, shade, spec, face_color, index))
 
         # The selected object is NOT drawn into the depth sort: its
         # triangles come from the built-in tessellator while `mesh` may
@@ -984,6 +1018,43 @@ class View3D(QWidget):
         if tree is None:                        # BSP order is already exact
             faces.sort(key=lambda fc: -fc[0])
         lighting = self._light()                # sliders, None when centred
+        # cavity shading and edge lines: per-face tables on the input
+        # mesh, reached from a tree piece through its parent. Not on
+        # the decimated draft (its indices are its own) nor for the
+        # see-through styles.
+        info = None
+        if (self.cavity or self.edges) and mesh is not None \
+                and not (self._fast and self._draft_mesh is not None) \
+                and style not in ("Wireframe", "X-ray"):
+            info = self._mesh_info()
+        parents = tree.parents if tree is not None else None
+        sil = {}
+        if info is not None and self.edges:
+            from . import shading
+            front = [False] * len(info.normals)
+            for _d, _p, _s, _sp, _c, idx in faces:
+                front[parents[idx] if parents else idx] = True
+            sil = shading.silhouette(info, front)
+            line = QColor(t["border"]).darker(260)
+            line_pen = QPen(line)
+            line_pen.setWidthF(1.2)
+
+            def draw_edges(parent):
+                segs = info.creases.get(parent, ())
+                more = sil.get(parent)
+                if more:
+                    segs = list(segs) + more
+                if not segs:
+                    return
+                painter.setPen(line_pen)
+                for p_, q_ in segs:
+                    sp = self._project(eye, right, up, forward, p_)
+                    sq = self._project(eye, right, up, forward, q_)
+                    if sp is not None and sq is not None:
+                        painter.drawLine(QPointF(sp[0], sp[1]),
+                                         QPointF(sq[0], sq[1]))
+        cavity_on = info is not None and self.cavity
+        cavity_strength = 0.5
         edge = QColor(t["border"])
         edge.setAlpha(60)
         pen = QPen(edge)
@@ -992,8 +1063,9 @@ class View3D(QWidget):
         wire.setAlpha(70)
         wire_pen = QPen(wire)
         wire_pen.setWidthF(0.3)
-        for _depth, pts, shade, spec, face_color in faces:
+        for _depth, pts, shade, spec, face_color, index in faces:
             poly = QPolygonF([QPointF(p[0], p[1]) for p in pts])
+            parent = parents[index] if parents else index
             if face_color is not None and face_color[0]:
                 own = QColor(face_color[0])
                 hue = max(own.hueF(), 0.0)
@@ -1013,6 +1085,15 @@ class View3D(QWidget):
                 face_style, hue, sat, val, shade, spec, base)
             if color is not None and lighting is not None:
                 color = self._adjust(color, *lighting)
+            if cavity_on and color is not None:
+                term = info.cavity[parent]
+                if term:
+                    from .shading import multiplier
+                    h_, s_, v_, a_ = color.getHsvF()
+                    v_ = min(max(v_ * multiplier(term, cavity_strength),
+                                 0.0), 1.0)
+                    color = QColor.fromHsvF(max(h_, 0.0), s_, v_)
+                    color.setAlphaF(a_)
             if color is None:                   # wireframe: edges only
                 painter.setPen(wire_pen)
                 painter.setBrush(Qt.NoBrush)
@@ -1035,6 +1116,8 @@ class View3D(QWidget):
             painter.setPen(face_pen)
             painter.setBrush(color)
             painter.drawPolygon(poly)
+            if sil is not None and self.edges and info is not None:
+                draw_edges(parent)
 
         if hi_polys:
             self._tint_selection(painter, hi_polys)
