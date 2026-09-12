@@ -23,6 +23,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
+import math
 import random
 
 from .examples import EXAMPLES, _root
@@ -706,11 +707,164 @@ def lego_building() -> CadNode:
     return _root(s.to_node("Apartment building"))
 
 
+# Sculpting in bricks: shapes are given in millimetres and every cell
+# whose centre falls inside becomes a voxel, so a curved body comes out
+# terraced the way a real brick-built creature does.
+
+def blob(v, centre, radii, paint):
+    """Fill the ellipsoid at *centre* with semi-axes *radii* (mm);
+    *paint(x, y, z)* gives each cell its (colour, group)."""
+    cx, cy, cz = centre
+    rx, ry, rz = radii
+    for i in range(math.floor((cx - rx) / PITCH),
+                   math.floor((cx + rx) / PITCH) + 1):
+        x = (i + 0.5) * PITCH
+        for j in range(math.floor((cy - ry) / PITCH),
+                       math.floor((cy + ry) / PITCH) + 1):
+            y = (j + 0.5) * PITCH
+            for k in range(max(0, math.floor((cz - rz) / BRICK_H)),
+                           math.floor((cz + rz) / BRICK_H) + 1):
+                z = (k + 0.5) * BRICK_H
+                if ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 \
+                        + ((z - cz) / rz) ** 2 <= 1.0:
+                    v[(i, j, k)] = paint(x, y, z)
+
+
+def sweep(v, path, radii, paint, step=4.0):
+    """Spheres swept along the polyline *path* (mm), the radius running
+    through *radii*; *paint(x, y, z, centre, r)*."""
+    for (a, ra), (b, rb) in zip(zip(path, radii),
+                                zip(path[1:], radii[1:])):
+        n = max(1, int(math.dist(a, b) / step))
+        for t in range(n + 1):
+            f = t / n
+            c = tuple(p + (q - p) * f for p, q in zip(a, b))
+            r = ra + (rb - ra) * f
+            blob(v, c, (r, r, r),
+                 lambda x, y, z, c=c, r=r: paint(x, y, z, c, r))
+
+
+def box_mm(v, x0, x1, y0, y1, z0, z1, value):
+    """The cells whose centres lie in a box given in mm."""
+    for i in range(math.floor(x0 / PITCH), math.ceil(x1 / PITCH) + 1):
+        x = (i + 0.5) * PITCH
+        for j in range(math.floor(y0 / PITCH), math.ceil(y1 / PITCH) + 1):
+            y = (j + 0.5) * PITCH
+            for k in range(max(0, math.floor(z0 / BRICK_H)),
+                           math.ceil(z1 / BRICK_H) + 1):
+                z = (k + 0.5) * BRICK_H
+                if x0 <= x <= x1 and y0 <= y <= y1 and z0 <= z <= z1:
+                    v[(i, j, k)] = value
+
+
+RED_SCALES = ("Red",) * 3 + ("Dark red",)
+
+
+def lego_dragon() -> CadNode:
+    """A red dragon breathing fire, sculpted in bricks: a tan belly,
+    a long neck and tail, horns, yellow eyes, an open jaw with teeth,
+    spikes down its back, four clawed legs, wings of smooth tiles with
+    red ribs, and a cone of flame in clear yellow, orange and red."""
+    s = Scene(seed=51)
+    rng = random.Random(51)
+    body = RED_SCALES
+
+    def scales(x, y, z, c, r):
+        belly = z < c[2] - 0.45 * r and abs(y) < 0.8 * r
+        return ("Tan", "Belly") if belly else (body, "Body")
+
+    v = {}
+    blob(v, (0, 0, 95), (56, 32, 38),
+         lambda x, y, z: scales(x, y, z, (0, 0, 95), 38))
+    sweep(v, [(40, 0, 110), (70, 0, 145), (92, 0, 178)], [24, 20, 17],
+          scales)                                                 # neck
+    sweep(v, [(-50, 0, 90), (-95, 0, 65), (-140, 0, 42), (-185, 0, 28),
+              (-222, 14, 30)], [26, 20, 14, 9, 6], scales)         # tail
+    blob(v, (-230, 18, 32), (10, 10, 7),
+         lambda x, y, z: ("Dark red", "Tail"))                    # its tip
+    for lx in (32, -38):
+        for ly in (-26, 26):
+            blob(v, (lx, ly, 72), (18, 14, 22),
+                 lambda x, y, z: (body, "Legs"))
+            box_mm(v, lx - 8, lx + 8, ly - 8, ly + 8, 0, 62, (body, "Legs"))
+            box_mm(v, lx - 12, lx + 14, ly - 12, ly + 12, 0, 9,
+                   (body, "Legs"))
+            box_mm(v, lx + 14, lx + 26, ly - 8, ly + 8, 0, 9,
+                   ("White", "Claws"))
+    # the head: a skull, a snout, and a lower jaw hanging open a brick
+    blob(v, (105, 0, 190), (24, 19, 20), lambda x, y, z: (body, "Head"))
+    box_mm(v, 112, 150, -12, 12, 172, 192, (body, "Head"))
+    box_mm(v, 104, 142, -10, 10, 146, 163, (body, "Jaw"))
+    box_mm(v, 104, 116, -10, 10, 146, 180, (body, "Jaw"))       # the hinge
+    for i in (15, 17):
+        for j in (-2, 1):
+            v[(i, j, 17)] = ("White", "Teeth")
+    for j in (-3, 2):
+        v[(13, j, 20)] = ("Yellow", "Eyes")
+    for j in (-2, 1):
+        v[(18, j, 19)] = ("Black", "Head")                      # nostrils
+        for step in range(4):                                   # horns
+            v[(math.floor((92 - 7 * step) / PITCH), j, 21 + step)] = \
+                ("Tan", "Horns")
+    # spikes down the back, from the neck to the tail
+    for i in range(-26, 11, 2):
+        tops = [k for (ci, cj, k) in v if ci == i and cj in (-1, 0)]
+        if tops:
+            top = max(tops) + 1
+            v[(i, -1, top)] = v[(i, 0, top)] = ("Tan", "Spikes")
+    # the flame: a cone out of the mouth, ragged at its edge — a solid
+    # yellow and orange core under a clear orange skin (all see-through,
+    # it read as a pale pink block)
+    for i in range(14, 19):
+        for j in (-1, 0):
+            v[(i, j, 17)] = ("Orange", "Fire")
+    for i in range(19, 29):
+        x = (i + 0.5) * PITCH
+        r = 6 + 0.25 * (x - 150)
+        for j in range(math.floor(-r / PITCH), math.floor(r / PITCH) + 1):
+            y = (j + 0.5) * PITCH
+            for k in range(max(0, math.floor((167 - r) / BRICK_H)),
+                           math.floor((167 + r) / BRICK_H) + 1):
+                d = math.hypot(y, ((k + 0.5) * BRICK_H - 167) * 0.9)
+                if d <= r * (0.85 + 0.3 * rng.random()):
+                    f = d / r
+                    v[(i, j, k)] = ("Yellow" if f < 0.45 else
+                                    "Orange" if f < 0.8 else
+                                    "Trans-orange", "Fire")
+    s.add_voxels(v)
+
+    # the wings: smooth tiles rising steeply from the shoulders in a V
+    # (flatter and smaller, they vanished edge-on in a side view),
+    # scalloped at the trailing edge, a red bone along the front and
+    # ribs; three plates thick so the steps between rows close up
+    wing = {}
+    for j in range(-28, 28):
+        y = (j + 0.5) * PITCH
+        out = abs(y) - 32
+        if out < 0:
+            continue
+        lead = 55 - 0.2 * out
+        trail = -75 + 0.5 * out + 14 * abs(math.sin(out / 30.0))
+        if trail >= lead - PITCH:
+            continue
+        kp = math.floor((110 + 0.9 * out) / PLATE_H)
+        for i in range(math.floor(trail / PITCH), math.floor(lead / PITCH) + 1):
+            x = (i + 0.5) * PITCH
+            if trail <= x <= lead:
+                rib = int(out) % 48 < 8 or x > lead - PITCH
+                value = ("Red" if rib else "Dark red", "Wings")
+                for dk in range(3):
+                    wing[(i, j, kp - dk)] = value
+    s.add_voxels(wing, height=PLATE_H, kind="tile")
+    return _root(s.to_node("Dragon"))
+
+
 EXAMPLES.extend([
     ("Minecraft tower", "Lego", lego_minecraft_tower),
     ("House", "Lego", lego_house),
     ("Church", "Lego", lego_church),
     ("Apartment building", "Lego", lego_building),
+    ("Dragon", "Lego", lego_dragon),
     ("Man (Minecraft style)", "Lego", lego_man_hd),
     ("Woman (Minecraft style)", "Lego", lego_woman_hd),
     ("Man (Minecraft style, small)", "Lego", lego_man),

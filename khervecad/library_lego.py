@@ -66,6 +66,9 @@ COLORS = {
 }
 #: colours cast in clear plastic: see-through in the preview
 TRANSLUCENT = {name for name in COLORS if name.startswith("Trans-")}
+#: the strongly tinted ones read washed-out at glass opacity (a flame
+#: came out pastel pink over a white ground), so they are denser
+VIVID = TRANSLUCENT - {"Trans-clear", "Trans-light blue"}
 
 
 # ------------------------------------------------------------ geometry
@@ -106,8 +109,9 @@ def colour(node, name):
     hexcol = COLORS.get(name) or (name if str(name).startswith("#")
                                   else COLORS["Red"])
     glass = name in TRANSLUCENT
+    alpha = 0.75 if name in VIVID else 0.55 if glass else 1.0
     wrap = CadNode("color", str(name), dict(
-        color=hexcol, alpha=0.55 if glass else 1.0,
+        color=hexcol, alpha=alpha,
         material="Glass" if glass else "Plastic"))
     wrap.add(node)
     return wrap

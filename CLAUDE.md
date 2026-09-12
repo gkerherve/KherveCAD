@@ -165,7 +165,11 @@ into a new module and import.
                        9.6 mm brick, 3.2 mm plate, 0.1 mm clearance a
                        side — the same as the hand-built
                        `lego_bricks.kcad`) in the official colours
-                       (`COLORS`; clear ones get the Glass material).
+                       (`COLORS`; clear ones get the Glass material, the
+                       strongly tinted `VIVID` ones a denser alpha — at
+                       glass opacity a flame read pastel pink). Slopes
+                       face all four ways: the ±X ones are the ±Y piece
+                       turned a quarter, stud indices mirrored.
                        Boolean-free: the hollow underside is walls + top,
                        tubes are revolved rings, a slope is an extruded
                        profile. Origin at the part's grid corner, not
@@ -233,8 +237,16 @@ into a new module and import.
                        side-effect import from the bottom of `examples.py`
                        so neither load order deadlocks).
   - `examples_lego.py` — the **Lego** category (Minecraft tower, house,
-                       Steve-style man, Alex-style woman), built from
-                       `library_lego` bricks. The figures are at ONE
+                       church, apartment building, dragon, Steve-style
+                       man, Alex-style woman), built from `library_lego`
+                       bricks. `gable_roof` lays slope courses + ridge
+                       tiles (house, church); `blob`/`sweep`/`box_mm`
+                       sculpt curved shapes in millimetres (every cell
+                       whose centre falls inside becomes a voxel — the
+                       dragon's body, neck, tail, head); floors seen
+                       through glass and pavements are `kind="tile"`
+                       voxels, whose absent studs keep the building
+                       light. The figures are at ONE
                        stud per Minecraft pixel (8x8x8 head, 8x4x12
                        body, ~31 cm tall, the face 8x8 bricks of pixel
                        art painted by `_paint`); the first 2-pixels-a-
