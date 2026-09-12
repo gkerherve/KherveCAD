@@ -57,6 +57,10 @@ if os.path.isfile(_version_file):
 _help_dir = os.path.join(_ROOT, "khervecad", "help")
 if os.path.isdir(_help_dir):
     datas.append((_help_dir, os.path.join("khervecad", "help")))
+# The KCAD-file library (library_kcad.py): khervecad/parts/*.kcad.
+_parts_dir = os.path.join(_ROOT, "khervecad", "parts")
+if os.path.isdir(_parts_dir):
+    datas.append((_parts_dir, os.path.join("khervecad", "parts")))
 
 # The whole app package. Several modules are imported lazily inside
 # functions or purely for their import side effects (examples_flowers /

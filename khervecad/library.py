@@ -1146,12 +1146,13 @@ PARTS = {
 
 # parts contributed by sibling modules (chemistry, room & furniture);
 # each entry carries its own `build` callable, dispatched by build_part.
-from . import (library_chem, library_lego, library_lego_sets,  # noqa: E402
-               library_room)
+from . import (library_chem, library_kcad, library_lego,  # noqa: E402
+               library_lego_sets, library_room)
 PARTS.update(library_chem.PARTS)
 PARTS.update(library_room.PARTS)
 PARTS.update(library_lego.PARTS)
 PARTS.update(library_lego_sets.PARTS)
+PARTS.update(library_kcad.PARTS)
 
 #: dialog fields holding a count (integer spin box, no "mm" suffix)
 _COUNT_FIELDS = {"bolts"} | library_lego.COUNT_FIELDS
