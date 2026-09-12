@@ -593,7 +593,7 @@ into a new module and import.
                        falls back to the centroid sort. Past
                        `SMALL_MESH` (12k) a mesh up to `MAX_TRIS` (40k)
                        gets a tree only if it grows by `BIG_GROWTH`
-                       (1.5x) at most: block models (a 28k-triangle Lego
+                       (2.5x) at most: block models (a 28k-triangle Lego
                        house splits 1.2x, 0.7 s) get the exact order,
                        threads give up in well under a second — the
                        centroid sort let a baseplate's one big face

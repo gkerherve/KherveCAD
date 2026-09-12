@@ -47,7 +47,7 @@ MAX_TRIS = 40000
 #: this, a 28k-triangle Lego house fell back to the centroid sort, whose
 #: huge baseplate face painted over the studs in front of it.
 SMALL_MESH = 12000
-BIG_GROWTH = 1.5
+BIG_GROWTH = 2.5
 
 #: CPU seconds the build may spend before giving up. Charged to the
 #: worker thread's own clock (time.thread_time), not the wall: the build
