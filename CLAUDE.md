@@ -1280,8 +1280,9 @@ half-added tool fails the suite.
 
 ## Roadmap
 
-**Tool queue** (asked for 2026-09-11, in order; each closes a gap
-against Blender/SolidWorks that matters to a user *and* an assistant):
+**Tool queue** (asked for 2026-09-11; **all six landed 2026-09-12** —
+fillet.py, shell.py, pattern.py, analysis.py, shading.py — kept here as
+the record of what each was for and where it would grow next):
 
 1. **Fillet / chamfer by clicking an edge** — SolidWorks' Fillet
    ("round objects"): pick an edge or a face in the 3D view (the Snap
@@ -1305,7 +1306,15 @@ against Blender/SolidWorks that matters to a user *and* an assistant):
 5. **Mass properties & interference**: volume, area, centre of mass,
    "do these parts overlap?" — what an assistant needs to check its
    own work (an MCP tool as much as a menu item).
-6. Ambient occlusion / edge lines in the preview.
+6. Ambient occlusion / edge lines in the preview — done as cavity
+   shading + edge lines (`shading.py`); true AO would need a depth
+   buffer the painter does not have.
+
+Where each would grow next: a fillet that reads the part's EXACT
+OpenSCAD mesh (so edges where a union's shapes meet exist), spherical
+corner blends where three fillets meet, a fillet preview that cuts;
+a shell whose opening is a picked face rather than a direction; a
+pattern along a path; a print check that suggests the best orientation.
 
 - Undo/redo on a shared `QUndoStack` (node add/remove/move/param
   changes), mirroring KherveSheet's `undo_commands.py`.
