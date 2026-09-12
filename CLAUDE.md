@@ -1496,6 +1496,18 @@ half-added tool fails the suite.
 
 ## Roadmap
 
+**SolidWorks gap list** (asked 2026-09-12). Landed the same day: the
+OpenGL viewer (`glrender.py`), the other mates (flush / concentric /
+angle / gear / limit, `mates.py`), 2D drawings (`drawing.py`) and sheet
+metal (`sheetmetal.py`). Still open, in the order they would pay off:
+**sketch constraints** (a 2D solver: parallel / tangent / equal /
+driven dimensions — the biggest remaining gap), **feature rollback and
+suppress** (the node tree is already the history; add roll-to-here and
+a suppressed flag), **extrude up-to-face / through-all**,
+**configurations** (named sets of the Variables sheet), **direct
+face push/pull** on primitive faces, and **drawings with more**: user
+dimensions, detail views, a bill of materials from an assembly.
+
 **Tool queue** (asked for 2026-09-11; **all six landed 2026-09-12** —
 fillet.py, shell.py, pattern.py, analysis.py, shading.py — kept here as
 the record of what each was for and where it would grow next):
