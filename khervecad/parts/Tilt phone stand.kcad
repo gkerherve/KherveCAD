@@ -1,0 +1,1139 @@
+{
+ "format": "kcad",
+ "version": 5,
+ "global_fn": 100,
+ "global_fn_on": true,
+ "dimensions": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "variables",
+    "name": "Variables",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "assign",
+      "name": "Zc =",
+      "visible": true,
+      "params": {
+       "variable": "Zc",
+       "value": 80.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "Zp =",
+      "visible": true,
+      "params": {
+       "variable": "Zp",
+       "value": 18.0
+      }
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#3a3a3a",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "union",
+      "name": "Group",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -6.0,
+         "y": 0.0,
+         "z": 80.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 90.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 12.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "union",
+                "name": "Group",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "rx": 0.0,
+                 "ry": 0.0,
+                 "rz": 0.0,
+                 "color": "",
+                 "alpha": 1.0
+                },
+                "children": [
+                 {
+                  "type": "circle",
+                  "name": "Circle",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "radius": 47.6,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 64
+                  }
+                 },
+                 {
+                  "type": "for_loop",
+                  "name": "For i",
+                  "visible": true,
+                  "params": {
+                   "variable": "i",
+                   "start": 0.0,
+                   "end": 49.0,
+                   "step": 1.0,
+                   "values": ""
+                  },
+                  "children": [
+                   {
+                    "type": "rotate",
+                    "name": "Rotate",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "i * 7.2"
+                    },
+                    "children": [
+                     {
+                      "type": "polygon",
+                      "name": "Polygon",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "points": [
+                        [
+                         47.5,
+                         -2.4
+                        ],
+                        [
+                         52.0,
+                         -0.85
+                        ],
+                        [
+                         52.0,
+                         0.85
+                        ],
+                        [
+                         47.5,
+                         2.4
+                        ]
+                       ]
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "circle",
+                "name": "Circle",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "radius": 40.0,
+                 "angle": 360.0,
+                 "start_angle": 0.0,
+                 "segments": 64
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-11, 6"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 0.0,
+           "z": 80.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 90.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": 5.0,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "difference",
+                "name": "Difference",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "circle",
+                  "name": "Circle",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "radius": 50.0,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 64
+                  }
+                 },
+                 {
+                  "type": "circle",
+                  "name": "Circle",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "radius": 40.0,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 64
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -11.0,
+         "y": 0.0,
+         "z": 80.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 90.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 22.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "intersection",
+              "name": "Intersection",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "circle",
+                "name": "Circle",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "radius": 41.0,
+                 "angle": 360.0,
+                 "start_angle": 0.0,
+                 "segments": 64
+                }
+               },
+               {
+                "type": "union",
+                "name": "Group",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "rx": 0.0,
+                 "ry": 0.0,
+                 "rz": 0.0,
+                 "color": "",
+                 "alpha": 1.0
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -40.0,
+                   "y": -18.0,
+                   "width": 80.0,
+                   "height": 6.0
+                  }
+                 },
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -9.0,
+                   "y": -12.0,
+                   "width": 4.0,
+                   "height": 7.0
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#2b2b2b",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -16.0,
+           "y": -45.0,
+           "z": 0.0,
+           "width": 32.0,
+           "depth": 90.0,
+           "height": 45.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -40.0,
+           "y": -45.0,
+           "z": 0.0,
+           "width": 80.0,
+           "depth": 90.0,
+           "height": 4.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -11.3,
+         "y": 0.0,
+         "z": 80.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 22.6,
+             "radius_bottom": 50.4,
+             "radius_top": 50.4,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -6.6,
+         "y": 0.0,
+         "z": 80.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 13.2,
+             "radius_bottom": 54.5,
+             "radius_top": 54.5,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -6.6,
+         "y": 0.0,
+         "z": 18.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 13.2,
+             "radius_bottom": 15.5,
+             "radius_top": 15.5,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -20.0,
+         "y": 0.0,
+         "z": 18.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 40.0,
+             "radius_bottom": 2.7,
+             "radius_top": 2.7,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#2f6fd6",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -6.0,
+         "y": 0.0,
+         "z": 18.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 90.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 12.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "union",
+              "name": "Group",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "circle",
+                "name": "Circle",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "radius": 9.6,
+                 "angle": 360.0,
+                 "start_angle": 0.0,
+                 "segments": 64
+                }
+               },
+               {
+                "type": "for_loop",
+                "name": "For i",
+                "visible": true,
+                "params": {
+                 "variable": "i",
+                 "start": 0.0,
+                 "end": 11.0,
+                 "step": 1.0,
+                 "values": ""
+                },
+                "children": [
+                 {
+                  "type": "rotate",
+                  "name": "Rotate",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": "i * 30"
+                  },
+                  "children": [
+                   {
+                    "type": "polygon",
+                    "name": "Polygon",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "points": [
+                      [
+                       9.5,
+                       -2.1
+                      ],
+                      [
+                       14.0,
+                       -0.85
+                      ],
+                      [
+                       14.0,
+                       0.85
+                      ],
+                      [
+                       9.5,
+                       2.1
+                      ]
+                     ]
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -7.0,
+         "y": 0.0,
+         "z": 18.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 90.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 14.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "intersection",
+              "name": "Intersection",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "circle",
+                "name": "Circle",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "radius": 2.65,
+                 "angle": 360.0,
+                 "start_angle": 0.0,
+                 "segments": 64
+                }
+               },
+               {
+                "type": "rect",
+                "name": "Rectangle",
+                "visible": true,
+                "params": {
+                 "x": -3.0,
+                 "y": -3.0,
+                 "width": 6.0,
+                 "height": 5.1
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#2f6fd6",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "union",
+      "name": "Group",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -20.0,
+         "y": 0.0,
+         "z": 18.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 90.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 38.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "intersection",
+              "name": "Intersection",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "circle",
+                "name": "Circle",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "radius": 2.5,
+                 "angle": 360.0,
+                 "start_angle": 0.0,
+                 "segments": 64
+                }
+               },
+               {
+                "type": "rect",
+                "name": "Rectangle",
+                "visible": true,
+                "params": {
+                 "x": -3.0,
+                 "y": -3.0,
+                 "width": 6.0,
+                 "height": 4.9
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 17.0,
+         "y": 0.0,
+         "z": 18.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 8.0,
+               "radius_bottom": 12.0,
+               "radius_top": 12.0,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "for_loop",
+              "name": "For i",
+              "visible": true,
+              "params": {
+               "variable": "i",
+               "start": 0.0,
+               "end": 11.0,
+               "step": 1.0,
+               "values": ""
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": "i * 30"
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 12.0,
+                   "y": 0.0,
+                   "z": -1.0,
+                   "height": 10.0,
+                   "radius_bottom": 2.0,
+                   "radius_top": 2.0,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#2f6fd6",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -21.0,
+         "y": 0.0,
+         "z": 18.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 4.5,
+             "radius_bottom": 6.0,
+             "radius_top": 6.0,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -20.5,
+         "y": 0.0,
+         "z": 18.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 90.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 5.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "intersection",
+              "name": "Intersection",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "circle",
+                "name": "Circle",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "radius": 2.6,
+                 "angle": 360.0,
+                 "start_angle": 0.0,
+                 "segments": 64
+                }
+               },
+               {
+                "type": "rect",
+                "name": "Rectangle",
+                "visible": true,
+                "params": {
+                 "x": -3.0,
+                 "y": -3.0,
+                 "width": 6.0,
+                 "height": 5.05
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

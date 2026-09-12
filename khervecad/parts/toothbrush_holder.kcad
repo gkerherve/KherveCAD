@@ -1,0 +1,293 @@
+{
+ "format": "kcad",
+ "version": 6,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "variables",
+    "name": "Variables",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "assign",
+      "name": "h =",
+      "visible": true,
+      "params": {
+       "variable": "h",
+       "value": 100.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "r_out =",
+      "visible": true,
+      "params": {
+       "variable": "r_out",
+       "value": 35.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "wall =",
+      "visible": true,
+      "params": {
+       "variable": "wall",
+       "value": 2.5
+      }
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 1",
+    "visible": true,
+    "params": {
+     "color": "#7FC8B8",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Toothbrush holder",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "rotate_extrude",
+            "name": "Rotate extrude",
+            "visible": true,
+            "params": {
+             "angle": 360.0,
+             "segments": 120
+            },
+            "children": [
+             {
+              "type": "offset",
+              "name": "Offset",
+              "visible": true,
+              "params": {
+               "radius": 1.0,
+               "chamfer": false
+              },
+              "children": [
+               {
+                "type": "offset",
+                "name": "Offset",
+                "visible": true,
+                "params": {
+                 "radius": -1.0,
+                 "chamfer": false
+                },
+                "children": [
+                 {
+                  "type": "polygon",
+                  "name": "Polygon",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "points": [
+                    [
+                     0.0,
+                     0.0
+                    ],
+                    [
+                     35.0,
+                     0.0
+                    ],
+                    [
+                     35.0,
+                     100.0
+                    ],
+                    [
+                     32.5,
+                     100.0
+                    ],
+                    [
+                     32.5,
+                     3.0
+                    ],
+                    [
+                     0.0,
+                     3.0
+                    ]
+                   ]
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Floor]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 3.0,
+             "radius_bottom": 33.0,
+             "radius_top": 33.0,
+             "segments": 120,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Top plate]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 97.0,
+             "height": 3.0,
+             "radius_bottom": 33.0,
+             "radius_top": 33.0,
+             "segments": 120,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [45 deg support cone]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 64.0,
+             "height": 33.0,
+             "radius_bottom": 0.0,
+             "radius_top": 33.0,
+             "segments": 120,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Paste hole]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 50.0,
+           "height": 60.0,
+           "radius_bottom": 13.0,
+           "radius_top": 13.0,
+           "segments": 80,
+           "center": false
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Brush 1]",
+          "visible": true,
+          "params": {
+           "x": 22.0,
+           "y": 0.0,
+           "z": 50.0,
+           "height": 60.0,
+           "radius_bottom": 6.5,
+           "radius_top": 6.5,
+           "segments": 60,
+           "center": false
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Brush 2]",
+          "visible": true,
+          "params": {
+           "x": -22.0,
+           "y": 0.0,
+           "z": 50.0,
+           "height": 60.0,
+           "radius_bottom": 6.5,
+           "radius_top": 6.5,
+           "segments": 60,
+           "center": false
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Brush 3]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 22.0,
+           "z": 50.0,
+           "height": 60.0,
+           "radius_bottom": 6.5,
+           "radius_top": 6.5,
+           "segments": 60,
+           "center": false
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Brush 4]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -22.0,
+           "z": 50.0,
+           "height": 60.0,
+           "radius_bottom": 6.5,
+           "radius_top": 6.5,
+           "segments": 60,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

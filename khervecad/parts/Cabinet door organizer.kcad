@@ -1,0 +1,740 @@
+{
+ "format": "kcad",
+ "version": 5,
+ "global_fn": 100,
+ "global_fn_on": true,
+ "dimensions": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "variables",
+    "name": "Variables",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "assign",
+      "name": "plate_w =",
+      "visible": true,
+      "params": {
+       "variable": "plate_w",
+       "value": 120.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "plate_h =",
+      "visible": true,
+      "params": {
+       "variable": "plate_h",
+       "value": 60.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "plate_t =",
+      "visible": true,
+      "params": {
+       "variable": "plate_t",
+       "value": 4.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "rail_base =",
+      "visible": true,
+      "params": {
+       "variable": "rail_base",
+       "value": 30.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "rail_top =",
+      "visible": true,
+      "params": {
+       "variable": "rail_top",
+       "value": 40.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "rail_h =",
+      "visible": true,
+      "params": {
+       "variable": "rail_h",
+       "value": 5.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "screw_d =",
+      "visible": true,
+      "params": {
+       "variable": "screw_d",
+       "value": 3.8
+      }
+     },
+     {
+      "type": "assign",
+      "name": "head_d =",
+      "visible": true,
+      "params": {
+       "variable": "head_d",
+       "value": 7.6
+      }
+     },
+     {
+      "type": "assign",
+      "name": "screw_x =",
+      "visible": true,
+      "params": {
+       "variable": "screw_x",
+       "value": 40.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "screw_z =",
+      "visible": true,
+      "params": {
+       "variable": "screw_z",
+       "value": 30.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "bin_w =",
+      "visible": true,
+      "params": {
+       "variable": "bin_w",
+       "value": 180.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "bin_d =",
+      "visible": true,
+      "params": {
+       "variable": "bin_d",
+       "value": 70.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "bin_h =",
+      "visible": true,
+      "params": {
+       "variable": "bin_h",
+       "value": 79.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "bin_r =",
+      "visible": true,
+      "params": {
+       "variable": "bin_r",
+       "value": 6.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "wall =",
+      "visible": true,
+      "params": {
+       "variable": "wall",
+       "value": 2.4
+      }
+     },
+     {
+      "type": "assign",
+      "name": "floor_t =",
+      "visible": true,
+      "params": {
+       "variable": "floor_t",
+       "value": 3.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "clr =",
+      "visible": true,
+      "params": {
+       "variable": "clr",
+       "value": 0.3
+      }
+     },
+     {
+      "type": "assign",
+      "name": "bin_z =",
+      "visible": true,
+      "params": {
+       "variable": "bin_z",
+       "value": -4.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "explode =",
+      "visible": true,
+      "params": {
+       "variable": "explode",
+       "value": 60.0
+      }
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Door plate",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "SteelBlue",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -60.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 4.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 90.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "linear_extrude",
+                  "name": "Linear extrude",
+                  "visible": true,
+                  "params": {
+                   "height": 4.0,
+                   "twist": 0.0,
+                   "scale": 1.0,
+                   "center": false,
+                   "segments": 0
+                  },
+                  "children": [
+                   {
+                    "type": "translate",
+                    "name": "Translate",
+                    "visible": true,
+                    "params": {
+                     "x": -55.0,
+                     "y": 5.0,
+                     "z": 0.0
+                    },
+                    "children": [
+                     {
+                      "type": "offset",
+                      "name": "Offset",
+                      "visible": true,
+                      "params": {
+                       "radius": 5.0,
+                       "chamfer": false
+                      },
+                      "children": [
+                       {
+                        "type": "rect",
+                        "name": "Rectangle",
+                        "visible": true,
+                        "params": {
+                         "x": 0.0,
+                         "y": 0.0,
+                         "width": 110.0,
+                         "height": 50.0
+                        }
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": 60.0,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Polygon",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   -15.0,
+                   3.99
+                  ],
+                  [
+                   15.0,
+                   3.99
+                  ],
+                  [
+                   20.0,
+                   9.0
+                  ],
+                  [
+                   -20.0,
+                   9.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For sx",
+            "visible": true,
+            "params": {
+             "variable": "sx",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "-1, 1"
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "sx * screw_x",
+               "y": -1.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": -90.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 6.0,
+                   "radius_bottom": 1.9,
+                   "radius_top": 1.9,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "sx * screw_x",
+               "y": 4.01,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 90.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 1.9,
+                   "radius_bottom": 3.8,
+                   "radius_top": 1.9,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Bin",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "WhiteSmoke",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 4.3,
+               "z": -4.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 79.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": 6.0,
+                   "y": 6.0,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "offset",
+                    "name": "Offset",
+                    "visible": true,
+                    "params": {
+                     "radius": 6.0,
+                     "chamfer": false
+                    },
+                    "children": [
+                     {
+                      "type": "rect",
+                      "name": "Rectangle",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "width": 168.0,
+                       "height": 58.0
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -87.6,
+               "y": 6.699999999999999,
+               "z": -1.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 79.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": 3.6,
+                   "y": 3.6,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "offset",
+                    "name": "Offset",
+                    "visible": true,
+                    "params": {
+                     "radius": 3.6,
+                     "chamfer": false
+                    },
+                    "children": [
+                     {
+                      "type": "rect",
+                      "name": "Rectangle",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "width": 168.0,
+                       "height": 58.0
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -24.0,
+             "y": 4.3,
+             "z": -4.0,
+             "width": 48.0,
+             "depth": 13.0,
+             "height": 79.0,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 79.0,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "offset",
+            "name": "Offset",
+            "visible": true,
+            "params": {
+             "radius": 0.3,
+             "chamfer": false
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Polygon",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 -13.0,
+                 2.0
+                ],
+                [
+                 13.0,
+                 2.0
+                ],
+                [
+                 20.0,
+                 9.0
+                ],
+                [
+                 -20.0,
+                 9.0
+                ]
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For i",
+          "visible": true,
+          "params": {
+           "variable": "i",
+           "start": -2.0,
+           "end": 2.0,
+           "step": 1.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": "i * 30",
+             "y": 44.3,
+             "z": -5.0,
+             "height": 5.0,
+             "radius_bottom": 3.0,
+             "radius_top": 3.0,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

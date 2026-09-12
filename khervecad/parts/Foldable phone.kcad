@@ -1,0 +1,1155 @@
+{
+ "format": "kcad",
+ "version": 5,
+ "global_fn": 100,
+ "global_fn_on": true,
+ "dimensions": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "variables",
+    "name": "Variables",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "assign",
+      "name": "pw =",
+      "visible": true,
+      "params": {
+       "variable": "pw",
+       "value": 72.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "ph =",
+      "visible": true,
+      "params": {
+       "variable": "ph",
+       "value": 150.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "pt =",
+      "visible": true,
+      "params": {
+       "variable": "pt",
+       "value": 6.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "cr =",
+      "visible": true,
+      "params": {
+       "variable": "cr",
+       "value": 8.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "open_a =",
+      "visible": true,
+      "params": {
+       "variable": "open_a",
+       "value": 40.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "bez =",
+      "visible": true,
+      "params": {
+       "variable": "bez",
+       "value": 3.5
+      }
+     },
+     {
+      "type": "assign",
+      "name": "btn_r =",
+      "visible": true,
+      "params": {
+       "variable": "btn_r",
+       "value": 1.6
+      }
+     },
+     {
+      "type": "assign",
+      "name": "hole_r =",
+      "visible": true,
+      "params": {
+       "variable": "hole_r",
+       "value": 0.7
+      }
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "panel_right",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#5c636d",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "component",
+          "name": "panel_body",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 8.0,
+               "y": 8.0,
+               "z": 0.0,
+               "height": 6.0,
+               "radius_bottom": 8.0,
+               "radius_top": 8.0,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 64.0,
+               "y": 8.0,
+               "z": 0.0,
+               "height": 6.0,
+               "radius_bottom": 8.0,
+               "radius_top": 8.0,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 8.0,
+               "y": 142.0,
+               "z": 0.0,
+               "height": 6.0,
+               "radius_bottom": 8.0,
+               "radius_top": 8.0,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 64.0,
+               "y": 142.0,
+               "z": 0.0,
+               "height": 6.0,
+               "radius_bottom": 8.0,
+               "radius_top": 8.0,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "component",
+          "name": "camera_bump",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 38.0,
+               "y": 110.0,
+               "z": -1.8,
+               "height": 1.8,
+               "radius_bottom": 5.0,
+               "radius_top": 5.0,
+               "segments": 48,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 58.0,
+               "y": 110.0,
+               "z": -1.8,
+               "height": 1.8,
+               "radius_bottom": 5.0,
+               "radius_top": 5.0,
+               "segments": 48,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 38.0,
+               "y": 134.0,
+               "z": -1.8,
+               "height": 1.8,
+               "radius_bottom": 5.0,
+               "radius_top": 5.0,
+               "segments": 48,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 58.0,
+               "y": 134.0,
+               "z": -1.8,
+               "height": 1.8,
+               "radius_bottom": 5.0,
+               "radius_top": 5.0,
+               "segments": 48,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "component",
+          "name": "buttons",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 71.4,
+             "y": 52.0,
+             "z": 3.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 13.0,
+                 "radius_bottom": 1.6,
+                 "radius_top": 1.6,
+                 "segments": 32,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 71.4,
+             "y": 72.0,
+             "z": 3.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 12.0,
+                 "radius_bottom": 1.6,
+                 "radius_top": 1.6,
+                 "segments": 32,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 71.4,
+             "y": 87.0,
+             "z": 3.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 12.0,
+                 "radius_bottom": 1.6,
+                 "radius_top": 1.6,
+                 "segments": 32,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "component",
+        "name": "screen_recess",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 8.0,
+             "z": 5.2,
+             "height": 2.0,
+             "radius_bottom": 4.5,
+             "radius_top": 4.5,
+             "segments": 64,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 64.0,
+             "y": 8.0,
+             "z": 5.2,
+             "height": 2.0,
+             "radius_bottom": 4.5,
+             "radius_top": 4.5,
+             "segments": 64,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 142.0,
+             "z": 5.2,
+             "height": 2.0,
+             "radius_bottom": 4.5,
+             "radius_top": 4.5,
+             "segments": 64,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 64.0,
+             "y": 142.0,
+             "z": 5.2,
+             "height": 2.0,
+             "radius_bottom": 4.5,
+             "radius_top": 4.5,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "component",
+        "name": "lens_cuts",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 48.0,
+           "y": 126.0,
+           "z": -2.2,
+           "height": 1.6,
+           "radius_bottom": 4.0,
+           "radius_top": 4.0,
+           "segments": 48,
+           "center": false
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 48.0,
+           "y": 116.0,
+           "z": -2.2,
+           "height": 1.6,
+           "radius_bottom": 4.0,
+           "radius_top": 4.0,
+           "segments": 48,
+           "center": false
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 61.0,
+           "y": 121.0,
+           "z": -2.2,
+           "height": 1.6,
+           "radius_bottom": 1.6,
+           "radius_top": 1.6,
+           "segments": 32,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "component",
+        "name": "speaker_holes",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For i",
+          "visible": true,
+          "params": {
+           "variable": "i",
+           "start": 0.0,
+           "end": 5.0,
+           "step": 1.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "pw / 2 - 12.5 + i * 5",
+             "y": -1.0,
+             "z": 3.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 8.0,
+                 "radius_bottom": 0.7,
+                 "radius_top": 0.7,
+                 "segments": 24,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "component",
+        "name": "front_cam_cut",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 36.0,
+           "y": 137.0,
+           "z": 4.4,
+           "height": 3.0,
+           "radius_bottom": 2.1,
+           "radius_top": 2.1,
+           "segments": 48,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 23.0,
+         "y": 145.0,
+         "z": 2.3,
+         "width": 26.0,
+         "depth": 8.0,
+         "height": 1.4,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "glass_right",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#16324a",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "component",
+        "name": "glass",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 8.0,
+             "z": 5.2,
+             "height": 0.8,
+             "radius_bottom": 4.5,
+             "radius_top": 4.5,
+             "segments": 64,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 64.0,
+             "y": 8.0,
+             "z": 5.2,
+             "height": 0.8,
+             "radius_bottom": 4.5,
+             "radius_top": 4.5,
+             "segments": 64,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 142.0,
+             "z": 5.2,
+             "height": 0.8,
+             "radius_bottom": 4.5,
+             "radius_top": 4.5,
+             "segments": 64,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 64.0,
+             "y": 142.0,
+             "z": 5.2,
+             "height": 0.8,
+             "radius_bottom": 4.5,
+             "radius_top": 4.5,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "reference",
+        "name": "front_cam_cut instance",
+        "visible": true,
+        "params": {
+         "ref": "front_cam_cut",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "rear_lens_glass",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#0d0f12",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "cylinder",
+      "name": "Cylinder",
+      "visible": true,
+      "params": {
+       "x": 48.0,
+       "y": 126.0,
+       "z": -1.7,
+       "height": 0.6,
+       "radius_bottom": 3.4,
+       "radius_top": 3.4,
+       "segments": 48,
+       "center": false
+      }
+     },
+     {
+      "type": "cylinder",
+      "name": "Cylinder",
+      "visible": true,
+      "params": {
+       "x": 48.0,
+       "y": 116.0,
+       "z": -1.7,
+       "height": 0.6,
+       "radius_bottom": 3.4,
+       "radius_top": 3.4,
+       "segments": 48,
+       "center": false
+      }
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "front_cam_glass",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#0d0f12",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "cylinder",
+      "name": "Cylinder",
+      "visible": true,
+      "params": {
+       "x": 36.0,
+       "y": 137.0,
+       "z": 5.0,
+       "height": 0.8,
+       "radius_bottom": 2.0,
+       "radius_top": 2.0,
+       "segments": 48,
+       "center": false
+      }
+     }
+    ]
+   },
+   {
+    "type": "rotate",
+    "name": "Rotate",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 40.0,
+     "z": 0.0
+    },
+    "children": [
+     {
+      "type": "mirror",
+      "name": "Mirror",
+      "visible": true,
+      "params": {
+       "x": 1.0,
+       "y": 0.0,
+       "z": 0.0
+      },
+      "children": [
+       {
+        "type": "component",
+        "name": "panel_left",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "#5c636d",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "reference",
+            "name": "panel_body instance",
+            "visible": true,
+            "params": {
+             "ref": "panel_body",
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            }
+           },
+           {
+            "type": "reference",
+            "name": "screen_recess instance",
+            "visible": true,
+            "params": {
+             "ref": "screen_recess",
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            }
+           },
+           {
+            "type": "reference",
+            "name": "speaker_holes instance",
+            "visible": true,
+            "params": {
+             "ref": "speaker_holes",
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 30.0,
+             "y": 145.0,
+             "z": 2.3,
+             "width": 12.0,
+             "depth": 8.0,
+             "height": 1.4,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#16324a",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "reference",
+          "name": "glass instance",
+          "visible": true,
+          "params": {
+           "ref": "glass",
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "hinge",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#b8bec6",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "for_loop",
+      "name": "For i",
+      "visible": true,
+      "params": {
+       "variable": "i",
+       "start": 0.0,
+       "end": 2.0,
+       "step": 1.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": "18 + i * 50",
+         "z": 3.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": -90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 26.0,
+             "radius_bottom": 3.2,
+             "radius_top": 3.2,
+             "segments": 48,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "translate",
+    "name": "front cam ring",
+    "visible": true,
+    "params": {
+     "x": 36.0,
+     "y": 137.0,
+     "z": 5.85
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#c9ced6",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "height": 0.35,
+         "radius_bottom": 2.4,
+         "radius_top": 2.4,
+         "segments": 48,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

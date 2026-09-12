@@ -1,0 +1,419 @@
+{
+ "format": "kcad",
+ "version": 5,
+ "global_fn": 100,
+ "global_fn_on": true,
+ "dimensions": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "variables",
+    "name": "Variables",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "assign",
+      "name": "r_body =",
+      "visible": true,
+      "params": {
+       "variable": "r_body",
+       "value": 5.8
+      }
+     },
+     {
+      "type": "assign",
+      "name": "r_grip =",
+      "visible": true,
+      "params": {
+       "variable": "r_grip",
+       "value": 5.5
+      }
+     },
+     {
+      "type": "assign",
+      "name": "r_cap =",
+      "visible": true,
+      "params": {
+       "variable": "r_cap",
+       "value": 6.3
+      }
+     },
+     {
+      "type": "assign",
+      "name": "z_grip =",
+      "visible": true,
+      "params": {
+       "variable": "z_grip",
+       "value": 24.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "z_barrel =",
+      "visible": true,
+      "params": {
+       "variable": "z_barrel",
+       "value": 58.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "z_cap =",
+      "visible": true,
+      "params": {
+       "variable": "z_cap",
+       "value": 130.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "cap_l =",
+      "visible": true,
+      "params": {
+       "variable": "cap_l",
+       "value": 34.0
+      }
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "nib",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#b9bec6",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "cylinder",
+      "name": "Cylinder",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "height": 6.0,
+       "radius_bottom": 0.45,
+       "radius_top": 2.2,
+       "segments": 48,
+       "center": false
+      }
+     },
+     {
+      "type": "cylinder",
+      "name": "Cylinder",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 6.0,
+       "height": 18.0,
+       "radius_bottom": 2.2,
+       "radius_top": 5.5,
+       "segments": 64,
+       "center": false
+      }
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "grip",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#1b2b4b",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 24.0,
+         "height": 34.0,
+         "radius_bottom": 5.5,
+         "radius_top": 5.5,
+         "segments": 64,
+         "center": false
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 5.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": "z_grip + 5 + i * 5"
+          },
+          "children": [
+           {
+            "type": "rotate_extrude",
+            "name": "Rotate extrude",
+            "visible": true,
+            "params": {
+             "angle": 360.0,
+             "segments": 72
+            },
+            "children": [
+             {
+              "type": "circle",
+              "name": "Circle",
+              "visible": true,
+              "params": {
+               "x": 5.5,
+               "y": 0.0,
+               "radius": 0.7,
+               "angle": 360.0,
+               "start_angle": 0.0,
+               "segments": 24
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "barrel",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#23375f",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "hull",
+      "name": "Hull",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 58.0,
+         "height": 1.0,
+         "radius_bottom": 5.8,
+         "radius_top": 5.8,
+         "segments": 64,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 129.0,
+         "height": 1.0,
+         "radius_bottom": 6.3,
+         "radius_top": 6.3,
+         "segments": 64,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "cap",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#1b2b4b",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "hull",
+      "name": "Hull",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 130.0,
+         "height": 28.0,
+         "radius_bottom": 6.3,
+         "radius_top": 6.3,
+         "segments": 64,
+         "center": false
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 158.0,
+         "radius": 6.3,
+         "segments": 64
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "clip",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#b9bec6",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "hull",
+      "name": "Hull",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 5.8,
+         "y": 0.0,
+         "z": 136.0,
+         "width": 2.0,
+         "depth": 5.0,
+         "height": 2.0,
+         "center": true
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 7.9,
+         "y": 0.0,
+         "z": 156.0,
+         "width": 2.0,
+         "depth": 5.5,
+         "height": 2.0,
+         "center": true
+        }
+       }
+      ]
+     },
+     {
+      "type": "hull",
+      "name": "Hull",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 7.9,
+         "y": 0.0,
+         "z": 156.0,
+         "width": 2.0,
+         "depth": 5.5,
+         "height": 2.0,
+         "center": true
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 5.3,
+         "y": 0.0,
+         "z": 162.0,
+         "width": 2.0,
+         "depth": 5.5,
+         "height": 2.0,
+         "center": true
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

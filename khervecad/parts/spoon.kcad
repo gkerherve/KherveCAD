@@ -1,0 +1,1006 @@
+{
+ "format": "kcad",
+ "version": 5,
+ "global_fn": 100,
+ "global_fn_on": true,
+ "dimensions": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 64.0
+    }
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#cdd3da",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "union",
+      "name": "Group",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "component",
+        "name": "bowl",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "intersection",
+            "name": "Intersection",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "component",
+              "name": "bowl_outer",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "hull",
+                "name": "Hull",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 8.0,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "scale",
+                    "name": "Scale",
+                    "visible": true,
+                    "params": {
+                     "x": 9.5,
+                     "y": 9.5,
+                     "z": 4.2
+                    },
+                    "children": [
+                     {
+                      "type": "sphere",
+                      "name": "Sphere",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "radius": 1.0,
+                       "segments": 48
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 18.0,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "scale",
+                    "name": "Scale",
+                    "visible": true,
+                    "params": {
+                     "x": 12.8,
+                     "y": 12.8,
+                     "z": 6.2
+                    },
+                    "children": [
+                     {
+                      "type": "sphere",
+                      "name": "Sphere",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "radius": 1.0,
+                       "segments": 48
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 29.0,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "scale",
+                    "name": "Scale",
+                    "visible": true,
+                    "params": {
+                     "x": 14.3,
+                     "y": 14.3,
+                     "z": 7.2
+                    },
+                    "children": [
+                     {
+                      "type": "sphere",
+                      "name": "Sphere",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "radius": 1.0,
+                       "segments": 48
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 41.0,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "scale",
+                    "name": "Scale",
+                    "visible": true,
+                    "params": {
+                     "x": 12.0,
+                     "y": 12.0,
+                     "z": 6.2
+                    },
+                    "children": [
+                     {
+                      "type": "sphere",
+                      "name": "Sphere",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "radius": 1.0,
+                       "segments": 48
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 51.0,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "scale",
+                    "name": "Scale",
+                    "visible": true,
+                    "params": {
+                     "x": 8.2,
+                     "y": 8.2,
+                     "z": 4.4
+                    },
+                    "children": [
+                     {
+                      "type": "sphere",
+                      "name": "Sphere",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "radius": 1.0,
+                       "segments": 48
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": -25.0,
+               "y": -10.0,
+               "z": -20.0,
+               "width": 50.0,
+               "depth": 75.0,
+               "height": 20.6,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "component",
+            "name": "bowl_inner",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 1.6,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 8.5,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 8.0,
+                   "y": 8.0,
+                   "z": 3.4
+                  },
+                  "children": [
+                   {
+                    "type": "sphere",
+                    "name": "Sphere",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "radius": 1.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 18.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 11.3,
+                   "y": 11.3,
+                   "z": 5.2
+                  },
+                  "children": [
+                   {
+                    "type": "sphere",
+                    "name": "Sphere",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "radius": 1.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 29.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 12.8,
+                   "y": 12.8,
+                   "z": 6.1
+                  },
+                  "children": [
+                   {
+                    "type": "sphere",
+                    "name": "Sphere",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "radius": 1.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 41.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 10.5,
+                   "y": 10.5,
+                   "z": 5.2
+                  },
+                  "children": [
+                   {
+                    "type": "sphere",
+                    "name": "Sphere",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "radius": 1.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 50.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 6.8,
+                   "y": 6.8,
+                   "z": 3.6
+                  },
+                  "children": [
+                   {
+                    "type": "sphere",
+                    "name": "Sphere",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "radius": 1.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "component",
+        "name": "handle",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 50.0,
+             "z": 1.0
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 6.0,
+               "y": 3.6,
+               "z": 1.8
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 1.0,
+                 "segments": 48
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 80.0,
+             "z": 3.4
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 4.4,
+               "y": 2.7,
+               "z": 1.3
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 1.0,
+                 "segments": 48
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 80.0,
+             "z": 3.4
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 4.4,
+               "y": 2.7,
+               "z": 1.3
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 1.0,
+                 "segments": 48
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 106.0,
+             "z": 5.8
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 4.7,
+               "y": 2.9,
+               "z": 1.4
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 1.0,
+                 "segments": 48
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 106.0,
+             "z": 5.8
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 4.7,
+               "y": 2.9,
+               "z": 1.4
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 1.0,
+                 "segments": 48
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 132.0,
+             "z": 7.7
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 5.9,
+               "y": 3.5,
+               "z": 1.55
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 1.0,
+                 "segments": 48
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 132.0,
+             "z": 7.7
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 5.9,
+               "y": 3.5,
+               "z": 1.55
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 1.0,
+                 "segments": 48
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 156.0,
+             "z": 8.6
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 7.2,
+               "y": 4.3,
+               "z": 1.7
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 1.0,
+                 "segments": 48
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 156.0,
+             "z": 8.6
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 7.2,
+               "y": 4.3,
+               "z": 1.7
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 1.0,
+                 "segments": 48
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 174.0,
+             "z": 8.2
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 6.4,
+               "y": 3.8,
+               "z": 1.55
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 1.0,
+                 "segments": 48
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 174.0,
+             "z": 8.2
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 6.4,
+               "y": 3.8,
+               "z": 1.55
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 1.0,
+                 "segments": 48
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 180.0,
+             "z": 7.9
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 3.4,
+               "y": 2.0,
+               "z": 1.1
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 1.0,
+                 "segments": 48
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

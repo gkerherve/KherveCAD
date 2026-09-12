@@ -1,0 +1,820 @@
+{
+ "format": "kcad",
+ "version": 6,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "variables",
+    "name": "Variables",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "assign",
+      "name": "W =",
+      "visible": true,
+      "params": {
+       "variable": "W",
+       "value": 38.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "H =",
+      "visible": true,
+      "params": {
+       "variable": "H",
+       "value": 45.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "T =",
+      "visible": true,
+      "params": {
+       "variable": "T",
+       "value": 10.7
+      }
+     },
+     {
+      "type": "assign",
+      "name": "R =",
+      "visible": true,
+      "params": {
+       "variable": "R",
+       "value": 9.0
+      }
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color [Case colour]",
+    "visible": true,
+    "params": {
+     "color": "#c9ccd1",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "hull",
+      "name": "Hull [Case shell]",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x [Left and right corners]",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For y [Front and back corners]",
+          "visible": true,
+          "params": {
+           "variable": "y",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-1, 1"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate [Corner position]",
+            "visible": true,
+            "params": {
+             "x": "x * (W/2 - R)",
+             "y": "y * (H/2 - R)",
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate [Bottom edge height]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 1.6
+              },
+              "children": [
+               {
+                "type": "scale",
+                "name": "Scale [Flatten bottom edge]",
+                "visible": true,
+                "params": {
+                 "x": 1.0,
+                 "y": 1.0,
+                 "z": 0.17
+                },
+                "children": [
+                 {
+                  "type": "sphere",
+                  "name": "Sphere [Bottom rounded edge]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "radius": 9.0,
+                   "segments": 48
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Corner wall]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 1.6,
+               "height": 7.1,
+               "radius_bottom": 9.0,
+               "radius_top": 9.0,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "translate",
+              "name": "Translate [Top edge height]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 8.7
+              },
+              "children": [
+               {
+                "type": "scale",
+                "name": "Scale [Flatten top edge]",
+                "visible": true,
+                "params": {
+                 "x": 1.0,
+                 "y": 1.0,
+                 "z": 0.17
+                },
+                "children": [
+                 {
+                  "type": "sphere",
+                  "name": "Sphere [Top rounded edge]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "radius": 9.0,
+                   "segments": 48
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color [Glass colour]",
+    "visible": true,
+    "params": {
+     "color": "#0a0a0c",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "hull",
+      "name": "Hull [Screen glass]",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x [Left and right glass corners]",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For y [Front and back glass corners]",
+          "visible": true,
+          "params": {
+           "variable": "y",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-1, 1"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate [Glass corner position]",
+            "visible": true,
+            "params": {
+             "x": "x * (W/2 - R)",
+             "y": "y * (H/2 - R)",
+             "z": 9.9
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale [Flatten glass dome]",
+              "visible": true,
+              "params": {
+               "x": 1.0,
+               "y": 1.0,
+               "z": 0.07
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere [Glass dome corner]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 8.1,
+                 "segments": 48
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color [Time colour]",
+    "visible": true,
+    "params": {
+     "color": "#ffffff",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate [Time position]",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 3.0,
+       "z": 10.45
+      },
+      "children": [
+       {
+        "type": "linear_extrude",
+        "name": "Linear extrude [Time thickness]",
+        "visible": true,
+        "params": {
+         "height": 0.15,
+         "twist": 0.0,
+         "scale": 1.0,
+         "center": false,
+         "segments": 0
+        },
+        "children": [
+         {
+          "type": "text",
+          "name": "Text [Time digits]",
+          "visible": true,
+          "params": {
+           "x": -10.21,
+           "y": -2.466,
+           "text": "10:09",
+           "size": 7.0
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color [Activity ring colour]",
+    "visible": true,
+    "params": {
+     "color": "#ff9f0a",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate [Activity ring position]",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": -8.0,
+       "z": 10.45
+      },
+      "children": [
+       {
+        "type": "linear_extrude",
+        "name": "Linear extrude [Activity ring thickness]",
+        "visible": true,
+        "params": {
+         "height": 0.15,
+         "twist": 0.0,
+         "scale": 1.0,
+         "center": false,
+         "segments": 0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference [Activity ring cut]",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "circle",
+            "name": "Circle [Ring outer edge]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "radius": 5.0,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
+            }
+           },
+           {
+            "type": "circle",
+            "name": "Circle [Ring hole]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "radius": 3.8,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color [Crown colour]",
+    "visible": true,
+    "params": {
+     "color": "#b0b3b8",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate [Crown position]",
+      "visible": true,
+      "params": {
+       "x": 18.2,
+       "y": 8.0,
+       "z": 5.4
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate [Point crown sideways]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 90.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference [Knurled crown]",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Crown wheel]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 3.2,
+             "radius_bottom": 3.4,
+             "radius_top": 3.4,
+             "segments": 64,
+             "center": false
+            }
+           },
+           {
+            "type": "for_loop",
+            "name": "For i [Grip grooves]",
+            "visible": true,
+            "params": {
+             "variable": "i",
+             "start": 0.0,
+             "end": 23.0,
+             "step": 1.0,
+             "values": ""
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate [Groove angle]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": "i * 15"
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Groove cutter]",
+                "visible": true,
+                "params": {
+                 "x": 3.4,
+                 "y": 0.0,
+                 "z": 0.6,
+                 "height": 3.0,
+                 "radius_bottom": 0.35,
+                 "radius_top": 0.35,
+                 "segments": 64,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color [Crown dot colour]",
+    "visible": true,
+    "params": {
+     "color": "#e03a2f",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate [Crown dot position]",
+      "visible": true,
+      "params": {
+       "x": 21.3,
+       "y": 8.0,
+       "z": 5.4
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate [Face crown dot outward]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 90.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Red crown dot]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 0.2,
+           "radius_bottom": 2.2,
+           "radius_top": 2.2,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color [Button colour]",
+    "visible": true,
+    "params": {
+     "color": "#b0b3b8",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "hull",
+      "name": "Hull [Side button]",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For y [Button ends]",
+        "visible": true,
+        "params": {
+         "variable": "y",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-9, -1"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate [Button end position]",
+          "visible": true,
+          "params": {
+           "x": 18.2,
+           "y": "y",
+           "z": 5.4
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate [Point button end sideways]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Button end]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 1.1,
+               "radius_bottom": 1.5,
+               "radius_top": 1.5,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color [Sensor colour]",
+    "visible": true,
+    "params": {
+     "color": "#2b2d31",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate [Sensor position]",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.3
+      },
+      "children": [
+       {
+        "type": "scale",
+        "name": "Scale [Flatten sensor dome]",
+        "visible": true,
+        "params": {
+         "x": 1.0,
+         "y": 1.0,
+         "z": 0.18
+        },
+        "children": [
+         {
+          "type": "sphere",
+          "name": "Sphere [Back sensor]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "radius": 13.0,
+           "segments": 48
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "for_loop",
+    "name": "For s [Top and bottom straps]",
+    "visible": true,
+    "params": {
+     "variable": "s",
+     "start": 0.0,
+     "end": 4.0,
+     "step": 1.0,
+     "values": "-1, 1"
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color [Band colour]",
+      "visible": true,
+      "params": {
+       "color": "#3a5f8a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "mirror",
+        "name": "Mirror [Flip for bottom strap]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": "s < 0 ? 1 : 0",
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull [Strap]",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Strap root]",
+            "visible": true,
+            "params": {
+             "x": -12.0,
+             "y": 19.5,
+             "z": 2.5,
+             "width": 24.0,
+             "depth": 1.0,
+             "height": 4.0,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate [Strap middle position]",
+            "visible": true,
+            "params": {
+             "x": -12.0,
+             "y": 42.5,
+             "z": 0.5
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate [Strap middle tilt]",
+              "visible": true,
+              "params": {
+               "x": -18.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cube",
+                "name": "Cube [Strap middle]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "width": 24.0,
+                 "depth": 1.0,
+                 "height": 3.0,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate [Strap tip position]",
+            "visible": true,
+            "params": {
+             "x": -12.0,
+             "y": 62.5,
+             "z": -6.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate [Strap tip tilt]",
+              "visible": true,
+              "params": {
+               "x": -35.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cube",
+                "name": "Cube [Strap tip]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "width": 24.0,
+                 "depth": 1.0,
+                 "height": 3.0,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

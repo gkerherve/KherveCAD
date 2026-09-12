@@ -1,0 +1,488 @@
+{
+ "format": "kcad",
+ "version": 6,
+ "global_fn": 96,
+ "global_fn_on": true,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "color",
+    "name": "Color 1",
+    "visible": true,
+    "params": {
+     "color": "#8EC9E8",
+     "alpha": 0.7,
+     "material": "Glass"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "bottle",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "rotate_extrude",
+            "name": "Rotate extrude",
+            "visible": true,
+            "params": {
+             "angle": 360.0,
+             "segments": 96
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Polygon [Body]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 0.0,
+                 0.0
+                ],
+                [
+                 34.0,
+                 0.0
+                ],
+                [
+                 36.0,
+                 2.0
+                ],
+                [
+                 36.0,
+                 160.0
+                ],
+                [
+                 35.0,
+                 166.0
+                ],
+                [
+                 32.0,
+                 173.0
+                ],
+                [
+                 27.0,
+                 180.0
+                ],
+                [
+                 21.0,
+                 186.0
+                ],
+                [
+                 15.0,
+                 192.0
+                ],
+                [
+                 14.0,
+                 194.0
+                ],
+                [
+                 14.0,
+                 212.0
+                ],
+                [
+                 0.0,
+                 212.0
+                ]
+               ]
+              }
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For z",
+            "visible": true,
+            "params": {
+             "variable": "z",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "55, 65, 75"
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": "z"
+              },
+              "children": [
+               {
+                "type": "rotate_extrude",
+                "name": "Rotate extrude",
+                "visible": true,
+                "params": {
+                 "angle": 360.0,
+                 "segments": 96
+                },
+                "children": [
+                 {
+                  "type": "circle",
+                  "name": "Circle [Grip rings]",
+                  "visible": true,
+                  "params": {
+                   "x": 36.0,
+                   "y": 0.0,
+                   "radius": 1.2,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 24
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Collar ramp]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 196.0,
+             "height": 3.0,
+             "radius_bottom": 14.0,
+             "radius_top": 17.0,
+             "segments": 64,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Collar]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 199.0,
+             "height": 1.0,
+             "radius_bottom": 17.0,
+             "radius_top": 17.0,
+             "segments": 64,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 205.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Rotate extrude",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "circle",
+                "name": "Circle [Snap bead]",
+                "visible": true,
+                "params": {
+                 "x": 14.0,
+                 "y": 0.0,
+                 "radius": 1.0,
+                 "angle": 360.0,
+                 "start_angle": 0.0,
+                 "segments": 24
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "rotate_extrude",
+          "name": "Rotate extrude",
+          "visible": true,
+          "params": {
+           "angle": 360.0,
+           "segments": 96
+          },
+          "children": [
+           {
+            "type": "polygon",
+            "name": "Polygon [Hollow]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "points": [
+              [
+               0.0,
+               2.0
+              ],
+              [
+               32.0,
+               2.0
+              ],
+              [
+               34.0,
+               4.0
+              ],
+              [
+               34.0,
+               160.0
+              ],
+              [
+               33.0,
+               166.0
+              ],
+              [
+               30.0,
+               172.5
+              ],
+              [
+               25.0,
+               179.0
+              ],
+              [
+               19.0,
+               185.0
+              ],
+              [
+               13.0,
+               191.0
+              ],
+              [
+               12.0,
+               193.0
+              ],
+              [
+               12.0,
+               214.0
+              ],
+              [
+               0.0,
+               214.0
+              ]
+             ]
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 2",
+    "visible": true,
+    "params": {
+     "color": "#1D3557",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "cap",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 201.0,
+               "height": 13.0,
+               "radius_bottom": 17.5,
+               "radius_top": 17.5,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 201.0,
+               "height": 15.0,
+               "radius_bottom": 16.0,
+               "radius_top": 16.0,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For a",
+            "visible": true,
+            "params": {
+             "variable": "a",
+             "start": 0.0,
+             "end": 345.0,
+             "step": 15.0,
+             "values": ""
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": "a"
+              },
+              "children": [
+               {
+                "type": "cube",
+                "name": "Cube [Knurling]",
+                "visible": true,
+                "params": {
+                 "x": 17.2,
+                 "y": -0.6,
+                 "z": 202.0,
+                 "width": 1.0,
+                 "depth": 1.2,
+                 "height": 11.0,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Neck socket]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 200.0,
+           "height": 13.2,
+           "radius_bottom": 14.2,
+           "radius_top": 14.2,
+           "segments": 64,
+           "center": false
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Snap groove]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 204.0,
+           "height": 2.0,
+           "radius_bottom": 15.1,
+           "radius_top": 15.1,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

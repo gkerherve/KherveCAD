@@ -1,0 +1,704 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "variables",
+    "name": "Variables",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "assign",
+      "name": "px =",
+      "visible": true,
+      "params": {
+       "variable": "px",
+       "value": 3.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "e =",
+      "visible": true,
+      "params": {
+       "variable": "e",
+       "value": 0.06
+      }
+     }
+    ]
+   },
+   {
+    "type": "scale",
+    "name": "Scale",
+    "visible": true,
+    "params": {
+     "x": 3.0,
+     "y": 3.0,
+     "z": 3.0
+    },
+    "children": [
+     {
+      "type": "for_loop",
+      "name": "For lx [---- Legs (4x4x12) with hooves ----]",
+      "visible": true,
+      "params": {
+       "variable": "lx",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": "0, 8"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For ly",
+        "visible": true,
+        "params": {
+         "variable": "ly",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "0, 14"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#4c3321",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": "lx",
+             "y": "ly",
+             "z": 1.0,
+             "width": 4.0,
+             "depth": 4.0,
+             "height": 11.0,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#383330",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": "lx",
+             "y": "ly",
+             "z": 0.0,
+             "width": 4.0,
+             "depth": 4.0,
+             "height": 1.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [White socks on front-left and back-right legs]",
+      "visible": true,
+      "params": {
+       "color": "#edebe0",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": -0.06,
+         "y": 13.94,
+         "z": 1.0,
+         "width": 4.12,
+         "depth": 4.12,
+         "height": 4.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#edebe0",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 7.94,
+         "y": -0.06,
+         "z": 1.0,
+         "width": 4.12,
+         "depth": 4.12,
+         "height": 5.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [---- Body (12 wide x 18 long x 10 tall) ----]",
+      "visible": true,
+      "params": {
+       "color": "#4c3321",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 12.0,
+         "width": 12.0,
+         "depth": 18.0,
+         "height": 10.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#edebe0",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [band over the back]",
+        "visible": true,
+        "params": {
+         "x": -0.06,
+         "y": 4.0,
+         "z": 14.0,
+         "width": 12.12,
+         "depth": 5.0,
+         "height": 8.06,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube [left side spot]",
+        "visible": true,
+        "params": {
+         "x": -0.06,
+         "y": 11.0,
+         "z": 11.94,
+         "width": 4.0,
+         "depth": 4.0,
+         "height": 5.0,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube [right rear spot]",
+        "visible": true,
+        "params": {
+         "x": 8.06,
+         "y": 1.0,
+         "z": 16.0,
+         "width": 4.0,
+         "depth": 3.0,
+         "height": 6.06,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube [top spot]",
+        "visible": true,
+        "params": {
+         "x": 3.0,
+         "y": 13.0,
+         "z": 21.94,
+         "width": 5.0,
+         "depth": 3.0,
+         "height": 0.12,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube [rump spot]",
+        "visible": true,
+        "params": {
+         "x": 2.0,
+         "y": -0.06,
+         "z": 15.0,
+         "width": 6.0,
+         "depth": 0.12,
+         "height": 5.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Udder]",
+      "visible": true,
+      "params": {
+       "color": "#f29ea8",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 4.0,
+         "y": 2.0,
+         "z": 11.0,
+         "width": 4.0,
+         "depth": 6.0,
+         "height": 1.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d97a85",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For tx",
+        "visible": true,
+        "params": {
+         "variable": "tx",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "4.5, 6.5"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For ty",
+          "visible": true,
+          "params": {
+           "variable": "ty",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "3, 6"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": "tx",
+             "y": "ty",
+             "z": 10.2,
+             "width": 1.0,
+             "depth": 1.0,
+             "height": 0.8,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Tail]",
+      "visible": true,
+      "params": {
+       "color": "#4c3321",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 5.5,
+         "y": -1.0,
+         "z": 14.0,
+         "width": 1.0,
+         "depth": 1.0,
+         "height": 7.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#edebe0",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 5.44,
+         "y": -1.06,
+         "z": 13.0,
+         "width": 1.12,
+         "depth": 1.12,
+         "height": 1.6,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [---- Head (8 wide x 6 deep x 8 tall) ----]",
+      "visible": true,
+      "params": {
+       "color": "#4c3321",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 2.0,
+         "y": 18.0,
+         "z": 14.0,
+         "width": 8.0,
+         "depth": 6.0,
+         "height": 8.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [White blaze down the face]",
+      "visible": true,
+      "params": {
+       "color": "#edebe0",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 5.0,
+         "y": 23.94,
+         "z": 17.0,
+         "width": 2.0,
+         "depth": 0.12,
+         "height": 5.06,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Muzzle (4x3x1) with nostrils]",
+      "visible": true,
+      "params": {
+       "color": "#ccb8a3",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 3.5,
+         "y": 24.0,
+         "z": 14.0,
+         "width": 5.0,
+         "depth": 1.0,
+         "height": 3.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#73594c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 4.0,
+         "y": 24.94,
+         "z": 15.0,
+         "width": 1.0,
+         "depth": 0.12,
+         "height": 1.0,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 7.0,
+         "y": 24.94,
+         "z": 15.0,
+         "width": 1.0,
+         "depth": 0.12,
+         "height": 1.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For ex [Eyes: white with black pupil]",
+      "visible": true,
+      "params": {
+       "variable": "ex",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": "2.5, 7.5"
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#f7f7f7",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "ex",
+           "y": 23.94,
+           "z": 18.5,
+           "width": 2.0,
+           "depth": 0.12,
+           "height": 1.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#0d0d0d",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 2.5,
+         "y": 24.0,
+         "z": 18.5,
+         "width": 1.0,
+         "depth": 0.06,
+         "height": 1.0,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 8.5,
+         "y": 24.0,
+         "z": 18.5,
+         "width": 1.0,
+         "depth": 0.06,
+         "height": 1.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#dbd6c7",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 1.0,
+         "y": 20.0,
+         "z": 21.0,
+         "width": 1.0,
+         "depth": 1.0,
+         "height": 3.0,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 10.0,
+         "y": 20.0,
+         "z": 21.0,
+         "width": 1.0,
+         "depth": 1.0,
+         "height": 3.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Horn bases]",
+      "visible": true,
+      "params": {
+       "color": "#dbd6c7",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 1.0,
+         "y": 20.0,
+         "z": 20.0,
+         "width": 1.2,
+         "depth": 1.0,
+         "height": 1.0,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 9.8,
+         "y": 20.0,
+         "z": 20.0,
+         "width": 1.2,
+         "depth": 1.0,
+         "height": 1.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

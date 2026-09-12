@@ -1,0 +1,428 @@
+{
+ "format": "kcad",
+ "version": 6,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "CF40 (CF70) spacer 100 mm",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "CF40 CF nipple",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "CF nipple body",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Port +Z",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Tube",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 50,
+             "radius_bottom": 19.05,
+             "radius_top": 19.05,
+             "segments": 96,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Flange position",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 37.3
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Flange +Z revolve",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 128
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Flange +Z profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   17.5,
+                   11.1
+                  ],
+                  [
+                   17.5,
+                   0.0
+                  ],
+                  [
+                   33.95,
+                   0.0
+                  ],
+                  [
+                   34.95,
+                   1.0
+                  ],
+                  [
+                   34.95,
+                   11.7
+                  ],
+                  [
+                   33.95,
+                   12.7
+                  ],
+                  [
+                   24.45,
+                   12.7
+                  ],
+                  [
+                   24.45,
+                   11.1
+                  ],
+                  [
+                   24.0202,
+                   11.1
+                  ],
+                  [
+                   23.25,
+                   12.2
+                  ],
+                  [
+                   22.4798,
+                   11.1
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "rotate",
+          "name": "Port -Z",
+          "visible": true,
+          "params": {
+           "x": 180.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Tube",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 50,
+             "radius_bottom": 19.05,
+             "radius_top": 19.05,
+             "segments": 96,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Flange position",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 37.3
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Flange -Z revolve",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 128
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Flange -Z profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   17.5,
+                   11.1
+                  ],
+                  [
+                   17.5,
+                   0.0
+                  ],
+                  [
+                   33.95,
+                   0.0
+                  ],
+                  [
+                   34.95,
+                   1.0
+                  ],
+                  [
+                   34.95,
+                   11.7
+                  ],
+                  [
+                   33.95,
+                   12.7
+                  ],
+                  [
+                   24.45,
+                   12.7
+                  ],
+                  [
+                   24.45,
+                   11.1
+                  ],
+                  [
+                   24.0202,
+                   11.1
+                  ],
+                  [
+                   23.25,
+                   12.2
+                  ],
+                  [
+                   22.4798,
+                   11.1
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "rotate",
+        "name": "Bore +Z",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Bore",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": -1.0,
+           "height": 51.0,
+           "radius_bottom": 17.5,
+           "radius_top": 17.5,
+           "segments": 96,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "rotate",
+        "name": "Bore -Z",
+        "visible": true,
+        "params": {
+         "x": 180.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Bore",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": -1.0,
+           "height": 51.0,
+           "radius_bottom": 17.5,
+           "radius_top": 17.5,
+           "segments": 96,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "rotate",
+        "name": "Bolts +Z",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "Bolt holes",
+          "visible": true,
+          "params": {
+           "variable": "a",
+           "start": 0.0,
+           "end": 330.0,
+           "step": 60.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Around axis",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": "a"
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Bolt hole",
+              "visible": true,
+              "params": {
+               "x": 29.35,
+               "y": 0.0,
+               "z": 36.3,
+               "height": 14.7,
+               "radius_bottom": 3.3,
+               "radius_top": 3.3,
+               "segments": 24,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "rotate",
+        "name": "Bolts -Z",
+        "visible": true,
+        "params": {
+         "x": 180.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "Bolt holes",
+          "visible": true,
+          "params": {
+           "variable": "a",
+           "start": 0.0,
+           "end": 330.0,
+           "step": 60.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Around axis",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": "a"
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Bolt hole",
+              "visible": true,
+              "params": {
+               "x": 29.35,
+               "y": 0.0,
+               "z": 36.3,
+               "height": 14.7,
+               "radius_bottom": 3.3,
+               "radius_top": 3.3,
+               "segments": 24,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

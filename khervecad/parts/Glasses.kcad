@@ -1,0 +1,409 @@
+{
+ "format": "kcad",
+ "version": 5,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "dimensions": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "variables",
+    "name": "Variables",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "assign",
+      "name": "lensW =",
+      "visible": true,
+      "params": {
+       "variable": "lensW",
+       "value": 34.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "lensH =",
+      "visible": true,
+      "params": {
+       "variable": "lensH",
+       "value": 20.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "r =",
+      "visible": true,
+      "params": {
+       "variable": "r",
+       "value": 9.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "rimT =",
+      "visible": true,
+      "params": {
+       "variable": "rimT",
+       "value": 3.4
+      }
+     },
+     {
+      "type": "assign",
+      "name": "thk =",
+      "visible": true,
+      "params": {
+       "variable": "thk",
+       "value": 4.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "sep =",
+      "visible": true,
+      "params": {
+       "variable": "sep",
+       "value": 30.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "splay =",
+      "visible": true,
+      "params": {
+       "variable": "splay",
+       "value": 7.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "armL =",
+      "visible": true,
+      "params": {
+       "variable": "armL",
+       "value": 112.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "hookR =",
+      "visible": true,
+      "params": {
+       "variable": "hookR",
+       "value": 13.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "hingeZ =",
+      "visible": true,
+      "params": {
+       "variable": "hingeZ",
+       "value": 5.0
+      }
+     }
+    ]
+   },
+   {
+    "type": "for_loop",
+    "name": "For s",
+    "visible": true,
+    "params": {
+     "variable": "s",
+     "start": 0.0,
+     "end": 4.0,
+     "step": 1.0,
+     "values": "-1, 1"
+    },
+    "children": [
+     {
+      "type": "rotate",
+      "name": "Rotate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": "-s * splay"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": "s * sep",
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 4.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "offset",
+                "name": "Offset",
+                "visible": true,
+                "params": {
+                 "radius": 9.0,
+                 "chamfer": false
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -17.0,
+                   "y": -10.0,
+                   "width": 34.0,
+                   "height": 20.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "offset",
+                "name": "Offset",
+                "visible": true,
+                "params": {
+                 "radius": 5.6,
+                 "chamfer": false
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -17.0,
+                   "y": -10.0,
+                   "width": 34.0,
+                   "height": 20.0
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "for_loop",
+    "name": "For t",
+    "visible": true,
+    "params": {
+     "variable": "t",
+     "start": -1.0,
+     "end": 1.0,
+     "step": 0.05,
+     "values": ""
+    },
+    "children": [
+     {
+      "type": "sphere",
+      "name": "Sphere",
+      "visible": true,
+      "params": {
+       "x": "t * 17",
+       "y": -2.0,
+       "z": "11 + 5 * (1 - t*t)",
+       "radius": 2.5,
+       "segments": 20
+      }
+     }
+    ]
+   },
+   {
+    "type": "for_loop",
+    "name": "For s",
+    "visible": true,
+    "params": {
+     "variable": "s",
+     "start": 0.0,
+     "end": 4.0,
+     "step": 1.0,
+     "values": "-1, 1"
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": "s * 7.5",
+       "y": -5.5,
+       "z": -3.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": "s * 22"
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 0.45,
+           "y": 1.0,
+           "z": 1.7
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 3.4,
+             "segments": 24
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "for_loop",
+    "name": "For s",
+    "visible": true,
+    "params": {
+     "variable": "s",
+     "start": 0.0,
+     "end": 4.0,
+     "step": 1.0,
+     "values": "-1, 1"
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": "s * 52",
+       "y": -1.0,
+       "z": 5.0
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": -2.2,
+         "y": -2.5,
+         "z": -4.5,
+         "width": 4.4,
+         "depth": 5.0,
+         "height": 9.0,
+         "center": false
+        }
+       },
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": "s * 5"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -1.8,
+           "y": -112.0,
+           "z": -2.5,
+           "width": 3.6,
+           "depth": 112.0,
+           "height": 5.0,
+           "center": false
+          }
+         },
+         {
+          "type": "for_loop",
+          "name": "For a",
+          "visible": true,
+          "params": {
+           "variable": "a",
+           "start": 0.0,
+           "end": 100.0,
+           "step": 4.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "-armL - hookR * sin(a)",
+             "z": "-hookR + hookR * cos(a)",
+             "radius": 2.5,
+             "segments": 20
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

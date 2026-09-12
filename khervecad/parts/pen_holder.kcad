@@ -1,0 +1,229 @@
+{
+ "format": "kcad",
+ "version": 6,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "variables",
+    "name": "Variables",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "assign",
+      "name": "pens =",
+      "visible": true,
+      "params": {
+       "variable": "pens",
+       "value": 5.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "hole_d =",
+      "visible": true,
+      "params": {
+       "variable": "hole_d",
+       "value": 12.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "spacing =",
+      "visible": true,
+      "params": {
+       "variable": "spacing",
+       "value": 18.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "depth =",
+      "visible": true,
+      "params": {
+       "variable": "depth",
+       "value": 60.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "floor_t =",
+      "visible": true,
+      "params": {
+       "variable": "floor_t",
+       "value": 4.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "corner =",
+      "visible": true,
+      "params": {
+       "variable": "corner",
+       "value": 9.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "flare =",
+      "visible": true,
+      "params": {
+       "variable": "flare",
+       "value": 3.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "ph_w =",
+      "visible": true,
+      "params": {
+       "variable": "ph_w",
+       "value": 30.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "ph_l =",
+      "visible": true,
+      "params": {
+       "variable": "ph_l",
+       "value": 96.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "ph_h =",
+      "visible": true,
+      "params": {
+       "variable": "ph_h",
+       "value": 64.0
+      }
+     }
+    ]
+   },
+   {
+    "type": "difference",
+    "name": "Difference",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "hull",
+      "name": "Hull",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "9, 87"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For y",
+          "visible": true,
+          "params": {
+           "variable": "y",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "9, 21"
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": "y",
+             "z": 0.0,
+             "height": 1.0,
+             "radius_bottom": 9.0,
+             "radius_top": 9.0,
+             "segments": 64,
+             "center": false
+            }
+           },
+           {
+            "type": "sphere",
+            "name": "Sphere",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": "y",
+             "z": 55.0,
+             "radius": 9.0,
+             "segments": 48
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For i [Pen holes with a flared, softened mouth]",
+      "visible": true,
+      "params": {
+       "variable": "i",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": "3 + spacing / 2 + i * spacing",
+         "y": 15.0,
+         "z": 4.0,
+         "height": 61.0,
+         "radius_bottom": 6.0,
+         "radius_top": 6.0,
+         "segments": 64,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": "3 + spacing / 2 + i * spacing",
+         "y": 15.0,
+         "z": 61.0,
+         "height": 3.01,
+         "radius_bottom": 6.0,
+         "radius_top": 9.0,
+         "segments": 64,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

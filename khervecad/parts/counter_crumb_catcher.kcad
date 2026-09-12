@@ -1,0 +1,277 @@
+{
+ "format": "kcad",
+ "version": 5,
+ "global_fn": 100,
+ "global_fn_on": true,
+ "dimensions": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "variables",
+    "name": "Variables",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "assign",
+      "name": "bin_w =",
+      "visible": true,
+      "params": {
+       "variable": "bin_w",
+       "value": 180.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "bin_d =",
+      "visible": true,
+      "params": {
+       "variable": "bin_d",
+       "value": 95.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "bin_h =",
+      "visible": true,
+      "params": {
+       "variable": "bin_h",
+       "value": 110.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "front_h =",
+      "visible": true,
+      "params": {
+       "variable": "front_h",
+       "value": 25.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "lip_len =",
+      "visible": true,
+      "params": {
+       "variable": "lip_len",
+       "value": 70.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "lip_t =",
+      "visible": true,
+      "params": {
+       "variable": "lip_t",
+       "value": 2.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "tip_t =",
+      "visible": true,
+      "params": {
+       "variable": "tip_t",
+       "value": 0.8
+      }
+     },
+     {
+      "type": "assign",
+      "name": "wall =",
+      "visible": true,
+      "params": {
+       "variable": "wall",
+       "value": 2.5
+      }
+     },
+     {
+      "type": "assign",
+      "name": "grip_w =",
+      "visible": true,
+      "params": {
+       "variable": "grip_w",
+       "value": 90.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "grip_h =",
+      "visible": true,
+      "params": {
+       "variable": "grip_h",
+       "value": 22.0
+      }
+     }
+    ]
+   },
+   {
+    "type": "rotate",
+    "name": "Rotate",
+    "visible": true,
+    "params": {
+     "x": 90.0,
+     "y": 0.0,
+     "z": 0.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "linear_extrude",
+        "name": "Linear extrude",
+        "visible": true,
+        "params": {
+         "height": 180.0,
+         "twist": 0.0,
+         "scale": 1.0,
+         "center": true,
+         "segments": 0
+        },
+        "children": [
+         {
+          "type": "polygon",
+          "name": "Polygon",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "points": [
+            [
+             70.0,
+             0.0
+            ],
+            [
+             0.0,
+             0.0
+            ],
+            [
+             0.0,
+             -110.0
+            ],
+            [
+             -95.0,
+             -110.0
+            ],
+            [
+             -95.0,
+             25.0
+            ],
+            [
+             0.0,
+             2.0
+            ],
+            [
+             70.0,
+             0.8
+            ]
+           ]
+          }
+         }
+        ]
+       },
+       {
+        "type": "linear_extrude",
+        "name": "Linear extrude",
+        "visible": true,
+        "params": {
+         "height": 175.0,
+         "twist": 0.0,
+         "scale": 1.0,
+         "center": true,
+         "segments": 0
+        },
+        "children": [
+         {
+          "type": "polygon",
+          "name": "Polygon",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "points": [
+            [
+             -2.5,
+             35.0
+            ],
+            [
+             -2.5,
+             -107.5
+            ],
+            [
+             -92.5,
+             -107.5
+            ],
+            [
+             -92.5,
+             35.0
+            ]
+           ]
+          }
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -96.0,
+         "y": 8.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 4.5,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "line",
+              "name": "Line",
+              "visible": true,
+              "params": {
+               "x1": -34.0,
+               "y1": 0.0,
+               "x2": 34.0,
+               "y2": 0.0,
+               "width": 22.0
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

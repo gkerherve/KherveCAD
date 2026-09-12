@@ -1,0 +1,586 @@
+{
+ "format": "kcad",
+ "version": 6,
+ "global_fn": 100,
+ "global_fn_on": true,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#F7A8BC",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "cube",
+      "name": "Cube",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 40.0,
+       "z": 50.0,
+       "width": 50.0,
+       "depth": 80.0,
+       "height": 40.0,
+       "center": true
+      }
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#F291AB",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "cube",
+      "name": "Cube",
+      "visible": true,
+      "params": {
+       "x": -10.0,
+       "y": 30.0,
+       "z": 70.5,
+       "width": 12.0,
+       "depth": 14.0,
+       "height": 1.0,
+       "center": true
+      }
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#F291AB",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "cube",
+      "name": "Cube",
+      "visible": true,
+      "params": {
+       "x": 12.0,
+       "y": 55.0,
+       "z": 70.5,
+       "width": 9.0,
+       "depth": 10.0,
+       "height": 1.0,
+       "center": true
+      }
+     }
+    ]
+   },
+   {
+    "type": "for_loop",
+    "name": "For px",
+    "visible": true,
+    "params": {
+     "variable": "px",
+     "start": 0.0,
+     "end": 4.0,
+     "step": 1.0,
+     "values": "-15, 15"
+    },
+    "children": [
+     {
+      "type": "for_loop",
+      "name": "For py",
+      "visible": true,
+      "params": {
+       "variable": "py",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": "12, 68"
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#F7A8BC",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "px",
+           "y": "py",
+           "z": 19.0,
+           "width": 16.0,
+           "depth": 16.0,
+           "height": 26.0,
+           "center": true
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#B8707F",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "px",
+           "y": "py",
+           "z": 3.0,
+           "width": 17.0,
+           "depth": 17.0,
+           "height": 6.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#F9B3C5",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "cube",
+      "name": "Cube",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": -12.0,
+       "z": 58.0,
+       "width": 42.0,
+       "depth": 40.0,
+       "height": 40.0,
+       "center": true
+      }
+     }
+    ]
+   },
+   {
+    "type": "for_loop",
+    "name": "For s",
+    "visible": true,
+    "params": {
+     "variable": "s",
+     "start": 0.0,
+     "end": 4.0,
+     "step": 1.0,
+     "values": "-1, 1"
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#EE8FA6",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": "s*14",
+         "y": -10.0,
+         "z": 79.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 15.0,
+           "y": "s*20",
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "width": 11.0,
+             "depth": 9.0,
+             "height": 4.0,
+             "center": true
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#EE8FA6",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "cube",
+      "name": "Cube",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": -35.0,
+       "z": 49.0,
+       "width": 22.0,
+       "depth": 8.0,
+       "height": 14.0,
+       "center": true
+      }
+     }
+    ]
+   },
+   {
+    "type": "for_loop",
+    "name": "For s",
+    "visible": true,
+    "params": {
+     "variable": "s",
+     "start": 0.0,
+     "end": 4.0,
+     "step": 1.0,
+     "values": "-1, 1"
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#6B2E3E",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": "s*5",
+         "y": -39.2,
+         "z": 49.0,
+         "width": 4.0,
+         "depth": 1.0,
+         "height": 6.0,
+         "center": true
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "for_loop",
+    "name": "For s",
+    "visible": true,
+    "params": {
+     "variable": "s",
+     "start": 0.0,
+     "end": 4.0,
+     "step": 1.0,
+     "values": "-1, 1"
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "white",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": "s*11",
+         "y": -32.3,
+         "z": 66.0,
+         "width": 12.0,
+         "depth": 1.0,
+         "height": 11.0,
+         "center": true
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1A1A1A",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": "s*8",
+         "y": -32.9,
+         "z": 65.0,
+         "width": 6.0,
+         "depth": 1.0,
+         "height": 9.0,
+         "center": true
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "white",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": "s*7",
+         "y": -33.5,
+         "z": 67.5,
+         "width": 2.0,
+         "depth": 0.4,
+         "height": 2.0,
+         "center": true
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#FF7196",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": "s*16",
+         "y": -32.3,
+         "z": 53.0,
+         "width": 7.0,
+         "depth": 1.0,
+         "height": 4.0,
+         "center": true
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#6B2E3E",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "cube",
+      "name": "Cube",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": -32.3,
+       "z": 40.0,
+       "width": 10.0,
+       "depth": 1.0,
+       "height": 1.5,
+       "center": true
+      }
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#6B2E3E",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "cube",
+      "name": "Cube",
+      "visible": true,
+      "params": {
+       "x": -5.5,
+       "y": -32.3,
+       "z": 41.2,
+       "width": 2.0,
+       "depth": 1.0,
+       "height": 2.5,
+       "center": true
+      }
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#6B2E3E",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "cube",
+      "name": "Cube",
+      "visible": true,
+      "params": {
+       "x": 5.5,
+       "y": -32.3,
+       "z": 41.2,
+       "width": 2.0,
+       "depth": 1.0,
+       "height": 2.5,
+       "center": true
+      }
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#EE8FA6",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 84.0,
+       "z": 62.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 90.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "rotate_extrude",
+          "name": "Rotate extrude",
+          "visible": true,
+          "params": {
+           "angle": 300.0,
+           "segments": 32
+          },
+          "children": [
+           {
+            "type": "circle",
+            "name": "Circle",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 0.0,
+             "radius": 1.8,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 12
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

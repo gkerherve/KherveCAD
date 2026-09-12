@@ -1,0 +1,3330 @@
+{
+ "format": "kcad",
+ "version": 6,
+ "global_fn": 96,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "color",
+    "name": "Color 1",
+    "visible": true,
+    "params": {
+     "color": "#C91A09",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "brick_1x1",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 0.1,
+               "y": 0.1,
+               "z": 0.0,
+               "width": 7.8,
+               "depth": 7.8,
+               "height": 9.6,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Shell]",
+              "visible": true,
+              "params": {
+               "x": 1.6,
+               "y": 1.6,
+               "z": -0.1,
+               "width": 4.8,
+               "depth": 4.8,
+               "height": 8.5,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 4.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 2",
+    "visible": true,
+    "params": {
+     "color": "#F2CD37",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "brick_1x2",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 20.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 0.1,
+               "y": 0.1,
+               "z": 0.0,
+               "width": 7.8,
+               "depth": 15.8,
+               "height": 9.6,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Shell]",
+              "visible": true,
+              "params": {
+               "x": 1.6,
+               "y": 1.6,
+               "z": -0.1,
+               "width": 4.8,
+               "depth": 12.8,
+               "height": 8.5,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 4.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 12.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 8.0,
+             "z": 0.0,
+             "height": 8.4,
+             "radius_bottom": 1.5,
+             "radius_top": 1.5,
+             "segments": 32,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 3",
+    "visible": true,
+    "params": {
+     "color": "#0055BF",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "brick_1x4",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 40.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 0.1,
+               "y": 0.1,
+               "z": 0.0,
+               "width": 7.8,
+               "depth": 31.8,
+               "height": 9.6,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Shell]",
+              "visible": true,
+              "params": {
+               "x": 1.6,
+               "y": 1.6,
+               "z": -0.1,
+               "width": 4.8,
+               "depth": 28.8,
+               "height": 8.5,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 4.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 12.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 20.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 28.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 8.0,
+             "z": 0.0,
+             "height": 8.4,
+             "radius_bottom": 1.5,
+             "radius_top": 1.5,
+             "segments": 32,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 16.0,
+             "z": 0.0,
+             "height": 8.4,
+             "radius_bottom": 1.5,
+             "radius_top": 1.5,
+             "segments": 32,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 24.0,
+             "z": 0.0,
+             "height": 8.4,
+             "radius_bottom": 1.5,
+             "radius_top": 1.5,
+             "segments": 32,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 4",
+    "visible": true,
+    "params": {
+     "color": "#237841",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "brick_2x2",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 60.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 0.1,
+               "y": 0.1,
+               "z": 0.0,
+               "width": 15.8,
+               "depth": 15.8,
+               "height": 9.6,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Shell]",
+              "visible": true,
+              "params": {
+               "x": 1.6,
+               "y": 1.6,
+               "z": -0.1,
+               "width": 12.8,
+               "depth": 12.8,
+               "height": 8.5,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 4.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 12.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 4.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 12.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 8.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 8.4,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 8.6,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 5",
+    "visible": true,
+    "params": {
+     "color": "#FE8A18",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "brick_2x3",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 88.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 0.1,
+               "y": 0.1,
+               "z": 0.0,
+               "width": 15.8,
+               "depth": 23.8,
+               "height": 9.6,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Shell]",
+              "visible": true,
+              "params": {
+               "x": 1.6,
+               "y": 1.6,
+               "z": -0.1,
+               "width": 12.8,
+               "depth": 20.8,
+               "height": 8.5,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 4.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 12.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 20.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 4.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 12.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 20.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 8.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 8.4,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 8.6,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 16.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 8.4,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 8.6,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 6",
+    "visible": true,
+    "params": {
+     "color": "#C91A09",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "brick_2x4",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 116.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 0.1,
+               "y": 0.1,
+               "z": 0.0,
+               "width": 15.8,
+               "depth": 31.8,
+               "height": 9.6,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Shell]",
+              "visible": true,
+              "params": {
+               "x": 1.6,
+               "y": 1.6,
+               "z": -0.1,
+               "width": 12.8,
+               "depth": 28.8,
+               "height": 8.5,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 4.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 12.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 20.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 28.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 4.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 12.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 20.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 28.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 8.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 8.4,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 8.6,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 16.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 8.4,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 8.6,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 24.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 8.4,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 8.6,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 7",
+    "visible": true,
+    "params": {
+     "color": "#F4F4F4",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "brick_2x6",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 144.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 0.1,
+               "y": 0.1,
+               "z": 0.0,
+               "width": 15.8,
+               "depth": 47.8,
+               "height": 9.6,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Shell]",
+              "visible": true,
+              "params": {
+               "x": 1.6,
+               "y": 1.6,
+               "z": -0.1,
+               "width": 12.8,
+               "depth": 44.8,
+               "height": 8.5,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 4.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 12.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 20.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 28.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 36.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 44.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 4.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 12.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 20.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 28.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 36.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 44.0,
+             "z": 9.6,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 8.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 8.4,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 8.6,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 16.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 8.4,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 8.6,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 24.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 8.4,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 8.6,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 32.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 8.4,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 8.6,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 40.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 8.4,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 8.6,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 8",
+    "visible": true,
+    "params": {
+     "color": "#36AEBF",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "plate_1x2",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 70.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 0.1,
+               "y": 0.1,
+               "z": 0.0,
+               "width": 7.8,
+               "depth": 15.8,
+               "height": 3.2,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Shell]",
+              "visible": true,
+              "params": {
+               "x": 1.6,
+               "y": 1.6,
+               "z": -0.1,
+               "width": 4.8,
+               "depth": 12.8,
+               "height": 2.1,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 4.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 12.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 8.0,
+             "z": 0.0,
+             "height": 2.0,
+             "radius_bottom": 1.5,
+             "radius_top": 1.5,
+             "segments": 32,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 9",
+    "visible": true,
+    "params": {
+     "color": "#BBE90B",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "plate_2x2",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 20.0,
+         "y": 70.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 0.1,
+               "y": 0.1,
+               "z": 0.0,
+               "width": 15.8,
+               "depth": 15.8,
+               "height": 3.2,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Shell]",
+              "visible": true,
+              "params": {
+               "x": 1.6,
+               "y": 1.6,
+               "z": -0.1,
+               "width": 12.8,
+               "depth": 12.8,
+               "height": 2.1,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 4.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 12.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 4.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 12.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 8.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2.0,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 2.2,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 10",
+    "visible": true,
+    "params": {
+     "color": "#1B2A34",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "plate_2x4",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 48.0,
+         "y": 70.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 0.1,
+               "y": 0.1,
+               "z": 0.0,
+               "width": 15.8,
+               "depth": 31.8,
+               "height": 3.2,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Shell]",
+              "visible": true,
+              "params": {
+               "x": 1.6,
+               "y": 1.6,
+               "z": -0.1,
+               "width": 12.8,
+               "depth": 28.8,
+               "height": 2.1,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 4.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 12.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 20.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 28.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 4.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 12.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 20.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 28.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 8.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2.0,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 2.2,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 16.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2.0,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 2.2,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 24.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2.0,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 2.2,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 11",
+    "visible": true,
+    "params": {
+     "color": "#A0A5A9",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "plate_4x4",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 76.0,
+         "y": 70.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 0.1,
+               "y": 0.1,
+               "z": 0.0,
+               "width": 31.8,
+               "depth": 31.8,
+               "height": 3.2,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Shell]",
+              "visible": true,
+              "params": {
+               "x": 1.6,
+               "y": 1.6,
+               "z": -0.1,
+               "width": 28.8,
+               "depth": 28.8,
+               "height": 2.1,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 4.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 12.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 20.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": 28.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 4.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 12.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 20.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 12.0,
+             "y": 28.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 20.0,
+             "y": 4.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 20.0,
+             "y": 12.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 20.0,
+             "y": 20.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 20.0,
+             "y": 28.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 28.0,
+             "y": 4.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 28.0,
+             "y": 12.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 28.0,
+             "y": 20.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 28.0,
+             "y": 28.0,
+             "z": 3.2,
+             "height": 1.8,
+             "radius_bottom": 2.4,
+             "radius_top": 2.4,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 8.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2.0,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 2.2,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 16.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2.0,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 2.2,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 24.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2.0,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 2.2,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 16.0,
+             "y": 8.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2.0,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 2.2,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 16.0,
+             "y": 16.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2.0,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 2.2,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 16.0,
+             "y": 24.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2.0,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 2.2,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 24.0,
+             "y": 8.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2.0,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 2.2,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 24.0,
+             "y": 16.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2.0,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 2.2,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 24.0,
+             "y": 24.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2.0,
+                 "radius_bottom": 3.255,
+                 "radius_top": 3.255,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -0.1,
+                 "height": 2.2,
+                 "radius_bottom": 2.4,
+                 "radius_top": 2.4,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

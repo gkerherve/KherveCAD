@@ -1,0 +1,1362 @@
+{
+ "format": "kcad",
+ "version": 6,
+ "global_fn": 96,
+ "global_fn_on": true,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "color",
+    "name": "Color 1",
+    "visible": true,
+    "params": {
+     "color": "#C69C6D",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "skin_steve",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "scale",
+        "name": "Scale",
+        "visible": true,
+        "params": {
+         "x": 1.5,
+         "y": 1.5,
+         "z": 1.5
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -30.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -4.0,
+             "y": -4.0,
+             "z": 24.0,
+             "width": 8.0,
+             "depth": 8.0,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -8.0,
+             "y": -2.0,
+             "z": 12.0,
+             "width": 4.0,
+             "depth": 4.0,
+             "height": 9.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": -2.0,
+             "z": 12.0,
+             "width": 4.0,
+             "depth": 4.0,
+             "height": 9.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 2",
+    "visible": true,
+    "params": {
+     "color": "#3B2213",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "hair_steve",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "scale",
+        "name": "Scale",
+        "visible": true,
+        "params": {
+         "x": 1.5,
+         "y": 1.5,
+         "z": 1.5
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -30.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -4.0,
+             "y": -4.0,
+             "z": 30.0,
+             "width": 8.0,
+             "depth": 8.0,
+             "height": 2.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -1.0,
+             "y": -4.3,
+             "z": 24.6,
+             "width": 2.0,
+             "depth": 0.3,
+             "height": 0.8,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 3",
+    "visible": true,
+    "params": {
+     "color": "#F2C9A0",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "skin_alex",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "scale",
+        "name": "Scale",
+        "visible": true,
+        "params": {
+         "x": 1.5,
+         "y": 1.5,
+         "z": 1.5
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -10.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -4.0,
+             "y": -4.0,
+             "z": 24.0,
+             "width": 8.0,
+             "depth": 7.0,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -7.0,
+             "y": -2.0,
+             "z": 12.0,
+             "width": 3.0,
+             "depth": 4.0,
+             "height": 9.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": -2.0,
+             "z": 12.0,
+             "width": 3.0,
+             "depth": 4.0,
+             "height": 9.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 4",
+    "visible": true,
+    "params": {
+     "color": "#D9772B",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "hair_alex",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "scale",
+        "name": "Scale",
+        "visible": true,
+        "params": {
+         "x": 1.5,
+         "y": 1.5,
+         "z": 1.5
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -10.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -4.0,
+             "y": -4.0,
+             "z": 30.0,
+             "width": 8.0,
+             "depth": 8.0,
+             "height": 2.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -4.0,
+             "y": 3.0,
+             "z": 24.0,
+             "width": 8.0,
+             "depth": 1.0,
+             "height": 6.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 5",
+    "visible": true,
+    "params": {
+     "color": "#5E8C3A",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "skin_zombie",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "scale",
+        "name": "Scale",
+        "visible": true,
+        "params": {
+         "x": 1.5,
+         "y": 1.5,
+         "z": 1.5
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 10.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -4.0,
+             "y": -4.0,
+             "z": 24.0,
+             "width": 8.0,
+             "depth": 8.0,
+             "height": 8.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -8.0,
+             "y": -2.0,
+             "z": 12.0,
+             "width": 4.0,
+             "depth": 4.0,
+             "height": 9.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": -2.0,
+             "z": 12.0,
+             "width": 4.0,
+             "depth": 4.0,
+             "height": 9.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 6",
+    "visible": true,
+    "params": {
+     "color": "#00AFAF",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "shirt_cyan",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "scale",
+        "name": "Scale",
+        "visible": true,
+        "params": {
+         "x": 1.5,
+         "y": 1.5,
+         "z": 1.5
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For fx",
+          "visible": true,
+          "params": {
+           "variable": "fx",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-30, 10"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "fx",
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": -4.0,
+               "y": -2.0,
+               "z": 12.0,
+               "width": 8.0,
+               "depth": 4.0,
+               "height": 12.0,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": -8.0,
+               "y": -2.0,
+               "z": 21.0,
+               "width": 4.0,
+               "depth": 4.0,
+               "height": 3.0,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 4.0,
+               "y": -2.0,
+               "z": 21.0,
+               "width": 4.0,
+               "depth": 4.0,
+               "height": 3.0,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 7",
+    "visible": true,
+    "params": {
+     "color": "#6DAA4B",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "shirt_green",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "scale",
+        "name": "Scale",
+        "visible": true,
+        "params": {
+         "x": 1.5,
+         "y": 1.5,
+         "z": 1.5
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -10.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -4.0,
+             "y": -2.0,
+             "z": 12.0,
+             "width": 8.0,
+             "depth": 4.0,
+             "height": 12.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -7.0,
+             "y": -2.0,
+             "z": 21.0,
+             "width": 3.0,
+             "depth": 4.0,
+             "height": 3.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 4.0,
+             "y": -2.0,
+             "z": 21.0,
+             "width": 3.0,
+             "depth": 4.0,
+             "height": 3.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 8",
+    "visible": true,
+    "params": {
+     "color": "#3B3FA8",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "pants_blue",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "scale",
+        "name": "Scale",
+        "visible": true,
+        "params": {
+         "x": 1.5,
+         "y": 1.5,
+         "z": 1.5
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For fx",
+          "visible": true,
+          "params": {
+           "variable": "fx",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-30, 10"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": "fx - 4",
+             "y": -2.0,
+             "z": 1.0,
+             "width": 8.0,
+             "depth": 4.0,
+             "height": 11.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 9",
+    "visible": true,
+    "params": {
+     "color": "#6B4A2B",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "pants_brown",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "scale",
+        "name": "Scale",
+        "visible": true,
+        "params": {
+         "x": 1.5,
+         "y": 1.5,
+         "z": 1.5
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -14.0,
+           "y": -2.0,
+           "z": 1.0,
+           "width": 8.0,
+           "depth": 4.0,
+           "height": 11.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 10",
+    "visible": true,
+    "params": {
+     "color": "#5A5A5A",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "shoes_grey",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "scale",
+        "name": "Scale",
+        "visible": true,
+        "params": {
+         "x": 1.5,
+         "y": 1.5,
+         "z": 1.5
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For fx",
+          "visible": true,
+          "params": {
+           "variable": "fx",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-30, -10, 10"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": "fx - 4",
+             "y": -2.0,
+             "z": 0.0,
+             "width": 8.0,
+             "depth": 4.0,
+             "height": 1.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 11",
+    "visible": true,
+    "params": {
+     "color": "#4CB847",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "creeper_green",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "scale",
+        "name": "Scale",
+        "visible": true,
+        "params": {
+         "x": 1.5,
+         "y": 1.5,
+         "z": 1.5
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 30.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -4.0,
+             "y": -6.0,
+             "z": 0.0,
+             "width": 8.0,
+             "depth": 4.0,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -4.0,
+             "y": 2.0,
+             "z": 0.0,
+             "width": 8.0,
+             "depth": 4.0,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -4.0,
+             "y": -2.0,
+             "z": 6.0,
+             "width": 8.0,
+             "depth": 4.0,
+             "height": 12.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -4.0,
+             "y": -4.0,
+             "z": 18.0,
+             "width": 8.0,
+             "depth": 8.0,
+             "height": 8.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 12",
+    "visible": true,
+    "params": {
+     "color": "#FFFFFF",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "eyes_white",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "scale",
+        "name": "Scale",
+        "visible": true,
+        "params": {
+         "x": 1.5,
+         "y": 1.5,
+         "z": 1.5
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For fx",
+          "visible": true,
+          "params": {
+           "variable": "fx",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-30, -10"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "fx",
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": -3.0,
+               "y": -4.3,
+               "z": 26.0,
+               "width": 1.0,
+               "depth": 0.3,
+               "height": 1.0,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 2.0,
+               "y": -4.3,
+               "z": 26.0,
+               "width": 1.0,
+               "depth": 0.3,
+               "height": 1.0,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 13",
+    "visible": true,
+    "params": {
+     "color": "#3D4DB7",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "eyes_blue",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "scale",
+        "name": "Scale",
+        "visible": true,
+        "params": {
+         "x": 1.5,
+         "y": 1.5,
+         "z": 1.5
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -30.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -2.0,
+             "y": -4.3,
+             "z": 26.0,
+             "width": 1.0,
+             "depth": 0.3,
+             "height": 1.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": -4.3,
+             "z": 26.0,
+             "width": 1.0,
+             "depth": 0.3,
+             "height": 1.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 14",
+    "visible": true,
+    "params": {
+     "color": "#1B1B1B",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "face_dark",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "scale",
+        "name": "Scale",
+        "visible": true,
+        "params": {
+         "x": 1.5,
+         "y": 1.5,
+         "z": 1.5
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -10.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -2.0,
+             "y": -4.3,
+             "z": 26.0,
+             "width": 1.0,
+             "depth": 0.3,
+             "height": 1.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": -4.3,
+             "z": 26.0,
+             "width": 1.0,
+             "depth": 0.3,
+             "height": 1.0,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 10.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -3.0,
+             "y": -4.3,
+             "z": 27.0,
+             "width": 2.0,
+             "depth": 0.3,
+             "height": 1.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": -4.3,
+             "z": 27.0,
+             "width": 2.0,
+             "depth": 0.3,
+             "height": 1.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -2.0,
+             "y": -4.3,
+             "z": 25.0,
+             "width": 4.0,
+             "depth": 0.3,
+             "height": 0.8,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 30.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -3.0,
+             "y": -4.3,
+             "z": 22.0,
+             "width": 2.0,
+             "depth": 0.3,
+             "height": 2.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": -4.3,
+             "z": 22.0,
+             "width": 2.0,
+             "depth": 0.3,
+             "height": 2.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -1.0,
+             "y": -4.3,
+             "z": 19.0,
+             "width": 2.0,
+             "depth": 0.3,
+             "height": 3.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -2.0,
+             "y": -4.3,
+             "z": 18.0,
+             "width": 1.0,
+             "depth": 0.3,
+             "height": 2.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": -4.3,
+             "z": 18.0,
+             "width": 1.0,
+             "depth": 0.3,
+             "height": 2.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

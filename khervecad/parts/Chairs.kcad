@@ -1,0 +1,1517 @@
+{
+ "format": "kcad",
+ "version": 5,
+ "global_fn": 100,
+ "global_fn_on": true,
+ "dimensions": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "seat_h =",
+    "visible": true,
+    "params": {
+     "variable": "seat_h",
+     "value": 40.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Seat",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#946138",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "hull",
+        "name": "Hull",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -9.0,
+           "z": 38.4
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 20.0,
+             "y": 9.0,
+             "z": 2.4
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 1.0,
+               "segments": 48
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 9.0,
+           "z": 38.4
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 17.5,
+             "y": 9.0,
+             "z": 2.4
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 1.0,
+               "segments": 48
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -8.0,
+           "z": 34.8
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 17.0,
+             "y": 8.0,
+             "z": 2.2
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 1.0,
+               "segments": 48
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 8.0,
+           "z": 34.8
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 15.0,
+             "y": 8.0,
+             "z": 2.2
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 1.0,
+               "segments": 48
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.0,
+         "z": 56.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 24.0,
+           "y": 24.0,
+           "z": 18.0
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 1.0,
+             "segments": 48
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Legs",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#6b4529",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -16.0,
+           "y": -15.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -3.0,
+             "y": 3.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Rotate extrude",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Polygon",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   2.9,
+                   0.0
+                  ],
+                  [
+                   3.05,
+                   1.6
+                  ],
+                  [
+                   2.5,
+                   4.0
+                  ],
+                  [
+                   3.15,
+                   6.2
+                  ],
+                  [
+                   3.15,
+                   7.6
+                  ],
+                  [
+                   2.6,
+                   9.6
+                  ],
+                  [
+                   2.35,
+                   15.0
+                  ],
+                  [
+                   2.7,
+                   19.0
+                  ],
+                  [
+                   3.0,
+                   23.0
+                  ],
+                  [
+                   3.0,
+                   24.6
+                  ],
+                  [
+                   2.5,
+                   26.6
+                  ],
+                  [
+                   2.35,
+                   33.0
+                  ],
+                  [
+                   2.7,
+                   36.5
+                  ],
+                  [
+                   2.8,
+                   38.0
+                  ],
+                  [
+                   2.8,
+                   40.0
+                  ],
+                  [
+                   0.0,
+                   40.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 16.0,
+           "y": -15.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -3.0,
+             "y": -3.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Rotate extrude",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Polygon",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   2.9,
+                   0.0
+                  ],
+                  [
+                   3.05,
+                   1.6
+                  ],
+                  [
+                   2.5,
+                   4.0
+                  ],
+                  [
+                   3.15,
+                   6.2
+                  ],
+                  [
+                   3.15,
+                   7.6
+                  ],
+                  [
+                   2.6,
+                   9.6
+                  ],
+                  [
+                   2.35,
+                   15.0
+                  ],
+                  [
+                   2.7,
+                   19.0
+                  ],
+                  [
+                   3.0,
+                   23.0
+                  ],
+                  [
+                   3.0,
+                   24.6
+                  ],
+                  [
+                   2.5,
+                   26.6
+                  ],
+                  [
+                   2.35,
+                   33.0
+                  ],
+                  [
+                   2.7,
+                   36.5
+                  ],
+                  [
+                   2.8,
+                   38.0
+                  ],
+                  [
+                   2.8,
+                   40.0
+                  ],
+                  [
+                   0.0,
+                   40.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -14.5,
+           "y": 13.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -3.0,
+             "y": 2.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Rotate extrude",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Polygon",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   2.85,
+                   0.0
+                  ],
+                  [
+                   2.95,
+                   1.6
+                  ],
+                  [
+                   2.55,
+                   5.0
+                  ],
+                  [
+                   2.75,
+                   14.0
+                  ],
+                  [
+                   2.65,
+                   24.0
+                  ],
+                  [
+                   2.55,
+                   34.0
+                  ],
+                  [
+                   2.5,
+                   38.0
+                  ],
+                  [
+                   2.5,
+                   40.3
+                  ],
+                  [
+                   0.0,
+                   40.3
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -13.095,
+           "y": 15.109,
+           "z": 40.22
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -9.0,
+             "y": 1.5,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Rotate extrude",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Polygon",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   2.5,
+                   0.0
+                  ],
+                  [
+                   2.6,
+                   4.0
+                  ],
+                  [
+                   2.3,
+                   14.0
+                  ],
+                  [
+                   2.35,
+                   22.0
+                  ],
+                  [
+                   2.15,
+                   28.0
+                  ],
+                  [
+                   2.5,
+                   30.0
+                  ],
+                  [
+                   2.5,
+                   31.4
+                  ],
+                  [
+                   2.0,
+                   32.4
+                  ],
+                  [
+                   1.1,
+                   33.0
+                  ],
+                  [
+                   0.0,
+                   33.02
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 14.5,
+           "y": 13.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -3.0,
+             "y": -2.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Rotate extrude",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Polygon",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   2.85,
+                   0.0
+                  ],
+                  [
+                   2.95,
+                   1.6
+                  ],
+                  [
+                   2.55,
+                   5.0
+                  ],
+                  [
+                   2.75,
+                   14.0
+                  ],
+                  [
+                   2.65,
+                   24.0
+                  ],
+                  [
+                   2.55,
+                   34.0
+                  ],
+                  [
+                   2.5,
+                   38.0
+                  ],
+                  [
+                   2.5,
+                   40.3
+                  ],
+                  [
+                   0.0,
+                   40.3
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 13.095,
+           "y": 15.109,
+           "z": 40.22
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -9.0,
+             "y": -1.5,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Rotate extrude",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Polygon",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   2.5,
+                   0.0
+                  ],
+                  [
+                   2.6,
+                   4.0
+                  ],
+                  [
+                   2.3,
+                   14.0
+                  ],
+                  [
+                   2.35,
+                   22.0
+                  ],
+                  [
+                   2.15,
+                   28.0
+                  ],
+                  [
+                   2.5,
+                   30.0
+                  ],
+                  [
+                   2.5,
+                   31.4
+                  ],
+                  [
+                   2.0,
+                   32.4
+                  ],
+                  [
+                   1.1,
+                   33.0
+                  ],
+                  [
+                   0.0,
+                   33.02
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "component",
+        "name": "Floor",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": -40.0,
+           "width": 300.0,
+           "depth": 300.0,
+           "height": 80.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Stretchers",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#6b4529",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "for_loop",
+      "name": "For sx",
+      "visible": true,
+      "params": {
+       "variable": "sx",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": "-1, 1"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": "sx * 14.6",
+         "y": -14.0,
+         "z": 15.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": -90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 28.0,
+             "radius_bottom": 1.8,
+             "radius_top": 1.6,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": -15.5,
+       "y": -13.6,
+       "z": 11.5
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 90.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "rotate_extrude",
+          "name": "Rotate extrude",
+          "visible": true,
+          "params": {
+           "angle": 360.0,
+           "segments": 96
+          },
+          "children": [
+           {
+            "type": "polygon",
+            "name": "Polygon",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "points": [
+              [
+               0.0,
+               0.0
+              ],
+              [
+               1.7,
+               0.0
+              ],
+              [
+               1.7,
+               11.0
+              ],
+              [
+               2.6,
+               13.5
+              ],
+              [
+               2.6,
+               17.5
+              ],
+              [
+               1.7,
+               20.0
+              ],
+              [
+               1.7,
+               31.0
+              ],
+              [
+               0.0,
+               31.0
+              ]
+             ]
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": -14.0,
+       "y": 14.2,
+       "z": 18.5
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 90.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 28.0,
+           "radius_bottom": 1.6,
+           "radius_top": 1.6,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Slats",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#7a4f2e",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": -12.0,
+       "z": 47.5
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 61.867
+        },
+        "children": [
+         {
+          "type": "rotate_extrude",
+          "name": "Rotate extrude",
+          "visible": true,
+          "params": {
+           "angle": 56.266,
+           "segments": 96
+          },
+          "children": [
+           {
+            "type": "polygon",
+            "name": "Polygon",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "points": [
+              [
+               30.15,
+               1.0
+              ],
+              [
+               30.85,
+               0.25
+              ],
+              [
+               31.95,
+               0.25
+              ],
+              [
+               32.65,
+               1.0
+              ],
+              [
+               32.65,
+               4.0
+              ],
+              [
+               31.95,
+               4.75
+              ],
+              [
+               30.85,
+               4.75
+              ],
+              [
+               30.15,
+               4.0
+              ]
+             ]
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": -12.0,
+       "z": 54.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 62.89
+        },
+        "children": [
+         {
+          "type": "rotate_extrude",
+          "name": "Rotate extrude",
+          "visible": true,
+          "params": {
+           "angle": 54.219,
+           "segments": 96
+          },
+          "children": [
+           {
+            "type": "polygon",
+            "name": "Polygon",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "points": [
+              [
+               31.03,
+               1.0
+              ],
+              [
+               31.73,
+               0.25
+              ],
+              [
+               32.83,
+               0.25
+              ],
+              [
+               33.53,
+               1.0
+              ],
+              [
+               33.53,
+               4.0
+              ],
+              [
+               32.83,
+               4.75
+              ],
+              [
+               31.73,
+               4.75
+              ],
+              [
+               31.03,
+               4.0
+              ]
+             ]
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": -12.0,
+       "z": 60.5
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 63.859
+        },
+        "children": [
+         {
+          "type": "rotate_extrude",
+          "name": "Rotate extrude",
+          "visible": true,
+          "params": {
+           "angle": 52.282,
+           "segments": 96
+          },
+          "children": [
+           {
+            "type": "polygon",
+            "name": "Polygon",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "points": [
+              [
+               31.91,
+               1.0
+              ],
+              [
+               32.61,
+               0.25
+              ],
+              [
+               33.71,
+               0.25
+              ],
+              [
+               34.41,
+               1.0
+              ],
+              [
+               34.41,
+               4.0
+              ],
+              [
+               33.71,
+               4.75
+              ],
+              [
+               32.61,
+               4.75
+              ],
+              [
+               31.91,
+               4.0
+              ]
+             ]
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Crest",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#7a4f2e",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -12.0,
+         "z": 65.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 64.625
+          },
+          "children": [
+           {
+            "type": "rotate_extrude",
+            "name": "Rotate extrude",
+            "visible": true,
+            "params": {
+             "angle": 50.749,
+             "segments": 96
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Polygon",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 32.31,
+                 1.0
+                ],
+                [
+                 33.01,
+                 0.25
+                ],
+                [
+                 34.81,
+                 0.25
+                ],
+                [
+                 35.51,
+                 1.0
+                ],
+                [
+                 35.51,
+                 5.8
+                ],
+                [
+                 34.81,
+                 6.55
+                ],
+                [
+                 33.01,
+                 6.55
+                ],
+                [
+                 32.31,
+                 5.8
+                ]
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "hull",
+        "name": "Hull",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -3.6,
+           "y": 21.91,
+           "z": 68.4
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 30.0,
+               "radius_bottom": 1.35,
+               "radius_top": 1.35,
+               "segments": 64,
+               "center": true
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 3.6,
+           "y": 21.91,
+           "z": 68.4
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 30.0,
+               "radius_bottom": 1.35,
+               "radius_top": 1.35,
+               "segments": 64,
+               "center": true
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

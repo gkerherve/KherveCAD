@@ -1,0 +1,322 @@
+{
+ "format": "kcad",
+ "version": 5,
+ "global_fn": 100,
+ "global_fn_on": true,
+ "dimensions": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "variables",
+    "name": "Variables",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "assign",
+      "name": "W =",
+      "visible": true,
+      "params": {
+       "variable": "W",
+       "value": 75.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "th =",
+      "visible": true,
+      "params": {
+       "variable": "th",
+       "value": 5.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "rt =",
+      "visible": true,
+      "params": {
+       "variable": "rt",
+       "value": 3.5
+      }
+     },
+     {
+      "type": "assign",
+      "name": "r0 =",
+      "visible": true,
+      "params": {
+       "variable": "r0",
+       "value": 48.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "pitch =",
+      "visible": true,
+      "params": {
+       "variable": "pitch",
+       "value": 10.5
+      }
+     },
+     {
+      "type": "assign",
+      "name": "ang =",
+      "visible": true,
+      "params": {
+       "variable": "ang",
+       "value": 24.9
+      }
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#d9875f",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 90.0,
+         "y": 0.0,
+         "z": 90.0
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 75.0,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "line",
+              "name": "Line",
+              "visible": true,
+              "params": {
+               "x1": 2.5,
+               "y1": 2.5,
+               "x2": 103.0,
+               "y2": 2.5,
+               "width": 5.0
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line",
+              "visible": true,
+              "params": {
+               "x1": 30.0,
+               "y1": 45.0,
+               "x2": 72.0,
+               "y2": 135.0,
+               "width": 5.0
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line",
+              "visible": true,
+              "params": {
+               "x1": 30.0,
+               "y1": 45.0,
+               "x2": 19.1,
+               "y2": 50.0,
+               "width": 5.0
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line",
+              "visible": true,
+              "params": {
+               "x1": 19.1,
+               "y1": 50.0,
+               "x2": 22.0,
+               "y2": 56.4,
+               "width": 5.0
+              }
+             },
+             {
+              "type": "intersection",
+              "name": "Intersection",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For i",
+                "visible": true,
+                "params": {
+                 "variable": "i",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": ""
+                },
+                "children": [
+                 {
+                  "type": "difference",
+                  "name": "Difference",
+                  "visible": true,
+                  "params": {},
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 10.0,
+                     "y": 2.5,
+                     "radius": "r0 + pitch*i + rt",
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 64
+                    }
+                   },
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 10.0,
+                     "y": 2.5,
+                     "radius": "r0 + pitch*i",
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 64
+                    }
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "polygon",
+                "name": "Polygon",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   9.1,
+                   0.0
+                  ],
+                  [
+                   78.7,
+                   150.0
+                  ],
+                  [
+                   200.0,
+                   150.0
+                  ],
+                  [
+                   200.0,
+                   0.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 22.5,
+         "y": 30.0,
+         "z": 45.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": -24.9,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -4.0,
+             "z": 10.0,
+             "width": 30.0,
+             "depth": 8.0,
+             "height": 62.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 30.5,
+         "y": 5.0,
+         "z": 30.0,
+         "width": 14.0,
+         "depth": 29.0,
+         "height": 22.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

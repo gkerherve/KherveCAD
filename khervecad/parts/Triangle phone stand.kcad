@@ -1,0 +1,212 @@
+{
+ "format": "kcad",
+ "version": 5,
+ "global_fn": 100,
+ "global_fn_on": true,
+ "dimensions": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "variables",
+    "name": "Variables",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "assign",
+      "name": "W =",
+      "visible": true,
+      "params": {
+       "variable": "W",
+       "value": 70.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "th =",
+      "visible": true,
+      "params": {
+       "variable": "th",
+       "value": 6.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "cw =",
+      "visible": true,
+      "params": {
+       "variable": "cw",
+       "value": 14.0
+      }
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#3d7fd9",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 90.0,
+         "y": 0.0,
+         "z": 90.0
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 70.0,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "line",
+              "name": "Line",
+              "visible": true,
+              "params": {
+               "x1": 12.0,
+               "y1": 3.0,
+               "x2": 54.0,
+               "y2": 90.0,
+               "width": 6.0
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line",
+              "visible": true,
+              "params": {
+               "x1": 54.0,
+               "y1": 90.0,
+               "x2": 92.0,
+               "y2": 3.0,
+               "width": 6.0
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line",
+              "visible": true,
+              "params": {
+               "x1": 3.0,
+               "y1": 3.0,
+               "x2": 92.0,
+               "y2": 3.0,
+               "width": 6.0
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line",
+              "visible": true,
+              "params": {
+               "x1": 17.6,
+               "y1": 14.0,
+               "x2": 6.7,
+               "y2": 19.0,
+               "width": 6.0
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line",
+              "visible": true,
+              "params": {
+               "x1": 6.7,
+               "y1": 19.0,
+               "x2": 9.2,
+               "y2": 25.0,
+               "width": 6.0
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line",
+              "visible": true,
+              "params": {
+               "x1": 3.0,
+               "y1": 3.0,
+               "x2": 6.7,
+               "y2": 19.0,
+               "width": 6.0
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 28.0,
+         "y": -1.0,
+         "z": -1.0,
+         "width": 14.0,
+         "depth": 28.0,
+         "height": 32.0,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 28.0,
+         "y": 70.0,
+         "z": -1.0,
+         "width": 14.0,
+         "depth": 30.0,
+         "height": 10.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

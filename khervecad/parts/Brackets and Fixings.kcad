@@ -1,0 +1,1797 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 40.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "L_Angle",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#c7ccd4",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Base leg]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 40.0,
+           "depth": 30.0,
+           "height": 3.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Wall leg]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 40.0,
+           "depth": 3.0,
+           "height": 30.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "10, 30"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Base hole]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 18.0,
+           "z": -1.0,
+           "height": 5.0,
+           "radius_bottom": 2.5,
+           "radius_top": 2.5,
+           "segments": 64,
+           "center": false
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -1.0,
+           "z": 18.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Wall hole]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 5.0,
+               "radius_bottom": 2.5,
+               "radius_top": 2.5,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Gusset_Angle",
+    "visible": true,
+    "params": {
+     "x": 90.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#c7ccd4",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Base leg]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 50.0,
+           "depth": 40.0,
+           "height": 4.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Wall leg]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 50.0,
+           "depth": 4.0,
+           "height": 40.0,
+           "center": false
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 23.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 90.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": 4.0,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Polygon [Gusset]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   4.0,
+                   4.0
+                  ],
+                  [
+                   34.0,
+                   4.0
+                  ],
+                  [
+                   4.0,
+                   34.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "11, 39"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Base hole]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 26.0,
+           "z": -1.0,
+           "height": 6.0,
+           "radius_bottom": 3.0,
+           "radius_top": 3.0,
+           "segments": 64,
+           "center": false
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -1.0,
+           "z": 26.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Wall hole]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 6.0,
+               "radius_bottom": 3.0,
+               "radius_top": 3.0,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Corner_Brace",
+    "visible": true,
+    "params": {
+     "x": 190.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#c7ccd4",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Arm X]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 60.0,
+           "depth": 14.0,
+           "height": 3.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Arm Y]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 14.0,
+           "depth": 60.0,
+           "height": 3.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For p",
+        "visible": true,
+        "params": {
+         "variable": "p",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "[7, 7], [30, 7], [50, 7], [7, 30], [7, 50]"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Countersunk hole]",
+          "visible": true,
+          "params": {
+           "x": "p[0]",
+           "y": "p[1]",
+           "z": -1.0,
+           "height": 4.01,
+           "radius_bottom": 2.25,
+           "radius_top": 4.25,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "T_Plate",
+    "visible": true,
+    "params": {
+     "x": 290.0,
+     "y": 50.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#c7ccd4",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Top bar]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 70.0,
+           "depth": 14.0,
+           "height": 3.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Stem]",
+          "visible": true,
+          "params": {
+           "x": 28.0,
+           "y": -50.0,
+           "z": 0.0,
+           "width": 14.0,
+           "depth": 50.0,
+           "height": 3.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For p",
+        "visible": true,
+        "params": {
+         "variable": "p",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "[8, 7], [22, 7], [48, 7], [62, 7], [35, -12], [35, -28], [35, -44]"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Countersunk hole]",
+          "visible": true,
+          "params": {
+           "x": "p[0]",
+           "y": "p[1]",
+           "z": -1.0,
+           "height": 4.01,
+           "radius_bottom": 2.25,
+           "radius_top": 4.25,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Mending_Plate",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 120.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#c7ccd4",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Strip]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "width": 90.0,
+         "depth": 16.0,
+         "height": 3.0,
+         "center": false
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "8, 26, 64, 82"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Countersunk hole]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 8.0,
+           "z": -1.0,
+           "height": 4.01,
+           "radius_bottom": 2.25,
+           "radius_top": 4.25,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Z_Bracket",
+    "visible": true,
+    "params": {
+     "x": 140.0,
+     "y": 110.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#333338",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Lower flange]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 30.0,
+           "depth": 25.0,
+           "height": 3.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Web]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 22.0,
+           "z": 0.0,
+           "width": 30.0,
+           "depth": 3.0,
+           "height": 28.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Upper flange]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 22.0,
+           "z": 25.0,
+           "width": 30.0,
+           "depth": 25.0,
+           "height": 3.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Lower hole]",
+        "visible": true,
+        "params": {
+         "x": 15.0,
+         "y": 11.0,
+         "z": -1.0,
+         "height": 5.0,
+         "radius_bottom": 2.5,
+         "radius_top": 2.5,
+         "segments": 64,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Upper hole]",
+        "visible": true,
+        "params": {
+         "x": 15.0,
+         "y": 36.0,
+         "z": 24.0,
+         "height": 5.0,
+         "radius_bottom": 2.5,
+         "radius_top": 2.5,
+         "segments": 64,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Joist_Hanger",
+    "visible": true,
+    "params": {
+     "x": 240.0,
+     "y": 130.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#b8bfb2",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Seat]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 46.0,
+           "depth": 40.0,
+           "height": 3.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Left side]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 3.0,
+           "depth": 40.0,
+           "height": 60.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Right side]",
+          "visible": true,
+          "params": {
+           "x": 43.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 3.0,
+           "depth": 40.0,
+           "height": 60.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Left flange]",
+          "visible": true,
+          "params": {
+           "x": -20.0,
+           "y": 37.0,
+           "z": 0.0,
+           "width": 20.0,
+           "depth": 3.0,
+           "height": 60.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Right flange]",
+          "visible": true,
+          "params": {
+           "x": 46.0,
+           "y": 37.0,
+           "z": 0.0,
+           "width": 20.0,
+           "depth": 3.0,
+           "height": 60.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For z",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "15, 30, 45"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -10.0,
+           "y": 36.0,
+           "z": "z"
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Left flange nail hole]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 5.0,
+               "radius_bottom": 2.5,
+               "radius_top": 2.5,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 56.0,
+           "y": 36.0,
+           "z": "z"
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Right flange nail hole]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 5.0,
+               "radius_bottom": 2.5,
+               "radius_top": 2.5,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -1.0,
+           "y": 20.0,
+           "z": "z"
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Side nail hole]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 48.0,
+               "radius_bottom": 2.0,
+               "radius_top": 2.0,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Pipe_Saddle",
+    "visible": true,
+    "params": {
+     "x": 40.0,
+     "y": 230.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#c7ccd4",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Feet]",
+          "visible": true,
+          "params": {
+           "x": -32.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 64.0,
+           "depth": 16.0,
+           "height": 3.0,
+           "center": false
+          }
+         },
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": -90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Strap arch]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 16.0,
+             "radius_bottom": 16.0,
+             "radius_top": 16.0,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -1.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": -90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Pipe bore]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 18.0,
+             "radius_bottom": 13.0,
+             "radius_top": 13.0,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Cut below floor]",
+        "visible": true,
+        "params": {
+         "x": -40.0,
+         "y": -1.0,
+         "z": -40.0,
+         "width": 80.0,
+         "depth": 18.0,
+         "height": 40.0,
+         "center": false
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-24, 24"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Screw hole]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 8.0,
+           "z": -1.0,
+           "height": 5.0,
+           "radius_bottom": 2.5,
+           "radius_top": 2.5,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Shelf_Bracket",
+    "visible": true,
+    "params": {
+     "x": 150.0,
+     "y": 230.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#262626",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "rotate",
+      "name": "Rotate",
+      "visible": true,
+      "params": {
+       "x": 90.0,
+       "y": 0.0,
+       "z": 0.0
+      },
+      "children": [
+       {
+        "type": "linear_extrude",
+        "name": "Linear extrude",
+        "visible": true,
+        "params": {
+         "height": 5.0,
+         "twist": 0.0,
+         "scale": 1.0,
+         "center": true,
+         "segments": 0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "rect",
+              "name": "Rectangle [Wall bar]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "width": 8.0,
+               "height": 130.0
+              }
+             },
+             {
+              "type": "rect",
+              "name": "Rectangle [Shelf bar]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 122.0,
+               "width": 110.0,
+               "height": 8.0
+              }
+             },
+             {
+              "type": "polygon",
+              "name": "Polygon [Diagonal strut]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 0.0,
+                 20.0
+                ],
+                [
+                 0.0,
+                 34.0
+                ],
+                [
+                 96.0,
+                 130.0
+                ],
+                [
+                 110.0,
+                 130.0
+                ]
+               ]
+              }
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For y",
+            "visible": true,
+            "params": {
+             "variable": "y",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "15, 60, 105"
+            },
+            "children": [
+             {
+              "type": "circle",
+              "name": "Circle [Wall screw hole]",
+              "visible": true,
+              "params": {
+               "x": 4.0,
+               "y": "y",
+               "radius": 2.0,
+               "angle": 360.0,
+               "start_angle": 0.0,
+               "segments": 64
+              }
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For x",
+            "visible": true,
+            "params": {
+             "variable": "x",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "40, 95"
+            },
+            "children": [
+             {
+              "type": "circle",
+              "name": "Circle [Shelf screw hole]",
+              "visible": true,
+              "params": {
+               "x": "x",
+               "y": 126.0,
+               "radius": 2.0,
+               "angle": 360.0,
+               "start_angle": 0.0,
+               "segments": 64
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Wall_Hook",
+    "visible": true,
+    "params": {
+     "x": 310.0,
+     "y": 240.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#d9b24c",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Back plate]",
+        "visible": true,
+        "params": {
+         "x": -12.0,
+         "y": 0.0,
+         "z": 0.0,
+         "width": 24.0,
+         "depth": 4.0,
+         "height": 60.0,
+         "center": false
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For z",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "12, 50"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -1.0,
+           "z": "z"
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Screw hole]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 6.0,
+               "radius_bottom": 2.25,
+               "radius_top": 4.5,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 1.0,
+       "z": 22.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": -110.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Arm]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 40.0,
+           "radius_bottom": 3.5,
+           "radius_top": 3.5,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "sphere",
+      "name": "Sphere [Knob]",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 38.6,
+       "z": 8.3,
+       "radius": 5.5,
+       "segments": 48
+      }
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "P_Clip",
+    "visible": true,
+    "params": {
+     "x": 20.0,
+     "y": 330.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#e6e6e6",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Loop]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 10.0,
+           "radius_bottom": 10.0,
+           "radius_top": 10.0,
+           "segments": 64,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Tab]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -10.0,
+           "z": 0.0,
+           "width": 26.0,
+           "depth": 4.0,
+           "height": 10.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Cable bore]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": -1.0,
+         "height": 12.0,
+         "radius_bottom": 7.0,
+         "radius_top": 7.0,
+         "segments": 64,
+         "center": false
+        }
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 19.0,
+         "y": -4.0,
+         "z": 5.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Screw hole]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 10.0,
+             "radius_bottom": 2.25,
+             "radius_top": 2.25,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Slotted_Angle",
+    "visible": true,
+    "params": {
+     "x": 120.0,
+     "y": 330.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#4c73b2",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Flat leg]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 120.0,
+           "depth": 35.0,
+           "height": 2.5,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Upright leg]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 120.0,
+           "depth": 2.5,
+           "height": 35.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 12.0,
+         "end": 108.0,
+         "step": 24.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": "x - 4",
+             "y": 20.0,
+             "z": -1.0,
+             "height": 5.0,
+             "radius_bottom": 3.5,
+             "radius_top": 3.5,
+             "segments": 64,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": "x + 4",
+             "y": 20.0,
+             "z": -1.0,
+             "height": 5.0,
+             "radius_bottom": 3.5,
+             "radius_top": 3.5,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "x - 4",
+             "y": -1.0,
+             "z": 20.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 5.0,
+                 "radius_bottom": 3.5,
+                 "radius_top": 3.5,
+                 "segments": 64,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "x + 4",
+             "y": -1.0,
+             "z": 20.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 5.0,
+                 "radius_bottom": 3.5,
+                 "radius_top": 3.5,
+                 "segments": 64,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

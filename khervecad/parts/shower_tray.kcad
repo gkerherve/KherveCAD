@@ -1,0 +1,387 @@
+{
+ "format": "kcad",
+ "version": 6,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "color",
+    "name": "Color 1",
+    "visible": true,
+    "params": {
+     "color": "#F4F1EA",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "shower_tray",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 2.0
+                },
+                "children": [
+                 {
+                  "type": "linear_extrude",
+                  "name": "Linear extrude",
+                  "visible": true,
+                  "params": {
+                   "height": 22.0,
+                   "twist": 0.0,
+                   "scale": 1.0,
+                   "center": false,
+                   "segments": 0
+                  },
+                  "children": [
+                   {
+                    "type": "offset",
+                    "name": "Offset",
+                    "visible": true,
+                    "params": {
+                     "radius": 8.5,
+                     "chamfer": false
+                    },
+                    "children": [
+                     {
+                      "type": "rect",
+                      "name": "Rectangle",
+                      "visible": true,
+                      "params": {
+                       "x": -70.0,
+                       "y": -40.0,
+                       "width": 140.0,
+                       "height": 80.0
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 3.5
+                },
+                "children": [
+                 {
+                  "type": "linear_extrude",
+                  "name": "Linear extrude",
+                  "visible": true,
+                  "params": {
+                   "height": 19.0,
+                   "twist": 0.0,
+                   "scale": 1.0,
+                   "center": false,
+                   "segments": 0
+                  },
+                  "children": [
+                   {
+                    "type": "offset",
+                    "name": "Offset",
+                    "visible": true,
+                    "params": {
+                     "radius": 10.0,
+                     "chamfer": false
+                    },
+                    "children": [
+                     {
+                      "type": "rect",
+                      "name": "Rectangle",
+                      "visible": true,
+                      "params": {
+                       "x": -70.0,
+                       "y": -40.0,
+                       "width": 140.0,
+                       "height": 80.0
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "for_loop",
+              "name": "For sx",
+              "visible": true,
+              "params": {
+               "variable": "sx",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "-1, 1"
+              },
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For sy",
+                "visible": true,
+                "params": {
+                 "variable": "sy",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "-1, 1"
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Feet]",
+                  "visible": true,
+                  "params": {
+                   "x": "sx * 62",
+                   "y": "sy * 37",
+                   "z": 0.0,
+                   "height": 2.5,
+                   "radius_bottom": 6.0,
+                   "radius_top": 6.0,
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 5.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": 30.0,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "offset",
+                "name": "Offset",
+                "visible": true,
+                "params": {
+                 "radius": 6.5,
+                 "chamfer": false
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle [Basin]",
+                  "visible": true,
+                  "params": {
+                   "x": -70.0,
+                   "y": -40.0,
+                   "width": 140.0,
+                   "height": 80.0
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For i",
+            "visible": true,
+            "params": {
+             "variable": "i",
+             "start": -5.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": ""
+            },
+            "children": [
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": "i * 12 + 6",
+                 "y": 28.0,
+                 "z": -1.0,
+                 "height": 10.0,
+                 "radius_bottom": 2.2,
+                 "radius_top": 2.2,
+                 "segments": 24,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": "i * 12 + 6",
+                 "y": -28.0,
+                 "z": -1.0,
+                 "height": 10.0,
+                 "radius_bottom": 2.2,
+                 "radius_top": 2.2,
+                 "segments": 24,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For i",
+          "visible": true,
+          "params": {
+           "variable": "i",
+           "start": -5.0,
+           "end": 5.0,
+           "step": 1.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "i * 12",
+             "y": 38.0,
+             "z": 5.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Drying ribs]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 76.0,
+                 "radius_bottom": 2.0,
+                 "radius_top": 2.0,
+                 "segments": 24,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

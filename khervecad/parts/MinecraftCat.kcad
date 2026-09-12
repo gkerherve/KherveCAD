@@ -1,0 +1,1766 @@
+{
+ "format": "kcad",
+ "version": 6,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "rotate",
+    "name": "Rotate [Minecraft cat]",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 90.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color [Orange fur]",
+      "visible": true,
+      "params": {
+       "color": "#E9A23B",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "union",
+        "name": "Group [Orange fur]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Body]",
+          "visible": true,
+          "params": {
+           "x": -4.0,
+           "y": -16.0,
+           "z": 12.0,
+           "width": 8.0,
+           "depth": 32.0,
+           "height": 12.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Head]",
+          "visible": true,
+          "params": {
+           "x": -6.0,
+           "y": -22.0,
+           "z": 20.0,
+           "width": 12.0,
+           "depth": 10.0,
+           "height": 9.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Left ear]",
+          "visible": true,
+          "params": {
+           "x": -6.0,
+           "y": -20.0,
+           "z": 29.0,
+           "width": 3.0,
+           "depth": 3.0,
+           "height": 3.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Right ear]",
+          "visible": true,
+          "params": {
+           "x": 3.0,
+           "y": -20.0,
+           "z": 29.0,
+           "width": 3.0,
+           "depth": 3.0,
+           "height": 3.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Front left leg]",
+          "visible": true,
+          "params": {
+           "x": -4.0,
+           "y": -16.0,
+           "z": 0.0,
+           "width": 3.75,
+           "depth": 4.0,
+           "height": 12.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Front right leg]",
+          "visible": true,
+          "params": {
+           "x": 0.25,
+           "y": -16.0,
+           "z": 0.0,
+           "width": 3.75,
+           "depth": 4.0,
+           "height": 12.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Back left leg]",
+          "visible": true,
+          "params": {
+           "x": -4.0,
+           "y": 12.0,
+           "z": 0.0,
+           "width": 3.75,
+           "depth": 4.0,
+           "height": 12.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Back right leg]",
+          "visible": true,
+          "params": {
+           "x": 0.25,
+           "y": 12.0,
+           "z": 0.0,
+           "width": 3.75,
+           "depth": 4.0,
+           "height": 12.0,
+           "center": false
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate [Tail base]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 15.0,
+           "z": 21.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate [Tail base]",
+            "visible": true,
+            "params": {
+             "x": 40.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Tail base]",
+              "visible": true,
+              "params": {
+               "x": -1.0,
+               "y": 0.0,
+               "z": -1.0,
+               "width": 2.0,
+               "depth": 16.0,
+               "height": 2.0,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate [Tail joint]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 27.26,
+           "z": 31.28
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate [Tail joint]",
+            "visible": true,
+            "params": {
+             "x": 60.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Tail joint]",
+              "visible": true,
+              "params": {
+               "x": -1.0,
+               "y": -1.6,
+               "z": -1.0,
+               "width": 2.0,
+               "depth": 3.2,
+               "height": 2.0,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate [Tail tip]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 27.26,
+           "z": 31.28
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate [Tail tip]",
+            "visible": true,
+            "params": {
+             "x": 80.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Tail tip]",
+              "visible": true,
+              "params": {
+               "x": -1.0,
+               "y": -1.0,
+               "z": -1.0,
+               "width": 2.0,
+               "depth": 11.0,
+               "height": 2.0,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Tabby stripes]",
+      "visible": true,
+      "params": {
+       "color": "#B8621F",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "union",
+        "name": "Group [Tabby stripes]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Back stripe 1]",
+          "visible": true,
+          "params": {
+           "x": -4.2,
+           "y": -8.0,
+           "z": 17.0,
+           "width": 8.4,
+           "depth": 2.5,
+           "height": 7.2,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Back stripe 2]",
+          "visible": true,
+          "params": {
+           "x": -4.2,
+           "y": -2.0,
+           "z": 17.0,
+           "width": 8.4,
+           "depth": 2.5,
+           "height": 7.2,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Back stripe 3]",
+          "visible": true,
+          "params": {
+           "x": -4.2,
+           "y": 4.0,
+           "z": 17.0,
+           "width": 8.4,
+           "depth": 2.5,
+           "height": 7.2,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Back stripe 4]",
+          "visible": true,
+          "params": {
+           "x": -4.2,
+           "y": 10.0,
+           "z": 17.0,
+           "width": 8.4,
+           "depth": 2.5,
+           "height": 7.2,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Head band front]",
+          "visible": true,
+          "params": {
+           "x": -6.2,
+           "y": -16.0,
+           "z": 25.0,
+           "width": 12.4,
+           "depth": 1.0,
+           "height": 4.2,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Head band back]",
+          "visible": true,
+          "params": {
+           "x": -6.2,
+           "y": -13.5,
+           "z": 25.0,
+           "width": 12.4,
+           "depth": 1.0,
+           "height": 4.2,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Head top stripe]",
+          "visible": true,
+          "params": {
+           "x": -0.5,
+           "y": -22.0,
+           "z": 28.9,
+           "width": 1.0,
+           "depth": 9.0,
+           "height": 0.3,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Forehead stripe centre]",
+          "visible": true,
+          "params": {
+           "x": -0.5,
+           "y": -22.2,
+           "z": 27.0,
+           "width": 1.0,
+           "depth": 0.3,
+           "height": 2.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Forehead stripe left]",
+          "visible": true,
+          "params": {
+           "x": -2.0,
+           "y": -22.2,
+           "z": 28.0,
+           "width": 1.0,
+           "depth": 0.3,
+           "height": 1.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Forehead stripe right]",
+          "visible": true,
+          "params": {
+           "x": 1.0,
+           "y": -22.2,
+           "z": 28.0,
+           "width": 1.0,
+           "depth": 0.3,
+           "height": 1.0,
+           "center": false
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate [Tail ring]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 15.0,
+           "z": 21.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate [Tail ring]",
+            "visible": true,
+            "params": {
+             "x": 40.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Tail ring]",
+              "visible": true,
+              "params": {
+               "x": -1.1,
+               "y": 7.0,
+               "z": -1.1,
+               "width": 2.2,
+               "depth": 2.0,
+               "height": 2.2,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate [Dark tail tip]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 27.26,
+           "z": 31.28
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate [Dark tail tip]",
+            "visible": true,
+            "params": {
+             "x": 80.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Dark tail tip]",
+              "visible": true,
+              "params": {
+               "x": -1.1,
+               "y": 7.0,
+               "z": -1.1,
+               "width": 2.2,
+               "depth": 3.1,
+               "height": 2.2,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Cream fur]",
+      "visible": true,
+      "params": {
+       "color": "#FBE8C8",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "union",
+        "name": "Group [Cream fur]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Muzzle]",
+          "visible": true,
+          "params": {
+           "x": -3.0,
+           "y": -24.0,
+           "z": 20.0,
+           "width": 6.0,
+           "depth": 2.2,
+           "height": 4.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Chest]",
+          "visible": true,
+          "params": {
+           "x": -3.0,
+           "y": -16.2,
+           "z": 12.5,
+           "width": 6.0,
+           "depth": 0.3,
+           "height": 5.5,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Belly]",
+          "visible": true,
+          "params": {
+           "x": -3.5,
+           "y": -12.0,
+           "z": 11.8,
+           "width": 7.0,
+           "depth": 24.0,
+           "height": 0.3,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Front left paw]",
+          "visible": true,
+          "params": {
+           "x": -4.1,
+           "y": -16.1,
+           "z": 0.0,
+           "width": 3.95,
+           "depth": 4.2,
+           "height": 2.5,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Front right paw]",
+          "visible": true,
+          "params": {
+           "x": 0.15,
+           "y": -16.1,
+           "z": 0.0,
+           "width": 3.95,
+           "depth": 4.2,
+           "height": 2.5,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Back left paw]",
+          "visible": true,
+          "params": {
+           "x": -4.1,
+           "y": 11.9,
+           "z": 0.0,
+           "width": 3.95,
+           "depth": 4.2,
+           "height": 2.5,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Back right paw]",
+          "visible": true,
+          "params": {
+           "x": 0.15,
+           "y": 11.9,
+           "z": 0.0,
+           "width": 3.95,
+           "depth": 4.2,
+           "height": 2.5,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Green eyes]",
+      "visible": true,
+      "params": {
+       "color": "#7FD34E",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "union",
+        "name": "Group [Green eyes]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Left eye iris]",
+          "visible": true,
+          "params": {
+           "x": -5.0,
+           "y": -22.2,
+           "z": 24.0,
+           "width": 1.0,
+           "depth": 0.3,
+           "height": 3.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Right eye iris]",
+          "visible": true,
+          "params": {
+           "x": 4.0,
+           "y": -22.2,
+           "z": 24.0,
+           "width": 1.0,
+           "depth": 0.3,
+           "height": 3.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Pupils]",
+      "visible": true,
+      "params": {
+       "color": "#1E1E1E",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "union",
+        "name": "Group [Pupils]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Left pupil]",
+          "visible": true,
+          "params": {
+           "x": -4.0,
+           "y": -22.2,
+           "z": 24.0,
+           "width": 2.0,
+           "depth": 0.3,
+           "height": 3.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Right pupil]",
+          "visible": true,
+          "params": {
+           "x": 2.0,
+           "y": -22.2,
+           "z": 24.0,
+           "width": 2.0,
+           "depth": 0.3,
+           "height": 3.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Sparkles & whiskers]",
+      "visible": true,
+      "params": {
+       "color": "#FFFFFF",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "union",
+        "name": "Group [Sparkles & whiskers]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Left eye sparkle]",
+          "visible": true,
+          "params": {
+           "x": -4.0,
+           "y": -22.3,
+           "z": 26.0,
+           "width": 1.0,
+           "depth": 0.3,
+           "height": 1.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Right eye sparkle]",
+          "visible": true,
+          "params": {
+           "x": 3.0,
+           "y": -22.3,
+           "z": 26.0,
+           "width": 1.0,
+           "depth": 0.3,
+           "height": 1.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Left eye small sparkle]",
+          "visible": true,
+          "params": {
+           "x": -2.6,
+           "y": -22.3,
+           "z": 24.2,
+           "width": 0.5,
+           "depth": 0.3,
+           "height": 0.5,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Right eye small sparkle]",
+          "visible": true,
+          "params": {
+           "x": 2.1,
+           "y": -22.3,
+           "z": 24.2,
+           "width": 0.5,
+           "depth": 0.3,
+           "height": 0.5,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Left whisker top]",
+          "visible": true,
+          "params": {
+           "x": -6.8,
+           "y": -23.4,
+           "z": 21.8,
+           "width": 3.9,
+           "depth": 0.3,
+           "height": 0.3,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Left whisker bottom]",
+          "visible": true,
+          "params": {
+           "x": -6.8,
+           "y": -23.4,
+           "z": 20.6,
+           "width": 3.9,
+           "depth": 0.3,
+           "height": 0.3,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Right whisker top]",
+          "visible": true,
+          "params": {
+           "x": 2.9,
+           "y": -23.4,
+           "z": 21.8,
+           "width": 3.9,
+           "depth": 0.3,
+           "height": 0.3,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Right whisker bottom]",
+          "visible": true,
+          "params": {
+           "x": 2.9,
+           "y": -23.4,
+           "z": 20.6,
+           "width": 3.9,
+           "depth": 0.3,
+           "height": 0.3,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Blush & ear pink]",
+      "visible": true,
+      "params": {
+       "color": "#F4A6B8",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "union",
+        "name": "Group [Blush & ear pink]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Left cheek blush]",
+          "visible": true,
+          "params": {
+           "x": -6.0,
+           "y": -22.2,
+           "z": 22.6,
+           "width": 2.0,
+           "depth": 0.3,
+           "height": 1.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Right cheek blush]",
+          "visible": true,
+          "params": {
+           "x": 4.0,
+           "y": -22.2,
+           "z": 22.6,
+           "width": 2.0,
+           "depth": 0.3,
+           "height": 1.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Left ear inside]",
+          "visible": true,
+          "params": {
+           "x": -5.0,
+           "y": -20.2,
+           "z": 29.0,
+           "width": 1.0,
+           "depth": 0.3,
+           "height": 2.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Right ear inside]",
+          "visible": true,
+          "params": {
+           "x": 4.0,
+           "y": -20.2,
+           "z": 29.0,
+           "width": 1.0,
+           "depth": 0.3,
+           "height": 2.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Nose]",
+      "visible": true,
+      "params": {
+       "color": "#E86F8C",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Nose]",
+        "visible": true,
+        "params": {
+         "x": -1.0,
+         "y": -24.2,
+         "z": 23.0,
+         "width": 2.0,
+         "depth": 0.3,
+         "height": 1.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Mouth]",
+      "visible": true,
+      "params": {
+       "color": "#5A3420",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "union",
+        "name": "Group [Mouth]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Mouth centre]",
+          "visible": true,
+          "params": {
+           "x": -0.5,
+           "y": -24.2,
+           "z": 22.0,
+           "width": 1.0,
+           "depth": 0.3,
+           "height": 1.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Mouth left]",
+          "visible": true,
+          "params": {
+           "x": -1.5,
+           "y": -24.2,
+           "z": 21.0,
+           "width": 1.0,
+           "depth": 0.3,
+           "height": 1.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Mouth right]",
+          "visible": true,
+          "params": {
+           "x": 0.5,
+           "y": -24.2,
+           "z": 21.0,
+           "width": 1.0,
+           "depth": 0.3,
+           "height": 1.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Collar]",
+      "visible": true,
+      "params": {
+       "color": "#D93A30",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Collar]",
+        "visible": true,
+        "params": {
+         "x": -4.3,
+         "y": -16.4,
+         "z": 18.0,
+         "width": 8.6,
+         "depth": 6.0,
+         "height": 1.5,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Bell]",
+      "visible": true,
+      "params": {
+       "color": "#F5C518",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Bell]",
+        "visible": true,
+        "params": {
+         "x": -1.0,
+         "y": -17.4,
+         "z": 15.8,
+         "width": 2.0,
+         "depth": 1.2,
+         "height": 2.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Bell slot]",
+      "visible": true,
+      "params": {
+       "color": "#5A3420",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Bell slot]",
+        "visible": true,
+        "params": {
+         "x": -0.25,
+         "y": -17.6,
+         "z": 16.1,
+         "width": 0.5,
+         "depth": 0.3,
+         "height": 0.9,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate [Love heart]",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": -17.0,
+       "z": 28.4
+      },
+      "children": [
+       {
+        "type": "scale",
+        "name": "Scale [Love heart]",
+        "visible": true,
+        "params": {
+         "x": 1.2,
+         "y": 2.5,
+         "z": 1.2
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color [Heart red]",
+          "visible": true,
+          "params": {
+           "color": "#E8202A",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "union",
+            "name": "Group [Heart]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Heart top left bump]",
+              "visible": true,
+              "params": {
+               "x": -2.5,
+               "y": 0.0,
+               "z": 5.0,
+               "width": 2.0,
+               "depth": 1.0,
+               "height": 1.0,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Heart top right bump]",
+              "visible": true,
+              "params": {
+               "x": 0.5,
+               "y": 0.0,
+               "z": 5.0,
+               "width": 2.0,
+               "depth": 1.0,
+               "height": 1.0,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Heart wide middle]",
+              "visible": true,
+              "params": {
+               "x": -3.5,
+               "y": 0.0,
+               "z": 3.0,
+               "width": 7.0,
+               "depth": 1.0,
+               "height": 2.0,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Heart lower row]",
+              "visible": true,
+              "params": {
+               "x": -2.5,
+               "y": 0.0,
+               "z": 2.0,
+               "width": 5.0,
+               "depth": 1.0,
+               "height": 1.0,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Heart narrow row]",
+              "visible": true,
+              "params": {
+               "x": -1.5,
+               "y": 0.0,
+               "z": 1.0,
+               "width": 3.0,
+               "depth": 1.0,
+               "height": 1.0,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Heart tip]",
+              "visible": true,
+              "params": {
+               "x": -0.5,
+               "y": 0.0,
+               "z": 0.0,
+               "width": 1.0,
+               "depth": 1.0,
+               "height": 1.0,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color [Heart shine]",
+          "visible": true,
+          "params": {
+           "color": "#FFFFFF",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Heart shine]",
+            "visible": true,
+            "params": {
+             "x": -2.5,
+             "y": -0.1,
+             "z": 4.0,
+             "width": 1.0,
+             "depth": 0.3,
+             "height": 1.0,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color [Heart shading]",
+          "visible": true,
+          "params": {
+           "color": "#8E0F16",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "union",
+            "name": "Group [Heart shading]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Heart shade upper]",
+              "visible": true,
+              "params": {
+               "x": 2.5,
+               "y": -0.1,
+               "z": 3.0,
+               "width": 1.0,
+               "depth": 0.3,
+               "height": 1.0,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Heart shade middle]",
+              "visible": true,
+              "params": {
+               "x": 1.5,
+               "y": -0.1,
+               "z": 2.0,
+               "width": 1.0,
+               "depth": 0.3,
+               "height": 1.0,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Heart shade lower]",
+              "visible": true,
+              "params": {
+               "x": 0.5,
+               "y": -0.1,
+               "z": 1.0,
+               "width": 1.0,
+               "depth": 0.3,
+               "height": 1.0,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Dirt]",
+      "visible": true,
+      "params": {
+       "color": "#8B5A2B",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Grass block dirt]",
+        "visible": true,
+        "params": {
+         "x": -14.0,
+         "y": -30.0,
+         "z": -8.0,
+         "width": 28.0,
+         "depth": 54.0,
+         "height": 6.5,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Grass top]",
+      "visible": true,
+      "params": {
+       "color": "#6DBE45",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Grass top]",
+        "visible": true,
+        "params": {
+         "x": -14.0,
+         "y": -30.0,
+         "z": -1.5,
+         "width": 28.0,
+         "depth": 54.0,
+         "height": 1.5,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Grass overhang]",
+      "visible": true,
+      "params": {
+       "color": "#6DBE45",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "union",
+        "name": "Group [Grass overhang]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Grass overhang left 1]",
+          "visible": true,
+          "params": {
+           "x": -14.2,
+           "y": -26.0,
+           "z": -3.0,
+           "width": 0.3,
+           "depth": 4.0,
+           "height": 1.6,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Grass overhang left 2]",
+          "visible": true,
+          "params": {
+           "x": -14.2,
+           "y": -14.0,
+           "z": -2.5,
+           "width": 0.3,
+           "depth": 6.0,
+           "height": 1.1,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Grass overhang left 3]",
+          "visible": true,
+          "params": {
+           "x": -14.2,
+           "y": 2.0,
+           "z": -3.5,
+           "width": 0.3,
+           "depth": 3.0,
+           "height": 2.1,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Grass overhang left 4]",
+          "visible": true,
+          "params": {
+           "x": -14.2,
+           "y": 14.0,
+           "z": -2.5,
+           "width": 0.3,
+           "depth": 5.0,
+           "height": 1.1,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Grass overhang right 1]",
+          "visible": true,
+          "params": {
+           "x": 13.9,
+           "y": -24.0,
+           "z": -2.5,
+           "width": 0.3,
+           "depth": 5.0,
+           "height": 1.1,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Grass overhang right 2]",
+          "visible": true,
+          "params": {
+           "x": 13.9,
+           "y": -8.0,
+           "z": -3.5,
+           "width": 0.3,
+           "depth": 3.0,
+           "height": 2.1,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Grass overhang right 3]",
+          "visible": true,
+          "params": {
+           "x": 13.9,
+           "y": 8.0,
+           "z": -3.0,
+           "width": 0.3,
+           "depth": 6.0,
+           "height": 1.6,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Grass overhang front 1]",
+          "visible": true,
+          "params": {
+           "x": -10.0,
+           "y": -30.2,
+           "z": -3.0,
+           "width": 4.0,
+           "depth": 0.3,
+           "height": 1.6,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Grass overhang front 2]",
+          "visible": true,
+          "params": {
+           "x": -1.0,
+           "y": -30.2,
+           "z": -3.5,
+           "width": 3.0,
+           "depth": 0.3,
+           "height": 2.1,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Grass overhang front 3]",
+          "visible": true,
+          "params": {
+           "x": 7.0,
+           "y": -30.2,
+           "z": -2.5,
+           "width": 5.0,
+           "depth": 0.3,
+           "height": 1.1,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Grass overhang back 1]",
+          "visible": true,
+          "params": {
+           "x": -12.0,
+           "y": 23.9,
+           "z": -3.0,
+           "width": 5.0,
+           "depth": 0.3,
+           "height": 1.6,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Grass overhang back 2]",
+          "visible": true,
+          "params": {
+           "x": 3.0,
+           "y": 23.9,
+           "z": -2.5,
+           "width": 4.0,
+           "depth": 0.3,
+           "height": 1.1,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Dirt speckles]",
+      "visible": true,
+      "params": {
+       "color": "#A8783E",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "union",
+        "name": "Group [Dirt speckles]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Dirt speckle 1]",
+          "visible": true,
+          "params": {
+           "x": -14.2,
+           "y": -20.0,
+           "z": -6.0,
+           "width": 0.3,
+           "depth": 1.5,
+           "height": 1.5,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Dirt speckle 2]",
+          "visible": true,
+          "params": {
+           "x": -14.2,
+           "y": 8.0,
+           "z": -5.0,
+           "width": 0.3,
+           "depth": 1.5,
+           "height": 1.5,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Dirt speckle 3]",
+          "visible": true,
+          "params": {
+           "x": 13.9,
+           "y": -2.0,
+           "z": -6.0,
+           "width": 0.3,
+           "depth": 1.5,
+           "height": 1.5,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Dirt speckle 4]",
+          "visible": true,
+          "params": {
+           "x": 13.9,
+           "y": 16.0,
+           "z": -5.0,
+           "width": 0.3,
+           "depth": 1.5,
+           "height": 1.5,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Dirt speckle 5]",
+          "visible": true,
+          "params": {
+           "x": -5.0,
+           "y": -30.2,
+           "z": -6.0,
+           "width": 1.5,
+           "depth": 0.3,
+           "height": 1.5,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Dirt speckle 6]",
+          "visible": true,
+          "params": {
+           "x": 8.0,
+           "y": -30.2,
+           "z": -5.0,
+           "width": 1.5,
+           "depth": 0.3,
+           "height": 1.5,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

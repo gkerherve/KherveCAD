@@ -1,0 +1,884 @@
+{
+ "format": "kcad",
+ "version": 5,
+ "global_fn": 32,
+ "global_fn_on": true,
+ "dimensions": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "variables",
+    "name": "Variables",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "assign",
+      "name": "chain_r =",
+      "visible": true,
+      "params": {
+       "variable": "chain_r",
+       "value": 35.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "links =",
+      "visible": true,
+      "params": {
+       "variable": "links",
+       "value": 48.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "link_r =",
+      "visible": true,
+      "params": {
+       "variable": "link_r",
+       "value": 3.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "wire_d =",
+      "visible": true,
+      "params": {
+       "variable": "wire_d",
+       "value": 1.2
+      }
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "Gold",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "for_loop",
+      "name": "For i",
+      "visible": true,
+      "params": {
+       "variable": "i",
+       "start": 0.0,
+       "end": 47.0,
+       "step": 2.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "assign",
+        "name": "a =",
+        "visible": true,
+        "params": {
+         "variable": "a",
+         "value": "i * 360 / links"
+        }
+       },
+       {
+        "type": "component",
+        "name": "link",
+        "visible": true,
+        "params": {
+         "x": "chain_r * cos(a)",
+         "y": 0.0,
+         "z": "chain_r * sin(a)",
+         "rx": 0.0,
+         "ry": "90 - a",
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "rotate_extrude",
+          "name": "Rotate extrude",
+          "visible": true,
+          "params": {
+           "angle": 360.0,
+           "segments": 96
+          },
+          "children": [
+           {
+            "type": "circle",
+            "name": "Circle",
+            "visible": true,
+            "params": {
+             "x": 3.0,
+             "y": 0.0,
+             "radius": 0.6,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For i",
+      "visible": true,
+      "params": {
+       "variable": "i",
+       "start": 1.0,
+       "end": 47.0,
+       "step": 2.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "assign",
+        "name": "a =",
+        "visible": true,
+        "params": {
+         "variable": "a",
+         "value": "i * 360 / links"
+        }
+       },
+       {
+        "type": "reference",
+        "name": "link instance",
+        "visible": true,
+        "params": {
+         "ref": "link",
+         "x": "chain_r * cos(a)",
+         "y": 0.0,
+         "z": "chain_r * sin(a)",
+         "rx": -90.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "assign",
+    "name": "heart_z =",
+    "visible": true,
+    "params": {
+     "variable": "heart_z",
+     "value": -46.5
+    }
+   },
+   {
+    "type": "assign",
+    "name": "ringA_r =",
+    "visible": true,
+    "params": {
+     "variable": "ringA_r",
+     "value": 2.8
+    }
+   },
+   {
+    "type": "assign",
+    "name": "ringB_r =",
+    "visible": true,
+    "params": {
+     "variable": "ringB_r",
+     "value": 2.2
+    }
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "Gold",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": -37.6
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 90.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "rotate_extrude",
+          "name": "Rotate extrude",
+          "visible": true,
+          "params": {
+           "angle": 360.0,
+           "segments": 96
+          },
+          "children": [
+           {
+            "type": "circle",
+            "name": "Circle",
+            "visible": true,
+            "params": {
+             "x": 2.8,
+             "y": 0.0,
+             "radius": 0.6,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": -42.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 90.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "rotate_extrude",
+          "name": "Rotate extrude",
+          "visible": true,
+          "params": {
+           "angle": 360.0,
+           "segments": 96
+          },
+          "children": [
+           {
+            "type": "circle",
+            "name": "Circle",
+            "visible": true,
+            "params": {
+             "x": 2.2,
+             "y": 0.0,
+             "radius": 0.6,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "Crimson",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": "heart_z"
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 90.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 2.4,
+           "twist": 0.0,
+           "scale": 0.55,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "polygon",
+            "name": "Polygon",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "points": [
+              [
+               0.0,
+               2.5
+              ],
+              [
+               0.009,
+               2.611
+              ],
+              [
+               0.072,
+               2.931
+              ],
+              [
+               0.236,
+               3.417
+              ],
+              [
+               0.538,
+               4.008
+              ],
+              [
+               1.0,
+               4.629
+              ],
+              [
+               1.625,
+               5.2
+              ],
+              [
+               2.397,
+               5.646
+              ],
+              [
+               3.283,
+               5.909
+              ],
+              [
+               4.236,
+               5.949
+              ],
+              [
+               5.196,
+               5.75
+              ],
+              [
+               6.099,
+               5.32
+              ],
+              [
+               6.882,
+               4.686
+              ],
+              [
+               7.487,
+               3.889
+              ],
+              [
+               7.869,
+               2.977
+              ],
+              [
+               8.0,
+               2.0
+              ],
+              [
+               7.869,
+               1.0
+              ],
+              [
+               7.487,
+               0.01
+              ],
+              [
+               6.882,
+               -0.95
+              ],
+              [
+               6.099,
+               -1.87
+              ],
+              [
+               5.196,
+               -2.75
+              ],
+              [
+               4.236,
+               -3.595
+              ],
+              [
+               3.283,
+               -4.408
+              ],
+              [
+               2.397,
+               -5.19
+              ],
+              [
+               1.625,
+               -5.936
+              ],
+              [
+               1.0,
+               -6.629
+              ],
+              [
+               0.538,
+               -7.25
+              ],
+              [
+               0.236,
+               -7.771
+              ],
+              [
+               0.072,
+               -8.167
+              ],
+              [
+               0.009,
+               -8.415
+              ],
+              [
+               0.0,
+               -8.5
+              ],
+              [
+               -0.009,
+               -8.415
+              ],
+              [
+               -0.072,
+               -8.167
+              ],
+              [
+               -0.236,
+               -7.771
+              ],
+              [
+               -0.538,
+               -7.25
+              ],
+              [
+               -1.0,
+               -6.629
+              ],
+              [
+               -1.625,
+               -5.936
+              ],
+              [
+               -2.397,
+               -5.19
+              ],
+              [
+               -3.283,
+               -4.408
+              ],
+              [
+               -4.236,
+               -3.595
+              ],
+              [
+               -5.196,
+               -2.75
+              ],
+              [
+               -6.099,
+               -1.87
+              ],
+              [
+               -6.882,
+               -0.95
+              ],
+              [
+               -7.487,
+               0.01
+              ],
+              [
+               -7.869,
+               1.0
+              ],
+              [
+               -8.0,
+               2.0
+              ],
+              [
+               -7.869,
+               2.977
+              ],
+              [
+               -7.487,
+               3.889
+              ],
+              [
+               -6.882,
+               4.686
+              ],
+              [
+               -6.099,
+               5.32
+              ],
+              [
+               -5.196,
+               5.75
+              ],
+              [
+               -4.236,
+               5.949
+              ],
+              [
+               -3.283,
+               5.909
+              ],
+              [
+               -2.397,
+               5.646
+              ],
+              [
+               -1.625,
+               5.2
+              ],
+              [
+               -1.0,
+               4.629
+              ],
+              [
+               -0.538,
+               4.008
+              ],
+              [
+               -0.236,
+               3.417
+              ],
+              [
+               -0.072,
+               2.931
+              ],
+              [
+               -0.009,
+               2.611
+              ]
+             ]
+            }
+           }
+          ]
+         },
+         {
+          "type": "mirror",
+          "name": "Mirror",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 1.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 2.4,
+             "twist": 0.0,
+             "scale": 0.55,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Polygon",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 0.0,
+                 2.5
+                ],
+                [
+                 0.009,
+                 2.611
+                ],
+                [
+                 0.072,
+                 2.931
+                ],
+                [
+                 0.236,
+                 3.417
+                ],
+                [
+                 0.538,
+                 4.008
+                ],
+                [
+                 1.0,
+                 4.629
+                ],
+                [
+                 1.625,
+                 5.2
+                ],
+                [
+                 2.397,
+                 5.646
+                ],
+                [
+                 3.283,
+                 5.909
+                ],
+                [
+                 4.236,
+                 5.949
+                ],
+                [
+                 5.196,
+                 5.75
+                ],
+                [
+                 6.099,
+                 5.32
+                ],
+                [
+                 6.882,
+                 4.686
+                ],
+                [
+                 7.487,
+                 3.889
+                ],
+                [
+                 7.869,
+                 2.977
+                ],
+                [
+                 8.0,
+                 2.0
+                ],
+                [
+                 7.869,
+                 1.0
+                ],
+                [
+                 7.487,
+                 0.01
+                ],
+                [
+                 6.882,
+                 -0.95
+                ],
+                [
+                 6.099,
+                 -1.87
+                ],
+                [
+                 5.196,
+                 -2.75
+                ],
+                [
+                 4.236,
+                 -3.595
+                ],
+                [
+                 3.283,
+                 -4.408
+                ],
+                [
+                 2.397,
+                 -5.19
+                ],
+                [
+                 1.625,
+                 -5.936
+                ],
+                [
+                 1.0,
+                 -6.629
+                ],
+                [
+                 0.538,
+                 -7.25
+                ],
+                [
+                 0.236,
+                 -7.771
+                ],
+                [
+                 0.072,
+                 -8.167
+                ],
+                [
+                 0.009,
+                 -8.415
+                ],
+                [
+                 0.0,
+                 -8.5
+                ],
+                [
+                 -0.009,
+                 -8.415
+                ],
+                [
+                 -0.072,
+                 -8.167
+                ],
+                [
+                 -0.236,
+                 -7.771
+                ],
+                [
+                 -0.538,
+                 -7.25
+                ],
+                [
+                 -1.0,
+                 -6.629
+                ],
+                [
+                 -1.625,
+                 -5.936
+                ],
+                [
+                 -2.397,
+                 -5.19
+                ],
+                [
+                 -3.283,
+                 -4.408
+                ],
+                [
+                 -4.236,
+                 -3.595
+                ],
+                [
+                 -5.196,
+                 -2.75
+                ],
+                [
+                 -6.099,
+                 -1.87
+                ],
+                [
+                 -6.882,
+                 -0.95
+                ],
+                [
+                 -7.487,
+                 0.01
+                ],
+                [
+                 -7.869,
+                 1.0
+                ],
+                [
+                 -8.0,
+                 2.0
+                ],
+                [
+                 -7.869,
+                 2.977
+                ],
+                [
+                 -7.487,
+                 3.889
+                ],
+                [
+                 -6.882,
+                 4.686
+                ],
+                [
+                 -6.099,
+                 5.32
+                ],
+                [
+                 -5.196,
+                 5.75
+                ],
+                [
+                 -4.236,
+                 5.949
+                ],
+                [
+                 -3.283,
+                 5.909
+                ],
+                [
+                 -2.397,
+                 5.646
+                ],
+                [
+                 -1.625,
+                 5.2
+                ],
+                [
+                 -1.0,
+                 4.629
+                ],
+                [
+                 -0.538,
+                 4.008
+                ],
+                [
+                 -0.236,
+                 3.417
+                ],
+                [
+                 -0.072,
+                 2.931
+                ],
+                [
+                 -0.009,
+                 2.611
+                ]
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

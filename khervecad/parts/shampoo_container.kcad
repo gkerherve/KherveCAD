@@ -1,0 +1,550 @@
+{
+ "format": "kcad",
+ "version": 6,
+ "global_fn": 96,
+ "global_fn_on": true,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "color",
+    "name": "Color 1",
+    "visible": true,
+    "params": {
+     "color": "#9B7FD1",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "bottle",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "scale",
+                "name": "Scale",
+                "visible": true,
+                "params": {
+                 "x": 1.0,
+                 "y": 0.62,
+                 "z": 1.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 1.0,
+                   "radius_bottom": 28.0,
+                   "radius_top": 28.0,
+                   "segments": 96,
+                   "center": false
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 4.0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 1.0,
+                   "y": 0.62,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": 130.0,
+                     "radius_bottom": 32.0,
+                     "radius_top": 32.0,
+                     "segments": 96,
+                     "center": false
+                    }
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 160.0,
+                 "height": 1.0,
+                 "radius_bottom": 12.0,
+                 "radius_top": 12.0,
+                 "segments": 64,
+                 "center": false
+                }
+               }
+              ]
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Neck]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 160.0,
+               "height": 15.0,
+               "radius_bottom": 11.0,
+               "radius_top": 11.0,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Snap bead ramp]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 168.0,
+               "height": 1.5,
+               "radius_bottom": 11.0,
+               "radius_top": 12.3,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Snap bead]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 169.5,
+               "height": 1.5,
+               "radius_bottom": 12.3,
+               "radius_top": 12.3,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 2.0
+              },
+              "children": [
+               {
+                "type": "scale",
+                "name": "Scale",
+                "visible": true,
+                "params": {
+                 "x": 1.0,
+                 "y": 0.6,
+                 "z": 1.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 1.0,
+                   "radius_bottom": 26.0,
+                   "radius_top": 26.0,
+                   "segments": 96,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 6.0
+              },
+              "children": [
+               {
+                "type": "scale",
+                "name": "Scale",
+                "visible": true,
+                "params": {
+                 "x": 1.0,
+                 "y": 0.6,
+                 "z": 1.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 128.0,
+                   "radius_bottom": 30.0,
+                   "radius_top": 30.0,
+                   "segments": 96,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 158.0,
+               "height": 1.0,
+               "radius_bottom": 10.0,
+               "radius_top": 10.0,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Neck bore]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 150.0,
+             "height": 40.0,
+             "radius_bottom": 8.5,
+             "radius_top": 8.5,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -19.2,
+           "z": 75.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 90.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 1.2,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "text",
+                  "name": "Text [Label]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "text": "SHAMPOO",
+                   "size": 8.0
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 2",
+    "visible": true,
+    "params": {
+     "color": "#F5F5F5",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "cap",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 163.0,
+               "height": 14.0,
+               "radius_bottom": 14.0,
+               "radius_top": 14.0,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 163.0,
+               "height": 16.0,
+               "radius_bottom": 12.5,
+               "radius_top": 12.5,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Nozzle]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 179.0,
+             "height": 5.0,
+             "radius_bottom": 4.0,
+             "radius_top": 2.5,
+             "segments": 32,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Neck socket]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 162.0,
+           "height": 14.0,
+           "radius_bottom": 11.2,
+           "radius_top": 11.2,
+           "segments": 64,
+           "center": false
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Snap groove]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 168.0,
+           "height": 3.0,
+           "radius_bottom": 12.5,
+           "radius_top": 12.5,
+           "segments": 64,
+           "center": false
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Dispensing hole]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 170.0,
+           "height": 20.0,
+           "radius_bottom": 1.5,
+           "radius_top": 1.5,
+           "segments": 24,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

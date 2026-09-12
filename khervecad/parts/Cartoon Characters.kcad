@@ -1,0 +1,2649 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Pac_Man",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ffd900",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "sphere",
+          "name": "Sphere [Body]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 30.0,
+           "radius": 30.0,
+           "segments": 48
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 30.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": 70.0,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": true,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Polygon [Mouth]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   40.0,
+                   26.0
+                  ],
+                  [
+                   40.0,
+                   -26.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Pellets",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ffcca6",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "sphere",
+        "name": "Sphere [Pellet 1]",
+        "visible": true,
+        "params": {
+         "x": 48.0,
+         "y": 0.0,
+         "z": 30.0,
+         "radius": 4.0,
+         "segments": 48
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ffcca6",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "sphere",
+        "name": "Sphere [Pellet 2]",
+        "visible": true,
+        "params": {
+         "x": 64.0,
+         "y": 0.0,
+         "z": 30.0,
+         "radius": 4.0,
+         "segments": 48
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Ghost_Blinky",
+    "visible": true,
+    "params": {
+     "x": 115.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#f21a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Body]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 8.0,
+         "height": 27.0,
+         "radius_bottom": 25.0,
+         "radius_top": 25.0,
+         "segments": 64,
+         "center": false
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Dome]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 35.0,
+         "radius": 25.0,
+         "segments": 48
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For a",
+        "visible": true,
+        "params": {
+         "variable": "a",
+         "start": 0.0,
+         "end": 315.0,
+         "step": 45.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": "a"
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Skirt foot]",
+            "visible": true,
+            "params": {
+             "x": 19.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 9.0,
+             "radius_bottom": 6.0,
+             "radius_top": 6.0,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For x",
+      "visible": true,
+      "params": {
+       "variable": "x",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": "-10, 10"
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#ffffff",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -20.0,
+           "z": 42.0
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 0.7,
+             "z": 1.3
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [Eye]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 8.0,
+               "segments": 48
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1a33e6",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "sphere",
+          "name": "Sphere [Pupil]",
+          "visible": true,
+          "params": {
+           "x": "x + 2",
+           "y": -25.0,
+           "z": 40.0,
+           "radius": 4.0,
+           "segments": 48
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Minion",
+    "visible": true,
+    "params": {
+     "x": 210.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ffd91a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Body]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 20.0,
+         "height": 42.0,
+         "radius_bottom": 22.0,
+         "radius_top": 22.0,
+         "segments": 64,
+         "center": false
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Head top]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 62.0,
+         "radius": 22.0,
+         "segments": 48
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "s * 21",
+           "y": 0.0,
+           "z": 42.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "s * 150",
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Arm]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 16.0,
+               "radius_bottom": 3.0,
+               "radius_top": 3.0,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#264ca6",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "sphere",
+        "name": "Sphere [Overall seat]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 20.0,
+         "radius": 22.5,
+         "segments": 48
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Overall pants]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 20.0,
+         "height": 12.0,
+         "radius_bottom": 22.5,
+         "radius_top": 22.5,
+         "segments": 64,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Bib]",
+        "visible": true,
+        "params": {
+         "x": -12.0,
+         "y": -23.0,
+         "z": 30.0,
+         "width": 24.0,
+         "depth": 4.0,
+         "height": 14.0,
+         "center": false
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Leg]",
+          "visible": true,
+          "params": {
+           "x": "s * 9",
+           "y": 0.0,
+           "z": 3.0,
+           "height": 12.0,
+           "radius_bottom": 6.0,
+           "radius_top": 6.0,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a1a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Goggle strap]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 58.0,
+         "height": 5.0,
+         "radius_bottom": 22.8,
+         "radius_top": 22.8,
+         "segments": 64,
+         "center": false
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "sphere",
+          "name": "Sphere [Glove]",
+          "visible": true,
+          "params": {
+           "x": "s * 30",
+           "y": 0.0,
+           "z": 27.0,
+           "radius": 4.5,
+           "segments": 48
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "s * 9",
+           "y": -3.0,
+           "z": 3.0
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 1.5,
+             "z": 0.6
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [Shoe]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 7.0,
+               "segments": 48
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For a",
+        "visible": true,
+        "params": {
+         "variable": "a",
+         "start": -30.0,
+         "end": 30.0,
+         "step": 15.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 80.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "a",
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Hair]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 9.0,
+               "radius_bottom": 0.6,
+               "radius_top": 0.6,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -21.5,
+         "z": 44.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 1.0,
+           "y": 0.3,
+           "z": 0.45
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Mouth]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 6.0,
+             "segments": 48
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -27.4,
+         "z": 60.5
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Pupil]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 0.6,
+             "radius_bottom": 2.0,
+             "radius_top": 2.0,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#bfc4cc",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -18.0,
+         "z": 60.5
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Goggle]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 8.0,
+             "radius_bottom": 11.0,
+             "radius_top": 11.0,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ffffff",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -21.0,
+         "z": 60.5
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Eye]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 5.6,
+             "radius_bottom": 8.0,
+             "radius_top": 8.0,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#734c26",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -26.4,
+         "z": 60.5
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Iris]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 0.6,
+             "radius_bottom": 4.0,
+             "radius_top": 4.0,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "SpongeBob",
+    "visible": true,
+    "params": {
+     "x": 310.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ffed4c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Sponge body]",
+        "visible": true,
+        "params": {
+         "x": -25.0,
+         "y": -10.0,
+         "z": 30.0,
+         "width": 50.0,
+         "depth": 20.0,
+         "height": 55.0,
+         "center": false
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Leg]",
+          "visible": true,
+          "params": {
+           "x": "s * 7",
+           "y": 0.0,
+           "z": 5.0,
+           "height": 10.0,
+           "radius_bottom": 2.2,
+           "radius_top": 2.2,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "s * 25",
+           "y": 0.0,
+           "z": 55.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "s * 120",
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Arm]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 22.0,
+               "radius_bottom": 2.0,
+               "radius_top": 2.0,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "sphere",
+          "name": "Sphere [Hand]",
+          "visible": true,
+          "params": {
+           "x": "s * 44",
+           "y": 0.0,
+           "z": 44.0,
+           "radius": 3.2,
+           "segments": 48
+          }
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -10.0,
+         "z": 62.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Nose]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 10.0,
+             "radius_bottom": 3.0,
+             "radius_top": 3.0,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#bfcc33",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For p",
+        "visible": true,
+        "params": {
+         "variable": "p",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "[-18, 78], [17, 40], [-15, 38], [19, 80]"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "p[0]",
+           "y": -10.0,
+           "z": "p[1]"
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 0.3,
+             "z": 1.2
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [Sponge hole]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 3.0,
+               "segments": 48
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ffffff",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Shirt]",
+        "visible": true,
+        "params": {
+         "x": -25.2,
+         "y": -10.2,
+         "z": 24.0,
+         "width": 50.4,
+         "depth": 20.4,
+         "height": 6.0,
+         "center": false
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "sphere",
+          "name": "Sphere [Eye]",
+          "visible": true,
+          "params": {
+           "x": "s * 9",
+           "y": -10.0,
+           "z": 70.0,
+           "radius": 9.0,
+           "segments": 48
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Sock]",
+          "visible": true,
+          "params": {
+           "x": "s * 7",
+           "y": 0.0,
+           "z": 5.0,
+           "height": 5.0,
+           "radius_bottom": 2.6,
+           "radius_top": 2.6,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-2.5, 2.5"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Tooth]",
+          "visible": true,
+          "params": {
+           "x": "s - 2",
+           "y": -11.8,
+           "z": 44.0,
+           "width": 4.0,
+           "depth": 1.0,
+           "height": 4.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8c5926",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Pants]",
+        "visible": true,
+        "params": {
+         "x": -25.3,
+         "y": -10.3,
+         "z": 14.0,
+         "width": 50.6,
+         "depth": 20.6,
+         "height": 10.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d91a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Tie]",
+        "visible": true,
+        "params": {
+         "x": -2.0,
+         "y": -11.2,
+         "z": 20.0,
+         "width": 4.0,
+         "depth": 1.0,
+         "height": 9.0,
+         "center": false
+        }
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -10.0,
+         "z": 49.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 2.2,
+           "y": 0.35,
+           "z": 0.7
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Smile]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 6.0,
+             "segments": 48
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#338cf2",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "s * 9",
+           "y": -18.5,
+           "z": 70.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Iris]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 1.0,
+               "radius_bottom": 4.0,
+               "radius_top": 4.0,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#0d0d0d",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "s * 9",
+           "y": -19.3,
+           "z": 70.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Pupil]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 0.8,
+               "radius_bottom": 2.0,
+               "radius_top": 2.0,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "s * 7",
+           "y": -3.0,
+           "z": 3.0
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 1.8,
+             "z": 0.6
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [Shoe]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 5.0,
+               "segments": 48
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Mickey",
+    "visible": true,
+    "params": {
+     "x": 420.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#141414",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "sphere",
+        "name": "Sphere [Head]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 75.0,
+         "radius": 20.0,
+         "segments": 48
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "s * 20",
+           "y": 0.0,
+           "z": 97.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Ear]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 4.0,
+               "radius_bottom": 12.0,
+               "radius_top": 12.0,
+               "segments": 64,
+               "center": true
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 44.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 1.0,
+           "y": 0.8,
+           "z": 1.1
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Torso]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 15.0,
+             "segments": 48
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Leg]",
+          "visible": true,
+          "params": {
+           "x": "s * 7",
+           "y": 0.0,
+           "z": 6.0,
+           "height": 22.0,
+           "radius_bottom": 3.5,
+           "radius_top": 3.5,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "s * 13",
+           "y": 0.0,
+           "z": 48.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "s * 120",
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Arm]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 18.0,
+               "radius_bottom": 3.0,
+               "radius_top": 3.0,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "s * 5",
+           "y": -21.6,
+           "z": 79.0
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 0.5,
+             "y": 0.3,
+             "z": 1.0
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [Pupil]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 3.0,
+               "segments": 48
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -25.5,
+         "z": 72.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 1.2,
+           "y": 1.0,
+           "z": 0.9
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Nose]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 4.0,
+             "segments": 48
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ffd9b2",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -9.0,
+         "z": 73.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 0.85,
+           "y": 0.65,
+           "z": 0.85
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Face]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 18.0,
+             "segments": 48
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -18.0,
+         "z": 70.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 1.0,
+           "y": 1.0,
+           "z": 0.7
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Snout]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 8.0,
+             "segments": 48
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ffffff",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "s * 5",
+           "y": -19.0,
+           "z": 80.0
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 0.6,
+             "y": 0.4,
+             "z": 1.0
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [Eye]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 6.0,
+               "segments": 48
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "sphere",
+          "name": "Sphere [Glove]",
+          "visible": true,
+          "params": {
+           "x": "s * 29",
+           "y": 0.0,
+           "z": 38.0,
+           "radius": 5.0,
+           "segments": 48
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "s * 5",
+           "y": -14.2,
+           "z": 32.0
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 0.4,
+             "z": 1.4
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [Button]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 2.5,
+               "segments": 48
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8c0d14",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -22.0,
+         "z": 64.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 1.2,
+           "y": 0.4,
+           "z": 0.5
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Mouth]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 6.0,
+             "segments": 48
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#e61a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 30.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 1.1,
+           "y": 0.9,
+           "z": 0.8
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Shorts]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 16.0,
+             "segments": 48
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ffcc1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "s * 8",
+           "y": -5.0,
+           "z": 4.0
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 1.6,
+             "z": 0.7
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [Shoe]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 7.0,
+               "segments": 48
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Olaf",
+    "visible": true,
+    "params": {
+     "x": 510.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#f7faff",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "sphere",
+        "name": "Sphere [Bottom]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 18.0,
+         "radius": 18.0,
+         "segments": 48
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Middle]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 44.0,
+         "radius": 13.0,
+         "segments": 48
+        }
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 70.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 0.85,
+           "y": 0.8,
+           "z": 1.2
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Head]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 14.0,
+             "segments": 48
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "sphere",
+          "name": "Sphere [Eye]",
+          "visible": true,
+          "params": {
+           "x": "s * 5",
+           "y": -10.0,
+           "z": 77.0,
+           "radius": 4.0,
+           "segments": 48
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ff801a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -10.0,
+         "z": 70.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Carrot nose]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 14.0,
+             "radius_bottom": 3.0,
+             "radius_top": 0.5,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#0d0d0d",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "sphere",
+          "name": "Sphere [Pupil]",
+          "visible": true,
+          "params": {
+           "x": "s * 5",
+           "y": -13.3,
+           "z": 77.0,
+           "radius": 1.8,
+           "segments": 48
+          }
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -9.8,
+         "z": 63.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 1.5,
+           "y": 0.4,
+           "z": 0.5
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Mouth]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 5.0,
+             "segments": 48
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For z",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "40, 48"
+        },
+        "children": [
+         {
+          "type": "sphere",
+          "name": "Sphere [Coal button]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -12.6,
+           "z": "z",
+           "radius": 2.0,
+           "segments": 48
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#66401a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "s * 12",
+           "y": 0.0,
+           "z": 48.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "s * 70",
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Twig arm]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 22.0,
+               "radius_bottom": 1.0,
+               "radius_top": 1.0,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For a",
+        "visible": true,
+        "params": {
+         "variable": "a",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-20, 0, 20"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 84.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "a",
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Twig hair]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 10.0,
+               "radius_bottom": 0.8,
+               "radius_top": 0.8,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
