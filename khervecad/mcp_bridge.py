@@ -54,7 +54,7 @@ _READ_ONLY_TOOLS = frozenset({
     "get_document_info", "list_node_types", "list_tree", "get_node",
     "get_code", "render_view", "list_parts", "list_examples",
     "list_anchors", "select_nodes", "get_node_bounds", "measure",
-    "section", "check_code",
+    "section", "check_code", "list_edges",
 })
 
 #: Tools that never change the document, so there is no snapshot to

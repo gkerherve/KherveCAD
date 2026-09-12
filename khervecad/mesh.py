@@ -32,7 +32,7 @@ _TEXT_PARAMS = {"text", "path", "variable", "condition", "update",
 
 #: ops the fallback can only approximate (engine renders exactly).
 APPROXIMATED = {"difference", "intersection", "minkowski", "hull",
-                "offset"}
+                "offset", "fillet"}     # a fillet cuts convex edges
 
 _stl_cache = {}
 

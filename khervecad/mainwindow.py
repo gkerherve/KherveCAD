@@ -554,6 +554,14 @@ class MainWindow(QMainWindow):
         wrapper = self.model.wrap_nodes(nodes, op)
         if wrapper is not None:
             tree.select_nodes([wrapper])
+            if op == "fillet":                # now: which edges?
+                self.start_fillet_pick(wrapper)
+
+    def start_fillet_pick(self, node):
+        """Arm the 3D view so clicks on the part add edges to the
+        fillet *node* (fillet_pick.py); Esc finishes."""
+        from . import fillet_pick
+        fillet_pick.start(self, node)
 
     def _ungroup_selection(self):
         for node in self.builder.active_tree().selected_nodes():

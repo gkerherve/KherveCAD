@@ -1474,3 +1474,92 @@ class McpToolExecutor:
                 "describe the model as published."),
         }
 
+    # ── Fillet ──────────────────────────────────────────────────
+
+    def _local_tris(self, node):
+        """The node's solid in its own frame (a fillet's children)."""
+        from . import bake
+        env = bake._codegen_env(node)
+        fn = self._model.effective_fn()
+        mesh._set_fn(fn)
+        try:
+            if node.type == "fillet":
+                return [t for t, _c, _s in mesh._children_mesh(
+                    node, env, None, frozenset(), False)]
+            return mesh.tessellate(node, env=env, fn=fn)
+        finally:
+            mesh._set_fn(None)
+
+    def _t_list_edges(self, params) -> dict:
+        from . import fillet
+        node = self._node(params.get("node_id"))
+        try:
+            min_angle = float(params.get("min_angle", fillet.MIN_ANGLE))
+        except (TypeError, ValueError):
+            raise ToolError("min_angle must be a number of degrees.")
+        tris = self._local_tris(node)
+        if not tris:
+            raise ToolError(f"{node.name} has no solid to take edges from.")
+        chains = fillet.chains(tris, min_angle)
+        for i, c in enumerate(chains):
+            c["index"] = i
+        return {"node": node.id, "name": node.name, "edges": chains,
+                "approximate": mesh.uses_booleans(node),
+                "note": ("Edges come from the built-in mesh: a union of "
+                         "overlapping shapes has no edge where they "
+                         "meet, and a difference's hole has none — only "
+                         "edges a single shape owns are listed.")}
+
+    def _t_fillet_edges(self, params) -> dict:
+        from . import fillet
+        node = self._node(params.get("node_id"))
+        if node.type == "fillet":
+            target = node
+        elif node.parent is not None and node.parent.type == "fillet":
+            target = node.parent
+        else:
+            if node.parent is None:
+                raise ToolError("The document root cannot be filleted.")
+            target = self._model.wrap_nodes([node], "fillet")
+        seeds = []
+        for row in params.get("edges") or []:
+            try:
+                seed = [float(v) for v in row]
+            except (TypeError, ValueError):
+                seed = []
+            if len(seed) != 6:
+                raise ToolError("Each edge is 6 numbers: x1 y1 z1 x2 y2 z2.")
+            seeds.append([round(v, 4) for v in seed])
+        indices = params.get("chains") or []
+        if indices:
+            chains = fillet.chains(self._local_tris(target))
+            for i in indices:
+                if not isinstance(i, int) or not 0 <= i < len(chains):
+                    raise ToolError(
+                        f"chain index {i!r} is out of range (0-"
+                        f"{len(chains) - 1}); call list_edges first.")
+                seeds.append(chains[i]["seed"])
+        have = [list(r) for r in (target.params.get("edges") or [])]
+        for s in seeds:
+            if not any(all(abs(a - b) < 1e-3 for a, b in zip(s, h))
+                       for h in have):
+                have.append(s)
+        target.params["edges"] = have
+        if params.get("radius") is not None:
+            target.params["radius"] = float(params["radius"])
+        if params.get("kind") in fillet.KINDS:
+            target.params["kind"] = params["kind"]
+        if params.get("detail") is not None:
+            target.params["detail"] = max(1, int(params["detail"]))
+        self._model.node_changed.emit(target)
+        errors = validate(self._model.root)
+        out = {"fillet": target.id, "name": target.name,
+               "edges": len(have), "radius": target.params["radius"],
+               "kind": target.params["kind"]}
+        if target.id in errors:
+            out["error"] = errors[target.id]
+        out["note"] = ("The rounding shows in the exact OpenSCAD render "
+                       "— call render_view after a moment; the built-in "
+                       "preview cannot cut a convex edge.")
+        return out
+

@@ -976,6 +976,59 @@ TOOLS = [
                                             "now."},
         }, ["title"]),
     },
+
+    # ── Fillet ─────────────────────────────────────────────────────
+    {
+        "name": "list_edges",
+        "description": (
+            "The edges of a node's solid that a fillet can round — "
+            "every crease where two faces meet at more than min_angle, "
+            "grouped into tangent-continuous chains (a cylinder's rim "
+            "is ONE chain; a box has 12). Each chain gives its `seed` "
+            "(6 numbers: a segment's start and end, in the node's own "
+            "frame — what fillet_edges takes), its ends, length, "
+            "dihedral angle, convex (outside corner) or not, closed, "
+            "and centre, longest first. Coordinates are local to the "
+            "node, not the assembly."
+        ),
+        "input_schema": _obj({
+            "node_id": _ID,
+            "min_angle": {"type": "number",
+                          "description": "Degrees; default 20. Facets "
+                                         "below it are one surface."},
+        }, ["node_id"]),
+    },
+    {
+        "name": "fillet_edges",
+        "description": (
+            "Round (or chamfer) chosen edges of a node — SolidWorks' "
+            "Fillet. Wraps the node in a fillet (or adds to the fillet "
+            "it already is / sits in) and records the edges as seed "
+            "segments from list_edges, by `edges` rows or by `chains` "
+            "indices into list_edges(node_id). A convex edge is cut "
+            "round, a concave one filled. The result shows in the "
+            "exact OpenSCAD render (render_view after a moment); the "
+            "built-in preview cannot cut. Radius is in mm (the "
+            "chamfer's setback along each face)."
+        ),
+        "input_schema": _obj({
+            "node_id": _ID,
+            "edges": {"type": "array",
+                      "items": {"type": "array",
+                                "items": {"type": "number"}},
+                      "description": "Seed rows [x1, y1, z1, x2, y2, "
+                                     "z2] from list_edges."},
+            "chains": {"type": "array", "items": {"type": "integer"},
+                       "description": "Indices into list_edges' list "
+                                      "for the same node, instead of "
+                                      "or as well as `edges`."},
+            "radius": {"type": "number", "description": "mm; default 2."},
+            "kind": {"type": "string", "enum": ["round", "chamfer"]},
+            "detail": {"type": "integer",
+                       "description": "Segments across a round; "
+                                      "default 6."},
+        }, ["node_id"]),
+    },
 ]
 
 #: Name -> definition, for the executor and the access-level checks.

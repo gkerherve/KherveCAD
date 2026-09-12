@@ -327,6 +327,27 @@ which one is the body.</li>
 capsule), <b>Minkowski</b> (sweep one shape around another),
 <b>Offset</b> (round or inset 2D corners) and <b>Round edges</b> (a
 small Minkowski sphere that fillets a finished solid).</p>
+<h3>Rounding edges &mdash; Fillet</h3>
+<p><b>Fillet edges</b> (the Finish group) is SolidWorks' Fillet: round
+only the edges you choose. Select the solid, click Fillet edges, and the
+3D view asks for edges &mdash; <b>click an edge</b> to round it; one
+click on a cylinder's rim takes the whole rim, and a click on a
+<b>face</b> rounds every edge round that face. {K("Esc")} when you are
+done, then set the <b>Radius</b> in Properties; <b>Kind</b> Chamfer cuts
+a flat instead of a curve. A convex edge is rounded off and an inside
+corner is filled in. The edges are remembered as geometry, so the
+fillet survives resizing and moving the part; if an edge disappears
+(you cut it away), the fillet turns red and says which. Right-click the
+fillet ▸ <b>Pick edges</b> to add more.</p>
+{figure("fillet", "Fillet edges: rounded top edges, a chamfered "
+        "vertical edge, and a boss rim rounded with one click.")}
+<p class='tip'><i>Tip:</i> an edge only exists where one shape has it.
+Two overlapping boxes have no inside-corner edge until they are one
+solid, so for an inside corner draw the L as one profile and extrude
+it. And like any cut, the rounding shows in the exact OpenSCAD render
+(a moment after each change, or {K("F5")}); <b>Round edges</b>
+(right-click ▸ Apply operation) is the older tool that rounds every
+edge of a part by the same amount.</p>
 <p class='tip'><i>Why is my hole not cut?</i> The instant built-in
 preview draws a Difference as its first child only. The OpenSCAD engine
 cuts it for real a moment later (the badge reads <i>OpenSCAD</i> or

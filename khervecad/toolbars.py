@@ -60,6 +60,7 @@ OPERATION_GROUPS = [
     ("extrude", ["linear_extrude", "rotate_extrude", "sweep"]),
     ("transform", ["translate", "rotate", "scale", "mirror"]),
     ("combine", ["union", "difference", "intersection"]),
+    ("finish", ["fillet", "hull", "minkowski"]),
     ("deform", ["blend", "bend", "twist", "taper", "lattice",
                 "subdivide"]),
     ("character", ["symmetry", "joint"]),

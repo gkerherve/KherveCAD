@@ -133,6 +133,7 @@ def new_window():
     win.resize(1440, 900)
     view = win.view3d
     view.style, view.background = "Shaded", "Light"
+    view.stage = False                   # whatever this machine saved
     view.brightness = view.contrast = 0.0
     view.projection = "Perspective"
     win._shot_busy = False
@@ -492,9 +493,22 @@ def shot_sweep(win):
     save(view.grab(), "sweep", 900)
 
 
+def shot_fillet(win):
+    load(win, "Filleted block (fillet edges)")
+    wait_exact(win)
+    view = win.view3d
+    view.stage = False
+    view.user_moved = False
+    view.yaw, view.pitch = -50.0, 28.0
+    view.fit()
+    finish_3d(win)
+    save(view.grab(), "fillet", 900)
+
+
 SHOTS = [shot_window, shot_toolbars, shot_tutorial, shot_tabs,
          shot_named_rows, shot_sketch, shot_styles, shot_character,
-         shot_attach, shot_dialogs, shot_vibe, shot_stage, shot_sweep]
+         shot_attach, shot_dialogs, shot_vibe, shot_stage, shot_sweep,
+         shot_fillet]
 
 
 def main(only=()):

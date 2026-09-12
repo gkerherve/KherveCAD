@@ -945,6 +945,15 @@ class ObjectTree(QTreeWidget):
         apply_menu.addAction(
             icons.icon("mdi.blur"), "Round edges (3D)",
             lambda: self.model.round_edges(roots))
+        fillet = roots[0] if len(roots) == 1 and roots[0].type == "fillet" \
+            else (roots[0].parent if len(roots) == 1 and roots[0].parent
+                  is not None and roots[0].parent.type == "fillet"
+                  else None)
+        win = self.window()
+        if fillet is not None and hasattr(win, "start_fillet_pick"):
+            menu.addAction(
+                icons.icon("mdi.rounded-corner"), "Pick fillet edges...",
+                lambda: win.start_fillet_pick(fillet))
         menu.addAction(icons.icon("mdi.palette-outline"),
                        "Color...", lambda: self._pick_color(nodes))
         menu.addAction(icons.icon("mdi.group"), "Group\tCtrl+G",

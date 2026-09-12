@@ -307,6 +307,36 @@ TIPS = {
         "— rounded-off corners, lens shapes, trimming.",
         [_SELECTION, "Click Intersection."],
         None),
+    "fillet": (
+        "Fillet edges (round / chamfer)",
+        "Rounds the edges you click — SolidWorks' Fillet. A convex edge "
+        "is rounded off, an inside corner is filled in; Chamfer cuts a "
+        "flat instead of a curve.",
+        [_SELECTION + " Pick the solid (or several).",
+         "Click Fillet edges: the 3D view asks for edges.",
+         "Click an edge to round it; one click on a cylinder's rim "
+         "takes the whole rim, a click on a face rounds every edge "
+         "round that face. Esc or right-click when done.",
+         "Set the Radius (or the chamfer's setback) in Properties. "
+         "Right-click the fillet ▸ Pick edges to add more."],
+        "The rounding shows in the exact OpenSCAD render (a moment "
+        "after each change, or F5) — the quick preview cannot cut."),
+    "hull": (
+        "Hull (shrink-wrap)",
+        "Wraps the selection in the tightest convex skin — two spheres "
+        "become a capsule, four pillars a rounded plate.",
+        [_SELECTION, "Click Hull.",
+         "Move or resize the pieces inside; the skin follows."],
+        None),
+    "minkowski": (
+        "Minkowski (sweep one shape round another)",
+        "Grows the first child by the shape of the second — a box plus "
+        "a small sphere is a box with every edge rounded.",
+        ["Select the body FIRST, then the shape to sweep round it "
+         "(a small sphere for rounding).",
+         "Click Minkowski."],
+        "To round only chosen edges use Fillet edges instead; this "
+        "rounds all of them and is slow on big parts."),
     "for_loop": (
         "For loop (repeat)",
         "Repeats its contents: the variable runs From → To by Step, or "
@@ -416,6 +446,7 @@ GROUPS = {
                 "round an axis, or along a path"),
     "transform": ("Move & transform", "move, turn, resize or mirror"),
     "combine": ("Combine", "group, cut and intersect solids"),
+    "finish": ("Finish", "round chosen edges, wrap, offset"),
     "deform": ("Deform & sculpt", "melt, bend, twist and reshape"),
     "character": ("Character", "mirror halves and pose with joints"),
     "logic": ("Repeat & logic", "loops and conditions"),

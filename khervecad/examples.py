@@ -252,6 +252,34 @@ def pipe_run() -> CadNode:
                  _color("O-ring", "#333333", ring))
 
 
+def filleted_block() -> CadNode:
+    """A block with its top edges rounded and one vertical edge
+    chamfered, and a boss whose rim is rounded with one click — the
+    Fillet edges tool, with the edges remembered as geometry."""
+    block = CadNode("fillet", "Fillet [top edges r4]", dict(
+        radius=4.0, kind="round", detail=8,
+        edges=[[0.0, 0.0, 20.0, 40.0, 0.0, 20.0],
+               [40.0, 0.0, 20.0, 40.0, 30.0, 20.0],
+               [40.0, 30.0, 20.0, 0.0, 30.0, 20.0],
+               [0.0, 30.0, 20.0, 0.0, 0.0, 20.0]]))
+    block.add(_cube("Cube [Block]", 40.0, 30.0, 20.0))
+    chamfer = CadNode("fillet", "Chamfer [front-left edge]", dict(
+        radius=6.0, kind="chamfer", detail=1,
+        edges=[[0.0, 0.0, 0.0, 0.0, 0.0, 20.0]]))
+    chamfer.add(block)
+    boss = CadNode("fillet", "Fillet [boss rim r2]", dict(
+        radius=2.0, kind="round", detail=6,
+        edges=[[10.0, 0.0, 12.0, 9.6593, 2.5882, 12.0]]))
+    boss.add(_cyl("Cylinder [Boss]", 10.0, 12.0, segments=24))
+    # Objects, so each part gets its own exact OpenSCAD render in Main —
+    # the rounding is a boolean the quick preview cannot show
+    block_part = CadNode("component", "Block")
+    block_part.add(_color("Block", "#7a9cc6", chamfer))
+    boss_part = CadNode("component", "Boss", dict(x=70.0, y=15.0))
+    boss_part.add(_color("Boss", "#c9a227", boss))
+    return _root(block_part, boss_part)
+
+
 def spur_gear() -> CadNode:
     """A single spur gear (module 3, 24 teeth) with a keyed-style bore —
     a for-loop stamps the teeth round a root disc."""
@@ -1230,6 +1258,7 @@ EXAMPLES = [
     ("Threaded rod & nuts", "Mechanical", threaded_rod),
     ("Fan impeller", "Mechanical", fan_impeller),
     ("Pipe run & handrail (sweep)", "Mechanical", pipe_run),
+    ("Filleted block (fillet edges)", "Mechanical", filleted_block),
     ("Bolt circle (Masters demo)", "Mechanical", bolt_circle),
     ("Ch.2 · Wall anchor", "Projects", project_02_wall_anchor),
     ("Ch.3 · Window stopper", "Projects", project_03_window_stopper),

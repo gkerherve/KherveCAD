@@ -709,6 +709,49 @@ into a new module and import.
                        inside a loop and its profile cannot hold a 2D
                        difference (use wall). Extrude toolbar group;
                        Examples ▸ Mechanical ▸ Pipe run & handrail.
+  - `fillet.py`      — **fillet / chamfer chosen edges** (SolidWorks'
+                       Fillet; Qt-free). `crease_edges` finds the
+                       edges of the children's preview mesh where two
+                       faces meet at > `MIN_ANGLE` (facets of a
+                       cylinder are not edges), each convex or
+                       concave; `chain` propagates a picked edge along
+                       tangent-continuous creases (one click takes a
+                       whole rim, stops at a box corner); `profile` is
+                       the kite between the edge and the circle
+                       tangent to both faces (chamfer: the setback
+                       triangle); `strip` sweeps it along the chain,
+                       mitred, capped. Convex chains become **cuts**,
+                       concave **adds**, and codegen writes both as
+                       polyhedra into `kcad_fillet(radius=, kind=,
+                       detail=, edges=, cuts=, adds=) { children }`
+                       whose helper does the boolean — so the exact
+                       render and STL are truly filleted while the
+                       preview shows children + adds (it cannot cut;
+                       `fillet` is in `mesh.APPROXIMATED`). Edges are
+                       stored as the seed segment's endpoints in the
+                       part's LOCAL frame and re-found by nearest
+                       match (`find_edge`); a vanished edge is a
+                       validation error, never a guess. Registered
+                       from bake.py (statement/build/check/tess
+                       dispatch); baked and cached like blend, so it
+                       is refused inside loops. Limitation: an edge
+                       exists only where one shape has it — the
+                       preview never merges a union, so two overlapping
+                       boxes have no inside-corner edge (extrude an L
+                       profile instead).
+  - `fillet_pick.py` — the click flow: `start(window, node)` arms
+                       `View3D.start_pick` on the fillet's part
+                       (groups=[(node, world tris)]) and re-arms after
+                       every click; a picked world edge/face maps to
+                       the local frame by index (`meshes()` gives the
+                       world and local tessellations in the same order,
+                       `seeds_from_pick` turns an edge into one seed and
+                       a face into every crease edge bounding it). The
+                       toolbar's Fillet edges (Finish group) wraps the
+                       selection and starts the pick; right-click ▸
+                       Pick edges re-enters it. MCP: `list_edges`
+                       (chains with seed/ends/length/convex/closed) and
+                       `fillet_edges` (by seed rows or chain indices).
   - `sdf.py`         — **smooth blend** geometry (Qt-free): the
                        primitives under a `blend` (sphere, cube,
                        cylinder, capsule, ellipsoid, rounded box —

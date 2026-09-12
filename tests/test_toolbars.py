@@ -58,8 +58,8 @@ def test_rich_tip_is_fixed_width_html_with_steps():
 
 
 def test_unknown_key_falls_back_to_the_node_label():
-    title, what, _steps, _tip = tooltips.entry("hull")
-    assert title == NODE_TYPES["hull"]["label"]
+    title, what, _steps, _tip = tooltips.entry("projection")
+    assert title == NODE_TYPES["projection"]["label"]
 
 
 def test_toolbar_icons_carry_rich_tooltips(window):

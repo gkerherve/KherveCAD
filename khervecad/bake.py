@@ -102,10 +102,15 @@ NODE_TYPES = {
         schema=[("levels", "Levels", "int", 1, 4)]),
 }
 
+# the fillet (fillet.py) is a baked boolean rather than a baked mesh —
+# its own module owns the geometry, helper, builder, check and preview
+from . import fillet as _fillet  # noqa: E402
+
+NODE_TYPES.update(_fillet.NODE_TYPES)
 TYPES = frozenset(NODE_TYPES)
 LEAVES = frozenset({"polyhedron", "loft"})
 WRAPPERS = frozenset({"sweep", "blend", "bend", "twist", "taper",
-                      "lattice", "subdivide"})
+                      "lattice", "subdivide", "fillet"})
 
 #: wrappers whose surface is computed here and baked into the program,
 #: with their helper module's parameters (besides points and faces)
@@ -233,6 +238,8 @@ def preamble(root) -> list:
     for t in ("loft",) + tuple(_BAKED):
         if t in used:
             lines.extend(HELPERS[t].split("\n"))
+    if "fillet" in used:
+        lines.extend(_fillet.HELPER.split("\n"))
     return lines
 
 
@@ -395,6 +402,8 @@ def statement(node, fmt, fn) -> str:
         return (f"kcad_loft(sections = {_rows(p['sections'], fmt)}, "
                 f"sides = {fmt(p['sides'])}, smooth = {fmt(p['smooth'])}, "
                 f'caps = "{caps}")')
+    if node.type == "fillet":
+        return _fillet.statement(node, fmt)
     raise ValueError(f"not a mesh node: {node.type}")  # pragma: no cover
 
 
@@ -473,7 +482,8 @@ def _b_baked(kind):
     return build
 
 
-BUILDERS = {"polyhedron": _b_polyhedron, "kcad_loft": _b_loft}
+BUILDERS = {"polyhedron": _b_polyhedron, "kcad_loft": _b_loft,
+            "kcad_fillet": _fillet.build}
 BUILDERS.update({f"kcad_{t}": _b_baked(t) for t in _BAKED})
 
 
@@ -537,6 +547,8 @@ def check(node, env):
         return _check_loft(node.params, env)
     if node.type in _BAKED:
         return _check_baked(node, env)
+    if node.type == "fillet":
+        return _fillet.check(node, env)
     return None
 
 
@@ -618,6 +630,8 @@ def _check_sweep(node, env):
 
 def tess(node, env, color, sel, selected):
     from . import mesh
+    if node.type == "fillet":
+        return _fillet.tess(node, env, color, sel, selected)
     if node.type == "polyhedron":
         pts = [tuple(mesh.rv(v, env)
                      for v in (list(row) + [0.0, 0.0, 0.0])[:3])
