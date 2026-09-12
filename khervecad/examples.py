@@ -273,10 +273,12 @@ def filleted_block() -> CadNode:
     boss.add(_cyl("Cylinder [Boss]", 10.0, 12.0, segments=24))
     # Objects, so each part gets its own exact OpenSCAD render in Main —
     # the rounding is a boolean the quick preview cannot show
-    block_part = CadNode("component", "Block")
-    block_part.add(_color("Block", "#7a9cc6", chamfer))
-    boss_part = CadNode("component", "Boss", dict(x=70.0, y=15.0))
-    boss_part.add(_color("Boss", "#c9a227", boss))
+    # (an Object's exact mesh is tinted by the Object's own colour)
+    block_part = CadNode("component", "Block", dict(color="#7a9cc6"))
+    block_part.add(chamfer)
+    boss_part = CadNode("component", "Boss",
+                        dict(x=70.0, y=15.0, color="#c9a227"))
+    boss_part.add(boss)
     return _root(block_part, boss_part)
 
 

@@ -298,6 +298,37 @@ def _openscad_binary():
     return None
 
 
+def test_the_cut_follows_the_document_segment_count(app, tmp_path):
+    """The rim was picked on a 24-segment cylinder, but the document's
+    common $fn renders it with 45: the cut must be built for the rim
+    OpenSCAD draws, or it straddles the wrong facets and misses."""
+    binary = _openscad_binary()
+    if binary is None:
+        pytest.skip("OpenSCAD is not installed")
+    from khervecad import engine
+    doc = DocumentModel()
+    doc.set_global_fn(False)
+    cyl = doc.add_node("cylinder", dict(radius_bottom=10.0, radius_top=10.0,
+                                        height=12.0, segments=24))
+    rim = [c for c in fillet.chains(mesh.tessellate(doc.root))
+           if c["centre"][2] > 6][0]
+    node = doc.wrap_nodes([cyl], "fillet")
+    node.params.update(radius=2.0, edges=[rim["seed"]])
+    doc.set_global_fn(True, 45)                  # now everything is 45
+    assert validate(doc.root) == {}
+    scad, stl = tmp_path / "rim.scad", tmp_path / "rim.stl"
+    scad.write_text(doc.to_scad())
+    assert "$fn=45" in scad.read_text() or "$fn = 45" in scad.read_text()
+    run = subprocess.run([binary, "-o", str(stl), str(scad)],
+                         capture_output=True, text=True, timeout=180)
+    assert run.returncode == 0, run.stderr[-1500:]
+    exact = engine.parse_stl(str(stl))
+    plain = math.pi * 100 * 12 * (math.sin(2 * math.pi / 45) * 45
+                                  / (2 * math.pi))
+    removed = (1 - math.pi / 4) * 4 * 2 * math.pi * 9   # torus corner
+    assert _volume(exact) == pytest.approx(plain - removed, rel=0.02)
+
+
 def test_openscad_rounds_the_edge_to_the_analytic_volume(app, tmp_path):
     binary = _openscad_binary()
     if binary is None:

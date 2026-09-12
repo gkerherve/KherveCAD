@@ -365,17 +365,28 @@ def strip(run: dict, radius: float, kind: str, detail: int) -> list:
 
 
 # ------------------------------------------------------------ compute
+def _seg_dist(p, a, b) -> float:
+    ab = _sub(b, a)
+    denom = _dot(ab, ab) or 1e-12
+    t = max(0.0, min(1.0, _dot(_sub(p, a), ab) / denom))
+    return _len(_sub(p, _add(a, _mul(ab, t))))
+
+
 def find_edge(edges, seed, size: float):
     """The crease nearest the remembered segment *seed* (6 numbers),
-    or None: closest midpoint within tolerance, roughly parallel."""
+    or None: the seed's midpoint must lie within tolerance of the
+    crease segment (so a rim re-tessellated at another segment count
+    is still the same rim), roughly parallel to it."""
     a, b = tuple(seed[:3]), tuple(seed[3:6])
     mid = _mul(_add(a, b), 0.5)
     d = _unit(_sub(b, a))
     tol = FIND_TOL + FIND_FRAC * size
     best, best_dist = None, None
     for e in edges:
-        dist = _len(_sub(e.mid, mid))
-        if dist > tol or abs(_dot(e.direction, d)) < 0.9:
+        if abs(_dot(e.direction, d)) < 0.9:
+            continue
+        dist = _seg_dist(mid, e.a, e.b)
+        if dist > tol:
             continue
         if best_dist is None or dist < best_dist:
             best, best_dist = e, dist
@@ -462,16 +473,30 @@ def _num(value, env, default):
 
 def baked(node, env) -> dict:
     """compute() for a fillet node, cached by content: the children's
-    local mesh and the node's parameters."""
+    local mesh and the node's parameters.
+
+    The children are tessellated at the segment count OpenSCAD will
+    render them with — the document-wide $fn in force during codegen
+    (model._FN_OVERRIDE) or the preview's (mesh._FN_OVERRIDE). A cut
+    built round a 24-gon rim misses a 45-gon one."""
     from . import bake, document, mesh
-    key = json.dumps([document.node_to_dict(node),
+    from . import model as model_mod
+    fn = mesh._FN_OVERRIDE
+    if fn is None:
+        fn = model_mod._FN_OVERRIDE
+    key = json.dumps([document.node_to_dict(node), fn,
                       sorted((k, repr(v)) for k, v in env.items())],
                      sort_keys=True, default=str)
     hit = _CACHE.get(key)
     if hit is None:
         p = node.params
-        src = [tri for tri, _c, _s in
-               mesh._children_mesh(node, env, None, frozenset(), False)]
+        saved = mesh._FN_OVERRIDE
+        mesh._set_fn(fn)
+        try:
+            src = [tri for tri, _c, _s in mesh._children_mesh(
+                node, env, None, frozenset(), False)]
+        finally:
+            mesh._set_fn(saved)
         result = compute(src, p.get("edges") or [],
                          _num(p.get("radius", 2.0), env, 2.0),
                          str(p.get("kind", "round")),
