@@ -35,8 +35,19 @@ import time
 EPS = 1e-4
 
 #: meshes above this many triangles are not partitioned (the build is
-#: pure Python and must stay well under a frame's worth of time)
-MAX_TRIS = 12000
+#: pure Python; past SMALL_MESH it must also barely split, BIG_GROWTH)
+MAX_TRIS = 40000
+
+#: up to here the growth rules below apply as they always have. A
+#: bigger mesh gets a tree only if splitting grows it by BIG_GROWTH at
+#: most: a model of blocks (a brick-built house, 28k triangles) splits
+#: ~1.2x and builds in well under a second, while threads and curved
+#: petals shred and give up early instead of burning the CPU budget —
+#: and a big tree that split much would be slow to paint anyway. Without
+#: this, a 28k-triangle Lego house fell back to the centroid sort, whose
+#: huge baseplate face painted over the studs in front of it.
+SMALL_MESH = 12000
+BIG_GROWTH = 1.5
 
 #: CPU seconds the build may spend before giving up. Charged to the
 #: worker thread's own clock (time.thread_time), not the wall: the build
@@ -268,7 +279,8 @@ def build(tris, colors=None, *, max_tris=MAX_TRIS, budget=TIME_BUDGET,
         return None
     clock = time.thread_time
     deadline = clock() + budget
-    limit = min(max(n * max_growth, MIN_PIECES), MAX_PIECES)
+    limit = (min(max(n * max_growth, MIN_PIECES), MAX_PIECES)
+             if n <= SMALL_MESH else n * BIG_GROWTH)
     out_tris = list(tris)
     out_colors = list(colors) if colors else None
     parents = list(range(n))
