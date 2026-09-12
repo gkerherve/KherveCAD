@@ -1554,13 +1554,21 @@ class BuilderPanel(QTabWidget):
         cbox.addLayout(crow)
 
         self._main_page = objects
-        self.addTab(objects, icons.icon("mdi.file-tree"), "Main")
-        self.addTab(self.object_tab,
-                    icons.icon("mdi.package-variant-closed"), "Object")
-        self.addTab(masters_tab, icons.icon("mdi.folder-star-outline"),
-                    "Masters")
-        self.addTab(self.variables, icons.icon("mdi.table"), "Variables")
-        self.addTab(code_tab, icons.icon("mdi.code-braces"), "Code")
+        # Text-only, tightly padded tabs: with an icon each and the
+        # theme's roomy padding the five needed ~520 px, wider than the
+        # left column, so Code fell off the end behind a scroll arrow.
+        self.setStyleSheet("QTabBar::tab { padding: 4px 9px; }")
+        for page, label, tip in (
+                (objects, "Main", "The assembly: every part in the "
+                 "document"),
+                (self.object_tab, "Object", "Define and edit one Object "
+                 "(part) at its own origin"),
+                (masters_tab, "Masters", "Reusable masters and their "
+                 "Linked copies"),
+                (self.variables, "Variables", "Document and per-Object "
+                 "variables"),
+                (code_tab, "Code", "The OpenSCAD program, editable")):
+            self.setTabToolTip(self.addTab(page, label), tip)
         self.tree.open_component.connect(self.open_component)
         self.object_tab.tree.open_component.connect(self.open_component)
         self.object_tab.active_changed.connect(self._active_changed)
