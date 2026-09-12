@@ -26,7 +26,8 @@ the Free Software Foundation, either version 3 of the License, or
 import random
 
 from .examples import EXAMPLES, _root
-from .library_lego import BRICK_H, PITCH, PLATE_H, brick, colour, slope
+from .library_lego import (BASEPLATE_H, BRICK_H, PITCH, PLATE_H, brick,
+                           colour, slope)
 from .model import CadNode
 
 #: standard brick footprints, largest first
@@ -203,6 +204,97 @@ def lego_minecraft_tower() -> CadNode:
     return _root(s.to_node("Minecraft tower"))
 
 
+def runs(i0, i1, skip=()):
+    """(start, length) pieces covering i0..i1 minus *skip*, each at most
+    4 long — how a row of 2x4 slopes or tiles is laid round a gap."""
+    out, start, n = [], None, 0
+    for i in range(i0, i1 + 2):
+        if i <= i1 and i not in skip:
+            start = i if start is None else start
+            n += 1
+            continue
+        while n:
+            take = min(4, n)
+            out.append((start, take))
+            start, n = start + take, n - take
+        start = None
+    return out
+
+
+def _tree(v, i, j):
+    """A little tree whose 2x2 trunk has its corner at (i, j): three
+    bricks of trunk under a round canopy of mixed greens."""
+    box(v, i, i + 1, j, j + 1, 0, 2, ("Reddish brown", "Trees"))
+    leaves = (LEAVES, "Trees")
+    for k in (3, 4):
+        box(v, i - 2, i + 3, j - 2, j + 3, k, k, leaves)
+        for ci in (i - 2, i + 3):
+            for cj in (j - 2, j + 3):
+                del v[(ci, cj, k)]                    # round the corners
+    box(v, i - 1, i + 2, j - 1, j + 2, 5, 5, leaves)
+    box(v, i, i + 1, j, j + 1, 6, 6, leaves)
+
+
+def lego_house() -> CadNode:
+    """A LEGO house on a 16 x 32 baseplate: a grey foundation, white
+    walls, a blue door, clear windows on every side, a red roof of 45°
+    slopes with a ridge and a chimney, a path, two trees and flowers."""
+    s = Scene(seed=7)
+    s.add("brick", 0, 0, 32, 16, 0.0, "Green", "Baseplate",
+          height=BASEPLATE_H, seg=12)
+    z0 = BASEPLATE_H
+    i0, i1, j0, j1 = 9, 22, 4, 11                      # the walls
+    v = {}
+    ring(v, i0, i1, j0, j1, 0, ("Dark bluish grey", "Foundation"))
+    for k in range(1, 6):
+        ring(v, i0, i1, j0, j1, k, ("White", "Walls"))
+    box(v, 15, 16, j0, j0, 1, 4, ("Blue", "Door"))
+    glass = ("Trans-light blue", "Windows")
+    for i in (11, 19):
+        box(v, i, i + 1, j0, j0, 2, 3, glass)
+    for i in (11, 15, 19):
+        box(v, i, i + 1, j1, j1, 2, 3, glass)
+    for i in (i0, i1):
+        box(v, i, i, 7, 8, 2, 3, glass)
+    # the gable ends: the wall's triangle under each end of the roof
+    for r, (g0, g1) in enumerate(((5, 10), (6, 9), (7, 8))):
+        for i in (i0, i1):
+            box(v, i, i, g0, g1, 6 + r, 6 + r, ("White", "Gables"))
+    chimney = range(18, 20)
+    box(v, 18, 19, 7, 8, 9, 11, ("Dark red", "Chimney"))
+    _tree(v, 3, 7)
+    _tree(v, 27, 7)
+    s.add_voxels(v, z0=z0)
+
+    # the roof: each course of slopes steps in a stud and sits on the
+    # stud row of the one below; it overhangs the walls by a stud
+    eaves = z0 + 6 * BRICK_H
+    for r in range(4):
+        z = eaves + r * BRICK_H
+        for start, n in runs(8, 23, chimney if r == 3 else ()):
+            s.add("slope", start, 3 + r, n, 2, z, "Red", "Roof",
+                  facing="-Y")
+            s.add("slope", start, 11 - r, n, 2, z, "Red", "Roof",
+                  facing="+Y")
+    for start, n in runs(8, 23, chimney):
+        s.add("tile", start, 7, n, 2, eaves + 4 * BRICK_H, "Dark red",
+              "Roof", height=PLATE_H)
+    s.add("tile", 18, 7, 2, 2, z0 + 12 * BRICK_H, "Black", "Chimney",
+          height=PLATE_H)
+
+    for j in (0, 2):
+        s.add("tile", 15, j, 2, 2, z0, "Tan", "Path", height=PLATE_H)
+    for i, j, bloom in ((10, 2, "Red"), (12, 2, "Yellow"),
+                        (19, 2, "Yellow"), (21, 2, "Red"), (7, 2, "Red"),
+                        (24, 2, "Yellow"), (6, 13, "Dark pink"),
+                        (25, 13, "Medium lavender")):
+        s.add("brick", i, j, 1, 1, z0, "Green", "Flowers", height=PLATE_H)
+        s.add("brick", i, j, 1, 1, z0 + PLATE_H, bloom, "Flowers",
+              height=PLATE_H)
+    return _root(s.to_node("House"))
+
+
 EXAMPLES.extend([
     ("Minecraft tower", "Lego", lego_minecraft_tower),
+    ("House", "Lego", lego_house),
 ])
