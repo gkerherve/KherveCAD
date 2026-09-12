@@ -505,13 +505,18 @@ def baked(node, env) -> dict:
     hit = _CACHE.get(key)
     if hit is None:
         p = node.params
-        saved = mesh._FN_OVERRIDE
+        saved, saved_detail = mesh._FN_OVERRIDE, mesh._DETAIL
+        # always at full detail: the 2D view tessellates parts under a
+        # detail cap, and a cutter baked round a coarse rim would be
+        # served from the cache to the program and miss the fine one
         mesh._set_fn(fn)
+        mesh._DETAIL = None
         try:
             src = [tri for tri, _c, _s in mesh._children_mesh(
                 node, env, None, frozenset(), False)]
         finally:
             mesh._set_fn(saved)
+            mesh._DETAIL = saved_detail
         result = compute(src, p.get("edges") or [],
                          _num(p.get("radius", 2.0), env, 2.0),
                          str(p.get("kind", "round")),

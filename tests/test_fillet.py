@@ -186,6 +186,37 @@ def test_the_fillet_round_trips_through_its_program(app, tmp_path):
     assert [c.type for c in back.children] == ["cube"]
 
 
+def test_a_coarse_2d_outline_pass_never_bakes_a_coarse_cutter(app):
+    """The sketch view tessellates parts under a detail cap; the cut
+    written into the program must still be built round the full rim
+    (a coarse one left saw-teeth in the exact render)."""
+    doc = DocumentModel()
+    doc.set_global_fn(True, 45)
+    cyl = doc.add_node("cylinder", dict(radius_bottom=10.0, radius_top=10.0,
+                                        height=12.0, segments=24))
+    node = doc.wrap_nodes([cyl], "fillet")
+    node.params.update(radius=2.0, edges=[[10.0, 0.0, 12.0, 9.6593,
+                                           2.5882, 12.0]])
+    from khervecad import bake
+    fillet._CACHE.clear()
+    mesh.selected_world_tris(doc.root, {node.id}, detail=12,
+                             fn=doc.effective_fn())          # the 2D view
+    # then the program: codegen bakes under the document's $fn
+    mesh._set_fn(45)
+    try:
+        after_coarse = fillet.baked(node, bake._codegen_env(node))
+    finally:
+        mesh._set_fn(None)
+    full = fillet.compute(mesh.tessellate(cyl, fn=45),
+                          node.params["edges"], 2.0)
+    assert full["cuts"] and after_coarse["cuts"]
+    assert len(after_coarse["cuts"][0]) == len(full["cuts"][0])
+    assert len(full["cuts"][0]) == 45 * 2 * (2 + 6)        # a 45-ring
+    # and what the program carries is that 45-ring cutter
+    code = doc.to_scad()
+    assert code.count("[") > 45 * 8                         # its points
+
+
 def test_fillet_validation(app):
     doc = DocumentModel()
     doc.set_global_fn(False)

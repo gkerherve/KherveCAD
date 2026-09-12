@@ -356,14 +356,30 @@ def _compute(node, env) -> list:
 
 
 def baked(node, env):
-    """(points, faces, triangles) of a baked node, cached by content."""
-    from . import document
-    key = json.dumps([document.node_to_dict(node),
+    """(points, faces, triangles) of a baked node, cached by content.
+
+    Always computed at full detail and at the segment count in force
+    (the preview's $fn, or codegen's): the 2D view tessellates parts
+    under a detail cap, and a mesh baked coarse there would otherwise
+    be served from the cache into the program."""
+    from . import document, mesh
+    from . import model as model_mod
+    fn = mesh._FN_OVERRIDE
+    if fn is None:
+        fn = model_mod._FN_OVERRIDE
+    key = json.dumps([document.node_to_dict(node), fn,
                       sorted((k, repr(v)) for k, v in env.items())],
                      sort_keys=True, default=str)
     hit = _CACHE.get(key)
     if hit is None:
-        tris = _compute(node, env)
+        saved, saved_detail = mesh._FN_OVERRIDE, mesh._DETAIL
+        mesh._set_fn(fn)
+        mesh._DETAIL = None
+        try:
+            tris = _compute(node, env)
+        finally:
+            mesh._set_fn(saved)
+            mesh._DETAIL = saved_detail
         points, faces = to_polyhedron(tris)
         hit = _CACHE[key] = (points, faces, tris)
         while len(_CACHE) > _CACHE_SIZE:
