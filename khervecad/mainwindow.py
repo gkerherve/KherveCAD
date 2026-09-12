@@ -19,6 +19,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
+import sys
 from pathlib import Path
 
 from PyQt5.QtCore import Qt
@@ -209,7 +210,14 @@ class MainWindow(QMainWindow):
                             self.publish_to_printables,
                             "Ctrl+Shift+P")
         file_menu.addSeparator()
-        file_menu.addAction("E&xit", self.close, "Ctrl+Q")
+        # Qt moves an action called "Exit" into the macOS application
+        # menu unless told otherwise, so File had no way out on a Mac.
+        # There the app menu's own Quit owns Cmd+Q; claiming it twice
+        # would make Qt fire neither.
+        exit_act = file_menu.addAction(
+            "E&xit", self.close,
+            "" if sys.platform == "darwin" else "Ctrl+Q")
+        exit_act.setMenuRole(QAction.NoRole)
 
         edit_menu = m.addMenu("&Edit")
         undo_act = self.model.undo_stack.createUndoAction(self, "&Undo")
