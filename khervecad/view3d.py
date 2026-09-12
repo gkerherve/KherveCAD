@@ -1043,13 +1043,17 @@ class View3D(QWidget):
             line_pen = QPen(line)
             line_pen.setWidthF(1.2)
 
-            def draw_edges(parent):
+            def draw_edges(parent, piece):
                 segs = info.creases.get(parent, ())
                 more = sil.get(parent)
                 if more:
                     segs = list(segs) + more
                 if not segs:
                     return
+                if parents is not None:      # only what lies on this piece
+                    segs = shading.piece_segments(piece, segs)
+                    if not segs:
+                        return
                 painter.setPen(line_pen)
                 for p_, q_ in segs:
                     sp = self._project(eye, right, up, forward, p_)
@@ -1121,7 +1125,7 @@ class View3D(QWidget):
             painter.setBrush(color)
             painter.drawPolygon(poly)
             if sil is not None and self.edges and info is not None:
-                draw_edges(parent)
+                draw_edges(parent, mesh[index])
 
         if hi_polys:
             self._tint_selection(painter, hi_polys)

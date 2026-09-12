@@ -80,11 +80,16 @@ def analyse(tris, edge_angle: float = EDGE_ANGLE) -> MeshInfo:
     creases = {}
     neighbours = []
     for (ka, kb), (i, k) in directed.items():
-        if ka >= kb:
-            continue
         other = directed.get((kb, ka))
         if other is None:
-            continue                     # open border or T-junction
+            # an open border or a T-junction (OpenSCAD's exact meshes
+            # are full of them): the face ends here, so draw the line —
+            # skipping it left the edges of many exact parts unmarked
+            creases.setdefault(i, []).append((tris[i][k],
+                                              tris[i][(k + 1) % 3]))
+            continue
+        if ka >= kb:
+            continue                     # a shared edge: once is enough
         j = other[0]
         ni, nj = normals[i], normals[j]
         cos = max(-1.0, min(1.0, ni[0] * nj[0] + ni[1] * nj[1]
@@ -131,6 +136,37 @@ def analyse(tris, edge_angle: float = EDGE_ANGLE) -> MeshInfo:
 def multiplier(term: float, strength: float) -> float:
     """The value multiplier for a face's colour."""
     return 1.0 + term * strength * CAVITY_RANGE
+
+
+def piece_segments(tri, segs, eps=1e-4):
+    """The parts of the input face's edge segments *segs* that lie on
+    the edges of *tri*, one BSP piece of that face. The painter draws a
+    piece's lines right after its polygon, so lines get the same
+    occlusion as faces — drawing a face's whole crease when any piece
+    of it was painted let a wall's edge run straight across the roof in
+    front of it. Pieces equal faces without a tree, and every segment
+    comes back whole."""
+    out = []
+    for p, q in segs:
+        dx, dy, dz = q[0] - p[0], q[1] - p[1], q[2] - p[2]
+        length2 = dx * dx + dy * dy + dz * dz
+        if length2 < 1e-18:
+            continue
+        tol = eps * eps * length2
+        on = []
+        for v in tri:
+            wx, wy, wz = v[0] - p[0], v[1] - p[1], v[2] - p[2]
+            t = (wx * dx + wy * dy + wz * dz) / length2
+            # distance² from the line, scaled by the segment's length²
+            cx = wy * dz - wz * dy
+            cy = wz * dx - wx * dz
+            cz = wx * dy - wy * dx
+            on.append(-1e-6 <= t <= 1 + 1e-6
+                      and cx * cx + cy * cy + cz * cz <= tol)
+        for k in range(3):
+            if on[k] and on[(k + 1) % 3]:
+                out.append((tri[k], tri[(k + 1) % 3]))
+    return out
 
 
 def silhouette(info: MeshInfo, facing) -> dict:

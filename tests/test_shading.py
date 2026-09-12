@@ -148,3 +148,18 @@ def test_settings_persist_and_the_snapshot_copies_them(app):
     finally:
         settings.remove("render_cavity")
         settings.remove("render_edges")
+
+
+def test_an_open_border_edge_is_drawn():
+    # one lone triangle: every edge is a border, so all three are lines
+    info = shading.analyse([((0, 0, 0), (1, 0, 0), (0, 1, 0))])
+    assert len(info.creases[0]) == 3
+
+
+def test_piece_segments_keep_only_what_lies_on_the_piece():
+    crease = [((0.0, 0.0, 0.0), (10.0, 0.0, 0.0))]
+    piece = ((2.0, 0.0, 0.0), (6.0, 0.0, 0.0), (4.0, 3.0, 0.0))
+    assert shading.piece_segments(piece, crease) == [
+        ((2.0, 0.0, 0.0), (6.0, 0.0, 0.0))]
+    off = ((2.0, 1.0, 0.0), (6.0, 1.0, 0.0), (4.0, 3.0, 0.0))
+    assert shading.piece_segments(off, crease) == []
