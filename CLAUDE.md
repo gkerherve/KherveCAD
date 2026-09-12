@@ -169,7 +169,14 @@ into a new module and import.
                        strongly tinted `VIVID` ones a denser alpha — at
                        glass opacity a flame read pastel pink). Slopes
                        face all four ways: the ±X ones are the ±Y piece
-                       turned a quarter, stud indices mirrored.
+                       turned a quarter, stud indices mirrored. Library
+                       parts pass `round_=True`: rounded vertical
+                       corners (quarter-round posts, walls shortened),
+                       a bevelled top edge (`_slab`, the hull of the
+                       rounded footprint and an inset top face — convex,
+                       so exact in the preview) and bevelled studs; the
+                       brick-built models stay sharp for their triangle
+                       budget.
                        Boolean-free: the hollow underside is walls + top,
                        tubes are revolved rings, a slope is an extruded
                        profile. Origin at the part's grid corner, not
@@ -262,6 +269,44 @@ into a new module and import.
                        drops studs another piece covers and the hidden
                        undersides, which is what keeps a 171-piece tower
                        at 17k triangles.
+  - `library_lego_sets.py` — the **Lego sets** category: every Lego
+                       example as a library part (`sizes={}`), built by
+                       the example's own function and lifted out of its
+                       root, so a set drops into an assembly as one
+                       Object. `examples` is imported lazily (it imports
+                       the library).
+  - `legoize.py`     — **Object ↔ Lego** (Qt-free). `column_hits` casts
+                       a ray up each grid column and records every
+                       surface as an entry (+1, facing down) or an exit
+                       (-1); `_intervals` counts **winding**, not parity
+                       (a brick's top and the bottom of the one on it
+                       share a height — dropping one as a duplicate once
+                       painted a house's walls baseplate-green), and a
+                       cell takes the colour of the last solid entered
+                       below it. `to_lego` scales the part to N studs
+                       across (bricks or plates a layer), matches
+                       colours to the palette (`nearest_colour`) and
+                       packs with `examples_lego.Scene`; `to_solid`
+                       voxelizes a brick build at plate resolution
+                       (`COVER` 75% so studs drop out, `HOLLOW` closes a
+                       brick's underside) and merges cells into boxes
+                       per colour (`boxes`). `MAX_CELLS` caps it.
+  - `lego_convert.py`— Library ▸ Convert Selection to Lego… (dialog:
+                       studs across, bricks/plates, colours) and Fuse
+                       Lego into One Solid; also on the tree's right
+                       click. The result is a new Object beside the
+                       source, which is never touched.
+  - `lego_builder.py`— Library ▸ **Lego Builder…**: a non-modal panel
+                       (piece, studs, colour, turn, Place/Erase) that
+                       keeps `view3d.start_pick` armed on the build's
+                       pieces. A piece is a Group at its grid corner
+                       with `params["lego"]` = {kind, nx, ny, h, colour,
+                       bare}; `target` drops a new piece onto the
+                       highest top under its footprint (a top click,
+                       stud sides included) or sets it beside a side
+                       face; `refresh_studs` rebuilds only pieces whose
+                       uncovered studs changed. Picks carry the raw
+                       `point` and face `normal` (`View3D._pick_at`).
   - `chat.py`        — **Assistant chat box** (family assistant, docked
                        right, **hidden by default**, opened from AI ▸ ChatBox or
                        Ctrl+/): Claude/Mistral/Ollama
@@ -1219,6 +1264,12 @@ switching to the Object tab) arrived afterwards and silently repainted
 the view with the *previous* model — the "3D forgot my colours" bug.
 The 3D view's **Redraw** button (`MainWindow.force_refresh`) is the
 manual escape hatch: clear the mesh caches, rebuild both views.
+A part is only sent for an exact render when `mesh.needs_exact` says
+so: the preview cannot show it right (`uses_booleans`) AND it has at
+most one colour inside (`part_colours`). The STL is colourless: it
+wears that single colour, and a multi-coloured part keeps its preview
+(before, a red library brick turned grey and a Lego set lost every
+colour when its exact mesh landed).
 
 ## Document format
 
