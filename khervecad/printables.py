@@ -27,6 +27,7 @@ import json
 import re
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 from PyQt5.QtCore import QUrl
@@ -405,6 +406,18 @@ def build_bundle(window, folder, *, title, description="", tags=(),
                 warnings.append(f"3MF export failed: {error}")
             else:
                 wrote(path)
+
+    # the source in one download: Printables lists every file on its
+    # own, and whoever wants to remix needs the .scad, .kcad and .3mf
+    # together
+    source = [Path(f) for f in files
+              if Path(f).suffix in (".scad", ".kcad", ".3mf")]
+    if source:
+        path = folder / f"{stem}-source.zip"
+        with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as bundle:
+            for member in source:
+                bundle.write(member, member.name)
+        wrote(path)
 
     images = _render_previews(window, folder, stem, code, views,
                               image_size, warnings)

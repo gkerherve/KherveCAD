@@ -713,7 +713,10 @@ into a new module and import.
                        to fill it in (`opening()` writes the first
                        paragraph from the model's own size, structure
                        and named dimensions) — and
-                       `printables.json`. Printables has **no upload
+                       `printables.json`, and `<stem>-source.zip`
+                       holding whichever of the .scad, .kcad and .3mf
+                       were written (one download for a remixer).
+                       Printables has **no upload
                        API** — this prepares the folder and opens the
                        upload page; the user does the last click, and
                        the tool result says `published: false` so an

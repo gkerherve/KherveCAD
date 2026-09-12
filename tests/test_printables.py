@@ -136,6 +136,22 @@ def test_bundle_writes_every_requested_file(cube_window, tmp_path):
         assert Path(path).stat().st_size > 0
 
 
+def test_bundle_zips_the_source_files(cube_window, tmp_path):
+    import zipfile
+    bundle = printables.build_bundle(
+        cube_window, tmp_path / "out", title="My Cube",
+        formats=("stl", "scad", "kcad"), views=())
+    path = tmp_path / "out" / "My-Cube-source.zip"
+    assert str(path) in bundle["files"]
+    with zipfile.ZipFile(path) as z:
+        assert sorted(z.namelist()) == ["My-Cube.kcad", "My-Cube.scad"]
+        assert z.read("My-Cube.scad").decode().strip()
+    bare = printables.build_bundle(cube_window, tmp_path / "stl",
+                                   title="Cube", formats=("stl",),
+                                   views=())
+    assert not any(f.endswith(".zip") for f in bare["files"])
+
+
 def test_bundle_only_writes_what_was_asked_for(cube_window, tmp_path):
     bundle = printables.build_bundle(
         cube_window, tmp_path / "out", title="Cube",
