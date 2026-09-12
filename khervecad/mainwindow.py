@@ -364,11 +364,20 @@ class MainWindow(QMainWindow):
         self._edges_act.setStatusTip("Draw the model's edges and outline "
                                      "as thin lines")
         self._edges_act.triggered.connect(self.view3d.set_edges)
+        self._gl_act = QAction("3D &Hardware Rendering (OpenGL)", self,
+                               checkable=True)
+        self._gl_act.setChecked(self.view3d.hardware)
+        self._gl_act.setStatusTip(
+            "Draw the model with OpenGL: exact occlusion at any size, "
+            "anti-aliased. Off, the built-in painter draws it")
+        self._gl_act.triggered.connect(self.view3d.set_hardware)
         self.view3d.look_toggled.connect(
-            lambda key, on: (self._cavity_act if key == "cavity"
-                             else self._edges_act).setChecked(on))
+            lambda key, on: {"cavity": self._cavity_act,
+                             "edges": self._edges_act,
+                             "hardware": self._gl_act}[key].setChecked(on))
         view_menu.addAction(self._cavity_act)
         view_menu.addAction(self._edges_act)
+        view_menu.addAction(self._gl_act)
         view_menu.addSeparator()
         theme_menu = view_menu.addMenu("&Theme")
         theme_group = QActionGroup(self)

@@ -616,7 +616,11 @@ Export PNG) include it.</p>
 {figure("stage", "The platform and its shadow.")}
 <h3>Cavity shading and edge lines</h3>
 <p>Two looks borrowed from Blender's solid view, both under the
-<b>View</b> menu: <b>3D Cavity Shading</b> darkens valleys and lightens
+<b>View</b> menu: <b>3D Hardware Rendering (OpenGL)</b> (on by default)
+draws the model with the graphics card &mdash; exact occlusion however
+big the model, anti-aliased, and it orbits smoothly; switch it off to
+use the built-in painter, which is also what Wireframe and X-ray use.
+<b>3D Cavity Shading</b> darkens valleys and lightens
 ridges so the shape reads at a glance, and <b>3D Edge Lines</b> draws
 the model's real edges and its outline as thin lines &mdash; a cylinder
 shows its two rims, not its facets. Both are looks only and are

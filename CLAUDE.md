@@ -604,7 +604,36 @@ into a new module and import.
                        after a manual Redraw. A newer mesh `cancel`s a
                        stale build, and only the current serial's tree
                        may be posted to the view.
-  - `view3d.py`      — bottom-right preview: software-rendered shaded
+  - `glrender.py`    — **OpenGL faces** for the 3D preview: one
+                       offscreen 2.1-compatibility context (GLSL 1.20,
+                       `QOpenGLFunctions_2_1` via `versionFunctions` —
+                       no PyOpenGL), a 4x multisampled FBO with a depth
+                       buffer, the mesh packed once per (mesh, style,
+                       cavity) into an interleaved VBO (`STRIDE` floats:
+                       position, normal, rgb, alpha, material params,
+                       cavity), a shader reproducing `_style_color`'s
+                       lighting (`material()`), translucent faces in a
+                       second back-to-front pass with depth writes off,
+                       crease lines in a line VBO under `glPolygonOffset`
+                       (no clip-space bias: 0.0005 at the far end of a
+                       perspective depth buffer was ~200 mm). Blending is
+                       `glBlendFuncSeparate(SRC_ALPHA, 1-SRC_ALPHA, ONE,
+                       1-SRC_ALPHA)` because `toImage()` is premultiplied
+                       — the plain blend gave glass alpha a² and painted
+                       as saturated noise. The projection reproduces
+                       `View3D._project` exactly so the image lines up
+                       with the QPainter overlays. `render()` returns a
+                       QImage or None; any failure sets `ok=False` and
+                       the view falls back to the painter for good.
+  - `view3d.py`      — bottom-right preview: `View3D.hardware` (View ▸
+                       3D Hardware Rendering, QSettings `render_gl`,
+                       MCP `set_render_options opengl`, default on) lays
+                       `glrender`'s image under the overlays at the top
+                       of the face pass (`_gl_drew`; the painter loop
+                       then only collects the selection outline); the
+                       BSP tree is built only when the painter will need
+                       it (`_gl_active()`, `_start_bsp_build`). Otherwise
+                       software-rendered shaded
                        mesh viewer (orbit/pan/zoom, painter's algo in
                        BSP order via `bsp.py` — centroid sort only for
                        the interaction draft and meshes too big to

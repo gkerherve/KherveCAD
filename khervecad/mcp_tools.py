@@ -1229,10 +1229,13 @@ class McpToolExecutor:
             win.view3d.set_cavity(bool(params["cavity"]))
         if params.get("edges") is not None:
             win.view3d.set_edges(bool(params["edges"]))
+        if params.get("opengl") is not None:
+            win.view3d.set_hardware(bool(params["opengl"]))
         return {"global_segments": int(model.global_fn),
                 "global_segments_on": bool(model.global_fn_on),
                 "projection": win.view3d.projection,
                 "stage": bool(win.view3d.stage),
+                "opengl": bool(win.view3d.hardware),
                 "cavity": bool(win.view3d.cavity),
                 "edges": bool(win.view3d.edges)}
 

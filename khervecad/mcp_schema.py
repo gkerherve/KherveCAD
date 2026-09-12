@@ -820,6 +820,10 @@ TOOLS = [
             "edges": {"type": "boolean",
                       "description": "Draw crease and outline edges as "
                                      "thin lines."},
+            "opengl": {"type": "boolean",
+                       "description": "Draw the faces with OpenGL (exact "
+                                      "occlusion, anti-aliased); off "
+                                      "uses the built-in painter."},
         }),
     },
     {

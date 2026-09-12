@@ -25,6 +25,7 @@ from PyQt5.QtWidgets import (QGridLayout, QLabel, QSlider, QToolButton,
                              QWidget)
 
 from . import bsp as bsp_mod
+from . import glrender
 
 _SETTINGS = ("Kherve", "KherveCAD")
 
@@ -247,6 +248,10 @@ class View3D(QWidget):
         self.edges = settings.value("render_edges", False, type=bool)
         self._info = None               # shading.MeshInfo of self.mesh
         self._info_serial = -1
+        #: draw the faces with OpenGL (glrender.py) — exact occlusion at
+        #: any size, anti-aliased; the painter is the fallback
+        self.hardware = settings.value("render_gl", True, type=bool)
+        self._gl_drew = False           # last paint came from OpenGL
         self.setMinimumHeight(160)
         self.setMouseTracking(False)
         self.lighting_bar = LightingBar(self)
@@ -296,6 +301,8 @@ class View3D(QWidget):
         if style in RENDER_STYLES:
             self.style = style
             QSettings(*_SETTINGS).setValue("render_style", style)
+            if not self._gl_active():
+                self._start_bsp_build()  # a painter style needs the order
             self.update()
 
     def set_background(self, name: str):
@@ -333,6 +340,21 @@ class View3D(QWidget):
         QSettings(*_SETTINGS).setValue("render_edges", self.edges)
         self.look_toggled.emit("edges", self.edges)
         self.update()
+
+    def set_hardware(self, on: bool):
+        """Faces by OpenGL (on) or by the painter (off); persisted."""
+        self.hardware = bool(on)
+        QSettings(*_SETTINGS).setValue("render_gl", self.hardware)
+        self.look_toggled.emit("hardware", self.hardware)
+        if not self._gl_active():
+            self._start_bsp_build()     # the painter needs its order
+        self.update()
+
+    def _gl_active(self):
+        """Whether the next paint will hand the faces to OpenGL."""
+        if not self.hardware or self.style not in glrender.STYLES:
+            return False
+        return glrender.renderer().available()
 
     def _mesh_info(self):
         """shading.MeshInfo for the current mesh — the worker's copy
@@ -426,6 +448,7 @@ class View3D(QWidget):
         # the stage, and its per-mesh cache (the twin gets the same list)
         twin.stage, twin._stage_cache = self.stage, self._stage_cache
         twin.cavity, twin.edges = self.cavity, self.edges
+        twin.hardware = self.hardware
         twin.projection = projection if projection in PROJECTIONS \
             else self.projection
         # a snapshot must be exact: wait for a tree still being built
@@ -495,30 +518,37 @@ class View3D(QWidget):
             self._mesh_serial += 1
             self._bsp_pending = None
         self._bsp = bsp
-        if bsp is None and self.mesh:
-            serial, tris, colors_ = self._mesh_serial, self.mesh, self.colors
-
-            def stale():
-                return serial != self._mesh_serial
-
-            def work():
-                # a superseded build stops at once rather than competing
-                # with the current one (and the GUI) for the GIL
-                tree = bsp_mod.build(tris, colors_, cancel=stale)
-                with self._bsp_lock:
-                    # only the current mesh's tree may be posted: a late
-                    # stale one used to overwrite the fresh result before
-                    # the GUI thread took it, and the view then kept the
-                    # centroid sort until a manual Redraw
-                    if stale():
-                        return
-                    self._bsp_pending = (serial, tree)
-                self._bsp_ready.emit()
-
-            self._bsp_thread = threading.Thread(target=work, daemon=True)
-            self._bsp_thread.start()
+        # OpenGL has a depth buffer and needs no order: the tree is only
+        # built for the painter (and later, if the user switches to it)
+        if bsp is None and self.mesh and not self._gl_active():
+            self._start_bsp_build()
         self.source = source
         self.update()
+
+    def _start_bsp_build(self):
+        if self._bsp is not None or not self.mesh:
+            return
+        serial, tris, colors_ = self._mesh_serial, self.mesh, self.colors
+
+        def stale():
+            return serial != self._mesh_serial
+
+        def work():
+            # a superseded build stops at once rather than competing
+            # with the current one (and the GUI) for the GIL
+            tree = bsp_mod.build(tris, colors_, cancel=stale)
+            with self._bsp_lock:
+                # only the current mesh's tree may be posted: a late
+                # stale one used to overwrite the fresh result before
+                # the GUI thread took it, and the view then kept the
+                # centroid sort until a manual Redraw
+                if stale():
+                    return
+                self._bsp_pending = (serial, tree)
+            self._bsp_ready.emit()
+
+        self._bsp_thread = threading.Thread(target=work, daemon=True)
+        self._bsp_thread.start()
 
     def _take_bsp(self):
         """Adopt the tree the worker left, if it is for the current
@@ -869,7 +899,26 @@ class View3D(QWidget):
         # its (split) triangles — the centroid sort below is only the
         # fallback for a mesh too big to partition
         tree = self._bsp
-        if self._fast and self._draft_mesh is not None:
+        self._gl_drew = False
+        if self._gl_active():
+            # OpenGL paints the faces (and the edge lines) into an image
+            # laid under the overlays; the painter's loop below then has
+            # nothing to draw but still collects the selection outline
+            info = self._mesh_info() if (self.cavity or self.edges) \
+                else None
+            edge_color = QColor(t["border"]).darker(260) if self.edges \
+                else None
+            image = glrender.renderer().render(
+                self, self.mesh, self.colors, info, eye, right, up,
+                forward, light, edge_color)
+            if image is not None:
+                painter.drawImage(0, 0, image)
+                self._gl_drew = True
+            elif self._bsp is None:
+                self._start_bsp_build()      # GL gave up: painter from now
+        if self._gl_drew:
+            mesh, colors, tree = [], None, None
+        elif self._fast and self._draft_mesh is not None:
             mesh, colors = self._draft_mesh, self._draft_colors
             tree = None
         elif tree is not None and self._fast \
@@ -1027,7 +1076,7 @@ class View3D(QWidget):
         # the decimated draft (its indices are its own) nor for the
         # see-through styles.
         info = None
-        if (self.cavity or self.edges) and mesh is not None \
+        if (self.cavity or self.edges) and mesh and not self._gl_drew \
                 and not (self._fast and self._draft_mesh is not None) \
                 and style not in ("Wireframe", "X-ray"):
             info = self._mesh_info()
@@ -1143,7 +1192,8 @@ class View3D(QWidget):
             painter.setPen(QColor("#e8e8e8") if dark else QColor("#333333"))
         painter.drawText(8, self.height() - 8,
                          f"{self.source} — {len(self.mesh)} triangles "
-                         f"· {self.style}")
+                         f"· {self.style}"
+                         + (" · OpenGL" if self._gl_drew else ""))
         painter.end()
 
     def _tint_selection(self, painter, polys):
