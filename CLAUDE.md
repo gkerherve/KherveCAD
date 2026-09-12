@@ -765,6 +765,33 @@ into a new module and import.
                        Claude is appended to whatever description
                        comes in, once, and names only the source files
                        actually shipped.
+  - `drawing.py`     — **2D engineering drawings** (Qt-free): `VIEWS`
+                       (third-angle Front/Top/Right/…, an isometric)
+                       as (right, up, forward); `view_lines` takes the
+                       mesh's creases + borders + that view's
+                       silhouette, dedupes edges that project onto the
+                       same line (front-most wins), and finds hidden
+                       runs with a `DepthGrid` — a pure-Python
+                       z-buffer at `GRID` cells across the model —
+                       sampling `SAMPLES` points per edge (one-sample
+                       runs are grid flicker, folded away); `layout`
+                       places the views in the third-angle arrangement
+                       on an A4/A3/Letter sheet at the largest `SCALES`
+                       entry that fits, with `overall_dimensions` and
+                       an optional `section.section`. Hidden lines can
+                       be left out (`hidden_lines`): a threaded part's
+                       facets give tens of thousands of dashes.
+  - `drawing_export.py` — paints a layout (dashed hidden lines,
+                       arrowed dimensions, hatched section, title
+                       block) through QPainter to PDF (`QPdfWriter`),
+                       SVG (`QSvgGenerator`), PNG, and writes a minimal
+                       DXF R12 by hand (LINE/TEXT on VISIBLE, HIDDEN,
+                       DIM, SECTION, TEXT layers, sheet mm).
+  - `drawing_dialog.py` — File ▸ Make Drawing… (Ctrl+Shift+D): title,
+                       sheet, views, dimensions, hidden lines, section
+                       axis, scale, a live preview; `make_layout` is
+                       what the `export_drawing` MCP tool calls too
+                       (the selection, else the render scope).
   - `pngexport.py`   — **File ▸ Export PNG…** (Ctrl+Alt+E): pictures
                        of the 3D view from the built-in renderer via
                        `View3D.snapshot(..., clean=True)` — the model
@@ -1020,7 +1047,7 @@ into a new module and import.
                        model via a projective `quadToQuad`. View >
                        Add Reference Image…, and the
                        `set_reference_image` MCP tool (file access).
-  - `mcp_schema.py`  — the **MCP tool table**: 39 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 40 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -1140,7 +1167,7 @@ into a new module and import.
                        caps a pattern at `MAX_COPIES` (1000) and needs
                        every count ≥ 1. Examples ▸ Mechanical ▸ Bolt
                        circle & stair (pattern).
-- `docs/MCP.md` — how to connect an assistant, what the 39 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 40 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -1398,7 +1425,7 @@ release the website links to. See `README.macos.md`.
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **39 tools**: the object tree, OpenSCAD in
+client gets the whole app as **40 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

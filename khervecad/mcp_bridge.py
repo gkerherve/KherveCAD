@@ -63,7 +63,8 @@ _READ_ONLY_TOOLS = frozenset({
 #: ``export_document`` can drive OpenSCAD for a minute, but neither
 #: leaves an edit behind).
 _NO_SNAPSHOT_TOOLS = _READ_ONLY_TOOLS | {
-    "save_document", "export_document", "publish_to_printables",
+    "save_document", "export_document", "export_drawing",
+    "publish_to_printables",
 }
 
 #: Tools that can read or write a file the client names.  Everything
@@ -72,7 +73,7 @@ _NO_SNAPSHOT_TOOLS = _READ_ONLY_TOOLS | {
 #: back until the user raises the access level.
 _FILE_TOOLS = frozenset({
     "open_document", "save_document", "export_document",
-    "publish_to_printables", "set_reference_image",
+    "export_drawing", "publish_to_printables", "set_reference_image",
 })
 
 

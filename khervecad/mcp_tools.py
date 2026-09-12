@@ -1394,6 +1394,40 @@ class McpToolExecutor:
         self._w._update_title()
         return {"saved": path}
 
+    def _t_export_drawing(self, params) -> dict:
+        from . import drawing, drawing_dialog, drawing_export
+        path = str(Path(str(params.get("path", ""))).expanduser())
+        suffix = Path(path).suffix.lower()
+        if suffix not in drawing_export.WRITERS:
+            raise ToolError("A drawing is written as .pdf, .svg, .dxf or "
+                            ".png.")
+        views = tuple(params.get("views") or drawing_dialog.STANDARD)
+        bad = [v for v in views if v not in drawing.VIEWS]
+        if bad:
+            raise ToolError(f"Unknown view(s) {', '.join(bad)}: choose "
+                            f"from {', '.join(drawing.VIEWS)}.")
+        sheet = params.get("sheet") or "A4"
+        if sheet not in drawing.SHEETS:
+            raise ToolError(f"Unknown sheet {sheet!r}: "
+                            f"{', '.join(drawing.SHEETS)}.")
+        section_axis = params.get("section") or None
+        if section_axis and section_axis not in ("x", "y", "z"):
+            raise ToolError("section must be x, y or z.")
+        try:
+            lay = drawing_dialog.make_layout(
+                self._w, sheet=sheet, views=views,
+                dimensions=params.get("dimensions", True) is not False,
+                hidden_lines=params.get("hidden_lines", True) is not False,
+                section_axis=section_axis, title=params.get("title"),
+                scale=(float(params["scale"]) if params.get("scale")
+                       else None))
+        except ValueError as exc:
+            raise ToolError(str(exc))
+        drawing_export.export(lay, path)
+        return {"exported": path, "format": suffix[1:],
+                "sheet": lay["sheet"], "scale": lay["scale_label"],
+                "views": [v["name"] for v in lay["views"]]}
+
     def _t_export_document(self, params) -> dict:
         from .engine import write_stl
         path = str(Path(str(params.get("path", ""))).expanduser())

@@ -204,6 +204,10 @@ class MainWindow(QMainWindow):
                             "Export PN&G...",
                             lambda: export_png_dialog(self),
                             "Ctrl+Alt+E")
+        from .drawing_dialog import open_dialog as drawing_dialog
+        file_menu.addAction(icons.icon("mdi.drawing-box"),
+                            "Make &Drawing (PDF/SVG/DXF)...",
+                            lambda: drawing_dialog(self), "Ctrl+Shift+D")
         file_menu.addSeparator()
         file_menu.addAction(icons.icon("mdi.cloud-upload-outline"),
                             "&Publish to Printables...",

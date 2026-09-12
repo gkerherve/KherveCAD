@@ -902,6 +902,48 @@ TOOLS = [
         }),
     },
     {
+        "name": "export_drawing",
+        "description": (
+            "A 2D engineering drawing of the model (or the selection): "
+            "third-angle Front / Top / Right views and an isometric, "
+            "visible edges solid and hidden edges dashed, overall "
+            "dimensions, an optional hatched section through the "
+            "middle, on an A4/A3 sheet at a standard scale with a title "
+            "block. Written by the path's extension: .pdf, .svg, .dxf "
+            "(lines on VISIBLE / HIDDEN / DIM / SECTION layers, sheet "
+            "mm) or .png."
+        ),
+        "input_schema": _obj({
+            "path": {"type": "string",
+                     "description": "Absolute path ending in .pdf, "
+                                    ".svg, .dxf or .png."},
+            "sheet": {"type": "string", "enum": ["A4", "A3", "Letter"],
+                      "description": "Sheet size, landscape (A4)."},
+            "views": {"type": "array", "items": {"type": "string"},
+                      "description": "Any of Front, Top, Right, Left, "
+                                     "Back, Bottom, Isometric (default "
+                                     "Front, Top, Right, Isometric)."},
+            "dimensions": {"type": "boolean",
+                           "description": "Overall width/height "
+                                          "dimensions on the three "
+                                          "orthographic views (true)."},
+            "section": {"type": "string", "enum": ["x", "y", "z"],
+                        "description": "Add a hatched section through "
+                                       "the model's middle on this axis."},
+            "hidden_lines": {"type": "boolean",
+                             "description": "Dashed edges behind the "
+                                            "surface (true); off for "
+                                            "threaded parts, whose facets "
+                                            "swamp the sheet."},
+            "scale": {"type": "number",
+                      "description": "Drawing scale as a multiplier "
+                                     "(0.5 = 1:2, 2 = 2:1); omit for "
+                                     "the largest standard scale that "
+                                     "fits."},
+            "title": {"type": "string"},
+        }, ["path"]),
+    },
+    {
         "name": "export_document",
         "description": (
             "Export by the path's extension: .scad writes the program, "

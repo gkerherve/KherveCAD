@@ -755,6 +755,15 @@ camera shows it, or <b>all standard views</b> (front-right and back-left
 isometric, front, back, left, right, top, bottom), one file each. Pick a
 size up to 4K, and tick <b>Transparent background</b> to drop the picture
 onto a slide or a web page. Your own camera never moves.</li>
+<li><b>Make Drawing</b> {K("Ctrl+Shift+D")} produces a 2D engineering
+drawing of the model (or of the selection): third-angle <b>Front, Top
+and Right</b> views and an isometric, visible edges solid and hidden
+edges dashed, overall dimensions, an optional hatched <b>section</b>
+through the middle, all on an A4/A3 sheet at a standard scale with a
+title block. Save it as <b>PDF</b>, <b>SVG</b>, <b>PNG</b> or
+<b>DXF</b> (lines on VISIBLE / HIDDEN / DIM / SECTION layers, in sheet
+millimetres, for any CAD or CAM program). Untick <i>Hidden lines</i>
+for threaded or very detailed parts.</li>
 <li><b>File &rsaquo; Show in File Explorer</b> opens the document's
 folder; <b>New Window</b> {K("Ctrl+Shift+N")} opens a second document.</li>
 <li><b>View &rsaquo; Add Reference Image&hellip;</b> puts a photo or
