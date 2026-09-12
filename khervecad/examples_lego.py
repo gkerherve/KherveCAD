@@ -91,30 +91,35 @@ def ring(cells, i0, i1, j0, j1, k, value):
 class Scene:
     """Pieces on the stud grid, emitted as one model node."""
 
-    def __init__(self, seed=1):
+    def __init__(self, seed=1, seg=SEGMENTS):
         self.pieces = []
         self.rng = random.Random(seed)
+        self.seg = seg
 
     def add(self, kind, i, j, nx, ny, z, colour_name, group,
             height=BRICK_H, facing="-Y", seg=None):
         """One piece: kind "brick" (any height), "tile" or "slope"
-        (2 deep, *nx* wide, low edge towards *facing*)."""
+        (2 deep, *nx* wide, low edge towards *facing* — along X for
+        "-Y"/"+Y", along Y for "-X"/"+X")."""
         if isinstance(colour_name, tuple):
             colour_name = self.rng.choice(colour_name)
+        n = nx
+        if kind == "slope":
+            nx, ny = (n, 2) if facing in ("-Y", "+Y") else (2, n)
         self.pieces.append(dict(
-            kind=kind, i=i, j=j, nx=nx, ny=2 if kind == "slope" else ny,
+            kind=kind, i=i, j=j, nx=nx, ny=ny, n=n,
             z=z, h=BRICK_H if kind == "slope" else height,
             colour=colour_name, group=group, facing=facing, seg=seg))
 
-    def add_voxels(self, cells, z0=0.0, height=BRICK_H):
+    def add_voxels(self, cells, z0=0.0, height=BRICK_H, kind="brick"):
         """*cells*: {(i, j, k): (colour, group)}; layer k sits at
-        z0 + k * height."""
+        z0 + k * height. *kind* "tile" makes smooth, studless pieces."""
         layers = {}
         for (i, j, k), value in cells.items():
             layers.setdefault(k, {})[(i, j)] = value
         for k in sorted(layers):
             for i, j, nx, ny, (col, group) in pack(layers[k], k):
-                self.add("brick", i, j, nx, ny, z0 + k * height, col,
+                self.add(kind, i, j, nx, ny, z0 + k * height, col,
                          group, height)
 
     def to_node(self, name):
@@ -132,13 +137,17 @@ class Scene:
             top = round(p["z"] + p["h"], 3)
             bare = {(a, b) for a in range(p["nx"]) for b in range(p["ny"])
                     if (p["i"] + a, p["j"] + b, top) not in bottoms}
-            x, y, seg = p["i"] * PITCH, p["j"] * PITCH, p["seg"] or SEGMENTS
+            x, y, seg = p["i"] * PITCH, p["j"] * PITCH, p["seg"] or self.seg
             if p["kind"] == "slope":
-                row = 1 if p["facing"] == "-Y" else 0
-                node = slope(p["nx"], p["facing"],
-                             studs={a for a, b in bare if b == row},
-                             x=x, y=y, z=p["z"], seg=seg,
-                             name=f"Slope 2x{p['nx']}")
+                facing = p["facing"]
+                if facing in ("-Y", "+Y"):           # the back stud row
+                    row = 1 if facing == "-Y" else 0
+                    keep = {a for a, b in bare if b == row}
+                else:
+                    col = 1 if facing == "-X" else 0
+                    keep = {b for a, b in bare if a == col}
+                node = slope(p["n"], facing, studs=keep, x=x, y=y,
+                             z=p["z"], seg=seg, name=f"Slope 2x{p['n']}")
             else:
                 kind = "Tile" if p["kind"] == "tile" else (
                     "Brick" if p["h"] >= BRICK_H else "Plate")
@@ -498,9 +507,118 @@ def lego_woman_hd() -> CadNode:
     return _root(s.to_node("Woman"))
 
 
+SANDSTONE = ("Tan",) * 3 + ("Dark tan",)
+STAINED = ("Trans-red", "Trans-yellow", "Trans-dark blue",
+           "Trans-dark blue", "Trans-green")
+
+
+def gable_roof(s, x0, x1, y0, y1, z, colour, ridge, group="Roof",
+               skip=()):
+    """A roof with its ridge along X over rows y0..y1 (eaves included,
+    an even number of rows): courses of 45° slopes, each stepping in a
+    stud onto the stud row of the one below, and ridge tiles on top.
+    Returns the number of courses — the gable end under course r spans
+    rows y0 + r + 2 .. y1 - r - 2."""
+    courses = (y1 - y0 + 1) // 2 - 1
+    for r in range(courses):
+        for start, n in runs(x0, x1, skip):
+            s.add("slope", start, y0 + r, n, 2, z + r * BRICK_H, colour,
+                  group, facing="-Y")
+            s.add("slope", start, y1 - 1 - r, n, 2, z + r * BRICK_H,
+                  colour, group, facing="+Y")
+    for start, n in runs(x0, x1, skip):
+        s.add("tile", start, y0 + courses, n, 2, z + courses * BRICK_H,
+              ridge, group, height=PLATE_H)
+    return courses
+
+
+def lego_church() -> CadNode:
+    """A village church: a sandstone nave with stained-glass windows
+    and a rose window, a slate roof, and a bell tower with a wooden
+    door, an open belfry, a stepped spire and a golden cross; a hedge,
+    a path and gravestones round it."""
+    s = Scene(seed=31)
+    rng = random.Random(31)
+    s.add("brick", 0, 0, 32, 20, 0.0, "Green", "Baseplate",
+          height=BASEPLATE_H, seg=12)
+    z0 = BASEPLATE_H
+    wall, base = (SANDSTONE, "Walls"), ("Dark bluish grey", "Foundation")
+    slate = "Dark bluish grey"
+
+    def glass(cells):
+        for cell in cells:
+            v[cell] = (rng.choice(STAINED), "Stained glass")
+
+    v = {}
+    # the nave, 18 x 10 studs and eight bricks high
+    ring(v, 10, 27, 5, 14, 0, base)
+    for k in range(1, 8):
+        ring(v, 10, 27, 5, 14, k, wall)
+    for x in (12, 16, 20, 24):
+        glass((xx, y, k) for xx in (x, x + 1) for y in (5, 14)
+              for k in range(2, 7))
+    glass((27, y, k) for y in (9, 10) for k in range(2, 7))   # east end
+    for r, (g0, g1) in enumerate(((6, 13), (7, 12), (8, 11), (9, 10))):
+        for x in (10, 27):
+            box(v, x, x, g0, g1, 8 + r, 8 + r, wall)
+    glass([(27, y, k) for y in range(8, 12) for k in (8, 9)]
+          + [(27, 9, 10), (27, 10, 10)])                       # rose window
+    # the bell tower, 6 x 6 and fifteen bricks high
+    ring(v, 4, 9, 7, 12, 0, base)
+    for k in range(1, 15):
+        ring(v, 4, 9, 7, 12, k, wall)
+    box(v, 4, 4, 9, 10, 1, 4, ("Reddish brown", "Door"))
+    box(v, 4, 4, 9, 10, 5, 5, ("Dark tan", "Door"))           # the lintel
+    for k in (7, 8, 11, 12):                                   # slits, belfry
+        for cell in ((6, 7), (7, 7), (6, 12), (7, 12)):
+            v.pop((*cell, k), None)
+    for k in (11, 12):
+        for cell in ((4, 9), (4, 10), (9, 9), (9, 10)):
+            v.pop((*cell, k), None)
+    box(v, 5, 8, 8, 11, 10, 10, (slate, "Belfry"))            # its floor
+    box(v, 6, 7, 9, 10, 11, 11, ("Yellow", "Belfry"))          # the bell
+    # the churchyard: a hedge along the front
+    box(v, 8, 29, 1, 1, 0, 0, (LEAVES, "Churchyard"))
+    s.add_voxels(v, z0=z0)
+
+    gable_roof(s, 10, 28, 4, 15, z0 + 8 * BRICK_H, slate, "Black")
+    # the spire: a course of slopes on all four sides of the tower, a
+    # smaller shaft with its own roof, a slender top and the cross
+    zs = z0 + 15 * BRICK_H
+    for start, n in runs(4, 9):
+        s.add("slope", start, 7, n, 2, zs, slate, "Spire", facing="-Y")
+        s.add("slope", start, 11, n, 2, zs, slate, "Spire", facing="+Y")
+    s.add("slope", 4, 9, 2, 2, zs, slate, "Spire", facing="-X")
+    s.add("slope", 8, 9, 2, 2, zs, slate, "Spire", facing="+X")
+    s.add("brick", 6, 9, 2, 2, zs, slate, "Spire")
+    shaft = {}
+    box(shaft, 5, 8, 8, 11, 0, 3, (SANDSTONE, "Spire"))
+    s.add_voxels(shaft, z0=zs + BRICK_H)
+    s.add("slope", 5, 8, 4, 2, zs + 5 * BRICK_H, slate, "Spire",
+          facing="-Y")
+    s.add("slope", 5, 10, 4, 2, zs + 5 * BRICK_H, slate, "Spire",
+          facing="+Y")
+    top = {}
+    box(top, 6, 7, 9, 10, 0, 2, (slate, "Spire"))
+    s.add_voxels(top, z0=zs + 6 * BRICK_H)
+    zc = zs + 9 * BRICK_H
+    gold = "Yellow"
+    for k, (i, nx) in enumerate(((6, 1), (6, 1), (5, 3), (6, 1))):
+        s.add("brick", i, 9, nx, 1, zc + k * BRICK_H, gold, "Cross")
+
+    for x in (0, 2):
+        s.add("tile", x, 9, 2, 2, z0, "Dark tan", "Path", height=PLATE_H)
+    for x in (13, 17, 21, 25):                                # gravestones
+        s.add("brick", x, 17, 2, 1, z0, "Light bluish grey", "Churchyard")
+        s.add("tile", x, 17, 2, 1, z0 + BRICK_H, "Light bluish grey",
+              "Churchyard", height=PLATE_H)
+    return _root(s.to_node("Church"))
+
+
 EXAMPLES.extend([
     ("Minecraft tower", "Lego", lego_minecraft_tower),
     ("House", "Lego", lego_house),
+    ("Church", "Lego", lego_church),
     ("Man (Minecraft style)", "Lego", lego_man_hd),
     ("Woman (Minecraft style)", "Lego", lego_woman_hd),
     ("Man (Minecraft style, small)", "Lego", lego_man),

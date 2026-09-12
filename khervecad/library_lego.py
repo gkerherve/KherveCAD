@@ -60,10 +60,12 @@ COLORS = {
     "Dark pink": "#C870A0", "Light nougat": "#F6D7B3",
     "Nougat": "#D09168", "Medium nougat": "#AA7D55",
     "Trans-clear": "#FCFCFC",
-    "Trans-light blue": "#AEEFEC",
+    "Trans-light blue": "#AEEFEC", "Trans-red": "#C91A09",
+    "Trans-orange": "#F08F1C", "Trans-yellow": "#F5CD2F",
+    "Trans-dark blue": "#0020A0", "Trans-green": "#84B68D",
 }
 #: colours cast in clear plastic: see-through in the preview
-TRANSLUCENT = {"Trans-clear", "Trans-light blue"}
+TRANSLUCENT = {name for name in COLORS if name.startswith("Trans-")}
 
 
 # ------------------------------------------------------------ geometry
@@ -159,11 +161,28 @@ def brick(nx, ny, height=BRICK_H, studs=True, hollow=True, x=0.0,
 
 def slope(nx, facing="-Y", studs=True, x=0.0, y=0.0, z=0.0, seg=32,
           name=None):
-    """A 45° roof slope, 2 studs deep and *nx* wide along X: a row of
-    studs at the back, the slope running down to a 1.7 mm lip at the
-    front. *facing* "-Y" puts the low edge towards -Y, "+Y" towards +Y.
-    *studs* True, False, or a set of i (0..nx-1) along the stud row."""
+    """A 45° roof slope, 2 studs deep and *nx* wide: a row of studs at
+    the back, the slope running down to a 1.7 mm lip at the front.
+    *facing* is the side the low edge faces: "-Y"/"+Y" (the slope is
+    *nx* along X) or "-X"/"+X" (*nx* along Y — four sides for a hipped
+    roof or a spire). *studs* True, False, or a set of indices
+    0..nx-1 along the stud row, counted from its low-coordinate end."""
     nx = max(int(nx), 1)
+    if facing in ("-X", "+X"):
+        # the Y-facing slope at the origin, turned a quarter to the
+        # right ((x, y) -> (y, -x)) and slid back onto the grid; the
+        # turn reverses the stud row, so the indices are mirrored
+        if studs is not True and studs is not False:
+            studs = {nx - 1 - i for i in studs}
+        inner = slope(nx, "-Y" if facing == "-X" else "+Y", studs, seg=seg)
+        turn = CadNode("rotate", "Turn", dict(x=0.0, y=0.0, z=-90.0))
+        turn.add(inner)
+        place = CadNode("translate", "Position",
+                        dict(x=x, y=y + nx * PITCH, z=z))
+        place.add(turn)
+        part = CadNode("union", name or f"Slope 45° 2x{nx}")
+        part.add(place)
+        return part
     w, d = nx * PITCH - 2 * GAP, 2 * PITCH - 2 * GAP
     back = PITCH - GAP                 # where the flat stud row begins
     lip = BRICK_H - back               # 45°: the run equals the drop

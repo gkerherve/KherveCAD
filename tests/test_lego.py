@@ -89,6 +89,21 @@ def test_slope_runs_down_towards_its_facing(app):
         pytest.approx(1.7)
 
 
+def test_slopes_face_all_four_ways(app):
+    for facing, lip_at in (("-X", lambda v: v[0] < 0.2),
+                           ("+X", lambda v: v[0] > 15.8)):
+        node = library_lego.slope(3, facing, studs=False)
+        assert _extent(node) == [(0.1, 15.9), (0.1, 23.9), (0.0, 9.6)]
+        tris = mesh.tessellate(node)
+        assert max(v[2] for t in tris for v in t if lip_at(v)) == \
+            pytest.approx(1.7)
+    # stud indices count from the low-Y end whichever way it faces
+    one = library_lego.slope(3, "-X", studs={0})
+    top = [v for t in mesh.tessellate(one) for v in t if v[2] > 11.3]
+    assert all(1.5 < v[1] < 6.5 for v in top)
+    assert all(9.5 < v[0] < 14.5 for v in top)        # on the back column
+
+
 def test_clear_colours_are_glass(app):
     node = library_lego.colour(library_lego.brick(1, 1), "Trans-clear")
     assert node.params["material"] == "Glass" and node.params["alpha"] < 1
