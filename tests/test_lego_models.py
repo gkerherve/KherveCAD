@@ -78,3 +78,28 @@ def test_lego_models_stay_light_enough_to_orbit(app, label, build):
             for key in ("x", "y"):
                 studs = (body.params[key] - 0.1) / 8.0
                 assert studs == pytest.approx(round(studs)), n.name
+
+
+# ------------------------------------------------------------ the sets
+
+def test_every_example_model_is_a_library_set():
+    from khervecad import library, library_lego_sets
+    labels = {label for label, _b in LEGO_MODELS}
+    assert set(library_lego_sets.SETS.values()) == labels
+    for pid in library_lego_sets.SETS:
+        assert library.PARTS[pid]["category"] == "Lego sets"
+
+
+def test_a_set_arrives_as_one_coloured_object(app):
+    from khervecad import library
+    from khervecad.model import DocumentModel
+    m = DocumentModel()
+    node = library.build_part("lego_set_house", {})
+    assert node.type == "union" and node.name == "House"
+    m.root.add(node)
+    comp = m.enclose_as_part(node)
+    assert comp.type == "component"
+    assert validate(m.root) == {}
+    # several colours: never swapped for a colourless exact render
+    assert len(mesh.part_colours(comp)) > 3
+    assert not mesh.needs_exact(comp)
