@@ -29,6 +29,8 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
+import math
+
 from .model import CadNode
 
 CATEGORY = "Lego"
@@ -45,6 +47,13 @@ TOP = 1.0
 TUBE_R_OUT = 3.255
 TUBE_R_IN = 2.4
 PIN_R = 1.5
+#: the moulded softness of a real part (``round_=True``): vertical
+#: corners rounded to ROUND, the top edge bevelled by BEVEL, the stud
+#: tops by STUD_BEVEL. Library parts have it; the brick-built models do
+#: not (it would triple the triangles of a few hundred bricks)
+ROUND = 0.5
+BEVEL = 0.35
+STUD_BEVEL = 0.25
 
 #: official LEGO colour names -> hex (BrickLink / Rebrickable values)
 COLORS = {
@@ -78,10 +87,67 @@ def _cube(name, x, y, z, w, d, h):
                                       height=h, center=False))
 
 
-def _stud(x, y, z, seg):
-    return CadNode("cylinder", "Stud", dict(
-        x=x, y=y, z=z, height=STUD_H, radius_bottom=STUD_R,
-        radius_top=STUD_R, segments=seg, center=False))
+def _stud(x, y, z, seg, round_=False):
+    if not round_:
+        return CadNode("cylinder", "Stud", dict(
+            x=x, y=y, z=z, height=STUD_H, radius_bottom=STUD_R,
+            radius_top=STUD_R, segments=seg, center=False))
+    stud = CadNode("union", "Stud")
+    stud.add(CadNode("cylinder", "Stud side", dict(
+        x=x, y=y, z=z, height=STUD_H - STUD_BEVEL, radius_bottom=STUD_R,
+        radius_top=STUD_R, segments=seg, center=False)))
+    stud.add(CadNode("cylinder", "Stud bevel", dict(
+        x=x, y=y, z=z + STUD_H - STUD_BEVEL, height=STUD_BEVEL,
+        radius_bottom=STUD_R, radius_top=STUD_R - STUD_BEVEL,
+        segments=seg, center=False)))
+    return stud
+
+
+def rounded_rect(x, y, w, d, r, n=4):
+    """Outline of a w x d rectangle with its corner at (x, y) and its
+    corners rounded to *r*, counter-clockwise, *n* steps per corner."""
+    pts = []
+    for cx, cy, a0 in ((x + w - r, y + r, -90.0), (x + w - r, y + d - r, 0.0),
+                       (x + r, y + d - r, 90.0), (x + r, y + r, 180.0)):
+        for s in range(n + 1):
+            a = math.radians(a0 + 90.0 * s / n)
+            pts.append([cx + r * math.cos(a), cy + r * math.sin(a)])
+    return pts
+
+
+def _prism(name, pts, z, h):
+    poly = CadNode("polygon", name, dict(x=0.0, y=0.0, points=pts))
+    ext = CadNode("linear_extrude", name, dict(height=h))
+    ext.add(poly)
+    place = CadNode("translate", name, dict(x=0.0, y=0.0, z=z))
+    place.add(ext)
+    return place
+
+
+def _slab(name, x0, y0, z, w, d, h):
+    """A block with rounded vertical corners and a bevelled top edge:
+    the hull of its rounded footprint and a thin top face set in by
+    the bevel — convex, so the hull is exact in the preview too."""
+    hull = CadNode("hull", name)
+    hull.add(_prism("Sides", rounded_rect(x0, y0, w, d, ROUND), z,
+                    h - BEVEL))
+    b = BEVEL
+    hull.add(_prism("Top face", rounded_rect(x0 + b, y0 + b, w - 2 * b,
+                                             d - 2 * b, ROUND - b / 2),
+                    z + h - 0.01, 0.01))
+    return hull
+
+
+def _corner(cx, cy, z, h, start):
+    """A quarter round post filling one rounded outer corner."""
+    quarter = CadNode("circle", "Corner", dict(
+        x=cx, y=cy, radius=ROUND, angle=90.0, start_angle=start,
+        segments=16))
+    ext = CadNode("linear_extrude", "Corner", dict(height=h))
+    ext.add(quarter)
+    place = CadNode("translate", "Corner", dict(x=0.0, y=0.0, z=z))
+    place.add(ext)
+    return place
 
 
 def _tube(x, y, z, h, seg):
@@ -122,18 +188,34 @@ def _keep(studs, i, j):
 
 
 def brick(nx, ny, height=BRICK_H, studs=True, hollow=True, x=0.0,
-          y=0.0, z=0.0, seg=32, name=None):
+          y=0.0, z=0.0, seg=32, name=None, round_=False):
     """A brick (or plate, or tile) *nx* x *ny* studs whose corner sits
     at (x, y, z) on the stud grid.
 
     *studs*: True for every stud, False for none (a tile), or a set of
     (i, j) to keep. *hollow* False makes the body one block — for a
-    brick inside a build, whose underside nobody sees."""
+    brick inside a build, whose underside nobody sees. *round_* gives
+    it a real part's rounded corners and bevelled edges."""
     nx, ny = max(int(nx), 1), max(int(ny), 1)
     w, d = nx * PITCH - 2 * GAP, ny * PITCH - 2 * GAP
     x0, y0 = x + GAP, y + GAP
     part = CadNode("union", name or f"Brick {nx}x{ny}")
-    if hollow and height > TOP + 0.5:
+    if hollow and height > TOP + 0.5 and round_:
+        inner = height - TOP
+        r = ROUND
+        part.add(_slab("Top", x0, y0, z + inner, w, d, TOP))
+        part.add(_cube("Front wall", x0 + r, y0, z, w - 2 * r, WALL, inner))
+        part.add(_cube("Back wall", x0 + r, y0 + d - WALL, z, w - 2 * r,
+                       WALL, inner))
+        part.add(_cube("Left wall", x0, y0 + r, z, WALL, d - 2 * r, inner))
+        part.add(_cube("Right wall", x0 + w - WALL, y0 + r, z, WALL,
+                       d - 2 * r, inner))
+        for cx, cy, start in ((x0 + r, y0 + r, 180.0),
+                              (x0 + w - r, y0 + r, 270.0),
+                              (x0 + w - r, y0 + d - r, 0.0),
+                              (x0 + r, y0 + d - r, 90.0)):
+            part.add(_corner(cx, cy, z, inner, start))
+    elif hollow and height > TOP + 0.5:
         inner = height - TOP
         part.add(_cube("Top", x0, y0, z + inner, w, d, TOP))
         part.add(_cube("Front wall", x0, y0, z, w, WALL, inner))
@@ -142,6 +224,8 @@ def brick(nx, ny, height=BRICK_H, studs=True, hollow=True, x=0.0,
                        d - 2 * WALL, inner))
         part.add(_cube("Right wall", x0 + w - WALL, y0 + WALL, z, WALL,
                        d - 2 * WALL, inner))
+    if hollow and height > TOP + 0.5:
+        inner = height - TOP
         if nx >= 2 and ny >= 2:
             for i in range(1, nx):
                 for j in range(1, ny):
@@ -154,12 +238,13 @@ def brick(nx, ny, height=BRICK_H, studs=True, hollow=True, x=0.0,
             for i in range(1, nx):
                 part.add(_pin(x + i * PITCH, y + PITCH / 2, z, inner, seg))
     else:
-        part.add(_cube("Body", x0, y0, z, w, d, height))
+        part.add(_slab("Body", x0, y0, z, w, d, height) if round_
+                 else _cube("Body", x0, y0, z, w, d, height))
     for i in range(nx):
         for j in range(ny):
             if _keep(studs, i, j):
                 part.add(_stud(x + (i + 0.5) * PITCH, y + (j + 0.5) * PITCH,
-                               z + height, seg))
+                               z + height, seg, round_))
     return part
 
 
@@ -234,19 +319,20 @@ def _named(dims, node, default="Red"):
 
 def build_brick(dims):
     p = _pick(dims, BRICK_SIZES)
-    return _named(dims, brick(p["nx"], p["ny"],
+    return _named(dims, brick(p["nx"], p["ny"], round_=True,
                               name=f"{int(p['nx'])}x{int(p['ny'])} brick"))
 
 
 def build_plate(dims):
     p = _pick(dims, PLATE_SIZES)
-    return _named(dims, brick(p["nx"], p["ny"], PLATE_H,
+    return _named(dims, brick(p["nx"], p["ny"], PLATE_H, round_=True,
                               name=f"{int(p['nx'])}x{int(p['ny'])} plate"))
 
 
 def build_tile(dims):
     p = _pick(dims, TILE_SIZES)
     return _named(dims, brick(p["nx"], p["ny"], PLATE_H, studs=False,
+                              round_=True,
                               name=f"{int(p['nx'])}x{int(p['ny'])} tile"))
 
 
@@ -260,6 +346,7 @@ def build_baseplate(dims):
     p = _pick(dims, BASEPLATE_SIZES)
     n = int(p["nx"])
     return _named(dims, brick(n, int(p["ny"]), BASEPLATE_H, hollow=False,
+                              round_=True,
                               seg=16, name=f"{n}x{int(p['ny'])} baseplate"),
                   default="Green")
 

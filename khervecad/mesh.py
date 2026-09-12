@@ -719,6 +719,34 @@ def _component_key(node, env):
     return "\x00".join(parts)
 
 
+def part_colours(node, env=None) -> set:
+    """The colours painted inside a part (its visible `color` nodes, as
+    the preview's colour tuples) — what decides whether OpenSCAD's
+    colourless STL can stand in for it: with one it is tinted, with
+    several it would paint them all one colour."""
+    out = set()
+    for n in node.walk():
+        if n is node or n.type != "color" or not n.visible:
+            continue
+        colour = (str(n.params.get("color", "#4a90d9")),
+                  rv(n.params.get("alpha", 1.0), env, 1.0))
+        material = str(n.params.get("material") or "Default")
+        if material != "Default":
+            colour += (material,)
+        out.add(colour)
+    return out
+
+
+def needs_exact(node, env=None) -> bool:
+    """Whether an exact OpenSCAD render of this part is worth asking
+    for: only when the preview cannot show it right (a boolean, hull,
+    offset, fillet...) and the part is of one colour at most. A part of
+    plain solids is already exact in the preview, and swapping in a
+    second triangulation of the same surface is what caused the
+    preview's glitches."""
+    return uses_booleans(node) and len(part_colours(node, env)) <= 1
+
+
 def _component_mesh(node, env, color, sel, selected):
     """The component branch of _tess with a two-level cache:
 
@@ -762,9 +790,13 @@ def _component_mesh(node, env, color, sel, selected):
     elif key is not None and key in _EXACT:
         CACHE_STATS["misses"] += 1
         # OpenSCAD has rendered this exact part: use its mesh (holes
-        # really cut) instead of the approximate tessellation, still
-        # colour-neutral so the part's own colour applies below
-        local = [(tri, None, False) for tri in _EXACT[key]]
+        # really cut) instead of the approximate tessellation. An STL
+        # has no colour, so it wears the one colour inside the part (a
+        # red library brick used to turn grey here); a part of several
+        # colours is never sent for an exact render (part_colours)
+        inside = part_colours(node, env)
+        tint = next(iter(inside)) if len(inside) == 1 else None
+        local = [(tri, tint, False) for tri in _EXACT[key]]
     else:
         CACHE_STATS["misses"] += 1
         # children tessellated colour-neutral, so the Object's own

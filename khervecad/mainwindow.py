@@ -1102,6 +1102,8 @@ class MainWindow(QMainWindow):
         for node in root.walk():
             if node.type != "component" or not node.children:
                 continue
+            if not mesh.needs_exact(node, env):
+                continue        # already exact in the preview, or coloured
             key = mesh.exact_key(node, env, fn=self.model.effective_fn())
             if key is None:                 # holds a Linked copy: unkeyable
                 continue

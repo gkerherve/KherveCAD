@@ -192,3 +192,37 @@ def test_a_non_positive_scale_is_an_error(model, tmp_path):
     node = model.add_node("stl_import", dict(path=_box(tmp_path / "b.stl"),
                                              scale=0.0))
     assert "scale" in validate(model.root).get(node.id, "")
+
+
+# ---------------------------------------------------- exact part colours
+
+def test_exact_render_keeps_a_single_coloured_part_red(model):
+    from khervecad import library
+    node = library.build_part("lego_brick", dict(_size="2x2",
+                                                 _color="Red"))
+    model.root.add(node)
+    comp = model.enclose_as_part(node)
+    assert mesh.part_colours(comp) == {("#C91A09", 1.0, "Plastic")}
+    assert mesh.needs_exact(comp)                   # the hull needs it
+    fake = [((0, 0, 0), (1, 0, 0), (0, 1, 0))]
+    mesh.set_exact_mesh(mesh.exact_key(comp), fake)
+    try:
+        mesh.clear_component_cache()
+        colours = {c for _t, c in mesh.tessellate_colored(model.root)}
+    finally:
+        mesh.clear_component_cache()
+    assert colours == {("#C91A09", 1.0, "Plastic")}
+
+
+def test_a_multicoloured_part_is_never_sent_for_an_exact_render(model):
+    comp = model.new_component("Two tone")
+    for hexcol in ("#ff0000", "#0000ff"):
+        wrap = model.add_node("color", dict(color=hexcol), parent=comp)
+        model.add_node("cube", parent=wrap)
+    hull = model.add_node("hull", parent=comp)
+    model.add_node("sphere", parent=hull)
+    assert len(mesh.part_colours(comp)) == 2
+    assert not mesh.needs_exact(comp)
+    plain = model.new_component("Plain")
+    model.add_node("cube", parent=plain)
+    assert not mesh.needs_exact(plain)       # the preview is exact already

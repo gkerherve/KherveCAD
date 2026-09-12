@@ -104,6 +104,25 @@ def test_slopes_face_all_four_ways(app):
     assert all(9.5 < v[0] < 14.5 for v in top)        # on the back column
 
 
+def test_library_bricks_are_rounded_but_keep_their_size(app):
+    plain = library_lego.brick(1, 2)
+    soft = library_lego.brick(1, 2, round_=True)
+    assert _extent(soft) == _extent(plain)
+    pts = [v for t in mesh.tessellate(soft) for v in t]
+    # no vertex on the sharp outer corner, nor on the sharp top edge
+    assert min(abs(v[0] - 0.1) + abs(v[1] - 0.1) for v in pts
+               if v[2] < 8.0) > 0.1
+    top = [v for v in pts if abs(v[2] - 9.6) < 1e-6]
+    assert min(v[0] for v in top) == pytest.approx(0.1 + 0.35, abs=1e-3)
+    # the underside stays hollow, and the stud top is bevelled
+    assert not any(n.type == "difference" for n in soft.walk())
+    studs = [n for n in soft.walk() if n.name == "Stud"]
+    assert len(studs) == 2
+    assert max(v[2] for v in pts) == pytest.approx(11.4)
+    node = library.build_part("lego_brick", dict(_size="1x2"))
+    assert any(n.type == "hull" for n in node.walk())
+
+
 def test_clear_colours_are_glass(app):
     node = library_lego.colour(library_lego.brick(1, 1), "Trans-clear")
     assert node.params["material"] == "Glass" and node.params["alpha"] < 1
