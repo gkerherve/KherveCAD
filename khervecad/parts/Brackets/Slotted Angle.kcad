@@ -1,0 +1,233 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Slotted_Angle",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#4c73b2",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Flat leg]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 120.0,
+           "depth": 35.0,
+           "height": 2.5,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Upright leg]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 120.0,
+           "depth": 2.5,
+           "height": 35.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 12.0,
+         "end": 108.0,
+         "step": 24.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": "x - 4",
+             "y": 20.0,
+             "z": -1.0,
+             "height": 5.0,
+             "radius_bottom": 3.5,
+             "radius_top": 3.5,
+             "segments": 64,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": "x + 4",
+             "y": 20.0,
+             "z": -1.0,
+             "height": 5.0,
+             "radius_bottom": 3.5,
+             "radius_top": 3.5,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "x - 4",
+             "y": -1.0,
+             "z": 20.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 5.0,
+                 "radius_bottom": 3.5,
+                 "radius_top": 3.5,
+                 "segments": 64,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "x + 4",
+             "y": -1.0,
+             "z": 20.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 5.0,
+                 "radius_bottom": 3.5,
+                 "radius_top": 3.5,
+                 "segments": 64,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -397,6 +397,48 @@ def kf_flange(p, name="KF flange", tube_length=20.0) -> CadNode:
     return part
 
 
+def _port_turn(port):
+    """(rx, ry, rz, label) for a port: a key of `_PORTS` ("+X"...) or
+    an explicit rotate([rx, ry, rz]) mapping +Z to the port's axis."""
+    if isinstance(port, str):
+        return _PORTS[port] + (port,)
+    rx, ry, rz = (float(v) for v in port)
+    return rx, ry, rz, f"{ry:g}°/{rz:g}°"
+
+
+def _straight(ports):
+    """True when every port lies on one axis (a nipple), where the tubes
+    already meet end to end and no knuckle is needed."""
+    axes = {"+X": "x", "-X": "x", "+Y": "y", "-Y": "y", "+Z": "z",
+            "-Z": "z"}
+    return all(isinstance(p, str) for p in ports) and \
+        len({axes[p] for p in ports}) == 1
+
+
+def fitting_reach(p, length=None):
+    """Centre-to-face distance of a fitting whose ports meet at an angle:
+    at least long enough that neighbouring flanges clear each other. The
+    dialog pre-fills 60 mm, which ran a CF63 tee's or cross's flanges
+    into one another (30 mm did the same to a KF50 tee)."""
+    need = p["flange_od"] / 2.0 + p["thickness"] + (
+        10.0 if "bolts" in p else 6.0)
+    return max(float(length), need) if length else max(40.0, need)
+
+
+def _knuckle(part, solid, p, ports):
+    """Where tubes meet at an angle, a ball the tube's size closes the
+    outer corner and a ball the bore's size joins the bores. Without it
+    an elbow's two tubes met edge to edge, the corner behind the bend was
+    empty and the bores ran straight out through it — a hole in the
+    fitting."""
+    if len(ports) < 2 or _straight(ports):
+        return
+    solid.add(CadNode("sphere", "Knuckle", dict(
+        x=0.0, y=0.0, z=0.0, radius=p["tube_od"] / 2.0, segments=96)))
+    part.add(CadNode("sphere", "Knuckle bore", dict(
+        x=0.0, y=0.0, z=0.0, radius=p["bore"] / 2.0, segments=96)))
+
+
 def kf_fitting(p, ports, name="KF fitting", port_length=40.0) -> CadNode:
     """A multi-port KF fitting (nipple / elbow / tee): one clamp-flanged
     tube per port, all bores meeting at the centre. KF has no bolts."""
@@ -404,20 +446,22 @@ def kf_fitting(p, ports, name="KF fitting", port_length=40.0) -> CadNode:
     solid = CadNode("union", f"{name} body")
     part.add(solid)
     for port in ports:
-        rx, ry, rz = _PORTS[port]
-        frame = CadNode("rotate", f"Port {port}", dict(x=rx, y=ry, z=rz))
+        rx, ry, rz, label = _port_turn(port)
+        frame = CadNode("rotate", f"Port {label}",
+                        dict(x=rx, y=ry, z=rz))
         frame.add(_cyl("Tube", p["tube_od"] / 2.0, port_length))
         lift = CadNode("translate", "Flange position", dict(
             x=0.0, y=0.0, z=port_length - p["thickness"]))
-        lift.add(_kf_flange_head(p, f"Flange {port}"))
+        lift.add(_kf_flange_head(p, f"Flange {label}"))
         frame.add(lift)
         solid.add(frame)
     for port in ports:
-        rx, ry, rz = _PORTS[port]
-        frame = CadNode("rotate", f"Bore {port}", dict(x=rx, y=ry, z=rz))
+        rx, ry, rz, label = _port_turn(port)
+        frame = CadNode("rotate", f"Bore {label}", dict(x=rx, y=ry, z=rz))
         frame.add(_cyl("Bore", p["bore"] / 2.0, port_length + 1.0,
                        z=-1.0))
         part.add(frame)
+    _knuckle(part, solid, p, ports)
     return part
 
 
@@ -435,29 +479,30 @@ def cf_fitting(p, ports, name="CF fitting",
     for extra in extra_solids:
         solid.add(extra)
     for port in ports:
-        rx, ry, rz = _PORTS[port]
-        frame = CadNode("rotate", f"Port {port}",
+        rx, ry, rz, label = _port_turn(port)
+        frame = CadNode("rotate", f"Port {label}",
                         dict(x=rx, y=ry, z=rz))
         frame.add(_cyl("Tube", p["tube_od"] / 2.0, port_length))
         lift = CadNode("translate", "Flange position", dict(
             x=0.0, y=0.0, z=port_length - p["thickness"]))
-        lift.add(cf_flange_solid(p, 0.0, f"Flange {port}"))
+        lift.add(cf_flange_solid(p, 0.0, f"Flange {label}"))
         frame.add(lift)
         solid.add(frame)
     for port in ports:
-        rx, ry, rz = _PORTS[port]
-        frame = CadNode("rotate", f"Bore {port}",
+        rx, ry, rz, label = _port_turn(port)
+        frame = CadNode("rotate", f"Bore {label}",
                         dict(x=rx, y=ry, z=rz))
         frame.add(_cyl("Bore", p["bore"] / 2.0, port_length + 1.0,
                        z=-1.0))
         part.add(frame)
     for port in ports:
-        rx, ry, rz = _PORTS[port]
-        frame = CadNode("rotate", f"Bolts {port}",
+        rx, ry, rz, label = _port_turn(port)
+        frame = CadNode("rotate", f"Bolts {label}",
                         dict(x=rx, y=ry, z=rz))
         frame.add(_bolt_holes(p, z=port_length - p["thickness"] - 1.0,
                               height=p["thickness"] + 2.0))
         part.add(frame)
+    _knuckle(part, solid, p, ports)
     return part
 
 
@@ -1146,10 +1191,14 @@ PARTS = {
 
 # parts contributed by sibling modules (chemistry, room & furniture);
 # each entry carries its own `build` callable, dispatched by build_part.
-from . import (library_chem, library_kcad, library_lego,  # noqa: E402
-               library_lego_sets, library_room)
+from . import (library_cards, library_chem, library_kcad,  # noqa: E402
+               library_lego, library_lego_sets, library_pots,
+               library_room, library_vacuum)
+PARTS.update(library_vacuum.PARTS)
 PARTS.update(library_chem.PARTS)
 PARTS.update(library_room.PARTS)
+PARTS.update(library_pots.PARTS)
+PARTS.update(library_cards.PARTS)
 PARTS.update(library_lego.PARTS)
 PARTS.update(library_lego_sets.PARTS)
 PARTS.update(library_kcad.PARTS)
@@ -1158,8 +1207,39 @@ PARTS.update(library_kcad.PARTS)
 _COUNT_FIELDS = {"bolts"} | library_lego.COUNT_FIELDS
 
 
+#: electropolished stainless steel — the colour of UHV hardware
+STAINLESS = "#b9bfc7"
+
+
+def metallic(node, colour=STAINLESS):
+    """Vacuum hardware is metal. An uncoloured part is wrapped in one
+    stainless Metal colour — one colour, so OpenSCAD's exact render (cut
+    bolt holes and all) can stand in for the preview, tinted; a part
+    that paints its own colours (a pump's cast body, its motor) keeps
+    them with a Metal finish, unless it chose a material itself (a
+    viewport's glass)."""
+    painted = [n for n in node.walk() if n.type == "color"]
+    for n in painted:
+        if str(n.params.get("material") or "Default") == "Default":
+            n.params["material"] = "Metal"
+    if painted:
+        return node
+    wrap = CadNode("color", node.name, dict(color=colour, alpha=1.0,
+                                            material="Metal"))
+    wrap.add(node)
+    return wrap
+
+
 def build_part(part_id: str, dims: dict) -> CadNode:
-    """Build the requested part from (possibly customised) *dims*."""
+    """Build the requested part from (possibly customised) *dims*.
+    Vacuum hardware comes out metal (`metallic`)."""
+    node = _build_part(part_id, dims)
+    if (PARTS.get(part_id) or {}).get("category") == _VAC:
+        node = metallic(node)
+    return node
+
+
+def _build_part(part_id: str, dims: dict) -> CadNode:
     spec = PARTS.get(part_id)
     if spec and callable(spec.get("build")):     # parts from other modules
         return spec["build"](dict(dims))
@@ -1179,12 +1259,14 @@ def build_part(part_id: str, dims: dict) -> CadNode:
     if part_id == "cf_nipple":
         return cf_fitting(p, ["+Z", "-Z"], "CF nipple", length)
     if part_id == "cf_tee":
-        return cf_fitting(p, ["+X", "-X", "+Z"], "CF tee", length)
+        return cf_fitting(p, ["+X", "-X", "+Z"], "CF tee",
+                          fitting_reach(p, length))
     if part_id == "cf_cross":
         return cf_fitting(p, ["+X", "-X", "+Z", "-Z"], "CF cross",
-                          length)
+                          fitting_reach(p, length))
     if part_id == "cf_elbow":
-        return cf_fitting(p, ["+Z", "+X"], "CF elbow", length)
+        return cf_fitting(p, ["+Z", "+X"], "CF elbow",
+                          fitting_reach(p, length))
     if part_id == "cf_feedthrough":
         return feedthrough(p, "cf")
     if part_id == "kf_flange":
@@ -1193,9 +1275,11 @@ def build_part(part_id: str, dims: dict) -> CadNode:
     if part_id == "kf_nipple":
         return kf_fitting(p, ["+Z", "-Z"], "KF nipple", length)
     if part_id == "kf_elbow":
-        return kf_fitting(p, ["+Z", "+X"], "KF elbow", length)
+        return kf_fitting(p, ["+Z", "+X"], "KF elbow",
+                          fitting_reach(p, length))
     if part_id == "kf_tee":
-        return kf_fitting(p, ["+X", "-X", "+Z"], "KF tee", length)
+        return kf_fitting(p, ["+X", "-X", "+Z"], "KF tee",
+                          fitting_reach(p, length))
     if part_id == "kf_feedthrough":
         return feedthrough(p, "kf")
     if part_id == "analyser_hsa":

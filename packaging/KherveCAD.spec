@@ -61,6 +61,10 @@ if os.path.isdir(_help_dir):
 _parts_dir = os.path.join(_ROOT, "khervecad", "parts")
 if os.path.isdir(_parts_dir):
     datas.append((_parts_dir, os.path.join("khervecad", "parts")))
+# Finished models for Examples > Showcase (examples._showcase).
+_showcase_dir = os.path.join(_ROOT, "khervecad", "showcase")
+if os.path.isdir(_showcase_dir):
+    datas.append((_showcase_dir, os.path.join("khervecad", "showcase")))
 
 # The whole app package. Several modules are imported lazily inside
 # functions or purely for their import side effects (examples_flowers /

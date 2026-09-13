@@ -1,0 +1,153 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Corner_Brace",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#c7ccd4",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Arm X]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 60.0,
+           "depth": 14.0,
+           "height": 3.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Arm Y]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 14.0,
+           "depth": 60.0,
+           "height": 3.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "7, 30, 50"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Countersunk hole X]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 7.0,
+           "z": -1.0,
+           "height": 4.01,
+           "radius_bottom": 2.25,
+           "radius_top": 4.25,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For y",
+        "visible": true,
+        "params": {
+         "variable": "y",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "30, 50"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Countersunk hole Y]",
+          "visible": true,
+          "params": {
+           "x": 7.0,
+           "y": "y",
+           "z": -1.0,
+           "height": 4.01,
+           "radius_bottom": 2.25,
+           "radius_top": 4.25,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

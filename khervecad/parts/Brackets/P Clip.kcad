@@ -1,0 +1,150 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "P_Clip",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#e6e6e6",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Loop]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 10.0,
+           "radius_bottom": 10.0,
+           "radius_top": 10.0,
+           "segments": 64,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Tab]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -10.0,
+           "z": 0.0,
+           "width": 26.0,
+           "depth": 4.0,
+           "height": 10.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Cable bore]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": -1.0,
+         "height": 12.0,
+         "radius_bottom": 7.0,
+         "radius_top": 7.0,
+         "segments": 64,
+         "center": false
+        }
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 19.0,
+         "y": -4.0,
+         "z": 5.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Screw hole]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 10.0,
+             "radius_bottom": 2.25,
+             "radius_top": 2.25,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

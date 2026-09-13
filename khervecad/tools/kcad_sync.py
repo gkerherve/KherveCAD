@@ -39,7 +39,7 @@ def _app():
 
 def existing_ids():
     from khervecad import library_kcad
-    return {library_kcad.part_id(p.stem) for p in library_kcad.files()}
+    return {library_kcad.part_id(p.stem) for p in library_kcad.shipped()}
 
 
 def candidates(folders):
@@ -104,11 +104,13 @@ def referenced_meshes(path):
     return out
 
 
-def cmd_add(paths):
+def cmd_add(paths, into=None):
+    """Copy *paths* in — into the section subfolder *into* ("Brackets")
+    when given, so they list under their own heading in the library."""
     _app()
     from khervecad import library_kcad
-    dest = library_kcad.PARTS_DIR
-    dest.mkdir(exist_ok=True)
+    dest = library_kcad.PARTS_DIR / into if into else library_kcad.PARTS_DIR
+    dest.mkdir(parents=True, exist_ok=True)
     added = []
     for raw in paths:
         src = Path(raw).expanduser()
@@ -132,7 +134,7 @@ def cmd_add(paths):
               + (f" — errors: {errors}" if errors else ""))
         added.append(target.name)
     print(f"{len(added)} added; the library now holds "
-          f"{len(library_kcad.files())} KCAD parts.")
+          f"{len(library_kcad.shipped())} KCAD parts.")
     return 0
 
 
@@ -140,10 +142,12 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--list", nargs="*", metavar="FOLDER")
     ap.add_argument("--add", nargs="+", metavar="FILE")
+    ap.add_argument("--into", metavar="SECTION",
+                    help="library section (a subfolder of parts/)")
     args = ap.parse_args(argv)
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
     if args.add:
-        return cmd_add(args.add)
+        return cmd_add(args.add, args.into)
     folders = args.list if args.list else DEFAULT_FOLDERS
     return cmd_list(folders)
 

@@ -1,0 +1,260 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "U_Bolt",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#ccd1d9",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 60.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 90.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "rotate_extrude",
+          "name": "Rotate extrude",
+          "visible": true,
+          "params": {
+           "angle": 180.0,
+           "segments": 96
+          },
+          "children": [
+           {
+            "type": "circle",
+            "name": "Circle [Bend]",
+            "visible": true,
+            "params": {
+             "x": 24.0,
+             "y": 0.0,
+             "radius": 4.0,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For s",
+      "visible": true,
+      "params": {
+       "variable": "s",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": "-1, 1"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Leg]",
+        "visible": true,
+        "params": {
+         "x": "s * 24",
+         "y": 0.0,
+         "z": 0.0,
+         "height": 60.0,
+         "radius_bottom": 4.0,
+         "radius_top": 4.0,
+         "segments": 64,
+         "center": false
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For z",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "start": 1.0,
+         "end": 27.0,
+         "step": 2.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Thread crest]",
+          "visible": true,
+          "params": {
+           "x": "s * 24",
+           "y": 0.0,
+           "z": "z",
+           "height": 1.0,
+           "radius_bottom": 3.4,
+           "radius_top": 4.4,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Clamp plate]",
+          "visible": true,
+          "params": {
+           "x": -36.0,
+           "y": -9.0,
+           "z": 20.0,
+           "width": 72.0,
+           "depth": 18.0,
+           "height": 6.0,
+           "center": false
+          }
+         },
+         {
+          "type": "for_loop",
+          "name": "For s",
+          "visible": true,
+          "params": {
+           "variable": "s",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-1, 1"
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Hex nut]",
+            "visible": true,
+            "params": {
+             "x": "s * 24",
+             "y": 0.0,
+             "z": 13.0,
+             "height": 6.5,
+             "radius_bottom": 7.5,
+             "radius_top": 7.5,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Washer]",
+            "visible": true,
+            "params": {
+             "x": "s * 24",
+             "y": 0.0,
+             "z": 19.5,
+             "height": 0.5,
+             "radius_bottom": 8.0,
+             "radius_top": 8.0,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Bolt hole]",
+          "visible": true,
+          "params": {
+           "x": "s * 24",
+           "y": 0.0,
+           "z": 10.0,
+           "height": 20.0,
+           "radius_bottom": 4.2,
+           "radius_top": 4.2,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -38,6 +38,12 @@ Arguments: an optional folder. Default: `~/Documents/KCAD Projects`
    .venv/bin/python -m khervecad.tools.kcad_sync --add "<path>" ["<path>" ...]
    ```
 
+   Add `--into SECTION` to put them in a library section of their own
+   (a subfolder of `khervecad/parts/`: `--into Brackets` lists them
+   under "Brackets"); without it they land in "KCAD files". Files from
+   one themed folder of the user's (Brackets/, Tools/...) usually
+   belong in a section named after it — ask.
+
    The tool copies each file into `khervecad/parts/`, copies any
    mesh (`.stl/.obj/.off/.3mf`) the document references from beside
    it, then loads the result through `library_kcad.load_part` and

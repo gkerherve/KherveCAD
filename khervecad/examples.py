@@ -1286,6 +1286,28 @@ def project_10_fan_wheel() -> CadNode:
     return _root(hub, _for("Blades", "i", 0, 7, 1, blade))
 
 
+# ── finished models shipped for the Showcase ────────────────────────
+
+def _showcase(stem):
+    """A finished model shipped in khervecad/showcase/, loaded as it was
+    saved: built in KherveCAD object by object, it shows what the tree
+    can hold."""
+    def build():
+        import json
+        import os
+        from .document import node_from_dict
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            "showcase", f"{stem}.kcad")
+        with open(path, encoding="utf-8") as fh:
+            return node_from_dict(json.load(fh)["tree"])
+    build.__name__ = "showcase_" + "".join(
+        c if c.isalnum() else "_" for c in stem.lower())
+    build.__doc__ = f"{stem} — a finished KherveCAD model."
+    return build
+
+
+ferrari_288_gto = _showcase("Ferrari 288 GTO")
+
 #: (menu label, category, builder) — grouped in the Examples menu.
 EXAMPLES = [
     ("1 · Cube", "Learn", learn_01_cube),
@@ -1338,6 +1360,7 @@ EXAMPLES = [
     ("Orientation cubes", "Showcase", orientation_cubes),
     ("Boolean regions (2D ops)", "Showcase", boolean_regions),
     ("Fractal tree", "Showcase", fractal_tree),
+    ("Ferrari 288 GTO", "Showcase", ferrari_288_gto),
     ("Flower (layered bloom)", "Flowers", flower),
     ("Sunflower (phyllotaxis)", "Flowers", sunflower),
     ("BOSL2 attachments (raw OpenSCAD)", "Showcase", bosl2_attachments_raw),

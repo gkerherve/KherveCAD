@@ -115,7 +115,11 @@ def test_cross_has_four_ports(model):
     ports = [n for n in node.walk() if n.name.startswith("Port ")]
     assert len(ports) == 4
     zs = [v[2] for t in mesh.tessellate(model.root) for v in t]
-    assert min(zs) == pytest.approx(-60.0, abs=1.0)  # -Z port too
+    # the -Z port too, far enough out that the CF63 flanges clear each
+    # other (at the dialog's 60 mm they ran into one another)
+    reach = library.fitting_reach(library.CF_SIZES["CF63 (DN63)"], 60.0)
+    assert reach > 60.0
+    assert min(zs) == pytest.approx(-reach, abs=1.0)
 
 
 def test_kf_flange(model):

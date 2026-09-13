@@ -44,12 +44,35 @@ def label(stem: str) -> str:
 
 
 def files(folder=None) -> list:
-    """The `.kcad` files of *folder* (PARTS_DIR by default), sorted."""
+    """The `.kcad` files of *folder* (PARTS_DIR by default), sorted —
+    that folder only, no subfolders."""
     folder = Path(folder) if folder else PARTS_DIR
     if not folder.is_dir():
         return []
     return sorted(p for p in folder.iterdir()
                   if p.suffix.lower() == ".kcad" and p.is_file())
+
+
+def shipped(folder=None) -> list:
+    """Every library `.kcad`: PARTS_DIR's own files and those of its
+    subfolders, one level down — each subfolder is a library SECTION
+    (parts/Brackets -> "Brackets")."""
+    folder = Path(folder) if folder else PARTS_DIR
+    if not folder.is_dir():
+        return []
+    out = list(files(folder))
+    for sub in sorted(p for p in folder.iterdir() if p.is_dir()
+                      and not p.name.startswith((".", "_"))):
+        out += files(sub)
+    return out
+
+
+def category_of(path) -> str:
+    """The library section of a shipped file: its subfolder's name, or
+    "KCAD files" for one straight in PARTS_DIR."""
+    parent = Path(path).parent
+    return CATEGORY if parent.resolve() == PARTS_DIR.resolve() \
+        else parent.name
 
 
 def load_part(path) -> "CadNode":
@@ -79,7 +102,8 @@ def _builder(path):
 
 
 PARTS = {
-    part_id(p.stem): dict(label=label(p.stem), category=CATEGORY, sizes={},
-                          fields=[], build=_builder(p), path=str(p))
-    for p in files()
+    part_id(p.stem): dict(label=label(p.stem), category=category_of(p),
+                          sizes={}, fields=[], build=_builder(p),
+                          path=str(p))
+    for p in shipped()
 }

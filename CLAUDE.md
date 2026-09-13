@@ -296,6 +296,61 @@ into a new module and import.
                        drops studs another piece covers and the hidden
                        undersides, which is what keeps a 171-piece tower
                        at 17k triangles.
+  - Vacuum revision (2026-09-13, `library.py`): `build_part` makes every
+                       Vacuum part **metal** (`metallic`: an uncoloured
+                       part wrapped in one stainless Metal colour, so its
+                       exact render still tints; painted parts keep their
+                       paint with a Metal finish, Glass stays glass).
+                       Multi-port fittings take a **knuckle** (a tube-size
+                       ball + a bore-size ball) where ports meet at an
+                       angle — an elbow's corner was open and its bores ran
+                       out through it — and `fitting_reach` keeps the
+                       dialog's 60 mm (30 for KF) from running a CF63+
+                       tee's or cross's flanges into each other. Ports may
+                       be explicit rotations (`_port_turn`).
+  - `library_vacuum.py` — 28 more Vacuum parts on library.py's flange
+                       geometry: 5/6-way crosses, CF cube, zero-length and
+                       conical reducers, viewport, flexible bellows,
+                       CF→KF adapter, spherical and cylindrical chambers
+                       (`_ported`: ports start at the wall, never inside,
+                       so a Cut Through shows an empty chamber), nude ion
+                       gauge (helix grid = twisted extrude of an offset
+                       circle), Pirani, capacitance manometer, RGA, ion
+                       pump, TSP, cryopump, diaphragm pump, leak valve,
+                       wobble stick, transfer arm, linear shift, KF clamp /
+                       centering ring / blank / cross / reducer / bellows
+                       hose. Multi-material parts are a union of OBJECTS
+                       (`_object`), one per material, each rendered exact
+                       on its own. Size tables are looked up by `_size`
+                       (the dialog passes only field values).
+  - `library_cards.py` — **Playing cards**, one card at a time: a part
+                       per suit (size = rank) + Joker + back. Paper body
+                       = hull of four corner circles (rounded, convex);
+                       raised ink: the index in the top-left AND turned
+                       half round in the bottom-right, standard pip
+                       layouts (`PIPS`, lower pips upside down), court
+                       cards framed with the letter and a crown / tiara /
+                       cap mirrored top and bottom, a diamond-lattice
+                       back. Text has no alignment param: `_text` centres
+                       by estimated width.
+  - `library_pots.py` — **Pots**: 14 parametric pots in 7 colours
+                       (`colors`, terracotta = Clay, glazes, concrete...).
+                       Round pots are one revolved wall profile (hollow
+                       without a boolean, drainage hole); hex / octagon /
+                       low-poly = the same revolved in 6 / 8 / 7 segments;
+                       square, trough and twisted star = a 2D ring
+                       (outline minus inset) extruded with a flare or
+                       twist over a floor — exact in the preview since the
+                       2D-hole fix above.
+  - `library_kcad.py` sections: a subfolder of `parts/` is a library
+                       **section** (`shipped`, `category_of`): Brackets
+                       (the 15 of KCAD Projects/Brackets + two older),
+                       Minecraft, Pots (merged with library_pots');
+                       top-level files stay "KCAD files". The sync tool
+                       takes `--into SECTION`.
+  - `examples.py` Showcase: `_showcase(stem)` loads a finished model from
+                       `khervecad/showcase/` (the Ferrari 288 GTO, 1138
+                       objects; the spec ships the folder).
   - `library_lego_sets.py` — the **Lego sets** category: every Lego
                        example as a library part (`sizes={}`), built by
                        the example's own function and lifted out of its
@@ -767,6 +822,23 @@ into a new module and import.
                        a 12-part assembly, ~25x when nothing changed).
                        Objects containing Linked copies skip the cache;
                        selection passes bypass it.
+  - `mesh.py` 2D content (fixed 2026-09-13): `collect_outlines` maps
+                       outlines through every 2D **translate / rotate /
+                       scale / mirror** (`_transformed_outlines`, the same
+                       `mat_*` builders as 3D) — before, all four were
+                       dropped between an extrude and its shapes (only
+                       translates the importer folded into x/y survived),
+                       so a card's index turned for the opposite corner
+                       landed on the first. Outlines arrive as SOLIDS
+                       (CCW) and HOLES (CW): `_oriented` normalises shapes
+                       and makes a glyph's counters holes, a 2D
+                       `difference` turns its subtrahends round
+                       (`_difference_outlines`), `outline_regions` gives
+                       each solid its holes and both extruders build walls
+                       for both and cap with `cutaway.fill` (even-odd) —
+                       an O and an outline-minus-inset pot were extruded
+                       filled. Hole-free shapes keep the ear-clip caps;
+                       union pieces stay separate solids.
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.

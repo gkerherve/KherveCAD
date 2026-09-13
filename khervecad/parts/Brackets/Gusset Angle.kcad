@@ -1,0 +1,224 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Gusset_Angle",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#c7ccd4",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Base leg]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 50.0,
+           "depth": 40.0,
+           "height": 4.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Wall leg]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 50.0,
+           "depth": 4.0,
+           "height": 40.0,
+           "center": false
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 23.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 90.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": 4.0,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Polygon [Gusset]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   4.0,
+                   4.0
+                  ],
+                  [
+                   34.0,
+                   4.0
+                  ],
+                  [
+                   4.0,
+                   34.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "11, 39"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Base hole]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 26.0,
+           "z": -1.0,
+           "height": 6.0,
+           "radius_bottom": 3.0,
+           "radius_top": 3.0,
+           "segments": 64,
+           "center": false
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -1.0,
+           "z": 26.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Wall hole]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 6.0,
+               "radius_bottom": 3.0,
+               "radius_top": 3.0,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

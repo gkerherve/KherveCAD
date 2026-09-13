@@ -1,0 +1,268 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Joist_Hanger",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#b8bfb2",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Seat]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 46.0,
+           "depth": 40.0,
+           "height": 3.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Left side]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 3.0,
+           "depth": 40.0,
+           "height": 60.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Right side]",
+          "visible": true,
+          "params": {
+           "x": 43.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 3.0,
+           "depth": 40.0,
+           "height": 60.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Left flange]",
+          "visible": true,
+          "params": {
+           "x": -20.0,
+           "y": 37.0,
+           "z": 0.0,
+           "width": 20.0,
+           "depth": 3.0,
+           "height": 60.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Right flange]",
+          "visible": true,
+          "params": {
+           "x": 46.0,
+           "y": 37.0,
+           "z": 0.0,
+           "width": 20.0,
+           "depth": 3.0,
+           "height": 60.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For z",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "15, 30, 45"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -10.0,
+           "y": 36.0,
+           "z": "z"
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Left flange nail hole]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 5.0,
+               "radius_bottom": 2.5,
+               "radius_top": 2.5,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 56.0,
+           "y": 36.0,
+           "z": "z"
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Right flange nail hole]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 5.0,
+               "radius_bottom": 2.5,
+               "radius_top": 2.5,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -1.0,
+           "y": 20.0,
+           "z": "z"
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Side nail hole]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 48.0,
+               "radius_bottom": 2.0,
+               "radius_top": 2.0,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

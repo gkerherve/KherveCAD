@@ -1,0 +1,418 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Butt_Hinge",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#d1ad59",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Leaf A]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -30.0,
+           "z": 0.0,
+           "width": 50.0,
+           "depth": 28.0,
+           "height": 2.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Leaf B]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 2.0,
+           "z": 0.0,
+           "width": 50.0,
+           "depth": 28.0,
+           "height": 2.0,
+           "center": false
+          }
+         },
+         {
+          "type": "for_loop",
+          "name": "For i",
+          "visible": true,
+          "params": {
+           "variable": "i",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "i * 10 + 0.15",
+             "y": 0.0,
+             "z": 3.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Knuckle]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 9.7,
+                 "radius_bottom": 3.0,
+                 "radius_top": 3.0,
+                 "segments": 64,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For i",
+          "visible": true,
+          "params": {
+           "variable": "i",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "0, 2, 4"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Leaf A web]",
+            "visible": true,
+            "params": {
+             "x": "i * 10 + 0.15",
+             "y": -3.0,
+             "z": 0.0,
+             "width": 9.7,
+             "depth": 1.5,
+             "height": 2.0,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For i",
+          "visible": true,
+          "params": {
+           "variable": "i",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "1, 3"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Leaf B web]",
+            "visible": true,
+            "params": {
+             "x": "i * 10 + 0.15",
+             "y": 1.5,
+             "z": 0.0,
+             "width": 9.7,
+             "depth": 1.5,
+             "height": 2.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -1.0,
+         "y": 0.0,
+         "z": 3.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Pin bore]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 52.0,
+             "radius_bottom": 1.3,
+             "radius_top": 1.3,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "10, 40"
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Countersunk hole]",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": "s * 12",
+             "z": -0.01,
+             "height": 2.02,
+             "radius_bottom": 1.75,
+             "radius_top": 3.5,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Centre hole]",
+          "visible": true,
+          "params": {
+           "x": 25.0,
+           "y": "s * 23",
+           "z": -0.01,
+           "height": 2.02,
+           "radius_bottom": 1.75,
+           "radius_top": 3.5,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": -0.8,
+       "y": 0.0,
+       "z": 3.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 90.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Pin]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 51.6,
+           "radius_bottom": 1.1,
+           "radius_top": 1.1,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": -1.2,
+       "y": 0.0,
+       "z": 3.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 90.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Pin head]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 1.0,
+           "radius_bottom": 3.0,
+           "radius_top": 3.0,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 50.2,
+       "y": 0.0,
+       "z": 3.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 90.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Pin cap]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 1.0,
+           "radius_bottom": 3.0,
+           "radius_top": 3.0,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

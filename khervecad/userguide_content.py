@@ -734,9 +734,13 @@ moment after each change, by itself. If the view ever looks stale,
         ("library", "Part Library and Examples", f"""
 <h3>Part Library</h3>
 <p><b>Insert &rsaquo; Part Library</b> {K("Ctrl+L")} opens a catalogue of
-parametric parts: CF and KF vacuum flanges, fittings, valves and pumps;
-bolts, screws and nuts from M3 to M20 with real threads; laboratory
-glassware; furniture. Pick a category, a part and a standard size, adjust
+parametric parts: CF and KF vacuum flanges, fittings, valves, pumps,
+gauges, chambers and manipulators, all in stainless steel; bolts, screws
+and nuts from M3 to M20 with real threads; laboratory glassware;
+furniture; Lego bricks and sets; <b>Playing cards</b>, one card at a time
+(pick the suit, then the rank as the size); <b>Pots</b> in several
+colours; and ready-made models in <b>Brackets</b>, <b>Minecraft</b> and
+<b>KCAD files</b>. Pick a category, a part and a standard size, adjust
 any dimension, then <b>Insert</b>. The window stays open while you work.
 Each part arrives as one Object; its construction is in the Object
 tab.</p>
@@ -747,7 +751,8 @@ in one click.</p>
 <p>The <b>Examples</b> menu replaces the document with a ready-made
 model: <b>Learn</b> (21 numbered tutorials, one technique each, from a
 single cube to masters), <b>Mechanical</b> (brackets, gears, bearings,
-pulleys, a bolted flange), <b>Projects</b>, <b>Showcase</b>,
+pulleys, a bolted flange), <b>Projects</b>, <b>Showcase</b> (among
+them a fully assembled Ferrari 288 GTO),
 <b>Flowers</b>, <b>Trees</b>, <b>Vacuum</b> and <b>Room</b>. Open one
 and click through its tree to see how it is made. You are asked before
 unsaved work is replaced.</p>

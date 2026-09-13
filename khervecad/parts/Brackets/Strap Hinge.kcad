@@ -1,0 +1,341 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Strap_Hinge",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#1f1f1f",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 2.0,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "polygon",
+            "name": "Polygon [Strap leaf]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "points": [
+              [
+               0.0,
+               2.0
+              ],
+              [
+               50.0,
+               2.0
+              ],
+              [
+               32.0,
+               110.0
+              ],
+              [
+               18.0,
+               110.0
+              ]
+             ]
+            }
+           }
+          ]
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Strap end]",
+          "visible": true,
+          "params": {
+           "x": 25.0,
+           "y": 110.0,
+           "z": 0.0,
+           "height": 2.0,
+           "radius_bottom": 7.0,
+           "radius_top": 7.0,
+           "segments": 64,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Plate leaf]",
+          "visible": true,
+          "params": {
+           "x": 5.0,
+           "y": -32.0,
+           "z": 0.0,
+           "width": 40.0,
+           "depth": 30.0,
+           "height": 2.0,
+           "center": false
+          }
+         },
+         {
+          "type": "for_loop",
+          "name": "For i",
+          "visible": true,
+          "params": {
+           "variable": "i",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "i * 10 + 0.15",
+             "y": 0.0,
+             "z": 3.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Knuckle]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 9.7,
+                 "radius_bottom": 3.0,
+                 "radius_top": 3.0,
+                 "segments": 64,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -1.0,
+         "y": 0.0,
+         "z": 3.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Pin bore]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 52.0,
+             "radius_bottom": 1.3,
+             "radius_top": 1.3,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For y",
+        "visible": true,
+        "params": {
+         "variable": "y",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "25, 55, 85, 110"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Strap hole]",
+          "visible": true,
+          "params": {
+           "x": 25.0,
+           "y": "y",
+           "z": -0.01,
+           "height": 2.02,
+           "radius_bottom": 1.75,
+           "radius_top": 3.5,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "13, 37"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Plate hole]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -12.0,
+           "z": -0.01,
+           "height": 2.02,
+           "radius_bottom": 1.75,
+           "radius_top": 3.5,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Plate centre hole]",
+        "visible": true,
+        "params": {
+         "x": 25.0,
+         "y": -25.0,
+         "z": -0.01,
+         "height": 2.02,
+         "radius_bottom": 1.75,
+         "radius_top": 3.5,
+         "segments": 64,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": -0.8,
+       "y": 0.0,
+       "z": 3.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 90.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Pin]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 51.6,
+           "radius_bottom": 1.1,
+           "radius_top": 1.1,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

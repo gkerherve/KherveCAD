@@ -32,12 +32,14 @@ def app():
 KNOWN_IMPERFECT = {"Brackets and Fixings", "Cartoon Characters"}
 
 
-@pytest.mark.parametrize("path", library_kcad.files(),
+@pytest.mark.parametrize("path", library_kcad.shipped(),
                          ids=lambda p: p.stem)
 def test_every_shipped_kcad_is_a_valid_part(app, path):
     pid = library_kcad.part_id(path.stem)
     assert pid in library.PARTS
-    assert library.PARTS[pid]["category"] == "KCAD files"
+    # a file straight in parts/ lists under "KCAD files", one in a
+    # subfolder under that section (parts/Brackets -> "Brackets")
+    assert library.PARTS[pid]["category"] == library_kcad.category_of(path)
     node = library.build_part(pid, {})
     root = CadNode("root")
     root.add(node)

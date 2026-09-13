@@ -1,0 +1,139 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Z_Bracket",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#333338",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Lower flange]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 30.0,
+           "depth": 25.0,
+           "height": 3.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Web]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 22.0,
+           "z": 0.0,
+           "width": 30.0,
+           "depth": 3.0,
+           "height": 28.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Upper flange]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 22.0,
+           "z": 25.0,
+           "width": 30.0,
+           "depth": 25.0,
+           "height": 3.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Lower hole]",
+        "visible": true,
+        "params": {
+         "x": 15.0,
+         "y": 11.0,
+         "z": -1.0,
+         "height": 5.0,
+         "radius_bottom": 2.5,
+         "radius_top": 2.5,
+         "segments": 64,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Upper hole]",
+        "visible": true,
+        "params": {
+         "x": 15.0,
+         "y": 36.0,
+         "z": 24.0,
+         "height": 5.0,
+         "radius_bottom": 2.5,
+         "radius_top": 2.5,
+         "segments": 64,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
