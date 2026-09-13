@@ -28,6 +28,7 @@ import re
 import subprocess
 import sys
 import zipfile
+import zlib
 from pathlib import Path
 
 from PyQt5.QtCore import QUrl
@@ -59,37 +60,77 @@ TOOLS_URL = "https://khervetools.com"
 #: The blocks are single long lines on purpose: Printables re-wraps
 #: the description box to its own width, and text hard-wrapped at 70
 #: columns comes out ragged there.
-_CREDIT_HEAD = """\
-MADE WITH
-
-Vibe designed in KherveCAD ({tools}) - a free, open-source parametric CAD app with OpenSCAD as its engine - and described with the help of Claude (Anthropic).
-"""
-
-#: Added only when the source really is in the folder.  A listing that
-#: promises an editable source it does not ship is worse than one that
-#: promises nothing.
-_CREDIT_SOURCE = """
-The {files} in the download {verb} the real, editable source, not an export of a mesh: open it, change a dimension, re-export.
-"""
-
-_CREDIT_TAIL = """
-KherveCAD and the rest of the Kherve tools are at {tools}
-"""
-
-#: The credit block's heading.  One place, because `build_bundle` looks
-#: for it to avoid appending the block twice.
+#: Each fixed sentence comes in several phrasings, picked per model
+#: (`variant_for`): someone who publishes a lot would otherwise post the
+#: same paragraph under every model. The heading and the tools URL never
+#: vary — `build_bundle` looks for them to avoid appending the block twice.
 CREDIT_HEADING = "MADE WITH"
 
+_CREDIT_LINES = (
+    "Vibe designed in KherveCAD ({tools}) - a free, open-source "
+    "parametric CAD app with OpenSCAD as its engine - and described with "
+    "the help of Claude (Anthropic).",
+    "Vibe designed in KherveCAD ({tools}), the free and open-source CAD "
+    "app that runs on OpenSCAD. The write-up was drafted with Claude "
+    "(Anthropic).",
+    "This one was vibe designed: built in KherveCAD ({tools}), a free, "
+    "open-source parametric CAD app powered by OpenSCAD, and written up "
+    "with a hand from Claude (Anthropic).",
+    "Vibe designed from start to finish in KherveCAD ({tools}) - free, "
+    "open source, OpenSCAD under the hood - with Claude (Anthropic) "
+    "helping with the words.",
+    "Made the vibe designed way in KherveCAD ({tools}), a free, "
+    "open-source CAD app on top of OpenSCAD, and described together "
+    "with Claude (Anthropic).",
+)
+_SOURCE_LINES = (
+    "The {files} in the download {verb} the real, editable source, not "
+    "an export of a mesh: open it, change a dimension, re-export.",
+    "The {files} in the download {verb} the living source rather than a "
+    "frozen mesh - change a number and export your own version.",
+    "Want it bigger, smaller or thicker? The {files} in the download "
+    "{verb} the editable source: open it, tweak a dimension, export "
+    "again.",
+    "Included: the {files} - the actual editable source, not a mesh "
+    "export. Adjust any dimension and re-export.",
+)
+_TAIL_LINES = (
+    "KherveCAD and the rest of the Kherve tools are at {tools}",
+    "More Kherve tools, KherveCAD included: {tools}",
+    "Get KherveCAD and the other Kherve tools at {tools}",
+)
 
-def credit(formats=FORMATS) -> str:
+
+def variant_for(title: str) -> int:
+    """A stable number for *title*: the same model always gets the same
+    wording (a rebuilt bundle does not change under the user), a
+    different model usually gets different wording. crc32, because
+    Python's own hash() changes from one run to the next."""
+    return zlib.crc32((title or "").strip().lower().encode("utf-8"))
+
+
+def _pick(options, variant, salt=0):
+    """One phrasing. Variant 0 is the original wording everywhere; any
+    other variant is hashed with the section's *salt*, so each section
+    picks on its own and two models rarely share every sentence (with a
+    plain offset, two titles that matched in one list of four matched in
+    all of them)."""
+    if not variant:
+        return options[0]
+    return options[zlib.crc32(f"{variant}/{salt}".encode()) % len(options)]
+
+
+def credit(formats=FORMATS, variant=0) -> str:
     """The attribution block, naming only the files actually shipped."""
     source = [f".{f}" for f in ("scad", "kcad") if f in formats]
-    text = _CREDIT_HEAD.format(tools=TOOLS_URL)
+    text = (f"{CREDIT_HEADING}\n\n"
+            + _pick(_CREDIT_LINES, variant).format(tools=TOOLS_URL) + "\n")
     if source:
-        text += _CREDIT_SOURCE.format(
+        text += "\n" + _pick(_SOURCE_LINES, variant, 1).format(
             files=" and ".join(source),
-            verb="is" if len(source) == 1 else "are")
-    return text + _CREDIT_TAIL.format(tools=TOOLS_URL)
+            verb="is" if len(source) == 1 else "are") + "\n"
+    return text + "\n" + _pick(_TAIL_LINES, variant, 2).format(
+        tools=TOOLS_URL) + "\n"
 
 
 def slug(text: str) -> str:
@@ -124,14 +165,24 @@ def _bounds(model, fn=None):
     return [round(hi[i] - lo[i], 2) for i in range(3)]
 
 
-def default_summary(window, title: str = "") -> str:
+_SUMMARIES = (
+    "{name} - parametric model vibe designed in KherveCAD",
+    "{name}, vibe designed in KherveCAD and fully parametric",
+    "{name} - a vibe designed, parametric print from KherveCAD",
+    "{name}: vibe designed in KherveCAD, every dimension adjustable",
+)
+
+
+def default_summary(window, title: str = "", variant=None) -> str:
     """The one-line summary Printables makes required, under its cap.
 
     Read off the model rather than invented: what it is, that it was
     drawn parametrically, and its footprint if that still fits.
     """
     name = (title or "This model").strip()
-    text = f"{name} - parametric model vibe designed in KherveCAD"
+    if variant is None:
+        variant = variant_for(title)
+    text = _pick(_SUMMARIES, variant, 3).format(name=name)
     size = _bounds(window.model, fn=(window.model.global_fn
                                      if window.model.global_fn_on
                                      else None))
@@ -237,7 +288,28 @@ def _shape_of(model) -> tuple:
     return objects, booleans, extrusions
 
 
-def opening(window, title: str = "") -> str:
+_FIRST = (
+    "{name} is {sized} vibe designed in KherveCAD and exported straight "
+    "from the object tree that defines it.",
+    "{name} is {sized}, vibe designed in KherveCAD and exported directly "
+    "from the objects that build it.",
+    "Meet {name}: {sized}, vibe designed in KherveCAD and exported "
+    "straight from its object tree.",
+    "{name} was vibe designed in KherveCAD - {sized} exported straight "
+    "from the tree of objects that makes it.",
+)
+_SECOND = ("It is built from {what}.", "Under the hood: {what}.",
+           "The model is made of {what}.")
+_THIRD = (
+    "{n} dimension{s} {verb} named rather than baked in, so it can be "
+    "resized without redrawing it.",
+    "{n} dimension{s} {verb} exposed as named parameters - resize it "
+    "without redrawing a thing.",
+    "Change any of its {n} named dimension{s} and it rebuilds itself.",
+)
+
+
+def opening(window, title: str = "", variant=None) -> str:
     """The paragraph the description opens with.
 
     This used to be the line "one or two sentences on what this is for
@@ -251,16 +323,13 @@ def opening(window, title: str = "") -> str:
     placeholder is to replace.
     """
     model = window.model
+    if variant is None:
+        variant = variant_for(title)
     name = (title or "This").strip()
     size = _bounds(model, fn=(model.global_fn if model.global_fn_on
                               else None))
-    first = name
-    if size:
-        first += " is a %g x %g x %g mm part" % tuple(size)
-    else:
-        first += " is a part"
-    first += " vibe designed in KherveCAD and exported straight from the "
-    first += "object tree that defines it."
+    sized = ("a %g x %g x %g mm part" % tuple(size)) if size else "a part"
+    first = _pick(_FIRST, variant, 4).format(name=name, sized=sized)
 
     objects, booleans, extrusions = _shape_of(model)
     built = []
@@ -272,26 +341,39 @@ def opening(window, title: str = "") -> str:
                                        "" if booleans == 1 else "s"))
     second = ""
     if objects:
-        second = "It is built from %d object%s" % (
-            objects, "" if objects == 1 else "s")
+        what = "%d object%s" % (objects, "" if objects == 1 else "s")
         if built:
-            second += " (" + " and ".join(built) + ")"
-        second += "."
+            what += " (" + " and ".join(built) + ")"
+        second = _pick(_SECOND, variant, 5).format(what=what)
 
     variables = _variables(model)
     third = ""
     if variables:
-        third = ("%d dimension%s %s named rather than baked in, so it "
-                 "can be resized without redrawing it." % (
-                     len(variables),
-                     "" if len(variables) == 1 else "s",
-                     "is" if len(variables) == 1 else "are"))
+        third = _pick(_THIRD, variant, 6).format(
+            n=len(variables), s="" if len(variables) == 1 else "s",
+            verb="is" if len(variables) == 1 else "are")
 
     return " ".join(part for part in (first, second, third) if part)
 
 
+_PARAM_INTROS = (
+    "The model is parametric - these are the values to change in the "
+    ".scad or .kcad file:",
+    "Everything below can be changed in the .scad or .kcad file:",
+    "Open the .scad or .kcad file and adjust any of these:",
+)
+_PRINT_NOTES = (
+    "A starting point rather than a tested profile - if you printed it "
+    "differently, say so in a comment and I will update this.",
+    "These are a sensible starting point, not a tuned profile. If other "
+    "settings worked better for you, leave a comment.",
+    "Treat these as a starting point. Printed it another way? Share your "
+    "settings in the comments.",
+)
+
+
 def default_description(window, title: str = "",
-                        formats=FORMATS) -> str:
+                        formats=FORMATS, variant=None) -> str:
     """A description worth editing rather than one worth deleting.
 
     Plain text, because that is what Printables' description box shows
@@ -303,10 +385,12 @@ def default_description(window, title: str = "",
     model = window.model
     size = _bounds(model, fn=(model.global_fn if model.global_fn_on
                               else None))
+    if variant is None:
+        variant = variant_for(title)
     lines = []
     if title:
         lines += [title.upper(), ""]
-    lines += [opening(window, title), ""]
+    lines += [opening(window, title, variant), ""]
 
     if size:
         lines += [
@@ -318,9 +402,7 @@ def default_description(window, title: str = "",
 
     variables = _variables(model)
     if variables:
-        lines += ["PARAMETERS", "",
-                  "The model is parametric - these are the values to "
-                  "change in the .scad or .kcad file:", ""]
+        lines += ["PARAMETERS", "", _pick(_PARAM_INTROS, variant, 7), ""]
         lines += [f"  {name} = {value}" for name, value in variables]
         lines.append("")
 
@@ -332,11 +414,9 @@ def default_description(window, title: str = "",
         "Supports: none",
         "Material: PLA",
         "",
-        "A starting point rather than a tested profile - if you "
-        "printed it differently, say so in a comment and I will "
-        "update this.",
+        _pick(_PRINT_NOTES, variant, 8),
         "",
-        credit(formats),
+        credit(formats, variant),
     ]
     return "\n".join(lines)
 
@@ -451,7 +531,8 @@ def build_bundle(window, folder, *, title, description="", tags=(),
         # the credit is the point of publishing from here, and a
         # description written elsewhere (the MCP tool, the user) has no
         # reason to have carried it.
-        body = body.rstrip() + "\n\n" + credit(formats)
+        body = body.rstrip() + "\n\n" + credit(formats,
+                                               variant_for(title))
     notes = folder / "description.txt"
     notes.write_text(body, encoding="utf-8")
     wrote(notes)
@@ -705,7 +786,8 @@ class PublishDialog(QDialog):
         layout.addWidget(self.description_edit)
 
         regen = QPushButton("Regenerate from the model")
-        regen.setToolTip("Rebuild the draft — this discards your edits.")
+        regen.setToolTip("Rebuild the draft in different words — press "
+                         "again for another. This discards your edits.")
         regen.clicked.connect(self._regenerate)
         layout.addWidget(regen)
 
@@ -744,11 +826,18 @@ class PublishDialog(QDialog):
             self.folder_edit.setText(path)
 
     def _regenerate(self):
+        """A fresh draft in the next set of phrasings — press again for
+        another."""
+        title = self.title_edit.text()
+        if getattr(self, "_variant", None) is None:
+            self._variant = variant_for(title)
+        self._variant += 1
         self.description_edit.setPlainText(
-            default_description(self._w, self.title_edit.text(),
-                                self._selected(self._format_boxes)))
+            default_description(self._w, title,
+                                self._selected(self._format_boxes),
+                                self._variant))
         self.summary_edit.setText(
-            default_summary(self._w, self.title_edit.text()))
+            default_summary(self._w, title, self._variant))
 
     def _selected(self, boxes) -> tuple:
         return tuple(k for k, b in boxes.items() if b.isChecked())

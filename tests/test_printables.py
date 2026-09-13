@@ -97,7 +97,7 @@ def test_the_description_opens_with_prose_not_a_placeholder(
         cube_window):
     """The opening line used to be a note to the author, and it went
     out unedited. It has to read as a finished sentence."""
-    text = printables.default_description(cube_window, "Cube")
+    text = printables.default_description(cube_window, "Cube", variant=0)
     assert "One or two sentences" not in text
     first = text.splitlines()[2]
     assert first.startswith("Cube is a 20 x 20 x 20 mm part")
@@ -107,7 +107,7 @@ def test_the_description_opens_with_prose_not_a_placeholder(
 def test_the_opening_counts_what_the_model_is_made_of(cube_window):
     from khervecad.model import CadNode
     cube_window.model.root.add(CadNode("difference", "Difference"))
-    text = printables.opening(cube_window, "Cube")
+    text = printables.opening(cube_window, "Cube", variant=0)
     assert "1 boolean" in text
     assert "1 dimension is named" in text
 
@@ -413,8 +413,36 @@ def test_an_assembly_gets_one_stl_per_object(window, tmp_path):
 
 
 def test_the_texts_say_vibe_designed(cube_window):
-    assert "Vibe designed in KherveCAD" in printables.credit()
-    assert "vibe designed in KherveCAD" in printables.default_summary(
-        cube_window, "Cube")
-    assert "vibe designed in KherveCAD" in printables.opening(
-        cube_window, "Cube")
+    """Every phrasing credits the model as vibe designed."""
+    for v in range(12):
+        for text in (printables.credit(variant=v),
+                     printables.default_summary(cube_window, "Cube", v),
+                     printables.opening(cube_window, "Cube", v)):
+            assert "vibe designed" in text.lower(), (v, text)
+
+
+def test_wording_varies_between_models_but_not_between_builds(
+        cube_window):
+    texts = {printables.default_description(cube_window, t)
+             .split("\n", 2)[2] for t in
+             ("Cube", "Hook", "Pen holder", "Shelf bracket", "Lamp",
+              "Coaster", "Planter", "Knob")}
+    assert len(texts) >= 4                     # not all the same prose
+    once = printables.default_description(cube_window, "Hook")
+    assert printables.default_description(cube_window, "Hook") == once
+    # every variant keeps the heading and the URL the bundle looks for
+    for v in range(12):
+        c = printables.credit(("stl", "scad"), v)
+        assert c.startswith(printables.CREDIT_HEADING)
+        assert printables.TOOLS_URL in c and ".scad" in c
+        assert "Claude" in c and "KherveCAD" in c
+
+
+def test_regenerate_steps_to_another_phrasing(cube_window):
+    dialog = printables.PublishDialog(cube_window)
+    dialog.title_edit.setText("Cube")
+    seen = set()
+    for _ in range(4):
+        dialog._regenerate()
+        seen.add(dialog.description_edit.toPlainText())
+    assert len(seen) >= 3

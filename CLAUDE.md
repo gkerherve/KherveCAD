@@ -767,7 +767,15 @@ into a new module and import.
                        block naming KherveCAD / khervetools.com /
                        Claude is appended to whatever description
                        comes in, once, and names only the source files
-                       actually shipped.
+                       actually shipped. Every fixed sentence (summary,
+                       opening, parameter intro, print notes, credit)
+                       comes in several phrasings picked per model by
+                       `variant_for(title)` (crc32 — the same model
+                       always reads the same, different models differ,
+                       each section hashed with its own salt in `_pick`);
+                       the dialog's Regenerate steps to the next variant.
+                       The `MADE WITH` heading and the tools URL never
+                       vary: they are how the credit is found once.
   - `drawing.py`     — **2D engineering drawings** (Qt-free): `VIEWS`
                        (third-angle Front/Top/Right/…, an isometric)
                        as (right, up, forward); `view_lines` takes the
