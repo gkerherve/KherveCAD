@@ -1434,6 +1434,37 @@ class DocumentModel(QObject):
         assembly the Main tab lists."""
         return [c for c in self.root.children if c.type == "component"]
 
+    def all_components(self):
+        """Every Object in the document, nested ones included — an
+        imported program often places its modules inside a colour or a
+        group (``color(...) Pot();``), and those are Objects too. In
+        document order; the Masters store is not searched."""
+        found = []
+
+        def walk(node):
+            for child in node.children:
+                if child.type == "masters":
+                    continue
+                if child.type == "component":
+                    found.append(child)
+                walk(child)
+        walk(self.root)
+        return found
+
+    def delete_component(self, comp: CadNode) -> int:
+        """Remove an Object definition and every instance / Linked copy
+        that places it, wherever it sits — one change, so one Ctrl+Z
+        brings them all back. Returns how many instances went."""
+        inside = {id(n) for n in comp.walk()}
+        refs = [n for n in self.root.walk()
+                if n.type == "reference" and id(n) not in inside
+                and n.params.get("ref") == comp.name]
+        for node in refs + [comp]:
+            if node.parent is not None:
+                node.parent.remove(node)
+        self.structure_changed.emit()
+        return len(refs)
+
     def new_component(self, name: str = "",
                       visible: bool = True) -> CadNode:
         """Create an empty Object at the top level. The UI creates new

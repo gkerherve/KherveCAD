@@ -773,7 +773,7 @@ class ObjectTree(QTreeWidget):
         comps = self.model.components()
         if not comps:
             return
-        sub = menu.addMenu(icons.icon("mdi.package-variant-plus"),
+        sub = menu.addMenu(icons.icon("mdi.package-down"),
                            "Insert Object")
         for comp in comps:
             sub.addAction(

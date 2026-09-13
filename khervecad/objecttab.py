@@ -6,6 +6,11 @@ double-clicking the Object in Main). Both viewers isolate to the
 active Object while this tab is current, so a busy assembly never
 gets in the way of editing one part.
 
+The dropdown lists every Object in the document, nested ones included
+(an imported program's modules often sit inside a colour). Its
+toolbar is icons only: New, Rename, Delete (the Object and every
+instance placing it, one Ctrl+Z) and To Main.
+
 Copyright (C) 2026 Gwilherm Kerherve
 
 This program is free software: you can redistribute it and/or modify
@@ -14,13 +19,29 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import (QComboBox, QHBoxLayout, QLabel,
-                             QPushButton, QVBoxLayout, QWidget)
+from PyQt5.QtCore import QSize, pyqtSignal
+from PyQt5.QtWidgets import (QComboBox, QHBoxLayout, QLabel, QMessageBox,
+                             QToolButton, QVBoxLayout, QWidget)
 
 from . import icons
 from .model import DocumentModel
 from .treepanel import ObjectTree
+
+#: (attribute, mdi icon, tooltip) of the Object toolbar, left to right
+BUTTONS = (
+    ("new_btn", "mdi.plus-box-outline",
+     "New Object — create an empty part and edit it here (hidden in "
+     "Main until you place it)"),
+    ("rename_btn", "mdi.pencil-outline",
+     "Rename this Object (its instances, mates and Linked copies "
+     "follow)"),
+    ("delete_btn", "mdi.delete-outline",
+     "Delete this Object and every instance of it in Main — Ctrl+Z "
+     "brings them back"),
+    ("insert_btn", "mdi.package-down",
+     "To Main — place an instance of this Object in the Main assembly "
+     "(anchors and snapping live there)"),
+)
 
 
 class ComponentTree(ObjectTree):
@@ -104,28 +125,27 @@ class ObjectTab(QWidget):
         layout.setContentsMargins(4, 4, 4, 0)
         layout.setSpacing(4)
         row = QHBoxLayout()
+        row.setSpacing(2)
         row.addWidget(QLabel("Object:"))
         self.combo = QComboBox()
         self.combo.setToolTip("The Object being edited — every Object "
-                              "in the Main tab is listed here")
+                              "in the document is listed here, nested "
+                              "ones included")
         self.combo.currentIndexChanged.connect(self._combo_picked)
         row.addWidget(self.combo, 1)
-        new_btn = QPushButton(icons.icon("mdi.plus"), " New")
-        new_btn.setToolTip("Create a new empty Object and edit it "
-                           "(hidden in Main until you show it)")
-        new_btn.clicked.connect(self.new_object)
-        row.addWidget(new_btn)
-        rename_btn = QPushButton(icons.icon("mdi.rename-box"), "")
-        rename_btn.setToolTip("Rename this Object")
-        rename_btn.clicked.connect(self.rename_active)
-        row.addWidget(rename_btn)
-        insert_btn = QPushButton(icons.icon("mdi.package-variant-plus"),
-                                 " To Main")
-        insert_btn.setToolTip(
-            "Place an instance of this Object into the Main assembly "
-            "(anchors and snapping live there)")
-        insert_btn.clicked.connect(self._insert_into_main)
-        row.addWidget(insert_btn)
+        slots = {"new_btn": self.new_object,
+                 "rename_btn": self.rename_active,
+                 "delete_btn": lambda: self.delete_active(),
+                 "insert_btn": self._insert_into_main}
+        for attr, glyph, tip in BUTTONS:
+            button = QToolButton()
+            button.setIcon(icons.icon(glyph))
+            button.setIconSize(QSize(20, 20))
+            button.setAutoRaise(True)
+            button.setToolTip(tip)
+            button.clicked.connect(slots[attr])
+            setattr(self, attr, button)
+            row.addWidget(button)
         layout.addLayout(row)
 
         self.tree = ComponentTree(model, self.active_component)
@@ -139,7 +159,7 @@ class ObjectTab(QWidget):
     def active_component(self):
         """The active Object node, re-resolved against the live tree
         (id first, then name) — or None."""
-        comps = self.model.components()
+        comps = self.model.all_components()
         for comp in comps:
             if comp.id == self._active_id:
                 self._active_name = comp.name
@@ -187,11 +207,34 @@ class ObjectTab(QWidget):
             self._active_name = name
             self._sync_combo()
 
+    def delete_active(self, confirm: bool = True) -> bool:
+        """Delete the edited Object and every instance placing it,
+        after asking (unless *confirm* is False). One undo step."""
+        comp = self.active_component()
+        if comp is None:
+            return False
+        uses = [n for n in self.model.root.walk()
+                if n.type == "reference" and n.params.get("ref") == comp.name]
+        if confirm:
+            extra = (f"\n\nIts {len(uses)} instance"
+                     f"{'s' if len(uses) != 1 else ''} in Main will go "
+                     "too." if uses else "")
+            answer = QMessageBox.question(
+                self, "Delete Object",
+                f"Delete the Object “{comp.name}”?{extra}\n\n"
+                "Ctrl+Z brings it back.",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if answer != QMessageBox.Yes:
+                return False
+        self.model.delete_component(comp)
+        self.set_active(None)
+        return True
+
     # ------------------------------------------------------------ combo
     def _sync_combo(self):
         """Rebuild the dropdown from the document's Objects; if the
         active one vanished (deleted / undone), fall back to none."""
-        comps = self.model.components()
+        comps = self.model.all_components()
         active = self.active_component()
         self._updating = True
         self.combo.clear()
@@ -199,6 +242,10 @@ class ObjectTab(QWidget):
         for comp in comps:
             self.combo.addItem(icons.icon("mdi.package-variant-closed"),
                                comp.name, comp.id)
+            if comp.parent is not None and comp.parent is not self.model.root:
+                self.combo.setItemData(
+                    self.combo.count() - 1,
+                    f"Inside {comp.parent.name}", 3)      # Qt.ToolTipRole
         index = 0
         if active is not None:
             for i in range(1, self.combo.count()):
@@ -207,6 +254,8 @@ class ObjectTab(QWidget):
                     break
         self.combo.setCurrentIndex(index)
         self._updating = False
+        for attr in ("rename_btn", "delete_btn", "insert_btn"):
+            getattr(self, attr).setEnabled(active is not None)
         if active is None and self._active_id is not None:
             # the active Object no longer exists
             self._active_id = self._active_name = None
