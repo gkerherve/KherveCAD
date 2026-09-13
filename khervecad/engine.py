@@ -61,7 +61,16 @@ _BUNDLE_LAYOUTS = [
 #: the built-in renderer and OpenSCAD see the same side of the part.
 CAMERA_ROTATIONS = {
     "Isometric": (55, 0, 25),          # OpenSCAD's default: front-right
+    "Isometric front-left": (55, 0, 335),
+    "Isometric back-right": (55, 0, 115),
     "Isometric back": (55, 0, 205),    # the opposite corner: back-left
+    # the product-shot angles: mostly the front, a little from the right;
+    # steeply from above; nearly level, the way the part stands on a
+    # table; and from below, so a listing shows the underside too
+    "Three-quarter front": (70, 0, 10),
+    "Bird's-eye": (30, 0, 30),
+    "Low angle": (80, 0, 40),
+    "Underside": (125, 0, 335),
     "Top": (0, 0, 0),
     "Bottom": (180, 0, 0),
     "Front": (90, 0, 0),
@@ -69,6 +78,31 @@ CAMERA_ROTATIONS = {
     "Right": (90, 0, 90),
     "Left": (90, 0, 270),
 }
+
+
+def wait_until_idle(engine, timeout_s: float) -> bool:
+    """Pump the event loop until *engine* has nothing rendering or
+    queued, so the 3D view holds OpenSCAD's exact meshes rather than the
+    built-in approximation. True when it settled within *timeout_s*
+    (always, without OpenSCAD: the preview is then the final word).
+    Anything with ``available`` and ``is_idle()`` will do."""
+    import time
+
+    from PyQt5.QtCore import QCoreApplication, QEventLoop, QThread
+    if not engine.available:
+        return True
+    deadline = time.monotonic() + timeout_s
+    calm = 0
+    while True:
+        QCoreApplication.processEvents(QEventLoop.AllEvents, 50)
+        # idle on two passes in a row: a finished part that queues the
+        # next render has had its chance to do so
+        calm = calm + 1 if engine.is_idle() else 0
+        if calm >= 2:
+            return True
+        if time.monotonic() >= deadline:
+            return False
+        QThread.msleep(15)
 
 
 def view_angles(rotation) -> tuple:
@@ -385,6 +419,10 @@ class ScadEngine(QObject):
         is final until the model changes again."""
         return (self._process is None and self._pending_code is None
                 and not self._part_queue and not self._timer.isActive())
+
+    def wait_idle(self, timeout_s: float) -> bool:
+        """See `wait_until_idle`."""
+        return wait_until_idle(self, timeout_s)
 
     def cancel_parts(self):
         """Drop queued part renders (the document changed wholesale)."""

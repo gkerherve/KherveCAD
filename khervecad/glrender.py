@@ -401,7 +401,12 @@ class GLRenderer:
             ctx, f = self.ctx, self.funcs
             if not ctx.makeCurrent(self.surface):
                 return None
-            w, h = max(view.width(), 1), max(view.height(), 1)
+            # an exported picture renders at a multiple of the view's
+            # size (View3D.snapshot's pixel_ratio); the projection stays
+            # in view units, so only the framebuffer grows
+            ratio = float(getattr(view, "_pixel_ratio", 1.0) or 1.0)
+            w = max(int(round(view.width() * ratio)), 1)
+            h = max(int(round(view.height() * ratio)), 1)
             fbo, plain = self._framebuffers(w, h)
             fbo.bind()
             f.glViewport(0, 0, w, h)
@@ -509,7 +514,7 @@ class GLRenderer:
         prog.enableAttributeArray(0)
         prog.setAttributeBuffer(0, GL_FLOAT, 0, 3, 12)
         f.glDepthFunc(GL_LEQUAL)
-        f.glLineWidth(1.2)
+        f.glLineWidth(1.2 * float(getattr(view, "_pixel_ratio", 1.0) or 1.0))
         f.glDrawArrays(GL_LINES, 0, count)
         f.glDepthFunc(GL_LESS)
         prog.disableAttributeArray(0)

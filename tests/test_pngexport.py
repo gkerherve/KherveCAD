@@ -96,13 +96,56 @@ def _eye(yaw, pitch):
 
 # ── the view set ──────────────────────────────────────────────────
 
-def test_the_still_set_is_every_side_with_the_cover_first():
+def test_the_default_stills_are_three_quarter_with_the_cover_first():
     names, unknown = pngexport.ordered_views(DEFAULT_VIEWS)
     assert unknown == []
     assert names[0] == "Isometric"
-    assert set(names) == set(STILL_VIEWS) == {
-        "Isometric", "Isometric back", "Front", "Back", "Left", "Right",
-        "Top", "Bottom"}
+    assert set(names) == {
+        "Isometric", "Isometric front-left", "Isometric back-right",
+        "Isometric back", "Three-quarter front", "Bird's-eye",
+        "Low angle", "Underside"}
+    # no square-on face by default: those read as a flat drawing
+    for name in names:
+        _yaw, pitch = pngexport.camera(name)
+        assert 5.0 <= abs(pitch) <= 70.0, name
+    # ...but they can still be asked for by name
+    assert {"Front", "Back", "Left", "Right", "Top", "Bottom"} \
+        <= set(STILL_VIEWS)
+
+
+def test_the_four_isometric_corners_look_from_four_corners():
+    corners = set()
+    for name in ("Isometric", "Isometric front-left",
+                 "Isometric back-right", "Isometric back"):
+        x, y, z = _eye(*pngexport.camera(name))
+        assert z > 0, name
+        corners.add((x > 0, y > 0))
+    assert len(corners) == 4
+    _x, _y, z = _eye(*pngexport.camera("Underside"))
+    assert z < 0
+
+
+def test_a_big_picture_keeps_the_screens_proportions(window):
+    """A still twice the pane's size is the pane at 2x, the way a Retina
+    screen paints — not a pane twice as big with one-pixel lines."""
+    view = window.view3d
+    view.resize(400, 300)
+    assert pngexport.pixel_ratio(view, 960, 720) == pytest.approx(2.0)
+    assert pngexport.pixel_ratio(view, 200, 150) == 1.0
+    small = pngexport.render(view, 480, 360, "Isometric", transparent=True)
+    big = pngexport.render(view, 960, 720, "Isometric", transparent=True)
+    assert (big.width(), big.height()) == (960, 720)
+
+    def covered(image):
+        step = max(1, image.width() // 120)
+        hits = total = 0
+        for y in range(0, image.height(), step):
+            for x in range(0, image.width(), step):
+                total += 1
+                hits += image.pixelColor(x, y).alpha() > 128
+        return hits / total
+    # the same framing: the model covers the same share of the picture
+    assert covered(big) == pytest.approx(covered(small), abs=0.03)
 
 
 def test_ordering_puts_the_cover_first_and_reports_unknowns():
@@ -168,11 +211,12 @@ def test_window_size_times_two_keeps_the_framing(window):
 def test_all_views_write_one_distinct_file_each(window, tmp_path):
     paths = pngexport.export_views(window.view3d, tmp_path / "views",
                                    "part", (160, 120))
-    assert len(paths) == len(STILL_VIEWS)
+    assert len(paths) == len(DEFAULT_VIEWS)
     names = [p.name for p in paths]
     assert names[0] == "part-1-isometric.png"
-    assert "part-2-isometric-back.png" in names
-    assert "part-8-bottom.png" in names
+    assert "part-2-isometric-front-left.png" in names
+    assert "part-6-bird-s-eye.png" in names
+    assert "part-8-underside.png" in names
     contents = {p.read_bytes() for p in paths}
     assert len(contents) == len(paths)       # every view is its own
 
@@ -199,7 +243,7 @@ def test_the_dialog_remembers_its_choices(window, settings, tmp_path):
     dialog.path_edit.setText(str(tmp_path / "out" / "views"))
     paths = dialog.export()
     assert [p.name for p in paths][0] == "model-1-isometric.png"
-    assert len(paths) == len(STILL_VIEWS)
+    assert len(paths) == len(DEFAULT_VIEWS)
     first = QImage(str(paths[0]))
     assert (first.width(), first.height()) == (1280, 720)
 
@@ -250,7 +294,7 @@ def test_export_document_all_views(window, tmp_path):
         "path": str(tmp_path / "box.png"), "view": "all",
         "width": 120, "height": 90})
     assert "error" not in result, result.get("error")
-    assert len(result["exported"]) == len(STILL_VIEWS)
+    assert len(result["exported"]) == len(DEFAULT_VIEWS)
     assert Path(result["exported"][0]).name == "box-1-isometric.png"
 
 
@@ -281,9 +325,9 @@ def test_printables_fallback_renders_every_view_cover_first(window,
         window, tmp_path / "bundle", title="Box", formats=("scad",),
         image_size=(200, 150))
     names = [Path(p).name for p in bundle["images"]]
-    assert len(names) == len(STILL_VIEWS)
+    assert len(names) == len(DEFAULT_VIEWS)
     assert names[0] == "Box-1-isometric.png"
-    assert "Box-2-isometric-back.png" in names
+    assert "Box-2-isometric-front-left.png" in names
     assert window.view3d.camera_state() == before   # never moved
     assert any("built-in renderer" in w for w in bundle["warnings"])
     cover = QImage(bundle["images"][0])

@@ -743,27 +743,33 @@ into a new module and import.
                        (plus `<stem>-<object>.stl` per visible Object
                        at its own origin, via `subtree_scad` /
                        `anchors.local_tris`, when there are 2+),
-                       preview stills of **every side** — `STILL_VIEWS`
-                       (mcp_schema): front-right isometric, back-left
-                       isometric, front, back, left, right, top,
-                       bottom, all by default — the front-right
-                       isometric first and larger since Printables
-                       makes the first image the cover. OpenSCAD
-                       renders them (`engine.export_png`); without it
-                       the built-in renderer does (`pngexport.render`,
-                       an offscreen snapshot, never the user's camera).
-                       Both aim from ONE table, `engine.CAMERA_ROTATIONS`
+                       preview stills from **three-quarter angles** —
+                       `DEFAULT_VIEWS` = `ISO_VIEWS` (mcp_schema): the
+                       isometric from all four corners, three-quarter
+                       front, bird's-eye, low angle, underside; the
+                       square-on `ORTHO_VIEWS` stay askable by name —
+                       the front-right isometric first and larger since
+                       Printables makes the first image the cover.
+                       **Every still is painted by the 3D view**
+                       (`pngexport.render`, an offscreen snapshot, never
+                       the user's camera) with the user's colours,
+                       materials, style, lighting, platform & shadow,
+                       cavity and edges — OpenSCAD's own `--render`
+                       PNG (one flat colour scheme) looked nothing like
+                       the screen. The geometry is still exact: the
+                       bundle first waits for the engine to go idle
+                       (`engine.wait_until_idle`, `RENDER_WAIT_S`), so
+                       every part's exact mesh is in the view. Pictures
+                       render at `pngexport.pixel_ratio` (the pane's
+                       size × ratio, Retina-style: `View3D.snapshot(
+                       pixel_ratio=)` scales the painter and grows the
+                       GL framebuffer) so lines, shadow and platform
+                       keep the screen's proportions. Cameras come from
+                       ONE table, `engine.CAMERA_ROTATIONS`
                        (`engine.view_angles`: yaw = rz - 90, pitch =
-                       90 - rx). The fallback used to aim with
-                       `View3D.VIEWS`, whose "Isometric" (35, 25) looked
-                       from the BACK-right while OpenSCAD's (55,0,25)
-                       looks from the front-right, so a bundle built
-                       without OpenSCAD led with the back of the model;
-                       the preset is now (-65, 35) and a test pins the
-                       two tables together. Each still is **cropped to
-                       the model** by `trim_to_content` (`--viewall`
-                       frames the bounding *sphere*, so a long diagonal
-                       part renders correct and tiny); a generated or
+                       90 - rx); a test pins `View3D.VIEWS` to it (its
+                       "Isometric" once looked from the back-right). A
+                       generated or
                        assistant-written **plain-text**
                        `description.txt` (Markdown pasted into
                        Printables' box reads back as literal hashes),
@@ -831,9 +837,9 @@ into a new module and import.
                        user's camera never moves. **Current view**
                        keeps the on-screen camera exactly; **All
                        standard views** writes `<stem>-<n>-<view>.png`
-                       per `STILL_VIEWS` entry, framed, cover first —
+                       per `DEFAULT_VIEWS` entry, framed, cover first —
                        the same set and cameras as the Printables
-                       stills (`printables` falls back to `render`).
+                       stills (`printables` paints them through `render`).
                        Size presets up to 4K plus window size × 2 (the
                        on-screen framing); **transparent** is a
                        snapshot flag, not post-processing (skip the

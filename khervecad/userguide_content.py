@@ -761,8 +761,9 @@ variable, part and snap. Save {K("Ctrl+S")}, Save As
 OpenSCAD is installed); <b>Export OpenSCAD</b> {K("Ctrl+E")}.</li>
 <li><b>Export PNG</b> {K("Ctrl+Alt+E")} saves a picture of the 3D view in
 its colours, style and lighting: the <b>current view</b> exactly as the
-camera shows it, or <b>all standard views</b> (front-right and back-left
-isometric, front, back, left, right, top, bottom), one file each. Pick a
+camera shows it, or <b>all standard views</b> (the isometric from all
+four corners, three-quarter front, bird's-eye, low angle and underside),
+one file each. Pick a
 size up to 4K, and tick <b>Transparent background</b> to drop the picture
 onto a slide or a web page. Your own camera never moves.</li>
 <li><b>Make Drawing</b> {K("Ctrl+Shift+D")} produces a 2D engineering
@@ -789,8 +790,9 @@ GitHub / GitLab</b> sets up the remote.</p>
 {K("Ctrl+Shift+P")} prepares everything for an upload: STL and 3MF
 files &mdash; and, for an assembly, <b>one STL per Object</b>
 (<code>name-Object.stl</code>, each at its own origin, ready to print
-apart) &mdash; the .scad and .kcad, a source ZIP, preview pictures of
-every side (the
+apart) &mdash; the .scad and .kcad, a source ZIP, preview pictures
+painted exactly like the 3D view (your colours, materials, lighting,
+platform and shadow) from eight three-quarter angles (the
 front-right isometric first, as the cover), a description and the
 upload form's answers. It then opens the Printables
 upload page; the final upload is yours to click.</p>

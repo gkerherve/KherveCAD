@@ -11,13 +11,14 @@ Two kinds of export:
 
 * **Current view** — exactly the camera on screen (same direction,
   distance, target and projection), at the size asked for.
-* **All standard views** — one file per `STILL_VIEWS` entry, each
-  framed on the whole model, front-right isometric first.  The same
-  set, in the same order, as the preview stills of a Printables bundle
-  (`printables._render_previews` falls back to `render` when OpenSCAD
-  is missing), and the cameras come from the same table
-  (`engine.CAMERA_ROTATIONS` via `engine.view_angles`), so the two can
-  never disagree about which side is the front.
+* **All standard views** — one file per `DEFAULT_VIEWS` entry (the
+  three-quarter set: every corner, the product angles, the underside),
+  each framed on the whole model, front-right isometric first.  The
+  same set, in the same order and through this same `render`, as the
+  preview stills of a Printables bundle, and the cameras come from the
+  one table OpenSCAD also reads (`engine.CAMERA_ROTATIONS` via
+  `engine.view_angles`), so nothing can disagree about which side is
+  the front.
 
 `export_request` is the `export_document` MCP tool's PNG branch.
 
@@ -42,7 +43,7 @@ from PyQt5.QtWidgets import (QApplication, QButtonGroup, QCheckBox,
                              QPushButton, QRadioButton, QVBoxLayout)
 
 from .engine import CAMERA_ROTATIONS, view_angles
-from .mcp_schema import PNG_DEFAULT_SIZE, STILL_VIEWS
+from .mcp_schema import DEFAULT_VIEWS, PNG_DEFAULT_SIZE, STILL_VIEWS
 
 #: The view that leads: Printables makes the first image the cover, and
 #: a numbered folder sorts it first everywhere else too.
@@ -92,15 +93,39 @@ def file_name(stem, index, view) -> str:
     return f"{stem}-{index}-{tag}.png"
 
 
+#: The smallest view a picture's proportions are taken from: a 3D pane
+#: squeezed to a sliver (or never shown, offscreen) would otherwise
+#: turn every line into a smear.
+MIN_REFERENCE = (480, 360)
+
+
+def pixel_ratio(view3d, width, height) -> float:
+    """How many picture pixels per unit of the on-screen 3D view.
+
+    A 2000-pixel still painted at 1:1 has the same one-pixel edge lines,
+    shadow blur and platform rim as a pane half its size, so the model
+    looks thin and the shading flat next to what the user was looking
+    at.  Rendering the pane's own size at this ratio — what a Retina
+    screen does — keeps every proportion of the screen, only sharper.
+    """
+    ref_w = max(view3d.width(), MIN_REFERENCE[0])
+    ref_h = max(view3d.height(), MIN_REFERENCE[1])
+    return max(1.0, min(width / float(ref_w), height / float(ref_h)))
+
+
 def render(view3d, width, height, view="current", transparent=False):
-    """A QImage of the model. *view* is ``"current"`` (the camera on
-    screen, untouched) or a standard view name (framed on the whole
+    """A QImage of the model, painted the way the 3D view paints it —
+    colours, materials, render style, lighting, platform and shadow,
+    cavity shading and edge lines. *view* is ``"current"`` (the camera
+    on screen, untouched) or a standard view name (framed on the whole
     model from that side)."""
     if not view3d.mesh:
         raise ValueError("There is nothing in the 3D view to export.")
+    ratio = pixel_ratio(view3d, width, height)
     if view == "current":
         image, _cam = view3d.snapshot(width, height, clean=True,
-                                      transparent=transparent)
+                                      transparent=transparent,
+                                      pixel_ratio=ratio)
         return image
     if view not in CAMERA_ROTATIONS:
         raise ValueError(f"Unknown view {view!r}. Choose one of: "
@@ -108,7 +133,8 @@ def render(view3d, width, height, view="current", transparent=False):
     yaw, pitch = camera(view)
     image, _cam = view3d.snapshot(width, height, yaw=yaw, pitch=pitch,
                                   frame=True, clean=True,
-                                  transparent=transparent)
+                                  transparent=transparent,
+                                  pixel_ratio=ratio)
     return image
 
 
@@ -139,7 +165,7 @@ def export_current(view3d, path, size, transparent=False) -> Path:
 
 
 def export_views(view3d, folder, stem, size, transparent=False,
-                 views=STILL_VIEWS) -> list:
+                 views=DEFAULT_VIEWS) -> list:
     """One PNG per view into *folder*, cover first. Returns the paths."""
     names, unknown = ordered_views(views)
     if unknown:
@@ -182,7 +208,7 @@ def export_request(view3d, path, *, view="current", width=None,
         paths = export_views(view3d, path.parent, path.stem, size,
                              transparent)
         result.update(exported=[str(p) for p in paths],
-                      views=ordered_views(STILL_VIEWS)[0])
+                      views=ordered_views(DEFAULT_VIEWS)[0])
     else:
         image = render(view3d, size[0], size[1], view, transparent)
         result.update(exported=str(_save(image, path)), view=view)
@@ -248,11 +274,12 @@ class PngExportDialog(QDialog):
         self.current_radio = QRadioButton(
             "Current view — exactly the camera on screen")
         self.all_radio = QRadioButton(
-            "All standard views — %d files, one per side"
-            % len(STILL_VIEWS))
+            "All standard views — %d three-quarter pictures"
+            % len(DEFAULT_VIEWS))
         self.all_radio.setToolTip(
-            "Front-right and back-left isometric, front, back, left, "
-            "right, top and bottom — each framed on the whole model")
+            "Isometric from all four corners, three-quarter front, "
+            "bird's-eye, low angle and underside — each framed on the "
+            "whole model, looking the way the 3D view does")
         self._what = QButtonGroup(self)
         for button in (self.current_radio, self.all_radio):
             self._what.addButton(button)

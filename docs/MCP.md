@@ -202,12 +202,16 @@ What it does instead is everything up to that point, in one call:
 - **Source** — the `.scad` program and the `.kcad` project, so the
   listing ships something editable rather than a frozen mesh. That is
   the point of publishing from a parametric tool.
-- **Previews** — a still of **every side** by default: the front-right
-  isometric (always first, so it is the cover), the back-left
-  isometric, then front, back, left, right, top and bottom, each
-  framed with `--viewall`. Without the binary the built-in renderer
-  draws the same views from the same cameras (an offscreen snapshot:
-  the user's view does not move), and the result says so.
+- **Previews** — stills painted by the 3D view's own renderer, so they
+  look like what the user sees: colours, materials, lighting, platform
+  and shadow, cavity shading and edge lines, at the screen's
+  proportions. The default set is three-quarter: the isometric from
+  all four corners (front-right first, so it is the cover),
+  three-quarter front, bird's-eye, low angle and underside. The
+  square-on Front / Back / Left / Right / Top / Bottom can still be
+  asked for by name. With OpenSCAD installed the bundle first waits for
+  every part's exact mesh (holes cut); the pictures come from an
+  offscreen twin, so the user's view does not move.
 - **`description.md`** — the assistant writes the body; the bundle
   appends a credit naming KherveCAD (khervetools.com), OpenSCAD and
   Claude, and never twice. Passing no description falls back to a

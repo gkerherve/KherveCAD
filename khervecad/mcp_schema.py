@@ -61,18 +61,25 @@ SUMMARY_LIMIT = 120
 #: What the bundle can contain, by extension.
 FORMATS = ("stl", "3mf", "scad", "kcad")
 
-#: Every standard still — what a Printables bundle renders and what
-#: File > Export PNG > All standard views writes — cover first: the
-#: front-right isometric, then the opposite corner, then the six faces.
-#: `engine.CAMERA_ROTATIONS` holds the camera for each.
-STILL_VIEWS = ("Isometric", "Isometric back", "Front", "Back", "Left",
-               "Right", "Top", "Bottom")
+#: The three-quarter stills: every corner from above, the classic
+#: product angles and the underside — pictures of a solid, where a face
+#: seen square-on reads as a flat 2D drawing.  The front-right
+#: isometric leads, as the cover.
+ISO_VIEWS = ("Isometric", "Isometric front-left", "Isometric back-right",
+             "Isometric back", "Three-quarter front", "Bird's-eye",
+             "Low angle", "Underside")
 
-#: Camera angles rendered unless the caller says otherwise: all of
-#: them.  Someone deciding whether to print a part wants to see every
-#: side of it, and the upload page keeps the files in order, so the
+#: The square-on faces, still on offer when a listing wants them.
+ORTHO_VIEWS = ("Front", "Back", "Left", "Right", "Top", "Bottom")
+
+#: Every standard still a Printables bundle or File > Export PNG can
+#: render; `engine.CAMERA_ROTATIONS` holds the camera for each.
+STILL_VIEWS = ISO_VIEWS + ORTHO_VIEWS
+
+#: Camera angles rendered unless the caller says otherwise: the
+#: three-quarter set.  The upload page keeps the files in order, so the
 #: front-right isometric still gets the cover.
-DEFAULT_VIEWS = STILL_VIEWS
+DEFAULT_VIEWS = ISO_VIEWS
 
 #: A PNG of a named view, when no size is given (File > Export PNG,
 #: export_document).
@@ -989,8 +996,11 @@ TOOLS = [
             "Build a complete Printables upload bundle for the open "
             "model in one call: the mesh (STL and 3MF), the "
             "parametric .scad source, the .kcad project, preview "
-            "renders of every side (the front-right isometric "
-            "first, as the cover), description.txt "
+            "stills painted the way the 3D view shows the model "
+            "(colours, materials, lighting, platform and shadow) "
+            "from three-quarter angles — every corner, the product "
+            "angles and the underside, the front-right isometric "
+            "first, as the cover — description.txt "
             "and upload-form.txt (every field of Printables' add-a-"
             "model form, already answered). "
             "Printables has NO upload API, so this does not and "

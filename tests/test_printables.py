@@ -331,34 +331,28 @@ def test_tool_rejects_an_unknown_category(cube_window, tmp_path):
     assert "Spaceships" in result["error"]
 
 
-def test_a_render_is_cropped_to_the_model(tmp_path):
-    """OpenSCAD frames the bounding sphere, so a small part sits in a
-    sea of background — the cover has to be trimmed to it."""
-    from PyQt5.QtGui import QColor, QImage
-    image = QImage(800, 600, QImage.Format_RGB32)
-    image.fill(QColor("white"))
-    for y in range(290, 310):
-        for x in range(390, 410):
-            image.setPixelColor(x, y, QColor("black"))
-    path = tmp_path / "shot.png"
-    image.save(str(path))
-
-    assert printables.trim_to_content(str(path))
-    out = QImage(str(path))
-    assert out.width() < 800
-    assert out.width() >= 800 * 0.45      # never trimmed to a stamp
-    assert abs(out.width() / out.height() - 4 / 3.0) < 0.05
-
-
-def test_a_full_frame_render_is_left_alone(tmp_path):
-    from PyQt5.QtGui import QColor, QImage
-    image = QImage(800, 600, QImage.Format_RGB32)
-    image.fill(QColor("black"))
-    image.setPixelColor(0, 0, QColor("white"))
-    path = tmp_path / "full.png"
-    image.save(str(path))
-    assert not printables.trim_to_content(str(path))
-    assert QImage(str(path)).width() == 800
+def test_stills_are_painted_by_the_3d_view_even_with_openscad(
+        cube_window, tmp_path, monkeypatch):
+    """OpenSCAD's own --render still (one flat colour scheme, no
+    materials, no platform) is what made the pictures look nothing like
+    the model on screen: with the engine present the bundle waits for
+    the exact meshes and then paints through the 3D view instead."""
+    engine = cube_window.engine
+    waited, exported = [], []
+    monkeypatch.setattr(type(engine), "available", property(lambda s: True))
+    monkeypatch.setattr(engine, "wait_idle",
+                        lambda t: waited.append(t) or True)
+    monkeypatch.setattr(engine, "export_png",
+                        lambda *a, **k: exported.append(a) or "")
+    monkeypatch.setattr(engine, "export_mesh", lambda *a, **k: "")
+    cube_window._refresh_preview()
+    bundle = printables.build_bundle(
+        cube_window, tmp_path / "out", title="Cube", formats=("scad",),
+        views=("Isometric", "Underside"), image_size=(200, 150))
+    assert waited and exported == []
+    names = [Path(p).name for p in bundle["images"]]
+    assert names == ["Cube-1-isometric.png", "Cube-2-underside.png"]
+    assert not any("built-in renderer" in w for w in bundle["warnings"])
 
 
 def test_print_settings_can_be_overridden(cube_window, tmp_path):

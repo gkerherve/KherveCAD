@@ -39,7 +39,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
                              QPushButton, QVBoxLayout)
 
 from . import document, mesh, pngexport
-from .engine import CAMERA_ROTATIONS, write_stl
+from .engine import write_stl
 from .mcp_schema import (CATEGORIES, DEFAULT_CATEGORY,
                          DEFAULT_LICENSE, DEFAULT_ORIGIN,
                          DEFAULT_VIEWS, FORMATS, LICENSES, ORIGINS,
@@ -521,8 +521,8 @@ def build_bundle(window, folder, *, title, description="", tags=(),
                 bundle.write(member, member.name)
         wrote(path)
 
-    images = _render_previews(window, folder, stem, code, views,
-                              image_size, warnings)
+    images = _render_previews(window, folder, stem, views, image_size,
+                              warnings)
     files += [str(p) for p in images]
 
     body = description or default_description(window, title,
@@ -577,113 +577,70 @@ def build_bundle(window, folder, *, title, description="", tags=(),
             "warnings": warnings}
 
 
-def trim_to_content(path, margin=0.06, aspect=4 / 3.0) -> bool:
-    """Crop *path* down to the model, keeping *aspect*.
-
-    OpenSCAD's ``--viewall`` frames the bounding SPHERE, so a long thin
-    part lying on a diagonal is rendered correct and tiny — most of the
-    canvas is empty background, and on Printables that is the thumbnail
-    people decide on.  The background is flat, so the model's real
-    extent is just the pixels that differ from the corner colour;
-    cropping to that with a margin turns the same render into a picture
-    of the part.  Returns False and leaves the file alone if there is
-    nothing to crop.
-    """
-    from PyQt5.QtGui import QImage
-    image = QImage(str(path))
-    if image.isNull():
-        return False
-    image = image.convertToFormat(QImage.Format_RGB32)
-    width, height = image.width(), image.height()
-    background = image.pixel(0, 0)
-
-    def differs(x, y):
-        pixel = image.pixel(x, y)
-        return (abs(((pixel >> 16) & 255) - ((background >> 16) & 255))
-                + abs(((pixel >> 8) & 255) - ((background >> 8) & 255))
-                + abs((pixel & 255) - (background & 255))) > 12
-
-    step = max(1, min(width, height) // 400)   # a scan, not a survey
-    xs, ys = [], []
-    for y in range(0, height, step):
-        for x in range(0, width, step):
-            if differs(x, y):
-                xs.append(x)
-                ys.append(y)
-    if not xs:
-        return False
-    x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
-    span = max(x1 - x0, (y1 - y0) * aspect) * (1 + 2 * margin)
-    if span >= width * 0.92:
-        return False                    # already fills the frame
-    cx, cy = (x0 + x1) / 2.0, (y0 + y1) / 2.0
-    # never crop past this: a front view of a flat part is a sliver,
-    # and trimming to it exactly would hand Printables a 200 px image.
-    box_w = min(width, max(span, width * 0.45))
-    box_h = min(height, box_w / aspect)
-    box_w = box_h * aspect
-    left = int(max(0, min(width - box_w, cx - box_w / 2)))
-    top = int(max(0, min(height - box_h, cy - box_h / 2)))
-    crop = image.copy(left, top, int(box_w), int(box_h))
-    return bool(crop.save(str(path), "PNG"))
+#: How long the stills wait for OpenSCAD's exact per-part meshes before
+#: taking the preview as it stands (a threaded assembly can take a
+#: minute the first time; after that every part is cached).
+RENDER_WAIT_S = 120.0
 
 
-def _render_previews(window, folder, stem, code, views, size,
-                     warnings) -> list:
-    """Preview stills, from OpenSCAD where it is installed and from the
-    built-in renderer where it is not.
+def _render_previews(window, folder, stem, views, size, warnings) -> list:
+    """Preview stills, painted by the 3D view's own renderer.
 
-    Every standard view by default (`STILL_VIEWS`): the front-right
-    isometric, the back-left one, and the six faces, so a listing shows
-    every side of the part.  Printables makes the FIRST image the
-    cover, and a listing is judged on it, so the front-right isometric
-    is rendered first and larger than the rest.  The names are numbered
-    because the upload page keeps the order the files arrive in, which
-    is the order the file dialog lists them.
+    They used to come from OpenSCAD's ``--render`` whenever it was
+    installed: its one flat colour scheme, no materials, no platform
+    or shadow — nothing like the model the user had been looking at.
+    Now every still goes through `pngexport.render`, an offscreen twin
+    of the 3D view with the user's colours, materials, style, lighting,
+    cavity shading and edge lines, at the screen's proportions.  The
+    geometry is still OpenSCAD's: the 3D view shows each part's EXACT
+    mesh once it has rendered, so this first waits for the engine to go
+    idle (holes cut, threads real) and says so when it could not.
 
-    Both renderers take their camera from `engine.CAMERA_ROTATIONS`
-    (the built-in one through `engine.view_angles`).  The fallback used
-    to aim with `View3D.VIEWS`, whose "Isometric" then looked from the
-    back-right — so a machine without OpenSCAD published the back of
-    the model as its cover — and it grabbed the user's own view,
-    moving their camera and photographing the grid and badge with it.
+    The three-quarter set by default (`DEFAULT_VIEWS`): every corner
+    from above, the product angles and the underside — pictures of a
+    solid, where a face seen square-on reads as a flat drawing.
+    Printables makes the FIRST image the cover, so the front-right
+    isometric leads and is rendered larger than the rest.  The names are
+    numbered because the upload page keeps the order the files arrive
+    in, which is the order the file dialog lists them.
     """
     ordered, unknown = pngexport.ordered_views(views)
     for name in unknown:
         warnings.append(f"Skipped unknown view {name!r}.")
-    exact = window.engine.available
-    if ordered and not exact:
+    if not ordered:
+        return []
+    if window.engine.available:
+        if not window.engine.wait_idle(RENDER_WAIT_S):
+            warnings.append(
+                "OpenSCAD was still rendering after %d s, so some parts "
+                "in the pictures are the built-in preview's (holes may "
+                "not be cut). Build the bundle again once the 3D view's "
+                "badge says every part is exact." % RENDER_WAIT_S)
+    else:
         warnings.append(
-            "The preview images come from the built-in renderer "
-            "because OpenSCAD was not found." + (
+            "The preview images come from the built-in renderer without "
+            "OpenSCAD's exact meshes, because OpenSCAD was not found." + (
                 " This model uses booleans, which it only approximates "
                 "— holes are not cut in the pictures."
                 if mesh.uses_booleans(window.model.root) else ""))
+    builder = getattr(window, "builder", None)
+    part = builder.isolated_component() if builder is not None else None
+    if part is not None:
+        warnings.append(f"The Object tab is open, so the pictures show "
+                        f"only {part.name}. Switch to Main to picture the "
+                        f"whole model.")
 
     out = []
     for index, name in enumerate(ordered, 1):
         path = folder / pngexport.file_name(stem, index, name)
         shot = (int(size[0] * 1.3), int(size[1] * 1.3)) if index == 1 \
             else size
-        if exact:
-            error = window.engine.export_png(
-                code, str(path), rotation=CAMERA_ROTATIONS[name],
-                size=shot)
-            if error:
-                warnings.append(f"{name} preview failed: {error}")
-                continue
-        else:
-            try:
-                image = pngexport.render(window.view3d, shot[0], shot[1],
-                                         name)
-                pngexport._save(image, path)
-            except (ValueError, OSError) as exc:
-                warnings.append(f"{name} preview failed: {exc}")
-                continue
         try:
-            trim_to_content(path)
-        except Exception as exc:                     # cosmetic, never fatal
-            warnings.append(f"{name} preview was not cropped: {exc}")
+            image = pngexport.render(window.view3d, shot[0], shot[1], name)
+            pngexport._save(image, path)
+        except (ValueError, OSError) as exc:
+            warnings.append(f"{name} preview failed: {exc}")
+            continue
         out.append(path)
     return out
 
@@ -765,8 +722,9 @@ class PublishDialog(QDialog):
         layout.addWidget(files_box)
 
         from PyQt5.QtWidgets import QGridLayout
-        views_box = QGroupBox("Preview images — the front-right "
-                              "Isometric is always first, as the cover")
+        views_box = QGroupBox("Preview images — painted like the 3D "
+                              "view; the front-right Isometric is always "
+                              "first, as the cover")
         views_grid = QGridLayout(views_box)
         self._view_boxes = {}
         for index, name in enumerate(STILL_VIEWS):

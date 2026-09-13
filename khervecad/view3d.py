@@ -424,9 +424,18 @@ class View3D(QWidget):
 
     def snapshot(self, width, height, *, yaw=None, pitch=None,
                  distance=None, target=None, projection=None,
-                 frame=None, zoom=1.0, clean=False, transparent=False):
+                 frame=None, zoom=1.0, clean=False, transparent=False,
+                 pixel_ratio=1.0):
         """Paint the scene from another camera into a QImage, leaving
         this view — the user's camera — exactly where it is.
+
+        *pixel_ratio* renders a view of ``width / ratio`` by ``height /
+        ratio`` at ``ratio`` pixels per unit, the way a Retina screen
+        paints: framing, line widths, shadow softness and text keep the
+        proportions they have on screen instead of shrinking into a big
+        empty picture, and everything stays crisp (the painter draws
+        vectors through a scaled transform, OpenGL renders the bigger
+        framebuffer).
 
         An offscreen twin gets the same mesh, colours, selection, style,
         background and lighting; only the camera differs. *frame* is a
@@ -442,7 +451,11 @@ class View3D(QWidget):
         twin = View3D()
         twin.lighting_bar.hide()
         twin._clean, twin._transparent = bool(clean), bool(transparent)
-        twin.resize(max(int(width), 2), max(int(height), 2))
+        ratio = max(float(pixel_ratio or 1.0), 1.0)
+        width, height = max(int(width), 2), max(int(height), 2)
+        twin._pixel_ratio = ratio
+        twin.resize(max(int(round(width / ratio)), 2),
+                    max(int(round(height / ratio)), 2))
         twin.style, twin.background = self.style, self.background
         twin.brightness, twin.contrast = self.brightness, self.contrast
         # the stage, and its per-mesh cache (the twin gets the same list)
@@ -472,10 +485,11 @@ class View3D(QWidget):
             twin.distance = max(float(distance), 1e-3)
         if zoom and float(zoom) != 1.0:
             twin.distance /= max(float(zoom), 1e-3)
-        img = QImage(QSize(twin.width(), twin.height()),
-                     QImage.Format_ARGB32)
+        img = QImage(QSize(width, height), QImage.Format_ARGB32)
         img.fill(0)
         painter = QPainter(img)
+        painter.scale(width / float(twin.width()),
+                      height / float(twin.height()))
         if transparent:
             # render() lays the palette's window colour under the widget
             # unless told not to — filling the very ground that is meant
@@ -757,7 +771,9 @@ class View3D(QWidget):
             return
         if len(verts) > 3000:                     # sample: fit is exact
             verts = verts[::len(verts) // 3000]   # enough at this scale
-        if whole and self.stage:                  # frame the platform too
+        # frame the platform too — but only from above: from below it is
+        # not drawn, and framing it left the model small in the middle
+        if whole and self.stage and self.pitch > 0:
             verts = verts + self._stage_obj().rim_points(self.mesh)
         xs = [v[0] for v in verts]
         ys = [v[1] for v in verts]
@@ -912,7 +928,9 @@ class View3D(QWidget):
                 self, self.mesh, self.colors, info, eye, right, up,
                 forward, light, edge_color)
             if image is not None:
-                painter.drawImage(0, 0, image)
+                # a snapshot's framebuffer is pixel_ratio times the view
+                painter.drawImage(QRectF(0, 0, self.width(), self.height()),
+                                  image)
                 self._gl_drew = True
             elif self._bsp is None:
                 self._start_bsp_build()      # GL gave up: painter from now

@@ -366,24 +366,8 @@ class McpToolExecutor:
 
         Re-entry is safe: the bridge refuses a second tool call while
         this one runs — the guard an STL export already relies on."""
-        import time
-
-        from PyQt5.QtCore import QCoreApplication, QEventLoop, QThread
-        engine = self._w.engine
-        if not engine.available:
-            return True           # the built-in preview IS the final word
-        deadline = time.monotonic() + timeout_s
-        calm = 0
-        while True:
-            QCoreApplication.processEvents(QEventLoop.AllEvents, 50)
-            # idle on two passes in a row: a finished part that queues
-            # the next render has had its chance to do so
-            calm = calm + 1 if engine.is_idle() else 0
-            if calm >= 2:
-                return True
-            if time.monotonic() >= deadline:
-                return False
-            QThread.msleep(15)
+        from .engine import wait_until_idle
+        return wait_until_idle(self._w.engine, timeout_s)
 
     def _world_tris(self, node) -> list:
         """World-space triangles of *node* as the 3D view draws it (in
