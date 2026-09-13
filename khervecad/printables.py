@@ -62,7 +62,7 @@ TOOLS_URL = "https://khervetools.com"
 _CREDIT_HEAD = """\
 MADE WITH
 
-Designed in KherveCAD ({tools}) - a free, open-source parametric CAD app with OpenSCAD as its engine - and described with the help of Claude (Anthropic).
+Vibe designed in KherveCAD ({tools}) - a free, open-source parametric CAD app with OpenSCAD as its engine - and described with the help of Claude (Anthropic).
 """
 
 #: Added only when the source really is in the folder.  A listing that
@@ -131,7 +131,7 @@ def default_summary(window, title: str = "") -> str:
     drawn parametrically, and its footprint if that still fits.
     """
     name = (title or "This model").strip()
-    text = f"{name} - parametric model designed in KherveCAD"
+    text = f"{name} - parametric model vibe designed in KherveCAD"
     size = _bounds(window.model, fn=(window.model.global_fn
                                      if window.model.global_fn_on
                                      else None))
@@ -259,7 +259,7 @@ def opening(window, title: str = "") -> str:
         first += " is a %g x %g x %g mm part" % tuple(size)
     else:
         first += " is a part"
-    first += " designed in KherveCAD and exported straight from the "
+    first += " vibe designed in KherveCAD and exported straight from the "
     first += "object tree that defines it."
 
     objects, booleans, extrusions = _shape_of(model)

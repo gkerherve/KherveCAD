@@ -410,3 +410,11 @@ def test_an_assembly_gets_one_stl_per_object(window, tmp_path):
                                      views=())
     assert not any(Path(f).name.startswith("Cube-") and f.endswith(".stl")
                    for f in single["files"])
+
+
+def test_the_texts_say_vibe_designed(cube_window):
+    assert "Vibe designed in KherveCAD" in printables.credit()
+    assert "vibe designed in KherveCAD" in printables.default_summary(
+        cube_window, "Cube")
+    assert "vibe designed in KherveCAD" in printables.opening(
+        cube_window, "Cube")
