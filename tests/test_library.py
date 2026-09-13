@@ -372,7 +372,8 @@ def test_liquid_colour_and_empty_vessels(model):
     purple = library.build_part("chem_erlenmeyer",
                                 dict(dims, _color="Permanganate (purple)"))
     liquid = next(n for n in purple.walk() if n.name == "Liquid")
-    assert liquid.params["color"] == "#7a2a8c"
+    assert liquid.params["color"] == \
+        library_chem.LIQUIDS["Permanganate (purple)"][0]
     empty = library.build_part("chem_erlenmeyer", dict(dims, _color="Empty"))
     assert not any(n.name == "Liquid" for n in empty.walk())
     assert library_chem.PARTS["chem_beaker"]["colors"][-1] == "Empty"
