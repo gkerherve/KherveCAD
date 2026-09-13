@@ -19,7 +19,7 @@ import os
 from .meshimport import relative_for_save, resolve_paths
 from .model import NODE_TYPES, CadNode, DocumentModel
 
-FORMAT_VERSION = 7          # 4: "component" (Object) node type
+FORMAT_VERSION = 8          # 4: "component" (Object) node type
                             # 5: instances (reference->component) may
                             #    carry a "mate" record
                             # 6: organic/mesh node types; color nodes
@@ -27,6 +27,8 @@ FORMAT_VERSION = 7          # 4: "component" (Object) node type
                             # 7: stl_import carries rx/ry/rz/scale, and
                             #    its path is relative to the .kcad when
                             #    the mesh is inside the document folder
+                            # 8: "drawing" — the Blueprint sheet (views,
+                            #    annotations, title block); absent = none
 
 
 def node_to_dict(node: CadNode) -> dict:
@@ -56,6 +58,8 @@ def save_kcad(model: DocumentModel, path: str):
             "dimensions": model.dimensions,
             "references": model.reference_images,
             "tree": node_to_dict(model.root)}
+    if model.drawing:
+        data["drawing"] = model.drawing
     relative_for_save(data["tree"], path)   # the folder travels whole
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=1)
@@ -73,10 +77,12 @@ def load_kcad(model: DocumentModel, path: str):
     model.global_fn_on = bool(data.get("global_fn_on", True))
     model.dimensions = [dict(d) for d in data.get("dimensions", [])]
     model.reference_images = [dict(r) for r in data.get("references", [])]
+    model.drawing = data.get("drawing") or None
     model.group_variables()               # gather loose top-level vars
     model.structure_changed.emit()
     model.dimensions_changed.emit()
     model.references_changed.emit()
+    model.drawing_changed.emit()
 
 
 def export_scad(model: DocumentModel, path: str):

@@ -918,7 +918,12 @@ TOOLS = [
             "middle, on an A4/A3 sheet at a standard scale with a title "
             "block. Written by the path's extension: .pdf, .svg, .dxf "
             "(lines on VISIBLE / HIDDEN / DIM / SECTION layers, sheet "
-            "mm) or .png."
+            "mm) or .png. When the user has made a Blueprint for this "
+            "document (File > Blueprint), that sheet is exported "
+            "instead — their views, dimensions, notes and title block, "
+            "re-projected from the model as it is now — unless "
+            "blueprint is false; the sheet options below then do not "
+            "apply."
         ),
         "input_schema": _obj({
             "path": {"type": "string",
@@ -948,6 +953,11 @@ TOOLS = [
                                      "the largest standard scale that "
                                      "fits."},
             "title": {"type": "string"},
+            "blueprint": {"type": "boolean",
+                          "description": "Export the document's saved "
+                                         "Blueprint sheet when it has one "
+                                         "(true). False draws a fresh "
+                                         "sheet from the options above."},
         }, ["path"]),
     },
     {

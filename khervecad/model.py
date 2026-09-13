@@ -931,6 +931,8 @@ class DocumentModel(QObject):
     dimensions_changed = pyqtSignal()
     #: the reference images (refimage.py) were added/removed/changed.
     references_changed = pyqtSignal()
+    #: the Blueprint sheet (blueprint.py) was edited or replaced.
+    drawing_changed = pyqtSignal()
     #: a mate was dropped because its placement was edited by hand.
     mate_released = pyqtSignal(object)
 
@@ -955,6 +957,11 @@ class DocumentModel(QObject):
         #: pictures to model against, each {"path", "plane", "x", "y",
         #: "width", "height", "offset", "opacity", "visible"}
         self.reference_images = []
+        #: the Blueprint sheet (blueprint.py): views, annotations and
+        #: title block as a plain dict, or None before one is made. Kept
+        #: out of the undo snapshots — the Blueprint window has its own
+        #: undo, and a Ctrl+Z in the model must not rewind the drawing.
+        self.drawing = None
         self.undo_stack = QUndoStack(self)
         self._restoring = False
         self._last_state = self._serialize()
@@ -1537,8 +1544,10 @@ class DocumentModel(QObject):
 
     def clear(self):
         self.reference_images = []
+        self.drawing = None
         self.root = CadNode("root")
         self.structure_changed.emit()
+        self.drawing_changed.emit()
 
 
 class _SnapshotCommand(QUndoCommand):

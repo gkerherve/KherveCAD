@@ -810,7 +810,26 @@ into a new module and import.
                        runs with a `DepthGrid` — a pure-Python
                        z-buffer at `GRID` cells across the model —
                        sampling `SAMPLES` points per edge (one-sample
-                       runs are grid flicker, folded away); `layout`
+                       runs are grid flicker, folded away, and runs
+                       under 0.2 % of the model join their neighbour).
+                       The grid also records the NEAREST TRIANGLE per
+                       cell: an edge is never hidden by its own faces,
+                       their neighbours or the smooth surface around
+                       them (`surroundings`, crease-free rings) — at a
+                       curved silhouette the facets are seen edge-on
+                       and the cell beside the edge lands a facet or
+                       two round, a whole tolerance in front, which
+                       drew cylinder sides dashed or dropped them.
+                       Hidden stretches lying on a visible line are
+                       dropped (`_uncovered` — an odd-segment rim's
+                       back half is no mirror of its front, so it
+                       survived the dedupe as dashes over a solid line).
+                       Also Qt-free helpers the Blueprint stands on:
+                       `find_circles` (round edges seen end-on: chains
+                       of equal chords, `MAX_TURN` rejects a hex nut),
+                       `merge_collinear`, `clip_to_circle`,
+                       `hatch_segments` (even-odd), `title_block_cells`
+                       / `TITLE_FIELDS` and `projection_symbol`; `layout`
                        places the views in the third-angle arrangement
                        on an A4/A3/Letter sheet at the largest `SCALES`
                        entry that fits, with `overall_dimensions` and
@@ -823,11 +842,75 @@ into a new module and import.
                        SVG (`QSvgGenerator`), PNG, and writes a minimal
                        DXF R12 by hand (LINE/TEXT on VISIBLE, HIDDEN,
                        DIM, SECTION, TEXT layers, sheet mm).
-  - `drawing_dialog.py` — File ▸ Make Drawing… (Ctrl+Shift+D): title,
-                       sheet, views, dimensions, hidden lines, section
-                       axis, scale, a live preview; `make_layout` is
-                       what the `export_drawing` MCP tool calls too
-                       (the selection, else the render scope).
+  - `drawing_dialog.py` — `make_layout`, the quick sheet the
+                       `export_drawing` MCP tool draws when the
+                       document has no Blueprint (the selection, else
+                       the render scope). Its dialog is gone: File ▸
+                       Blueprint replaced it.
+  - `blueprint.py`   — **File ▸ Blueprint… (Ctrl+Shift+D, toolbar)**:
+                       the 2D engineering drawing in its own non-modal
+                       window (one per main window, `open_blueprint`).
+                       `Geometry` = the 3D view's mesh (after
+                       `engine.wait_until_idle`, so exact parts), each
+                       view's lines/circles projected once and cached.
+                       `BlueprintScene` (usable offscreen:
+                       `export_saved` is the MCP path) holds frame,
+                       title block, views and notes; `state()` /
+                       `load_state()` is the dict saved as
+                       `DocumentModel.drawing` (.kcad "drawing",
+                       FORMAT_VERSION 8; kept OUT of the model's undo
+                       snapshots — the window has its own QUndoStack of
+                       whole-sheet states, `_StateCommand`). First
+                       open: `new_layout` (Front/Top/Right/Isometric)
+                       + `arrange` (third-angle, largest standard
+                       scale fitting `usable_rect`) + `auto_dimension`
+                       (overall sizes; holes grouped "3× Ø6" with
+                       leaders pointing off the part, `_leader`; centre
+                       marks; re-running replaces only `auto` notes).
+                       Top/Bottom share Front's x, Right/Left/Back its
+                       y (`constrain_view`, `view_moved` carries them).
+                       Sections draw a `CuttingLineItem` on their
+                       parent view, details a `DetailMarkItem`.
+                       Title block mass = volume × `analysis.MATERIALS`
+                       density unless typed; material/company/author
+                       remembered in QSettings `blueprint/*` (tests
+                       neutralise those keys in conftest).
+  - `blueprint_items.py` — the sheet's QGraphicsItems. Every note is
+                       PRIMITIVES (line/poly/circle/arc/text in item
+                       coordinates) painted by `paint_prims` and
+                       written by the DXF exporter — one source, so
+                       screen, PDF and DXF agree. Text is drawn as
+                       outlines (`text_path`, cap height in mm), not
+                       fonts. Anchored notes are CHILDREN of their
+                       `ViewItem` and store MODEL (u, v) points, so a
+                       dimension's number is the model's distance at
+                       any scale; dragging moves the label (`drag_to`),
+                       never the anchor. `DimensionItem` (horizontal /
+                       vertical / aligned / diameter / radius / angle,
+                       ± or stacked tolerances), leader, balloon,
+                       datum, `FcfItem` (ISO 1101 symbols drawn as
+                       vectors, `gdt_symbol`), surface finish, centre
+                       mark/line, text, sketch, `BomItem`, plus
+                       `FrameItem` (zones, centring marks) and
+                       `TitleBlockItem`. `Look` holds the style (white
+                       paper / blueprint blue) and ISO line weights.
+  - `blueprint_tools.py` — snapping (`ViewSnap`: endpoints, midpoints,
+                       centres, quadrants, nearest edge, round edges,
+                       cell grid) with an on-screen `SnapMarker`, and
+                       the click-sequence tools (smart / H / V /
+                       aligned / Ø / R / angle dimensions, tagged
+                       notes, finish, centre mark/line, text, sketch,
+                       detail). A tool previews the real item half
+                       transparent and hands its data to
+                       `BlueprintWindow.add_note` (one undo step).
+                       Prompts go through `ask_text` / `ask_choice` /
+                       `ask_fcf` so tests can answer them.
+  - `blueprint_export.py` — PDF / SVG / PNG through `scene.render`
+                       inside `scene.exporting()` (no selection, marker
+                       or preview), a DXF R12 with LTYPE/LAYER tables
+                       (HIDDEN and CENTER linetypes) from the same
+                       primitives (arrowheads as SOLID, Ø as %%c), and
+                       printing.
   - `pngexport.py`   — **File ▸ Export PNG…** (Ctrl+Alt+E): pictures
                        of the 3D view from the built-in renderer via
                        `View3D.snapshot(..., clean=True)` — the model
@@ -1561,8 +1644,11 @@ driven dimensions — the biggest remaining gap), **feature rollback and
 suppress** (the node tree is already the history; add roll-to-here and
 a suppressed flag), **extrude up-to-face / through-all**,
 **configurations** (named sets of the Variables sheet), **direct
-face push/pull** on primitive faces, and **drawings with more**: user
-dimensions, detail views, a bill of materials from an assembly.
+face push/pull** on primitive faces. **Drawings with more** landed
+2026-09-13 as the Blueprint window (user dimensions, notes, GD&T,
+detail and section views, a parts list); what it lacks next is a
+revision table, ordinate/baseline dimension chains, and dimensions that
+re-attach to a moved edge instead of keeping their model points.
 
 **Tool queue** (asked for 2026-09-11; **all six landed 2026-09-12** —
 fillet.py, shell.py, pattern.py, analysis.py, shading.py — kept here as

@@ -27,7 +27,12 @@ import pytest  # noqa: E402
 #: flattened the shading the contrast test measures. Neutral for the
 #: session, then put back exactly as they were.
 _NEUTRAL_SETTINGS = ("render_stage", "render_style", "render_bg",
-                     "render_projection", "render_cavity", "render_edges")
+                     "render_projection", "render_cavity", "render_edges",
+                     # the Blueprint remembers the title block's material,
+                     # company and author: a test choosing Aluminium once
+                     # made every real sheet after it weigh aluminium
+                     "blueprint/material", "blueprint/company",
+                     "blueprint/drawn", "blueprint/dir")
 
 
 @pytest.fixture(autouse=True, scope="session")

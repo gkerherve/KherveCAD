@@ -448,6 +448,22 @@ TIPS = {
                "Frames the whole model in the 3D view. Drag there to "
                "orbit, right-drag or middle-drag to pan, wheel to zoom.",
                [], None),
+    "blueprint": (
+        "Blueprint (2D drawing)",
+        "Opens the engineering drawing of the model in its own window: "
+        "Front, Top, Right and isometric views laid out and dimensioned "
+        "by themselves, a title block with the material and mass, and a "
+        "toolbar of dimension, note, balloon, datum, tolerance and "
+        "detail-view tools to finish it.",
+        ["Build the model, then click Blueprint (Ctrl+Shift+D).",
+         "Drag views to arrange them; add dimensions with Smart "
+         "dimension (D) — click an edge, a hole or two points, then "
+         "place.",
+         "Double-click the title block to fill in the title, material "
+         "and who drew it.",
+         "Export PDF, DXF, SVG or PNG, or print."],
+        "The sheet is saved in the .kcad; Update from model re-projects "
+        "the views after you change the part."),
     "vibe_model": (
         "Vibe Model",
         "Folds away the object tree, Properties, the 2D sketch, the "

@@ -766,15 +766,41 @@ four corners, three-quarter front, bird's-eye, low angle and underside),
 one file each. Pick a
 size up to 4K, and tick <b>Transparent background</b> to drop the picture
 onto a slide or a web page. Your own camera never moves.</li>
-<li><b>Make Drawing</b> {K("Ctrl+Shift+D")} produces a 2D engineering
-drawing of the model (or of the selection): third-angle <b>Front, Top
-and Right</b> views and an isometric, visible edges solid and hidden
-edges dashed, overall dimensions, an optional hatched <b>section</b>
-through the middle, all on an A4/A3 sheet at a standard scale with a
-title block. Save it as <b>PDF</b>, <b>SVG</b>, <b>PNG</b> or
-<b>DXF</b> (lines on VISIBLE / HIDDEN / DIM / SECTION layers, in sheet
-millimetres, for any CAD or CAM program). Untick <i>Hidden lines</i>
-for threaded or very detailed parts.</li>
+<li><b>Blueprint</b> {K("Ctrl+Shift+D")} (also on the toolbar) opens
+the 2D engineering drawing of the model in its own window. The first
+time, it lays the sheet out by itself: third-angle <b>Front, Top and
+Right</b> views and an isometric at the largest standard scale that
+fits, the overall sizes, every hole's diameter (<i>3&times; &Oslash;6</i>)
+with its centre mark, and a <b>title block</b> already filled in &mdash;
+title, drawing number, material, the <b>mass</b> worked out from the
+volume and the material's density, scale, sheet, date and who drew it.
+<ul>
+<li>Drag views to arrange them (Top and Right stay aligned to Front);
+drag a dimension or a note by its label.</li>
+<li>The tools down the left: <b>Smart dimension</b> {K("D")} (click a
+round edge for &Oslash; or R, a straight edge for its length, or two
+points &mdash; then place it), horizontal, vertical, aligned, diameter,
+radius and angle dimensions; <b>notes</b> with leaders, text,
+<b>balloons</b>, centre marks and lines, <b>surface finish</b>,
+<b>datums</b> and <b>geometric tolerances</b>; lines, rectangles and
+circles; and <b>detail views</b> (an area enlarged 2:1). Clicks snap to
+corners, midpoints, centres and edges.</li>
+<li>Across the top: Insert a projected view, a hatched <b>section</b>
+(its cutting line drawn on the view it cuts), a shaded picture of the
+model or the <b>parts list</b>; sheet size A4&ndash;A0, Letter or
+Tabloid; the scale; <b>white paper or blueprint blue</b>; hidden lines;
+auto-dimension; auto-arrange.</li>
+<li>Select anything to edit it in <b>Properties</b> &mdash; a
+dimension's text, prefix and &plusmn; tolerance; double-click the title
+block to fill it in.</li>
+<li><b>Export PDF</b>, <b>DXF</b> (layered, with real HIDDEN and CENTER
+linetypes, in sheet millimetres), <b>SVG</b> or <b>PNG</b>, or
+<b>Print</b>.</li>
+</ul>
+The sheet is saved in the .kcad. After changing the part, <b>Update
+from model</b> {K("F5")} re-projects every view and keeps your
+annotations. Turn <i>Hidden lines</i> off for threaded or very detailed
+parts.</li>
 <li><b>File &rsaquo; Show in File Explorer</b> opens the document's
 folder; <b>New Window</b> {K("Ctrl+Shift+N")} opens a second document.</li>
 <li><b>View &rsaquo; Add Reference Image&hellip;</b> puts a photo or

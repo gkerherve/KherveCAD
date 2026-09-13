@@ -1385,6 +1385,17 @@ class McpToolExecutor:
         if suffix not in drawing_export.WRITERS:
             raise ToolError("A drawing is written as .pdf, .svg, .dxf or "
                             ".png.")
+        saved = self._model.drawing
+        if params.get("blueprint", True) is not False and saved \
+                and saved.get("views"):
+            # the user's own sheet: their dimensions and title block
+            from . import blueprint
+            scene = blueprint.export_saved(self._w, path)
+            return {"exported": path, "format": suffix[1:],
+                    "blueprint": True, "sheet": scene.sheet,
+                    "scale": drawing.scale_label(scene.scale),
+                    "views": [v.label_text() for v in scene.views.values()],
+                    "annotations": len(scene.notes())}
         views = tuple(params.get("views") or drawing_dialog.STANDARD)
         bad = [v for v in views if v not in drawing.VIEWS]
         if bad:

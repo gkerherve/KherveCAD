@@ -1,5 +1,7 @@
 """Painting a `drawing.layout()` to a page — PDF, SVG, PNG through Qt,
-and DXF (R12 entities, mm) written by hand — and File ▸ Make Drawing…
+and DXF (R12 entities, mm) written by hand — for the export_drawing
+MCP tool when the document has no Blueprint (blueprint_export.py writes
+the Blueprint window's sheet).
 
 Copyright (C) 2026 Gwilherm Kerherve
 

@@ -269,6 +269,9 @@ def build_options_bar(win):
                           win._render_now, "F5"))
     bar.addAction(_action(win, "mdi.arrow-expand-all", "Fit 3D", "fit_3d",
                           win.view3d.fit))
+    bar.addAction(_action(win, "mdi.drawing-box", "Blueprint", "blueprint",
+                          win.open_blueprint, "Ctrl+Shift+D",
+                          bind=False))                     # File menu's
     bar.addSeparator()
 
     # -- the 3D-only layout for building with an assistant (the ChatBox

@@ -132,6 +132,7 @@ class MainWindow(QMainWindow):
         self.model.structure_changed.connect(self._model_edited)
         self.model.node_changed.connect(lambda _n: self._model_edited())
         self.model.references_changed.connect(self._model_edited)
+        self.model.drawing_changed.connect(self._drawing_edited)
         self.model.mate_released.connect(
             lambda n: self.statusBar().showMessage(
                 f"{n.name} detached — its position is now yours to "
@@ -204,10 +205,9 @@ class MainWindow(QMainWindow):
                             "Export PN&G...",
                             lambda: export_png_dialog(self),
                             "Ctrl+Alt+E")
-        from .drawing_dialog import open_dialog as drawing_dialog
         file_menu.addAction(icons.icon("mdi.drawing-box"),
-                            "Make &Drawing (PDF/SVG/DXF)...",
-                            lambda: drawing_dialog(self), "Ctrl+Shift+D")
+                            "&Blueprint (2D Drawing)...",
+                            self.open_blueprint, "Ctrl+Shift+D")
         file_menu.addSeparator()
         file_menu.addAction(icons.icon("mdi.cloud-upload-outline"),
                             "&Publish to Printables...",
@@ -1806,6 +1806,18 @@ class MainWindow(QMainWindow):
         """Build the Printables upload bundle for the open model."""
         from .printables import PublishDialog
         PublishDialog(self).exec_()
+
+    def open_blueprint(self):
+        """File ▸ Blueprint… — the 2D engineering drawing window."""
+        from .blueprint import open_blueprint
+        return open_blueprint(self)
+
+    def _drawing_edited(self):
+        """The Blueprint sheet lives in the document: an edit to it is
+        an unsaved change (no preview to rebuild)."""
+        if self.model.drawing is not None:
+            self._dirty = True
+            self._update_title()
 
     # -------------------------------------------------------------- MCP
     def mcp_bridge(self):
