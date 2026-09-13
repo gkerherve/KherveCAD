@@ -38,16 +38,20 @@ Arguments: an optional folder. Default: `~/Documents/KCAD Projects`
    .venv/bin/python -m khervecad.tools.kcad_sync --add "<path>" ["<path>" ...]
    ```
 
-   Add `--into SECTION` to put them in a library section of their own
-   (a subfolder of `khervecad/parts/`: `--into Brackets` lists them
-   under "Brackets"); without it they land in "KCAD files". Files from
-   one themed folder of the user's (Brackets/, Tools/...) usually
-   belong in a section named after it — ask.
+   **Always pass `--into SECTION`** — a library section of its own (a
+   subfolder of `khervecad/parts/`: `--into Brackets` lists them under
+   "Brackets"). The user retired the loose "KCAD files" section
+   (Sep 2026) and a test keeps `parts/` free of top-level files, so a
+   file added without `--into` fails the suite. Files from one themed
+   folder of the user's (Brackets/, Cars/, Tools/...) belong in a
+   section named after it; for a loose file, ask which section.
 
-   The tool copies each file into `khervecad/parts/`, copies any
-   mesh (`.stl/.obj/.off/.3mf`) the document references from beside
-   it, then loads the result through `library_kcad.load_part` and
-   removes anything that fails. It prints the final list.
+   The tool copies each file into the section, copies any mesh
+   (`.stl/.obj/.off/.3mf`) the document references — a relative mesh
+   keeps its subfolder (`Mini Cooper S parts/body.stl`), since the
+   document names it that way — then loads the result through
+   `library_kcad.load_part` and removes anything that fails. It prints
+   the final list.
 
 4. **Test and commit.** Run `python -m pytest tests/test_library_kcad.py
    -q` (offscreen). Then commit only `khervecad/parts/` with a subject
@@ -56,4 +60,4 @@ Arguments: an optional folder. Default: `~/Documents/KCAD Projects`
 
 5. **Report** what was added, what was skipped and why, and remind the
    user that the running app needs a restart to show the new parts
-   (Library ▸ KCAD files, and Insert ▸ Part Library).
+   (the section's entry in the Library menu, and Insert ▸ Part Library).

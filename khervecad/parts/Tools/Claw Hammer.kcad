@@ -1,0 +1,367 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Claw_Hammer",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#b8bdc7",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -10.0,
+         "z": 15.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Striking neck]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 26.0,
+             "radius_bottom": 13.0,
+             "radius_top": 13.0,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -36.0,
+         "z": 15.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Face]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 4.0,
+             "radius_bottom": 14.0,
+             "radius_top": 14.0,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Eye block]",
+        "visible": true,
+        "params": {
+         "x": -12.0,
+         "y": -10.0,
+         "z": 3.0,
+         "width": 24.0,
+         "depth": 30.0,
+         "height": 24.0,
+         "center": false
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For z",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "3, 17"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": "z"
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 10.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Polygon [Claw]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 -12.0,
+                 20.0
+                ],
+                [
+                 12.0,
+                 20.0
+                ],
+                [
+                 8.0,
+                 40.0
+                ],
+                [
+                 -5.0,
+                 60.0
+                ],
+                [
+                 -22.0,
+                 72.0
+                ],
+                [
+                 -26.0,
+                 68.0
+                ],
+                [
+                 -14.0,
+                 52.0
+                ],
+                [
+                 -10.0,
+                 35.0
+                ]
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#bf8c4c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -12.0,
+         "y": 5.0,
+         "z": 15.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Handle]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 150.0,
+             "radius_bottom": 10.0,
+             "radius_top": 12.0,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a1a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -155.0,
+         "y": 5.0,
+         "z": 15.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Rubber grip]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 115.0,
+             "radius_bottom": 13.0,
+             "radius_top": 14.5,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -270.0,
+         "y": 5.0,
+         "z": 15.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 0.4,
+           "y": 1.0,
+           "z": 1.0
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Grip end]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 14.5,
+             "segments": 48
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

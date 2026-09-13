@@ -1,0 +1,276 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Spanner_7_8_in",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "linear_extrude",
+        "name": "Linear extrude",
+        "visible": true,
+        "params": {
+         "height": 8.67,
+         "twist": 0.0,
+         "scale": 1.0,
+         "center": false,
+         "segments": 0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "circle",
+                "name": "Circle",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "radius": 9.67,
+                 "angle": 360.0,
+                 "start_angle": 0.0,
+                 "segments": 64
+                }
+               },
+               {
+                "type": "circle",
+                "name": "Circle",
+                "visible": true,
+                "params": {
+                 "x": 271.14,
+                 "y": 0.0,
+                 "radius": 11.12,
+                 "angle": 360.0,
+                 "start_angle": 0.0,
+                 "segments": 64
+                }
+               }
+              ]
+             },
+             {
+              "type": "circle",
+              "name": "Circle [Ring head]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "radius": 21.89,
+               "angle": 360.0,
+               "start_angle": 0.0,
+               "segments": 64
+              }
+             },
+             {
+              "type": "circle",
+              "name": "Circle [Open head]",
+              "visible": true,
+              "params": {
+               "x": 271.14,
+               "y": 0.0,
+               "radius": 26.34,
+               "angle": 360.0,
+               "start_angle": 0.0,
+               "segments": 64
+              }
+             }
+            ]
+           },
+           {
+            "type": "circle",
+            "name": "Circle [Ring hex A]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "radius": 12.83,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 6
+            }
+           },
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 30.0
+            },
+            "children": [
+             {
+              "type": "circle",
+              "name": "Circle [Ring hex B (12-point)]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "radius": 12.83,
+               "angle": 360.0,
+               "start_angle": 0.0,
+               "segments": 6
+              }
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 271.14,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 15.0
+              },
+              "children": [
+               {
+                "type": "circle",
+                "name": "Circle [Jaw throat]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "radius": 11.11,
+                 "angle": 360.0,
+                 "start_angle": 0.0,
+                 "segments": 64
+                }
+               },
+               {
+                "type": "rect",
+                "name": "Rectangle [Jaw opening]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": -11.11,
+                 "width": 29.34,
+                 "height": 22.22
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 9.07,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "text",
+            "name": "Text [Size mark]",
+            "visible": true,
+            "params": {
+             "x": 124.46,
+             "y": -5.45,
+             "text": "7/8",
+             "size": 10.89
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

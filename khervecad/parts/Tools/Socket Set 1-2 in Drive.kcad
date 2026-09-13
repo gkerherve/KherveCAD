@@ -1,0 +1,2873 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Set_1_2_drive_rail",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a1a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Storage rail]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "width": 603.98,
+         "depth": 67.08,
+         "height": 8.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ffffff",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 0.6,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "text",
+            "name": "Text",
+            "visible": true,
+            "params": {
+             "x": 13.48,
+             "y": 2.9,
+             "text": "10",
+             "size": 4.2
+            }
+           },
+           {
+            "type": "text",
+            "name": "Text",
+            "visible": true,
+            "params": {
+             "x": 41.17,
+             "y": 2.9,
+             "text": "11",
+             "size": 4.2
+            }
+           },
+           {
+            "type": "text",
+            "name": "Text",
+            "visible": true,
+            "params": {
+             "x": 68.86,
+             "y": 2.9,
+             "text": "12",
+             "size": 4.2
+            }
+           },
+           {
+            "type": "text",
+            "name": "Text",
+            "visible": true,
+            "params": {
+             "x": 97.06,
+             "y": 2.9,
+             "text": "13",
+             "size": 4.2
+            }
+           },
+           {
+            "type": "text",
+            "name": "Text",
+            "visible": true,
+            "params": {
+             "x": 126.5,
+             "y": 2.9,
+             "text": "14",
+             "size": 4.2
+            }
+           },
+           {
+            "type": "text",
+            "name": "Text",
+            "visible": true,
+            "params": {
+             "x": 157.38,
+             "y": 2.9,
+             "text": "15",
+             "size": 4.2
+            }
+           },
+           {
+            "type": "text",
+            "name": "Text",
+            "visible": true,
+            "params": {
+             "x": 189.7,
+             "y": 2.9,
+             "text": "16",
+             "size": 4.2
+            }
+           },
+           {
+            "type": "text",
+            "name": "Text",
+            "visible": true,
+            "params": {
+             "x": 223.46,
+             "y": 2.9,
+             "text": "17",
+             "size": 4.2
+            }
+           },
+           {
+            "type": "text",
+            "name": "Text",
+            "visible": true,
+            "params": {
+             "x": 258.66,
+             "y": 2.9,
+             "text": "18",
+             "size": 4.2
+            }
+           },
+           {
+            "type": "text",
+            "name": "Text",
+            "visible": true,
+            "params": {
+             "x": 295.3,
+             "y": 2.9,
+             "text": "19",
+             "size": 4.2
+            }
+           },
+           {
+            "type": "text",
+            "name": "Text",
+            "visible": true,
+            "params": {
+             "x": 334.1,
+             "y": 2.9,
+             "text": "21",
+             "size": 4.2
+            }
+           },
+           {
+            "type": "text",
+            "name": "Text",
+            "visible": true,
+            "params": {
+             "x": 375.06,
+             "y": 2.9,
+             "text": "22",
+             "size": 4.2
+            }
+           },
+           {
+            "type": "text",
+            "name": "Text",
+            "visible": true,
+            "params": {
+             "x": 418.18,
+             "y": 2.9,
+             "text": "24",
+             "size": 4.2
+            }
+           },
+           {
+            "type": "text",
+            "name": "Text",
+            "visible": true,
+            "params": {
+             "x": 464.9,
+             "y": 2.9,
+             "text": "27",
+             "size": 4.2
+            }
+           },
+           {
+            "type": "text",
+            "name": "Text",
+            "visible": true,
+            "params": {
+             "x": 515.94,
+             "y": 2.9,
+             "text": "30",
+             "size": 4.2
+            }
+           },
+           {
+            "type": "text",
+            "name": "Text",
+            "visible": true,
+            "params": {
+             "x": 570.58,
+             "y": 2.9,
+             "text": "32",
+             "size": 4.2
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 301.99,
+         "y": 64.08,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 0.6,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "text",
+            "name": "Text [Title]",
+            "visible": true,
+            "params": {
+             "x": -14.96,
+             "y": -2.0,
+             "text": "1/2\" drive",
+             "size": 4.0
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Set_1_2_drive_sockets",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 16.34,
+         "y": 5.0,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Drive boss]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.96,
+               "radius_bottom": 11.34,
+               "radius_top": 11.34,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Body]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 38.0,
+               "radius_bottom": 9.7,
+               "radius_top": 9.7,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [12-point bore A]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0,
+             "height": 20.0,
+             "radius_bottom": 5.77,
+             "radius_top": 5.77,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [12-point bore B]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 20.0,
+                 "radius_bottom": 5.77,
+                 "radius_top": 5.77,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Square drive]",
+            "visible": true,
+            "params": {
+             "x": -6.35,
+             "y": -6.35,
+             "z": -1.0,
+             "width": 12.7,
+             "depth": 12.7,
+             "height": 10.52,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 44.03,
+         "y": 5.0,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Drive boss]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.96,
+               "radius_bottom": 11.34,
+               "radius_top": 11.34,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Body]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 38.0,
+               "radius_bottom": 10.42,
+               "radius_top": 10.42,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [12-point bore A]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0,
+             "height": 20.0,
+             "radius_bottom": 6.35,
+             "radius_top": 6.35,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [12-point bore B]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 20.0,
+                 "radius_bottom": 6.35,
+                 "radius_top": 6.35,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Square drive]",
+            "visible": true,
+            "params": {
+             "x": -6.35,
+             "y": -6.35,
+             "z": -1.0,
+             "width": 12.7,
+             "depth": 12.7,
+             "height": 10.52,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 71.72,
+         "y": 5.0,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Drive boss]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.96,
+               "radius_bottom": 11.34,
+               "radius_top": 11.34,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Body]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 38.0,
+               "radius_bottom": 11.14,
+               "radius_top": 11.14,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [12-point bore A]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0,
+             "height": 20.0,
+             "radius_bottom": 6.93,
+             "radius_top": 6.93,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [12-point bore B]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 20.0,
+                 "radius_bottom": 6.93,
+                 "radius_top": 6.93,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Square drive]",
+            "visible": true,
+            "params": {
+             "x": -6.35,
+             "y": -6.35,
+             "z": -1.0,
+             "width": 12.7,
+             "depth": 12.7,
+             "height": 10.52,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 99.92,
+         "y": 5.0,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Drive boss]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.96,
+               "radius_bottom": 11.86,
+               "radius_top": 11.86,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Body]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 38.0,
+               "radius_bottom": 11.86,
+               "radius_top": 11.86,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [12-point bore A]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0,
+             "height": 20.0,
+             "radius_bottom": 7.51,
+             "radius_top": 7.51,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [12-point bore B]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 20.0,
+                 "radius_bottom": 7.51,
+                 "radius_top": 7.51,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Square drive]",
+            "visible": true,
+            "params": {
+             "x": -6.35,
+             "y": -6.35,
+             "z": -1.0,
+             "width": 12.7,
+             "depth": 12.7,
+             "height": 10.52,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 129.36,
+         "y": 5.0,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Drive boss]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.96,
+               "radius_bottom": 12.58,
+               "radius_top": 12.58,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Body]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 38.0,
+               "radius_bottom": 12.58,
+               "radius_top": 12.58,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [12-point bore A]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0,
+             "height": 20.0,
+             "radius_bottom": 8.08,
+             "radius_top": 8.08,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [12-point bore B]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 20.0,
+                 "radius_bottom": 8.08,
+                 "radius_top": 8.08,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Square drive]",
+            "visible": true,
+            "params": {
+             "x": -6.35,
+             "y": -6.35,
+             "z": -1.0,
+             "width": 12.7,
+             "depth": 12.7,
+             "height": 10.52,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 160.24,
+         "y": 5.0,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Drive boss]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.96,
+               "radius_bottom": 13.3,
+               "radius_top": 13.3,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Body]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 38.0,
+               "radius_bottom": 13.3,
+               "radius_top": 13.3,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [12-point bore A]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0,
+             "height": 20.0,
+             "radius_bottom": 8.66,
+             "radius_top": 8.66,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [12-point bore B]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 20.0,
+                 "radius_bottom": 8.66,
+                 "radius_top": 8.66,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Square drive]",
+            "visible": true,
+            "params": {
+             "x": -6.35,
+             "y": -6.35,
+             "z": -1.0,
+             "width": 12.7,
+             "depth": 12.7,
+             "height": 10.52,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 192.56,
+         "y": 5.0,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Drive boss]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.96,
+               "radius_bottom": 14.02,
+               "radius_top": 14.02,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Body]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 38.0,
+               "radius_bottom": 14.02,
+               "radius_top": 14.02,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [12-point bore A]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0,
+             "height": 20.0,
+             "radius_bottom": 9.24,
+             "radius_top": 9.24,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [12-point bore B]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 20.0,
+                 "radius_bottom": 9.24,
+                 "radius_top": 9.24,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Square drive]",
+            "visible": true,
+            "params": {
+             "x": -6.35,
+             "y": -6.35,
+             "z": -1.0,
+             "width": 12.7,
+             "depth": 12.7,
+             "height": 10.52,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 226.32,
+         "y": 5.0,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Drive boss]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.96,
+               "radius_bottom": 14.74,
+               "radius_top": 14.74,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Body]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 38.0,
+               "radius_bottom": 14.74,
+               "radius_top": 14.74,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [12-point bore A]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0,
+             "height": 20.0,
+             "radius_bottom": 9.81,
+             "radius_top": 9.81,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [12-point bore B]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 20.0,
+                 "radius_bottom": 9.81,
+                 "radius_top": 9.81,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Square drive]",
+            "visible": true,
+            "params": {
+             "x": -6.35,
+             "y": -6.35,
+             "z": -1.0,
+             "width": 12.7,
+             "depth": 12.7,
+             "height": 10.52,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 261.52,
+         "y": 5.0,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Drive boss]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.96,
+               "radius_bottom": 15.46,
+               "radius_top": 15.46,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Body]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 38.0,
+               "radius_bottom": 15.46,
+               "radius_top": 15.46,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [12-point bore A]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0,
+             "height": 20.0,
+             "radius_bottom": 10.39,
+             "radius_top": 10.39,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [12-point bore B]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 20.0,
+                 "radius_bottom": 10.39,
+                 "radius_top": 10.39,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Square drive]",
+            "visible": true,
+            "params": {
+             "x": -6.35,
+             "y": -6.35,
+             "z": -1.0,
+             "width": 12.7,
+             "depth": 12.7,
+             "height": 10.52,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 298.16,
+         "y": 5.0,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Drive boss]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.96,
+               "radius_bottom": 16.18,
+               "radius_top": 16.18,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Body]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 38.0,
+               "radius_bottom": 16.18,
+               "radius_top": 16.18,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [12-point bore A]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0,
+             "height": 20.0,
+             "radius_bottom": 10.97,
+             "radius_top": 10.97,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [12-point bore B]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 20.0,
+                 "radius_bottom": 10.97,
+                 "radius_top": 10.97,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Square drive]",
+            "visible": true,
+            "params": {
+             "x": -6.35,
+             "y": -6.35,
+             "z": -1.0,
+             "width": 12.7,
+             "depth": 12.7,
+             "height": 10.52,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 336.96,
+         "y": 5.0,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Drive boss]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.96,
+               "radius_bottom": 17.62,
+               "radius_top": 17.62,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Body]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 38.0,
+               "radius_bottom": 17.62,
+               "radius_top": 17.62,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [12-point bore A]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0,
+             "height": 20.0,
+             "radius_bottom": 12.12,
+             "radius_top": 12.12,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [12-point bore B]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 20.0,
+                 "radius_bottom": 12.12,
+                 "radius_top": 12.12,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Square drive]",
+            "visible": true,
+            "params": {
+             "x": -6.35,
+             "y": -6.35,
+             "z": -1.0,
+             "width": 12.7,
+             "depth": 12.7,
+             "height": 10.52,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 377.92,
+         "y": 5.0,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Drive boss]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.96,
+               "radius_bottom": 18.34,
+               "radius_top": 18.34,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Body]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 38.0,
+               "radius_bottom": 18.34,
+               "radius_top": 18.34,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [12-point bore A]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0,
+             "height": 20.0,
+             "radius_bottom": 12.7,
+             "radius_top": 12.7,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [12-point bore B]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 20.0,
+                 "radius_bottom": 12.7,
+                 "radius_top": 12.7,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Square drive]",
+            "visible": true,
+            "params": {
+             "x": -6.35,
+             "y": -6.35,
+             "z": -1.0,
+             "width": 12.7,
+             "depth": 12.7,
+             "height": 10.52,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 421.04,
+         "y": 5.0,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Drive boss]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.96,
+               "radius_bottom": 19.78,
+               "radius_top": 19.78,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Body]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 38.0,
+               "radius_bottom": 19.78,
+               "radius_top": 19.78,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [12-point bore A]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0,
+             "height": 20.0,
+             "radius_bottom": 13.86,
+             "radius_top": 13.86,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [12-point bore B]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 20.0,
+                 "radius_bottom": 13.86,
+                 "radius_top": 13.86,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Square drive]",
+            "visible": true,
+            "params": {
+             "x": -6.35,
+             "y": -6.35,
+             "z": -1.0,
+             "width": 12.7,
+             "depth": 12.7,
+             "height": 10.52,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 467.76,
+         "y": 5.0,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Drive boss]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.96,
+               "radius_bottom": 21.94,
+               "radius_top": 21.94,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Body]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 38.0,
+               "radius_bottom": 21.94,
+               "radius_top": 21.94,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [12-point bore A]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0,
+             "height": 20.0,
+             "radius_bottom": 15.59,
+             "radius_top": 15.59,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [12-point bore B]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 20.0,
+                 "radius_bottom": 15.59,
+                 "radius_top": 15.59,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Square drive]",
+            "visible": true,
+            "params": {
+             "x": -6.35,
+             "y": -6.35,
+             "z": -1.0,
+             "width": 12.7,
+             "depth": 12.7,
+             "height": 10.52,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 518.8,
+         "y": 5.0,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Drive boss]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.96,
+               "radius_bottom": 24.1,
+               "radius_top": 24.1,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Body]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 38.0,
+               "radius_bottom": 24.1,
+               "radius_top": 24.1,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [12-point bore A]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0,
+             "height": 20.0,
+             "radius_bottom": 17.32,
+             "radius_top": 17.32,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [12-point bore B]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 20.0,
+                 "radius_bottom": 17.32,
+                 "radius_top": 17.32,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Square drive]",
+            "visible": true,
+            "params": {
+             "x": -6.35,
+             "y": -6.35,
+             "z": -1.0,
+             "width": 12.7,
+             "depth": 12.7,
+             "height": 10.52,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 573.44,
+         "y": 5.0,
+         "z": 8.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Drive boss]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.96,
+               "radius_bottom": 25.54,
+               "radius_top": 25.54,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Body]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 38.0,
+               "radius_bottom": 25.54,
+               "radius_top": 25.54,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [12-point bore A]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0,
+             "height": 20.0,
+             "radius_bottom": 18.48,
+             "radius_top": 18.48,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [12-point bore B]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 20.0,
+                 "radius_bottom": 18.48,
+                 "radius_top": 18.48,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Square drive]",
+            "visible": true,
+            "params": {
+             "x": -6.35,
+             "y": -6.35,
+             "z": -1.0,
+             "width": 12.7,
+             "depth": 12.7,
+             "height": 10.52,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -106.02,
+         "z": 9.37
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Female end]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 17.78,
+                 "radius_bottom": 11.34,
+                 "radius_top": 11.34,
+                 "segments": 64,
+                 "center": false
+                }
+               },
+               {
+                "type": "cube",
+                "name": "Cube [Drive socket]",
+                "visible": true,
+                "params": {
+                 "x": -6.35,
+                 "y": -6.35,
+                 "z": -1.0,
+                 "width": 12.7,
+                 "depth": 12.7,
+                 "height": 10.52,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Extension shaft]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 125.0,
+             "radius_bottom": 9.37,
+             "radius_top": 9.37,
+             "segments": 64,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Male square]",
+            "visible": true,
+            "params": {
+             "x": -6.35,
+             "y": -6.35,
+             "z": 125.0,
+             "width": 12.7,
+             "depth": 12.7,
+             "height": 9.52,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Set_1_2_drive_ratchet",
+    "visible": true,
+    "params": {
+     "x": 26.24,
+     "y": -66.78,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Ratchet head]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 3.0,
+         "height": 16.43,
+         "radius_bottom": 21.24,
+         "radius_top": 21.24,
+         "segments": 64,
+         "center": false
+        }
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 3.0
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 9.04,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "circle",
+              "name": "Circle",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "radius": 9.35,
+               "angle": 360.0,
+               "start_angle": 0.0,
+               "segments": 64
+              }
+             },
+             {
+              "type": "circle",
+              "name": "Circle",
+              "visible": true,
+              "params": {
+               "x": 260.0,
+               "y": 0.0,
+               "radius": 8.85,
+               "angle": 360.0,
+               "start_angle": 0.0,
+               "segments": 64
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Square drive]",
+        "visible": true,
+        "params": {
+         "x": -6.35,
+         "y": -6.35,
+         "z": 19.43,
+         "width": 12.7,
+         "depth": 12.7,
+         "height": 13.97,
+         "center": false
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Detent ball]",
+        "visible": true,
+        "params": {
+         "x": 6.35,
+         "y": 0.0,
+         "z": 27.05,
+         "radius": 1.52,
+         "segments": 48
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Reverse lever pivot]",
+        "visible": true,
+        "params": {
+         "x": -4.25,
+         "y": 0.0,
+         "z": 0.0,
+         "height": 3.5,
+         "radius_bottom": 3.0,
+         "radius_top": 3.0,
+         "segments": 64,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Reverse lever]",
+        "visible": true,
+        "params": {
+         "x": -4.25,
+         "y": -2.0,
+         "z": 0.0,
+         "width": 19.12,
+         "depth": 4.0,
+         "height": 2.5,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d91a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "hull",
+        "name": "Hull",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 117.0,
+           "y": 0.0,
+           "z": 7.6
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 1.0,
+             "z": 0.8
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 11.35,
+               "segments": 48
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 256.0,
+           "y": 0.0,
+           "z": 7.6
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 1.0,
+             "z": 0.8
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 12.35,
+               "segments": 48
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -299,6 +299,24 @@ def test_a_subfolder_names_its_section(tmp_path):
     assert [p.name for p in found] == ["top.kcad", "hinge.kcad"]
 
 
+def test_cars_and_tools_are_sections_and_the_loose_files_are_gone():
+    import os
+    cats = {s["category"] for s in library.PARTS.values()}
+    assert {"Cars", "Tools", "Home furniture"} <= cats
+    # the loose "KCAD files" section was retired at the user's request
+    assert library_kcad.CATEGORY not in cats
+    assert library_kcad.files() == []
+    assert "kcad_vase_elwen" not in library.PARTS
+    tools = [pid for pid, s in library.PARTS.items()
+             if s["category"] == "Tools"]
+    assert len(tools) >= 50
+    # the Mini's baked body ships beside it, in its own subfolder
+    mini = library.build_part(
+        library_kcad.part_id("Mini Cooper S Monte Carlo 1966"), {})
+    stls = [n.params["path"] for n in mini.walk() if n.type == "stl_import"]
+    assert len(stls) == 3 and all(os.path.isfile(s) for s in stls), stls
+
+
 # ── the Showcase car ─────────────────────────────────────────────────
 
 def test_the_ferrari_is_in_the_showcase(app):

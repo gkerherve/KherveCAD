@@ -1191,12 +1191,13 @@ PARTS = {
 
 # parts contributed by sibling modules (chemistry, room & furniture);
 # each entry carries its own `build` callable, dispatched by build_part.
-from . import (library_cards, library_chem, library_kcad,  # noqa: E402
-               library_lego, library_lego_sets, library_pots,
-               library_room, library_vacuum)
+from . import (library_cards, library_chem, library_home,  # noqa: E402
+               library_kcad, library_lego, library_lego_sets,
+               library_pots, library_room, library_vacuum)
 PARTS.update(library_vacuum.PARTS)
 PARTS.update(library_chem.PARTS)
 PARTS.update(library_room.PARTS)
+PARTS.update(library_home.PARTS)
 PARTS.update(library_pots.PARTS)
 PARTS.update(library_cards.PARTS)
 PARTS.update(library_lego.PARTS)
@@ -1204,7 +1205,8 @@ PARTS.update(library_lego_sets.PARTS)
 PARTS.update(library_kcad.PARTS)
 
 #: dialog fields holding a count (integer spin box, no "mm" suffix)
-_COUNT_FIELDS = {"bolts"} | library_lego.COUNT_FIELDS
+_COUNT_FIELDS = ({"bolts"} | library_lego.COUNT_FIELDS
+                 | library_home.COUNT_FIELDS)
 
 
 #: electropolished stainless steel — the colour of UHV hardware

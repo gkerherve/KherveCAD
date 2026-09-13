@@ -121,10 +121,14 @@ def cmd_add(paths, into=None):
         shutil.copy2(src, target)
         for mesh in referenced_meshes(src):
             m = Path(mesh)
+            # a relative mesh keeps its subfolder ("Mini parts/body.stl"):
+            # the document names it that way, so a flat copy would not load
+            out = dest / (m.name if m.is_absolute() else m)
             if not m.is_absolute():
                 m = src.parent / m
             if m.is_file() and m.suffix.lower() in MESH_EXTS:
-                shutil.copy2(m, dest / m.name)
+                out.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(m, out)
         count, errors = describe(target)
         if count is None:
             target.unlink()

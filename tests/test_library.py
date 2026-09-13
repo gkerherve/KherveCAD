@@ -475,6 +475,58 @@ def test_furniture_keeps_per_component_colours(model):
     assert len(colours) >= 2                      # top + legs differ
 
 
+# ---------------------------------------------------------- home furniture
+
+from khervecad import library_home             # noqa: E402
+
+
+@pytest.mark.parametrize("part_id", list(library_home.PARTS))
+def test_every_home_part_builds_in_every_size_and_colour(model, part_id):
+    spec = library_home.PARTS[part_id]
+    colours = spec.get("colors") or [None]
+    for size, entry in spec["sizes"].items():
+        for colour in {colours[0], colours[-1]}:
+            node = library.build_part(
+                part_id, dict(entry, _size=size, _color=colour))
+            model.root.add(node)
+            assert not validate(model.root), (part_id, size, colour)
+            tris = mesh.tessellate(node)
+            assert tris, (part_id, size)
+            # every piece stands on the floor
+            zs = [pt[2] for t in tris for pt in t]
+            assert min(zs) == pytest.approx(0.0, abs=1.0), (part_id, size)
+
+
+def test_home_furniture_covers_the_rooms_of_a_house():
+    labels = " ".join(s["label"] for s in library_home.PARTS.values())
+    for word in ("Dining table", "Dining chair", "Sofa", "Bed", "Wardrobe",
+                 "Chest of drawers", "Kitchen", "Toilet", "Bath"):
+        assert word in labels, word
+    assert {s["category"] for s in library_home.PARTS.values()} == {
+        "Home furniture"}
+    assert library_home.COUNT_FIELDS <= library._COUNT_FIELDS
+
+
+def test_the_sofa_takes_its_fabric_from_the_colour(model):
+    size, entry = next(iter(library_home.SOFA_SIZES.items()))
+    for name in ("Navy", "Mustard"):
+        node = library.build_part("home_sofa",
+                                  dict(entry, _size=size, _color=name))
+        assert f'color("{library_home.FABRICS[name]}"' in node.to_scad()
+
+
+def test_counts_drive_drawers_doors_and_seats(model):
+    def named(pid, size, key, value, name):
+        entry = dict(library_home.PARTS[pid]["sizes"][size], _size=size)
+        entry[key] = value
+        return sum(1 for n in library.build_part(pid, entry).walk()
+                   if n.name == name and n.type != "color")
+    assert named("home_chest", "4 drawers", "drawers", 6, "Drawer") == 6
+    assert named("home_wardrobe", "2 doors (1000)", "doors", 3, "Door") == 3
+    assert named("home_sofa", "3-seater (2200)", "seats", 2,
+                 "Seat cushion") == 2
+
+
 # -------------------------------------------------------------- fasteners
 
 def test_thread_profile_radii():

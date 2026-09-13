@@ -1,0 +1,213 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Tape_Measure",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ffcc0d",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "hull",
+        "name": "Hull",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 32.0,
+           "radius_bottom": 30.0,
+           "radius_top": 30.0,
+           "segments": 64,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 22.0,
+           "y": -30.0,
+           "z": 0.0,
+           "width": 14.0,
+           "depth": 60.0,
+           "height": 32.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a1a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Grip panel]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 31.5,
+         "height": 1.5,
+         "radius_bottom": 21.0,
+         "radius_top": 21.0,
+         "segments": 64,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Grip panel under]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": -1.0,
+         "height": 1.5,
+         "radius_bottom": 21.0,
+         "radius_top": 21.0,
+         "segments": 64,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube [End hook]",
+        "visible": true,
+        "params": {
+         "x": 55.5,
+         "y": -10.0,
+         "z": 0.0,
+         "width": 1.5,
+         "depth": 20.0,
+         "height": 6.0,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Belt clip]",
+        "visible": true,
+        "params": {
+         "x": 10.0,
+         "y": -31.0,
+         "z": 10.0,
+         "width": 24.0,
+         "depth": 2.0,
+         "height": 12.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#f2e64c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Blade]",
+        "visible": true,
+        "params": {
+         "x": 35.0,
+         "y": -9.5,
+         "z": 1.0,
+         "width": 21.0,
+         "depth": 19.0,
+         "height": 0.3,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d91a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Lock button]",
+        "visible": true,
+        "params": {
+         "x": 22.0,
+         "y": -6.0,
+         "z": 32.0,
+         "width": 10.0,
+         "depth": 12.0,
+         "height": 3.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

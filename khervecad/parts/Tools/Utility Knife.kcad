@@ -1,0 +1,244 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Utility_Knife",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ffcc0d",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "linear_extrude",
+        "name": "Linear extrude",
+        "visible": true,
+        "params": {
+         "height": 14.0,
+         "twist": 0.0,
+         "scale": 1.0,
+         "center": false,
+         "segments": 0
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "circle",
+            "name": "Circle",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "radius": 10.0,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
+            }
+           },
+           {
+            "type": "circle",
+            "name": "Circle",
+            "visible": true,
+            "params": {
+             "x": 140.0,
+             "y": 2.0,
+             "radius": 9.0,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
+            }
+           },
+           {
+            "type": "circle",
+            "name": "Circle",
+            "visible": true,
+            "params": {
+             "x": 60.0,
+             "y": 6.0,
+             "radius": 12.0,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a1a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 13.5
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 1.5,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "line",
+            "name": "Line",
+            "visible": true,
+            "params": {
+             "x1": 5.0,
+             "y1": 0.0,
+             "x2": 110.0,
+             "y2": 3.0,
+             "width": 12.0
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Blade slider]",
+        "visible": true,
+        "params": {
+         "x": 90.0,
+         "y": 6.0,
+         "z": 14.0,
+         "width": 14.0,
+         "depth": 6.0,
+         "height": 4.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 6.0
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 1.0,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "polygon",
+            "name": "Polygon [Blade]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "points": [
+              [
+               145.0,
+               -5.0
+              ],
+              [
+               145.0,
+               9.0
+              ],
+              [
+               166.0,
+               9.0
+              ],
+              [
+               178.0,
+               -5.0
+              ]
+             ]
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

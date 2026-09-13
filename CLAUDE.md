@@ -187,6 +187,20 @@ into a new module and import.
                        (colour chosen from the size list). Multi-colour
                        unions with no booleans, so each component keeps
                        its colour in the preview.
+  - `library_home.py`— **Home furniture**, 18 parts for every room:
+                       dining table + chair, sofa, armchair, coffee
+                       table, bookcase (with books), sideboard, floor
+                       lamp, made-up bed, bedside table (with lamp),
+                       wardrobe, chest of drawers, a kitchen run (drawers,
+                       sink + tap, oven + hob + hood, wall units),
+                       fridge-freezer, toilet, washbasin on a vanity, bath
+                       and shower. Same rule as library_room: boxes,
+                       rounded boxes, cylinders and capsules, NO booleans
+                       (a bath or basin is walls around a floor). Wood /
+                       fabric / front colours via `colors` +
+                       `dims["_color"]`; counts (seats, shelves, doors,
+                       drawers, units) are `COUNT_FIELDS`, merged into
+                       `library._COUNT_FIELDS`. Front faces -Y.
   - `library_lego.py`— **Lego**: bricks, plates, tiles, 45° slopes and
                        baseplates at the real dimensions (8 mm pitch,
                        9.6 mm brick, 3.2 mm plate, 0.1 mm clearance a
@@ -345,9 +359,17 @@ into a new module and import.
   - `library_kcad.py` sections: a subfolder of `parts/` is a library
                        **section** (`shipped`, `category_of`): Brackets
                        (the 15 of KCAD Projects/Brackets + two older),
-                       Minecraft, Pots (merged with library_pots');
-                       top-level files stay "KCAD files". The sync tool
-                       takes `--into SECTION`.
+                       Minecraft, Pots (merged with library_pots'),
+                       **Cars** (Ferrari 288 GTO / F8 / SF90, Mercedes
+                       G-Class, Mini Cooper S — its baked body meshes
+                       ride along in `Cars/Mini Cooper S parts/`) and
+                       **Tools** (57 hand tools). The loose top-level
+                       "KCAD files" section was **retired** (Sep 2026,
+                       the user's request; Vase Elwen dropped from Pots
+                       too): `parts/` holds sections only, and a test
+                       enforces it. The sync tool takes `--into SECTION`
+                       (always pass it) and keeps a relative mesh's
+                       subfolder when copying.
   - `examples.py` Showcase: `_showcase(stem)` loads a finished model from
                        `khervecad/showcase/` (the Ferrari 288 GTO, 1138
                        objects; the spec ships the folder).

@@ -97,3 +97,25 @@ def test_sync_tool_lists_only_new_files_and_adds(app, tmp_path,
     assert (dest / "Fresh part.kcad").exists()
     assert not (dest / "broken.kcad").exists()
     assert "1 added" in out
+
+
+def test_sync_keeps_a_relative_mesh_in_its_subfolder(app, tmp_path,
+                                                      monkeypatch):
+    """The Mini's baked body lives in "Mini Cooper S parts/"; copied flat
+    beside the document, the document could no longer find it."""
+    from khervecad.tools import kcad_sync
+    src = tmp_path / "src"
+    (src / "Car parts").mkdir(parents=True)
+    stl = src / "Car parts" / "body.stl"
+    stl.write_text("solid b\nfacet normal 0 0 1\nouter loop\n"
+                   "vertex 0 0 0\nvertex 1 0 0\nvertex 0 1 0\n"
+                   "endloop\nendfacet\nendsolid b\n", encoding="utf-8")
+    m = DocumentModel()
+    m.add_node("cube")
+    m.add_node("stl_import", dict(path=str(stl)))
+    document.save_kcad(m, str(src / "Car.kcad"))
+    dest = tmp_path / "parts"
+    monkeypatch.setattr(library_kcad, "PARTS_DIR", dest)
+    kcad_sync.cmd_add([str(src / "Car.kcad")], into="Cars")
+    assert (dest / "Cars" / "Car parts" / "body.stl").is_file()
+    assert not (dest / "Cars" / "body.stl").exists()

@@ -1,0 +1,323 @@
+{
+ "format": "kcad",
+ "version": 7,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Combination_Pliers",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#b8bdc7",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "linear_extrude",
+        "name": "Linear extrude",
+        "visible": true,
+        "params": {
+         "height": 10.0,
+         "twist": 0.0,
+         "scale": 1.0,
+         "center": false,
+         "segments": 0
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "circle",
+            "name": "Circle [Pivot boss]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "radius": 11.0,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
+            }
+           },
+           {
+            "type": "circle",
+            "name": "Circle [Jaw tip]",
+            "visible": true,
+            "params": {
+             "x": 45.0,
+             "y": 0.0,
+             "radius": 4.0,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
+            }
+           },
+           {
+            "type": "circle",
+            "name": "Circle",
+            "visible": true,
+            "params": {
+             "x": 28.0,
+             "y": 7.0,
+             "radius": 5.0,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
+            }
+           },
+           {
+            "type": "circle",
+            "name": "Circle",
+            "visible": true,
+            "params": {
+             "x": 28.0,
+             "y": -7.0,
+             "radius": 5.0,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 8.0,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "circle",
+              "name": "Circle",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "radius": 7.0,
+               "angle": 360.0,
+               "start_angle": 0.0,
+               "segments": 64
+              }
+             },
+             {
+              "type": "circle",
+              "name": "Circle",
+              "visible": true,
+              "params": {
+               "x": -60.0,
+               "y": "s * 13",
+               "radius": 5.0,
+               "angle": 360.0,
+               "start_angle": 0.0,
+               "segments": 64
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8c8c94",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Rivet]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": -0.5,
+         "height": 11.0,
+         "radius_bottom": 5.0,
+         "radius_top": 5.0,
+         "segments": 64,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d91a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-1, 1"
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": -58.0,
+             "y": "s * 13",
+             "z": 4.0
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 1.0,
+               "y": 1.0,
+               "z": 0.8
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 7.0,
+                 "segments": 48
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": -150.0,
+             "y": "s * 26",
+             "z": 4.0
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 1.0,
+               "y": 1.0,
+               "z": 0.8
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 8.0,
+                 "segments": 48
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
