@@ -147,13 +147,32 @@ into a new module and import.
                        modules register parts by adding a `build`
                        callable to `PARTS`, which `build_part`
                        dispatches to.
-  - `library_chem.py`— **Chemistry** parts: beaker, graduated
-                       cylinder, test tube, Erlenmeyer / round-bottom
-                       flasks, funnel, burette, Petri dish, watch
-                       glass, test-tube rack, retort stand. Glassware
-                       is a **revolved thin-wall profile** so it is
-                       hollow without a boolean (renders in the
-                       built-in preview), tinted glass via `color`.
+  - `library_chem.py`— **Chemistry** parts: beakers, flasks
+                       (Erlenmeyer, round-bottom, volumetric), test
+                       tube, graduated cylinder, funnel, burette,
+                       pipette, dropper, Petri dish, watch glass,
+                       separating funnel, condenser, plus the bench
+                       hardware (rack, stand, burner, hotplate...).
+                       Glassware is ONE revolved wall profile: the
+                       outer outline drawn, the inner one offset along
+                       its normals (`_offset_in`, an even wall round
+                       every heel and shoulder), a rolled rim bead —
+                       hollow without a boolean, so the preview is
+                       right. Glass pieces carry the **Glass material**
+                       (`_col` adds it to the GLASS tint); joints are
+                       frosted. Graduations sit where the volume really
+                       reaches (`_z_for_volume` integrates the inner
+                       outline), printed white with numbers and the
+                       nominal volume one character per tangent plane
+                       (`_curved_text`, tilted with a sloping wall);
+                       Griffin spout (`_spout`, a polyhedron lip),
+                       volumetric calibration ring (bulb sized by
+                       bisection so the ring lands in the neck),
+                       burette Schellbach stripe, glass stopcocks with
+                       PTFE keys. An optional liquid (`fill` %, colour
+                       from `LIQUIDS` via the Part Library colour combo
+                       `dims["_color"]`, "Empty" for none) has a
+                       meniscus; the separating funnel holds two layers.
   - `library_room.py`— **Room & furniture**: table, lab workbench,
                        chair, stool, monitor, TV, door (with frame),
                        wall panel, and coloured **carpet** squares

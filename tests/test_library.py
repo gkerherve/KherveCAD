@@ -318,10 +318,95 @@ def test_glassware_is_revolved_and_hollow(model):
                             _size="250 mL"))
     code = node.to_scad()
     assert "rotate_extrude" in code
-    assert 'color("#cfe8ee")' in code             # glass tint
+    assert 'kcad_material("Glass") color("#cfe8ee"' in code   # real glass
     tris = mesh.tessellate(node)
     zs = [v[2] for t in tris for v in t]
     assert max(zs) == pytest.approx(95.0, abs=1.0)   # 250 mL height
+
+
+def _walk_names(node):
+    return [n.name for n in node.walk()]
+
+
+def test_the_beaker_is_a_griffin_beaker(model):
+    """Spout, printed scale and numbers, the nominal volume, a liquid."""
+    node = library.build_part(
+        "chem_beaker", dict(library_chem.BEAKER_SIZES["250 mL"],
+                            _size="250 mL"))
+    names = _walk_names(node)
+    assert "Pouring spout" in names
+    assert "Volume print" in names and "Marking spot" in names
+    assert {"'50'", "'100'", "'150'", "'200'", "'250 mL'"} <= set(names)
+    assert any(n.type == "polyhedron" for n in node.walk())   # the lip
+    liquid = next(n for n in node.walk() if n.name == "Liquid")
+    assert liquid.params["material"] == "Glass"
+    model.root.add(node)
+    assert not validate(model.root)
+
+
+def test_graduations_sit_where_the_volume_reaches(model):
+    """The 100 mL mark of a 250 mL beaker holds 100 mL of the beaker's
+    own inside, and an Erlenmeyer's marks crowd towards its neck."""
+    import math
+    beaker = library_chem.BEAKER_SIZES["250 mL"]
+    r_in = beaker["d"] / 2 - beaker["wall"]
+    node = library.build_part("chem_beaker", dict(beaker, _size="250 mL"))
+    ring = next(n for n in node.walk() if n.name == "100 mL mark")
+    pts = ring.children[0].children[0].children[0].params["points"]
+    z = (pts[0][1] + pts[2][1]) / 2
+    assert math.pi * r_in ** 2 * (z - beaker["wall"]) / 1000 == \
+        pytest.approx(100, rel=0.04)
+    flask = library.build_part("chem_erlenmeyer",
+                               dict(library_chem.FLASK_SIZES["250 mL"],
+                                    _size="250 mL"))
+    zs = []
+    for v in (50, 100, 150):
+        mark = next(n for n in flask.walk() if n.name == f"{v} mL mark")
+        p = mark.children[0].children[0].children[0].params["points"]
+        zs.append((p[0][1] + p[2][1]) / 2)
+    assert zs[2] - zs[1] > zs[1] - zs[0]           # narrower up the cone
+
+
+def test_liquid_colour_and_empty_vessels(model):
+    dims = dict(library_chem.FLASK_SIZES["250 mL"], _size="250 mL")
+    purple = library.build_part("chem_erlenmeyer",
+                                dict(dims, _color="Permanganate (purple)"))
+    liquid = next(n for n in purple.walk() if n.name == "Liquid")
+    assert liquid.params["color"] == "#7a2a8c"
+    empty = library.build_part("chem_erlenmeyer", dict(dims, _color="Empty"))
+    assert not any(n.name == "Liquid" for n in empty.walk())
+    assert library_chem.PARTS["chem_beaker"]["colors"][-1] == "Empty"
+
+
+def test_every_glass_piece_uses_the_glass_material(model):
+    for pid in ("chem_beaker", "chem_cylinder", "chem_test_tube",
+                "chem_erlenmeyer", "chem_round_flask", "chem_funnel",
+                "chem_burette", "chem_volumetric", "chem_sep_funnel",
+                "chem_condenser", "chem_pipette", "chem_watch_glass",
+                "chem_petri"):
+        spec = library_chem.PARTS[pid]
+        size = next(iter(spec["sizes"]))
+        node = library.build_part(pid, dict(spec["sizes"][size], _size=size))
+        glass = [n for n in node.walk() if n.type == "color"
+                 and n.params["color"] == library_chem.GLASS]
+        assert glass, pid
+        assert all(n.params.get("material") == "Glass" for n in glass), pid
+
+
+def test_the_volumetric_flask_ring_marks_its_volume(model):
+    import math
+    node = library.build_part("chem_volumetric",
+                              dict(library_chem.VOLU_SIZES["250 mL"],
+                                   _size="250 mL"))
+    ring = next(n for n in node.walk() if n.name == "Calibration ring")
+    rev = ring.children[0].children[0]
+    assert rev.params["angle"] == pytest.approx(359.9)
+    liquid = next(n for n in node.walk() if n.name == "Liquid")
+    prof = liquid.children[0].children[0].params["points"]
+    vol = 0.0                                   # the liquid holds 250 mL
+    for (r0, z0), (r1, z1) in zip(prof, prof[1:]):
+        vol += math.pi * (z1 - z0) * (r0 * r0 + r0 * r1 + r1 * r1) / 3
+    assert vol / 1000 == pytest.approx(250, rel=0.04)
 
 
 def test_chemistry_parts_registered_with_category(model):
