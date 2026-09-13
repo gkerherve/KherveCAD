@@ -163,7 +163,10 @@ open = "top") { … }` hollows a solid into an even-walled shell (a cup: \
 open = "top"; "none" for a closed hollow), and `kcad_fillet(radius = 2, \
 kind = "round", edges = [[x1, y1, z1, x2, y2, z2], ...]) { … }` rounds \
 the edges listed (get them from list_edges, or use fillet_edges). \
-Prefer a sweep to a chain of hull()s.
+Prefer a sweep to a chain of hull()s. For a body whose cross-sections \
+have corners (a car, a boat hull), `kcad_section_loft(heights = [[z0], \
+[z1], ...], smooth = 0)` with one 2D child shape per section, in \
+order, lofts through them.
 - NAME EVERY PIECE YOU BUILD. End EVERY shape line — each cube(), \
 sphere(), cylinder(), capsule… — with a short comment saying which part \
 of the model it is: `cube([4, 4, 12]);  // Front-left leg`, \

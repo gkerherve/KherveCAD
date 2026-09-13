@@ -191,6 +191,21 @@ TIPS = {
         "Only 2D shapes go inside. The result is baked into the "
         "program, so a sweep cannot sit inside a loop — put the loop "
         "inside the sweep instead."),
+    "section_loft": (
+        "Loft through sections",
+        "Joins a series of 2D shapes — one cross-section each — into one "
+        "solid, keeping their corners as sharp edges: car bodies, boat "
+        "hulls, bottles with flats, wings.",
+        ["Draw each cross-section as a polygon (or rectangle, circle) "
+         "in the XY plane, around the same origin.",
+         "Select them in order and click Loft through sections.",
+         "In Properties, type one height (Z) per section, in the same "
+         "order as the shapes in the tree.",
+         "Smoothing adds curved in-between sections; the ones you drew "
+         "stay exactly where they are."],
+        "Give every section the same number of points and they join "
+        "point to point, so each corner runs as a crisp edge. Rotate "
+        "the loft to make it run along X."),
     "translate": (
         "Translate (move)",
         "Moves the selection by X, Y and Z millimetres.",

@@ -887,6 +887,26 @@ into a new module and import.
                        inside a loop and its profile cannot hold a 2D
                        difference (use wall). Extrude toolbar group;
                        Examples ▸ Mechanical ▸ Pipe run & handrail.
+  - `section_loft.py`— **loft through sections** (Qt-free): the
+                       node's 2D children are the cross-sections, one
+                       per `heights` row, joined in order — so a body
+                       keeps its corners (flat sides, a shoulder
+                       crease, a flat hood: car bodies, boat hulls),
+                       which the elliptical `loft` cannot. Sections
+                       with the same point count join point to point
+                       (every corner a sharp edge along the solid);
+                       different counts are `resample`d to one count
+                       keeping every original vertex. `align` shifts
+                       each ring to its neighbour so nothing twists;
+                       `smooth` adds Catmull-Rom rings, the given
+                       sections staying put; both ends are capped.
+                       Each child gives its largest outline
+                       (`child_sections`). The `section_loft` node
+                       (bake.py, in `_BAKED`: `kcad_section_loft(
+                       heights=, smooth=, points=, faces=) { 2D
+                       sections }`) bakes like `sweep` — refused in a
+                       loop, no 2D booleans inside, one height per
+                       section. Extrude toolbar group.
   - `fillet.py`      — **fillet / chamfer chosen edges** (SolidWorks'
                        Fillet; Qt-free). `crease_edges` finds the
                        edges of the children's preview mesh where two

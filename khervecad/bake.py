@@ -63,6 +63,13 @@ NODE_TYPES = {
                 ("scale", "Scale at the far end", "float", 0.01, 100.0),
                 ("wall", "Wall thickness (0 = solid)", "float", 0.0, 1e4),
                 ("closed", "Closed loop", "bool", None, None)]),
+    "section_loft": dict(
+        label="Loft through sections", category=OPERATION,
+        icon="mdi.layers-outline",
+        params=dict(heights=[[0.0], [20.0], [40.0]], smooth=0),
+        schema=[("heights", "Section heights (one per shape, in order)",
+                 "rows", ["Z"], None),
+                ("smooth", "Smoothing steps", "int", 0, 12)]),
     "blend": dict(
         label="Smooth blend", category=OPERATION, icon="mdi.blur-radial",
         params=dict(radius=4.0, detail=40),
@@ -120,14 +127,15 @@ from . import fillet as _fillet  # noqa: E402
 NODE_TYPES.update(_fillet.NODE_TYPES)
 TYPES = frozenset(NODE_TYPES)
 LEAVES = frozenset({"polyhedron", "loft"})
-WRAPPERS = frozenset({"sweep", "blend", "bend", "twist", "taper",
-                      "lattice", "subdivide", "fillet", "shell"})
+WRAPPERS = frozenset({"sweep", "section_loft", "blend", "bend", "twist",
+                      "taper", "lattice", "subdivide", "fillet", "shell"})
 
 #: wrappers whose surface is computed here and baked into the program,
 #: with their helper module's parameters (besides points and faces)
 _BAKED = {
     "sweep": [("path", []), ("smooth", 3), ("twist", 0), ("scale", 1),
               ("wall", 0), ("closed", False)],
+    "section_loft": [("heights", []), ("smooth", 0)],
     "blend": [("radius", 0), ("detail", 40)],
     "bend": [("axis", "z"), ("toward", "x"), ("angle", 0), ("detail", 2)],
     "twist": [("axis", "z"), ("angle", 0), ("detail", 2)],
@@ -348,6 +356,13 @@ def _compute(node, env) -> list:
             smooth=int(num("smooth", 3.0)), twist=num("twist", 0.0),
             scale=num("scale", 1.0), wall=num("wall", 0.0),
             closed=bool(p.get("closed", False)))
+    if t == "section_loft":
+        from . import section_loft
+        heights = [mesh.rv(row[0], env) for row in p.get("heights") or []
+                   if isinstance(row, list) and row]
+        return section_loft.loft_sections(
+            section_loft.child_sections(node, env), heights,
+            smooth=int(num("smooth", 0.0)))
     src = [tri for tri, _c, _s in
            mesh._children_mesh(node, env, None, frozenset(), False)]
     if t == "subdivide":
@@ -500,7 +515,7 @@ def _b_baked(kind):
             elif key in _CHOICES:
                 params[key] = value if value in ("x", "y", "z") \
                     else defaults[key]
-            elif key in ("offsets", "path"):
+            elif key in ("offsets", "path", "heights"):
                 params[key] = ([[_num(v) for v in row] for row in value
                                 if isinstance(row, list)]
                                if isinstance(value, list)
@@ -509,7 +524,8 @@ def _b_baked(kind):
                 params[key] = value is True or value == "true"
             elif (kind, key) in (("blend", "detail"),
                                  ("subdivide", "levels"),
-                                 ("sweep", "smooth")):
+                                 ("sweep", "smooth"),
+                                 ("section_loft", "smooth")):
                 try:
                     params[key] = int(_num(value, defaults[key]))
                 except (TypeError, ValueError):
@@ -612,6 +628,8 @@ def _check_baked(node, env):
         return None
     if t == "sweep":
         return _check_sweep(node, env)
+    if t == "section_loft":
+        return _check_section_loft(node, env)
     bad = next((n for n in node.walk() if n is not node and n.visible
                 and n.type in _INEXACT), None)
     if bad is not None:
@@ -674,6 +692,40 @@ def _check_sweep(node, env):
     if len(rows) < needed:
         return (f"a {'closed ' if needed == 3 else ''}sweep needs at "
                 f"least {needed} path points")
+    return None
+
+
+def _check_section_loft(node, env):
+    from . import expr, section_loft
+    from .model import _contains_3d
+    if _contains_3d(node):
+        return ("a loft through sections joins flat 2D shapes — this "
+                "contains 3D. Put one polygon, rectangle or circle per "
+                "section inside")
+    bad = next((n for n in node.walk() if n is not node and n.visible
+                and n.type in _INEXACT), None)
+    if bad is not None:
+        return (f"a loft through sections reads its shapes from the "
+                f"preview, which cannot cut a {bad.type} — draw each "
+                "section as one polygon")
+    sections = section_loft.child_sections(node, env)
+    if len(sections) < 2:
+        return ("a loft through sections needs at least 2 2D shapes "
+                "inside — one per section, in order")
+    rows = node.params.get("heights") or []
+    if not isinstance(rows, list):
+        return "heights: give one Z per section"
+    for number, row in enumerate(rows):
+        if not isinstance(row, list) or len(row) != 1:
+            return f"height {number} needs one value: Z"
+        if isinstance(row[0], str):
+            try:
+                expr.evaluate(row[0], env)
+            except expr.ExprError as exc:
+                return f"height {number}: {exc}"
+    if len(rows) != len(sections):
+        return (f"{len(sections)} sections but {len(rows)} heights — "
+                "give one height per section, in the same order")
     return None
 
 

@@ -1685,7 +1685,8 @@ def _contains_3d(node) -> bool:
         if n is node:
             continue
         if n.category == SHAPE_3D or \
-                n.type in ("linear_extrude", "rotate_extrude", "sweep"):
+                n.type in ("linear_extrude", "rotate_extrude", "sweep",
+                           "section_loft"):
             return True
     return False
 

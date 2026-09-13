@@ -152,7 +152,9 @@ supported subset:
   scale=1, wall=0, closed=false) { 2D profile } drives a profile along
   a 3D path (pipes with wall>0, handrails, springs, O-rings with
   closed=true); kcad_loft(sections=[[x,y,z,rx,ry],...]) is a tube
-  through elliptical sections; kcad_pattern(kind="linear"|"polar"|"grid",
+  through elliptical sections; kcad_section_loft(heights=[[z0],[z1],...],
+  smooth=0) { one 2D shape per section, in order } lofts through shapes
+  WITH CORNERS — a car body, a boat hull (rotate it to lie along X); kcad_pattern(kind="linear"|"polar"|"grid",
   count=6, step=[dx,dy,dz], angle=360, axis="z", rise=0,
   counts=[nx,ny,nz]) { ... } repeats its children (a bolt circle: polar,
   angle 360 spreads count copies evenly, below 360 they span the angle;
