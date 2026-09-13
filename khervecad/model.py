@@ -325,6 +325,26 @@ def fmt(value) -> str:
     return str(value)
 
 
+def split_values(text: str) -> list:
+    """*text* split at its top-level commas: a loop's value list
+    ``[7, 7], [30, 7]`` is two vectors, not four numbers."""
+    chunks, depth, quote, start = [], 0, False, 0
+    for i, ch in enumerate(text):
+        if ch == '"' and (i == 0 or text[i - 1] != "\\"):
+            quote = not quote
+        elif quote:
+            continue
+        elif ch in "[(":
+            depth += 1
+        elif ch in "])":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            chunks.append(text[start:i])
+            start = i + 1
+    chunks.append(text[start:])
+    return [c for c in chunks if c.strip()]
+
+
 def scad_str(text: str) -> str:
     """Quote *text* as an OpenSCAD string literal."""
     return '"' + str(text).replace("\\", "\\\\").replace('"', '\\"') + '"'
@@ -571,16 +591,19 @@ class CadNode:
         p = self.params
         if self.type == "for_loop":
             if str(p.get("values", "")).strip():
+                chunks = split_values(str(p["values"]))
                 out = []
-                for chunk in str(p["values"]).split(","):
+                for chunk in chunks:
                     try:
                         value = expr.evaluate(chunk, env)
                     except expr.ExprError:
                         value = 0.0
-                    # a chunk may resolve to a whole list/range (e.g. a
-                    # `for (x = x_values)` over a vector variable) — then
-                    # iterate its elements, not the list itself
-                    if isinstance(value, (list, tuple)):
+                    # a lone value may be a whole list/range (a
+                    # `for (x = x_values)` over a vector variable, or the
+                    # list itself in brackets) — iterate its elements.
+                    # Several values are the elements: [7, 7], [30, 7]
+                    # is two points, each one vector
+                    if len(chunks) == 1 and isinstance(value, (list, tuple)):
                         out.extend(value)
                     else:
                         out.append(value)
@@ -860,6 +883,10 @@ class CadNode:
                 # directly; a literal value list gets wrapped in [ ... ]
                 if values.isidentifier():
                     return f"for ({var} = {values})"
+                chunks = split_values(values)
+                if len(chunks) == 1 and chunks[0].strip().startswith("["):
+                    # the value is the list itself: [[7, 7]] is one point
+                    return f"for ({var} = {chunks[0].strip()})"
                 return f"for ({var} = [{values}])"
             return (f"for ({var} = [{fmt(p['start'])} : "
                     f"{fmt(p['step'])} : {fmt(p['end'])}])")
@@ -1630,7 +1657,7 @@ def _check_node(node, env, errors):
             except expr.ExprError as exc:
                 return f"condition: {exc}"
     if t == "for_loop" and str(p.get("values", "")).strip():
-        for chunk in str(p["values"]).split(","):
+        for chunk in split_values(str(p["values"])):
             try:
                 expr.evaluate(chunk, env)
             except expr.ExprError as exc:

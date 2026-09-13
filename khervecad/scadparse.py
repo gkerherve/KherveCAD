@@ -519,7 +519,12 @@ class Parser:
                 values.append(self._expr_param())
             self.expect("]")
             from .model import fmt
-            return dict(values=", ".join(fmt(v) for v in values))
+            text = ", ".join(fmt(v) for v in values)
+            if len(values) == 1 and text.strip().startswith("["):
+                # one vector: keep the outer list, or the loop would
+                # iterate the vector's numbers instead of the vector
+                text = f"[{text}]"
+            return dict(values=text)
         value = self._expr_param()
         from .model import fmt
         return dict(values=fmt(value))

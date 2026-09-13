@@ -361,3 +361,58 @@ def test_imported_if_with_or_condition_validates(app):
     """)
     assert not warns
     assert model.validate(root) == {}
+
+
+# ---------------------------------------------- loops over vectors
+def test_for_loop_over_a_list_of_vectors(app):
+    """Each element of [[7, 7], [30, 7], [50, 7]] is one point — the
+    value list is split at top-level commas only."""
+    from khervecad import mesh
+    from khervecad.model import validate
+    root, warnings = _parse(
+        "for (p = [[7, 7], [30, 7], [50, 7]]) "
+        "translate([p[0], p[1], -1]) cylinder(d = 4, h = 4);")
+    loop = root.children[0]
+    assert not warnings
+    assert loop.loop_values() == [[7, 7], [30, 7], [50, 7]]
+    m = DocumentModel()
+    m.root = root
+    assert not validate(root)
+    xs = sorted({round(v[0]) for tri in mesh.tessellate(root) for v in tri})
+    assert xs[0] == 5 and xs[-1] == 52          # three holes, 7 .. 50
+
+
+def test_for_loop_over_one_vector_iterates_once(app):
+    root, _ = _parse("for (p = [[7, 3]]) translate([p[0], p[1], 0]) cube(1);")
+    loop = root.children[0]
+    assert loop.loop_values() == [[7, 3]]
+    assert "for (p = [[7, 3]])" in loop.to_scad()
+
+
+def test_vector_values_with_expressions_and_nesting(app):
+    root, _ = _parse("n = 2; for (p = [[n * 2, 3], [4, max(1, 5)]]) cube(p[0]);")
+    loop = next(c for c in root.walk() if c.type == "for_loop")
+    assert loop.loop_values({"n": 2}) == [[4, 3], [4, 5]]
+
+
+def test_vector_loops_round_trip(app, tmp_path):
+    src = ("for (p = [[7, 7], [30, 7]]) translate([p[0], p[1], 0]) cube(1);\n"
+           "for (q = [[1, 2]]) translate([q[0], q[1], 0]) sphere(1);\n")
+    root, _ = _parse(src)
+    first = DocumentModel()
+    first.root = root
+    code1 = first.to_scad()
+    root2, warnings = _parse(code1)
+    assert not warnings
+    second = DocumentModel()
+    second.root = root2
+    assert second.to_scad() == code1
+    loops = [n for n in root2.walk() if n.type == "for_loop"]
+    assert [lp.loop_values() for lp in loops] == [[[7, 7], [30, 7]], [[1, 2]]]
+
+
+def test_split_values_respects_brackets_and_strings():
+    from khervecad.model import split_values
+    assert split_values("[7, 7], [30, 7]") == ["[7, 7]", " [30, 7]"]
+    assert split_values("1, 2, 4") == ["1", " 2", " 4"]
+    assert split_values('max(1, 2), "a, b"') == ["max(1, 2)", ' "a, b"']
