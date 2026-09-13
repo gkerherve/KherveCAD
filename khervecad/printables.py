@@ -425,7 +425,8 @@ def build_bundle(window, folder, *, title, description="", tags=(),
                  license=DEFAULT_LICENSE, formats=FORMATS,
                  views=DEFAULT_VIEWS, image_size=(2000, 1500),
                  summary="", category=DEFAULT_CATEGORY,
-                 origin=DEFAULT_ORIGIN, print_settings=None) -> dict:
+                 origin=DEFAULT_ORIGIN, print_settings=None,
+                 exploded=None) -> dict:
     """Write the upload folder. Returns what was written and what wasn't.
 
     Never raises for a missing engine or a format OpenSCAD declined —
@@ -523,6 +524,11 @@ def build_bundle(window, folder, *, title, description="", tags=(),
 
     images = _render_previews(window, folder, stem, views, image_size,
                               warnings)
+    if exploded is None:                 # an assembly shows how it goes
+        exploded = _assembly_parts(window) >= 2
+    if exploded and images:
+        images += _render_exploded(window, folder, stem, image_size,
+                                   warnings, len(images) + 1)
     files += [str(p) for p in images]
 
     body = description or default_description(window, title,
@@ -645,6 +651,40 @@ def _render_previews(window, folder, stem, views, size, warnings) -> list:
     return out
 
 
+def _assembly_parts(window) -> int:
+    """How many parts the pictured scope has (an exploded view of one
+    part would show nothing new)."""
+    from . import anchors, explode
+    builder = getattr(window, "builder", None)
+    root = builder.isolated_component() if builder is not None else None
+    return explode.part_count(root or window.model.root,
+                              anchors.doc_env(window.model),
+                              window.model.effective_fn())
+
+
+def _render_exploded(window, folder, stem, size, warnings, first) -> list:
+    """Exploded-view stills, numbered after the others: the front-right
+    isometric and the front, every part pulled away from the centre."""
+    from . import explode
+    out = []
+    state = window.explode_state()
+    with explode.showing(window, state["amount"] or 1.0, state["mode"]):
+        for index, name in enumerate(("Isometric", "Front"), first):
+            if name not in pngexport.CAMERA_ROTATIONS:
+                continue
+            path = folder / pngexport.file_name(stem, index,
+                                                f"{name} exploded")
+            try:
+                image = pngexport.render(window.view3d, size[0], size[1],
+                                         name)
+                pngexport._save(image, path)
+            except (ValueError, OSError) as exc:
+                warnings.append(f"Exploded {name} still failed: {exc}")
+                continue
+            out.append(path)
+    return out
+
+
 def open_upload_page():
     QDesktopServices.openUrl(QUrl(UPLOAD_URL))
 
@@ -732,6 +772,12 @@ class PublishDialog(QDialog):
             box.setChecked(name in DEFAULT_VIEWS)
             views_grid.addWidget(box, index // 4, index % 4)
             self._view_boxes[name] = box
+        self.exploded_box = QCheckBox(
+            "Exploded-view pictures too — every part pulled apart, to "
+            "show how it goes together")
+        self.exploded_box.setChecked(_assembly_parts(window) >= 2)
+        views_grid.addWidget(self.exploded_box,
+                             (len(STILL_VIEWS) + 3) // 4, 0, 1, 4)
         layout.addWidget(views_box)
 
         layout.addWidget(QLabel(
@@ -820,7 +866,8 @@ class PublishDialog(QDialog):
                 formats=formats, views=views,
                 summary=self.summary_edit.text(),
                 category=self.category_combo.currentText(),
-                origin=self.origin_combo.currentText())
+                origin=self.origin_combo.currentText(),
+                exploded=self.exploded_box.isChecked())
         except Exception as exc:
             QMessageBox.warning(self, "Publish to Printables",
                                 f"Could not build the bundle:\n{exc}")

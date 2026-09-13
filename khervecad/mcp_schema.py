@@ -856,6 +856,18 @@ TOOLS = [
                        "description": "Draw the faces with OpenGL (exact "
                                       "occlusion, anti-aliased); off "
                                       "uses the built-in painter."},
+            "explode": {"type": "number",
+                        "description": "Exploded view: push every part "
+                                       "away from the assembly's centre, "
+                                       "1 = as far again as it already "
+                                       "sits; 0 puts them back. A "
+                                       "display only — the model does "
+                                       "not move."},
+            "explode_mode": {"type": "string",
+                             "enum": ["Radial", "X", "Y", "Z"],
+                             "description": "Which way the parts move: "
+                                            "outwards, or along one "
+                                            "axis."},
         }),
     },
     {
@@ -998,6 +1010,10 @@ TOOLS = [
             "transparent": {"type": "boolean",
                             "description": "PNG only: leave the "
                                            "background transparent."},
+            "exploded": {"type": "boolean",
+                         "description": "PNG only: picture the assembly "
+                                        "exploded — every part pulled "
+                                        "away from the centre."},
         }, ["path"]),
     },
     {
@@ -1048,6 +1064,11 @@ TOOLS = [
                          "description": "Printables' required main "
                                         "category. Defaults to %s." %
                                         DEFAULT_CATEGORY},
+            "exploded": {"type": "boolean",
+                         "description": "Add exploded-view stills (every "
+                                        "part pulled apart). Default: "
+                                        "yes for an assembly of two or "
+                                        "more parts."},
             "origin": {"type": "string", "enum": ORIGINS,
                        "description": "Where the model came from. "
                                       "Defaults to %s." %

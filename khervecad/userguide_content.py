@@ -216,6 +216,47 @@ node you can drag objects into.</p>
 chapter.</p>
 """),
 
+        ("insert_menu", "The Insert menu", f"""
+<p>Every tool on the two toolbars is also in the <b>Insert</b> menu, one
+submenu per group &mdash; handy when you know a tool's name but not its
+icon, and every entry keeps the icon's how-to tooltip:</p>
+<ul>
+<li><b>2D Shapes</b> &mdash; line, rectangle, circle, polygon, text (the
+same drawing tools as the left bar; the tick shows the one in use).</li>
+<li><b>3D Solids</b> &mdash; cube, sphere, cylinder, capsule, ellipsoid,
+rounded box, loft.</li>
+<li><b>Extrude</b>, <b>Move &amp; transform</b>, <b>Combine</b>,
+<b>Finish</b>, <b>Deform &amp; sculpt</b>, <b>Character</b> and
+<b>Repeat &amp; logic</b> &mdash; the operation families of the main
+toolbar, applied to the selection.</li>
+<li><b>Measure &amp; annotate</b>, <b>Assembly</b> (Snap objects
+{K("J")}) and <b>Code &amp; files</b> (variables, imported meshes,
+OpenSCAD code, sheet metal).</li>
+</ul>
+<p>The menu is built from the very tables the toolbars are, so a new
+tool appears in both at once.</p>
+"""),
+        ("exploded", "Exploded views", f"""
+<p>An <b>exploded view</b> pulls every part of an assembly away from its
+centre so you can see how it goes together &mdash; for instructions,
+for a Printables listing, or just to check what sits behind what. It
+is a way of <i>looking</i>: the model itself does not move.</p>
+<ul>
+<li><b>View &rsaquo; Exploded View &rsaquo; Explode the Assembly</b>
+{K("Ctrl+Shift+X")} switches it on and off; {K("Ctrl+F")} frames the
+spread-out parts.</li>
+<li><b>Distance</b> 50&ndash;300&nbsp;%: at 100&nbsp;% each part moves
+as far again as it already sits from the centre.</li>
+<li><b>Outwards (radial)</b> spreads parts in every direction;
+<b>Along X / Y / Z</b> keeps them in line &mdash; a stack of plates
+explodes nicely along Z.</li>
+<li>A part is each top-level row of Main (an Object, an instance, a
+coloured group); in the Object tab, the Object's own sub-parts.</li>
+<li><b>File &rsaquo; Export PNG</b> has an <b>Exploded view</b> box,
+and <b>Publish to Printables</b> adds exploded pictures (isometric and
+front) for any assembly of two or more parts.</li>
+</ul>
+"""),
         ("reference", "Tool reference", "@reference"),
 
         ("sketching", "Drawing in 2D", f"""
@@ -478,12 +519,21 @@ placed many times &mdash; edit it once and every copy changes.</li>
 </ul>
 <h3>Making and placing parts</h3>
 <ul>
-<li><b>Insert &rsaquo; New Object</b> {K("Ctrl+Alt+N")}, or <b>+ New</b>
-in the Object tab, starts an empty part.</li>
+<li><b>Insert &rsaquo; New Object</b> {K("Ctrl+Alt+N")}, or the
+<b>New</b> icon (a plus in a box) in the Object tab, starts an empty
+part.</li>
+<li>The Object tab's icons, left to right: <b>New</b>, <b>Rename</b>
+(pencil), <b>Delete</b> (bin &mdash; the Object and every instance of
+it in Main go together, and {K("Ctrl+Z")} brings them back) and
+<b>To Main</b>. Hover over one for its name.</li>
+<li>The Object list holds <b>every</b> Object in the document, nested
+ones included &mdash; an imported program's <code>module</code>s are
+Objects even when a colour wraps them.</li>
 <li>Right-click objects &rsaquo; <b>Make Object</b> turns them into a
 part.</li>
-<li><b>To Main</b> in the Object tab (or right-click in Main &rsaquo;
-Insert Object) places another instance.</li>
+<li><b>To Main</b> (the package icon) in the Object tab, or
+right-click in Main &rsaquo; Insert Object, places another
+instance.</li>
 <li>Drag a part's outline in the sketch to move it on the chosen plane,
 or type its X/Y/Z and angles in Properties.</li>
 </ul>

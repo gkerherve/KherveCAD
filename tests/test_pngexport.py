@@ -325,7 +325,10 @@ def test_printables_fallback_renders_every_view_cover_first(window,
         window, tmp_path / "bundle", title="Box", formats=("scad",),
         image_size=(200, 150))
     names = [Path(p).name for p in bundle["images"]]
-    assert len(names) == len(DEFAULT_VIEWS)
+    stills = [n for n in names if "exploded" not in n]
+    assert len(stills) == len(DEFAULT_VIEWS)
+    # an assembly adds its exploded pictures after the standard set
+    assert names[:len(stills)] == stills
     assert names[0] == "Box-1-isometric.png"
     assert "Box-2-isometric-front-left.png" in names
     assert window.view3d.camera_state() == before   # never moved

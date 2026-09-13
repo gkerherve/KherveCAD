@@ -54,6 +54,19 @@ class MainWindow(QMainWindow):
         self._dirty = False
         self._syncing = False
         self._fitted = False
+        # exploded view (explode.py): a display, remembered between runs
+        from PyQt5.QtCore import QSettings as _QSettings
+        from . import explode as _explode
+        _saved = _QSettings("Kherve", "KherveCAD")
+        _mode = str(_saved.value("explode/mode", _explode.DEFAULT_MODE))
+        try:
+            _amount = float(_saved.value("explode/amount",
+                                         _explode.DEFAULT_AMOUNT))
+        except (TypeError, ValueError):
+            _amount = _explode.DEFAULT_AMOUNT
+        self._explode = dict(
+            on=False, amount=_amount,
+            mode=_mode if _mode in _explode.MODES else _explode.DEFAULT_MODE)
 
         # ---- panels
         self.builder = BuilderPanel(self.model)
@@ -268,12 +281,9 @@ class MainWindow(QMainWindow):
                               "&Part Library...", self.open_library,
                               "Ctrl+L")
         insert_menu.addSeparator()
-        for control in ("for_loop", "while_loop", "if_else", "assign",
-                        "stl_import", "scad_raw", "sheet_metal"):
-            spec = NODE_TYPES[control]
-            insert_menu.addAction(
-                icons.icon(spec["icon"]), spec["label"],
-                lambda _=False, t=control: self._add_primitive(t))
+        # every toolbar tool, grouped the way the toolbars group them
+        from .toolbars import build_insert_menu
+        build_insert_menu(self, insert_menu)
 
         self._build_library_menu(m)
         self._build_examples_menu(m)
@@ -382,6 +392,7 @@ class MainWindow(QMainWindow):
         view_menu.addAction(self._cavity_act)
         view_menu.addAction(self._edges_act)
         view_menu.addAction(self._gl_act)
+        self._build_explode_menu(view_menu)
         view_menu.addSeparator()
         theme_menu = view_menu.addMenu("&Theme")
         theme_group = QActionGroup(self)
@@ -1149,8 +1160,15 @@ class MainWindow(QMainWindow):
         fn = self.model.effective_fn()
         root, scad = self._render_scope()
         iso = root if root is not self.model.root else None
+        exploding = self._explode["on"]
         with self._isolated_frame(iso):
-            colored = mesh.tessellate_colored(root, fn=fn)
+            if exploding:
+                from . import anchors, explode
+                colored = explode.exploded_colored(
+                    root, anchors.doc_env(self.model), fn,
+                    self._explode["amount"], self._explode["mode"])
+            else:
+                colored = mesh.tessellate_colored(root, fn=fn)
             booleans = mesh.uses_booleans(root)
         tris = [t for t, _c in colored]
         colors = [c for _t, c in colored]
@@ -1163,6 +1181,8 @@ class MainWindow(QMainWindow):
             label += f" — {exact}/{total} parts exact"
         if booleans and not self.engine.available:
             label += " (booleans approximated)"
+        if exploding:
+            label += " — exploded"
         self.view3d.set_mesh(tris, label,
                              colors if has_colors else None)
         if getattr(self, "_selected_ids", set()):
@@ -1182,8 +1202,12 @@ class MainWindow(QMainWindow):
             # tint it if uniform) so booleans cut real holes. A model with
             # several colours keeps the built-in per-part colour preview,
             # since an STL cannot carry them — tinting it all one colour
-            # would wrongly paint every part the same.
-            if not has_colors or uniform:
+            # would wrongly paint every part the same. An exploded view
+            # is per-part too: one STL of the whole would land on top of
+            # it with the parts back together.
+            if exploding:
+                self.engine.cancel()
+            elif not has_colors or uniform:
                 self.engine.request_render(scad())
             else:
                 # A render requested a moment ago (before the document
@@ -1250,6 +1274,80 @@ class MainWindow(QMainWindow):
             "Vibe Model — describe the part to your assistant (AI menu) "
             "and watch it build; Ctrl+Shift+M brings the panels back."
             if on else "Panels back — edit by hand.", 6000)
+
+    # ------------------------------------------------- exploded view
+    def _build_explode_menu(self, view_menu):
+        """View ▸ Exploded View: on/off, how far, which way."""
+        from . import explode
+        menu = view_menu.addMenu(icons.icon("mdi.arrow-expand-all"),
+                                 "E&xploded View")
+        self._explode_act = QAction("&Explode the Assembly", self,
+                                    checkable=True)
+        self._explode_act.setShortcut("Ctrl+Shift+X")
+        self._explode_act.setStatusTip(
+            "Push every part away from the centre to show how the "
+            "assembly goes together — the model itself does not move")
+        self._explode_act.triggered.connect(
+            lambda on: self.set_explode(bool(on)))
+        menu.addAction(self._explode_act)
+        menu.addSeparator()
+        self._explode_amounts = QActionGroup(self)
+        for amount in explode.AMOUNTS:
+            act = QAction(f"Distance {int(round(amount * 100))} %", self,
+                          checkable=True)
+            act.setData(amount)
+            act.triggered.connect(
+                lambda _=False, a=amount: self.set_explode(True, amount=a))
+            self._explode_amounts.addAction(act)
+            menu.addAction(act)
+        menu.addSeparator()
+        self._explode_modes = QActionGroup(self)
+        for mode in explode.MODES:
+            act = QAction("Outwards (radial)" if mode == "Radial"
+                          else f"Along {mode}", self, checkable=True)
+            act.setData(mode)
+            act.triggered.connect(
+                lambda _=False, m=mode: self.set_explode(True, mode=m))
+            self._explode_modes.addAction(act)
+            menu.addAction(act)
+        self._sync_explode_menu()
+
+    def _sync_explode_menu(self):
+        if not hasattr(self, "_explode_act"):
+            return
+        state = self._explode
+        self._explode_act.setChecked(state["on"])
+        for act in self._explode_amounts.actions():
+            act.setChecked(abs(float(act.data()) - state["amount"]) < 1e-9)
+        for act in self._explode_modes.actions():
+            act.setChecked(act.data() == state["mode"])
+
+    def explode_state(self) -> dict:
+        """{on, amount, mode} of the exploded view."""
+        return dict(self._explode)
+
+    def set_explode(self, on=None, amount=None, mode=None):
+        """Switch the exploded view and/or change how far and which
+        way the parts move; the 3D view redraws at once."""
+        from PyQt5.QtCore import QSettings
+        from . import explode
+        state = self._explode
+        if on is not None:
+            state["on"] = bool(on)
+        if amount is not None:
+            state["amount"] = max(0.0, float(amount))
+        if mode is not None and mode in explode.MODES:
+            state["mode"] = mode
+        settings = QSettings("Kherve", "KherveCAD")
+        settings.setValue("explode/amount", state["amount"])
+        settings.setValue("explode/mode", state["mode"])
+        self._sync_explode_menu()
+        self._refresh_preview()
+        self.statusBar().showMessage(
+            f"Exploded view — {int(round(state['amount'] * 100))} %, "
+            f"{state['mode'].lower()}; Ctrl+F frames it, Ctrl+Shift+X "
+            "puts the parts back." if state["on"] else
+            "Parts back together.", 5000)
 
     def force_refresh(self):
         """Redraw everything from the object tree: drop the mesh caches

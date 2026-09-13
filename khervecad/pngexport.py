@@ -190,9 +190,18 @@ def _side(value, default) -> int:
 
 
 def export_request(view3d, path, *, view="current", width=None,
-                   height=None, transparent=False) -> dict:
+                   height=None, transparent=False, exploded=False,
+                   window=None) -> dict:
     """The export_document tool's PNG branch. Raises ValueError for a
-    request the client should fix."""
+    request the client should fix. *exploded* pictures the assembly
+    pulled apart (needs the *window*)."""
+    if exploded and window is not None:
+        from . import explode
+        with explode.showing(window, *_explode_setting(window)):
+            result = export_request(view3d, path, view=view, width=width,
+                                    height=height, transparent=transparent)
+        result["exploded"] = True
+        return result
     path = Path(str(path)).expanduser()
     if path.suffix.lower() != ".png":
         raise ValueError("A picture export path must end in .png.")
@@ -215,6 +224,12 @@ def export_request(view3d, path, *, view="current", width=None,
     return result
 
 
+def _explode_setting(window):
+    """(amount, mode) the user last chose in View ▸ Exploded View."""
+    state = window.explode_state()
+    return state["amount"] or 1.0, state["mode"]
+
+
 # ── remembered choices ─────────────────────────────────────────────
 
 def _settings(settings=None):
@@ -233,13 +248,15 @@ def load_choices(settings=None) -> dict:
         else DEFAULT_SIZE_KEY,
         "transparent": s.value(f"{SETTINGS_GROUP}/transparent", False,
                                type=bool),
+        "exploded": s.value(f"{SETTINGS_GROUP}/exploded", False,
+                            type=bool),
         "dir": str(s.value(f"{SETTINGS_GROUP}/dir", "") or ""),
     }
 
 
 def save_choices(choices, settings=None):
     s = _settings(settings)
-    for key in ("what", "size", "transparent", "dir"):
+    for key in ("what", "size", "transparent", "exploded", "dir"):
         if key in choices:
             s.setValue(f"{SETTINGS_GROUP}/{key}", choices[key])
     s.sync()
@@ -301,6 +318,13 @@ class PngExportDialog(QDialog):
         self.transparent_box = QCheckBox("Transparent background")
         self.transparent_box.setChecked(choices["transparent"])
         form.addRow("Background", self.transparent_box)
+        self.exploded_box = QCheckBox(
+            "Exploded view — every part pulled away from the centre")
+        self.exploded_box.setToolTip(
+            "Shows how the assembly goes together; the distance and "
+            "direction are View ▸ Exploded View's")
+        self.exploded_box.setChecked(choices["exploded"])
+        form.addRow("Parts", self.exploded_box)
         layout.addLayout(form)
 
         path_row = QHBoxLayout()
@@ -355,6 +379,7 @@ class PngExportDialog(QDialog):
         return {"what": "all" if self.is_all() else "current",
                 "size": self.size_combo.currentData(),
                 "transparent": self.transparent_box.isChecked(),
+                "exploded": self.exploded_box.isChecked(),
                 "dir": str(path.parent)}
 
     # ----------------------------------------------------------- export
@@ -368,6 +393,16 @@ class PngExportDialog(QDialog):
         if not text:
             raise ValueError("Choose where to save.")
         path = Path(text).expanduser()
+        if choices["exploded"]:
+            from . import explode
+            with explode.showing(self._w, *_explode_setting(self._w)):
+                paths = self._write(view3d, path, size, choices)
+        else:
+            paths = self._write(view3d, path, size, choices)
+        save_choices(choices, self._settings)
+        return paths
+
+    def _write(self, view3d, path, size, choices) -> list:
         if self.is_all():
             paths = export_views(view3d, path, self._stem, size,
                                  choices["transparent"])
@@ -376,7 +411,6 @@ class PngExportDialog(QDialog):
                 path = path.with_suffix(".png")
             paths = [export_current(view3d, path, size,
                                     choices["transparent"])]
-        save_choices(choices, self._settings)
         return paths
 
     def _export_clicked(self):

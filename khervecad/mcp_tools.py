@@ -1229,7 +1229,14 @@ class McpToolExecutor:
             win.view3d.set_edges(bool(params["edges"]))
         if params.get("opengl") is not None:
             win.view3d.set_hardware(bool(params["opengl"]))
-        return {"global_segments": int(model.global_fn),
+        if params.get("explode") is not None or params.get("explode_mode"):
+            amount = params.get("explode")
+            win.set_explode(
+                None if amount is None else float(amount) > 0,
+                amount=None if not amount else float(amount),
+                mode=params.get("explode_mode"))
+        return {"exploded": win.explode_state(),
+                "global_segments": int(model.global_fn),
                 "global_segments_on": bool(model.global_fn_on),
                 "projection": win.view3d.projection,
                 "stage": bool(win.view3d.stage),
@@ -1440,7 +1447,9 @@ class McpToolExecutor:
                     view=params.get("view") or "current",
                     width=params.get("width"),
                     height=params.get("height"),
-                    transparent=bool(params.get("transparent")))
+                    transparent=bool(params.get("transparent")),
+                    exploded=bool(params.get("exploded")),
+                    window=self._w)
             except (ValueError, OSError) as exc:
                 raise ToolError(str(exc))
             result["render_complete"] = complete
@@ -1515,7 +1524,8 @@ class McpToolExecutor:
             license=str(params.get("license") or DEFAULT_LICENSE),
             formats=formats, views=views,
             summary=str(params.get("summary", "")),
-            category=category, origin=origin)
+            category=category, origin=origin,
+            exploded=params.get("exploded"))
         if params.get("open_browser"):
             printables.reveal(bundle["folder"])
             printables.open_upload_page()

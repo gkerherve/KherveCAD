@@ -286,3 +286,63 @@ def build_options_bar(win):
     bar.widgetForAction(win._vibe_act).setToolButtonStyle(
         Qt.ToolButtonTextBesideIcon)
     return bar
+
+
+#: (submenu title, tool keys) of the Insert menu's groups that are not
+#: operation families; the families follow, in the toolbar's own order
+INSERT_EXTRAS = [
+    ("Code && files", ["assign", "stl_import", "scad_raw",
+                       "sheet_metal"]),
+]
+
+
+def build_insert_menu(win, menu):
+    """Every tool of both toolbars as a menu, one submenu per group —
+    the same tables the toolbars are built from, so the two can never
+    disagree. The drawing tools are the toolbar's own checkable actions
+    (the tick shows the tool in use); the rest run the same slot as
+    their button, with the same how-to tooltip."""
+    menu.setToolTipsVisible(True)
+    shapes = menu.addMenu(icons.icon("mdi.vector-polygon"), "&2D Shapes")
+    shapes.setToolTipsVisible(True)
+    by_key = {a.data(): a for a in win._tool_group.actions()}
+    for tool, _glyph, _label, _key in TOOLS[1:]:          # not Select
+        shapes.addAction(by_key[tool])
+    solids = menu.addMenu(icons.icon("mdi.cube-outline"), "3D &Solids")
+    solids.setToolTipsVisible(True)
+    for prim in PRIMITIVES:
+        spec = NODE_TYPES[prim]
+        solids.addAction(_action(
+            win, spec["icon"], spec["label"], prim,
+            lambda _=False, t=prim: win._add_primitive(t)))
+    menu.addSeparator()
+    for key, ops in OPERATION_GROUPS:
+        title = tooltips.GROUPS.get(key, (key, ""))[0].replace("&", "&&")
+        sub = menu.addMenu(icons.icon(NODE_TYPES[ops[0]]["icon"]), title)
+        sub.setToolTipsVisible(True)
+        for op in ops:
+            spec = NODE_TYPES[op]
+            sub.addAction(_action(
+                win, spec["icon"], spec["label"], op,
+                lambda _=False, o=op: win._apply_operation(o),
+                _OP_SHORTCUTS.get(op, ""), bind=False))
+    menu.addSeparator()
+    measure = menu.addMenu(icons.icon("mdi.tape-measure"),
+                           "&Measure && annotate")
+    measure.setToolTipsVisible(True)
+    for tool, _glyph, _label, _key in MEASURE_TOOLS:
+        measure.addAction(by_key[tool])
+    assembly = menu.addMenu(icons.icon("mdi.magnet-on"), "&Assembly")
+    assembly.setToolTipsVisible(True)
+    assembly.addAction(_action(win, "mdi.magnet-on", "Snap objects",
+                               "snap_objects", win._start_snap, "J",
+                               bind=False))
+    for title, keys in INSERT_EXTRAS:
+        sub = menu.addMenu(icons.icon("mdi.code-braces"), title)
+        sub.setToolTipsVisible(True)
+        for key in keys:
+            spec = NODE_TYPES[key]
+            sub.addAction(_action(
+                win, spec["icon"], spec["label"], key,
+                lambda _=False, t=key: win._add_primitive(t)))
+    return menu

@@ -349,6 +349,22 @@ into a new module and import.
                        Pull, Connect to GitHub); the status bar shows the
                        current file path, File > Show in File Explorer
                        reveals it.
+  - `explode.py`     — **exploded views**, a display only (the tree is
+                       untouched): `part_meshes` tessellates each
+                       top-level part of the scope on its own (document
+                       variables applied, colours and cached exact
+                       meshes kept), `offsets` moves each along
+                       assembly-centre -> part-centre times `amount`
+                       (Radial, or one axis X/Y/Z), `exploded_colored`
+                       is what `_refresh_preview` draws while
+                       View ▸ Exploded View is on (Ctrl+Shift+X; the
+                       whole-document OpenSCAD render is cancelled
+                       then, it would land un-exploded). `showing(window)`
+                       switches it on for a picture: Export PNG's
+                       Exploded box, the Printables bundle's exploded
+                       stills (default for >= 2 parts), MCP
+                       `set_render_options explode/explode_mode` and
+                       `export_document exploded`.
   - `objecttab.py`   — the **Object tab**, where parts are **defined**
                        and edited (the part/assembly split — anchors and
                        mates are a Main-tab concern, not here):
@@ -356,7 +372,12 @@ into a new module and import.
                        "New", Rename, and **To Main** = insert an
                        instance into the assembly) and `ComponentTree`
                        (the same tree widget rooted at the **active
-                       Object**; `SHOWS_INSERT_OBJECT = False`, since an
+                       Object**; the dropdown lists **every** Object via
+                       `model.all_components()`, nested ones included —
+                       an imported `color(...) Pot();` wraps its module
+                       — and the toolbar is icons only: New, Rename,
+                       Delete (`model.delete_component`: the definition
+                       and every instance, one undo step) and To Main; `SHOWS_INSERT_OBJECT = False`, since an
                        instance belongs to the assembly, not inside a
                        definition). The active Object is tracked by node
                        id with a name fallback so it survives renames
@@ -528,6 +549,10 @@ into a new module and import.
                        sculpt, Character, Repeat & logic): a click runs
                        the family's last-used tool (QSettings
                        `toolbar/<family>`), the chevron opens the rest.
+                       `build_insert_menu` lays every tool of both bars
+                       out as the Insert menu (2D Shapes, 3D Solids, one
+                       submenu per family, Measure, Assembly, Code &
+                       files) from these same tables.
                        A shortcut a menu already owns is shown in the
                        tip but not bound (`bind=False`) — two actions on
                        one key make Qt fire neither.
