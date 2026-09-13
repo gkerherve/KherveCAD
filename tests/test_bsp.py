@@ -153,9 +153,12 @@ def test_convex_body_does_not_degenerate_into_a_chain():
     t0 = time.perf_counter()
     tree = bsp.build(tris, budget=10)
     assert tree is not None
-    # the pure chain took ~0.65 s for 2k facets and grows quadratically;
-    # the median planes cut a ring per level (about 2x pieces) instead
-    assert time.perf_counter() - t0 < 1.0
+    # The pure chain grows quadratically; the median planes cut a ring per
+    # level (about 2x pieces) instead. The depth check below is what
+    # catches a chain — this is only a backstop, loose enough for a slow
+    # CI runner (the x86_64 macOS image took 1.15 s where a desktop takes
+    # well under one).
+    assert time.perf_counter() - t0 < 5.0
     assert len(tree.tris) <= 2.5 * len(tris)
 
     def depth(node):
