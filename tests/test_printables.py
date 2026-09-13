@@ -406,6 +406,35 @@ def test_an_assembly_gets_one_stl_per_object(window, tmp_path):
                    for f in single["files"])
 
 
+def test_nested_objects_and_instances_get_their_own_stl(window, tmp_path):
+    """An imported ``color(...) Pot();`` nests the Object in a colour,
+    and a hidden definition is placed by instances — both are parts."""
+    m = window.model
+    for name in ("gem_pot", "rose_pot"):
+        tint = m.add_node("color")
+        comp = m.new_component(name)
+        m.root.remove(comp)
+        tint.add(comp)
+        m.add_node("cube", parent=comp)
+    bolt = m.new_component("Bolt", visible=False)
+    inner = m.new_component("Thread")          # built from an Object
+    m.root.remove(inner)
+    bolt.add(inner)
+    m.add_node("cylinder", parent=inner)
+    m.add_instance(bolt)
+    m.add_instance(bolt)                       # placed twice, printed once
+    m.structure_changed.emit()
+    assert [c.name for c in printables.print_parts(m)] == [
+        "gem_pot", "rose_pot", "Bolt"]
+    bundle = printables.build_bundle(window, tmp_path / "out",
+                                     title="Pots", formats=("stl",),
+                                     views=())
+    names = sorted(Path(f).name for f in bundle["files"]
+                   if f.endswith(".stl"))
+    assert names == ["Pots-Bolt.stl", "Pots-gem-pot.stl",
+                     "Pots-rose-pot.stl", "Pots.stl"]
+
+
 def test_the_texts_say_vibe_designed(cube_window):
     """Every phrasing credits the model as vibe designed."""
     for v in range(12):

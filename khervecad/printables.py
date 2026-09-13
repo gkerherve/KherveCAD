@@ -476,14 +476,19 @@ def build_bundle(window, folder, *, title, description="", tags=(),
                     "faithful."))
 
     if "stl" in formats:
-        # an assembly prints part by part: each visible Object as its
+        # an assembly prints part by part: each Object it shows as its
         # own STL at its own origin, the way a part file comes out
-        parts = [c for c in model.components() if c.visible and c.children]
+        parts = print_parts(model)
         if len(parts) > 1:
             from . import anchors
             env = anchors.doc_env(model)
+            taken = set()
             for comp in parts:
-                path = folder / f"{stem}-{slug(comp.name)}.stl"
+                name, n = slug(comp.name), 2
+                while name.lower() in taken:
+                    name, n = f"{slug(comp.name)}-{n}", n + 1
+                taken.add(name.lower())
+                path = folder / f"{stem}-{name}.stl"
                 if engine.available:
                     error = engine.export_mesh(model.subtree_scad(comp),
                                                str(path))
@@ -649,6 +654,38 @@ def _render_previews(window, folder, stem, views, size, warnings) -> list:
             continue
         out.append(path)
     return out
+
+
+def print_parts(model) -> list:
+    """The Objects the assembly shows, each once, in document order —
+    what gets its own STL. An Object counts wherever it sits (an
+    imported ``color(...) Pot();`` puts it inside a colour), and an
+    instance counts as the Object it places (a definition is hidden,
+    its instances are what Main shows). The outermost Object is the
+    part: the Objects a part is built from are not printed apart.
+    Hidden nodes, empty Objects and the Masters store are skipped."""
+    from . import mates
+    found, seen = [], set()
+
+    def take(comp):
+        if comp is not None and comp.children and id(comp) not in seen:
+            seen.add(id(comp))
+            found.append(comp)
+
+    def walk(node):
+        for child in node.children:
+            if not child.visible or child.type == "masters":
+                continue
+            if child.type == "component":
+                take(child)
+            elif child.type == "reference":
+                definition = mates.definition_of(model, child)
+                if definition is not None and definition.type == "component":
+                    take(definition)
+            else:
+                walk(child)
+    walk(model.root)
+    return found
 
 
 def _assembly_parts(window) -> int:

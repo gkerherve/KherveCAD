@@ -866,7 +866,8 @@ GitHub / GitLab</b> sets up the remote.</p>
 {K("Ctrl+Shift+P")} prepares everything for an upload: STL and 3MF
 files &mdash; and, for an assembly, <b>one STL per Object</b>
 (<code>name-Object.stl</code>, each at its own origin, ready to print
-apart) &mdash; the .scad and .kcad, a source ZIP, preview pictures
+apart; an Object inside a colour or a group counts, and one placed
+several times is written once) &mdash; the .scad and .kcad, a source ZIP, preview pictures
 painted exactly like the 3D view (your colours, materials, lighting,
 platform and shadow) from eight three-quarter angles (the
 front-right isometric first, as the cover), a description and the

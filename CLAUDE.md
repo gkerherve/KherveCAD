@@ -765,9 +765,13 @@ into a new module and import.
   - `printables.py`  — **File ▸ Publish to Printables…** and the
                        `publish_to_printables` MCP tool share one
                        builder: STL / 3MF / .scad / .kcad exports
-                       (plus `<stem>-<object>.stl` per visible Object
-                       at its own origin, via `subtree_scad` /
-                       `anchors.local_tris`, when there are 2+),
+                       (plus `<stem>-<object>.stl` per part at its
+                       own origin, via `subtree_scad` /
+                       `anchors.local_tris`, when there are 2+ —
+                       `print_parts` finds them: the outermost Object
+                       at any depth, since an imported `color(...)
+                       Pot();` nests it, and the definition behind an
+                       instance, once however often it is placed),
                        preview stills from **three-quarter angles** —
                        `DEFAULT_VIEWS` = `ISO_VIEWS` (mcp_schema): the
                        isometric from all four corners, three-quarter
