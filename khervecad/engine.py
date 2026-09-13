@@ -8,6 +8,10 @@ QProcess with debouncing so dragging in the 2D view stays smooth.
 Without the binary the app still works — the built-in tessellator
 (mesh.py) supplies the preview.
 
+Every run uses OpenSCAD's Manifold backend when the installed binary has
+it (`backend_args`): the same exact geometry as the old CGAL backend,
+one to two orders of magnitude faster.
+
 Copyright (C) 2026 Gwilherm Kerherve
 
 This program is free software: you can redistribute it and/or modify
@@ -186,6 +190,67 @@ def find_openscad() -> str:
 
 def set_openscad_path(path: str):
     QSettings(*_SETTINGS).setValue("openscad_path", path)
+
+
+# -------------------------------------------------------------- backend
+
+#: ``KHERVECAD_OPENSCAD_BACKEND=cgal`` forces OpenSCAD's old CGAL backend
+#: (for troubleshooting); otherwise `backend_args` picks Manifold.
+_BACKEND_ENV = "KHERVECAD_OPENSCAD_BACKEND"
+
+#: {binary path: its backend switch}, asked once per binary
+_backend_cache = {}
+
+
+def _help_text(binary: str) -> str:
+    """``binary --help``, stdout and stderr together ('' on failure)."""
+    import subprocess
+    try:
+        out = subprocess.run(
+            [binary, "--help"], capture_output=True, text=True,
+            errors="replace", timeout=5,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return ""
+    return (out.stdout or "") + (out.stderr or "")
+
+
+def backend_args(binary: str) -> list:
+    """The switch that puts OpenSCAD on its Manifold backend, or [].
+
+    Manifold computes the same exact geometry as the old CGAL backend,
+    one to two orders of magnitude faster: a car body took 2 min 43 s
+    under CGAL and 0.8 s under Manifold — the difference between an
+    exact preview and one that never arrives. Recent builds take
+    ``--backend=Manifold``; earlier development snapshots offered it as
+    the experimental feature ``--enable=manifold``; the 2021.01 release
+    has neither and gets no switch (an unknown flag fails every render).
+    Read off the binary's --help, once per binary."""
+    if not binary or \
+            os.environ.get(_BACKEND_ENV, "").strip().lower() == "cgal":
+        return []
+    if binary not in _backend_cache:
+        text = _help_text(binary).lower()
+        if "--backend" in text and "manifold" in text:
+            _backend_cache[binary] = ["--backend=Manifold"]
+        elif "manifold" in text:                 # a feature of --enable
+            _backend_cache[binary] = ["--enable=manifold"]
+        else:
+            _backend_cache[binary] = []
+    return list(_backend_cache[binary])
+
+
+def backend_name(binary: str) -> str:
+    """'Manifold' or 'CGAL': the backend a run of *binary* uses."""
+    return "Manifold" if backend_args(binary) else "CGAL"
+
+
+def openscad_args(binary: str, out_path, scad_path, extra=()) -> list:
+    """The arguments of one OpenSCAD run: output, backend, extras, input.
+    Every render and export goes through here, so none of them falls
+    back to the slow backend."""
+    return ["-o", str(out_path), *backend_args(binary), *extra,
+            str(scad_path)]
 
 
 # ----------------------------------------------------------------- STL
@@ -382,7 +447,13 @@ class ScadEngine(QObject):
     def available(self) -> bool:
         return bool(self.binary)
 
+    @property
+    def backend(self) -> str:
+        """'Manifold' or 'CGAL' ('' without OpenSCAD); see backend_args."""
+        return backend_name(self.binary) if self.binary else ""
+
     def refresh_binary(self):
+        _backend_cache.clear()            # a new binary may know new flags
         self.binary = find_openscad()
         return self.binary
 
@@ -496,7 +567,7 @@ class ScadEngine(QObject):
         path = str(stl_path)
         self._watch(self._process, lambda eng: eng._finished(path))
         self._process.start(self.binary,
-                            ["-o", str(stl_path), str(scad_path)])
+                            openscad_args(self.binary, stl_path, scad_path))
         self.busy_changed.emit(True)
 
     def _start_part(self):
@@ -515,7 +586,7 @@ class ScadEngine(QObject):
                     lambda eng, k=key, p=str(stl_path):
                     eng._part_finished(k, p))
         self._process.start(self.binary,
-                            ["-o", str(stl_path), str(scad_path)])
+                            openscad_args(self.binary, stl_path, scad_path))
         self.busy_changed.emit(True)
 
     def _part_finished(self, key: str, stl_path: str):
@@ -571,7 +642,7 @@ class ScadEngine(QObject):
         scad_path.write_text(scad_code, encoding="utf-8")
         process = QProcess()
         process.start(self.binary,
-                      ["-o", out_path, *extra, str(scad_path)])
+                      openscad_args(self.binary, out_path, scad_path, extra))
         process.waitForFinished(timeout_ms)
         if process.exitStatus() == QProcess.NormalExit and \
                 process.exitCode() == 0:

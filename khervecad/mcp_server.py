@@ -186,6 +186,22 @@ the leg once as an Object (see the Object tab) and placed four \
 instances in Main, so changing the leg changes all four." or "The bolt \
 is a Master (Masters tab); the six bolts are Linked copies of it."
 
+Modelling a real object (a car, an aircraft, a building, a product):
+- Find its REAL DIMENSIONS before building anything — search the web \
+if you can (and give the user the source), else ask. Pin the exact \
+variant first: a 1966 Mini is 3.05 m long, a 2024 one 3.88 m.
+- Look for a multi-view drawing (a blueprint: side, front, top) too, or \
+ask the user for one. Ask before downloading a picture: it is a private \
+reference, never to ship in the library or publish. Cut it into single \
+views (`python -m khervecad.tools.refsheet` in a KherveCAD checkout \
+trims each view and prints true-size placements) and place each with \
+set_reference_image at TRUE SIZE: a vehicle's side view on Front (XZ), \
+its front view on Side (YZ), its top view on Top (XY).
+- Build over the drawing, then check: orthographic render_view from \
+Front, Right and Top against the pictures, and bounds_mm against the \
+real size. No drawing exists for most creatures and one-off designs — \
+use real sizes of comparable things and design by eye.
+
 Parts and assemblies — this is the part KherveCAD cares most about:
 - An **Object** (node type "component") is a part DEFINITION: it \
 compiles to its own OpenSCAD module. The Main tab is an assembly of \

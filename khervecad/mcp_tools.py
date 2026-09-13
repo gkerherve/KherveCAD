@@ -185,7 +185,14 @@ class McpToolExecutor:
             "openscad": {
                 "available": bool(win.engine.available),
                 "path": win.engine.binary or None,
+                "backend": win.engine.backend or None,
                 "note": ("Exact geometry: booleans really cut."
+                         + ("" if win.engine.backend != "CGAL" else
+                            " This OpenSCAD only has the old CGAL backend: "
+                            "heavy booleans can take minutes, and until "
+                            "they land the view is the approximate "
+                            "preview — a newer OpenSCAD (Manifold) renders "
+                            "them in seconds.")
                          if win.engine.available else
                          "Not found — the preview approximates a "
                          "difference() by showing its first operand, so "

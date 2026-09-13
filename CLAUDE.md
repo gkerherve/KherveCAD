@@ -864,6 +864,22 @@ into a new module and import.
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.
+                       **Every run is on the Manifold backend** when the
+                       binary has it: `openscad_args` builds all three
+                       launches (document render, per-part render,
+                       export) and `backend_args` reads the switch off
+                       `--help` once per binary — `--backend=Manifold`
+                       (recent builds), `--enable=manifold` (2024-era
+                       snapshots), nothing on 2021.01 (an unknown flag
+                       would fail every render). CGAL had taken 2 min
+                       43 s over the Mini's intersected body that
+                       Manifold renders in 0.8 s, so its exact preview
+                       never arrived. `KHERVECAD_OPENSCAD_BACKEND=cgal`
+                       forces the old backend; `ScadEngine.backend` and
+                       get_document_info's `openscad.backend` report it
+                       (the note warns when only CGAL is there). Tests
+                       with a fake sleeping binary set that variable, so
+                       the `--help` probe never waits on them.
   - `printables.py`  — **File ▸ Publish to Printables…** and the
                        `publish_to_printables` MCP tool share one
                        builder: STL / 3MF / .scad / .kcad exports
@@ -1355,6 +1371,23 @@ into a new module and import.
                        model via a projective `quadToQuad`. View >
                        Add Reference Image…, and the
                        `set_reference_image` MCP tool (file access).
+  - `tools/refsheet.py` — cuts a blueprint sheet (one picture, 3–4
+                       orthographic views) into single views: each rough
+                       `--view NAME=x0,y0,x1,y1[:mirror]` box is trimmed
+                       to the drawing (vs the border's commonest colour),
+                       optionally mirrored, saved as `SHEET-NAME.png`,
+                       and reported as true-size `set_reference_image`
+                       arguments from the real `--length/--width/
+                       --height` (side/top span the length, front/back
+                       the width) plus a `check` of the other dimension.
+                       QImage only (no Pillow in the venv). Driven by
+                       the **model-from-blueprint** skill
+                       (`.claude/skills/`): find real dimensions, find a
+                       drawing, ask before downloading (private
+                       reference, never shipped), cut, place, build,
+                       check orthographically. The MCP `_INSTRUCTIONS`
+                       carry the same rule ("Modelling a real object")
+                       to every connected client.
   - `mcp_schema.py`  — the **MCP tool table**: 40 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested

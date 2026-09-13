@@ -218,6 +218,7 @@ def test_a_located_binary_still_wins_over_the_bundle(tmp_path, monkeypatch):
 _DROPPED_MID_RENDER = r'''
 import gc, os, sys, tempfile
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
+os.environ["KHERVECAD_OPENSCAD_BACKEND"] = "cgal"   # no --help probe of the fake
 sys.path.insert(0, sys.argv[1])
 from PyQt5.QtCore import QCoreApplication
 from khervecad import engine
@@ -257,10 +258,12 @@ def test_engine_dropped_mid_render_does_not_abort():
     assert "survived" in out.stdout
 
 
-def test_shutdown_kills_the_render_in_flight(qt_app, tmp_path):
+def test_shutdown_kills_the_render_in_flight(qt_app, tmp_path, monkeypatch):
     """shutdown() empties the queue and ends a running render."""
     if sys.platform == "win32":
         pytest.skip("the fake OpenSCAD is a POSIX shell script")
+    # the fake sleeps whatever it is asked: skip the --help probe
+    monkeypatch.setenv("KHERVECAD_OPENSCAD_BACKEND", "cgal")
     fake = tmp_path / "slow-openscad"
     fake.write_text("#!/bin/sh\nsleep 30\n")
     fake.chmod(0o755)
@@ -276,3 +279,94 @@ def test_shutdown_kills_the_render_in_flight(qt_app, tmp_path):
     assert eng._process is None and not eng._part_queue
     from PyQt5.QtCore import QProcess
     assert process.state() == QProcess.NotRunning
+
+
+# ------------------------------------------------ the Manifold backend
+
+_NEW_HELP = ("  --backend arg   3D rendering backend to use: 'CGAL' "
+             "(old/slow) or 'Manifold' (new/fast)")
+_SNAPSHOT_HELP = ("  --enable arg    Enable experimental features: roof | "
+                  "manifold | textmetrics")
+_OLD_HELP = ("  --enable arg    Enable experimental features: fast-csg | "
+             "lazy-union")
+
+posix_only = pytest.mark.skipif(sys.platform == "win32",
+                                reason="the fake OpenSCAD is a shell script")
+
+
+def _fake_openscad(tmp_path, help_text, name="openscad"):
+    """A stand-in binary that prints *help_text* for --help."""
+    fake = tmp_path / name
+    fake.write_text("#!/bin/sh\ncat <<'EOF'\n%s\nEOF\n" % help_text)
+    fake.chmod(0o755)
+    return str(fake)
+
+
+@posix_only
+def test_manifold_is_chosen_when_openscad_offers_it(tmp_path, monkeypatch):
+    """CGAL took 2 min 43 s over a car body Manifold renders in 0.8 s,
+    so the exact preview never arrived. Every run now asks for Manifold."""
+    monkeypatch.delenv("KHERVECAD_OPENSCAD_BACKEND", raising=False)
+    fake = _fake_openscad(tmp_path, _NEW_HELP)
+    assert engine.backend_args(fake) == ["--backend=Manifold"]
+    assert engine.backend_name(fake) == "Manifold"
+    assert engine.openscad_args(fake, "o.stl", "i.scad", ["--render"]) == [
+        "-o", "o.stl", "--backend=Manifold", "--render", "i.scad"]
+
+
+@posix_only
+def test_development_snapshots_enable_manifold_as_a_feature(tmp_path,
+                                                           monkeypatch):
+    monkeypatch.delenv("KHERVECAD_OPENSCAD_BACKEND", raising=False)
+    fake = _fake_openscad(tmp_path, _SNAPSHOT_HELP)
+    assert engine.backend_args(fake) == ["--enable=manifold"]
+
+
+@posix_only
+def test_an_old_release_gets_no_switch(tmp_path, monkeypatch):
+    """2021.01 knows neither flag, and an unknown flag fails every run."""
+    monkeypatch.delenv("KHERVECAD_OPENSCAD_BACKEND", raising=False)
+    fake = _fake_openscad(tmp_path, _OLD_HELP)
+    assert engine.backend_args(fake) == []
+    assert engine.backend_name(fake) == "CGAL"
+    assert engine.openscad_args(fake, "o.stl", "i.scad") == [
+        "-o", "o.stl", "i.scad"]
+
+
+@posix_only
+def test_the_environment_can_force_cgal(tmp_path, monkeypatch):
+    monkeypatch.setenv("KHERVECAD_OPENSCAD_BACKEND", "cgal")
+    assert engine.backend_args(_fake_openscad(tmp_path, _NEW_HELP)) == []
+
+
+def test_a_missing_binary_gets_no_switch(tmp_path):
+    assert engine.backend_args(str(tmp_path / "no-openscad")) == []
+    assert engine.backend_args("") == []
+
+
+@posix_only
+def test_renders_and_exports_all_go_through_the_backend(qt_app, tmp_path,
+                                                        monkeypatch):
+    """The whole-document render, the per-part renders and exports each
+    start OpenSCAD; all three must carry the backend switch."""
+    calls = []
+
+    def args(binary, out, scad, extra=()):
+        calls.append(Path(out).name)
+        return []
+    monkeypatch.setattr(engine, "openscad_args", args)
+    fake = tmp_path / "quick-openscad"
+    fake.write_text("#!/bin/sh\nexit 0\n")
+    fake.chmod(0o755)
+    eng = engine.ScadEngine()
+    eng.binary = str(fake)
+    eng.request_render("cube(1);")
+    eng._timer.stop()
+    eng._start()
+    eng.shutdown()
+    eng.request_part_render("a", "cube(2);")
+    eng._timer.stop()
+    eng._start()
+    eng.shutdown()
+    assert eng.export_mesh("cube(3);", str(tmp_path / "out.3mf")) == ""
+    assert calls == ["model.stl", "part.stl", "out.3mf"]
