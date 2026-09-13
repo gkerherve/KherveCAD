@@ -17,8 +17,8 @@ Output, in `dist/`:
 
 | Artifact | What it is |
 |---|---|
-| `KherveCAD-<ver>-macOS-arm64.dmg` | drag-to-install disk image |
-| `KherveCAD-macOS-arm64.dmg` | stable-name copy, for a "latest" link |
+| `KherveCAD-<ver>-macOS-<arch>.dmg` | drag-to-install disk image (`arm64` or `x86_64`, the build Mac's own) |
+| `KherveCAD-macOS-<arch>.dmg` | stable-name copy, for a "latest" link |
 | `openscad-<osver>.src.tar.gz` | OpenSCAD's source — attach it to the release |
 
 `build_macos.py` is the macOS counterpart of `build_installer.py` and
@@ -28,16 +28,21 @@ placeholder. There is no installer to compile — on macOS a drag-install
 replaces the whole bundle atomically, so the upgrade problems
 `packaging/khervecad.iss` works around cannot happen here.
 
-## Apple Silicon only
+## Apple Silicon and Intel
 
-The DMG is arm64, and the engine decides that, not the app. KherveCAD
-bundles OpenSCAD so no user lands silently in approximate-boolean preview
-mode, and the last *stable* OpenSCAD (2021.01) predates Apple Silicon: it
-is x86_64 only, so bundling it would mean Rosetta on the machines most
-people now have. The nightly snapshots ship a **universal** binary that
-runs natively on Apple Silicon, so the engine comes from there.
-`build_macos.py` reads the extracted binary with `file` and refuses to
-build a pair that is not native — the filename is never taken as proof.
+A DMG is built for the architecture of the Mac that builds it, and the
+workflow builds both: `macos-14` (arm64) and `macos-15-intel` (x86_64),
+published together under one `macos-v<ver>` release. The updater takes
+the image matching the running Mac (`updater.platform_key`).
+
+The engine is what makes that possible. KherveCAD bundles OpenSCAD so no
+user lands silently in approximate-boolean preview mode, and the last
+*stable* OpenSCAD (2021.01) predates Apple Silicon: it is x86_64 only, so
+bundling it would mean Rosetta on the machines most people now have. The
+nightly snapshots ship a **universal** binary that runs natively on both
+architectures, so the engine comes from there. `build_macos.py` reads the
+extracted binary with `file` and refuses to build a pair that is not
+native — the filename is never taken as proof.
 
 Which snapshot gets bundled is **discovered at build time** from
 `https://files.openscad.org/snapshots/`, not hard-coded, because the

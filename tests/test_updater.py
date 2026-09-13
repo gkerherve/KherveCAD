@@ -36,19 +36,23 @@ def _win(n, body="", draft=False, pre=False, assets=True):
                        _asset("KherveCAD-Setup.exe")] if assets else []}
 
 
-def _mac(n, body="Open the DMG and drag it to Applications."):
+def _mac(n, body="Open the DMG and drag it to Applications.", intel=False):
+    assets = [_asset(f"KherveCAD-0.1.{n}-macOS-arm64.dmg", 89),
+              _asset("KherveCAD-macOS-arm64.dmg", 89)]
+    if intel:
+        assets += [_asset(f"KherveCAD-0.1.{n}-macOS-x86_64.dmg", 93),
+                   _asset("KherveCAD-macOS-x86_64.dmg", 93)]
     return {"tag_name": f"macos-v0.1.{n}", "name": f"KherveCAD v0.1.{n} mac",
             "body": body, "draft": False, "prerelease": False,
             "html_url": f"https://github.com/x/releases/tag/macos-v0.1.{n}",
-            "assets": [_asset(f"KherveCAD-0.1.{n}-macOS-arm64.dmg", 89),
-                       _asset("KherveCAD-macOS-arm64.dmg", 89)]}
+            "assets": assets}
 
 
 RELEASES = [
     _win(200, "Draft notes", draft=True),
     _win(190, "Pre notes", pre=True),
     _win(180, "## Faster\r\nBSP painter"),
-    _mac(178),
+    _mac(178, intel=True),
     _win(172, "## MCP\nConnect Claude"),
     _mac(165),
     _win(155, "First release"),
@@ -94,7 +98,7 @@ def test_is_newer_compares_the_commit_count():
 def test_platform_key():
     assert up.platform_key("win32", "AMD64") == "windows"
     assert up.platform_key("darwin", "arm64") == "macos"
-    assert up.platform_key("darwin", "x86_64") is None     # DMG is arm64
+    assert up.platform_key("darwin", "x86_64") == "macos-intel"
     assert up.platform_key("linux", "x86_64") is None
 
 
@@ -114,6 +118,13 @@ def test_macos_release_selection_uses_macos_tags_and_dmg():
     assert newest.label == "0.1.178"
     assert newest.asset["name"] == "KherveCAD-0.1.178-macOS-arm64.dmg"
     assert newest.asset["size"] == 89
+
+
+def test_intel_mac_takes_the_x86_64_dmg_and_skips_arm64_only_releases():
+    rels = up.releases_for(RELEASES, "macos-intel")
+    assert [r.tag for r in rels] == ["macos-v0.1.178"]    # 165 was arm64 only
+    assert rels[0].asset["name"] == "KherveCAD-0.1.178-macOS-x86_64.dmg"
+    assert rels[0].asset["size"] == 93
 
 
 def test_stable_asset_name_is_the_fallback():
@@ -355,6 +366,7 @@ def test_install_mode(tmp_path):
     app_exe.parent.mkdir(parents=True)
     app_exe.touch()
     assert up.install_mode("macos", True, str(app_exe)) == "mac-replace"
+    assert up.install_mode("macos-intel", True, str(app_exe)) == "mac-replace"
     assert up.install_mode("macos", True, str(exe)) == "page"
 
 

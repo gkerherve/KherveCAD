@@ -9,8 +9,9 @@ changed and offers to install it:
   closes, and the installer runs silently; the ``[Run]`` entry that
   ``packaging/khervecad.iss`` keeps for silent mode starts the new build
   when it is done.
-* **macOS** -- releases tagged ``macos-v0.1.N`` carrying the arm64 DMG.
-  The DMG is mounted, and a detached shell script waits for this process
+* **macOS** -- releases tagged ``macos-v0.1.N`` carrying a DMG per
+  architecture (arm64 and x86_64); each Mac takes its own. The DMG is
+  mounted, and a detached shell script waits for this process
   to exit, swaps the ``.app`` bundle for the one in the image and opens
   it again. A bundle that cannot be replaced in place (a read-only
   folder, App Translocation, run from the DMG) gets the DMG opened in
@@ -90,7 +91,16 @@ FAMILIES = {
         "assets": (r"KherveCAD-\d+\.\d+\.\d+-macOS-arm64\.dmg",
                    r"KherveCAD-macOS-arm64\.dmg"),
     },
+    # Same tags as "macos": one release carries both disk images. A release
+    # from before the Intel build has no x86_64 DMG and is skipped here.
+    "macos-intel": {
+        "prefix": "macos-v",
+        "assets": (r"KherveCAD-\d+\.\d+\.\d+-macOS-x86_64\.dmg",
+                   r"KherveCAD-macOS-x86_64\.dmg"),
+    },
 }
+#: the families that install by swapping an .app bundle
+MAC_FAMILIES = ("macos", "macos-intel")
 #: the family whose release notes carry the changelog prose
 MAIN_FAMILY = "windows"
 
@@ -155,8 +165,12 @@ def platform_key(sys_platform: str | None = None,
     machine = platform.machine() if machine is None else machine
     if sys_platform.startswith("win"):
         return "windows"
-    if sys_platform == "darwin" and machine.lower() in ("arm64", "aarch64"):
-        return "macos"                  # the DMG is Apple Silicon only
+    if sys_platform == "darwin":
+        machine = machine.lower()
+        if machine in ("arm64", "aarch64"):
+            return "macos"
+        if machine in ("x86_64", "amd64"):
+            return "macos-intel"
     return None
 
 
@@ -499,7 +513,7 @@ def install_mode(family: str | None, frozen: bool | None = None,
         return "page"
     if family == "windows":
         return "windows" if windows_installed(executable) else "page"
-    if family == "macos":
+    if family in MAC_FAMILIES:
         bundle = mac_app_bundle(executable)
         if bundle is None:
             return "page"

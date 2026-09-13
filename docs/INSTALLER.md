@@ -78,7 +78,8 @@ from that tag and attach that version's source archive.
 ## macOS
 
 Same goal, same obligations, different container: `packaging/build_macos.py`
-produces `dist/KherveCAD-<ver>-macOS-arm64.dmg`. It is the counterpart of
+produces `dist/KherveCAD-<ver>-macOS-<arch>.dmg` (`arm64` or `x86_64`, the
+build Mac's own). It is the counterpart of
 `build_installer.py` and shares its first step (write `khervecad/VERSION`),
 then diverges where the platform does:
 
@@ -91,9 +92,9 @@ then diverges where the platform does:
   mounts it and `ditto`s `OpenSCAD.app` into
   `KherveCAD.app/Contents/Resources/openscad/`. `bundled_openscad()`
   knows both layouts.
-- **arm64**, because the last stable OpenSCAD (2021.01) is x86_64 only —
-  the engine has to come from a snapshot, whose macOS image is universal.
-  The build discovers which snapshot from OpenSCAD's index rather than
+- **A snapshot engine**, because the last stable OpenSCAD (2021.01) is
+  x86_64 only. A snapshot's macOS image is universal, so the same engine
+  serves the arm64 and the x86_64 build alike. The build discovers which snapshot from OpenSCAD's index rather than
   pinning it, and verifies the extracted binary's architecture rather
   than trusting its name. The snapshots ship no source archive, so the
   GPL's corresponding source is resolved to the upstream commit for that
@@ -105,8 +106,8 @@ then diverges where the platform does:
   atomically, so nothing `khervecad.iss` guards against applies.
 
 `.github/workflows/macos-build.yml` runs all of it on a `macos-14`
-runner and publishes the DMG plus OpenSCAD's source archive under a
-`macos-v<ver>` tag — created with `--latest=false` so `releases/latest`
+(arm64) and a `macos-15-intel` (x86_64) runner and publishes both DMGs
+plus OpenSCAD's source archive under one `macos-v<ver>` tag — created with `--latest=false` so `releases/latest`
 stays on the Windows release the website's download button points at.
 Full detail in `README.macos.md`.
 
@@ -120,8 +121,10 @@ already provides, so keep them stable:
 - **Tags and asset names.** Windows releases are `v0.1.N` carrying
   `KherveCAD-Setup-0.1.N.exe` (or the stable `KherveCAD-Setup.exe`);
   macOS releases are `macos-v0.1.N` carrying
-  `KherveCAD-0.1.N-macOS-arm64.dmg`. A release without its platform's
-  asset is ignored, so an upload still in progress is never offered.
+  `KherveCAD-0.1.N-macOS-arm64.dmg` and `KherveCAD-0.1.N-macOS-x86_64.dmg`,
+  each Mac taking its own architecture's. A release without its
+  platform's asset is ignored (an Intel Mac skips the older arm64-only
+  releases), so an upload still in progress is never offered.
 - **`khervecad/VERSION` holds `0.1.N+sha`.** N is compared with the tag;
   the sha is the base of the compare API call that lists every commit
   since the running build.
