@@ -35,6 +35,20 @@ _NEUTRAL_SETTINGS = ("render_stage", "render_style", "render_bg",
                      "blueprint/drawn", "blueprint/dir")
 
 
+@pytest.fixture(autouse=True)
+def _fresh_blueprint_settings():
+    """The Blueprint remembers the title block's material, company and
+    author as the next sheet's defaults: a test that chose Steel made the
+    next test's sheet weigh steel. Each test starts without them (the
+    session fixture below puts the user's own back at the end)."""
+    from PyQt5.QtCore import QSettings
+    settings = QSettings("Kherve", "KherveCAD")
+    for key in ("blueprint/material", "blueprint/company",
+                "blueprint/drawn", "blueprint/dir"):
+        settings.remove(key)
+    yield
+
+
 @pytest.fixture(autouse=True, scope="session")
 def _neutral_view_settings():
     from PyQt5.QtCore import QSettings

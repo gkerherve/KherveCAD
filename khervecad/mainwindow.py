@@ -393,6 +393,7 @@ class MainWindow(QMainWindow):
         view_menu.addAction(self._edges_act)
         view_menu.addAction(self._gl_act)
         self._build_explode_menu(view_menu)
+        self._build_cut_menu(view_menu)
         view_menu.addSeparator()
         theme_menu = view_menu.addMenu("&Theme")
         theme_group = QActionGroup(self)
@@ -1275,6 +1276,21 @@ class MainWindow(QMainWindow):
             "and watch it build; Ctrl+Shift+M brings the panels back."
             if on else "Panels back — edit by hand.", 6000)
 
+    # --------------------------------------------------- cut through
+    def _build_cut_menu(self, view_menu):
+        """View ▸ Cut Through (cut_ui.py)."""
+        from . import cut_ui
+        cut_ui.build_menu(self, view_menu)
+
+    def set_cut(self, on=True, axis=None, position=None, flip=None):
+        """Cut Through on or off (and which axis, where, which half)."""
+        from . import cut_ui
+        cut_ui.set_cut(self, on, axis, position, flip)
+
+    def _sync_cut(self):
+        from . import cut_ui
+        cut_ui.sync(self)
+
     # ------------------------------------------------- exploded view
     def _build_explode_menu(self, view_menu):
         """View ▸ Exploded View: on/off, how far, which way."""
@@ -1579,7 +1595,15 @@ class MainWindow(QMainWindow):
         self.view3d.fit()
         self._update_title()
 
+    def _flush_blueprint(self):
+        """An edit still waiting in the Blueprint's Properties goes into
+        the document before it is saved or the window closes."""
+        board = getattr(self, "_blueprint", None)
+        if board is not None:
+            board.flush_pending()
+
     def save_file(self):
+        self._flush_blueprint()
         if self._path is None:
             self.save_file_as()
             return
@@ -1971,6 +1995,7 @@ class MainWindow(QMainWindow):
         return answer == QMessageBox.Discard
 
     def closeEvent(self, event):
+        self._flush_blueprint()             # so the unsaved check sees it
         if self._confirm_discard():
             # The bridge holds a listening socket and an endpoint file
             # naming this process; both have to go with the window.

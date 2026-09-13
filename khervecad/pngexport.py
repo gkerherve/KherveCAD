@@ -113,19 +113,21 @@ def pixel_ratio(view3d, width, height) -> float:
     return max(1.0, min(width / float(ref_w), height / float(ref_h)))
 
 
-def render(view3d, width, height, view="current", transparent=False):
+def render(view3d, width, height, view="current", transparent=False,
+           uncut=False):
     """A QImage of the model, painted the way the 3D view paints it —
     colours, materials, render style, lighting, platform and shadow,
     cavity shading and edge lines. *view* is ``"current"`` (the camera
     on screen, untouched) or a standard view name (framed on the whole
-    model from that side)."""
+    model from that side). A Cut Through on screen shows in the picture
+    unless *uncut* (a Printables still is of the whole part)."""
     if not view3d.mesh:
         raise ValueError("There is nothing in the 3D view to export.")
     ratio = pixel_ratio(view3d, width, height)
     if view == "current":
         image, _cam = view3d.snapshot(width, height, clean=True,
                                       transparent=transparent,
-                                      pixel_ratio=ratio)
+                                      pixel_ratio=ratio, uncut=uncut)
         return image
     if view not in CAMERA_ROTATIONS:
         raise ValueError(f"Unknown view {view!r}. Choose one of: "
@@ -134,7 +136,7 @@ def render(view3d, width, height, view="current", transparent=False):
     image, _cam = view3d.snapshot(width, height, yaw=yaw, pitch=pitch,
                                   frame=True, clean=True,
                                   transparent=transparent,
-                                  pixel_ratio=ratio)
+                                  pixel_ratio=ratio, uncut=uncut)
     return image
 
 

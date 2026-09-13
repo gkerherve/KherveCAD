@@ -136,10 +136,32 @@ class SheetView(QGraphicsView):
                 self.win.set_tool("select")
             return
         if tool.key == "select":
+            self._raise_view_of(self._note_at(event.pos()))
             super().mousePressEvent(event)
             return
         if event.button() == Qt.LeftButton:
             tool.press(self.mapToScene(event.pos()), event)
+
+    def _note_at(self, pos):
+        """The annotation under viewport point *pos*, if any — even one
+        stacked under a neighbouring view."""
+        for item in self.items(pos):
+            if isinstance(item, bi.SheetItem) and \
+                    item.flags() & item.ItemIsSelectable and \
+                    not getattr(item, "transient", False):
+                return item
+        return None
+
+    def _raise_view_of(self, note):
+        """A child item stacks above its own view only, so a label that
+        hangs out of its view into the next one lay under that view's
+        click area and could not be selected, dragged or deleted: lift
+        its view above the others before the click is delivered."""
+        if note is None or note.parentItem() is None:
+            return
+        for view in self.scene().views.values():
+            view.setZValue(1)
+        note.parentItem().setZValue(2)
 
     def mouseMoveEvent(self, event):
         if self._pan is not None:
@@ -173,7 +195,7 @@ class SheetView(QGraphicsView):
     def mouseDoubleClickEvent(self, event):
         if self._tool().key != "select":
             return
-        item = self.itemAt(event.pos())
+        item = self._note_at(event.pos()) or self.itemAt(event.pos())
         while item is not None and not isinstance(
                 item, (bi.SheetItem, bi.ViewItem)):
             item = item.parentItem()
@@ -334,6 +356,11 @@ class PropertiesPanel(QWidget):
         edit.editingFinished.connect(lambda: commit(edit.text()))
         return edit
 
+    def discard_pending(self):
+        """Forget an edit not yet applied (the sheet is being replaced)."""
+        self._pending = None
+        self._timer.stop()
+
     def _flush(self):
         if self._pending is not None:
             item, key, value = self._pending
@@ -475,6 +502,7 @@ class BlueprintWindow(QMainWindow):
         self.undo_stack = QUndoStack(self)
         self._state = None
         self._saving = False
+        self._restoring = False
         self._stale = False
         self.tools = make_tools(self)
         self.tool = self.tools["select"]
@@ -716,7 +744,7 @@ class BlueprintWindow(QMainWindow):
                 wait_until_idle(engine, 60.0)
             finally:
                 QApplication.restoreOverrideCursor()
-        return list(self.main.view3d.mesh or ())
+        return list(self.main.view3d.model_mesh or ())   # never the cut
 
     def _doc_title(self):
         builder = getattr(self.main, "builder", None)
@@ -728,6 +756,8 @@ class BlueprintWindow(QMainWindow):
 
     def load(self):
         """Build the sheet: the saved one, or a fresh automatic layout."""
+        self.tool.reset()
+        self.panel.discard_pending()
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
             self.scene.geometry = Geometry(self._model_tris())
@@ -800,7 +830,11 @@ class BlueprintWindow(QMainWindow):
             self._saving = False
 
     def commit(self, label="Edit"):
-        """One change to the sheet: an undo step, saved in the document."""
+        """One change to the sheet: an undo step, saved in the document.
+        Never while an undo/redo is rebuilding the sheet: a commit from
+        inside QUndoStack.undo() pushed a step mid-undo."""
+        if self._restoring:
+            return
         new = self.scene.state()
         if new == self._state:
             return
@@ -810,10 +844,26 @@ class BlueprintWindow(QMainWindow):
         self.setWindowTitle(f"Blueprint — {self.scene.title_text()}")
 
     def restore(self, state):
-        self.scene.load_state(state)
-        self._state = copy.deepcopy(state)
-        self._save()
-        self.sync_controls()
+        """Undo/redo: the sheet rebuilt from *state*. What was half made
+        goes — an unapplied edit in Properties, a tool's preview and the
+        views it had picked, all of which belong to the sheet being
+        replaced (a tool kept clicking into a view no longer shown)."""
+        self._restoring = True
+        try:
+            self.panel.discard_pending()
+            self.tool.reset()
+            self.scene.load_state(state)
+            self._state = copy.deepcopy(state)
+            self._save()
+            self.sync_controls()
+        finally:
+            self._restoring = False
+
+    def flush_pending(self):
+        """Apply an edit still waiting in Properties (typed text is
+        applied a moment after the last key) — before the document is
+        saved or the window closes, so nothing typed is lost."""
+        self.panel._flush()
 
     def sync_controls(self):
         for combo, value in ((self.sheet_combo, self.scene.sheet),):
@@ -951,7 +1001,7 @@ class BlueprintWindow(QMainWindow):
 
     def _picture(self, data):
         view3d = self.main.view3d
-        if not view3d.mesh:
+        if not view3d.model_mesh:
             return None
         px = int(float(data.get("width", 80.0)) * 12)
         stage, view3d.stage = view3d.stage, False
@@ -960,7 +1010,7 @@ class BlueprintWindow(QMainWindow):
                 px, int(px * 0.75), yaw=float(data.get("yaw", -65.0)),
                 pitch=float(data.get("pitch", 30.0)), frame=True,
                 clean=True, transparent=True,
-                pixel_ratio=max(1.0, px / 700.0))
+                pixel_ratio=max(1.0, px / 700.0), uncut=True)
         finally:
             view3d.stage = stage
         return image
@@ -1034,6 +1084,7 @@ class BlueprintWindow(QMainWindow):
                  if isinstance(i, bi.ViewItem) or i in self.scene.note_items]
         if not items:
             return
+        self.tool.reset()               # it may have picked a view going now
         self.scene.remove(items)
         self.commit("Delete")
 
@@ -1113,6 +1164,7 @@ class BlueprintWindow(QMainWindow):
         blueprint_export.print_sheet(self.scene, self)
 
     def closeEvent(self, event):
+        self.flush_pending()
         self.tool.deactivate()
         super().closeEvent(event)
 
@@ -1138,7 +1190,7 @@ def export_saved(main, path):
     if getattr(main, "engine", None) is not None:
         wait_until_idle(main.engine, 60.0)
     scene = BlueprintScene()
-    scene.geometry = Geometry(list(main.view3d.mesh or ()))
+    scene.geometry = Geometry(list(main.view3d.model_mesh or ()))
     scene.load_state(main.model.drawing)
     blueprint_export.export(scene, path)
     return scene

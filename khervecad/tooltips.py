@@ -448,6 +448,19 @@ TIPS = {
                "Frames the whole model in the 3D view. Drag there to "
                "orbit, right-drag or middle-drag to pan, wheel to zoom.",
                [], None),
+    "cut_through": (
+        "Cut through",
+        "Slices the 3D view with a plane, hides one half and fills the "
+        "cut face in red, so you can see how the part is made inside — "
+        "holes, walls, bores, threads, how parts sit in each other. Only "
+        "the picture is cut: the model, exports and drawings stay whole.",
+        ["Click Cut through (Ctrl+Alt+X).",
+         "Pick X, Y or Z on the bar along the bottom of the 3D view.",
+         "Drag the slider to move the cut through the model.",
+         "⇄ keeps the other half; ✕ (or the button again) shows the "
+         "whole model."],
+        "Orbit while it is cut: the red face is the section, the rest "
+        "is the inside of the part."),
     "blueprint": (
         "Blueprint (2D drawing)",
         "Opens the engineering drawing of the model in its own window: "

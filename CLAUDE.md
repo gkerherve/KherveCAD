@@ -40,6 +40,14 @@ into a new module and import.
   - `__main__.py`    — module entry point.
   - `_version.py`    — git-based version string.
   - `app.py`         — `main()`, crash log, Fusion style + theme.
+                       `install_excepthook`: PyQt turns an exception
+                       escaping a Qt callback into qFatal, which aborted
+                       the app with the document; the hook appends the
+                       traceback to the crash log, warns once (via a
+                       0 ms timer, never inside a paint) and carries on.
+                       The log now APPENDS per session (it was truncated
+                       at every launch, so a crash was gone by the time
+                       it was reported), rotating past `CRASH_LOG_LIMIT`.
   - `style.py`       — token-driven QSS themes (same template family
                        as KhervePaint; theme persists via QSettings).
   - `icons.py`       — qtawesome MDI icon wrapper with fallback.
@@ -889,7 +897,21 @@ into a new module and import.
                        `DocumentModel.drawing` (.kcad "drawing",
                        FORMAT_VERSION 8; kept OUT of the model's undo
                        snapshots — the window has its own QUndoStack of
-                       whole-sheet states, `_StateCommand`). First
+                       whole-sheet states, `_StateCommand`). Nothing
+                       may be lost or half-applied: `restore` (undo/
+                       redo) sets `_restoring` so no commit is pushed
+                       mid-undo, drops a pending Properties edit and
+                       resets the tool (a tool once kept clicking into
+                       a replaced view); `flush_pending` applies typed
+                       text before every save (main window, MCP
+                       save_document, Printables) and on close; a moved
+                       free item (text, sketch, parts list) commits on
+                       release; views are not pixmap-cached (a 60x zoom
+                       made each cache hundreds of MB).
+                       `tests/test_blueprint_tools.py` drives every tool
+                       with real mouse events — create, edit each
+                       Properties editor, double-click, drag, Delete,
+                       undo/redo — under an exception collector. First
                        open: `new_layout` (Front/Top/Right/Isometric)
                        + `arrange` (third-angle, largest standard
                        scale fitting `usable_rect`) + `auto_dimension`
@@ -1186,6 +1208,30 @@ into a new module and import.
                        `chain()` joins them (an outline that cannot
                        close = the mesh leaks there); `draw()` paints
                        the hatched section. Behind the `section` tool.
+  - `cutaway.py`     — **Cut Through** (View ▸ Cut Through, Ctrl+Alt+X,
+                       toolbar scissors; Qt-free): `clip` keeps one side
+                       of an axis plane (straddling triangles split,
+                       winding kept), `caps` closes the opening from
+                       `section.cut`/`chain` outlines tiled by `fill` — a
+                       trapezoid sweep, even-odd so holes stay open,
+                       linear where ear clipping went quadratic on a
+                       thread — facing the removed side, in `CAP_COLOR`
+                       (Matte). Clipped surface + caps is a closed solid
+                       again (a halved box measures exactly half).
+                       `View3D` keeps the whole model in `model_mesh` and
+                       shows the cut copy in `mesh` (`set_cut`, `cut`
+                       {axis, position 0..1, flip, offset}, `cut_changed`
+                       syncs the menu and toolbar). The Qt side —
+                       `CutBar` along the bottom of the 3D view and the
+                       View ▸ Cut Through menu — is `cut_ui.py`, so
+                       view3d/mainwindow only hold thin wrappers. Changing axis picks the half whose cap
+                       faces the usual camera (the back half for Y).
+                       Everything that must see the whole part reads
+                       `model_mesh`: Blueprint geometry and pictures,
+                       MCP `section`, and Printables stills
+                       (`pngexport.render(uncut=True)` →
+                       `snapshot(uncut=True)`). MCP: set_render_options
+                       `cut` / `cut_position` / `cut_flip`.
   - `meshimport.py`  — **imported meshes** (`stl_import`, Qt-free):
                        paths stay absolute in memory (preview,
                        validation and the engine's temp-folder render

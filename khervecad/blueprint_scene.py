@@ -329,7 +329,8 @@ class BlueprintScene(QGraphicsScene):
         data.setdefault("show_label", data["kind"] != "projected"
                         or data.get("name") == "Isometric")
         item = bi.ViewItem(data)
-        item.setCacheMode(bi.QGraphicsItem.DeviceCoordinateCache)
+        # no item cache: a device-resolution pixmap of a 150 mm view at
+        # full zoom is hundreds of megabytes; the paths paint fast enough
         self.views[data["id"]] = item
         self.addItem(item)
         self.fill_view(item)

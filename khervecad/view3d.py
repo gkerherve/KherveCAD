@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import (QGridLayout, QLabel, QSlider, QToolButton,
 
 from . import bsp as bsp_mod
 from . import glrender
+from .cut_ui import CutBar
 
 _SETTINGS = ("Kherve", "KherveCAD")
 
@@ -256,6 +257,14 @@ class View3D(QWidget):
         self.setMouseTracking(False)
         self.lighting_bar = LightingBar(self)
         self.lighting_bar.show()
+        #: View ▸ Cut Through (cutaway.py): None, or {"axis", "position"
+        #: 0..1 of the extent, "flip", "offset" mm}. `model_mesh` is the
+        #: whole model as handed in; `mesh` what is shown (cut and capped)
+        self.cut = None
+        self.model_mesh, self.model_colors = [], None
+        self._highlight_full = []
+        self.cut_bar = CutBar(self)
+        self.cut_bar.hide()
 
     # ------------------------------------------------------- lighting
     def set_light(self, key: str, value: float):
@@ -289,6 +298,48 @@ class View3D(QWidget):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self._place_lighting_bar()
+        self._place_cut_bar()
+
+    # ---------------------------------------------------- cut through
+    def cut_state(self):
+        """The cut as {axis, position, flip, offset}, or None."""
+        return dict(self.cut) if self.cut is not None else None
+
+    def set_cut(self, axis=None, position=None, flip=None, enabled=None):
+        """View ▸ Cut Through: slice the shown model across *axis* at
+        *position* (0..1 of its extent), keep one side and cap the cut
+        face. Changing the axis picks the side facing the usual camera
+        (the back half for Y, whose cut face then looks to the front)
+        unless *flip* says otherwise; *enabled* False switches it off.
+        Only the picture changes — the model and every export stay
+        whole (`model_mesh`)."""
+        if enabled is False:
+            self.cut = None
+        else:
+            cut = dict(self.cut or {"axis": "y", "position": 0.5,
+                                    "flip": True, "offset": 0.0})
+            if axis in ("x", "y", "z") and axis != cut["axis"]:
+                cut["axis"] = axis
+                cut["flip"] = axis == "y"
+            if position is not None:
+                cut["position"] = min(max(float(position), 0.0), 1.0)
+            if flip is not None:
+                cut["flip"] = bool(flip)
+            self.cut = cut
+        self.set_mesh(self.model_mesh, self.source, self.model_colors)
+        self.set_highlight_mesh(self._highlight_full)
+        self.cut_bar.sync()
+        self.cut_bar.setVisible(self.cut is not None)
+        self._place_cut_bar()
+        self.cut_changed.emit()
+
+    def _place_cut_bar(self):
+        """Bottom middle, clear of the source badge (bottom-left) and
+        the navigation bar (top-right)."""
+        bar = self.cut_bar
+        bar.adjustSize()
+        bar.move(max(8, (self.width() - bar.width()) // 2),
+                 max(8, self.height() - bar.height() - 34))
 
     def _place_lighting_bar(self):
         """Top-left corner: the source badge sits bottom-left and the
@@ -403,6 +454,10 @@ class View3D(QWidget):
         "Back": (90.0, 2.0), "Right": (0.0, 2.0), "Left": (180.0, 2.0),
     }
 
+    #: Cut Through was switched on or off, or moved (the menu and the
+    #: toolbar button follow it)
+    cut_changed = pyqtSignal()
+
     #: set on a snapshot's offscreen twin only: an exported picture is
     #: the model and nothing else — no grid, axes, badge, selection or
     #: anchors — optionally on a transparent ground.
@@ -425,7 +480,7 @@ class View3D(QWidget):
     def snapshot(self, width, height, *, yaw=None, pitch=None,
                  distance=None, target=None, projection=None,
                  frame=None, zoom=1.0, clean=False, transparent=False,
-                 pixel_ratio=1.0):
+                 pixel_ratio=1.0, uncut=False):
         """Paint the scene from another camera into a QImage, leaving
         this view — the user's camera — exactly where it is.
 
@@ -464,12 +519,18 @@ class View3D(QWidget):
         twin.hardware = self.hardware
         twin.projection = projection if projection in PROJECTIONS \
             else self.projection
-        # a snapshot must be exact: wait for a tree still being built
-        twin.set_mesh(self.mesh, self.source, self.colors,
-                      bsp=self.wait_for_bsp())
-        if self.cavity or self.edges:
-            twin._info, twin._info_serial = self._mesh_info(), \
-                twin._mesh_serial
+        if uncut and self.cut is not None:
+            # the whole model (a Printables still, a drawing's picture)
+            # while the user looks at a cut: its own tree and analysis
+            twin.set_mesh(self.model_mesh, self.source, self.model_colors)
+            twin.wait_for_bsp()
+        else:
+            # a snapshot must be exact: wait for a tree still being built
+            twin.set_mesh(self.mesh, self.source, self.colors,
+                          bsp=self.wait_for_bsp())
+            if self.cavity or self.edges:
+                twin._info, twin._info_serial = self._mesh_info(), \
+                    twin._mesh_serial
         if not clean:
             twin.set_highlight_mesh(self.highlight_mesh)
             twin.set_anchor_markers(list(self.anchor_markers))
@@ -518,7 +579,17 @@ class View3D(QWidget):
         """*colors* is an optional per-face list of (colorstring,
         alpha) — colours from color() nodes shown by the preview.
         *bsp* hands over a `bsp.Tree` already built for this very mesh
-        (the snapshot twin), otherwise one is built here."""
+        (the snapshot twin), otherwise one is built here. With Cut
+        Through on, *mesh* is kept whole in `model_mesh` and what is
+        shown is its cut and capped copy."""
+        self.model_mesh = list(mesh or [])
+        self.model_colors = colors if colors and \
+            len(colors) == len(self.model_mesh) else None
+        if self.cut is not None and self.model_mesh and bsp is None:
+            from . import cutaway
+            mesh, colors, self.cut["offset"] = cutaway.apply(
+                self.model_mesh, self.model_colors, self.cut["axis"],
+                self.cut["position"], self.cut["flip"])
         self.mesh = mesh or []
         self.colors = colors if colors and len(colors) == len(self.mesh) \
             else None
@@ -588,7 +659,14 @@ class View3D(QWidget):
         return self._bsp
 
     def set_highlight_mesh(self, tris):
-        """Triangles of the selected object, drawn glowing on top."""
+        """Triangles of the selected object, drawn glowing on top (cut
+        like the model while Cut Through is on)."""
+        self._highlight_full = tris or []
+        if self.cut is not None and self._highlight_full:
+            from . import cutaway
+            tris, _colors = cutaway.clip(self._highlight_full, None,
+                                         self.cut["axis"], self.cut["offset"],
+                                         self.cut["flip"])
         self.highlight_mesh = tris or []
         self._draft_hi, _ = self._decimate(self.highlight_mesh)
         self.update()

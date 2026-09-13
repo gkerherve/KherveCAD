@@ -272,6 +272,11 @@ def build_options_bar(win):
     bar.addAction(_action(win, "mdi.drawing-box", "Blueprint", "blueprint",
                           win.open_blueprint, "Ctrl+Shift+D",
                           bind=False))                     # File menu's
+    win._cut_tool_act = _action(win, "mdi.content-cut", "Cut through",
+                                "cut_through", shortcut="Ctrl+Alt+X",
+                                checkable=True, bind=False)  # View menu's
+    win._cut_tool_act.toggled.connect(lambda on: win.set_cut(bool(on)))
+    bar.addAction(win._cut_tool_act)
     bar.addSeparator()
 
     # -- the 3D-only layout for building with an assistant (the ChatBox

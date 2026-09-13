@@ -304,9 +304,27 @@ def prims_path(prims):
 
 
 def prims_shape(prims, width=1.6):
+    """What a click hits: every stroke widened to *width*, plus the whole
+    box of every text and the area of every filled mark. The stroked
+    outline alone made a note, a dimension's number or a balloon
+    unclickable except on the exact edge of its text box — so they
+    could not be selected, dragged, edited or deleted."""
     stroker = QPainterPathStroker()
     stroker.setWidth(width)
-    return stroker.createStroke(prims_path(prims))
+    lines = [p for p in prims if p[0] != "text"]
+    shape = stroker.createStroke(prims_path(lines))
+    solid = QPainterPath()
+    for p in prims:
+        if p[0] == "text":
+            solid.addRect(placed_text(p).boundingRect().adjusted(
+                -0.6, -0.6, 0.6, 0.6))
+        elif p[0] in ("poly", "circle") and p[-1] is True:
+            solid.addPath(prims_path([p]))
+    if not solid.isEmpty():
+        # a boolean union: with plain subpaths the winding rule could
+        # cancel a stroke crossing a text box and leave a hole in it
+        shape = shape.united(solid)
+    return shape
 
 
 def fmt(value, decimals=2):
@@ -424,6 +442,7 @@ class SheetItem(QGraphicsItem):
         super().mousePressEvent(event)
         self._dragging = self.ANCHORED and event.button() == Qt.LeftButton
         self._before = dict(self.data)
+        self._press_pos = self.pos()
 
     def mouseMoveEvent(self, event):
         if self._dragging:
@@ -435,12 +454,18 @@ class SheetItem(QGraphicsItem):
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
-        if self._dragging:
-            self._dragging = False
-            if self.data != getattr(self, "_before", self.data):
-                scene = self.scene()
-                if scene is not None and hasattr(scene, "edited"):
-                    scene.edited("Move annotation")
+        # a label dragged, or a free item (text, sketch, parts list)
+        # moved: either way one undo step, saved in the document — a
+        # moved text used to wait for some other edit to be saved
+        changed = self._dragging and \
+            self.data != getattr(self, "_before", self.data)
+        moved = self.MOVABLE and \
+            self.pos() != getattr(self, "_press_pos", self.pos())
+        self._dragging = False
+        if changed or moved:
+            scene = self.scene()
+            if scene is not None and hasattr(scene, "edited"):
+                scene.edited("Move annotation")
 
 
 # ── dimensions ─────────────────────────────────────────────────────

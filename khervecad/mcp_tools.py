@@ -699,7 +699,7 @@ class McpToolExecutor:
             complete = (self._wait_for_render(timeout)
                         if params.get("wait_for_exact", True)
                         else self._render_settled())
-            tris = list(self._w.view3d.mesh)
+            tris = list(self._w.view3d.model_mesh)   # never a Cut Through
             source = self._w.view3d.source
         if not tris:
             raise ToolError("There is nothing in the 3D view to cut.")
@@ -1235,6 +1235,21 @@ class McpToolExecutor:
                 None if amount is None else float(amount) > 0,
                 amount=None if not amount else float(amount),
                 mode=params.get("explode_mode"))
+        axis = params.get("cut")
+        if axis is not None or params.get("cut_position") is not None \
+                or params.get("cut_flip") is not None:
+            if axis == "none":
+                win.view3d.set_cut(enabled=False)
+            else:
+                if axis is not None and axis not in ("x", "y", "z"):
+                    raise ToolError("cut must be x, y, z or none.")
+                position = params.get("cut_position")
+                if position is not None:
+                    position = self._number(params, "cut_position")
+                    if not 0.0 <= position <= 1.0:
+                        raise ToolError("cut_position runs from 0 to 1.")
+                win.view3d.set_cut(axis=axis, position=position,
+                                   flip=params.get("cut_flip"))
         return {"exploded": win.explode_state(),
                 "global_segments": int(model.global_fn),
                 "global_segments_on": bool(model.global_fn_on),
@@ -1242,7 +1257,8 @@ class McpToolExecutor:
                 "stage": bool(win.view3d.stage),
                 "opengl": bool(win.view3d.hardware),
                 "cavity": bool(win.view3d.cavity),
-                "edges": bool(win.view3d.edges)}
+                "edges": bool(win.view3d.edges),
+                "cut": win.view3d.cut_state()}
 
     def _guard_unsaved(self, params, tool: str):
         if self._w._dirty and not params.get("discard_unsaved_changes"):
@@ -1378,6 +1394,9 @@ class McpToolExecutor:
         if not path.lower().endswith(".kcad"):
             raise ToolError("Save as .kcad. For a program or a mesh use "
                             "export_document.")
+        flush = getattr(self._w, "_flush_blueprint", None)
+        if flush is not None:
+            flush()                 # an edit waiting in the Blueprint
         document.save_kcad(self._model, path)
         self._w._path = path
         self._w._dirty = False

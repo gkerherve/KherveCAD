@@ -450,6 +450,9 @@ def build_bundle(window, folder, *, title, description="", tags=(),
 
     if "kcad" in formats:
         path = folder / f"{stem}.kcad"
+        flush = getattr(window, "_flush_blueprint", None)
+        if flush is not None:
+            flush()                 # the drawing ships as the user left it
         document.save_kcad(model, str(path))
         wrote(path)
 
@@ -647,7 +650,8 @@ def _render_previews(window, folder, stem, views, size, warnings) -> list:
         shot = (int(size[0] * 1.3), int(size[1] * 1.3)) if index == 1 \
             else size
         try:
-            image = pngexport.render(window.view3d, shot[0], shot[1], name)
+            image = pngexport.render(window.view3d, shot[0], shot[1], name,
+                                     uncut=True)
             pngexport._save(image, path)
         except (ValueError, OSError) as exc:
             warnings.append(f"{name} preview failed: {exc}")
@@ -713,7 +717,7 @@ def _render_exploded(window, folder, stem, size, warnings, first) -> list:
                                                 f"{name} exploded")
             try:
                 image = pngexport.render(window.view3d, size[0], size[1],
-                                         name)
+                                         name, uncut=True)
                 pngexport._save(image, path)
             except (ValueError, OSError) as exc:
                 warnings.append(f"Exploded {name} still failed: {exc}")

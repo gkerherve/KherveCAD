@@ -868,6 +868,20 @@ TOOLS = [
                              "description": "Which way the parts move: "
                                             "outwards, or along one "
                                             "axis."},
+            "cut": {"type": "string", "enum": ["none", "x", "y", "z"],
+                    "description": "Cut Through: slice the 3D view "
+                                   "across this axis and cap the cut "
+                                   "face, to show the inside (holes, "
+                                   "walls, threads) — also what "
+                                   "render_view shows. 'none' switches "
+                                   "it off. A display only: exports and "
+                                   "the model stay whole."},
+            "cut_position": {"type": "number",
+                             "description": "Where the cut goes, 0 to 1 "
+                                            "across the model's extent "
+                                            "(0.5 = the middle)."},
+            "cut_flip": {"type": "boolean",
+                         "description": "Keep the other half."},
         }),
     },
     {

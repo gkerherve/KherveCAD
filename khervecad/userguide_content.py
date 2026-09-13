@@ -257,6 +257,32 @@ and <b>Publish to Printables</b> adds exploded pictures (isometric and
 front) for any assembly of two or more parts.</li>
 </ul>
 """),
+        ("cut-through", "Cut through", f"""
+<p><b>Cut through</b> slices the 3D view with a plane, takes one half
+away and fills the cut face in red &mdash; the way a CAD section looks
+&mdash; so you can see how a part is made inside: the holes and bores,
+the wall thickness, a thread, how one part sits in another. Like the
+exploded view it is a way of <i>looking</i>: the model, its exports and
+its drawings stay whole.</p>
+<ul>
+<li>Click the <b>scissors</b> on the toolbar, or <b>View &rsaquo; Cut
+Through</b> {K("Ctrl+Alt+X")}.</li>
+<li>A bar appears along the bottom of the 3D view: pick <b>X</b>,
+<b>Y</b> or <b>Z</b>, and drag the slider to move the cut through the
+model; the readout gives its position in millimetres.</li>
+<li><b>&#x21C4;</b> keeps the other half; <b>&#x2715;</b> (or the
+toolbar button again) shows the whole model.</li>
+<li>Keep orbiting while it is cut: the red face is the section, what is
+behind it the inside of the part.</li>
+<li>With OpenSCAD installed the cut goes through the exact geometry, so
+bored holes and threads show as they will print.</li>
+</ul>
+<p>Pictures from <b>File &rsaquo; Export PNG</b> of the current view
+show the cut; <b>Publish to Printables</b> and <b>Blueprint</b> always
+use the whole model. A 2D engineering section (hatched, with its
+cutting line) is on the <b>Blueprint</b>: Insert &rsaquo; Section
+view.</p>
+"""),
         ("reference", "Tool reference", "@reference"),
 
         ("sketching", "Drawing in 2D", f"""
