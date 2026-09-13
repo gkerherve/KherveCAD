@@ -241,12 +241,13 @@ class View3D(QWidget):
         self.projection = proj if proj in PROJECTIONS else "Perspective"
         self.brightness = _clamp_light(settings.value("render_brightness"))
         self.contrast = _clamp_light(settings.value("render_contrast"))
-        #: platform & shadow instead of the grid (stage.py)
-        self.stage = settings.value("render_stage", False, type=bool)
+        #: platform & shadow instead of the grid (stage.py) — on by
+        #: default, like edge lines and OpenGL: the look users settle on
+        self.stage = settings.value("render_stage", True, type=bool)
         self._stage_cache = None        # stage.Stage, made on first use
         #: Blender-style cavity shading and edge lines (shading.py)
         self.cavity = settings.value("render_cavity", False, type=bool)
-        self.edges = settings.value("render_edges", False, type=bool)
+        self.edges = settings.value("render_edges", True, type=bool)
         self._info = None               # shading.MeshInfo of self.mesh
         self._info_serial = -1
         #: draw the faces with OpenGL (glrender.py) — exact occlusion at

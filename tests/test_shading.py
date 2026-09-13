@@ -147,7 +147,19 @@ def test_settings_persist_and_the_snapshot_copies_them(app):
         assert img.width() == 120
     finally:
         settings.remove("render_cavity")
-        settings.remove("render_edges")
+        settings.setValue("render_edges", False)   # the session's neutral
+
+
+def test_edge_lines_are_on_by_default():
+    from PyQt5.QtCore import QSettings
+    from khervecad.view3d import View3D
+    settings = QSettings("Kherve", "KherveCAD")
+    settings.remove("render_edges")
+    try:
+        assert View3D().edges is True
+        assert View3D().hardware is True       # OpenGL, on already
+    finally:
+        settings.setValue("render_edges", False)   # the session's neutral
 
 
 def test_an_open_border_edge_is_drawn():

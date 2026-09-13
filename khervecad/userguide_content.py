@@ -704,8 +704,8 @@ soft shadow from a light far away at the top left, the way a product
 photo is lit. The light follows the camera, so the shadow always falls
 towards the bottom right as you turn the model. It is a look only
 &mdash; nothing is added to the model or the exported files &mdash; and
-it is remembered between sessions. Exported pictures (File &rsaquo;
-Export PNG) include it.</p>
+it is remembered between sessions (it is on until you switch it off).
+Exported pictures (File &rsaquo; Export PNG) include it.</p>
 {figure("stage", "The platform and its shadow.")}
 <h3>Cavity shading and edge lines</h3>
 <p>Two looks borrowed from Blender's solid view, both under the
@@ -714,10 +714,11 @@ draws the model with the graphics card &mdash; exact occlusion however
 big the model, anti-aliased, and it orbits smoothly; switch it off to
 use the built-in painter, which is also what Wireframe and X-ray use.
 <b>3D Cavity Shading</b> darkens valleys and lightens
-ridges so the shape reads at a glance, and <b>3D Edge Lines</b> draws
-the model's real edges and its outline as thin lines &mdash; a cylinder
-shows its two rims, not its facets. Both are looks only and are
-remembered between sessions; exported pictures include them.</p>
+ridges so the shape reads at a glance, and <b>3D Edge Lines</b> (on by
+default) draws the model's real edges and its outline as thin lines
+&mdash; a cylinder shows its two rims, not its facets. Both are looks
+only and are remembered between sessions; exported pictures include
+them.</p>
 {figure("cavity_edges", "The same part plain (left) and with cavity "
         "shading and edge lines (right).")}
 <h3>Preview and exact render</h3>

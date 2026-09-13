@@ -96,16 +96,16 @@ def _lum(img, x, y):
     return c.red() + c.green() + c.blue()
 
 
-def test_stage_is_off_by_default_and_persists(app, clean_stage_setting):
+def test_stage_is_on_by_default_and_persists(app, clean_stage_setting):
     view = View3D()
-    assert view.stage is False
+    assert view.stage is True              # the app's default look
     seen = []
     view.stage_toggled.connect(seen.append)
-    view.set_stage(True)
-    assert view.stage is True and seen == [True]
-    assert View3D().stage is True          # a new view reads it back
     view.set_stage(False)
-    assert View3D().stage is False
+    assert view.stage is False and seen == [False]
+    assert View3D().stage is False         # a new view reads it back
+    view.set_stage(True)
+    assert View3D().stage is True
 
 
 def test_shadow_falls_below_right_of_a_floating_cube(app):

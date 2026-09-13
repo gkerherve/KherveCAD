@@ -34,6 +34,9 @@ _NEUTRAL_SETTINGS = ("render_stage", "render_style", "render_bg",
                      "blueprint/material", "blueprint/company",
                      "blueprint/drawn", "blueprint/dir")
 
+#: looks that default to on, held off for the session instead of removed
+_NEUTRAL_OFF = ("render_stage", "render_edges")
+
 
 @pytest.fixture(autouse=True)
 def _fresh_blueprint_settings():
@@ -56,6 +59,10 @@ def _neutral_view_settings():
     saved = {key: settings.value(key) for key in _NEUTRAL_SETTINGS}
     for key in _NEUTRAL_SETTINGS:
         settings.remove(key)
+    # the platform and edge lines are ON by default in the app; pixel and
+    # framing tests were written for a bare view, so hold them off here
+    for key in _NEUTRAL_OFF:
+        settings.setValue(key, False)
     settings.sync()
     del settings
     yield
