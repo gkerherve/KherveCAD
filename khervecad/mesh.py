@@ -188,9 +188,12 @@ def triangulate(points):
                      - (b[1] - a[1]) * (c[0] - a[0]))
             if cross <= 1e-12:
                 continue                     # reflex corner
+            # a bridged hole visits its cut's two ends twice: those
+            # copies sit on the ear's corners, not inside it
             if any(_point_in_tri(pts[j], a, b, c)
                    for j in indices
-                   if j not in (i0, i1, i2)):
+                   if j not in (i0, i1, i2)
+                   and pts[j] not in (a, b, c)):
                 continue
             triangles.append((i0, i1, i2))
             del indices[k]
@@ -331,11 +334,13 @@ def collect_outlines(node: CadNode, env=None):
     if not node.visible:
         return outlines
     if node.category == SHAPE_2D:
-        outlines.extend(node_outlines(node, env))
+        outlines.extend(_oriented(node, node_outlines(node, env)))
     if node.type == "offset":
         child_outlines = _children_outlines(node, env)
         r = rv(node.params["radius"], env)
-        return [offset_outline(o, r) for o in child_outlines]
+        return [_offset_keeping(o, r) for o in child_outlines]
+    if node.type == "difference":
+        return _difference_outlines(node, env)
     if node.type == "hull":
         pts = [pt for o in _children_outlines(node, env) for pt in o]
         hull = convex_hull_2d(pts)
@@ -355,8 +360,228 @@ def collect_outlines(node: CadNode, env=None):
     if node.type == "pattern":
         from . import pattern
         return pattern.outlines(node, env)
+    if node.type in _TRANSFORMS_2D:
+        return _transformed_outlines(node, env)
     outlines.extend(_children_outlines(node, env))
     return outlines
+
+
+#: transforms a 2D outline passes through on its way into an extrusion
+_TRANSFORMS_2D = ("translate", "rotate", "scale", "mirror")
+
+
+def _transformed_outlines(node, env):
+    """The children's outlines mapped through the transform's 2D part.
+
+    Without it every translate, rotate, scale and mirror between an
+    extrude and its 2D shapes was dropped in the preview: a card's index
+    turned half round for the opposite corner was drawn back on top of
+    the first one, a scaled pip stayed a dot, and a translate only
+    survived where the importer had folded it into the shape's own x/y.
+    Inner transforms apply first, as the recursion returns; a mirror (or
+    a negative scale) reverses each outline so its winding holds."""
+    def val(key, default):
+        try:
+            return float(rv(node.params.get(key, default), env, default))
+        except (TypeError, ValueError):
+            return default
+    if node.type == "translate":
+        m = mat_translate(val("x", 0.0), val("y", 0.0), val("z", 0.0))
+    elif node.type == "rotate":
+        m = mat_rotate(val("x", 0.0), val("y", 0.0), val("z", 0.0))
+    elif node.type == "scale":
+        m = mat_scale(val("x", 1.0), val("y", 1.0), val("z", 1.0))
+    else:
+        m = mat_mirror(val("x", 1.0), val("y", 0.0), val("z", 0.0))
+    out = [[(m[0][0] * x + m[0][1] * y + m[0][3],
+             m[1][0] * x + m[1][1] * y + m[1][3]) for x, y in outline]
+           for outline in _children_outlines(node, env)]
+    if m[0][0] * m[1][1] - m[0][1] * m[1][0] < 0:
+        out = [list(reversed(outline)) for outline in out]
+    return out
+
+
+# 2D content reaches an extrusion as SOLIDS (counter-clockwise outlines)
+# and HOLES (clockwise), the way OpenSCAD's own polygons carry holes: a
+# glyph's counter (the inside of an O) and the shapes a 2D difference
+# takes away are holes, which the extruders cut out of the solid around
+# them. Before, every outline was extruded as a solid of its own: an O
+# came out filled and a pot drawn as outline-minus-inset was a block.
+
+def _inside(pt, loop):
+    """Even-odd point-in-polygon."""
+    x, y = pt
+    inside = False
+    for (x1, y1), (x2, y2) in zip(loop, loop[1:] + loop[:1]):
+        if (y1 > y) != (y2 > y) and \
+                x < x1 + (y - y1) * (x2 - x1) / (y2 - y1):
+            inside = not inside
+    return inside
+
+
+def _centroid2d(loop):
+    return (sum(x for x, _ in loop) / len(loop),
+            sum(y for _, y in loop) / len(loop))
+
+
+def _oriented(node, outlines):
+    """A 2D shape's outlines as solids (counter-clockwise) — and, for
+    text, the loops nested inside a glyph as holes (clockwise)."""
+    loops = [o for o in (_distinct(o) for o in outlines) if len(o) >= 3]
+    if node.type != "text":
+        return [ensure_ccw(o) for o in loops]
+    out = []
+    for i, loop in enumerate(loops):
+        depth = sum(1 for j, other in enumerate(loops)
+                    if j != i and _inside(loop[0], other))
+        ccw = ensure_ccw(loop)
+        out.append(ccw if depth % 2 == 0 else ccw[::-1])
+    return out
+
+
+def _distinct(outline):
+    """The loop without repeated points: a glyph's outline closes by
+    repeating its first point, and that zero-length edge stalled the
+    ear clipper on a bridged hole, whose fan fallback then covered the
+    counter of an O."""
+    out = []
+    for p in outline:
+        p = tuple(p)
+        if not out or abs(p[0] - out[-1][0]) > 1e-9 or \
+                abs(p[1] - out[-1][1]) > 1e-9:
+            out.append(p)
+    while len(out) > 1 and abs(out[0][0] - out[-1][0]) <= 1e-9 and \
+            abs(out[0][1] - out[-1][1]) <= 1e-9:
+        out.pop()
+    return out
+
+
+def _offset_keeping(outline, r):
+    """Offset that grows a solid and shrinks a hole alike."""
+    if polygon_area(outline) >= 0:
+        return offset_outline(outline, r)
+    return offset_outline(ensure_ccw(outline), -r)[::-1]
+
+
+def _difference_outlines(node, env):
+    """A 2D difference: the first shape's outlines, then every other
+    shape's turned round, so its solids become holes. A hole inside a
+    solid is cut out of it exactly (a pot wall, a washer, a frame); a
+    subtraction across an edge is approximated."""
+    env = dict(env)
+    out, first = [], True
+    for child in node.children:
+        if child.type == "assign":
+            _apply_assign(child, env)
+            continue
+        loops = collect_outlines(child, env)
+        if first:
+            out.extend(loops)
+            first = False
+        else:
+            out.extend(list(reversed(o)) for o in loops)
+    return out
+
+
+def outline_regions(loops):
+    """[(solid, [holes inside it])]: each hole goes to the smallest solid
+    that holds it; a hole inside no solid takes nothing away."""
+    regions = [(o, []) for o in loops if polygon_area(o) >= 0]
+    for hole in (o for o in loops if polygon_area(o) < 0):
+        probe = _centroid2d(hole)
+        best, best_area = None, None
+        for index, (solid, _holes) in enumerate(regions):
+            if _inside(probe, solid) or _inside(hole[0], solid):
+                area = polygon_area(solid)
+                if best is None or area < best_area:
+                    best, best_area = index, area
+        if best is not None:
+            regions[best][1].append(hole)
+    return regions
+
+
+def _caps(solid, holes):
+    """Cap triangles (counter-clockwise) of a solid less its holes. Each
+    hole is bridged into the outline and the result ear-clipped, so the
+    cap uses only the outline's own vertices and meets the walls edge
+    for edge (a trapezoid sweep split the edges and left the solid
+    unsealed for the print check); the sweep remains the fallback."""
+    if not holes:
+        return triangulate(solid)
+    merged = _bridge_holes(solid, holes)
+    if merged is None:
+        from .cutaway import fill
+        return fill([solid] + holes)
+    return triangulate(merged)
+
+
+def _bridge_holes(solid, holes):
+    """One polygon walking *solid* (CCW) and every hole (CW), each hole
+    joined by a two-way cut from its rightmost vertex to the nearest
+    outline vertex it can see, rightmost holes first (Eberly's order);
+    None when a hole sees nothing."""
+    outer = [tuple(p) for p in solid]
+    rest = sorted(([tuple(p) for p in h] for h in holes),
+                  key=lambda h: -max(p[0] for p in h))
+    while rest:
+        hole = rest.pop(0)
+        j = max(range(len(hole)), key=lambda k: hole[k][0])
+        m = hole[j]
+        walls = _loop_edges(outer) + [e for h in rest
+                                      for e in _loop_edges(h)] \
+            + _loop_edges(hole)
+        best = None
+        for i, v in enumerate(outer):
+            if v[0] < m[0] - 1e-9 or v == m:
+                continue
+            d = (v[0] - m[0]) ** 2 + (v[1] - m[1]) ** 2
+            if best is not None and d >= best[0]:
+                continue
+            if not _sees(m, v, walls):
+                continue
+            mid = ((m[0] + v[0]) / 2, (m[1] + v[1]) / 2)
+            if not _inside(mid, outer) or \
+                    any(_inside(mid, h) for h in rest):
+                continue
+            best = (d, i)
+        if best is None:
+            return None
+        i = best[1]
+        outer = outer[:i + 1] + hole[j:] + hole[:j + 1] + outer[i:]
+    return outer
+
+
+def _loop_edges(loop):
+    return list(zip(loop, loop[1:] + loop[:1]))
+
+
+def _sees(m, v, walls):
+    """True when the segment m-v crosses no wall (touching at m or v is
+    allowed: those are the bridge's own ends)."""
+    for a, b in walls:
+        if a in (m, v) or b in (m, v):
+            continue
+        if _segments_cross(m, v, a, b):
+            return False
+    return True
+
+
+def _segments_cross(p, q, a, b):
+    def side(o, s, t):
+        return (s[0] - o[0]) * (t[1] - o[1]) - (s[1] - o[1]) * (t[0] - o[0])
+    d1, d2 = side(a, b, p), side(a, b, q)
+    d3, d4 = side(p, q, a), side(p, q, b)
+    eps = 1e-12
+    if ((d1 > eps and d2 < -eps) or (d1 < -eps and d2 > eps)) and \
+            ((d3 > eps and d4 < -eps) or (d3 < -eps and d4 > eps)):
+        return True
+    # a wall vertex lying on the bridge blocks it too
+    for o, s, t, d in ((p, q, a, d3), (p, q, b, d4)):
+        if abs(d) <= eps and min(o[0], s[0]) - eps <= t[0] <= \
+                max(o[0], s[0]) + eps and min(o[1], s[1]) - eps <= t[1] \
+                <= max(o[1], s[1]) + eps:
+            return True
+    return False
 
 
 def _children_outlines(node, env):
@@ -513,44 +738,43 @@ def linear_extrude_mesh(node: CadNode, env=None):
     if _DETAIL:
         slices = min(slices, _DETAIL)
     mesh = []
-    for outline in collect_outlines(node, env):
-        if len(outline) < 3:
-            continue
-        outline = ensure_ccw(outline)
-        cx = sum(x for x, _ in outline) / len(outline)
-        cy = sum(y for _, y in outline) / len(outline)
+    loops = [o for o in collect_outlines(node, env) if len(o) >= 3]
+    for solid, holes in outline_regions(loops):
+        # a hole twists and scales with its solid (about the same centre)
+        cx, cy = _centroid2d(solid)
 
-        def ring(f):
-            """Outline at fraction f of the height (twist about origin,
-            scale about the outline centroid, like OpenSCAD)."""
+        def ring(loop, f):
+            """A loop at fraction f of the height (twist about origin,
+            scale about the solid's centroid, like OpenSCAD)."""
             angle = -math.radians(twist) * f
             s = 1.0 + (scale_top - 1.0) * f
             cos_a, sin_a = math.cos(angle), math.sin(angle)
             pts = []
-            for x, y in outline:
+            for x, y in loop:
                 sx = cx + (x - cx) * s
                 sy = cy + (y - cy) * s
                 pts.append((sx * cos_a - sy * sin_a,
                             sx * sin_a + sy * cos_a,
                             z0 + height * f))
             return pts
-        rings = [ring(i / slices) for i in range(slices + 1)]
-        n = len(outline)
-        for k in range(slices):
-            lower, upper = rings[k], rings[k + 1]
-            for i in range(n):
-                j = (i + 1) % n
-                mesh.append((lower[i], lower[j], upper[j]))
-                mesh.append((lower[i], upper[j], upper[i]))
-        bottom = triangulate(outline)
-        for a, b, c in bottom:               # bottom cap faces down
+        tops = []
+        for loop in [solid] + holes:
+            # walls follow the loop's own direction: a hole's face inward
+            rings = [ring(loop, i / slices) for i in range(slices + 1)]
+            tops.append([(x, y) for x, y, _ in rings[-1]])
+            n = len(loop)
+            for k in range(slices):
+                lower, upper = rings[k], rings[k + 1]
+                for i in range(n):
+                    j = (i + 1) % n
+                    mesh.append((lower[i], lower[j], upper[j]))
+                    mesh.append((lower[i], upper[j], upper[i]))
+        for a, b, c in _caps(solid, holes):  # bottom cap faces down
             mesh.append(((a[0], a[1], z0), (c[0], c[1], z0),
                          (b[0], b[1], z0)))
         if scale_top > 0:
-            top_ring = rings[-1]
-            top2d = [(x, y) for x, y, _ in top_ring]
-            for a, b, c in triangulate(top2d):
-                z = z0 + height
+            z = z0 + height
+            for a, b, c in _caps(tops[0], tops[1:]):
                 mesh.append(((a[0], a[1], z), (b[0], b[1], z),
                              (c[0], c[1], z)))
     return mesh
@@ -563,30 +787,32 @@ def rotate_extrude_mesh(node: CadNode, env=None):
     steps = max(int(n * angle / 360.0), 2)
     full = angle >= 360.0
     mesh = []
-    for outline in collect_outlines(node, env):
-        if len(outline) < 3:
-            continue
-        profile = [(max(x, 0.0), y) for x, y in ensure_ccw(outline)]
-
-        def ring(step):
-            a = math.radians(angle) * step / steps
-            cos_a, sin_a = math.cos(a), math.sin(a)
-            return [(x * cos_a, x * sin_a, y) for x, y in profile]
-        rings = [ring(s) for s in range(steps + 1)]
-        m = len(profile)
-        for s in range(steps):
-            r0, r1 = rings[s], rings[s + 1]
-            for i in range(m):
-                j = (i + 1) % m
-                mesh.append((r0[i], r1[i], r1[j]))
-                mesh.append((r0[i], r1[j], r0[j]))
+    loops = [o for o in collect_outlines(node, env) if len(o) >= 3]
+    for solid, holes in outline_regions(loops):
+        profiles = [[(max(x, 0.0), y) for x, y in loop]
+                    for loop in [solid] + holes]
+        for profile in profiles:
+            # a hole's loop runs the other way round: its surface faces in
+            def ring(step, profile=profile):
+                a = math.radians(angle) * step / steps
+                cos_a, sin_a = math.cos(a), math.sin(a)
+                return [(x * cos_a, x * sin_a, y) for x, y in profile]
+            rings = [ring(s) for s in range(steps + 1)]
+            m = len(profile)
+            for s in range(steps):
+                r0, r1 = rings[s], rings[s + 1]
+                for i in range(m):
+                    j = (i + 1) % m
+                    mesh.append((r0[i], r1[i], r1[j]))
+                    mesh.append((r0[i], r1[j], r0[j]))
         if not full:                          # end caps
-            for a, b, c in triangulate(profile):
+            caps = _caps(profiles[0], profiles[1:])
+            for a, b, c in caps:
                 mesh.append(((a[0], 0.0, a[1]), (c[0], 0.0, c[1]),
                              (b[0], 0.0, b[1])))
             last = math.radians(angle)
             cos_a, sin_a = math.cos(last), math.sin(last)
-            for a, b, c in triangulate(profile):
+            for a, b, c in caps:
                 mesh.append(((a[0] * cos_a, a[0] * sin_a, a[1]),
                              (b[0] * cos_a, b[0] * sin_a, b[1]),
                              (c[0] * cos_a, c[0] * sin_a, c[1])))
