@@ -90,6 +90,8 @@ def test_paint_colours_faces_by_their_projection(halves):
     picture = paint.load(halves)
     out = paint.paint(items, picture, "Front (XZ)", -20.0, 0.0, 40.0)
     for tri, colour, _sel in out:
+        if paint._facing(tri, 1) > -0.9:            # only the front faces
+            continue
         cx = sum(v[0] for v in tri) / 3
         expect = "#ff0000" if cx < 0 else "#0000ff"
         assert colour == (expect, 0.5, "Matte")       # alpha, material kept
@@ -100,8 +102,20 @@ def test_paint_colours_faces_by_their_projection(halves):
     # no picture, no colour of its own: the photo's colour with alpha 1
     plain = paint.paint([(t, None, False) for t in mesh.tessellate(root)],
                         picture, "Front (XZ)", -20.0, 0.0, 40.0)
-    assert plain[0][1][1] == 1.0
+    assert next(c for _t, c, _s in plain if c is not None)[1] == 1.0
     assert paint.paint(items, None, "Front (XZ)", 0, 0, 40) is items
+    # front only (the default): the back and the side faces keep their
+    # colour — a face turned away must not wear the photo's background
+    front = [c for t, c, _s in out if paint._facing(t, 1) < -0.9]
+    back = [c for t, c, _s in out if paint._facing(t, 1) > 0.9]
+    side = [c for t, c, _s in out if abs(paint._facing(t, 0)) > 0.9]
+    assert front and all(c[0] in ("#ff0000", "#0000ff") for c in front)
+    assert back and all(c == ("#aaaaaa", 0.5, "Matte") for c in back)
+    assert side and all(c == ("#aaaaaa", 0.5, "Matte") for c in side)
+    through = paint.paint(items, picture, "Front (XZ)", -20.0, 0.0, 40.0,
+                          sides="both")
+    assert all(c[0] in ("#ff0000", "#0000ff")
+               for t, c, _s in through if paint._facing(t, 1) > 0.9)
 
 
 def test_the_paint_node_previews_bakes_and_round_trips(app, halves, tmp_path):
@@ -116,6 +130,7 @@ def test_the_paint_node_previews_bakes_and_round_trips(app, halves, tmp_path):
     assert colours == {"#ff0000", "#0000ff"}
     code = doc.to_scad()
     assert 'kcad_paint(image = "' in code and 'plane = "Front (XZ)"' in code
+    assert 'sides = "front"' in code
     assert "module kcad_paint(" in code
     path = tmp_path / "paint.scad"
     document.export_scad(doc, str(path))
@@ -123,6 +138,7 @@ def test_the_paint_node_previews_bakes_and_round_trips(app, halves, tmp_path):
     assert not scadparse.import_scad(other, str(path))
     back = next(n for n in other.root.walk() if n.type == "paint")
     assert back.params["image"] == halves and back.params["width"] == 40
+    assert back.params["sides"] == "front"
     assert other.to_scad().splitlines()[3:] == code.splitlines()[3:]
     node.params["image"] = ""
     assert "choose" in validate(doc.root)[node.id]

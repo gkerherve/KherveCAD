@@ -1347,9 +1347,13 @@ into a new module and import.
                        — the same placement as a reference image
                        (plane, lower-left `x`/`y`, `width`, `height` 0 =
                        aspect); faces outside keep their own, alpha and
-                       material are kept. The projection runs through
-                       the part, so a front photo paints the back
-                       mirrored. `read_png` is a pure-Python 8-bit PNG
+                       material are kept. `sides` "front" (default)
+                       paints only faces looking towards the camera the
+                       photo was taken from (`VIEW_SIGN` per plane, a
+                       `GRAZE` cutoff so a face seen edge-on keeps its
+                       colour rather than smeared texels) — the far side
+                       of a head must not wear the photo's background;
+                       "both" projects straight through. `read_png` is a pure-Python 8-bit PNG
                        decoder (filters 0-4, RGB/RGBA/grey/palette),
                        QImage the fallback for JPEG; `Picture.at(s, t)`
                        samples t-up; `load` caches by mtime. Compiles to

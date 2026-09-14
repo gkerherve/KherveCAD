@@ -111,10 +111,11 @@ NODE_TYPES = {
 NODE_TYPES["paint"] = dict(
     label="Paint from photo", category=OPERATION, icon="mdi.image-filter-hdr",
     params=dict(image="", plane="Front (XZ)", x=0.0, y=0.0, width=100.0,
-                height=0.0),
+                height=0.0, sides="front"),
     schema=[("image", "Picture file", "str", None, None),
             ("plane", "Projected onto", "choice",
              ["Top (XY)", "Front (XZ)", "Side (YZ)"], None),
+            ("sides", "Paint", "choice", ["front", "both"], None),
             ("x", "Lower-left, along the plane (mm)", "float", -1e6, 1e6),
             ("y", "Lower-left, up the plane (mm)", "float", -1e6, 1e6),
             ("width", "Width (mm)", "float", 0.01, 1e6),
@@ -172,7 +173,7 @@ module kcad_joint(pivot = [0, 0, 0], a = [0, 0, 0], limits = [-180, 180]) {
     # faces, and this keeps the placement so the node re-imports
     "paint": """\
 module kcad_paint(image = "", plane = "Front (XZ)", x = 0, y = 0,
-                  width = 100, height = 0) {
+                  width = 100, height = 0, sides = "front") {
     children();
 }""",
     # OpenSCAD has no materials: this renders its children unchanged
@@ -255,7 +256,8 @@ def statement(node, fmt, fn) -> str:
                 f"plane = {scad_str(str(p.get('plane', 'Front (XZ)')))}, "
                 f"x = {fmt(p.get('x', 0.0))}, y = {fmt(p.get('y', 0.0))}, "
                 f"width = {fmt(p.get('width', 100.0))}, "
-                f"height = {fmt(p.get('height', 0.0))})")
+                f"height = {fmt(p.get('height', 0.0))}, "
+                f"sides = {scad_str(str(p.get('sides', 'front')))})")
     raise ValueError(f"not an organic type: {t}")   # pragma: no cover
 
 
@@ -340,11 +342,13 @@ def _b_paint(parser, positional, named):
     plane = str(named.get("plane", DEFAULT_PAINT_PLANE))
     if plane not in paint_mod.PLANES:
         plane = DEFAULT_PAINT_PLANE
+    sides = str(named.get("sides", "front"))
     return CadNode("paint", "Paint", dict(
         image=str(named.get("image", positional[0] if positional else "")),
         plane=plane, x=_num(named.get("x", 0.0)), y=_num(named.get("y", 0.0)),
         width=_num(named.get("width", 100.0), 100.0),
-        height=_num(named.get("height", 0.0))))
+        height=_num(named.get("height", 0.0)),
+        sides=sides if sides in paint_mod.SIDES else "front"))
 
 
 DEFAULT_PAINT_PLANE = "Front (XZ)"
@@ -471,7 +475,7 @@ def tess(node, env, color, sel, selected):
                 kids, paint_mod.load(str(raw.get("image", ""))),
                 str(raw.get("plane", DEFAULT_PAINT_PLANE)),
                 p.get("x", 0.0), p.get("y", 0.0), p.get("width", 100.0),
-                p.get("height", 0.0))
+                p.get("height", 0.0), str(raw.get("sides", "front")))
         if t == "joint":
             px, py, pz = p["px"], p["py"], p["pz"]
             m = mesh.mat_mul(mesh.mat_translate(px, py, pz),

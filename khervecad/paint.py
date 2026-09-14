@@ -33,6 +33,14 @@ import zlib
 PLANES = {"Top (XY)": (0, 1, 2), "Front (XZ)": (0, 2, 1),
           "Side (YZ)": (1, 2, 0)}
 DEFAULT_PLANE = "Front (XZ)"
+#: which way along the plane's normal the photo was taken from: a Top
+#: picture looks down from +Z, a Front one looks from -Y, a Side one
+#: from +X (the 2D view's Right)
+VIEW_SIGN = {"Top (XY)": 1.0, "Front (XZ)": -1.0, "Side (YZ)": 1.0}
+SIDES = ("front", "both")
+#: a face turned more than ~75° from the camera keeps its own colour:
+#: its texels would be smeared across it
+GRAZE = 0.26
 
 _CACHE = {}
 
@@ -154,17 +162,39 @@ def load(path) -> "Picture | None":
     return picture
 
 
-def paint(items, picture, plane, x, y, width, height=0.0) -> list:
+def _facing(tri, axis):
+    """cos of the angle between the face's outward normal and *axis*."""
+    a, b, c = tri
+    ux, uy, uz = b[0] - a[0], b[1] - a[1], b[2] - a[2]
+    vx, vy, vz = c[0] - a[0], c[1] - a[1], c[2] - a[2]
+    n = (uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx)
+    length = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]) ** 0.5
+    return n[axis] / length if length > 1e-15 else 0.0
+
+
+def paint(items, picture, plane, x, y, width, height=0.0,
+          sides="front") -> list:
     """*items* — mesh tuples ``(triangle, colour, selected)`` — with
     each face's colour replaced by the picture's where its centre
-    projects inside it; the colour's alpha and material are kept."""
+    projects inside it; the colour's alpha and material are kept.
+    With *sides* "front" only the faces looking towards the camera the
+    picture was taken from are painted (a face turned away, or seen at
+    a grazing angle, keeps its own colour — the far side of a head
+    must not wear the photo's background); "both" paints straight
+    through."""
     if picture is None or width <= 0:
         return items
-    u, v, _n = PLANES.get(plane, PLANES[DEFAULT_PLANE])
+    plane = plane if plane in PLANES else DEFAULT_PLANE
+    u, v, n_axis = PLANES[plane]
+    sign = VIEW_SIGN[plane]
+    front_only = sides != "both"
     if height <= 0:
         height = width * picture.aspect
     out = []
     for tri, colour, selected in items:
+        if front_only and _facing(tri, n_axis) * sign < GRAZE:
+            out.append((tri, colour, selected))
+            continue
         cu = (tri[0][u] + tri[1][u] + tri[2][u]) / 3.0
         cv = (tri[0][v] + tri[1][v] + tri[2][v]) / 3.0
         hexcol = picture.at((cu - x) / width, (cv - y) / height)
