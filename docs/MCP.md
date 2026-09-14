@@ -6,7 +6,7 @@ Cursor, Zed, Continue, or anything else that speaks the Model Context
 Protocol — can build in an open document directly.
 
 The built-in chat replies with an OpenSCAD program you then apply. An
-MCP client gets the **whole application** instead: 46 tools over the
+MCP client gets the **whole application** instead: 48 tools over the
 object tree, the code, the part library, assemblies, the document —
 and a **picture of the 3D preview**.
 
@@ -116,6 +116,34 @@ Practical consequences:
 - Node ids come from `list_tree`. They live as long as the node does,
   but undo and open rebuild the tree from a snapshot — re-read them
   afterwards.
+
+## Crystals, lattices and nanoparticles
+
+`list_crystals` is a library of 32 standard crystal structures (FCC,
+BCC, HCP and simple-cubic metals, diamond and zinc-blende
+semiconductors, wurtzite, rock salt, CsCl, fluorite, rutile, anatase,
+perovskite, α-quartz, graphite, h-BN), each with its space group,
+lattice, every atom of the unit cell, density and coordination
+polyhedra. `build_crystal` turns one — or a `custom` crystal from a
+paper — into Objects, in nanometres:
+
+- **unit cell** — atoms at covalent radii, the lattice box, and the
+  coordination polyhedra (SiO₄ tetrahedra, TiO₆ octahedra) over them;
+- **supercell** — `for` loops over na × nb × nc cells;
+- **particle** — a sphere, hemisphere, cube, box, cylinder, hexagonal
+  prism or octahedron filled with every cell (atoms or polyhedra) or
+  every N × N × N block of cells whose centre is inside; spheres and
+  hemispheres stack each column with a `while` loop.
+
+`build: "hierarchy"` makes all three side by side. The build is
+counted before anything is drawn — cells, atoms, polyhedra, triangles —
+and `dry_run: true` returns only that. Past what the 3D view can draw
+it is refused with what to change; `fill: "auto"` switches to blocks by
+itself. The radius, block size and gap become document variables named
+after the crystal (`quartz_r`, `quartz_N`), so the Variables tab
+reshapes the build afterwards. The same builder is **Library ▸ Crystal
+Builder…** in the app, and the server's instructions tell a client
+never to type a crystal's atoms by hand.
 
 ## Characters and organic shapes
 

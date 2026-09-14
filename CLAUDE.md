@@ -410,6 +410,49 @@ into a new module and import.
                        root, so a set drops into an assembly as one
                        Object. `examples` is imported lazily (it imports
                        the library).
+  - `crystal.py`     — **crystal structures** (Qt-free): `Crystal` = a
+                       lattice (a, b, c Å, α, β, γ — any system; a along
+                       x, b in xy) + EVERY atom of the conventional cell
+                       (fractional), optional coordination `polyhedra`
+                       {centre, ligand, cutoff, sites} and the reference
+                       `density` / `bonds` the tests pin. `ELEMENTS`:
+                       covalent radii (Cordero 2008), Jmol colours,
+                       masses. `nearest`, `computed_density`,
+                       `polyhedra_sites` (ligands through the periodic
+                       images), `polyhedron` (convex hull -> OpenSCAD
+                       points/faces, clockwise outside) and `custom(dict)`
+                       for a crystal an assistant brings from a paper.
+  - `crystal_library.py` — 32 standard structures in five families
+                       (metals FCC/BCC/HCP/SC, semiconductors, ionic
+                       salts, oxides incl. rutile/anatase/perovskite/
+                       α-quartz, carbon & nitrides); prototypes written
+                       once (`fcc`, `diamond`, `rock_salt`, `wurtzite`,
+                       `rutile`…), quartz's O the P3₂21 orbit.
+                       `test_crystal` pins every density (2.5 %) and
+                       nearest distance (1.5 %).
+  - `crystal_build.py` — the **Crystal Builder**'s program writer: unit
+                       cell (atoms incl. face/edge/corner repeats, lattice
+                       box, translucent polyhedra) -> supercell (for i,
+                       j, k over na×nb×nc of ONE tiling cell) -> particle
+                       (sphere, hemisphere, cube, box, cylinder, hexagonal
+                       prism, octahedron; every cell or N³ block whose
+                       centre is inside; spheres/hemispheres on an upright
+                       c-axis stack each column with a `while`, else `for`
+                       + `if`); `build: "hierarchy"` = all three side by
+                       side. NANOMETRES; tunables are prefixed document
+                       variables (`quartz_r`, `quartz_N`; a second build
+                       gets `quartz2_`). Counts cells/atoms/polyhedra/
+                       triangles with the program's own loops (by volume
+                       past `MAX_ITERATIONS`) — a test pins estimate ==
+                       tessellation — refuses past `BUDGET` (800k tris),
+                       and `fill: auto` switches to blocks past `COMFORT`.
+                       `apply` (empty document -> nm, else scaled into its
+                       unit with a note; sphere segments lowered) and the
+                       MCP `list_crystals` / `build_crystal` bodies live
+                       here (mcp_tools.py is past its size).
+  - `crystal_dialog.py` — Library ▸ Crystal Builder…: a non-modal panel
+                       over crystal_build with a live count; a refused
+                       build disables Build and says why.
   - `legoize.py`     — **Object ↔ Lego** (Qt-free). `column_hits` casts
                        a ray up each grid column and records every
                        surface as an entry (+1, facing down) or an exit
@@ -1664,7 +1707,7 @@ into a new module and import.
                        check orthographically. The MCP `_INSTRUCTIONS`
                        carry the same rule ("Modelling a real object")
                        to every connected client.
-  - `mcp_schema.py`  — the **MCP tool table**: 46 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 48 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -1824,7 +1867,7 @@ into a new module and import.
                        caps a pattern at `MAX_COPIES` (1000) and needs
                        every count ≥ 1. Examples ▸ Mechanical ▸ Bolt
                        circle & stair (pattern).
-- `docs/MCP.md` — how to connect an assistant, what the 46 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 48 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -2091,7 +2134,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **46 tools**: the object tree, OpenSCAD in
+client gets the whole app as **48 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

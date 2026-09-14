@@ -219,6 +219,35 @@ the parent and the child follows.
 - A Master plus Linked copies is the other kind of reuse: edit the \
 master and every copy changes.
 
+Crystals, lattices and nanoparticles:
+- NEVER type a crystal's atoms by hand. list_crystals gives the \
+library — FCC/BCC/HCP metals, diamond and zinc-blende semiconductors, \
+wurtzite, rock salt, CsCl, fluorite, rutile, anatase, perovskite, \
+alpha-quartz, graphite, h-BN — with space group, cell, atoms per cell, \
+density and polyhedra; build_crystal builds from it, or from `custom` \
+(a, b, c, alpha, beta, gamma and every atom of the conventional cell in \
+fractional coordinates, from a paper or a CIF) when the material is \
+missing.
+- Work in NANOMETRES (build_crystal switches an empty document to nm) \
+and in the builder's hierarchy, each level its own Object: the UNIT \
+CELL (atoms at covalent radii, the lattice box, coordination polyhedra \
+such as SiO4 tetrahedra), a SUPERCELL (for loops over na x nb x nc \
+cells), a PARTICLE (sphere, hemisphere, cube, box, cylinder, hexagonal \
+prism or octahedron filled with cells or with N x N x N blocks). build \
+"hierarchy" makes all three side by side — the clearest answer to "show \
+me what this nanoparticle is made of".
+- Mind the scale: a 10 nm particle holds tens of thousands of atoms and \
+a 100 nm one tens of millions. Atoms are the costliest to draw, \
+polyhedra (one solid per coordination unit) about ten times lighter, \
+blocks lighter still. fill "auto" keeps cells while the view can draw \
+them and switches to blocks beyond; dry_run returns the counts and \
+triangles without building. A refused build says what to change — do \
+that, do not retry the same call.
+- Tell the user what one entity stands for ("each block is 10^3 unit \
+cells = 3000 SiO2") and which prefixed variables reshape it (radius, \
+block size, gap on the Variables tab). Look with render_view: \
+orthographic from Top shows the lattice down the c-axis.
+
 Look at what you built:
 - render_view returns a PNG of the 3D preview as an image. LOOK AT IT \
 after anything non-trivial, and use `orientation` to check another side \

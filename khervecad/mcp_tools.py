@@ -1297,6 +1297,20 @@ class McpToolExecutor:
 
     # ── Parts and assemblies ────────────────────────────────────
 
+    def _t_list_crystals(self, params) -> dict:
+        from . import crystal_build
+        try:
+            return crystal_build.list_crystals(params)
+        except crystal_build.BuildError as exc:
+            raise ToolError(str(exc))
+
+    def _t_build_crystal(self, params) -> dict:
+        from . import crystal_build
+        try:
+            return crystal_build.build_crystal(self._w, params)
+        except crystal_build.BuildError as exc:
+            raise ToolError(str(exc))
+
     def _t_make_object(self, params) -> dict:
         nodes = self._nodes(params.get("ids"))
         model = self._model

@@ -780,6 +780,42 @@ unsaved work is replaced.</p>
 {figure("menu_examples", "The Examples menu.", 140)}
 """),
 
+        ("crystals", "Crystals and nanoparticles", """
+<p><b>Library &#9656; Crystal Builder&hellip;</b> builds real crystal
+structures from a library of 32 standard ones &mdash; metals (copper,
+gold, iron, titanium&hellip;), semiconductors (silicon, GaAs, GaN),
+salts, oxides (rutile, anatase, perovskite, &alpha;-quartz) and carbon
+(diamond, graphite, h-BN). Each entry holds its lattice and every atom
+of its unit cell, checked against its published density and bond
+lengths.</p>
+<p>A crystal is built in three levels, each its own Object:</p>
+<table>
+<tr><td><b>Unit cell</b></td><td>the lattice box, every atom at its
+covalent radius and, for compounds, the coordination polyhedra
+(SiO<sub>4</sub> tetrahedra in quartz, TiO<sub>6</sub> octahedra in
+rutile) drawn over the atoms.</td></tr>
+<tr><td><b>Supercell</b></td><td>a block of unit cells repeated by
+<i>for</i> loops.</td></tr>
+<tr><td><b>Particle</b></td><td>a sphere, hemisphere, cube, box,
+cylinder, hexagonal prism or octahedron filled with every cell whose
+centre lies inside &mdash; or, for big particles, with blocks of
+N&times;N&times;N cells. A sphere's columns are stacked by a
+<i>while</i> loop.</td></tr>
+</table>
+<p>The panel counts the build as you change it &mdash; cells, atoms,
+polyhedra and the triangles the 3D view will draw &mdash; and will not
+build what would freeze the view: a 10&nbsp;nm particle already holds
+tens of thousands of atoms. Draw the cells as <b>polyhedra</b> (about
+ten times lighter than atoms) or let <b>Automatic</b> switch to
+blocks.</p>
+<p>Crystals are built in <b>nanometres</b>: an empty document switches
+to nm (Edit &#9656; Document Units). The radius, block size and gap
+become variables named after the crystal &mdash; <tt>quartz_r</tt>,
+<tt>quartz_N</tt> &mdash; so the <b>Variables</b> tab reshapes the build
+afterwards. An assistant connected over MCP uses the same builder
+(<tt>list_crystals</tt>, <tt>build_crystal</tt>).</p>
+"""),
+
         ("code", "OpenSCAD code", f"""
 <p>The <b>Code</b> tab shows the OpenSCAD program written from the tree.
 Selecting an object highlights its lines; broken objects are tinted

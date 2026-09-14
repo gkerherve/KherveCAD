@@ -1012,6 +1012,101 @@ TOOLS = [
         }, ["part_id"]),
     },
     {
+        "name": "list_crystals",
+        "description": (
+            "The crystal library: 32 standard structures — FCC, BCC, "
+            "HCP and simple-cubic metals, diamond and zinc-blende "
+            "semiconductors, wurtzite, rock salt, CsCl, fluorite, "
+            "rutile, anatase, perovskite, alpha-quartz, graphite, h-BN — "
+            "each with its space group, lattice (nm, degrees), atoms per "
+            "cell, density and coordination polyhedra. Pass `crystal` "
+            "for one in full (every atom's fractional coordinates, the "
+            "nearest distances). Use it before build_crystal; never type "
+            "a crystal's atoms yourself."
+        ),
+        "input_schema": _obj({
+            "category": {"type": "string",
+                         "description": "Filter to one family."},
+            "crystal": {"type": "string",
+                        "description": "A key, e.g. 'quartz', 'cu', "
+                                       "'rutile'."},
+        }),
+    },
+    {
+        "name": "build_crystal",
+        "description": (
+            "Build a crystal in nanometres as Objects: its UNIT CELL "
+            "(atoms at covalent radii, lattice box, coordination "
+            "polyhedra such as SiO4 tetrahedra), a SUPERCELL (for loops "
+            "over na x nb x nc cells) and/or a PARTICLE — a shape filled "
+            "with every cell whose centre is inside, or with blocks of "
+            "N x N x N cells. build 'hierarchy' makes all three side by "
+            "side. The build is counted first (cells, atoms, polyhedra, "
+            "triangles) and refused past what the 3D view can draw, with "
+            "what to change; dry_run returns the counts only. An empty "
+            "document is switched to nm. Tunables become prefixed "
+            "document variables (quartz_r, quartz_N) the user can edit."
+        ),
+        "input_schema": _obj({
+            "crystal": {"type": "string",
+                        "description": "Library key from list_crystals."},
+            "custom": {"type": "object",
+                       "description": "A crystal the library lacks: {name, "
+                                      "a, b, c, alpha, beta, gamma, atoms: "
+                                      "[[element, fx, fy, fz], ...], "
+                                      "polyhedra: {centre, ligand, "
+                                      "cutoff}, units: 'angstrom' | "
+                                      "'nm'} — every atom of the "
+                                      "conventional cell, fractional."},
+            "build": {"type": "string",
+                      "enum": ["hierarchy", "unit_cell", "supercell",
+                               "particle"]},
+            "representation": {"type": "string",
+                               "enum": ["auto", "atoms", "polyhedra",
+                                        "both"],
+                               "description": "How a cell is drawn. auto: "
+                                              "both in the unit cell, "
+                                              "polyhedra (else atoms) in "
+                                              "supercells."},
+            "supercell": {"type": "array", "items": {"type": "integer"},
+                          "description": "[na, nb, nc], default [4, 4, 4]."},
+            "shape": {"type": "string",
+                      "enum": ["sphere", "hemisphere", "cube", "box",
+                               "cylinder", "hexagonal_prism",
+                               "octahedron"]},
+            "size_nm": {"type": "number",
+                        "description": "Diameter (sphere, hemisphere, "
+                                       "cylinder), edge (cube), across "
+                                       "corners (hexagonal prism), tip to "
+                                       "tip (octahedron). Default 10."},
+            "height_nm": {"type": "number",
+                          "description": "Cylinder / hexagonal prism."},
+            "box_nm": {"type": "array", "items": {"type": "number"},
+                       "description": "Box edges [x, y, z]."},
+            "fill": {"type": "string",
+                     "enum": ["auto", "atoms", "polyhedra", "blocks"],
+                     "description": "What fills the particle; auto keeps "
+                                    "cells while light, blocks beyond."},
+            "block_cells": {"type": "integer",
+                            "description": "Cells per block edge (10: a "
+                                           "block is 1000 cells)."},
+            "gap": {"type": "number",
+                    "description": "Gap between blocks, fraction of a "
+                                   "block (0 = solid). Default 0.03."},
+            "atom_scale": {"type": "number",
+                           "description": "x the covalent radius, default "
+                                          "1."},
+            "cell_box": {"type": "boolean",
+                         "description": "Draw the lattice boxes (default "
+                                        "true)."},
+            "segments": {"type": "integer",
+                         "description": "Sphere segments for atoms "
+                                        "(default 12)."},
+            "dry_run": {"type": "boolean",
+                        "description": "Count only; build nothing."},
+        }),
+    },
+    {
         "name": "select_nodes",
         "description": (
             "Select nodes in the window, so the user sees what you mean "
