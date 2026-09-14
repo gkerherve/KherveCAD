@@ -1287,6 +1287,38 @@ into a new module and import.
                        translucent entry then carries three tails,
                        `translucent_tails`). OpenGL only — the painter
                        fills a polygon with one colour.
+  - `photo3d.py`     — **Mesh from a photo** (Qt-free): one picture
+                       -> a generated surface through an image-to-3D
+                       model — `generate_tripo` (api.tripo3d.ai v2:
+                       multipart upload -> `image_to_model` task -> poll
+                       -> pbr_model/model URL), `generate_meshy`
+                       (api.meshy.ai `/openapi/v1/image-to-3d` with the
+                       picture as a data URI -> poll SUCCEEDED ->
+                       model_urls.glb) and `generate_local` (a command
+                       template with `{image}` and `{output}`, for
+                       Hunyuan3D / TripoSR / TRELLIS run locally; a
+                       stale output is unlinked first). urllib only, an
+                       injectable `opener` so the tests fake the wire.
+                       `parse_glb` reads glTF binaries (JSON + BIN
+                       chunks, triangle primitives, node matrix/TRS
+                       transforms), `write_glb` writes one; `.glb` is in
+                       `engine.MESH_EXTS` (parse_mesh turns it Z-up) and
+                       imports through a sibling `_from_glb.stl` like
+                       OBJ. `to_stl` scales the longest side to
+                       `size_mm`, centres X/Y and stands it on Z = 0.
+                       Keys: QSettings `photo3d/keys/<backend>` or
+                       `TRIPO_API_KEY` / `MESHY_API_KEY`; command
+                       `photo3d/command`. The far side of a one-view
+                       surface is guessed — the sculpt node and the
+                       reference overlay are what fix it.
+  - `photo3d_dialog.py` — AI ▸ Mesh from Photo… (picture, generator,
+                       key or command, longest side; a `Worker` QThread,
+                       log, import on success) and `run_blocking`, the
+                       MCP `mesh_from_photo` path: the worker runs while
+                       the GUI thread pumps events, results stored over
+                       direct connections (a queued one could land after
+                       the pump stopped). Tests use the local backend
+                       with a script that writes a GLB.
   - `shading.py`     — Blender-solid-view **cavity shading and edge
                        lines** (Qt-free): `analyse(tris)` → `MeshInfo`
                        with per-face normals, a signed `cavity` term
@@ -1453,7 +1485,7 @@ into a new module and import.
                        check orthographically. The MCP `_INSTRUCTIONS`
                        carry the same rule ("Modelling a real object")
                        to every connected client.
-  - `mcp_schema.py`  — the **MCP tool table**: 43 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 44 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -1613,7 +1645,7 @@ into a new module and import.
                        caps a pattern at `MAX_COPIES` (1000) and needs
                        every count ≥ 1. Examples ▸ Mechanical ▸ Bolt
                        circle & stair (pattern).
-- `docs/MCP.md` — how to connect an assistant, what the 43 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 44 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -1873,7 +1905,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **43 tools**: the object tree, OpenSCAD in
+client gets the whole app as **44 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

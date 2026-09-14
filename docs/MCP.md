@@ -6,7 +6,7 @@ Cursor, Zed, Continue, or anything else that speaks the Model Context
 Protocol — can build in an open document directly.
 
 The built-in chat replies with an OpenSCAD program you then apply. An
-MCP client gets the **whole application** instead: 43 tools over the
+MCP client gets the **whole application** instead: 44 tools over the
 object tree, the code, the part library, assemblies, the document —
 and a **picture of the 3D preview**.
 
@@ -158,6 +158,14 @@ part — with every crossing along the ray listed nearest first. That
 is how a detail goes *on* a curved surface: probe down onto a lofted
 body where the eye should be, then place the sphere at the hit point
 plus the normal times its inset. No geometry to derive by hand.
+
+**`mesh_from_photo`** turns one picture into a surface with an
+image-to-3D model — Tripo or Meshy with the user's API key, or a
+command the user runs locally — and imports it as a mesh part, scaled
+to a size and stood on the floor. It is plausible, not exact: the far
+side is guessed. So: `set_reference_image` with the same photo,
+`render_view overlay_reference`, and `sculpt_stroke` where they
+disagree.
 
 **`render_view` with `overlay_reference: true`** is how a likeness is
 checked: the reference photo is drawn over the model from square on to

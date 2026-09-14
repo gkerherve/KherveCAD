@@ -455,6 +455,12 @@ class MainWindow(QMainWindow):
                             "needs your own Claude, Mistral or "
                             "Ollama API key")
         ai_menu.addAction(chat_act)
+        photo_act = ai_menu.addAction(
+            icons.icon("mdi.camera-outline"), "Mesh from &Photo\u2026",
+            self._open_photo3d)
+        photo_act.setToolTip("Turn one picture into a 3D surface with an "
+                             "image-to-3D model (Tripo, Meshy, or a "
+                             "command you run locally) and import it")
 
         git_menu = m.addMenu("&Git")
         git_menu.addAction(icons.icon("mdi.source-commit"),
@@ -1570,7 +1576,7 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(
                 self, APP_NAME,
                 f"KherveCAD can open .kcad, .scad and mesh files "
-                f"(.stl/.obj/.off/.3mf) — not {ext or 'this type'}.")
+                f"(.stl/.obj/.off/.3mf/.glb) — not {ext or 'this type'}.")
 
     # ------------------------------------------------------ drag & drop
     _DROP_EXTS = (".kcad", ".scad", ".stl", ".obj", ".off", ".3mf")
@@ -1872,8 +1878,9 @@ class MainWindow(QMainWindow):
     def import_stl(self):
         path, _ = QFileDialog.getOpenFileName(
             self, "Import mesh", "",
-            "Mesh (*.stl *.obj *.off *.3mf);;STL (*.stl);;"
-            "Wavefront OBJ (*.obj);;OFF (*.off);;3MF (*.3mf)")
+            "Mesh (*.stl *.obj *.off *.3mf *.glb);;STL (*.stl);;"
+            "Wavefront OBJ (*.obj);;OFF (*.off);;3MF (*.3mf);;"
+            "glTF binary (*.glb)")
         if not path:
             return
         self._import_mesh_path(path)
@@ -1883,12 +1890,13 @@ class MainWindow(QMainWindow):
         # an OBJ to a sibling STL (from the same triangles the preview
         # uses) and point the node at that, so the exact render works too.
         use_path, note = path, ""
-        if Path(path).suffix.lower() == ".obj":
+        ext = Path(path).suffix.lower()
+        if ext in (".obj", ".glb"):
             from .engine import parse_mesh, write_stl
             tris = parse_mesh(path)
             if tris:
                 stl_path = Path(path).with_name(
-                    Path(path).stem + "_from_obj.stl")
+                    Path(path).stem + f"_from_{ext[1:]}.stl")
                 try:
                     write_stl(tris, str(stl_path), Path(path).stem)
                     use_path = str(stl_path)
@@ -1991,6 +1999,12 @@ class MainWindow(QMainWindow):
         if QSettings("Kherve", "KherveCAD").value(
                 "mcp/enabled", False, type=bool):
             self.mcp_bridge().start()
+
+    def _open_photo3d(self):
+        """AI ▸ Mesh from Photo…: one picture -> a generated surface,
+        imported as a mesh part (photo3d_dialog.py)."""
+        from .photo3d_dialog import open_photo3d
+        open_photo3d(self)
 
     def _open_mcp_dialog(self):
         """Open the MCP server control panel (non-modal)."""

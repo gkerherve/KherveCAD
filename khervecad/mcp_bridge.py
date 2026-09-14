@@ -76,6 +76,7 @@ _NO_SNAPSHOT_TOOLS = _READ_ONLY_TOOLS | {
 _FILE_TOOLS = frozenset({
     "open_document", "save_document", "export_document",
     "export_drawing", "publish_to_printables", "set_reference_image",
+    "mesh_from_photo",
 })
 
 

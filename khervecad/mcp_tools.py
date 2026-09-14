@@ -1823,6 +1823,47 @@ class McpToolExecutor:
                        "preview cannot cut a convex edge.")
         return out
 
+    def _t_mesh_from_photo(self, params) -> dict:
+        from . import photo3d, photo3d_dialog
+        image = Path(str(params.get("image_path") or "")).expanduser()
+        if not image.is_file():
+            raise ToolError(f"No such picture: {image}")
+        backend = str(params.get("backend") or "tripo")
+        if backend not in photo3d.BACKENDS:
+            raise ToolError(f"'backend' is one of "
+                            f"{', '.join(photo3d.BACKENDS)}.")
+        size = self._number(params, "size_mm", True) or 100.0
+        key = str(params.get("api_key") or "") or \
+            photo3d_dialog.get_key(backend)
+        command = str(params.get("command") or "") or \
+            photo3d_dialog.get_command()
+        if backend != "local" and not key:
+            raise ToolError(f"No API key for {backend}: the user sets it "
+                            "in AI \u25b8 Mesh from Photo, or pass api_key.")
+        if backend == "local" and not command:
+            raise ToolError("No local command configured: pass 'command' "
+                            "with {image} and {output}, or set it in "
+                            "AI \u25b8 Mesh from Photo.")
+        try:
+            stl = photo3d_dialog.run_blocking(self._w, str(image), backend,
+                                              key, command, size)
+        except photo3d.Photo3DError as exc:
+            raise ToolError(f"Generation failed: {exc}")
+        before = {n.id for n in self._model.root.children}
+        self._w._import_mesh_path(stl)
+        part = next((n for n in self._model.root.children
+                     if n.id not in before), None)
+        if part is not None and params.get("name"):
+            self._model.rename(part, str(params["name"]))
+        out = {"imported": stl, "backend": backend, "size_mm": size,
+               "part": part.id if part is not None else None,
+               "name": part.name if part is not None else None,
+               "note": ("One view gives a plausible surface — the far "
+                        "side is guessed. set_reference_image with the "
+                        "same photo, then sculpt_stroke where "
+                        "render_view overlay_reference disagrees.")}
+        return out
+
     def _t_sculpt_stroke(self, params) -> dict:
         from . import sculpt, sculpt_ui
         node = self._node(params.get("node_id"))

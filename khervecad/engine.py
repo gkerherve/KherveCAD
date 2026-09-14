@@ -378,7 +378,7 @@ def _parse_3mf(path: str):
 
 #: Mesh formats KherveCAD can preview in the built-in viewer (the
 #: OpenSCAD engine's import() renders them all for the exact mesh).
-MESH_EXTS = (".stl", ".obj", ".off", ".3mf")
+MESH_EXTS = (".stl", ".obj", ".off", ".3mf", ".glb")
 
 
 def parse_mesh(path: str):
@@ -390,6 +390,11 @@ def parse_mesh(path: str):
         return _parse_off(Path(path).read_text(errors="replace"))
     if ext == ".3mf":
         return _parse_3mf(path)
+    if ext == ".glb":
+        # glTF is Y-up: turned Z-up here, so the preview, the STL the
+        # import writes and the exact render all agree
+        from .photo3d import parse_glb
+        return [tuple((v[0], -v[2], v[1]) for v in t) for t in parse_glb(path)]
     return parse_stl(path)
 
 

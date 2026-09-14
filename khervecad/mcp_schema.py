@@ -551,6 +551,38 @@ TOOLS = [
         }, ["node_id"]),
     },
     {
+        "name": "mesh_from_photo",
+        "description": (
+            "Turn ONE picture into a 3D surface with an image-to-3D "
+            "model and import it as a mesh part: `backend` tripo "
+            "(api.tripo3d.ai) or meshy (api.meshy.ai) with the user's "
+            "API key (kept in the app's settings or TRIPO_API_KEY / "
+            "MESHY_API_KEY), or local — a command the user configured "
+            "that takes {image} and writes {output}. The result is "
+            "scaled to `size_mm` on its longest side, stood on Z = 0, "
+            "and is a plausible surface (the far side is guessed): "
+            "sculpt it against the photo afterwards. Takes minutes; "
+            "the file access needs the full level."
+        ),
+        "input_schema": _obj({
+            "image_path": {"type": "string",
+                           "description": "Absolute path of the picture."},
+            "backend": {"type": "string", "enum": ["tripo", "meshy",
+                                                  "local"]},
+            "size_mm": {"type": "number",
+                        "description": "Longest side after import "
+                                       "(default 100)."},
+            "name": {"type": "string",
+                     "description": "Name of the imported part."},
+            "api_key": {"type": "string",
+                        "description": "Only when the app has none "
+                                       "stored for that backend."},
+            "command": {"type": "string",
+                        "description": "local only: the command template "
+                                       "with {image} and {output}."},
+        }, ["image_path"]),
+    },
+    {
         "name": "section",
         "description": (
             "Cut the model with a plane and get the cross-section: a "
