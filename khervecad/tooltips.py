@@ -260,6 +260,21 @@ TIPS = {
          "the mesh resolution (higher = finer, slower)."],
         "A blend cannot sit inside a loop — the loop varies, the "
         "melted mesh cannot."),
+    "sculpt": (
+        "Sculpt (brush strokes)",
+        "Pushes the surface about with a brush — Blender's sculpt mode: "
+        "grab, inflate, smooth, flatten, pinch — for faces, muscles, "
+        "dents and every organic shape a primitive cannot give.",
+        [_SELECTION + " (a blend, a subdivided cage or an imported scan "
+         "works best).",
+         "Click Sculpt: the panel opens and the 3D view asks for clicks.",
+         "Pick the brush, radius and strength, then click the surface "
+         "where the brush lands; Mirror repeats each stroke across the "
+         "part's middle so a face stays symmetric.",
+         "Strokes are kept in Properties: edit or delete any of them "
+         "later, and the mesh recomputes."],
+        "Grab with a negative strength pulls the surface in; Inflate "
+        "with a small radius is a blob, a large one a cheek."),
     "bend": (
         "Bend",
         "Curves the selection along an arc — bananas, arches, curled "

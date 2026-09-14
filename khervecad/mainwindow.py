@@ -378,6 +378,21 @@ class MainWindow(QMainWindow):
         self._edges_act.setStatusTip("Draw the model's edges and outline "
                                      "as thin lines")
         self._edges_act.triggered.connect(self.view3d.set_edges)
+        self._smooth_act = QAction("3D &Smooth Shading", self,
+                                   checkable=True)
+        self._smooth_act.setChecked(self.view3d.smooth)
+        self._smooth_act.setStatusTip(
+            "Shade curved surfaces smoothly (a normal per vertex) instead "
+            "of showing their facets; edges sharper than 40° stay hard")
+        self._smooth_act.triggered.connect(self.view3d.set_smooth)
+        self._overlay_act = QAction("Compare to &Reference Image (overlay)",
+                                    self, checkable=True)
+        self._overlay_act.setChecked(self.view3d.overlay)
+        self._overlay_act.setStatusTip(
+            "Draw the reference pictures over the model as well as behind "
+            "it: from the plane's square-on view (Front, Top, Right) the "
+            "model's outline is checked against the photo")
+        self._overlay_act.triggered.connect(self.view3d.set_overlay)
         self._gl_act = QAction("3D &Hardware Rendering (OpenGL)", self,
                                checkable=True)
         self._gl_act.setChecked(self.view3d.hardware)
@@ -388,9 +403,13 @@ class MainWindow(QMainWindow):
         self.view3d.look_toggled.connect(
             lambda key, on: {"cavity": self._cavity_act,
                              "edges": self._edges_act,
+                             "smooth": self._smooth_act,
+                             "overlay": self._overlay_act,
                              "hardware": self._gl_act}[key].setChecked(on))
         view_menu.addAction(self._cavity_act)
         view_menu.addAction(self._edges_act)
+        view_menu.addAction(self._smooth_act)
+        view_menu.addAction(self._overlay_act)
         view_menu.addAction(self._gl_act)
         self._build_explode_menu(view_menu)
         self._build_cut_menu(view_menu)
@@ -631,6 +650,14 @@ class MainWindow(QMainWindow):
             tree.select_nodes([wrapper])
             if op == "fillet":                # now: which edges?
                 self.start_fillet_pick(wrapper)
+            elif op == "sculpt":              # now: where to push?
+                self.start_sculpt(wrapper)
+
+    def start_sculpt(self, node):
+        """Open the sculpt panel for *node* (a sculpt): each click in
+        the 3D view lands one brush stroke (sculpt_ui.py)."""
+        from . import sculpt_ui
+        sculpt_ui.start(self, node)
 
     def start_fillet_pick(self, node):
         """Arm the 3D view so clicks on the part add edges to the

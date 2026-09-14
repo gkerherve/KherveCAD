@@ -930,6 +930,13 @@ class ObjectTree(QTreeWidget):
                        lambda: self.select_nodes(
                            [self.model.new_master()]))
         menu.addSeparator()
+        sculpt = roots[0] if len(roots) == 1 and roots[0].type == "sculpt" \
+            else (roots[0].parent if len(roots) == 1 and roots[0].parent
+                  is not None and roots[0].parent.type == "sculpt"
+                  else None)
+        if sculpt is not None and hasattr(win, "start_sculpt"):
+            menu.addAction(icons.icon("mdi.brush"), "Sculpt...",
+                           lambda: win.start_sculpt(sculpt))
         menu.addAction(icons.icon("mdi.palette-outline"),
                        "Color...", lambda: self._pick_color(nodes))
         if len(nodes) == 1:
@@ -983,6 +990,13 @@ class ObjectTree(QTreeWidget):
             menu.addAction(
                 icons.icon("mdi.rounded-corner"), "Pick fillet edges...",
                 lambda: win.start_fillet_pick(fillet))
+        sculpt = roots[0] if len(roots) == 1 and roots[0].type == "sculpt" \
+            else (roots[0].parent if len(roots) == 1 and roots[0].parent
+                  is not None and roots[0].parent.type == "sculpt"
+                  else None)
+        if sculpt is not None and hasattr(win, "start_sculpt"):
+            menu.addAction(icons.icon("mdi.brush"), "Sculpt...",
+                           lambda: win.start_sculpt(sculpt))
         menu.addAction(icons.icon("mdi.palette-outline"),
                        "Color...", lambda: self._pick_color(nodes))
         menu.addAction(icons.icon("mdi.group"), "Group\tCtrl+G",

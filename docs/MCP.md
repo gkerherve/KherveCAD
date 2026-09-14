@@ -6,7 +6,7 @@ Cursor, Zed, Continue, or anything else that speaks the Model Context
 Protocol — can build in an open document directly.
 
 The built-in chat replies with an OpenSCAD program you then apply. An
-MCP client gets the **whole application** instead: 42 tools over the
+MCP client gets the **whole application** instead: 43 tools over the
 object tree, the code, the part library, assemblies, the document —
 and a **picture of the 3D preview**.
 
@@ -122,6 +122,7 @@ things a cube and a `difference()` do not give you:
 | `blend` | melts its children together with a fillet of the given radius — a head onto a neck onto a body | `kcad_blend(radius, detail, …) { … }` |
 | `bend`, `twist`, `taper`, `lattice` | reshape the surface of whatever is inside — model straight, then curve a limb or squash a head | `kcad_bend(axis, toward, angle, detail, …) { … }` … |
 | `subdivide` | Loop subdivision: a coarse cage (a polyhedron, a few boxes) becomes a smooth organic form | `kcad_subdivide(levels, …) { … }` |
+| `sculpt` | brush strokes on whatever is inside — grab, inflate, smooth, flatten, pinch, each with a radius and a falloff, mirrored across a plane if asked: the free-form surface a likeness needs | `kcad_sculpt(strokes, detail, mirror, …) { … }` |
 | `symmetry` | its children **plus** their mirror image — edit one half | `kcad_symmetry(n, c) { ... }` |
 | `joint` | rotates its children about a pivot, within limits | `kcad_joint(pivot, a, limits) { ... }` |
 
@@ -158,6 +159,19 @@ is how a detail goes *on* a curved surface: probe down onto a lofted
 body where the eye should be, then place the sphere at the hit point
 plus the normal times its inset. No geometry to derive by hand.
 
+**`render_view` with `overlay_reference: true`** is how a likeness is
+checked: the reference photo is drawn over the model from square on to
+its plane, orthographic, so the outline and the picture line up or do
+not. Sculpt where they do not, render again.
+
+**`sculpt_stroke`** is the brush. A blend of primitives is a cartoon
+because a face lives in hundreds of small curvatures; this pushes the
+surface where they belong. Probe the surface, push (grab / inflate /
+smooth / flatten / pinch) with a radius and a strength, render, compare
+to the photo, repeat. Strokes stay on the node as parameters, so any of
+them can be edited or removed later, and `mirror` sculpts both halves
+of a face from one side.
+
 **`sample_surface`** does the same for details that come in numbers:
 it scatters N evenly spread points, each with its normal, over a
 part's surface — only the faces looking a given way, or inside a box
@@ -172,6 +186,10 @@ so a character can be sculpted to its sheet or a part checked
 against its photo. It is saved with the document.
 
 ## What the preview is showing
+
+`set_render_options` also switches the looks: `smooth` (curved surfaces
+shade as one skin instead of facets; sharp edges stay sharp), `cavity`,
+`edges`, `stage` and `opengl`.
 
 `render_view` **waits for the picture to be final** before taking it:
 while OpenSCAD is still rendering, the call pumps the app until the

@@ -133,6 +133,52 @@ def analyse(tris, edge_angle: float = EDGE_ANGLE) -> MeshInfo:
     return MeshInfo(normals, cavity, creases, neighbours)
 
 
+#: faces meeting at less than this are one smooth surface (a sphere's
+#: facets, a loft's rings); at more they are a crease and stay sharp
+SMOOTH_ANGLE = 40.0
+
+
+def vertex_normals(tris, angle: float = SMOOTH_ANGLE) -> list:
+    """Per triangle, the three vertex normals for smooth shading: each
+    vertex's normal is the area-weighted mean of the faces meeting it
+    whose normal lies within *angle* of this face's own — so a curved
+    surface shades as one continuous skin while a box edge stays a
+    hard line (the facets of a sphere are not creases, a cube's edges
+    are). Unit vectors; a degenerate face keeps its own normal."""
+    raw, unit = [], []
+    for a, b, c in tris:
+        ux, uy, uz = b[0] - a[0], b[1] - a[1], b[2] - a[2]
+        vx, vy, vz = c[0] - a[0], c[1] - a[1], c[2] - a[2]
+        n = (uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx)
+        length = math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2])
+        raw.append(n)
+        unit.append((n[0] / length, n[1] / length, n[2] / length)
+                    if length > 1e-15 else (0.0, 0.0, 0.0))
+    around = {}
+    for i, tri in enumerate(tris):
+        for v in tri:
+            around.setdefault(_key(v), []).append(i)
+    cos_a = math.cos(math.radians(angle))
+    out = []
+    for i, tri in enumerate(tris):
+        n = unit[i]
+        vn = []
+        for v in tri:
+            sx = sy = sz = 0.0
+            for j in around[_key(v)]:
+                m = unit[j]
+                if m[0] * n[0] + m[1] * n[1] + m[2] * n[2] >= cos_a:
+                    w = raw[j]                    # area-weighted
+                    sx += w[0]
+                    sy += w[1]
+                    sz += w[2]
+            length = math.sqrt(sx * sx + sy * sy + sz * sz)
+            vn.append((sx / length, sy / length, sz / length)
+                      if length > 1e-15 else n)
+        out.append(tuple(vn))
+    return out
+
+
 def multiplier(term: float, strength: float) -> float:
     """The value multiplier for a face's colour."""
     return 1.0 + term * strength * CAVITY_RANGE

@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import pytest
 from PyQt5.QtWidgets import QApplication
 
-from khervecad import document, mcp_bridge, refimage
+from khervecad import document, mcp_bridge, mesh, refimage
 from khervecad.model import DocumentModel
 
 
@@ -163,3 +163,72 @@ def test_naming_a_file_needs_full_access():
     assert mcp_bridge._names_a_path("set_reference_image", {"path": "a"})
     assert not mcp_bridge._names_a_path("set_reference_image",
                                         {"clear": True})
+
+
+def test_the_overlay_draws_the_picture_over_the_model(app, red_png):
+    """Compare-to-photo: with the overlay on, the reference shows
+    through where the model is; off, the model hides it."""
+    from PyQt5.QtCore import QSize
+    from PyQt5.QtGui import QImage, QPainter
+    from khervecad.model import CadNode
+    from khervecad.view3d import View3D
+    root = CadNode("root", "root")
+    root.add(CadNode("cube", "c", dict(x=-40.0, y=-20.0, z=-5.0,
+                                       width=80.0, depth=40.0, height=10.0)))
+    tris = mesh.tessellate(root)
+    view = View3D()
+    view.resize(160, 160)
+    view.hardware = False
+    view.set_mesh(tris, "test", None)
+    view.set_reference_images([_ref(red_png, x=-50.0, y=-25.0,
+                                    width=100.0, height=50.0, offset=20.0)])
+    view.yaw, view.pitch = view.VIEWS["Top"]
+    view.target, view.distance = [0.0, 0.0, 0.0], 150.0
+
+    def shot(overlay):
+        view.overlay = overlay
+        img = QImage(QSize(160, 160), QImage.Format_ARGB32)
+        img.fill(0)
+        painter = QPainter(img)
+        view.render(painter)
+        painter.end()
+        return img
+    def pure_red(c):
+        return c.red() > 240 and c.green() < 40 and c.blue() < 40
+    assert pure_red(shot(True).pixelColor(120, 60))      # photo over the cube
+    assert not pure_red(shot(False).pixelColor(120, 60))  # the cube hides it
+
+
+def test_overlay_toggle_persists_and_the_tools_switch_it(app, red_png):
+    from PyQt5.QtCore import QSettings
+    from khervecad.mainwindow import MainWindow
+    from khervecad.mcp_tools import McpToolExecutor
+    from khervecad.view3d import View3D
+    settings = QSettings("Kherve", "KherveCAD")
+    saved = settings.value("render_overlay")
+    try:
+        win = MainWindow()
+        win.resize(800, 600)
+        ex = McpToolExecutor(win)
+        assert ex.execute("set_render_options", {"overlay": True})["overlay"]
+        assert win._overlay_act.isChecked() and View3D().overlay
+        # a compare picture: square on to the reference's plane, ortho
+        assert "error" in ex.execute("render_view",
+                                     {"overlay_reference": True})
+        win.model.add_reference_image(dict(
+            path=red_png, plane="Front (XZ)", x=-20.0, y=0.0, width=40.0,
+            height=20.0, offset=0.0, opacity=0.5, visible=True))
+        cube = win.model.add_node("cube")
+        shot = ex.execute("render_view", {"overlay_reference": True,
+                                          "max_width": 120,
+                                          "wait_for_exact": False})
+        assert "error" not in shot, shot
+        assert shot["camera"]["projection"] == "Orthographic"
+        assert shot["camera"]["azimuth"] == pytest.approx(-90)   # Front
+        ex.execute("set_render_options", {"overlay": False})
+        assert not View3D().overlay
+    finally:
+        if saved is None:
+            settings.remove("render_overlay")
+        else:
+            settings.setValue("render_overlay", saved)

@@ -52,7 +52,12 @@ _MAX_WAIT_S = 300.0
 #: render_view parameters that call for the offscreen camera, which
 #: leaves the user's own view where it is.
 _CAMERA_KEYS = ("azimuth", "elevation", "distance", "zoom", "target",
-                "target_node", "projection", "region", "orientations")
+                "target_node", "projection", "region", "orientations",
+                "overlay_reference")
+
+#: the square-on preset for each reference-image plane
+_PLANE_VIEWS = {"Top (XY)": "Top", "Front (XZ)": "Front",
+                "Side (YZ)": "Right"}
 
 #: The largest side an offscreen render paints — a region crop renders
 #: the whole picture bigger, then cuts the detail out of it.
@@ -435,6 +440,27 @@ class McpToolExecutor:
             raise ToolError(f"Unknown projection {projection!r}. Choose "
                             f"one of: {', '.join(PROJECTIONS)}.")
         frame = None
+        overlay = None
+        if params.get("overlay_reference"):
+            # compare to the photo: square on to its plane, orthographic,
+            # the picture and the model both in frame, drawn over it
+            from . import refimage
+            refs = [r for r in self._model.reference_images
+                    if r.get("visible", True)]
+            if not refs:
+                raise ToolError("There is no reference image to compare "
+                                "with — set_reference_image first.")
+            overlay = True
+            params = dict(params)
+            if not any(params.get(k) is not None for k in
+                       ("azimuth", "elevation", "orientation")):
+                params["orientation"] = _PLANE_VIEWS.get(
+                    refs[0].get("plane"), "Front")
+            if projection is None:
+                projection = "Orthographic"
+            frame = self._model_frame()
+            frame = ([] if frame is True else list(frame)) + [
+                c for r in refs for c in refimage.corners(r)]
         if params.get("target_node") is not None:
             node = self._node(params["target_node"])
             frame = self._world_points(node)
@@ -454,7 +480,8 @@ class McpToolExecutor:
                 raise ToolError("'target' must be [x, y, z] in mm.")
         common = dict(distance=self._number(params, "distance", True),
                       target=target, projection=projection,
-                      zoom=self._number(params, "zoom", True) or 1.0)
+                      zoom=self._number(params, "zoom", True) or 1.0,
+                      overlay=overlay)
         if params.get("orientations"):
             return self._contact_sheet(params["orientations"], limit,
                                        frame, common)
@@ -1362,6 +1389,10 @@ class McpToolExecutor:
             win.view3d.set_cavity(bool(params["cavity"]))
         if params.get("edges") is not None:
             win.view3d.set_edges(bool(params["edges"]))
+        if params.get("smooth") is not None:
+            win.view3d.set_smooth(bool(params["smooth"]))
+        if params.get("overlay") is not None:
+            win.view3d.set_overlay(bool(params["overlay"]))
         if params.get("opengl") is not None:
             win.view3d.set_hardware(bool(params["opengl"]))
         if params.get("explode") is not None or params.get("explode_mode"):
@@ -1393,6 +1424,8 @@ class McpToolExecutor:
                 "opengl": bool(win.view3d.hardware),
                 "cavity": bool(win.view3d.cavity),
                 "edges": bool(win.view3d.edges),
+                "smooth": bool(win.view3d.smooth),
+                "overlay": bool(win.view3d.overlay),
                 "cut": win.view3d.cut_state()}
 
     def _guard_unsaved(self, params, tool: str):
@@ -1788,6 +1821,73 @@ class McpToolExecutor:
         out["note"] = ("The rounding shows in the exact OpenSCAD render "
                        "— call render_view after a moment; the built-in "
                        "preview cannot cut a convex edge.")
+        return out
+
+    def _t_sculpt_stroke(self, params) -> dict:
+        from . import sculpt, sculpt_ui
+        node = self._node(params.get("node_id"))
+        if node.type == "sculpt":
+            target = node
+        elif node.parent is not None and node.parent.type == "sculpt":
+            target = node.parent
+        else:
+            if node.parent is None:
+                raise ToolError("The document root cannot be sculpted.")
+            target = self._model.wrap_nodes([node], "sculpt")
+        if params.get("mirror") is not None:
+            if params["mirror"] not in sculpt.MIRRORS:
+                raise ToolError("'mirror' is none, x, y or z.")
+            target.params["mirror"] = params["mirror"]
+        if params.get("detail") is not None:
+            target.params["detail"] = max(0.05, float(params["detail"]))
+        specs = list(params.get("strokes") or [])
+        if params.get("kind") is not None or params.get("at") is not None:
+            specs.append({k: params.get(k) for k in
+                          ("kind", "at", "radius", "strength", "direction")})
+        if not specs:
+            raise ToolError("Give a stroke (kind, at, radius, strength) "
+                            "or a list in 'strokes'.")
+        world, local = sculpt_ui.meshes(self._w, target)
+        added = 0
+        for spec in specs:
+            if not isinstance(spec, dict):
+                raise ToolError("Each stroke is {kind, at, radius, "
+                                "strength, direction}.")
+            kind = spec.get("kind", "inflate")
+            if sculpt.kind_index(kind) < 0:
+                raise ToolError(f"Unknown brush {kind!r}. Choose one of: "
+                                f"{', '.join(sculpt.KINDS)}.")
+            at = self._vec3(spec, "at")
+            if at is None:
+                raise ToolError("Each stroke needs 'at' [x, y, z].")
+            radius = self._number(spec, "radius", True) or 5.0
+            strength = spec.get("strength", 1.0)
+            try:
+                strength = float(strength)
+            except (TypeError, ValueError):
+                raise ToolError("'strength' must be a number.")
+            direction = self._vec3(spec, "direction")
+            if world is not None:
+                ok = sculpt_ui.add_stroke(self._model, target, kind, at,
+                                          radius, strength, direction,
+                                          world=world, local=local)
+            else:
+                ok = sculpt_ui.add_stroke(self._model, target, kind, at,
+                                          radius, strength, direction)
+            if not ok:
+                raise ToolError("That stroke could not be placed on the "
+                                "surface.")
+            added += 1
+            world, local = sculpt_ui.meshes(self._w, target)
+        errors = validate(self._model.root)
+        out = {"sculpt": target.id, "name": target.name, "added": added,
+               "strokes": len(target.params.get("strokes") or []),
+               "mirror": target.params.get("mirror", "none")}
+        if target.id in errors:
+            out["error"] = errors[target.id]
+        out["note"] = ("Strokes are kept on the node in its own frame; "
+                       "render_view to see the result, probe_surface for "
+                       "the next one.")
         return out
 
     # ── Checking ────────────────────────────────────────────────

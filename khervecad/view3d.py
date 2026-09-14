@@ -248,6 +248,13 @@ class View3D(QWidget):
         #: Blender-style cavity shading and edge lines (shading.py)
         self.cavity = settings.value("render_cavity", False, type=bool)
         self.edges = settings.value("render_edges", True, type=bool)
+        #: smooth shading: OpenGL interpolates a normal per vertex
+        #: (shading.vertex_normals), so curved surfaces lose their facets
+        self.smooth = settings.value("render_smooth", True, type=bool)
+        #: compare-to-photo: the reference images drawn OVER the model
+        #: too (an onion skin), so from the plane's square-on view the
+        #: model's outline is checked against the picture directly
+        self.overlay = settings.value("render_overlay", False, type=bool)
         self._info = None               # shading.MeshInfo of self.mesh
         self._info_serial = -1
         #: draw the faces with OpenGL (glrender.py) — exact occlusion at
@@ -393,6 +400,21 @@ class View3D(QWidget):
         self.look_toggled.emit("edges", self.edges)
         self.update()
 
+    def set_overlay(self, on: bool):
+        """Draw the reference images over the model as well as behind
+        it — the onion skin a likeness is checked against; persisted."""
+        self.overlay = bool(on)
+        QSettings(*_SETTINGS).setValue("render_overlay", self.overlay)
+        self.look_toggled.emit("overlay", self.overlay)
+        self.update()
+
+    def set_smooth(self, on: bool):
+        """Smooth shading across curved surfaces (OpenGL); persisted."""
+        self.smooth = bool(on)
+        QSettings(*_SETTINGS).setValue("render_smooth", self.smooth)
+        self.look_toggled.emit("smooth", self.smooth)
+        self.update()
+
     def set_hardware(self, on: bool):
         """Faces by OpenGL (on) or by the painter (off); persisted."""
         self.hardware = bool(on)
@@ -481,7 +503,7 @@ class View3D(QWidget):
     def snapshot(self, width, height, *, yaw=None, pitch=None,
                  distance=None, target=None, projection=None,
                  frame=None, zoom=1.0, clean=False, transparent=False,
-                 pixel_ratio=1.0, uncut=False):
+                 pixel_ratio=1.0, uncut=False, overlay=None):
         """Paint the scene from another camera into a QImage, leaving
         this view — the user's camera — exactly where it is.
 
@@ -517,6 +539,8 @@ class View3D(QWidget):
         # the stage, and its per-mesh cache (the twin gets the same list)
         twin.stage, twin._stage_cache = self.stage, self._stage_cache
         twin.cavity, twin.edges = self.cavity, self.edges
+        twin.smooth = self.smooth
+        twin.overlay = self.overlay if overlay is None else bool(overlay)
         twin.hardware = self.hardware
         twin.projection = projection if projection in PROJECTIONS \
             else self.projection
@@ -532,10 +556,11 @@ class View3D(QWidget):
             if self.cavity or self.edges:
                 twin._info, twin._info_serial = self._mesh_info(), \
                     twin._mesh_serial
+        if not clean or twin.overlay:
+            twin.reference_images = list(self.reference_images)
         if not clean:
             twin.set_highlight_mesh(self.highlight_mesh)
             twin.set_anchor_markers(list(self.anchor_markers))
-            twin.reference_images = list(self.reference_images)
         twin.yaw = self.yaw if yaw is None else float(yaw)
         twin.pitch = self.pitch if pitch is None else float(pitch)
         twin.distance, twin.target = self.distance, list(self.target)
@@ -1275,6 +1300,13 @@ class View3D(QWidget):
 
         if hi_polys:
             self._tint_selection(painter, hi_polys)
+        if self.overlay and self.reference_images:
+            # the photo over the model: where the outline leaves the
+            # picture is where the sculpt is wrong
+            from . import refimage
+            refimage.draw_3d(painter, self.reference_images,
+                             lambda v: self._project(eye, right, up,
+                                                     forward, v))
         self._draw_anchors(painter, eye, right, up, forward)
         self._draw_pick_overlays(painter, eye, right, up, forward)
         if self._clean:                  # an exported picture: model only

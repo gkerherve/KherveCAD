@@ -107,6 +107,18 @@ NODE_TYPES = {
         icon="mdi.circle-multiple-outline",
         params=dict(levels=2),
         schema=[("levels", "Levels", "int", 1, 4)]),
+    "sculpt": dict(
+        label="Sculpt (brush strokes)", category=OPERATION,
+        icon="mdi.brush",
+        params=dict(strokes=[], detail=1.5, mirror="none"),
+        schema=[("strokes", "Strokes (kind 0 grab 1 inflate 2 smooth "
+                            "3 flatten 4 pinch; centre; radius; "
+                            "strength; direction)", "rows",
+                 ["Kind", "X", "Y", "Z", "Radius", "Strength",
+                  "dX", "dY", "dZ"], None),
+                ("detail", "Max edge (mm)", "float", 0.05, 1e4),
+                ("mirror", "Mirror strokes across", "choice",
+                 ["none", "x", "y", "z"], None)]),
     "shell": dict(
         label="Shell (hollow)", category=OPERATION,
         icon="mdi.cup-outline",
@@ -128,7 +140,8 @@ NODE_TYPES.update(_fillet.NODE_TYPES)
 TYPES = frozenset(NODE_TYPES)
 LEAVES = frozenset({"polyhedron", "loft"})
 WRAPPERS = frozenset({"sweep", "section_loft", "blend", "bend", "twist",
-                      "taper", "lattice", "subdivide", "fillet", "shell"})
+                      "taper", "lattice", "subdivide", "fillet", "shell",
+                      "sculpt"})
 
 #: wrappers whose surface is computed here and baked into the program,
 #: with their helper module's parameters (besides points and faces)
@@ -144,9 +157,10 @@ _BAKED = {
     "subdivide": [("levels", 1)],
     "shell": [("thickness", 2), ("open", "none"), ("open_angle", 30),
               ("detail", 2)],
+    "sculpt": [("strokes", []), ("detail", 1.5), ("mirror", "none")],
 }
 #: parameters written as quoted OpenSCAD strings
-_CHOICES = {"axis", "toward", "open"}
+_CHOICES = {"axis", "toward", "open", "mirror"}
 #: what a deformer cannot take from the preview mesh: booleans and the
 #: rest are only approximated there, so baking them would bake a wrong
 #: shape into the program
@@ -368,6 +382,12 @@ def _compute(node, env) -> list:
     if t == "subdivide":
         return deform.loop_subdivide(src, int(num("levels", 1.0)))
     src = deform.split_long_edges(src, num("detail", 2.0))
+    if t == "sculpt":
+        from . import sculpt
+        rows = [[mesh.rv(v, env) for v in row]
+                for row in p.get("strokes") or []
+                if isinstance(row, list) and len(row) == sculpt.STROKE_LEN]
+        return sculpt.sculpt(src, rows, str(p.get("mirror", "none")))
     if t == "shell":
         from . import shell
         return shell.shell(src, num("thickness", 2.0),
@@ -512,10 +532,13 @@ def _b_baked(kind):
                 from .shell import OPEN_CHOICES
                 params[key] = value if value in OPEN_CHOICES \
                     else defaults[key]
+            elif key == "mirror":
+                params[key] = value if value in ("none", "x", "y", "z") \
+                    else defaults[key]
             elif key in _CHOICES:
                 params[key] = value if value in ("x", "y", "z") \
                     else defaults[key]
-            elif key in ("offsets", "path", "heights"):
+            elif key in ("offsets", "path", "heights", "strokes"):
                 params[key] = ([[_num(v) for v in row] for row in value
                                 if isinstance(row, list)]
                                if isinstance(value, list)
@@ -658,6 +681,33 @@ def _check_baked(node, env):
                                  for r in rows):
             return ("lattice: give 8 corner offsets [dx, dy, dz] — x "
                     "fastest, then y, then z")
+    if t == "sculpt":
+        return _check_sculpt(p, env)
+    return None
+
+
+def _check_sculpt(p, env):
+    from . import expr, mesh, sculpt
+    if str(p.get("mirror", "none")) not in sculpt.MIRRORS:
+        return "sculpt: mirror must be none, x, y or z"
+    rows = p.get("strokes") or []
+    if not isinstance(rows, list):
+        return "sculpt: strokes are rows of kind, x, y, z, radius, strength, dx, dy, dz"
+    for number, row in enumerate(rows):
+        if not isinstance(row, list) or len(row) != sculpt.STROKE_LEN:
+            return (f"stroke {number} needs {sculpt.STROKE_LEN} values: kind, "
+                    "x, y, z, radius, strength, dx, dy, dz")
+        for value in row:
+            if isinstance(value, str):
+                try:
+                    expr.evaluate(value, env)
+                except expr.ExprError as exc:
+                    return f"stroke {number}: {exc}"
+        if sculpt.kind_index(mesh.rv(row[0], env, -1.0)) < 0:
+            return (f"stroke {number}: kind must be 0-4 "
+                    f"({', '.join(sculpt.KINDS)})")
+        if mesh.rv(row[4], env, 0.0) <= 0:
+            return f"stroke {number}: the radius must be more than 0"
     return None
 
 

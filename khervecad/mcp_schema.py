@@ -95,7 +95,7 @@ WRAP_TYPES = [
     "mirror", "offset", "projection", "color", "for_loop",
     "while_loop", "if_else", "component", "symmetry", "joint", "sweep",
     "section_loft", "blend", "bend", "twist", "taper", "lattice", "subdivide",
-    "pattern", "shell",
+    "pattern", "shell", "sculpt",
 ]
 
 
@@ -324,6 +324,16 @@ TOOLS = [
                                "framed on its own. One call instead of "
                                "one per angle.",
             },
+            "overlay_reference": {
+                "type": "boolean",
+                "description": "Compare with the photo: the reference "
+                               "image is drawn OVER the model (onion "
+                               "skin), square on to its plane and "
+                               "orthographic unless you aim the camera "
+                               "yourself, picture and model both framed. "
+                               "Where the model's outline leaves the "
+                               "photo is where to sculpt next.",
+            },
         }),
     },
     {
@@ -495,6 +505,50 @@ TOOLS = [
                      "description": "Random seed (default 1): the same "
                                     "seed gives the same points."},
         }, ["node_ids"]),
+    },
+    {
+        "name": "sculpt_stroke",
+        "description": (
+            "Sculpt a surface with brush strokes — Blender's sculpt "
+            "mode, kept as parameters: grab drags the surface along "
+            "`direction` by `strength` mm, inflate pushes it out along "
+            "its normals (negative pulls in), smooth relaxes it, flatten "
+            "presses it onto a plane, pinch draws it to the centre; each "
+            "falls off to nothing at `radius`. Give one stroke, or "
+            "several in `strokes` (one undo step). `node_id` is a "
+            "sculpt node, or any solid — a blend, a subdivided cage, an "
+            "imported scan — which is wrapped in one. Points are WORLD "
+            "coordinates from probe_surface; `mirror` repeats every "
+            "stroke across the part's x, y or z plane (a face from one "
+            "side). This is what turns a blob of primitives into a "
+            "likeness: probe the surface, push it where the photo says, "
+            "render_view, repeat."
+        ),
+        "input_schema": _obj({
+            "node_id": _ID,
+            "kind": {"type": "string",
+                     "enum": ["grab", "inflate", "smooth", "flatten",
+                              "pinch"]},
+            "at": _vec3("Brush centre [x, y, z] in world mm."),
+            "radius": {"type": "number", "description": "mm."},
+            "strength": {"type": "number",
+                         "description": "mm for grab/inflate; 0-1 for "
+                                        "smooth (more = passes), flatten "
+                                        "and pinch."},
+            "direction": _vec3("grab only: which way to drag."),
+            "strokes": {"type": "array",
+                        "description": "Several strokes at once: "
+                                       "[{kind, at, radius, strength, "
+                                       "direction}].",
+                        "items": {"type": "object"}},
+            "mirror": {"type": "string", "enum": ["none", "x", "y", "z"],
+                       "description": "Repeat strokes across this plane "
+                                      "of the part (set on the node)."},
+            "detail": {"type": "number",
+                       "description": "Max edge length in mm the surface "
+                                      "is refined to before sculpting "
+                                      "(default 1.5)."},
+        }, ["node_id"]),
     },
     {
         "name": "section",
@@ -928,6 +982,16 @@ TOOLS = [
             "edges": {"type": "boolean",
                       "description": "Draw crease and outline edges as "
                                      "thin lines."},
+            "overlay": {"type": "boolean",
+                        "description": "Draw the reference images OVER "
+                                       "the model too (onion skin), to "
+                                       "compare a likeness with its "
+                                       "photo."},
+            "smooth": {"type": "boolean",
+                       "description": "Smooth shading: curved surfaces "
+                                      "shade as one skin instead of "
+                                      "facets (edges over 40° stay "
+                                      "sharp). OpenGL only."},
             "opengl": {"type": "boolean",
                        "description": "Draw the faces with OpenGL (exact "
                                       "occlusion, anti-aliased); off "

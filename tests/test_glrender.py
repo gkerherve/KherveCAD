@@ -57,7 +57,8 @@ def test_vertices_pack_opaque_and_translucent_apart(app):
     # the red cube's colour survives the Shaded style's saturation boost
     r, g, b = data[6], data[7], data[8]
     assert r > 0.7 and g < 0.2 and b < 0.2
-    assert all(tail[6] < 0.99 for _tri, tail in trans)  # glass alpha
+    assert all(tail[6] < 0.99 for entry in trans          # glass alpha
+               for tail in glrender.translucent_tails(entry))
 
 
 def test_materials_follow_the_painter_styles():

@@ -17,7 +17,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PyQt5.QtWidgets import QApplication
 
-from khervecad import bsp, shading
+from khervecad import bsp, mesh, shading
 
 
 @pytest.fixture(scope="module")
@@ -175,3 +175,62 @@ def test_piece_segments_keep_only_what_lies_on_the_piece():
         ((2.0, 0.0, 0.0), (6.0, 0.0, 0.0))]
     off = ((2.0, 1.0, 0.0), (6.0, 1.0, 0.0), (4.0, 3.0, 0.0))
     assert shading.piece_segments(off, crease) == []
+
+
+# ── smooth shading: a normal per vertex ─────────────────────────────
+
+def test_vertex_normals_smooth_a_sphere_and_keep_a_cube_sharp():
+    from khervecad import glrender
+    from khervecad.model import CadNode
+    root = CadNode("root", "root")
+    root.add(CadNode("sphere", "s", dict(radius=10.0, segments=24)))
+    sphere = mesh.tessellate(root)
+    vn = shading.vertex_normals(sphere)
+    assert len(vn) == len(sphere)
+    for tri, normals in zip(sphere, vn):
+        for v, n in zip(tri, normals):
+            length = math.sqrt(sum(c * c for c in n))
+            assert length == pytest.approx(1.0, abs=1e-6)
+            # on a sphere the smooth normal points along the radius
+            radial = [c / 10.0 for c in v]
+            assert sum(a * b for a, b in zip(n, radial)) > 0.97
+    # a cube's vertex normals are its face normals: the edges are creases
+    box = CadNode("root", "root")
+    box.add(CadNode("cube", "c", dict(width=10.0, depth=10.0, height=10.0)))
+    cube = mesh.tessellate(box)
+    for tri, normals in zip(cube, shading.vertex_normals(cube)):
+        face = shading._normal(tri)
+        for n in normals:
+            assert n == pytest.approx(face, abs=1e-9)
+    # packed for OpenGL, the sphere's three vertices carry three normals
+    from khervecad.view3d import View3D
+    view = View3D()
+    view.smooth = True
+    data, _trans = glrender.build_vertices(view, sphere, None)
+    stride = glrender.STRIDE
+    first = [tuple(data[k * stride + 3:k * stride + 6]) for k in range(3)]
+    assert len(set(first)) == 3
+    view.smooth = False
+    flat, _trans = glrender.build_vertices(view, sphere, None)
+    first = [tuple(flat[k * stride + 3:k * stride + 6]) for k in range(3)]
+    assert len(set(first)) == 1
+
+
+def test_smooth_shading_toggle_persists_and_reaches_the_menu(app):
+    from PyQt5.QtCore import QSettings
+    settings = QSettings("Kherve", "KherveCAD")
+    saved = settings.value("render_smooth")
+    try:
+        from khervecad.view3d import View3D
+        view = View3D()
+        seen = []
+        view.look_toggled.connect(lambda key, on: seen.append((key, on)))
+        view.set_smooth(False)
+        assert seen == [("smooth", False)] and not View3D().smooth
+        view.set_smooth(True)
+        assert View3D().smooth
+    finally:
+        if saved is None:
+            settings.remove("render_smooth")
+        else:
+            settings.setValue("render_smooth", saved)

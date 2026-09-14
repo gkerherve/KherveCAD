@@ -1241,6 +1241,52 @@ into a new module and import.
                        open_angle=, detail=, points=, faces=)`), in the
                        Deform & sculpt group; Examples ▸ Mechanical ▸
                        Hollow cup.
+  - `sculpt.py`      — **sculpting** (Blender's sculpt mode as
+                       parameters; Qt-free): a `sculpt` node wraps a
+                       solid (a blend, a subdivided cage, an imported
+                       scan) and holds `strokes` rows `[kind, x, y, z,
+                       radius, strength, dx, dy, dz]` in the children's
+                       LOCAL frame — kinds grab (drag along a direction,
+                       mm), inflate (along the vertex normals, negative
+                       pulls in), smooth (relax, passes = ceil
+                       strength), flatten (press onto the patch's mean
+                       plane), pinch (towards the centre) — each with a
+                       smoothstep falloff to zero at the radius, and
+                       `mirror` repeating every stroke across the x/y/z
+                       plane so a face is sculpted from one side. The
+                       mesh is welded once (`Mesh`) so vertices moving
+                       never open it. Baked like the deformers (in
+                       `_BAKED`, after `split_long_edges` at `detail`).
+                       `to_local` maps a world point + direction the
+                       view picked back into the node's frame: nearest
+                       vertex twin (same tessellation, same order) plus
+                       the linear part read off that triangle. Why
+                       strokes and not a mesh: a likeness needs a
+                       free-form surface, and this keeps it editable,
+                       undoable and re-importable.
+  - `sculpt_ui.py`   — the click flow: `SculptPanel` (brush, radius,
+                       strength, mirror, undo last) keeps
+                       `view3d.start_pick` armed on the sculpt's CURRENT
+                       baked surface (`meshes`, re-fetched after every
+                       stroke since the surface moved); a click lands one
+                       stroke at the hit, direction = the face normal.
+                       Toolbar Deform ▸ Sculpt wraps the selection and
+                       opens it; right-click ▸ Sculpt… re-enters. MCP
+                       `sculpt_stroke` (one stroke or a `strokes` batch,
+                       world coordinates from `probe_surface`, wraps any
+                       solid) is the assistant's brush.
+  - Smooth shading (2026-09-14): `shading.vertex_normals` gives each
+                       triangle three normals — the area-weighted mean
+                       of the faces meeting at that vertex within
+                       `SMOOTH_ANGLE` (40°) of this face's, so a sphere,
+                       a loft or a sculpted head shades as one skin and
+                       a box edge stays hard. `glrender.build_vertices`
+                       packs them when `View3D.smooth` is on (View ▸ 3D
+                       Smooth Shading, QSettings `render_smooth`, MCP
+                       `set_render_options smooth`, default on; a
+                       translucent entry then carries three tails,
+                       `translucent_tails`). OpenGL only — the painter
+                       fills a polygon with one colour.
   - `shading.py`     — Blender-solid-view **cavity shading and edge
                        lines** (Qt-free): `analyse(tris)` → `MeshInfo`
                        with per-face normals, a signed `cavity` term
@@ -1377,6 +1423,19 @@ into a new module and import.
                        model via a projective `quadToQuad`. View >
                        Add Reference Image…, and the
                        `set_reference_image` MCP tool (file access).
+                       **Compare to reference** (2026-09-14): with
+                       `View3D.overlay` on (View ▸ Compare to Reference
+                       Image, QSettings `render_overlay`,
+                       `set_render_options overlay`) the pictures are
+                       drawn OVER the model too, after the faces and the
+                       selection tint — an onion skin. `render_view
+                       overlay_reference: true` makes the comparison
+                       picture: square on to the first visible
+                       reference's plane (`_PLANE_VIEWS`), orthographic,
+                       the model and the picture's corners both framed,
+                       overlay forced on the offscreen twin
+                       (`snapshot(overlay=)`). Where the outline leaves
+                       the photo is where the next sculpt stroke goes.
   - `tools/refsheet.py` — cuts a blueprint sheet (one picture, 3–4
                        orthographic views) into single views: each rough
                        `--view NAME=x0,y0,x1,y1[:mirror]` box is trimmed
@@ -1394,7 +1453,7 @@ into a new module and import.
                        check orthographically. The MCP `_INSTRUCTIONS`
                        carry the same rule ("Modelling a real object")
                        to every connected client.
-  - `mcp_schema.py`  — the **MCP tool table**: 42 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 43 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -1554,7 +1613,7 @@ into a new module and import.
                        caps a pattern at `MAX_COPIES` (1000) and needs
                        every count ≥ 1. Examples ▸ Mechanical ▸ Bolt
                        circle & stair (pattern).
-- `docs/MCP.md` — how to connect an assistant, what the 42 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 43 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -1814,7 +1873,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **42 tools**: the object tree, OpenSCAD in
+client gets the whole app as **43 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

@@ -209,6 +209,14 @@ def build_vertices(view, mesh, colors, info=None):
     cache = {}
     opaque, trans = array("f"), []
     cavity = info.cavity if info is not None else None
+    # smooth shading: a normal per vertex, averaged over the faces that
+    # meet there short of a crease (shading.vertex_normals), so a
+    # sphere, a loft or a sculpted head reads as one skin, not facets
+    smooth = bool(getattr(view, "smooth", False))
+    vnormals = None
+    if smooth:
+        from .shading import vertex_normals
+        vnormals = vertex_normals(mesh)
     for i, tri in enumerate(mesh):
         fc = colors[i] if colors else None
         face_style = style
@@ -232,13 +240,31 @@ def build_vertices(view, mesh, colors, info=None):
         if cavity is not None:
             from .shading import multiplier
             cav = multiplier(cavity[i], 0.5)
-        tail = (nx, ny, nz, r, g, b, alpha, amb, dif, gk, gp, cav)
+        rest = (r, g, b, alpha, amb, dif, gk, gp, cav)
+        if vnormals is not None:
+            tails = tuple(n + rest for n in vnormals[i])
+            if alpha < 0.99:
+                trans.append((tri, tails))
+                continue
+            for v, tail in zip(tri, tails):
+                opaque.extend((v[0], v[1], v[2]) + tail)
+            continue
+        tail = (nx, ny, nz) + rest
         if alpha < 0.99:
             trans.append((tri, tail))
             continue
         for v in tri:
             opaque.extend((v[0], v[1], v[2]) + tail)
     return opaque, trans
+
+
+def translucent_tails(entry):
+    """The per-vertex tails of one translucent entry: three when the
+    mesh was packed smooth, else the face's own repeated."""
+    tri, tail = entry
+    if tail and isinstance(tail[0], tuple):
+        return tail
+    return (tail, tail, tail)
 
 
 # -------------------------------------------------------------- renderer
@@ -323,7 +349,7 @@ class GLRenderer:
     def _buffer(self, view, mesh, colors, info):
         from PyQt5.QtGui import QOpenGLBuffer
         key = (id(mesh), len(mesh), id(colors), view.style,
-               bool(view.cavity))
+               bool(view.cavity), bool(getattr(view, "smooth", False)))
         got = self._buffers.get(key)
         if got is not None:
             return got
@@ -480,8 +506,8 @@ class GLRenderer:
             cz = (a[2] + b[2] + c[2]) / 3.0 - eye[2]
             return cx * forward[0] + cy * forward[1] + cz * forward[2]
         data = array("f")
-        for tri, tail in sorted(trans, key=depth, reverse=True):
-            for v in tri:
+        for entry in sorted(trans, key=depth, reverse=True):
+            for v, tail in zip(entry[0], translucent_tails(entry)):
                 data.extend((v[0], v[1], v[2]) + tail)
         buf = QOpenGLBuffer(QOpenGLBuffer.VertexBuffer)
         buf.create()
