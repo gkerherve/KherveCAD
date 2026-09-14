@@ -112,6 +112,11 @@ _IDS = {
 
 _ID = {"type": "integer", "description": "A node id from list_tree."}
 
+
+def _vec3(description: str) -> dict:
+    return {"type": "array", "items": {"type": "number"},
+            "minItems": 3, "maxItems": 3, "description": description}
+
 #: Parameter values are numbers, booleans, strings — or expression
 #: strings, which is the point of the app.
 _PARAMS = {
@@ -425,6 +430,34 @@ TOOLS = [
             }}, ["a", "b"]),
     },
     {
+        "name": "probe_surface",
+        "description": (
+            "Cast a ray at the model and read the surface it hits: the "
+            "world point, the outward unit normal there, the distance "
+            "and which part it is. This is how to put an eye, a knob, a "
+            "boss or a label ON a curved surface (a loft, a blend, a "
+            "sphere) without deriving the geometry by hand: place it at "
+            "point + normal * inset, orient it along the normal. The "
+            "ray runs from `from` along `direction` (or through `to`); "
+            "`hits` lists every crossing nearest first, each marked "
+            "entering (into the solid) or leaving, so the far side of a "
+            "part is one call away too. Probes the visible parts of the "
+            "scope, or only `node_ids`. Uses the built-in tessellation "
+            "(booleans approximated: a difference reads as its first "
+            "operand)."
+        ),
+        "input_schema": _obj({
+            "from": _vec3("Ray origin [x, y, z] in mm."),
+            "direction": _vec3("Ray direction [dx, dy, dz] (any length)."),
+            "to": _vec3("A point the ray passes through, instead of "
+                        "`direction`."),
+            "node_ids": _IDS,
+            "max_hits": {"type": "integer",
+                         "description": "Keep only the nearest N hits "
+                                        "(default: all)."},
+        }, ["from"]),
+    },
+    {
         "name": "section",
         "description": (
             "Cut the model with a plane and get the cross-section: a "
@@ -634,7 +667,9 @@ TOOLS = [
             "subset come back as warnings; for a library the parser "
             "cannot read (BOSL2…), add a scad_raw node instead. End "
             "each statement with a `// Label` comment (`cube(10);  // "
-            "Body`): the node is named \"Cube [Body]\" in the tree."
+            "Body`): the node is named \"Cube [Body]\" in the tree, and "
+            "the label on a module's placed call (`Part();  // Left "
+            "flipper`) names that Object."
         ),
         "input_schema": _obj({
             "code": {"type": "string",

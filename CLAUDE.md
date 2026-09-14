@@ -103,7 +103,13 @@ into a new module and import.
                        Codegen writes the label back as a trailing
                        comment, so it round-trips; the chat prompt and
                        MCP instructions ask assistants to label every
-                       part this way.
+                       part this way. A label on an **Object's placed
+                       call names the Object** (`Throat_and_belly();
+                       // Throat and belly`): an Object has no tag, and
+                       codegen writes that comment whenever the name is
+                       not the identifier (spaces, a deduped `Wheel_2`),
+                       so such names survive export -> import instead of
+                       coming back as identifiers.
                        `expr.py` evaluates the extra syntax (a scalar
                        reads as `[s,s,s]` so `cube(size)` works either
                        way). Constructs still outside the subset
@@ -1388,7 +1394,7 @@ into a new module and import.
                        check orthographically. The MCP `_INSTRUCTIONS`
                        carry the same rule ("Modelling a real object")
                        to every connected client.
-  - `mcp_schema.py`  — the **MCP tool table**: 40 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 41 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -1407,7 +1413,18 @@ into a new module and import.
                        statements by design — right for importing
                        someone else's file, wrong for a program a
                        client just wrote), and an approximated STL
-                       export says so loudly.
+                       export says so loudly. `probe_surface` casts a
+                       ray at the scope's parts (`analysis.surface_hits`,
+                       Möller-Trumbore over each part's world mesh, bbox
+                       pre-reject, shared-edge hits merged) and returns
+                       the hit point, outward normal, distance and part,
+                       every crossing nearest first — how an assistant
+                       puts an eye or a tubercle ON a loft without
+                       re-deriving its geometry outside the app (the
+                       whale needed a side script for that). The
+                       offscreen `render_view` fit frames the MODEL
+                       (`_model_frame`), where the on-screen fit takes
+                       the platform in and left the model small.
   - `mcp_bridge.py`  — `McpBridge`: loopback JSON server on 127.0.0.1
                        exposing those tools, token-authenticated from
                        the endpoint file, off until AI ▸ Connect to
@@ -1530,7 +1547,7 @@ into a new module and import.
                        caps a pattern at `MAX_COPIES` (1000) and needs
                        every count ≥ 1. Examples ▸ Mechanical ▸ Bolt
                        circle & stair (pattern).
-- `docs/MCP.md` — how to connect an assistant, what the 40 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 41 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -1790,7 +1807,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **40 tools**: the object tree, OpenSCAD in
+client gets the whole app as **41 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

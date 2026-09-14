@@ -230,3 +230,26 @@ def test_nested_object_module_is_hoisted_to_top_level(model):
     assert "    module Floor()" not in code
     assert code.count("module Floor()") == 1
     assert "    Floor();" in code
+
+
+def test_object_names_the_identifier_cannot_carry_round_trip(model):
+    """"Throat and belly" becomes the module Throat_and_belly; the
+    placed call carries the real name as its label, and the importer
+    names the Object from it — so a spaced or deduped name survives
+    export -> import instead of coming back as the identifier."""
+    a = model.new_component("Throat and belly")
+    model.add_node("cube", parent=a)
+    b = model.new_component("Wheel")
+    model.add_node("cube", parent=b)
+    c = model.new_component("Wheel")
+    model.add_node("sphere", parent=c)
+    code = model.to_scad()
+    assert "Throat_and_belly();  // Throat and belly" in code
+    assert "Wheel_2();  // Wheel" in code
+    assert "Wheel();  //" not in code                # same name: no label
+    root, _ = scadparse.parse_scad(code)
+    names = [n.name for n in root.walk() if n.type == "component"]
+    assert names == ["Throat and belly", "Wheel", "Wheel"]
+    again = DocumentModel()
+    again.root = root
+    assert again.to_scad() == code

@@ -172,3 +172,20 @@ def test_unlabelled_nodes_emit_no_comment(app):
     model.root.add(CadNode("cube", "Cube", dict(x=1, y=1, z=1)))
     body = model.to_scad().split("\n", 4)[-1]
     assert "//" not in body
+
+
+def test_a_label_on_an_objects_call_names_the_object():
+    """`Part();  // Main body` names the Object itself — an Object has
+    no tag, its name IS the label — while the statements inside keep
+    the usual "Cube [Body]" tagging."""
+    root, _ = scadparse.parse_scad(
+        "module Part() {\n"
+        "    cube(10);  // Body\n"
+        "}\n"
+        "Part();  // Main body\n"
+        'color("red") Part();  // Second\n')
+    comps = [n for n in root.walk() if n.type == "component"]
+    assert [c.name for c in comps] == ["Main body"]
+    assert [n.name for n in comps[0].children] == ["Cube [Body]"]
+    insts = [n for n in root.walk() if n.type == "reference"]
+    assert len(insts) == 1 and "[" not in insts[0].name

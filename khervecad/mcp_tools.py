@@ -419,6 +419,13 @@ class McpToolExecutor:
         el = self._number(params, "elevation")
         return (yaw if az is None else az, pitch if el is None else el)
 
+    def _model_frame(self):
+        """What an offscreen fit frames: the model's own vertices. The
+        on-screen fit takes the platform in too (View3D.fit), which is
+        the look the user wants — but in a picture an assistant asks
+        for it left the model small in the middle of a big disc."""
+        return [v for tri in self._w.view3d.mesh for v in tri] or True
+
     def _offscreen(self, params, limit):
         """render_view from a camera of its own (View3D.snapshot)."""
         from PyQt5.QtCore import QRect
@@ -436,7 +443,7 @@ class McpToolExecutor:
                     f"{node.name} has no geometry in the 3D view to "
                     "frame — it is hidden, empty, or 2D-only.")
         elif params.get("fit"):
-            frame = True
+            frame = self._model_frame()
         target = params.get("target")
         if target is not None:
             try:
@@ -510,7 +517,8 @@ class McpToolExecutor:
             yaw, pitch = view.VIEWS[name]
             image, cam = view.snapshot(
                 tw, th, yaw=yaw, pitch=pitch,
-                frame=True if frame is None else frame, **common)
+                frame=self._model_frame() if frame is None else frame,
+                **common)
             x, y = (i % cols) * tw, (i // cols) * th
             painter.drawImage(x, y, image)
             painter.setPen(QColor("#1e2226"))
@@ -663,6 +671,74 @@ class McpToolExecutor:
                 f"or one of: {', '.join(a['name'] for a in found[:40])}.")
         pos, _direction = anchors.anchor_world(node, match[0], self._env())
         return pos, box, f"{node.name} · {match[0]['name']}"
+
+    def _vec3(self, params, key):
+        value = params.get(key)
+        if value is None:
+            return None
+        try:
+            out = [float(v) for v in value]
+        except (TypeError, ValueError):
+            out = []
+        if len(out) != 3:
+            raise ToolError(f"'{key}' must be [x, y, z] in mm.")
+        return out
+
+    def _t_probe_surface(self, params) -> dict:
+        from . import analysis, analysis_dialog
+        origin = self._vec3(params, "from")
+        if origin is None:
+            raise ToolError("'from' is the ray origin [x, y, z] in mm.")
+        direction = self._vec3(params, "direction")
+        if direction is None:
+            to = self._vec3(params, "to")
+            if to is None:
+                raise ToolError("Give a 'direction' [dx, dy, dz] or a "
+                                "'to' point the ray passes through.")
+            direction = [to[i] - origin[i] for i in range(3)]
+        if math.sqrt(sum(c * c for c in direction)) < 1e-12:
+            raise ToolError("The ray direction has zero length.")
+        ids = params.get("node_ids")
+        if ids:
+            nodes = self._nodes(ids)
+        else:
+            root = self._w._render_scope()[0]
+            nodes = [n for n in root.children if n.visible and n.type
+                     not in ("variables", "masters", "assign")]
+        if not nodes:
+            raise ToolError("Nothing to probe: the scope has no visible "
+                            "parts.")
+        try:
+            limit = max(int(params.get("max_hits") or 0), 0)
+        except (TypeError, ValueError):
+            raise ToolError("'max_hits' must be a whole number.")
+        parts, approx = [], False
+        for n in nodes:
+            tris, a = analysis_dialog.part_tris(self._w, [n])
+            approx = approx or a
+            parts.append((n.id, tris))
+        by_id = {n.id: n for n in nodes}
+        hits = []
+        for h in analysis.surface_hits(origin, direction, parts, limit):
+            node = by_id[h["key"]]
+            hits.append({"point": [round(v, 3) for v in h["point"]],
+                         "normal": [round(v, 4) for v in h["normal"]],
+                         "distance": round(h["distance"], 3),
+                         "node_id": node.id, "name": node.name,
+                         "entering": h["entering"]})
+        length = math.sqrt(sum(c * c for c in direction))
+        out = {"hit": hits[0] if hits else None, "hits": hits,
+               "ray": {"from": origin,
+                       "direction": [round(c / length, 4)
+                                     for c in direction]},
+               "probed": [n.name for n in nodes], "approximate": approx}
+        if not hits:
+            out["note"] = ("The ray misses every probed part. Aim it "
+                           "with 'to' at a point inside the part, or "
+                           "check get_node_bounds.")
+        elif approx:
+            out["note"] = self._APPROX_NOTE
+        return out
 
     def _t_measure(self, params) -> dict:
         pa, box_a, la = self._where(params.get("a"), "a")

@@ -228,6 +228,10 @@ immediately, replaced by the exact OpenSCAD render as parts finish.
 - The built-in preview APPROXIMATES booleans (it shows the first \
 operand, holes uncut). get_document_info says whether OpenSCAD was \
 found; without it, do not trust a difference() in the picture.
+- Details go ON a surface, not near it: probe_surface casts a ray at \
+the model and returns the hit point, its outward normal and the part, \
+so an eye, a knob or a boss sits on a lofted body at point + normal × \
+inset instead of a guessed coordinate.
 - CHECK, do not assume. After building anything meant to be printed, \
 run check_printability (watertight, overhangs, thin walls, footprint) \
 and fix what it names; after placing or mating parts run \

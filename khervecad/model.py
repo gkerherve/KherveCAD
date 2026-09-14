@@ -736,8 +736,13 @@ class CadNode:
             or module_name(self.name)
         if self.id not in (_HOISTED or ()):
             self.emit_module(lines, indent, spans)
+        # a name the identifier cannot carry ("Throat and belly",
+        # "Wheel" deduped to Wheel_2) rides the call as its label, which
+        # the importer reads back as the Object's name
+        shown = str(self.name or "").strip()
+        note = f"  // {shown}" if shown and shown != name else ""
         lines.append((pad + star + _group_prefix(self.params)
-                      + f"{name}();", self))
+                      + f"{name}();" + note, self))
 
     def emit_module(self, lines, indent: int = 0, spans: dict = None):
         """Just the Object's ``module X() { ... }`` definition, without

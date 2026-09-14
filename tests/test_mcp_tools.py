@@ -676,3 +676,69 @@ def test_check_code_is_a_dry_run(ex):
     assert skipped["warnings"]
     empty = call(ex, "check_code", code="// nothing here")
     assert empty["would_apply"] is False
+
+
+# ── probe_surface: a ray onto the model ────────────────────────────
+
+def test_probe_surface_finds_the_face_its_normal_and_the_part(ex):
+    ident = cube(ex, width=10.0, depth=10.0, height=10.0)
+    out = call(ex, "probe_surface", **{"from": [5, 5, 50],
+                                       "direction": [0, 0, -1]})
+    hit = out["hit"]
+    assert hit["point"] == pytest.approx([5, 5, 10])
+    assert hit["normal"] == pytest.approx([0, 0, 1])
+    assert hit["distance"] == pytest.approx(40)
+    assert hit["entering"] is True and hit["node_id"] == ident
+    assert [h["entering"] for h in out["hits"]] == [True, False]
+    assert out["approximate"] is False
+    # aim through a point instead of giving a direction, and keep one hit
+    aimed = call(ex, "probe_surface", **{"from": [5, 5, 50], "to": [5, 5, 0],
+                                         "max_hits": 1})
+    assert len(aimed["hits"]) == 1
+    assert aimed["ray"]["direction"] == pytest.approx([0, 0, -1])
+
+
+def test_probe_surface_limits_to_named_parts_and_reports_a_miss(ex):
+    low = cube(ex, width=10.0, depth=10.0, height=10.0)
+    high = cube(ex, z=30.0, width=10.0, depth=10.0, height=10.0)
+    out = call(ex, "probe_surface", **{"from": [5, 5, 100],
+                                       "direction": [0, 0, -1]})
+    assert out["hit"]["node_id"] == high
+    only_low = call(ex, "probe_surface", **{"from": [5, 5, 100],
+                                            "direction": [0, 0, -1],
+                                            "node_ids": [low]})
+    assert only_low["hit"]["node_id"] == low
+    miss = call(ex, "probe_surface", **{"from": [50, 50, 100],
+                                        "direction": [0, 0, -1]})
+    assert miss["hit"] is None and "note" in miss
+    assert "error" in ex.execute("probe_surface", {"from": [0, 0, 0]})
+    assert "error" in ex.execute("probe_surface",
+                                 {"from": [0, 0, 0], "direction": [0, 0, 0]})
+    assert "error" in ex.execute("probe_surface", {"from": [0, 0]})
+
+
+def test_probe_surface_is_read_only(ex):
+    from khervecad.mcp_bridge import _READ_ONLY_TOOLS
+    assert "probe_surface" in _READ_ONLY_TOOLS
+
+
+# ── the offscreen fit frames the model, not the platform ───────────
+
+def test_offscreen_fit_frames_the_model_not_the_platform(ex, window):
+    """On screen the fit takes the platform in (the look the user
+    wants); a picture an assistant asks for frames the model alone,
+    which used to sit small in the middle of a big disc."""
+    cube(ex, width=10.0, depth=10.0, height=10.0)
+    view = window.view3d
+    view.set_stage(True)
+    try:
+        view.set_view("Isometric")
+        view.fit()
+        on_screen = view.distance
+        shot = call(ex, "render_view", azimuth=view.yaw,
+                    elevation=view.pitch, fit=True, max_width=120,
+                    wait_for_exact=False)
+        assert shot["camera"]["distance"] < on_screen * 0.8
+        assert view.distance == on_screen        # the user's camera stays
+    finally:
+        view.set_stage(False)

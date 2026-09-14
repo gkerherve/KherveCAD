@@ -172,3 +172,33 @@ def test_mcp_tools_report(window):
     assert inter["pairs"][0]["status"] == "intersect"
     everything = ex.execute("check_interference", {})
     assert len(everything["pairs"]) == 1
+
+
+# ── probing a surface ──────────────────────────────────────────────
+
+def test_surface_hits_reports_point_normal_and_side():
+    box = _box(0, 0, 0, 10, 10, 10)
+    hits = analysis.surface_hits((5, 5, 50), (0, 0, -1), [("box", box)])
+    assert len(hits) == 2
+    top, bottom = hits
+    assert top["point"] == pytest.approx([5, 5, 10])
+    assert top["normal"] == pytest.approx([0, 0, 1])
+    assert top["distance"] == pytest.approx(40)
+    assert top["entering"] is True and top["key"] == "box"
+    assert bottom["point"] == pytest.approx([5, 5, 0])
+    assert bottom["entering"] is False
+    # the direction need not be unit length, and a limit keeps the nearest
+    only = analysis.surface_hits((5, 5, 50), (0, 0, -7), [("box", box)], 1)
+    assert [h["distance"] for h in only] == pytest.approx([40])
+
+
+def test_surface_hits_skips_parts_the_ray_misses():
+    near = _box(0, 0, 0, 10, 10, 10)
+    far = _box(100, 0, 0, 10, 10, 10)
+    hits = analysis.surface_hits((5, 5, 50), (0, 0, -1),
+                                 [("far", far), ("near", near)])
+    assert [h["key"] for h in hits] == ["near", "near"]
+    assert analysis.surface_hits((50, 50, 50), (0, 0, -1),
+                                 [("near", near)]) == []
+    assert analysis.surface_hits((5, 5, 50), (0, 0, 0),
+                                 [("near", near)]) == []

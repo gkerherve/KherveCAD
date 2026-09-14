@@ -221,6 +221,72 @@ def _ray_hit(orig, direction, tri, strict=False):
     return dist if dist > 1e-9 else None
 
 
+def surface_hits(origin, direction, parts, limit: int = 0) -> list:
+    """Every crossing of the ray from *origin* along *direction* through
+    the meshes in *parts* (``[(key, tris)]``), nearest first. Each hit
+    is a dict: ``point``, the outward unit ``normal`` of the face,
+    ``distance`` along the ray, the part's ``key`` and ``entering``
+    (the ray goes into the solid there — the normal faces it). This is
+    how a detail is put ON a curved surface: the hit point plus the
+    normal times an inset. A part whose bounding box the ray misses is
+    skipped without a triangle test; *limit* > 0 keeps the nearest
+    that many."""
+    d = _unit(direction)
+    if d is None:
+        return []
+    hits = []
+    for key, tris in parts:
+        if not tris or not _ray_meets_box(origin, d, tris):
+            continue
+        for tri in tris:
+            dist = _ray_hit(origin, d, tri)
+            if dist is None:
+                continue
+            normal, area = _normal_area(tri)
+            if area <= 0.0:
+                continue
+            hits.append({
+                "point": [origin[i] + d[i] * dist for i in range(3)],
+                "normal": list(normal), "distance": dist, "key": key,
+                "entering": _dot(normal, d) < 0.0})
+    hits.sort(key=lambda h: h["distance"])
+    # a ray down the edge two triangles share hits both: one crossing
+    merged = []
+    for h in hits:
+        last = merged[-1] if merged else None
+        if last is not None and last["key"] == h["key"] and \
+                last["entering"] == h["entering"] and \
+                abs(last["distance"] - h["distance"]) < 1e-6:
+            continue
+        merged.append(h)
+    return merged[:limit] if limit > 0 else merged
+
+
+def _unit(v):
+    try:
+        length = math.sqrt(_dot(v, v))
+    except (TypeError, IndexError):
+        return None
+    return None if length < 1e-12 else tuple(c / length for c in v)
+
+
+def _ray_meets_box(origin, d, tris) -> bool:
+    """Slab test of the ray against the triangles' bounding box."""
+    lo, hi = bounds(tris)
+    t0, t1 = 0.0, float("inf")
+    for i in range(3):
+        if abs(d[i]) < 1e-12:
+            if origin[i] < lo[i] - 1e-9 or origin[i] > hi[i] + 1e-9:
+                return False
+            continue
+        a = (lo[i] - origin[i]) / d[i]
+        b = (hi[i] - origin[i]) / d[i]
+        t0, t1 = max(t0, min(a, b)), min(t1, max(a, b))
+        if t0 > t1:
+            return False
+    return True
+
+
 # ---------------------------------------------------------- print check
 def print_check(tris, overhang_deg: float = DEFAULT_OVERHANG,
                 min_wall: float = DEFAULT_MIN_WALL,

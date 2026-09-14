@@ -6,7 +6,7 @@ Cursor, Zed, Continue, or anything else that speaks the Model Context
 Protocol — can build in an open document directly.
 
 The built-in chat replies with an OpenSCAD program you then apply. An
-MCP client gets the **whole application** instead: 40 tools over the
+MCP client gets the **whole application** instead: 41 tools over the
 object tree, the code, the part library, assemblies, the document —
 and a **picture of the 3D preview**.
 
@@ -150,6 +150,13 @@ rebuilds a blend from its children.
 Gold, Emissive and more — which the 3D view shades per object
 (Glass is see-through). OpenSCAD has no materials, so the choice
 is kept in the file and survives export and import.
+
+**`probe_surface`** casts a ray at the model and returns the surface
+it hits — the world point, the outward normal, the distance and the
+part — with every crossing along the ray listed nearest first. That
+is how a detail goes *on* a curved surface: probe down onto a lofted
+body where the eye should be, then place the sphere at the hit point
+plus the normal times its inset. No geometry to derive by hand.
 
 **`set_reference_image`** puts a photo or sketch on an axis plane
 (Top, Front, Side) at a width in millimetres — the 2D view shows it

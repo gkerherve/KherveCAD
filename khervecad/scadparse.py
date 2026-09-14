@@ -322,8 +322,18 @@ class Parser:
         # line -> start offset -> [(node, end offset)]
         heads = defaultdict(lambda: defaultdict(list))
         for offset, end, node in self._heads:
-            if node.type not in UNTAGGED_TYPES:
+            if node.type == "component" or node.type not in UNTAGGED_TYPES:
                 heads[line_of(offset)][offset].append((node, end))
+
+        def label_node(node, label):
+            # an Object is NAMED by the label on its placed call
+            # (`Throat_and_belly();  // Throat and belly`, which is how
+            # codegen carries a name its identifier cannot), where any
+            # other node is tagged ("Cube [Body]")
+            if node.type == "component":
+                node.name = label
+            else:
+                node.name = with_tag(node.name, label)
         comment_lines = set()
         for offset, body in self.comments:
             if not text[starts[line_of(offset)]:offset].strip():
@@ -343,7 +353,7 @@ class Parser:
                                        for _n, end in heads[line][o])]
                     pick = max(complete) if complete else min(before)
                     for node, _end in heads[line][pick]:
-                        node.name = with_tag(node.name, label)
+                        label_node(node, label)
                         labelled.add(id(node))
             elif line - 1 not in comment_lines:
                 standalone.append((line, label))
@@ -360,7 +370,7 @@ class Parser:
             pick = max(complete) if complete else min(below)
             for node, _end in below[pick]:
                 if id(node) not in labelled:
-                    node.name = with_tag(node.name, label)
+                    label_node(node, label)
 
     def _recover(self, start):
         """After a failed statement, advance to the next top-level ';' or
