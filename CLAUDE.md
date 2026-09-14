@@ -1340,6 +1340,80 @@ into a new module and import.
                        primitive, and the base a Sculpt shapes a face on.
                        Why: correct anatomy under the clothes, which
                        capsules and lofts never give.
+                       **Face** (2026-09-14): `khervecad/human/face/`
+                       holds 182 MakeHuman face targets (nose, mouth,
+                       eyes, chin, cheeks, forehead, head shape, neck,
+                       brows — re-indexed, gzipped); `sliders()` pairs
+                       them by suffix (decr/incr, in/out, down/up,
+                       backward/forward, concave/convex) into 102
+                       sliders, `eye-scale` moving both `l-`/`r-`
+                       targets, a shape (`head-oval`) 0..1 only. The
+                       node's `targets` rows `[[slider, weight]]` add
+                       them after the macro blend; `warp` rows
+                       `[x, y, z, dx, dy, dz]` (its own frame) are a
+                       Gaussian RBF field (`rbf_warp`, coefficients
+                       solved so each centre lands exactly; radius
+                       `warp_radius`). `landmarks.json` names 19 face
+                       landmarks by body vertex (from the rig's joints
+                       and the base geometry); `landmark_points()` gives
+                       their positions for any parameters. `skeleton.
+                       json.gz` (bones with head/tail, parents, skin
+                       weights re-indexed) is shipped for the rig.
+                       **Rig** (same day): `skeleton.json.gz` carries
+                       MakeHuman's default rig — 163 bones (parent,
+                       head/tail joint names), every joint's 8 helper
+                       vertices in the raw frame, `joint_offsets` (how
+                       each macro target moves those helpers, so joints
+                       follow a heavier or longer-limbed body the way
+                       MakeHuman moves them) and skin weights re-indexed
+                       to the body. `pose` rows `[[bone, rx, ry, rz]]`
+                       (degrees about the bone's head, in the body's
+                       axes, carried down the hierarchy —
+                       `bone_matrices`) drive linear blend skinning
+                       (`pose_points`) in the raw frame, BEFORE the
+                       standing/scaling/centring transform, which is
+                       taken from the rest pose so a raised arm moves
+                       nothing below it; warp comes after. MCP
+                       `set_pose` with `node_id` + `bones` poses a
+                       figure (`{}` lists the bones). Clothes built round
+                       the figure do not follow: pose first, dress after.
+  - `deform.py` `split_long_edges(region=)` refines only edges whose
+                       midpoint lies in a box: the sculpt's `region`
+                       rows (two corners) refine the head of a 1.6 m
+                       figure at 4 mm without the 575k triangles a
+                       whole-body refinement made.
+  - `facefit.py`     — **fitting a face to photos** (Qt-free): the face
+                       is linear in the slider weights, so `fit()` takes
+                       one difference per slider as the exact Jacobian
+                       and `least_squares()` solves ridge-regularised
+                       normal equations with the weights pinned at ±1
+                       (a few rounds); `residual_warp()` turns what the
+                       sliders could not reach into warp rows.
+                       `DEFAULT_SLIDERS` are the proportions a photo pins
+                       down. MCP `face_landmarks` (local, world and the
+                       PIXEL position on every reference image, so an
+                       assistant compares with the photo it can see) and
+                       `fit_face` (landmark pixels on a reference image
+                       -> plane mm via `paint.PLANES`; the node's world
+                       placement from `mesh.ancestor_matrix`; sets
+                       `targets` and `warp`, reports rms before / after
+                       sliders / after warp). One photo pins its plane's
+                       two axes; a front and a side pin three.
+  - `hair.py`        — **hair cap** (Qt-free; the `hair_cap` wrapper,
+                       Character family, baked in `_BAKED`): the faces
+                       of the children inside a `within` box and not
+                       looking within `clear_angle` of `clear` (the
+                       face, `-y`) are lifted outward by `thickness`
+                       plus `noise` × a smooth seeded bump field of
+                       `curl` size (`bumps`: four sine waves in seeded
+                       directions), the originals reversed as the
+                       inside and the rim bridged — a shell turned
+                       outward, one closed solid that hugs the head.
+                       Vertices are canonicalised through `_key`
+                       (neighbouring tessellation faces differ at
+                       1e-16) so the cap is closed. Why: spheres are
+                       not hair; a bumpy skin at curl size reads as a
+                       set.
   - `paint.py`       — **Paint from photo** (Qt-free): the `paint`
                        wrapper (organic.py registers it; Character
                        family) gives every face of its children the
@@ -1353,7 +1427,15 @@ into a new module and import.
                        `GRAZE` cutoff so a face seen edge-on keeps its
                        colour rather than smeared texels) — the far side
                        of a head must not wear the photo's background;
-                       "both" projects straight through. `read_png` is a pure-Python 8-bit PNG
+                       "both" projects straight through. A **second
+                       picture** (`image2`, `plane2`, `x2`/`y2`/`width2`/
+                       `height2` — a side photo beside the front one) is
+                       blended per face by how squarely the face looks
+                       at each (`paint_many`: weight = facing minus the
+                       cutoff), so a cheek turns from the front photo to
+                       the side photo without a seam. Both paths save
+                       relative (`meshimport.PATH_PARAMS` now lists
+                       several per type). `read_png` is a pure-Python 8-bit PNG
                        decoder (filters 0-4, RGB/RGBA/grey/palette),
                        QImage the fallback for JPEG; `Picture.at(s, t)`
                        samples t-up; `load` caches by mtime. Compiles to
@@ -1532,7 +1614,7 @@ into a new module and import.
                        check orthographically. The MCP `_INSTRUCTIONS`
                        carry the same rule ("Modelling a real object")
                        to every connected client.
-  - `mcp_schema.py`  — the **MCP tool table**: 44 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 46 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -1692,7 +1774,7 @@ into a new module and import.
                        caps a pattern at `MAX_COPIES` (1000) and needs
                        every count ≥ 1. Examples ▸ Mechanical ▸ Bolt
                        circle & stair (pattern).
-- `docs/MCP.md` — how to connect an assistant, what the 44 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 46 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -1952,7 +2034,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **44 tools**: the object tree, OpenSCAD in
+client gets the whole app as **46 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

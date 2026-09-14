@@ -110,7 +110,8 @@ NODE_TYPES = {
     "human": dict(
         label="Human figure", category=SHAPE_3D, icon="mdi.human",
         params=dict(gender=0.0, age=0.0, weight=0.0, height=0.0,
-                    stature=1700.0),
+                    stature=1700.0, targets=[], warp=[], warp_radius=45.0,
+                    pose=[]),
         schema=[("gender", "Gender (0 female .. 1 male)", "float",
                  0.0, 1.0),
                 ("age", "Age (0 young .. 1 old)", "float", 0.0, 1.0),
@@ -118,11 +119,31 @@ NODE_TYPES = {
                  -1.0, 1.0),
                 ("height", "Proportions (-1 stocky .. 1 long-limbed)",
                  "float", -1.0, 1.0),
-                ("stature", "Height (mm)", "float", 1.0, 1e6)]),
+                ("stature", "Height (mm)", "float", 1.0, 1e6),
+                ("targets", "Face sliders (name, -1 .. 1)", "rows",
+                 ["Slider", "Weight"], None),
+                ("warp", "Warp (point, move — mm, own frame)", "rows",
+                 ["X", "Y", "Z", "dX", "dY", "dZ"], None),
+                ("warp_radius", "Warp radius (mm)", "float", 1.0, 1e4),
+                ("pose", "Pose (bone, rx, ry, rz °)", "rows",
+                 ["Bone", "rX", "rY", "rZ"], None)]),
+    "hair_cap": dict(
+        label="Hair cap", category=OPERATION, icon="mdi.face-woman-outline",
+        params=dict(thickness=12.0, noise=6.0, curl=25.0, seed=1,
+                    within=[], clear="-y", clear_angle=60.0),
+        schema=[("thickness", "Thickness (mm)", "float", 0.1, 1e4),
+                ("noise", "Curl height (mm)", "float", 0.0, 1e4),
+                ("curl", "Curl size (mm)", "float", 0.5, 1e4),
+                ("seed", "Seed", "int", 0, 100000),
+                ("within", "Only faces inside (two corners, mm)", "rows",
+                 ["X", "Y", "Z"], None),
+                ("clear", "Keep clear the faces looking", "choice",
+                 ["none", "-y", "+y", "-x", "+x", "+z", "-z"], None),
+                ("clear_angle", "... within (°)", "float", 1.0, 179.0)]),
     "sculpt": dict(
         label="Sculpt (brush strokes)", category=OPERATION,
         icon="mdi.brush",
-        params=dict(strokes=[], detail=0.0, mirror="none"),
+        params=dict(strokes=[], detail=0.0, mirror="none", region=[]),
         schema=[("strokes", "Strokes (kind 0 grab 1 inflate 2 smooth "
                             "3 flatten 4 pinch; centre; radius; "
                             "strength; direction)", "rows",
@@ -131,7 +152,9 @@ NODE_TYPES = {
                 ("detail", "Refine to max edge (mm, 0 = as is)", "float",
                  0.0, 1e4),
                 ("mirror", "Mirror strokes across", "choice",
-                 ["none", "x", "y", "z"], None)]),
+                 ["none", "x", "y", "z"], None),
+                ("region", "Refine only inside (two corners, mm)", "rows",
+                 ["X", "Y", "Z"], None)]),
     "shell": dict(
         label="Shell (hollow)", category=OPERATION,
         icon="mdi.cup-outline",
@@ -154,7 +177,7 @@ TYPES = frozenset(NODE_TYPES)
 LEAVES = frozenset({"polyhedron", "loft", "human"})
 WRAPPERS = frozenset({"sweep", "section_loft", "blend", "bend", "twist",
                       "taper", "lattice", "subdivide", "fillet", "shell",
-                      "sculpt"})
+                      "sculpt", "hair_cap"})
 
 #: wrappers whose surface is computed here and baked into the program,
 #: with their helper module's parameters (besides points and faces)
@@ -170,12 +193,16 @@ _BAKED = {
     "subdivide": [("levels", 1)],
     "shell": [("thickness", 2), ("open", "none"), ("open_angle", 30),
               ("detail", 2)],
-    "sculpt": [("strokes", []), ("detail", 0), ("mirror", "none")],
+    "sculpt": [("strokes", []), ("detail", 0), ("mirror", "none"),
+               ("region", [])],
+    "hair_cap": [("thickness", 12), ("noise", 6), ("curl", 25), ("seed", 1),
+                 ("within", []), ("clear", "-y"), ("clear_angle", 60)],
     "human": [("gender", 0), ("age", 0), ("weight", 0), ("height", 0),
-              ("stature", 1700)],
+              ("stature", 1700), ("targets", []), ("warp", []),
+              ("warp_radius", 45), ("pose", [])],
 }
 #: parameters written as quoted OpenSCAD strings
-_CHOICES = {"axis", "toward", "open", "mirror"}
+_CHOICES = {"axis", "toward", "open", "mirror", "clear"}
 #: what a deformer cannot take from the preview mesh: booleans and the
 #: rest are only approximated there, so baking them would bake a wrong
 #: shape into the program
@@ -396,15 +423,39 @@ def _compute(node, env) -> list:
         from . import human
         return human.build(num("gender", 0.0), num("age", 0.0),
                            num("weight", 0.0), num("height", 0.0),
-                           num("stature", human.DEFAULT_STATURE))
+                           num("stature", human.DEFAULT_STATURE),
+                           targets=p.get("targets") or [],
+                           warp=[[mesh.rv(v, env) for v in row]
+                                 for row in p.get("warp") or []
+                                 if isinstance(row, list) and len(row) == 6],
+                           warp_radius=num("warp_radius",
+                                           human.DEFAULT_WARP_RADIUS),
+                           pose=[[row[0]] + [mesh.rv(v, env) for v in row[1:4]]
+                                 for row in p.get("pose") or []
+                                 if isinstance(row, list) and len(row) == 4])
     src = [tri for tri, _c, _s in
            mesh._children_mesh(node, env, None, frozenset(), False)]
     if t == "subdivide":
         return deform.loop_subdivide(src, int(num("levels", 1.0)))
+    if t == "hair_cap":
+        from . import hair
+        within = [[mesh.rv(v, env) for v in row]
+                  for row in p.get("within") or []
+                  if isinstance(row, list) and len(row) == 3]
+        return hair.cap(src, num("thickness", 12.0), num("noise", 6.0),
+                        num("curl", 25.0), int(num("seed", 1.0)),
+                        within if len(within) == 2 else None,
+                        str(p.get("clear", "-y")), num("clear_angle", 60.0))
     # a sculpt keeps the mesh it is given unless asked to refine it (a
     # dense blend or a scan needs nothing; a cube needs vertices to push)
+    region = None
+    if t == "sculpt":
+        rows = [[mesh.rv(v, env) for v in row]
+                for row in p.get("region") or []
+                if isinstance(row, list) and len(row) == 3]
+        region = rows if len(rows) == 2 else None
     src = deform.split_long_edges(src, num("detail", 0.0 if t == "sculpt"
-                                           else 2.0))
+                                           else 2.0), region=region)
     if t == "sculpt":
         from . import sculpt
         rows = [[mesh.rv(v, env) for v in row]
@@ -482,6 +533,13 @@ def statement(node, fmt, fn) -> str:
                 return f'"{value}"'
             if isinstance(value, bool):
                 return "true" if value else "false"
+            if key in ("targets", "pose"):      # [["name", numbers...], ...]
+                from .model import scad_str
+                return "[" + ", ".join(
+                    "[" + ", ".join([scad_str(str(r[0]))]
+                                    + [fmt(v) for v in r[1:]]) + "]"
+                    for r in value if isinstance(r, list) and len(r) >= 2
+                ) + "]"
             if isinstance(value, list):
                 return _rows(value, fmt)
             return fmt(value)
@@ -558,10 +616,22 @@ def _b_baked(kind):
             elif key == "mirror":
                 params[key] = value if value in ("none", "x", "y", "z") \
                     else defaults[key]
+            elif key == "clear":
+                from .hair import CLEAR_CHOICES
+                params[key] = value if value in CLEAR_CHOICES \
+                    else defaults[key]
             elif key in _CHOICES:
                 params[key] = value if value in ("x", "y", "z") \
                     else defaults[key]
-            elif key in ("offsets", "path", "heights", "strokes"):
+            elif key in ("targets", "pose"):     # [["name", numbers], ...]
+                width = 2 if key == "targets" else 4
+                params[key] = [[str(row[0]).strip().strip('"')]
+                               + [_num(v) for v in row[1:width]]
+                               for row in value
+                               if isinstance(row, list) and len(row) == width] \
+                    if isinstance(value, list) else []
+            elif key in ("offsets", "path", "heights", "strokes", "warp",
+                         "within", "region"):
                 params[key] = ([[_num(v) for v in row] for row in value
                                 if isinstance(row, list)]
                                if isinstance(value, list)
@@ -706,12 +776,39 @@ def _check_baked(node, env):
                     "fastest, then y, then z")
     if t == "sculpt":
         return _check_sculpt(p, env)
+    if t == "hair_cap":
+        from . import hair, mesh
+        if str(p.get("clear", "-y")) not in hair.CLEAR_CHOICES:
+            return "hair cap: clear must be none, -y, +y, -x, +x, +z or -z"
+        rows = p.get("within") or []
+        if rows and (len(rows) != 2 or any(
+                not isinstance(r, list) or len(r) != 3 for r in rows)):
+            return "hair cap: 'within' is two corners [x, y, z], or empty"
+        if not any(c.visible for c in node.children):
+            return "a hair cap grows on a head — put one inside it"
     if t == "human":
         from . import human, mesh
         if not human.available():
             return "the human body data (khervecad/human) is missing"
         if mesh.rv(p.get("stature", 1700.0), env, 1700.0) <= 0:
             return "human: the height must be more than 0 mm"
+        table = human.sliders()
+        for number, row in enumerate(p.get("targets") or []):
+            if not isinstance(row, list) or len(row) != 2:
+                return f"face slider {number} needs a name and a weight"
+            if str(row[0]).strip() not in table:
+                return (f"face slider {number}: no slider named "
+                        f"{row[0]!r} (list_node_types names them)")
+        for number, row in enumerate(p.get("warp") or []):
+            if not isinstance(row, list) or len(row) != 6:
+                return f"warp row {number} needs 6 values: x, y, z, dx, dy, dz"
+        bones = human.skeleton()["bones"]
+        for number, row in enumerate(p.get("pose") or []):
+            if not isinstance(row, list) or len(row) != 4:
+                return f"pose row {number} needs a bone and rx, ry, rz"
+            if str(row[0]).strip() not in bones:
+                return (f"pose row {number}: no bone named {row[0]!r} "
+                        "(set_pose lists them)")
     return None
 
 
@@ -737,6 +834,10 @@ def _check_sculpt(p, env):
                     f"({', '.join(sculpt.KINDS)})")
         if mesh.rv(row[4], env, 0.0) <= 0:
             return f"stroke {number}: the radius must be more than 0"
+    region = p.get("region") or []
+    if region and (len(region) != 2 or any(
+            not isinstance(r, list) or len(r) != 3 for r in region)):
+        return "sculpt: 'region' is two corners [x, y, z], or empty"
     return None
 
 

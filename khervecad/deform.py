@@ -59,16 +59,29 @@ def _map(tris, f):
 
 # ---------------------------------------------------------- refinement
 
-def split_long_edges(tris, max_len: float, passes: int = 12) -> list:
+def split_long_edges(tris, max_len: float, passes: int = 12,
+                     region=None) -> list:
     """Split every edge longer than *max_len* at its midpoint until none
     is left (or SPLIT_LIMIT is reached). The decision belongs to the
-    edge, so both of its triangles make it: the surface stays closed."""
+    edge, so both of its triangles make it: the surface stays closed.
+    With *region* (two corners) only edges whose midpoint lies inside
+    the box split — the head of a figure refined, the body left as it
+    is."""
     tris = [tuple(t) for t in tris]
     if max_len <= 0:
         return tris
     m2 = max_len * max_len
+    box = None
+    if region and len(region) == 2:
+        box = ([min(region[0][i], region[1][i]) for i in range(3)],
+               [max(region[0][i], region[1][i]) for i in range(3)])
 
     def long(a, b):
+        if box is not None:
+            for i in range(3):
+                mid = (a[i] + b[i]) * 0.5
+                if mid < box[0][i] or mid > box[1][i]:
+                    return False
         return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2
                 + (a[2] - b[2]) ** 2) > m2
     for _ in range(passes):

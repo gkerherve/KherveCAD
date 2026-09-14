@@ -96,6 +96,54 @@ def mat_identity():
     return [[1.0 if i == j else 0.0 for j in range(4)] for i in range(4)]
 
 
+def ancestor_matrix(node, env=None, stop=None):
+    """The 4x4 transform mapping *node*'s own coordinates to the frame
+    of *stop* (the document root when None): the product of its
+    ancestors' translate / rotate / scale / mirror and Group / Object /
+    instance placements, exactly as the tessellator applies them.
+    Expressions resolve with *env*."""
+    env = env or {}
+    chain = []
+    probe = node.parent
+    while probe is not None and probe is not stop:
+        chain.append(probe)
+        probe = probe.parent
+
+    def num(n, key, default=0.0):
+        return rv(n.params.get(key, default), env, default)
+    m = mat_identity()
+    for anc in reversed(chain):
+        t = anc.type
+        if t == "translate":
+            m = mat_mul(m, mat_translate(num(anc, "x"), num(anc, "y"),
+                                         num(anc, "z")))
+        elif t == "rotate":
+            m = mat_mul(m, mat_rotate(num(anc, "x"), num(anc, "y"),
+                                      num(anc, "z")))
+        elif t == "scale":
+            m = mat_mul(m, mat_scale(num(anc, "x", 1.0), num(anc, "y", 1.0),
+                                     num(anc, "z", 1.0)))
+        elif t == "mirror":
+            m = mat_mul(m, mat_mirror(num(anc, "x", 1.0), num(anc, "y"),
+                                      num(anc, "z")))
+        elif t in ("union", "component", "reference"):
+            m = mat_mul(m, mat_mul(
+                mat_translate(num(anc, "x"), num(anc, "y"), num(anc, "z")),
+                mat_rotate(num(anc, "rx"), num(anc, "ry"), num(anc, "rz"))))
+    return m
+
+
+def mat_apply(m, p):
+    """*p* (x, y, z) through the 4x4 *m*."""
+    return [m[i][0] * p[0] + m[i][1] * p[1] + m[i][2] * p[2] + m[i][3]
+            for i in range(3)]
+
+
+def mat_apply_dir(m, d):
+    return [m[i][0] * d[0] + m[i][1] * d[1] + m[i][2] * d[2]
+            for i in range(3)]
+
+
 def mat_mul(a, b):
     return [[sum(a[i][k] * b[k][j] for k in range(4)) for j in range(4)]
             for i in range(4)]

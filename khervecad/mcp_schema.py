@@ -585,6 +585,53 @@ TOOLS = [
         }, ["image_path"]),
     },
     {
+        "name": "face_landmarks",
+        "description": (
+            "Where a human figure's face landmarks are: eye_l/r, brow_l/r, "
+            "cheek_l/r, mouth_l/r, jaw_l/r, ear_l/r, nose_tip, "
+            "nose_bridge, forehead, lip_top, lip_bottom, chin, head_top — "
+            "in the node's own frame, in world mm, and as PIXEL positions "
+            "on each reference image (so they can be compared with where "
+            "the photo has them). Read this, look at the photo, then "
+            "fit_face."
+        ),
+        "input_schema": _obj({"node_id": _ID}, ["node_id"]),
+    },
+    {
+        "name": "fit_face",
+        "description": (
+            "Make a human figure's face match photographs: give where "
+            "its landmarks are in a reference image (pixel positions, "
+            "the names from face_landmarks) and the face sliders are "
+            "solved so the model's landmarks project onto them, then a "
+            "smooth warp carries each landmark the rest of the way. One "
+            "photo pins the two axes of its plane; a front and a side "
+            "photo pin all three. The figure may be turned (the fit "
+            "reads its placement). Sets the node's `targets` and `warp` "
+            "— this is what turns the generic head into a likeness; "
+            "sculpt afterwards for what landmarks cannot say."
+        ),
+        "input_schema": _obj({
+            "node_id": _ID,
+            "landmarks": {
+                "type": "array",
+                "description": "[{name, image, px, py}] — landmark name, "
+                               "reference image index (default 0), pixel "
+                               "x/y in that picture (y down). Or {name, "
+                               "plane, u, v} in mm on a plane.",
+                "items": {"type": "object"}},
+            "sliders": {"type": "array", "items": {"type": "string"},
+                        "description": "Sliders to adjust (default: the "
+                                       "proportions a photo pins down)."},
+            "warp": {"type": "boolean",
+                     "description": "Carry the residual with a warp "
+                                    "(default true)."},
+            "stiffness": {"type": "number",
+                          "description": "Regularisation, 0.01 loose .. 1 "
+                                         "stiff (default 0.05)."},
+        }, ["node_id", "landmarks"]),
+    },
+    {
         "name": "section",
         "description": (
             "Cut the model with a plane and get the cross-section: a "
@@ -683,7 +730,9 @@ TOOLS = [
         "name": "set_pose",
         "description": (
             "Pose a character in one call: set the bend angles of any "
-            "number of `joint` nodes, by name or id. A joint rotates "
+            "number of `joint` nodes, by name or id — or, with node_id "
+            "and `bones`, pose a human figure's own rig (MakeHuman's "
+            "163 bones with skin weights). A joint rotates "
             "everything inside it about its pivot, and joints nest — a "
             "hand in a forearm in an upper arm — so the tree IS the "
             "armature and a pose is a handful of angles. Angles past a "
@@ -698,7 +747,22 @@ TOOLS = [
                                "\"ry\": deg, \"rz\": deg}, ...}. An "
                                "axis left out keeps its angle.",
             },
-        }, ["joints"]),
+            "node_id": dict(_ID, description=(
+                "A human figure (or the Object holding it): pose its "
+                "rig with `bones` instead of joint nodes.")),
+            "bones": {
+                "type": "object",
+                "description": "For a human figure: {\"<bone>\": {\"rx\": "
+                               "deg, \"ry\": deg, \"rz\": deg}} — "
+                               "MakeHuman's rig (upperarm01/02.L/R, "
+                               "lowerarm01/02, wrist, upperleg01/02, "
+                               "lowerleg01/02, foot, spine01-05, "
+                               "neck01-03, head, jaw, clavicle, ...); "
+                               "pass {} to list the bones. Angles turn "
+                               "the bone about its head in the body's "
+                               "axes and carry everything below it.",
+            },
+        }),
     },
     {
         "name": "wrap_nodes",

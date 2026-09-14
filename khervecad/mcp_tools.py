@@ -981,10 +981,13 @@ class McpToolExecutor:
 
     def _t_set_pose(self, params) -> dict:
         from . import expr
+        if params.get("bones") is not None or params.get("node_id") is not None:
+            return self._pose_human(params)
         wanted = params.get("joints")
         if not isinstance(wanted, dict):
             raise ToolError("'joints' must be an object: "
-                            "{\"<joint name or id>\": {\"rx\": deg}}.")
+                            "{\"<joint name or id>\": {\"rx\": deg}}, or "
+                            "'bones' with a human figure's node_id.")
         model, env = self._model, self._env()
         joints = [n for n in model.root.walk() if n.type == "joint"]
         index = {}
@@ -1041,6 +1044,53 @@ class McpToolExecutor:
             result["note"] = ("Some angles were past a joint's limits "
                               "and were clamped to them.")
         return result
+
+    def _pose_human(self, params) -> dict:
+        """set_pose on a human figure: bones of MakeHuman's rig, angles
+        in degrees about each bone's head in the body's axes, kept as
+        the node's `pose` rows (an axis left out keeps its angle)."""
+        from . import human
+        if params.get("node_id") is None:
+            raise ToolError("Posing a human figure needs its node_id.")
+        node = self._human_node(self._node(params["node_id"]))
+        bones = human.skeleton()["bones"]
+        wanted = params.get("bones")
+        if wanted is None:
+            wanted = {}
+        if not isinstance(wanted, dict):
+            raise ToolError("'bones' is {\"<bone>\": {\"rx\": deg, "
+                            "\"ry\": deg, \"rz\": deg}}.")
+        rows = {str(r[0]): [float(v) for v in r[1:4]]
+                for r in (node.params.get("pose") or [])
+                if isinstance(r, list) and len(r) == 4}
+        for name, angles in wanted.items():
+            if name not in bones:
+                close = [b for b in bones if str(name).lower() in b.lower()][:8]
+                raise ToolError(f"No bone named {name!r}."
+                                + (f" Did you mean: {', '.join(close)}?"
+                                   if close else ""))
+            if not isinstance(angles, dict) or set(angles) - {"rx", "ry", "rz"}:
+                raise ToolError(f"The pose for {name} is an object of "
+                                "rx / ry / rz degrees.")
+            current = rows.get(name, [0.0, 0.0, 0.0])
+            for axis, value in angles.items():
+                try:
+                    current["rx ry rz".split().index(axis)] = float(value)
+                except (TypeError, ValueError):
+                    raise ToolError(f"{name}.{axis} must be a number.")
+            rows[name] = current
+        pose = [[n] + a for n, a in rows.items() if any(a)]
+        if wanted:
+            self._model.set_param(node, "pose", pose)
+        return {"node": node.id, "pose": pose,
+                "bones": sorted(bones),
+                "note": ("Angles turn the bone about its head in the "
+                         "body's own axes (X across, Y front-back, Z "
+                         "up) and carry everything below it: "
+                         "upperarm02.L rz lifts the left arm out, "
+                         "lowerarm01.L bends the elbow, head rz turns "
+                         "the head. Clothes built round the figure "
+                         "do not follow — pose first, dress after.")}
 
     def _t_wrap_nodes(self, params) -> dict:
         op = str(params.get("operation", ""))
@@ -1863,6 +1913,181 @@ class McpToolExecutor:
                         "same photo, then sculpt_stroke where "
                         "render_view overlay_reference disagrees.")}
         return out
+
+    # ── faces: landmarks and fitting ────────────────────────────
+
+    def _human_node(self, node):
+        if node.type == "human":
+            return node
+        for n in node.walk():
+            if n.type == "human":
+                return n
+        raise ToolError(f"{node.name} holds no human figure.")
+
+    def _human_kwargs(self, node):
+        from . import human
+        p, env = node.params, self._env()
+        return dict(gender=mesh.rv(p.get("gender", 0.0), env, 0.0),
+                    age=mesh.rv(p.get("age", 0.0), env, 0.0),
+                    weight=mesh.rv(p.get("weight", 0.0), env, 0.0),
+                    height=mesh.rv(p.get("height", 0.0), env, 0.0),
+                    stature=mesh.rv(p.get("stature", 1700.0), env, 1700.0),
+                    targets=[list(r) for r in (p.get("targets") or [])],
+                    warp=[[mesh.rv(v, env) for v in r]
+                          for r in (p.get("warp") or [])
+                          if isinstance(r, list) and len(r) == 6],
+                    warp_radius=mesh.rv(p.get("warp_radius", 45.0), env,
+                                        human.DEFAULT_WARP_RADIUS))
+
+    def _reference_pixels(self, world):
+        """For each reference image, the pixel where *world* projects."""
+        from . import paint
+        out = []
+        for i, ref in enumerate(self._model.reference_images):
+            u, v, _n = paint.PLANES.get(ref.get("plane"),
+                                       paint.PLANES[paint.DEFAULT_PLANE])
+            picture = paint.load(str(ref.get("path", "")))
+            if picture is None:
+                out.append({"image": i, "px": None, "py": None})
+                continue
+            w, h = float(ref.get("width", 100.0)), float(ref.get("height", 100.0))
+            px = (world[u] - float(ref.get("x", 0.0))) / w * picture.width
+            py = (1.0 - (world[v] - float(ref.get("y", 0.0))) / h) * picture.height
+            out.append({"image": i, "px": round(px, 1), "py": round(py, 1)})
+        return out
+
+    def _t_face_landmarks(self, params) -> dict:
+        from . import human
+        node = self._human_node(self._node(params.get("node_id")))
+        kw = self._human_kwargs(node)
+        m = mesh.ancestor_matrix(node, self._env())
+        out = []
+        for name, local in human.landmark_points(**kw).items():
+            world = mesh.mat_apply(m, local)
+            out.append({"name": name, "local": [round(v, 2) for v in local],
+                        "world": [round(v, 2) for v in world],
+                        "images": self._reference_pixels(world)})
+        return {"node": node.id, "landmarks": out,
+                "sliders": sorted(human.sliders()),
+                "targets": kw["targets"], "warp_rows": len(kw["warp"]),
+                "references": len(self._model.reference_images)}
+
+    def _observations(self, rows):
+        """[(name, plane, u_mm, v_mm)] from the tool's landmark rows."""
+        from . import human, paint
+        names = human.landmarks()
+        refs = self._model.reference_images
+        obs = []
+        for row in rows or []:
+            if not isinstance(row, dict) or not row.get("name"):
+                raise ToolError("Each landmark is {name, image, px, py} "
+                                "or {name, plane, u, v}.")
+            name = str(row["name"])
+            if name not in names:
+                raise ToolError(f"Unknown landmark {name!r}; "
+                                f"face_landmarks lists them.")
+            if row.get("plane") is not None:
+                plane = str(row["plane"])
+                if plane not in paint.PLANES:
+                    raise ToolError("'plane' is Top (XY), Front (XZ) or "
+                                    "Side (YZ).")
+                u, v = self._number(row, "u"), self._number(row, "v")
+                if u is None or v is None:
+                    raise ToolError(f"{name}: give 'u' and 'v' in mm.")
+                obs.append((name, plane, u, v))
+                continue
+            index = int(row.get("image", 0) or 0)
+            if not 0 <= index < len(refs):
+                raise ToolError(f"No reference image {index}; "
+                                f"set_reference_image first.")
+            ref = refs[index]
+            picture = paint.load(str(ref.get("path", "")))
+            if picture is None:
+                raise ToolError(f"Reference image {index} cannot be read.")
+            px, py = self._number(row, "px"), self._number(row, "py")
+            if px is None or py is None:
+                raise ToolError(f"{name}: give 'px' and 'py'.")
+            u = float(ref.get("x", 0.0)) + px / picture.width * float(
+                ref.get("width", 100.0))
+            v = float(ref.get("y", 0.0)) + (1.0 - py / picture.height) * float(
+                ref.get("height", 100.0))
+            obs.append((name, str(ref.get("plane", paint.DEFAULT_PLANE)),
+                        u, v))
+        if not obs:
+            raise ToolError("Give at least one landmark.")
+        return obs
+
+    def _t_fit_face(self, params) -> dict:
+        from . import facefit, human, paint
+        node = self._human_node(self._node(params.get("node_id")))
+        obs = self._observations(params.get("landmarks"))
+        table = human.sliders()
+        sliders = params.get("sliders") or list(facefit.DEFAULT_SLIDERS)
+        bad = [s for s in sliders if s not in table]
+        if bad:
+            raise ToolError(f"No face slider named {bad[0]!r}.")
+        lam = self._number(params, "stiffness")
+        lam = 0.05 if lam is None else max(lam, 1e-4)
+        kw = self._human_kwargs(node)
+        base_targets = {str(r[0]): float(r[1]) for r in kw["targets"]
+                        if isinstance(r, list) and len(r) == 2}
+        m = mesh.ancestor_matrix(node, self._env())
+        axes = {name: paint.PLANES[plane][:2] for name, plane, _u, _v in obs}
+
+        def merged(weights):
+            t = dict(base_targets)
+            for k, v in weights.items():
+                t[k] = max(-1.0, min(1.0, t.get(k, 0.0) + v))
+            return [[k, v] for k, v in t.items() if v]
+
+        def project(weights, warp=None, rows=None):
+            lm = human.landmark_points(**dict(
+                kw, targets=merged(weights) if rows is None else rows,
+                warp=warp))
+            out = []
+            for name, plane, u, v in obs:
+                world = mesh.mat_apply(m, lm[name])
+                a, b = paint.PLANES[plane][:2]
+                out.extend((world[a] - u, world[b] - v))
+            return out
+        weights, before, after = facefit.fit(lambda w: project(w, None),
+                                             sliders, lam)
+        targets = merged(weights)
+        warp_rows = []
+        if params.get("warp", True):
+            lm = human.landmark_points(**dict(kw, targets=targets, warp=None))
+            # the move each landmark still needs, in world, then local
+            need = {}
+            for name, plane, u, v in obs:
+                world = mesh.mat_apply(m, lm[name])
+                a, b = paint.PLANES[plane][:2]
+                d = need.setdefault(name, [0.0, 0.0, 0.0])
+                d[a], d[b] = u - world[a], v - world[b]
+            inv = [[m[c][r] for c in range(3)] for r in range(3)]   # R^T
+            errors = [(lm[name], mesh.mat_apply_dir(
+                [row + [0.0] for row in inv], d)) for name, d in need.items()]
+            warp_rows = facefit.residual_warp(errors)
+        self._model.set_param(node, "targets", targets)
+        self._model.set_param(node, "warp", warp_rows)
+        final = project({}, warp_rows, targets) if warp_rows else None
+        kw2 = self._human_kwargs(node)
+        lm = human.landmark_points(**kw2)
+        per = []
+        for name, plane, u, v in obs:
+            world = mesh.mat_apply(m, lm[name])
+            a, b = paint.PLANES[plane][:2]
+            per.append({"name": name, "error_mm": round(
+                ((world[a] - u) ** 2 + (world[b] - v) ** 2) ** 0.5, 2)})
+        return {"node": node.id, "sliders": weights, "targets": targets,
+                "warp_rows": len(warp_rows),
+                "rms_mm": {"before": round(before, 2),
+                           "sliders": round(after, 2),
+                           "warp": round(facefit._rms(final), 2)
+                           if final is not None else round(after, 2)},
+                "landmarks": per,
+                "note": ("Sliders shape the whole face; the warp pins the "
+                         "landmarks. render_view with overlay_reference "
+                         "to compare, sculpt_stroke for the rest.")}
 
     def _t_sculpt_stroke(self, params) -> dict:
         from . import sculpt, sculpt_ui

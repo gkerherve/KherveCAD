@@ -164,3 +164,65 @@ def test_paint_is_a_character_tool_with_a_tip(app):
     from khervecad import toolbars, tooltips
     assert "paint" in dict(toolbars.OPERATION_GROUPS)["character"]
     assert "Paint" in tooltips.TIPS["paint"][0]
+
+
+def test_two_pictures_blend_by_facing(app, halves, tmp_path):
+    """A front photo and a side photo: a face square to the front takes
+    the front picture, one square to the side takes the side picture,
+    and between them the colours mix instead of meeting at a seam."""
+    from PyQt5.QtGui import QColor, QImage
+    from khervecad.model import CadNode
+    green = QImage(20, 20, QImage.Format_RGB888)
+    green.fill(QColor("#00ff00"))
+    side_path = tmp_path / "side.png"
+    green.save(str(side_path))
+    root = CadNode("root", "root")
+    # a cylinder standing on z: its wall faces every direction
+    root.add(CadNode("cylinder", "c", dict(radius_bottom=10.0, radius_top=10.0,
+                                           height=20.0, segments=48)))
+    items = [(t, None, False) for t in mesh.tessellate(root)]
+    front = paint.load(halves)
+    side = paint.load(str(side_path))
+    out = paint.paint_many(items, [(front, "Front (XZ)", -10.0, 0.0, 20.0, 20.0),
+                                   (side, "Side (YZ)", -10.0, 0.0, 20.0, 20.0)])
+    def colour_at(fy, fx):
+        for tri, c, _s in out:
+            if paint._facing(tri, 1) < fy and paint._facing(tri, 0) > fx:
+                return c
+    facing_front = colour_at(-0.98, -2)        # looks along -Y: the front photo
+    assert facing_front[0] in ("#ff0000", "#0000ff")
+    facing_side = colour_at(2, 0.98)           # looks along +X: the side photo
+    assert facing_side[0] == "#00ff00"
+    between = [c for tri, c, _s in out
+               if c and -0.8 < paint._facing(tri, 1) < -0.6
+               and 0.6 < paint._facing(tri, 0) < 0.8]
+    assert between and all(c[0] not in ("#ff0000", "#0000ff", "#00ff00")
+                           for c in between)
+    r, g, b = (int(between[0][0][i:i + 2], 16) for i in (1, 3, 5))
+    assert g > 60 and (r > 60 or b > 60)      # a mix of both pictures
+    # the node: a second picture in the params, in the code, back again
+    doc = DocumentModel()
+    cyl = doc.add_node("cylinder")
+    node = doc.wrap_nodes([cyl], "paint")
+    node.params.update(image=halves, image2=str(side_path), plane2="Side (YZ)",
+                       x2=-10.0, y2=0.0, width2=20.0)
+    assert node.id not in validate(doc.root)
+    code = doc.to_scad()
+    assert 'image2 = "' in code and 'plane2 = "Side (YZ)"' in code
+    other = DocumentModel()
+    path = tmp_path / "two.scad"
+    document.export_scad(doc, str(path))
+    assert not scadparse.import_scad(other, str(path))
+    back = next(n for n in other.root.walk() if n.type == "paint")
+    assert back.params["image2"] == str(side_path) and back.params["width2"] == 20
+    node.params["image2"] = str(tmp_path / "gone.png")
+    assert "second picture" in validate(doc.root)[node.id]
+    # the second path saves relative too
+    node.params["image2"] = str(side_path)
+    kcad = tmp_path / "two.kcad"
+    document.save_kcad(doc, str(kcad))
+    assert '"image2": "side.png"' in kcad.read_text()
+    loaded = DocumentModel()
+    document.load_kcad(loaded, str(kcad))
+    back = next(n for n in loaded.root.walk() if n.type == "paint")
+    assert back.params["image2"] == str(side_path)

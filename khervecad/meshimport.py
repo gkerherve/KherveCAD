@@ -93,7 +93,7 @@ def set_scale(model, node, factor: float):
 # ------------------------------------------------------------------ paths
 
 #: node type -> the parameter holding a file path the document refers to
-PATH_PARAMS = {"stl_import": "path", "paint": "image"}
+PATH_PARAMS = {"stl_import": ("path",), "paint": ("image", "image2")}
 
 
 def relative_for_save(data: dict, doc_path: str):
@@ -108,17 +108,15 @@ def relative_for_save(data: dict, doc_path: str):
     while stack:
         d = stack.pop()
         stack.extend(d.get("children", []))
-        key = PATH_PARAMS.get(d.get("type"))
-        if key is None:
-            continue
-        raw = str(d.get("params", {}).get(key, "")).strip()
-        if not raw or not os.path.isabs(raw):
-            continue
-        try:
-            rel = Path(raw).resolve().relative_to(folder)
-        except (ValueError, OSError):
-            continue
-        d["params"] = dict(d["params"], **{key: rel.as_posix()})
+        for key in PATH_PARAMS.get(d.get("type"), ()):
+            raw = str(d.get("params", {}).get(key, "")).strip()
+            if not raw or not os.path.isabs(raw):
+                continue
+            try:
+                rel = Path(raw).resolve().relative_to(folder)
+            except (ValueError, OSError):
+                continue
+            d["params"] = dict(d["params"], **{key: rel.as_posix()})
 
 
 def resolve_paths(root, base_dir: str):
@@ -129,18 +127,21 @@ def resolve_paths(root, base_dir: str):
     by file name in *base_dir*."""
     base = os.path.abspath(base_dir)
     for n in root.walk():
-        key = PATH_PARAMS.get(n.type)
-        if key is None:
-            continue
-        raw = str(n.params.get(key, "")).strip()
-        if not raw:
-            continue
-        foreign = bool(PureWindowsPath(raw).drive) or raw.startswith("\\\\")
-        if not foreign and not os.path.isabs(raw):
-            n.params[key] = os.path.normpath(os.path.join(base, raw))
-            continue
-        if os.path.exists(raw):
-            continue
-        beside = os.path.join(base, PureWindowsPath(raw).name)
-        if os.path.exists(beside):
-            n.params[key] = beside
+        for key in PATH_PARAMS.get(n.type, ()):
+            _resolve_one(n, key, base)
+
+
+def _resolve_one(n, key, base):
+    """One path parameter of *n* made absolute against *base*."""
+    raw = str(n.params.get(key, "")).strip()
+    if not raw:
+        return
+    foreign = bool(PureWindowsPath(raw).drive) or raw.startswith("\\\\")
+    if not foreign and not os.path.isabs(raw):
+        n.params[key] = os.path.normpath(os.path.join(base, raw))
+        return
+    if os.path.exists(raw):
+        return
+    beside = os.path.join(base, PureWindowsPath(raw).name)
+    if os.path.exists(beside):
+        n.params[key] = beside

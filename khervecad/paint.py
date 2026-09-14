@@ -172,6 +172,55 @@ def _facing(tri, axis):
     return n[axis] / length if length > 1e-15 else 0.0
 
 
+def paint_many(items, pictures, sides="front") -> list:
+    """Several pictures at once — ``[(picture, plane, x, y, width,
+    height)]``, a front photo and a side photo, say. Every face takes
+    the pictures its centre projects into, blended by how squarely it
+    looks at each (weight = facing minus the grazing cutoff), so the
+    cheek turns from the front photo to the side photo without a
+    seam. With *sides* "both" a picture also reaches the faces turned
+    away from it."""
+    plans = []
+    for picture, plane, x, y, width, height in pictures:
+        if picture is None or width <= 0:
+            continue
+        plane = plane if plane in PLANES else DEFAULT_PLANE
+        u, v, n_axis = PLANES[plane]
+        if height <= 0:
+            height = width * picture.aspect
+        plans.append((picture, u, v, n_axis, VIEW_SIGN[plane], x, y,
+                      width, height))
+    if not plans:
+        return items
+    front_only = sides != "both"
+    out = []
+    for tri, colour, selected in items:
+        rgb = [0.0, 0.0, 0.0]
+        total = 0.0
+        for picture, u, v, n_axis, sign, x, y, width, height in plans:
+            facing = _facing(tri, n_axis) * sign
+            w = facing - GRAZE if front_only else abs(facing)
+            if w <= 0.0:
+                continue
+            cu = (tri[0][u] + tri[1][u] + tri[2][u]) / 3.0
+            cv = (tri[0][v] + tri[1][v] + tri[2][v]) / 3.0
+            hexcol = picture.at((cu - x) / width, (cv - y) / height)
+            if not hexcol:
+                continue
+            rgb[0] += w * int(hexcol[1:3], 16)
+            rgb[1] += w * int(hexcol[3:5], 16)
+            rgb[2] += w * int(hexcol[5:7], 16)
+            total += w
+        if total <= 0.0:
+            out.append((tri, colour, selected))
+            continue
+        hexcol = "#%02x%02x%02x" % tuple(
+            min(255, max(0, int(round(c / total)))) for c in rgb)
+        painted = (hexcol, 1.0) if colour is None else (hexcol,) + tuple(colour[1:])
+        out.append((tri, painted, selected))
+    return out
+
+
 def paint(items, picture, plane, x, y, width, height=0.0,
           sides="front") -> list:
     """*items* — mesh tuples ``(triangle, colour, selected)`` — with

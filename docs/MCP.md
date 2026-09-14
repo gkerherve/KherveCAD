@@ -6,7 +6,7 @@ Cursor, Zed, Continue, or anything else that speaks the Model Context
 Protocol — can build in an open document directly.
 
 The built-in chat replies with an OpenSCAD program you then apply. An
-MCP client gets the **whole application** instead: 44 tools over the
+MCP client gets the **whole application** instead: 46 tools over the
 object tree, the code, the part library, assemblies, the document —
 and a **picture of the 3D preview**.
 
@@ -123,7 +123,8 @@ things a cube and a `difference()` do not give you:
 | `bend`, `twist`, `taper`, `lattice` | reshape the surface of whatever is inside — model straight, then curve a limb or squash a head | `kcad_bend(axis, toward, angle, detail, …) { … }` … |
 | `subdivide` | Loop subdivision: a coarse cage (a polyhedron, a few boxes) becomes a smooth organic form | `kcad_subdivide(levels, …) { … }` |
 | `human` | a realistic body — MakeHuman's base mesh with gender, age, build and proportion sliders, at any height in mm — to clothe, pose and sculpt a face on | `kcad_human(gender, age, weight, height, stature, …)` |
-| `paint` | colours the faces inside that look towards the camera from a picture projected onto an axis plane (placed like a reference image; `sides: "both"` paints through) — the photo's skin, eyes and lips on the sculpted head; the preview shows it, OpenSCAD keeps one colour per solid | `kcad_paint(image, plane, x, y, width, height) { … }` |
+| `hair_cap` | a thick curly skin grown over the head's faces (a box, and not the ones looking at the face): thickness, curl height and size, seed | `kcad_hair_cap(thickness, noise, curl, seed, within, clear, clear_angle, …) { … }` |
+| `paint` | colours the faces inside that look towards the camera from a picture projected onto an axis plane (placed like a reference image; a second picture on another plane blends in by facing, so a front and a side photo cover a head; `sides: "both"` paints through) — the photo's skin, eyes and lips on the sculpted head; the preview shows it, OpenSCAD keeps one colour per solid | `kcad_paint(image, plane, x, y, width, height) { … }` |
 | `sculpt` | brush strokes on whatever is inside — grab, inflate, smooth, flatten, pinch, each with a radius and a falloff, mirrored across a plane if asked: the free-form surface a likeness needs | `kcad_sculpt(strokes, detail, mirror, …) { … }` |
 | `symmetry` | its children **plus** their mirror image — edit one half | `kcad_symmetry(n, c) { ... }` |
 | `joint` | rotates its children about a pivot, within limits | `kcad_joint(pivot, a, limits) { ... }` |
@@ -173,6 +174,20 @@ disagree.
 checked: the reference photo is drawn over the model from square on to
 its plane, orthographic, so the outline and the picture line up or do
 not. Sculpt where they do not, render again.
+
+**`set_pose`** with a figure's `node_id` and `bones` poses the
+human node's own rig — MakeHuman's 163 bones with skin weights: an arm
+raised to wave, an elbow bent for a handbag, the head turned. Pose
+first, then dress: clothes built round the figure do not follow it.
+
+**`face_landmarks`** and **`fit_face`** make a human figure's face a
+particular person's. The first says where the model's eye corners,
+nose tip, mouth corners, chin and the rest fall as pixels on each
+reference image; look at the photo, say where they really are, and
+the second solves the face sliders (102 of MakeHuman's, shipped) so
+the landmarks project onto the photo's, then warps the last
+millimetres. One photo pins two axes, a front and a side photo pin
+three.
 
 **`sculpt_stroke`** is the brush. A blend of primitives is a cartoon
 because a face lives in hundreds of small curvatures; this pushes the

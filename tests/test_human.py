@@ -98,7 +98,8 @@ def test_the_human_node_previews_bakes_and_round_trips(app, tmp_path):
     assert ("kcad_human(gender = 1, age = 0, weight = 0.5, height = 0, "
             "stature = 1750,") in code
     assert "module kcad_human(gender = 0, age = 0, weight = 0, height = 0, " \
-           "stature = 1700, points = [], faces = [])" in code
+           "stature = 1700, targets = [], warp = [], warp_radius = 45, " \
+           "pose = [], points = [], faces = [])" in code
     path = tmp_path / "human.scad"
     document.export_scad(doc, str(path))
     other = DocumentModel()

@@ -245,6 +245,20 @@ TIPS = {
         "and right, (0, 1, 0) front and back, (0, 0, 1) up and down.",
         [_SELECTION, "Click Mirror.", "Set the plane's normal X/Y/Z."],
         "The original is not kept — use Symmetry to keep both halves."),
+    "hair_cap": (
+        "Hair cap",
+        "Grows a thick, curly cap over part of the selection — hair on a "
+        "head, fur on a back: a skin lifted off the surface by a "
+        "thickness plus seeded bumps the size of a curl, closed back "
+        "onto it.",
+        [_SELECTION + " (the head, a human figure).",
+         "Click Hair cap. Set Thickness, Curl height and Curl size; a "
+         "different Seed gives different curls.",
+         "Keep the face clear: the cap skips faces looking within the "
+         "angle of the chosen direction (-y is the front); two corners "
+         "in 'Only faces inside' limit it to the skull."],
+        "Colour the cap grey, white or brown with a Color above it; a "
+        "second cap with a smaller curl over the first reads as a set."),
     "paint": (
         "Paint from photo",
         "Colours every face of the selection from a picture projected "

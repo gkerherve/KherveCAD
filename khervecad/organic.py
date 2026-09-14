@@ -111,7 +111,8 @@ NODE_TYPES = {
 NODE_TYPES["paint"] = dict(
     label="Paint from photo", category=OPERATION, icon="mdi.image-filter-hdr",
     params=dict(image="", plane="Front (XZ)", x=0.0, y=0.0, width=100.0,
-                height=0.0, sides="front"),
+                height=0.0, sides="front", image2="", plane2="Side (YZ)",
+                x2=0.0, y2=0.0, width2=100.0, height2=0.0),
     schema=[("image", "Picture file", "str", None, None),
             ("plane", "Projected onto", "choice",
              ["Top (XY)", "Front (XZ)", "Side (YZ)"], None),
@@ -120,6 +121,15 @@ NODE_TYPES["paint"] = dict(
             ("y", "Lower-left, up the plane (mm)", "float", -1e6, 1e6),
             ("width", "Width (mm)", "float", 0.01, 1e6),
             ("height", "Height (mm, 0 = from the picture)", "float",
+             0.0, 1e6),
+            ("image2", "Second picture (blended by facing)", "str",
+             None, None),
+            ("plane2", "Second picture's plane", "choice",
+             ["Top (XY)", "Front (XZ)", "Side (YZ)"], None),
+            ("x2", "Second: lower-left along (mm)", "float", -1e6, 1e6),
+            ("y2", "Second: lower-left up (mm)", "float", -1e6, 1e6),
+            ("width2", "Second: width (mm)", "float", 0.01, 1e6),
+            ("height2", "Second: height (mm, 0 = aspect)", "float",
              0.0, 1e6)])
 
 #: this module's own types; bake.py's join the registry below
@@ -173,7 +183,9 @@ module kcad_joint(pivot = [0, 0, 0], a = [0, 0, 0], limits = [-180, 180]) {
     # faces, and this keeps the placement so the node re-imports
     "paint": """\
 module kcad_paint(image = "", plane = "Front (XZ)", x = 0, y = 0,
-                  width = 100, height = 0, sides = "front") {
+                  width = 100, height = 0, sides = "front", image2 = "",
+                  plane2 = "Side (YZ)", x2 = 0, y2 = 0, width2 = 100,
+                  height2 = 0) {
     children();
 }""",
     # OpenSCAD has no materials: this renders its children unchanged
@@ -257,7 +269,14 @@ def statement(node, fmt, fn) -> str:
                 f"x = {fmt(p.get('x', 0.0))}, y = {fmt(p.get('y', 0.0))}, "
                 f"width = {fmt(p.get('width', 100.0))}, "
                 f"height = {fmt(p.get('height', 0.0))}, "
-                f"sides = {scad_str(str(p.get('sides', 'front')))})")
+                f"sides = {scad_str(str(p.get('sides', 'front')))}"
+                + (f", image2 = {scad_str(str(p.get('image2', '')))}, "
+                   f"plane2 = {scad_str(str(p.get('plane2', 'Side (YZ)')))}, "
+                   f"x2 = {fmt(p.get('x2', 0.0))}, y2 = {fmt(p.get('y2', 0.0))}, "
+                   f"width2 = {fmt(p.get('width2', 100.0))}, "
+                   f"height2 = {fmt(p.get('height2', 0.0))}"
+                   if str(p.get("image2", "")).strip() else "")
+                + ")")
     raise ValueError(f"not an organic type: {t}")   # pragma: no cover
 
 
@@ -343,12 +362,19 @@ def _b_paint(parser, positional, named):
     if plane not in paint_mod.PLANES:
         plane = DEFAULT_PAINT_PLANE
     sides = str(named.get("sides", "front"))
+    plane2 = str(named.get("plane2", "Side (YZ)"))
+    if plane2 not in paint_mod.PLANES:
+        plane2 = "Side (YZ)"
     return CadNode("paint", "Paint", dict(
         image=str(named.get("image", positional[0] if positional else "")),
         plane=plane, x=_num(named.get("x", 0.0)), y=_num(named.get("y", 0.0)),
         width=_num(named.get("width", 100.0), 100.0),
         height=_num(named.get("height", 0.0)),
-        sides=sides if sides in paint_mod.SIDES else "front"))
+        sides=sides if sides in paint_mod.SIDES else "front",
+        image2=str(named.get("image2", "")), plane2=plane2,
+        x2=_num(named.get("x2", 0.0)), y2=_num(named.get("y2", 0.0)),
+        width2=_num(named.get("width2", 100.0), 100.0),
+        height2=_num(named.get("height2", 0.0))))
 
 
 DEFAULT_PAINT_PLANE = "Front (XZ)"
@@ -422,6 +448,11 @@ def check(node, env):
             return f"paint: cannot read {os.path.basename(image)}"
         if str(p.get("plane", "")) not in paint_mod.PLANES:
             return "paint: the plane must be Top (XY), Front (XZ) or Side (YZ)"
+        image2 = str(p.get("image2", "")).strip()
+        if image2 and not os.path.isfile(image2):
+            return f"paint: second picture not found: {image2}"
+        if image2 and paint_mod.load(image2) is None:
+            return f"paint: cannot read {os.path.basename(image2)}"
         return None
 
     def val(key, default=0.0):
@@ -471,11 +502,18 @@ def tess(node, env, color, sel, selected):
         if t == "paint":
             from . import paint as paint_mod
             raw = node.params
-            return paint_mod.paint(
-                kids, paint_mod.load(str(raw.get("image", ""))),
-                str(raw.get("plane", DEFAULT_PAINT_PLANE)),
-                p.get("x", 0.0), p.get("y", 0.0), p.get("width", 100.0),
-                p.get("height", 0.0), str(raw.get("sides", "front")))
+            pictures = [(paint_mod.load(str(raw.get("image", ""))),
+                         str(raw.get("plane", DEFAULT_PAINT_PLANE)),
+                         p.get("x", 0.0), p.get("y", 0.0),
+                         p.get("width", 100.0), p.get("height", 0.0))]
+            if str(raw.get("image2", "")).strip():
+                pictures.append((paint_mod.load(str(raw.get("image2", ""))),
+                                 str(raw.get("plane2", "Side (YZ)")),
+                                 p.get("x2", 0.0), p.get("y2", 0.0),
+                                 p.get("width2", 100.0),
+                                 p.get("height2", 0.0)))
+            return paint_mod.paint_many(kids, pictures,
+                                        str(raw.get("sides", "front")))
         if t == "joint":
             px, py, pz = p["px"], p["py"], p["pz"]
             m = mesh.mat_mul(mesh.mat_translate(px, py, pz),
