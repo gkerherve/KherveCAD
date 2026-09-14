@@ -20,7 +20,7 @@ import math
 from pathlib import Path
 
 from . import expr
-from .model import SHAPE_2D, CadNode
+from .model import SHAPE_2D, CadNode, keeps_segments
 from . import organic
 
 #: a mesh is a list of triangles; a triangle is 3 (x, y, z) tuples.
@@ -85,7 +85,9 @@ def rp(node: CadNode, env=None) -> dict:
                 out[key] = value
         else:
             out[key] = rv(value, env)
-    if _FN_OVERRIDE is not None and node.type in _FN_TYPES:
+    # the codegen's rule (model._fn): a hex prism stays a hex
+    if _FN_OVERRIDE is not None and node.type in _FN_TYPES and \
+            not keeps_segments(out.get("segments")):
         out["segments"] = _FN_OVERRIDE
     return out
 

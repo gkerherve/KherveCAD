@@ -445,10 +445,28 @@ def _referenced_modules(only):
     return out
 
 
+#: a segment count this low is a polygon on purpose (a hex head, a hex
+#: socket, an octagonal pot), not a coarse circle: the document-wide
+#: $fn leaves it alone. It used to turn every hex socket round, so no
+#: key could turn a library bolt or the butt hinge's.
+POLYGON_SEGMENTS = 8
+
+
+def keeps_segments(segments) -> bool:
+    """True when *segments* is an intended polygon the common $fn must
+    not replace."""
+    return isinstance(segments, (int, float)) and \
+        not isinstance(segments, bool) and 0 < segments <= POLYGON_SEGMENTS
+
+
 def _fn(p) -> object:
     """Effective $fn for a round object: the document-wide common
-    segment count when one is active, else the object's own value."""
-    return _FN_OVERRIDE if _FN_OVERRIDE is not None else p["segments"]
+    segment count when one is active, else the object's own value —
+    except an intended polygon (`keeps_segments`), which keeps its
+    sides."""
+    if _FN_OVERRIDE is None or keeps_segments(p["segments"]):
+        return p["segments"]
+    return _FN_OVERRIDE
 
 
 def _nonzero(p, keys) -> bool:

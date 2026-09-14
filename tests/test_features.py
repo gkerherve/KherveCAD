@@ -260,6 +260,23 @@ def test_common_fn_overrides_round_objects(model):
     assert fns(model.to_scad()) == own              # own values restored
 
 
+def test_common_fn_leaves_intended_polygons_alone(model):
+    """A hex socket under the common $fn came out round: no key could
+    turn a library bolt or the butt hinge's."""
+    from khervecad import mesh
+    model.add_node("cylinder", dict(radius_bottom=3.0, radius_top=3.0,
+                                    height=5.0, segments=6))
+    model.add_node("cylinder", dict(radius_bottom=5.0, radius_top=5.0,
+                                    height=5.0, segments=96, x=20.0))
+    model.set_global_fn(True, 45)
+    code = model.to_scad()
+    assert "$fn=6," in code and "$fn=45," in code and "$fn=96" not in code
+    hexagon = model.root.children[-2]
+    # 6 sides x 2 + 2 caps x 4 triangles, whatever the common $fn is
+    assert len(mesh.tessellate(hexagon, fn=45)) == \
+        len(mesh.tessellate(hexagon, fn=None))
+
+
 def test_common_fn_roundtrips_kcad(model, tmp_path):
     from khervecad import document
     model.add_node("cylinder", dict(segments=96))
