@@ -1,8 +1,9 @@
 {
  "format": "kcad",
- "version": 7,
+ "version": 9,
  "global_fn": 45,
  "global_fn_on": false,
+ "unit": "mm",
  "dimensions": [],
  "references": [],
  "tree": {
@@ -12,17 +13,8 @@
   "params": {},
   "children": [
    {
-    "type": "assign",
-    "name": "$fn =",
-    "visible": true,
-    "params": {
-     "variable": "$fn",
-     "value": 48.0
-    }
-   },
-   {
     "type": "component",
-    "name": "Butt_Hinge",
+    "name": "Leaf A",
     "visible": true,
     "params": {
      "x": 0.0,
@@ -37,13 +29,13 @@
     "children": [
      {
       "type": "difference",
-      "name": "Difference",
+      "name": "Leaf A",
       "visible": true,
       "params": {},
       "children": [
        {
         "type": "union",
-        "name": "Group",
+        "name": "Leaf and knuckles",
         "visible": true,
         "params": {
          "x": 0.0,
@@ -57,78 +49,172 @@
         },
         "children": [
          {
-          "type": "cube",
-          "name": "Cube [Leaf A]",
+          "type": "linear_extrude",
+          "name": "Plate",
           "visible": true,
           "params": {
-           "x": 0.0,
-           "y": -30.0,
-           "z": 0.0,
-           "width": 50.0,
-           "depth": 28.0,
-           "height": 2.0,
-           "center": false
-          }
-         },
-         {
-          "type": "cube",
-          "name": "Cube [Leaf B]",
-          "visible": true,
-          "params": {
-           "x": 0.0,
-           "y": 2.0,
-           "z": 0.0,
-           "width": 50.0,
-           "depth": 28.0,
-           "height": 2.0,
-           "center": false
-          }
-         },
-         {
-          "type": "for_loop",
-          "name": "For i",
-          "visible": true,
-          "params": {
-           "variable": "i",
-           "start": 0.0,
-           "end": 4.0,
-           "step": 1.0,
-           "values": ""
+           "height": 4.5,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
           },
           "children": [
            {
-            "type": "translate",
-            "name": "Translate",
+            "type": "polygon",
+            "name": "Plate outline",
             "visible": true,
             "params": {
-             "x": "i * 10 + 0.15",
+             "x": 0.0,
              "y": 0.0,
-             "z": 3.0
+             "points": [
+              [
+               74.99,
+               1.5
+              ],
+              [
+               74.99,
+               -34.0
+              ],
+              [
+               74.9131,
+               -34.7804
+              ],
+              [
+               74.6855,
+               -35.5307
+              ],
+              [
+               74.3159,
+               -36.2223
+              ],
+              [
+               73.8184,
+               -36.8284
+              ],
+              [
+               73.2123,
+               -37.3259
+              ],
+              [
+               72.5207,
+               -37.6955
+              ],
+              [
+               71.7704,
+               -37.9231
+              ],
+              [
+               70.99,
+               -38.0
+              ],
+              [
+               4.01,
+               -38.0
+              ],
+              [
+               3.2296,
+               -37.9231
+              ],
+              [
+               2.4793,
+               -37.6955
+              ],
+              [
+               1.7877,
+               -37.3259
+              ],
+              [
+               1.1816,
+               -36.8284
+              ],
+              [
+               0.6841,
+               -36.2223
+              ],
+              [
+               0.3145,
+               -35.5307
+              ],
+              [
+               0.0869,
+               -34.7804
+              ],
+              [
+               0.01,
+               -34.0
+              ],
+              [
+               0.01,
+               1.5
+              ]
+             ]
+            }
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Knuckle 1",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
             },
             "children": [
              {
-              "type": "rotate",
-              "name": "Rotate",
+              "type": "rotate_extrude",
+              "name": "Knuckle 1",
               "visible": true,
               "params": {
-               "x": 0.0,
-               "y": 90.0,
-               "z": 0.0
+               "angle": 360.0,
+               "segments": 96
               },
               "children": [
                {
-                "type": "cylinder",
-                "name": "Cylinder [Knuckle]",
+                "type": "polygon",
+                "name": "Knuckle 1 profile",
                 "visible": true,
                 "params": {
                  "x": 0.0,
                  "y": 0.0,
-                 "z": 0.0,
-                 "height": 9.7,
-                 "radius_bottom": 3.0,
-                 "radius_top": 3.0,
-                 "segments": 64,
-                 "center": false
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   8.5,
+                   0.0
+                  ],
+                  [
+                   9.0,
+                   0.5
+                  ],
+                  [
+                   9.0,
+                   14.3
+                  ],
+                  [
+                   8.5,
+                   14.8
+                  ],
+                  [
+                   0.0,
+                   14.8
+                  ]
+                 ]
                 }
                }
               ]
@@ -138,58 +224,850 @@
           ]
          },
          {
-          "type": "for_loop",
-          "name": "For i",
+          "type": "translate",
+          "name": "Fillet 1",
           "visible": true,
           "params": {
-           "variable": "i",
-           "start": 0.0,
-           "end": 4.0,
-           "step": 1.0,
-           "values": "0, 2, 4"
+           "x": 0.7,
+           "y": 0.0,
+           "z": 0.0
           },
           "children": [
            {
-            "type": "cube",
-            "name": "Cube [Leaf A web]",
+            "type": "rotate",
+            "name": "Profile on YZ",
             "visible": true,
             "params": {
-             "x": "i * 10 + 0.15",
-             "y": -3.0,
-             "z": 0.0,
-             "width": 9.7,
-             "depth": 1.5,
-             "height": 2.0,
-             "center": false
-            }
+             "x": 90.0,
+             "y": 0.0,
+             "z": 90.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Fillet 1",
+              "visible": true,
+              "params": {
+               "height": 13.4,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Fillet 1 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   -11.3248,
+                   4.0
+                  ],
+                  [
+                   -11.3248,
+                   4.5
+                  ],
+                  [
+                   -10.8906,
+                   4.538
+                  ],
+                  [
+                   -10.4696,
+                   4.6508
+                  ],
+                  [
+                   -10.0746,
+                   4.835
+                  ],
+                  [
+                   -9.7176,
+                   5.0851
+                  ],
+                  [
+                   -9.4094,
+                   5.3933
+                  ],
+                  [
+                   -9.1595,
+                   5.7503
+                  ],
+                  [
+                   -8.9754,
+                   6.1454
+                  ],
+                  [
+                   -8.8626,
+                   6.5664
+                  ],
+                  [
+                   -8.8248,
+                   7.0006
+                  ],
+                  [
+                   -8.8628,
+                   7.4348
+                  ],
+                  [
+                   -4.0,
+                   7.4348
+                  ],
+                  [
+                   -4.0,
+                   4.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
            }
           ]
          },
          {
-          "type": "for_loop",
-          "name": "For i",
+          "type": "translate",
+          "name": "Knuckle 3",
           "visible": true,
           "params": {
-           "variable": "i",
-           "start": 0.0,
-           "end": 4.0,
-           "step": 1.0,
-           "values": "1, 3"
+           "x": 30.2,
+           "y": 0.0,
+           "z": 9.0
           },
           "children": [
            {
-            "type": "cube",
-            "name": "Cube [Leaf B web]",
+            "type": "rotate",
+            "name": "Along X",
             "visible": true,
             "params": {
-             "x": "i * 10 + 0.15",
-             "y": 1.5,
-             "z": 0.0,
-             "width": 9.7,
-             "depth": 1.5,
-             "height": 2.0,
-             "center": false
-            }
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Knuckle 3",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Knuckle 3 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   8.5,
+                   0.0
+                  ],
+                  [
+                   9.0,
+                   0.5
+                  ],
+                  [
+                   9.0,
+                   14.1
+                  ],
+                  [
+                   8.5,
+                   14.6
+                  ],
+                  [
+                   0.0,
+                   14.6
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Fillet 3",
+          "visible": true,
+          "params": {
+           "x": 30.9,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Profile on YZ",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 90.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Fillet 3",
+              "visible": true,
+              "params": {
+               "height": 13.2,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Fillet 3 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   -11.3248,
+                   4.0
+                  ],
+                  [
+                   -11.3248,
+                   4.5
+                  ],
+                  [
+                   -10.8906,
+                   4.538
+                  ],
+                  [
+                   -10.4696,
+                   4.6508
+                  ],
+                  [
+                   -10.0746,
+                   4.835
+                  ],
+                  [
+                   -9.7176,
+                   5.0851
+                  ],
+                  [
+                   -9.4094,
+                   5.3933
+                  ],
+                  [
+                   -9.1595,
+                   5.7503
+                  ],
+                  [
+                   -8.9754,
+                   6.1454
+                  ],
+                  [
+                   -8.8626,
+                   6.5664
+                  ],
+                  [
+                   -8.8248,
+                   7.0006
+                  ],
+                  [
+                   -8.8628,
+                   7.4348
+                  ],
+                  [
+                   -4.0,
+                   7.4348
+                  ],
+                  [
+                   -4.0,
+                   4.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Knuckle 5",
+          "visible": true,
+          "params": {
+           "x": 60.2,
+           "y": 0.0,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Knuckle 5",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Knuckle 5 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   8.5,
+                   0.0
+                  ],
+                  [
+                   9.0,
+                   0.5
+                  ],
+                  [
+                   9.0,
+                   14.3
+                  ],
+                  [
+                   8.5,
+                   14.8
+                  ],
+                  [
+                   0.0,
+                   14.8
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Fillet 5",
+          "visible": true,
+          "params": {
+           "x": 60.9,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Profile on YZ",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 90.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Fillet 5",
+              "visible": true,
+              "params": {
+               "height": 13.4,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Fillet 5 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   -11.3248,
+                   4.0
+                  ],
+                  [
+                   -11.3248,
+                   4.5
+                  ],
+                  [
+                   -10.8906,
+                   4.538
+                  ],
+                  [
+                   -10.4696,
+                   4.6508
+                  ],
+                  [
+                   -10.0746,
+                   4.835
+                  ],
+                  [
+                   -9.7176,
+                   5.0851
+                  ],
+                  [
+                   -9.4094,
+                   5.3933
+                  ],
+                  [
+                   -9.1595,
+                   5.7503
+                  ],
+                  [
+                   -8.9754,
+                   6.1454
+                  ],
+                  [
+                   -8.8626,
+                   6.5664
+                  ],
+                  [
+                   -8.8248,
+                   7.0006
+                  ],
+                  [
+                   -8.8628,
+                   7.4348
+                  ],
+                  [
+                   -4.0,
+                   7.4348
+                  ],
+                  [
+                   -4.0,
+                   4.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "union",
+        "name": "Swing clearance 2",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Swing clearance",
+          "visible": true,
+          "params": {
+           "x": 14.79,
+           "y": 0.0,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Swing clearance",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.42,
+               "radius_bottom": 9.4,
+               "radius_top": 9.4,
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cube",
+          "name": "Feather-edge trim",
+          "visible": true,
+          "params": {
+           "x": 14.79,
+           "y": -4.9356,
+           "z": -1.0,
+           "width": 15.42,
+           "depth": 9.8712,
+           "height": 2.2,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "union",
+        "name": "Swing clearance 4",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Swing clearance",
+          "visible": true,
+          "params": {
+           "x": 44.790000000000006,
+           "y": 0.0,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Swing clearance",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.42,
+               "radius_bottom": 9.4,
+               "radius_top": 9.4,
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cube",
+          "name": "Feather-edge trim",
+          "visible": true,
+          "params": {
+           "x": 44.79,
+           "y": -4.9356,
+           "z": -1.0,
+           "width": 15.42,
+           "depth": 9.8712,
+           "height": 2.2,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Bore",
+        "visible": true,
+        "params": {
+         "x": -1.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Profile on YZ",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 90.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Bore",
+            "visible": true,
+            "params": {
+             "height": 60.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Bore profile",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 -3.7477,
+                 12.7477
+                ],
+                [
+                 -4.097,
+                 12.3623
+                ],
+                [
+                 -4.4068,
+                 11.9445
+                ],
+                [
+                 -4.6742,
+                 11.4984
+                ],
+                [
+                 -4.8966,
+                 11.0282
+                ],
+                [
+                 -5.0718,
+                 10.5385
+                ],
+                [
+                 -5.1982,
+                 10.034
+                ],
+                [
+                 -5.2745,
+                 9.5195
+                ],
+                [
+                 -5.3,
+                 9.0
+                ],
+                [
+                 -5.2745,
+                 8.4805
+                ],
+                [
+                 -5.1982,
+                 7.966
+                ],
+                [
+                 -5.0718,
+                 7.4615
+                ],
+                [
+                 -4.8966,
+                 6.9718
+                ],
+                [
+                 -4.6742,
+                 6.5016
+                ],
+                [
+                 -4.4068,
+                 6.0555
+                ],
+                [
+                 -4.097,
+                 5.6377
+                ],
+                [
+                 -3.7477,
+                 5.2523
+                ],
+                [
+                 -3.3623,
+                 4.903
+                ],
+                [
+                 -2.9445,
+                 4.5932
+                ],
+                [
+                 -2.4984,
+                 4.3258
+                ],
+                [
+                 -2.0282,
+                 4.1034
+                ],
+                [
+                 -1.5385,
+                 3.9282
+                ],
+                [
+                 -1.034,
+                 3.8018
+                ],
+                [
+                 -0.5195,
+                 3.7255
+                ],
+                [
+                 -0.0,
+                 3.7
+                ],
+                [
+                 0.5195,
+                 3.7255
+                ],
+                [
+                 1.034,
+                 3.8018
+                ],
+                [
+                 1.5385,
+                 3.9282
+                ],
+                [
+                 2.0282,
+                 4.1034
+                ],
+                [
+                 2.4984,
+                 4.3258
+                ],
+                [
+                 2.9445,
+                 4.5932
+                ],
+                [
+                 3.3623,
+                 4.903
+                ],
+                [
+                 3.7477,
+                 5.2523
+                ],
+                [
+                 4.097,
+                 5.6377
+                ],
+                [
+                 4.4068,
+                 6.0555
+                ],
+                [
+                 4.6742,
+                 6.5016
+                ],
+                [
+                 4.8966,
+                 6.9718
+                ],
+                [
+                 5.0718,
+                 7.4615
+                ],
+                [
+                 5.1982,
+                 7.966
+                ],
+                [
+                 5.2745,
+                 8.4805
+                ],
+                [
+                 5.3,
+                 9.0
+                ],
+                [
+                 5.2745,
+                 9.5195
+                ],
+                [
+                 5.1982,
+                 10.034
+                ],
+                [
+                 5.0718,
+                 10.5385
+                ],
+                [
+                 4.8966,
+                 11.0282
+                ],
+                [
+                 4.6742,
+                 11.4984
+                ],
+                [
+                 4.4068,
+                 11.9445
+                ],
+                [
+                 4.097,
+                 12.3623
+                ],
+                [
+                 3.7477,
+                 12.7477
+                ],
+                [
+                 1.5593,
+                 14.936
+                ],
+                [
+                 -1.5593,
+                 14.936
+                ]
+               ]
+              }
+             }
+            ]
            }
           ]
          }
@@ -197,17 +1075,354 @@
        },
        {
         "type": "translate",
-        "name": "Translate",
+        "name": "Tapped thread",
         "visible": true,
         "params": {
-         "x": -1.0,
+         "x": 58.0,
          "y": 0.0,
-         "z": 3.0
+         "z": 9.0
         },
         "children": [
          {
           "type": "rotate",
-          "name": "Rotate",
+          "name": "Along X",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Tapped thread",
+            "visible": true,
+            "params": {
+             "height": 15.0,
+             "twist": -2700.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 180
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Tapped thread profile",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 4.0732,
+                 0.0
+                ],
+                [
+                 4.0577,
+                 0.355
+                ],
+                [
+                 4.0113,
+                 0.7073
+                ],
+                [
+                 3.9344,
+                 1.0542
+                ],
+                [
+                 3.8276,
+                 1.3931
+                ],
+                [
+                 3.6916,
+                 1.7214
+                ],
+                [
+                 3.5275,
+                 2.0366
+                ],
+                [
+                 3.3366,
+                 2.3363
+                ],
+                [
+                 3.1203,
+                 2.6182
+                ],
+                [
+                 2.8802,
+                 2.8802
+                ],
+                [
+                 2.6182,
+                 3.1203
+                ],
+                [
+                 2.3363,
+                 3.3366
+                ],
+                [
+                 2.0366,
+                 3.5275
+                ],
+                [
+                 1.7214,
+                 3.6916
+                ],
+                [
+                 1.3931,
+                 3.8276
+                ],
+                [
+                 1.0542,
+                 3.9344
+                ],
+                [
+                 0.7073,
+                 4.0113
+                ],
+                [
+                 0.355,
+                 4.0577
+                ],
+                [
+                 0.0,
+                 4.0732
+                ],
+                [
+                 -0.3598,
+                 4.112
+                ],
+                [
+                 -0.7262,
+                 4.1187
+                ],
+                [
+                 -1.0966,
+                 4.0924
+                ],
+                [
+                 -1.4677,
+                 4.0325
+                ],
+                [
+                 -1.8366,
+                 3.9387
+                ],
+                [
+                 -2.2002,
+                 3.8108
+                ],
+                [
+                 -2.5552,
+                 3.6492
+                ],
+                [
+                 -2.8986,
+                 3.4544
+                ],
+                [
+                 -3.2272,
+                 3.2272
+                ],
+                [
+                 -3.5379,
+                 2.9687
+                ],
+                [
+                 -3.8279,
+                 2.6803
+                ],
+                [
+                 -4.0941,
+                 2.3637
+                ],
+                [
+                 -4.334,
+                 2.021
+                ],
+                [
+                 -4.5449,
+                 1.6542
+                ],
+                [
+                 -4.7244,
+                 1.2659
+                ],
+                [
+                 -4.8705,
+                 0.8588
+                ],
+                [
+                 -4.9811,
+                 0.4358
+                ],
+                [
+                 -5.0546,
+                 0.0
+                ],
+                [
+                 -5.0897,
+                 -0.4453
+                ],
+                [
+                 -5.0852,
+                 -0.8967
+                ],
+                [
+                 -5.0404,
+                 -1.3506
+                ],
+                [
+                 -4.9548,
+                 -1.8034
+                ],
+                [
+                 -4.8034,
+                 -2.2399
+                ],
+                [
+                 -4.5899,
+                 -2.65
+                ],
+                [
+                 -4.3415,
+                 -3.04
+                ],
+                [
+                 -4.06,
+                 -3.4068
+                ],
+                [
+                 -3.7477,
+                 -3.7477
+                ],
+                [
+                 -3.4068,
+                 -4.06
+                ],
+                [
+                 -3.04,
+                 -4.3415
+                ],
+                [
+                 -2.65,
+                 -4.5899
+                ],
+                [
+                 -2.2399,
+                 -4.8034
+                ],
+                [
+                 -1.8034,
+                 -4.9548
+                ],
+                [
+                 -1.3506,
+                 -5.0404
+                ],
+                [
+                 -0.8967,
+                 -5.0852
+                ],
+                [
+                 -0.4453,
+                 -5.0897
+                ],
+                [
+                 -0.0,
+                 -5.0546
+                ],
+                [
+                 0.4358,
+                 -4.9811
+                ],
+                [
+                 0.8588,
+                 -4.8705
+                ],
+                [
+                 1.2659,
+                 -4.7244
+                ],
+                [
+                 1.6542,
+                 -4.5449
+                ],
+                [
+                 2.021,
+                 -4.334
+                ],
+                [
+                 2.3637,
+                 -4.0941
+                ],
+                [
+                 2.6803,
+                 -3.8279
+                ],
+                [
+                 2.9687,
+                 -3.5379
+                ],
+                [
+                 3.2272,
+                 -3.2272
+                ],
+                [
+                 3.4544,
+                 -2.8986
+                ],
+                [
+                 3.6492,
+                 -2.5552
+                ],
+                [
+                 3.8108,
+                 -2.2002
+                ],
+                [
+                 3.9387,
+                 -1.8366
+                ],
+                [
+                 4.0325,
+                 -1.4677
+                ],
+                [
+                 4.0924,
+                 -1.0966
+                ],
+                [
+                 4.1187,
+                 -0.7262
+                ],
+                [
+                 4.112,
+                 -0.3598
+                ]
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Bolt entry",
+        "visible": true,
+        "params": {
+         "x": -0.5,
+         "y": 0.0,
+         "z": 9.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Along X",
           "visible": true,
           "params": {
            "x": 0.0,
@@ -217,16 +1432,16 @@
           "children": [
            {
             "type": "cylinder",
-            "name": "Cylinder [Pin bore]",
+            "name": "Bolt entry",
             "visible": true,
             "params": {
              "x": 0.0,
              "y": 0.0,
              "z": 0.0,
-             "height": 52.0,
-             "radius_bottom": 1.3,
-             "radius_top": 1.3,
-             "segments": 64,
+             "height": 1.6,
+             "radius_bottom": 6.6,
+             "radius_top": 5.0,
+             "segments": 96,
              "center": false
             }
            }
@@ -235,177 +1450,1780 @@
         ]
        },
        {
-        "type": "for_loop",
-        "name": "For s",
+        "type": "translate",
+        "name": "Tap entry",
         "visible": true,
         "params": {
-         "variable": "s",
-         "start": 0.0,
-         "end": 4.0,
-         "step": 1.0,
-         "values": "-1, 1"
+         "x": 59.7,
+         "y": 0.0,
+         "z": 9.0
         },
         "children": [
          {
-          "type": "for_loop",
-          "name": "For x",
+          "type": "rotate",
+          "name": "Along X",
           "visible": true,
           "params": {
-           "variable": "x",
-           "start": 0.0,
-           "end": 4.0,
-           "step": 1.0,
-           "values": "10, 40"
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
           },
           "children": [
            {
             "type": "cylinder",
-            "name": "Cylinder [Countersunk hole]",
+            "name": "Tap entry",
             "visible": true,
             "params": {
-             "x": "x",
-             "y": "s * 12",
-             "z": -0.01,
-             "height": 2.02,
-             "radius_bottom": 1.75,
-             "radius_top": 3.5,
-             "segments": 64,
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 1.6,
+             "radius_bottom": 6.6,
+             "radius_top": 5.0,
+             "segments": 96,
              "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cylinder",
+        "name": "Screw hole",
+        "visible": true,
+        "params": {
+         "x": 15.0,
+         "y": -17.0,
+         "z": -0.01,
+         "height": 4.52,
+         "radius_bottom": 2.25,
+         "radius_top": 2.25,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Countersink",
+        "visible": true,
+        "params": {
+         "x": 15.0,
+         "y": -17.0,
+         "z": 2.25,
+         "height": 2.26,
+         "radius_bottom": 2.25,
+         "radius_top": 4.51,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Screw hole",
+        "visible": true,
+        "params": {
+         "x": 60.0,
+         "y": -17.0,
+         "z": -0.01,
+         "height": 4.52,
+         "radius_bottom": 2.25,
+         "radius_top": 2.25,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Countersink",
+        "visible": true,
+        "params": {
+         "x": 60.0,
+         "y": -17.0,
+         "z": 2.25,
+         "height": 2.26,
+         "radius_bottom": 2.25,
+         "radius_top": 4.51,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Screw hole",
+        "visible": true,
+        "params": {
+         "x": 37.5,
+         "y": -30.0,
+         "z": -0.01,
+         "height": 4.52,
+         "radius_bottom": 2.25,
+         "radius_top": 2.25,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Countersink",
+        "visible": true,
+        "params": {
+         "x": 37.5,
+         "y": -30.0,
+         "z": 2.25,
+         "height": 2.26,
+         "radius_bottom": 2.25,
+         "radius_top": 4.51,
+         "segments": 32,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Leaf B",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#d1ad59",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Leaf B",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Leaf and knuckles",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Plate",
+          "visible": true,
+          "params": {
+           "height": 4.5,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "polygon",
+            "name": "Plate outline",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "points": [
+              [
+               0.01,
+               -1.5
+              ],
+              [
+               0.01,
+               34.0
+              ],
+              [
+               0.0869,
+               34.7804
+              ],
+              [
+               0.3145,
+               35.5307
+              ],
+              [
+               0.6841,
+               36.2223
+              ],
+              [
+               1.1816,
+               36.8284
+              ],
+              [
+               1.7877,
+               37.3259
+              ],
+              [
+               2.4793,
+               37.6955
+              ],
+              [
+               3.2296,
+               37.9231
+              ],
+              [
+               4.01,
+               38.0
+              ],
+              [
+               70.99,
+               38.0
+              ],
+              [
+               71.7704,
+               37.9231
+              ],
+              [
+               72.5207,
+               37.6955
+              ],
+              [
+               73.2123,
+               37.3259
+              ],
+              [
+               73.8184,
+               36.8284
+              ],
+              [
+               74.3159,
+               36.2223
+              ],
+              [
+               74.6855,
+               35.5307
+              ],
+              [
+               74.9131,
+               34.7804
+              ],
+              [
+               74.99,
+               34.0
+              ],
+              [
+               74.99,
+               -1.5
+              ]
+             ]
             }
            }
           ]
          },
          {
-          "type": "cylinder",
-          "name": "Cylinder [Centre hole]",
+          "type": "translate",
+          "name": "Knuckle 2",
           "visible": true,
           "params": {
-           "x": 25.0,
-           "y": "s * 23",
-           "z": -0.01,
-           "height": 2.02,
-           "radius_bottom": 1.75,
-           "radius_top": 3.5,
-           "segments": 64,
+           "x": 15.2,
+           "y": 0.0,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Knuckle 2",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Knuckle 2 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   8.5,
+                   0.0
+                  ],
+                  [
+                   9.0,
+                   0.5
+                  ],
+                  [
+                   9.0,
+                   14.1
+                  ],
+                  [
+                   8.5,
+                   14.6
+                  ],
+                  [
+                   0.0,
+                   14.6
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Fillet 2",
+          "visible": true,
+          "params": {
+           "x": 15.9,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Profile on YZ",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 90.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Fillet 2",
+              "visible": true,
+              "params": {
+               "height": 13.2,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Fillet 2 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   11.3248,
+                   4.0
+                  ],
+                  [
+                   11.3248,
+                   4.5
+                  ],
+                  [
+                   10.8906,
+                   4.538
+                  ],
+                  [
+                   10.4696,
+                   4.6508
+                  ],
+                  [
+                   10.0746,
+                   4.835
+                  ],
+                  [
+                   9.7176,
+                   5.0851
+                  ],
+                  [
+                   9.4094,
+                   5.3933
+                  ],
+                  [
+                   9.1595,
+                   5.7503
+                  ],
+                  [
+                   8.9754,
+                   6.1454
+                  ],
+                  [
+                   8.8626,
+                   6.5664
+                  ],
+                  [
+                   8.8248,
+                   7.0006
+                  ],
+                  [
+                   8.8628,
+                   7.4348
+                  ],
+                  [
+                   4.0,
+                   7.4348
+                  ],
+                  [
+                   4.0,
+                   4.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Knuckle 4",
+          "visible": true,
+          "params": {
+           "x": 45.2,
+           "y": 0.0,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Knuckle 4",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Knuckle 4 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   8.5,
+                   0.0
+                  ],
+                  [
+                   9.0,
+                   0.5
+                  ],
+                  [
+                   9.0,
+                   14.1
+                  ],
+                  [
+                   8.5,
+                   14.6
+                  ],
+                  [
+                   0.0,
+                   14.6
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Fillet 4",
+          "visible": true,
+          "params": {
+           "x": 45.9,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Profile on YZ",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 90.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Fillet 4",
+              "visible": true,
+              "params": {
+               "height": 13.2,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Fillet 4 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   11.3248,
+                   4.0
+                  ],
+                  [
+                   11.3248,
+                   4.5
+                  ],
+                  [
+                   10.8906,
+                   4.538
+                  ],
+                  [
+                   10.4696,
+                   4.6508
+                  ],
+                  [
+                   10.0746,
+                   4.835
+                  ],
+                  [
+                   9.7176,
+                   5.0851
+                  ],
+                  [
+                   9.4094,
+                   5.3933
+                  ],
+                  [
+                   9.1595,
+                   5.7503
+                  ],
+                  [
+                   8.9754,
+                   6.1454
+                  ],
+                  [
+                   8.8626,
+                   6.5664
+                  ],
+                  [
+                   8.8248,
+                   7.0006
+                  ],
+                  [
+                   8.8628,
+                   7.4348
+                  ],
+                  [
+                   4.0,
+                   7.4348
+                  ],
+                  [
+                   4.0,
+                   4.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "union",
+        "name": "Swing clearance 1",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Swing clearance",
+          "visible": true,
+          "params": {
+           "x": -1.0,
+           "y": 0.0,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Swing clearance",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 16.21,
+               "radius_bottom": 9.4,
+               "radius_top": 9.4,
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cube",
+          "name": "Feather-edge trim",
+          "visible": true,
+          "params": {
+           "x": -1.0,
+           "y": -4.9356,
+           "z": -1.0,
+           "width": 16.21,
+           "depth": 9.8712,
+           "height": 2.2,
            "center": false
           }
          }
         ]
-       }
-      ]
-     },
-     {
-      "type": "translate",
-      "name": "Translate",
-      "visible": true,
-      "params": {
-       "x": -0.8,
-       "y": 0.0,
-       "z": 3.0
-      },
-      "children": [
+       },
        {
-        "type": "rotate",
-        "name": "Rotate",
+        "type": "union",
+        "name": "Swing clearance 3",
         "visible": true,
         "params": {
          "x": 0.0,
-         "y": 90.0,
-         "z": 0.0
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
         },
         "children": [
          {
-          "type": "cylinder",
-          "name": "Cylinder [Pin]",
+          "type": "translate",
+          "name": "Swing clearance",
           "visible": true,
           "params": {
-           "x": 0.0,
+           "x": 29.79,
            "y": 0.0,
-           "z": 0.0,
-           "height": 51.6,
-           "radius_bottom": 1.1,
-           "radius_top": 1.1,
-           "segments": 64,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Swing clearance",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.42,
+               "radius_bottom": 9.4,
+               "radius_top": 9.4,
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cube",
+          "name": "Feather-edge trim",
+          "visible": true,
+          "params": {
+           "x": 29.79,
+           "y": -4.9356,
+           "z": -1.0,
+           "width": 15.42,
+           "depth": 9.8712,
+           "height": 2.2,
            "center": false
           }
          }
         ]
-       }
-      ]
-     },
-     {
-      "type": "translate",
-      "name": "Translate",
-      "visible": true,
-      "params": {
-       "x": -1.2,
-       "y": 0.0,
-       "z": 3.0
-      },
-      "children": [
+       },
        {
-        "type": "rotate",
-        "name": "Rotate",
+        "type": "union",
+        "name": "Swing clearance 5",
         "visible": true,
         "params": {
          "x": 0.0,
-         "y": 90.0,
-         "z": 0.0
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
         },
         "children": [
          {
-          "type": "cylinder",
-          "name": "Cylinder [Pin head]",
+          "type": "translate",
+          "name": "Swing clearance",
           "visible": true,
           "params": {
-           "x": 0.0,
+           "x": 59.790000000000006,
            "y": 0.0,
-           "z": 0.0,
-           "height": 1.0,
-           "radius_bottom": 3.0,
-           "radius_top": 3.0,
-           "segments": 64,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Swing clearance",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 16.21,
+               "radius_bottom": 9.4,
+               "radius_top": 9.4,
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cube",
+          "name": "Feather-edge trim",
+          "visible": true,
+          "params": {
+           "x": 59.79,
+           "y": -4.9356,
+           "z": -1.0,
+           "width": 16.21,
+           "depth": 9.8712,
+           "height": 2.2,
            "center": false
           }
          }
         ]
-       }
-      ]
-     },
-     {
-      "type": "translate",
-      "name": "Translate",
-      "visible": true,
-      "params": {
-       "x": 50.2,
-       "y": 0.0,
-       "z": 3.0
-      },
-      "children": [
+       },
        {
-        "type": "rotate",
-        "name": "Rotate",
+        "type": "translate",
+        "name": "Bore",
         "visible": true,
         "params": {
-         "x": 0.0,
-         "y": 90.0,
+         "x": -1.0,
+         "y": 0.0,
          "z": 0.0
         },
         "children": [
          {
-          "type": "cylinder",
-          "name": "Cylinder [Pin cap]",
+          "type": "rotate",
+          "name": "Profile on YZ",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 90.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Bore",
+            "visible": true,
+            "params": {
+             "height": 77.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Bore profile",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 -3.7477,
+                 12.7477
+                ],
+                [
+                 -4.097,
+                 12.3623
+                ],
+                [
+                 -4.4068,
+                 11.9445
+                ],
+                [
+                 -4.6742,
+                 11.4984
+                ],
+                [
+                 -4.8966,
+                 11.0282
+                ],
+                [
+                 -5.0718,
+                 10.5385
+                ],
+                [
+                 -5.1982,
+                 10.034
+                ],
+                [
+                 -5.2745,
+                 9.5195
+                ],
+                [
+                 -5.3,
+                 9.0
+                ],
+                [
+                 -5.2745,
+                 8.4805
+                ],
+                [
+                 -5.1982,
+                 7.966
+                ],
+                [
+                 -5.0718,
+                 7.4615
+                ],
+                [
+                 -4.8966,
+                 6.9718
+                ],
+                [
+                 -4.6742,
+                 6.5016
+                ],
+                [
+                 -4.4068,
+                 6.0555
+                ],
+                [
+                 -4.097,
+                 5.6377
+                ],
+                [
+                 -3.7477,
+                 5.2523
+                ],
+                [
+                 -3.3623,
+                 4.903
+                ],
+                [
+                 -2.9445,
+                 4.5932
+                ],
+                [
+                 -2.4984,
+                 4.3258
+                ],
+                [
+                 -2.0282,
+                 4.1034
+                ],
+                [
+                 -1.5385,
+                 3.9282
+                ],
+                [
+                 -1.034,
+                 3.8018
+                ],
+                [
+                 -0.5195,
+                 3.7255
+                ],
+                [
+                 -0.0,
+                 3.7
+                ],
+                [
+                 0.5195,
+                 3.7255
+                ],
+                [
+                 1.034,
+                 3.8018
+                ],
+                [
+                 1.5385,
+                 3.9282
+                ],
+                [
+                 2.0282,
+                 4.1034
+                ],
+                [
+                 2.4984,
+                 4.3258
+                ],
+                [
+                 2.9445,
+                 4.5932
+                ],
+                [
+                 3.3623,
+                 4.903
+                ],
+                [
+                 3.7477,
+                 5.2523
+                ],
+                [
+                 4.097,
+                 5.6377
+                ],
+                [
+                 4.4068,
+                 6.0555
+                ],
+                [
+                 4.6742,
+                 6.5016
+                ],
+                [
+                 4.8966,
+                 6.9718
+                ],
+                [
+                 5.0718,
+                 7.4615
+                ],
+                [
+                 5.1982,
+                 7.966
+                ],
+                [
+                 5.2745,
+                 8.4805
+                ],
+                [
+                 5.3,
+                 9.0
+                ],
+                [
+                 5.2745,
+                 9.5195
+                ],
+                [
+                 5.1982,
+                 10.034
+                ],
+                [
+                 5.0718,
+                 10.5385
+                ],
+                [
+                 4.8966,
+                 11.0282
+                ],
+                [
+                 4.6742,
+                 11.4984
+                ],
+                [
+                 4.4068,
+                 11.9445
+                ],
+                [
+                 4.097,
+                 12.3623
+                ],
+                [
+                 3.7477,
+                 12.7477
+                ],
+                [
+                 1.5593,
+                 14.936
+                ],
+                [
+                 -1.5593,
+                 14.936
+                ]
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cylinder",
+        "name": "Screw hole",
+        "visible": true,
+        "params": {
+         "x": 15.0,
+         "y": 17.0,
+         "z": -0.01,
+         "height": 4.52,
+         "radius_bottom": 2.25,
+         "radius_top": 2.25,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Countersink",
+        "visible": true,
+        "params": {
+         "x": 15.0,
+         "y": 17.0,
+         "z": 2.25,
+         "height": 2.26,
+         "radius_bottom": 2.25,
+         "radius_top": 4.51,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Screw hole",
+        "visible": true,
+        "params": {
+         "x": 60.0,
+         "y": 17.0,
+         "z": -0.01,
+         "height": 4.52,
+         "radius_bottom": 2.25,
+         "radius_top": 2.25,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Countersink",
+        "visible": true,
+        "params": {
+         "x": 60.0,
+         "y": 17.0,
+         "z": 2.25,
+         "height": 2.26,
+         "radius_bottom": 2.25,
+         "radius_top": 4.51,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Screw hole",
+        "visible": true,
+        "params": {
+         "x": 37.5,
+         "y": 30.0,
+         "z": -0.01,
+         "height": 4.52,
+         "radius_bottom": 2.25,
+         "radius_top": 2.25,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Countersink",
+        "visible": true,
+        "params": {
+         "x": 37.5,
+         "y": 30.0,
+         "z": 2.25,
+         "height": 2.26,
+         "radius_bottom": 2.25,
+         "radius_top": 4.51,
+         "segments": 32,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Bolt",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 4.4,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#a8843f",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Bolt",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Head, shank and thread",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Head",
           "visible": true,
           "params": {
            "x": 0.0,
            "y": 0.0,
-           "z": 0.0,
-           "height": 1.0,
-           "radius_bottom": 3.0,
-           "radius_top": 3.0,
-           "segments": 64,
-           "center": false
-          }
+           "z": 4.6
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Head",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Head profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   -6.0
+                  ],
+                  [
+                   8.0,
+                   -6.0
+                  ],
+                  [
+                   9.0,
+                   -5.0
+                  ],
+                  [
+                   9.0,
+                   -0.5
+                  ],
+                  [
+                   8.5,
+                   0.0
+                  ],
+                  [
+                   0.0,
+                   0.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Shank",
+          "visible": true,
+          "params": {
+           "x": -0.5,
+           "y": 0.0,
+           "z": 4.6
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Shank",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 59.0,
+               "radius_bottom": 4.95,
+               "radius_top": 4.95,
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Thread",
+          "visible": true,
+          "params": {
+           "x": 58.0,
+           "y": 0.0,
+           "z": 4.6
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Thread",
+              "visible": true,
+              "params": {
+               "height": 14.5,
+               "twist": -2610.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 174
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Thread profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   3.7732,
+                   0.0
+                  ],
+                  [
+                   3.7588,
+                   0.3289
+                  ],
+                  [
+                   3.7159,
+                   0.6552
+                  ],
+                  [
+                   3.6446,
+                   0.9766
+                  ],
+                  [
+                   3.5456,
+                   1.2905
+                  ],
+                  [
+                   3.4197,
+                   1.5946
+                  ],
+                  [
+                   3.2677,
+                   1.8866
+                  ],
+                  [
+                   3.0908,
+                   2.1642
+                  ],
+                  [
+                   2.8904,
+                   2.4254
+                  ],
+                  [
+                   2.6681,
+                   2.6681
+                  ],
+                  [
+                   2.4254,
+                   2.8904
+                  ],
+                  [
+                   2.1642,
+                   3.0908
+                  ],
+                  [
+                   1.8866,
+                   3.2677
+                  ],
+                  [
+                   1.5946,
+                   3.4197
+                  ],
+                  [
+                   1.2905,
+                   3.5456
+                  ],
+                  [
+                   0.9766,
+                   3.6446
+                  ],
+                  [
+                   0.6552,
+                   3.7159
+                  ],
+                  [
+                   0.3289,
+                   3.7588
+                  ],
+                  [
+                   0.0,
+                   3.7732
+                  ],
+                  [
+                   -0.3336,
+                   3.8132
+                  ],
+                  [
+                   -0.6741,
+                   3.8233
+                  ],
+                  [
+                   -1.0189,
+                   3.8026
+                  ],
+                  [
+                   -1.3651,
+                   3.7506
+                  ],
+                  [
+                   -1.7098,
+                   3.6668
+                  ],
+                  [
+                   -2.0502,
+                   3.551
+                  ],
+                  [
+                   -2.3831,
+                   3.4035
+                  ],
+                  [
+                   -2.7057,
+                   3.2246
+                  ],
+                  [
+                   -3.015,
+                   3.015
+                  ],
+                  [
+                   -3.3081,
+                   2.7758
+                  ],
+                  [
+                   -3.5821,
+                   2.5082
+                  ],
+                  [
+                   -3.8343,
+                   2.2137
+                  ],
+                  [
+                   -4.0621,
+                   1.8942
+                  ],
+                  [
+                   -4.263,
+                   1.5516
+                  ],
+                  [
+                   -4.4346,
+                   1.1883
+                  ],
+                  [
+                   -4.575,
+                   0.8067
+                  ],
+                  [
+                   -4.6822,
+                   0.4096
+                  ],
+                  [
+                   -4.7546,
+                   0.0
+                  ],
+                  [
+                   -4.7909,
+                   -0.4191
+                  ],
+                  [
+                   -4.7898,
+                   -0.8446
+                  ],
+                  [
+                   -4.7506,
+                   -1.2729
+                  ],
+                  [
+                   -4.6728,
+                   -1.7008
+                  ],
+                  [
+                   -4.5315,
+                   -2.1131
+                  ],
+                  [
+                   -4.3301,
+                   -2.5
+                  ],
+                  [
+                   -4.0958,
+                   -2.8679
+                  ],
+                  [
+                   -3.8302,
+                   -3.2139
+                  ],
+                  [
+                   -3.5355,
+                   -3.5355
+                  ],
+                  [
+                   -3.2139,
+                   -3.8302
+                  ],
+                  [
+                   -2.8679,
+                   -4.0958
+                  ],
+                  [
+                   -2.5,
+                   -4.3301
+                  ],
+                  [
+                   -2.1131,
+                   -4.5315
+                  ],
+                  [
+                   -1.7008,
+                   -4.6728
+                  ],
+                  [
+                   -1.2729,
+                   -4.7506
+                  ],
+                  [
+                   -0.8446,
+                   -4.7898
+                  ],
+                  [
+                   -0.4191,
+                   -4.7909
+                  ],
+                  [
+                   -0.0,
+                   -4.7546
+                  ],
+                  [
+                   0.4096,
+                   -4.6822
+                  ],
+                  [
+                   0.8067,
+                   -4.575
+                  ],
+                  [
+                   1.1883,
+                   -4.4346
+                  ],
+                  [
+                   1.5516,
+                   -4.263
+                  ],
+                  [
+                   1.8942,
+                   -4.0621
+                  ],
+                  [
+                   2.2137,
+                   -3.8343
+                  ],
+                  [
+                   2.5082,
+                   -3.5821
+                  ],
+                  [
+                   2.7758,
+                   -3.3081
+                  ],
+                  [
+                   3.015,
+                   -3.015
+                  ],
+                  [
+                   3.2246,
+                   -2.7057
+                  ],
+                  [
+                   3.4035,
+                   -2.3831
+                  ],
+                  [
+                   3.551,
+                   -2.0502
+                  ],
+                  [
+                   3.6668,
+                   -1.7098
+                  ],
+                  [
+                   3.7506,
+                   -1.3651
+                  ],
+                  [
+                   3.8026,
+                   -1.0189
+                  ],
+                  [
+                   3.8233,
+                   -0.6741
+                  ],
+                  [
+                   3.8132,
+                   -0.3336
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Print flat",
+        "visible": true,
+        "params": {
+         "x": -7.0,
+         "y": -10.0,
+         "z": -10.0,
+         "width": 80.5,
+         "depth": 20.0,
+         "height": 10.0,
+         "center": false
+        }
+       },
+       {
+        "type": "translate",
+        "name": "Hex socket",
+        "visible": true,
+        "params": {
+         "x": -6.01,
+         "y": 0.0,
+         "z": 4.6
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Along X",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Hex socket",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 5.01,
+             "radius_bottom": 3.4641,
+             "radius_top": 3.4641,
+             "segments": 6,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Tip chamfer",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 4.6
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Along X",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate_extrude",
+            "name": "Tip chamfer",
+            "visible": true,
+            "params": {
+             "angle": 360.0,
+             "segments": 96
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Tip chamfer profile",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 2.3232,
+                 73.5
+                ],
+                [
+                 6.5,
+                 69.3232
+                ],
+                [
+                 6.5,
+                 73.5
+                ]
+               ]
+              }
+             }
+            ]
+           }
+          ]
          }
         ]
        }

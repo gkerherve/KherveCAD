@@ -1707,6 +1707,26 @@ into a new module and import.
                        check orthographically. The MCP `_INSTRUCTIONS`
                        carry the same rule ("Modelling a real object")
                        to every connected client.
+  - `tools/butt_hinge.py` — writes `parts/Brackets/Butt Hinge.kcad`
+                       (`python -m khervecad.tools.butt_hinge [OUT]`): a
+                       butt hinge in THREE printable Objects, each at its
+                       own origin in its print pose — Leaf A (knuckles 1,
+                       3, 5; the last one tapped and blind), Leaf B
+                       (knuckles 2, 4) and a removable Ø10 bolt (coarse
+                       2 mm thread, hex socket, round head) printed lying
+                       on a flat, since stood up a hinge pin shears
+                       between layers. Clearances are named (FIT bolt ↔
+                       bores/thread, GAP between knuckles, SWING round the
+                       other leaf's knuckles, which each leaf is scooped
+                       for); bores are truncated teardrops; the tap is the
+                       bolt's own helix grown by FIT (same start and slice
+                       spacing, so in phase). Nothing may touch exactly —
+                       a plate edge on a knuckle's tangent line, a fillet
+                       ending on a chamfer ring, a cone crossing a thread
+                       root on a slice plane each gave doubled edges.
+                       `test_butt_hinge` pins the shipped file to the
+                       builder and, with OpenSCAD, watertightness, bed
+                       contact and a clear 0-180° swing.
   - `mcp_schema.py`  — the **MCP tool table**: 48 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
@@ -1949,6 +1969,13 @@ into a new module and import.
   master updates every copy. `make_master()` promotes a scene object
   into the store and leaves a Linked copy behind; `instance_master()`
   drops a copy into the scene.
+
+The document-wide `$fn` (Edit ▸ common segments, on by default at 45)
+replaces every round object's own segment count **except an intended
+polygon** — `model.keeps_segments`: 8 or fewer (a hex head, a hex
+socket, an octagonal pot) keeps its sides in both the codegen (`_fn`)
+and the preview (`mesh.rp`). It used to turn every hex socket round, so
+no key could turn a library bolt or the butt hinge's.
 
 Hidden objects are emitted with OpenSCAD's `*` disable modifier, so
 visibility round-trips through the generated program. New node types
