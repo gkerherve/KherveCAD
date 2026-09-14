@@ -210114,9 +210114,9 @@
       "name": "Color",
       "visible": true,
       "params": {
-       "color": "#0f1217",
-       "alpha": 0.85,
-       "material": "Glass"
+       "color": "#0d1116",
+       "alpha": 1.0,
+       "material": "Plastic"
       },
       "children": [
        {
