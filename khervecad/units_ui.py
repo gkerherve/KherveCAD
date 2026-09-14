@@ -39,6 +39,8 @@ def changed(win, unit):
     win._show_dimensions(getattr(win.view3d, "highlight_mesh", None))
     win.scene.clear_measure()
     win.view2d.viewport().update()
+    win.view3d.unit = unit                # the 3D scale bar's label
+    win.view3d.update()
     if getattr(win.view3d, "cut", None) is not None:
         win._sync_cut()
     win._dirty = True

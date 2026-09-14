@@ -402,14 +402,25 @@ class MainWindow(QMainWindow):
             "Draw the model with OpenGL: exact occlusion at any size, "
             "anti-aliased. Off, the built-in painter draws it")
         self._gl_act.triggered.connect(self.view3d.set_hardware)
+        # a bar in the document's unit, true at the orbit centre
+        self.view3d.unit = self.model.unit
+        self._scale_bar_act = QAction("3D Scale &Bar", self, checkable=True)
+        self._scale_bar_act.setChecked(self.view3d.scale_bar)
+        self._scale_bar_act.setStatusTip(
+            "Show a scale bar in the document's unit in the 3D view — "
+            "true at the point the camera orbits (everywhere in "
+            "orthographic)")
+        self._scale_bar_act.triggered.connect(self.view3d.set_scale_bar)
         self.view3d.look_toggled.connect(
             lambda key, on: {"cavity": self._cavity_act,
                              "edges": self._edges_act,
                              "smooth": self._smooth_act,
                              "overlay": self._overlay_act,
+                             "scale_bar": self._scale_bar_act,
                              "hardware": self._gl_act}[key].setChecked(on))
         view_menu.addAction(self._cavity_act)
         view_menu.addAction(self._edges_act)
+        view_menu.addAction(self._scale_bar_act)
         view_menu.addAction(self._smooth_act)
         view_menu.addAction(self._overlay_act)
         view_menu.addAction(self._gl_act)

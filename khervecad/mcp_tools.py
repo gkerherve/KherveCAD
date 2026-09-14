@@ -1483,6 +1483,8 @@ class McpToolExecutor:
             win.view3d.set_smooth(bool(params["smooth"]))
         if params.get("overlay") is not None:
             win.view3d.set_overlay(bool(params["overlay"]))
+        if params.get("scale_bar") is not None:
+            win.view3d.set_scale_bar(bool(params["scale_bar"]))
         if params.get("opengl") is not None:
             win.view3d.set_hardware(bool(params["opengl"]))
         if params.get("explode") is not None or params.get("explode_mode"):
@@ -1517,6 +1519,7 @@ class McpToolExecutor:
                 "edges": bool(win.view3d.edges),
                 "smooth": bool(win.view3d.smooth),
                 "overlay": bool(win.view3d.overlay),
+                "scale_bar": bool(win.view3d.scale_bar),
                 "cut": win.view3d.cut_state()}
 
     def _guard_unsaved(self, params, tool: str):

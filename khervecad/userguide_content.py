@@ -730,6 +730,12 @@ default) draws the model's real edges and its outline as thin lines
 &mdash; a cylinder shows its two rims, not its facets. Both are looks
 only and are remembered between sessions; exported pictures include
 them.</p>
+<p><b>3D Scale Bar</b> (on by default) puts a round length &mdash; 1, 2
+or 5 times a power of ten &mdash; in the bottom-left corner of the 3D
+view, in the document's unit (Edit &#9656; Document Units), and redraws
+it as you zoom. A perspective picture has no single scale, so the bar is
+true at the point the camera orbits around; switch to orthographic and
+it is true everywhere.</p>
 {figure("cavity_edges", "The same part plain (left) and with cavity "
         "shading and edge lines (right).")}
 <h3>Preview and exact render</h3>

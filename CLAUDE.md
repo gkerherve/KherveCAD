@@ -864,6 +864,17 @@ into a new module and import.
                        is box-blurred and scaled up smoothly. ~2-7 ms a
                        frame on a 36k-triangle model whose own paint is
                        ~115 ms.
+  - `scalebar.py`    — the 3D view's **scale bar** (View ▸ 3D Scale Bar,
+                       QSettings `render_scale_bar`, default on, MCP
+                       `set_render_options scale_bar`): the shortest 1-2-5
+                       × 10^k length drawn 60-170 px long bottom-left, in
+                       the document's unit (`View3D.unit`, kept in step by
+                       `units_ui.changed`). Pixels per unit are `_focal() /
+                       distance` — true at the ORBIT CENTRE in perspective
+                       (a perspective picture has no single scale) and
+                       everywhere in orthographic; a test pins it to
+                       `_project`. Not drawn in clean pictures; the
+                       snapshot twin copies it.
   - `mesh.py`        — pure-Python fallback tessellator (primitives,
                        linear/rotate extrude with twist/scale/angle,
                        transforms, ear-clipping triangulation). Objects

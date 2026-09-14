@@ -255,6 +255,10 @@ class View3D(QWidget):
         #: too (an onion skin), so from the plane's square-on view the
         #: model's outline is checked against the picture directly
         self.overlay = settings.value("render_overlay", False, type=bool)
+        #: a scale bar in the document's unit, true at the orbit centre
+        #: (scalebar.py); the main window keeps `unit` in step
+        self.scale_bar = settings.value("render_scale_bar", True, type=bool)
+        self.unit = "mm"
         self._info = None               # shading.MeshInfo of self.mesh
         self._info_serial = -1
         #: draw the faces with OpenGL (glrender.py) — exact occlusion at
@@ -408,6 +412,13 @@ class View3D(QWidget):
         self.look_toggled.emit("overlay", self.overlay)
         self.update()
 
+    def set_scale_bar(self, on: bool):
+        """Show the scale bar (scalebar.py); persisted."""
+        self.scale_bar = bool(on)
+        QSettings(*_SETTINGS).setValue("render_scale_bar", self.scale_bar)
+        self.look_toggled.emit("scale_bar", self.scale_bar)
+        self.update()
+
     def set_smooth(self, on: bool):
         """Smooth shading across curved surfaces (OpenGL); persisted."""
         self.smooth = bool(on)
@@ -540,6 +551,7 @@ class View3D(QWidget):
         twin.stage, twin._stage_cache = self.stage, self._stage_cache
         twin.cavity, twin.edges = self.cavity, self.edges
         twin.smooth = self.smooth
+        twin.scale_bar, twin.unit = self.scale_bar, self.unit
         twin.overlay = self.overlay if overlay is None else bool(overlay)
         twin.hardware = self.hardware
         twin.projection = projection if projection in PROJECTIONS \
@@ -1319,6 +1331,11 @@ class View3D(QWidget):
         else:                                  # readable over the chosen bg
             dark = QColor(pair[1]).lightnessF() < 0.5
             painter.setPen(QColor("#e8e8e8") if dark else QColor("#333333"))
+        if self.scale_bar:                     # true at the orbit centre
+            from . import scalebar
+            scalebar.draw(painter, self.width(), self.height(),
+                          scalebar.px_per_unit(self), self.unit,
+                          painter.pen().color())
         painter.drawText(8, self.height() - 8,
                          f"{self.source} — {len(self.mesh)} triangles "
                          f"· {self.style}"

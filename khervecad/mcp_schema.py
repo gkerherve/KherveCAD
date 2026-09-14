@@ -1104,6 +1104,11 @@ TOOLS = [
             "edges": {"type": "boolean",
                       "description": "Draw crease and outline edges as "
                                      "thin lines."},
+            "scale_bar": {"type": "boolean",
+                          "description": "Show a scale bar in the "
+                                         "document's unit in the 3D view, "
+                                         "true at the orbit centre "
+                                         "(everywhere in orthographic)."},
             "overlay": {"type": "boolean",
                         "description": "Draw the reference images OVER "
                                        "the model too (onion skin), to "
