@@ -38,7 +38,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
                              QLabel, QLineEdit, QMessageBox, QPlainTextEdit,
                              QPushButton, QVBoxLayout)
 
-from . import document, mesh, pngexport
+from . import document, mesh, pngexport, units
 from .engine import write_stl
 from .mcp_schema import (CATEGORIES, DEFAULT_CATEGORY,
                          DEFAULT_LICENSE, DEFAULT_ORIGIN,
@@ -187,7 +187,7 @@ def default_summary(window, title: str = "", variant=None) -> str:
                                      if window.model.global_fn_on
                                      else None))
     if size:
-        with_size = text + ", %g x %g x %g mm" % tuple(size)
+        with_size = text + ", " + _size_text(window.model, size)
         if len(with_size) <= SUMMARY_LIMIT:
             text = with_size
     if len(text) > SUMMARY_LIMIT:
@@ -264,8 +264,27 @@ def form_answers(window, *, title, summary="", tags=(),
     ]
     if size:
         lines += ["", "Bounding box (for your own check against the "
-                  "bed)", "  %g x %g x %g mm" % tuple(size)]
+                  "bed)", "  " + _size_text(model, size)]
+        if units.coerce(model.unit) != "mm":
+            lines.append("  (the files are 1:1, so a slicer reads it as "
+                         "%g x %g x %g mm)" % tuple(size))
     return "\n".join(lines) + "\n"
+
+
+def _size_text(model, size) -> str:
+    """"40 x 20 x 10 mm" in the document's unit."""
+    return "%g x %g x %g %s" % (*size, units.symbol(model.unit))
+
+
+def units_note(model) -> str:
+    """What the bundle's files mean for a document not in mm — they are
+    written 1:1, the way a scale model is printed — or ""."""
+    if units.coerce(model.unit) == "mm":
+        return ""
+    return (f"Modelled in {units.name(model.unit)}. The STL and 3MF "
+            f"files are exported 1:1, so a slicer reads each "
+            f"{units.symbol(model.unit)} as 1 mm - scale it in the slicer "
+            "to taste.")
 
 
 def _shape_of(model) -> tuple:
@@ -328,7 +347,7 @@ def opening(window, title: str = "", variant=None) -> str:
     name = (title or "This").strip()
     size = _bounds(model, fn=(model.global_fn if model.global_fn_on
                               else None))
-    sized = ("a %g x %g x %g mm part" % tuple(size)) if size else "a part"
+    sized = f"a {_size_text(model, size)} part" if size else "a part"
     first = _pick(_FIRST, variant, 4).format(name=name, sized=sized)
 
     objects, booleans, extrusions = _shape_of(model)
@@ -396,9 +415,11 @@ def default_description(window, title: str = "",
         lines += [
             "SIZE",
             "",
-            "%g x %g x %g mm as modelled (X x Y x Z)." % tuple(size),
+            _size_text(model, size) + " as modelled (X x Y x Z).",
             "",
         ]
+        if units_note(model):
+            lines[-1:-1] = [units_note(model)]
 
     variables = _variables(model)
     if variables:
@@ -442,6 +463,9 @@ def build_bundle(window, folder, *, title, description="", tags=(),
 
     def wrote(path):
         files.append(str(path))
+
+    if units_note(model) and ({"stl", "3mf"} & set(formats)):
+        warnings.append(units_note(model))
 
     if "scad" in formats:
         path = folder / f"{stem}.scad"

@@ -248,7 +248,10 @@ unless you pass discard_unsaved_changes — offer to save instead.
 - get_document_info reports validation errors (bad expressions, empty \
 extrusions, 3D inside an extrude, a revolve crossing the axis). Fix \
 them; the app paints those nodes red for the user.
-- Sizes are millimetres.
+- Sizes are in the document's unit — millimetres unless \
+get_document_info says otherwise ("unit": nm, um, cm, m, in). The unit \
+is a label, never a rescale: a 0.49 nm lattice cell in a nanometre \
+document is written 0.49. set_render_options unit changes it.
 - The user controls what you may do (Tools > MCP Server). A refusal \
 naming an access level is their setting, not a bug — tell them what you \
 needed rather than working around it.

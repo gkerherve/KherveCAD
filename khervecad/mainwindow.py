@@ -27,7 +27,7 @@ from PyQt5.QtWidgets import (QAction, QActionGroup, QApplication,
                              QDockWidget, QFileDialog, QLabel,
                              QMainWindow, QMessageBox, QSplitter)
 
-from . import APP_NAME, __version__, document, icons, mesh
+from . import APP_NAME, __version__, document, icons, mesh, units
 from .engine import ScadEngine, set_openscad_path
 from .model import NODE_TYPES, DocumentModel
 from .properties import PropertiesPanel
@@ -133,7 +133,7 @@ class MainWindow(QMainWindow):
         self.view2d.cursor_moved.connect(self._cursor_moved)
         self.view2d.zoom_changed.connect(
             lambda ppm: self._zoom_label.setText(
-                f"1 mm = {ppm:.2f} px"))
+                f"1 {self._unit()} = {ppm:.2f} px"))
         self.scene.status.connect(
             lambda text: self.statusBar().showMessage(text, 6000))
         self.scene.measure_changed.connect(
@@ -146,6 +146,7 @@ class MainWindow(QMainWindow):
         self.model.node_changed.connect(lambda _n: self._model_edited())
         self.model.references_changed.connect(self._model_edited)
         self.model.drawing_changed.connect(self._drawing_edited)
+        self.model.unit_changed.connect(self._unit_changed)
         self.model.mate_released.connect(
             lambda n: self.statusBar().showMessage(
                 f"{n.name} detached — its position is now yours to "
@@ -270,6 +271,7 @@ class MainWindow(QMainWindow):
         edit_menu.addAction("&Ungroup", self._ungroup_selection,
                             "Ctrl+Shift+G")
         edit_menu.addSeparator()
+        edit_menu.addAction("Document &Units...", self.choose_unit)
         edit_menu.addAction("&Locate OpenSCAD...", self._locate_openscad)
 
         insert_menu = m.addMenu("&Insert")
@@ -553,7 +555,8 @@ class MainWindow(QMainWindow):
         self._update_title()
 
     def _build_status_bar(self):
-        self._cursor_label = QLabel("x: 0.0 mm  y: 0.0 mm")
+        u = self._unit()
+        self._cursor_label = QLabel(f"x: 0.0 {u}  y: 0.0 {u}")
         self.statusBar().addWidget(self._cursor_label)
         self._measure_label = QLabel("")
         self.statusBar().addWidget(self._measure_label)
@@ -562,7 +565,7 @@ class MainWindow(QMainWindow):
         self._file_label = QLabel()            # current document path
         self.statusBar().addPermanentWidget(self._file_label)
         self._zoom_label = QLabel(
-            f"1 mm = {self.view2d.px_per_mm():.2f} px")
+            f"1 {u} = {self.view2d.px_per_mm():.2f} px")
         self.statusBar().addPermanentWidget(self._zoom_label)
         self._engine_label = QLabel()
         self.statusBar().addPermanentWidget(self._engine_label)
@@ -571,8 +574,22 @@ class MainWindow(QMainWindow):
 
     def _cursor_moved(self, p):
         _axes, (kx, ky) = PLANES[self.scene.plane]
+        u = self._unit()
         self._cursor_label.setText(
-            f"{kx}: {p.x():.1f} mm  {ky}: {p.y():.1f} mm")
+            f"{kx}: {p.x():.1f} {u}  {ky}: {p.y():.1f} {u}")
+
+    # ---------------------------------------------------------- units
+    def _unit(self) -> str:
+        """The document unit's symbol for a readout ("mm", "nm", ...)."""
+        return units.symbol(self.model.unit)
+
+    def choose_unit(self):
+        from . import units_ui
+        units_ui.choose(self)
+
+    def _unit_changed(self, unit):
+        from . import units_ui
+        units_ui.changed(self, unit)
 
     def _on_plane_auto_changed(self, plane):
         """The 2D view jumped planes to expose a primitive's edit handles;
@@ -763,7 +780,7 @@ class MainWindow(QMainWindow):
         dx, dy, dz = (max(xs) - min(xs), max(ys) - min(ys),
                       max(zs) - min(zs))
         self._dims_label.setText(
-            f"Size  X {dx:.1f} · Y {dy:.1f} · Z {dz:.1f} mm")
+            f"Size  X {dx:.1f} · Y {dy:.1f} · Z {dz:.1f} {self._unit()}")
 
     def _node_created(self, node):
         if self.builder.isolated_component() is None \
@@ -1265,8 +1282,8 @@ class MainWindow(QMainWindow):
                                 f"Could not read an image from {path}.")
             return
         width, ok = QInputDialog.getDouble(
-            self, "Reference image", "Width on the plane (mm):", 100.0,
-            0.1, 1e6, 1)
+            self, "Reference image",
+            f"Width on the plane ({self._unit()}):", 100.0, 0.1, 1e6, 1)
         if not ok:
             return
         height = width * ratio
@@ -1916,7 +1933,8 @@ class MainWindow(QMainWindow):
         # inches or metres is only obviously wrong once it is measured
         from .meshimport import size_text
         self.statusBar().showMessage(
-            f"Imported {Path(path).name}{size_text(node)}{note} — "
+            f"Imported {Path(path).name}"
+            f"{size_text(node, unit=self.model.unit)}{note} — "
             "right-click ▸ Imported mesh to centre it, stand it on the "
             "floor or fix its units.", 12000)
 
@@ -1945,19 +1963,29 @@ class MainWindow(QMainWindow):
             return
         if not path.lower().endswith(".stl"):
             path += ".stl"
+        factor = self._export_scale()
+        if factor is None:
+            return
         if self.engine.available:
             error = self.engine.export_stl(self.model.to_scad(), path)
             if error:
                 QMessageBox.warning(self, APP_NAME,
                                     f"OpenSCAD export failed:\n{error}")
-            return
-        from .engine import write_stl
-        write_stl(mesh.tessellate(self.model.root), path)
-        if mesh.uses_booleans(self.model.root):
+                return
+        else:
+            from .engine import write_stl
+            write_stl(mesh.tessellate(self.model.root), path)
+        if factor != 1.0:
+            units.scale_mesh_file(path, factor)
+        if not self.engine.available and mesh.uses_booleans(self.model.root):
             QMessageBox.information(
                 self, APP_NAME,
                 "Exported with the built-in tessellator: booleans are "
                 "approximated. Install OpenSCAD for exact geometry.")
+
+    def _export_scale(self):
+        from . import units_ui
+        return units_ui.export_scale(self)
 
     def publish_to_printables(self):
         """Build the Printables upload bundle for the open model."""

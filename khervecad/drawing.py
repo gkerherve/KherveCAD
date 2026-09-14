@@ -411,10 +411,13 @@ def scale_label(s):
 def layout(tris, *, sheet="A4", views=("Front", "Top", "Right",
                                        "Isometric"),
            dimensions=True, section_axis=None, title="Part", scale=None,
-           info=None, hidden_lines=True):
+           info=None, hidden_lines=True, unit="mm"):
     """Everything the exporters need: the sheet, the scale, every view
     placed on it (sheet mm, y up from the bottom-left corner), the
-    dimensions, the optional section and the title block text."""
+    dimensions, the optional section and the title block text. *unit*
+    is the document's (the model's numbers; the sheet stays mm) and
+    only names the title block's UNITS cell."""
+    from .units import symbol
     sheet_w, sheet_h = SHEETS[sheet]
     margin = 10.0
     block_h = 24.0                            # the title block strip
@@ -484,7 +487,8 @@ def layout(tris, *, sheet="A4", views=("Front", "Top", "Right",
                            lines=None, dims=[]))
     return dict(sheet=sheet, width=sheet_w, height=sheet_h,
                 margin=margin, block_h=block_h, scale=s,
-                scale_label=scale_label(s), title=title, views=placed)
+                scale_label=scale_label(s), title=title, views=placed,
+                units=symbol(unit))
 
 
 def to_sheet(view, u, v, scale):

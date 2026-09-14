@@ -185,7 +185,8 @@ one or two plain sentences what you made, why, and where to find it —
 e.g. "I built the leg once as an Object and placed it four times, so
 editing it in the Object tab changes all four legs."
 
-Units are millimetres. Prefer named variables (and vectors like
+Sizes are in the document's unit, stated with every message
+(millimetres unless it says otherwise). Prefer named variables (and vectors like
 size=[x,y,z]) for key dimensions so parts stay parametric. The user's
 current program is provided with every message — modify it rather than
 starting over, unless asked.
@@ -983,16 +984,19 @@ class ChatPanel(QWidget):
         """The program the assistant works on, plus which mode it is:
         one Object's contents in Object mode, the whole assembly in
         Main."""
+        from .units import name, symbol
         model = self.window.model
         comp = self.active_object()
+        unit_line = (f"\nUNITS: {name(model.unit)} — write every size so "
+                     f"1 means 1 {symbol(model.unit)}.")
         if comp is not None:
-            return (f"\n\nMODE: Object — the user is editing the part "
+            return (unit_line + f"\n\nMODE: Object — the user is editing the part "
                     f"'{comp.name}'. Your program is the CONTENTS of "
                     f"that part; it is applied inside it, and each step "
                     f"becomes a row in the Object tree.\n"
                     f"Current Object program:\n```scad\n"
                     + model.subtree_scad(comp) + "\n```")
-        return ("\n\nMODE: Main — the user is in the assembly. Your "
+        return (unit_line + "\n\nMODE: Main — the user is in the assembly. Your "
                 "program is the whole document. To change how one part "
                 "is MADE, they must open it in the Object tab first "
                 "(Object mode) — say so rather than rebuilding the "

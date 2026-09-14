@@ -353,15 +353,32 @@ def _ray_meets_box(origin, d, tris) -> bool:
 # ---------------------------------------------------------- print check
 def print_check(tris, overhang_deg: float = DEFAULT_OVERHANG,
                 min_wall: float = DEFAULT_MIN_WALL,
-                layer: float = 0.2) -> dict:
+                layer: float = 0.2, unit: str = "mm") -> dict:
     """The report: per check a status (pass / warn / fail), a message,
-    numbers, and the triangles at fault for highlighting."""
+    numbers, and the triangles at fault for highlighting.
+
+    *tris* are in the document's *unit*; *min_wall* and *layer* are a
+    printer's, in real millimetres, and are converted — the part is
+    judged as it would print 1:1 (a nanometre model fails the wall
+    check, truthfully). Reported lengths are in *unit*."""
+    from .units import length, name, printable, symbol, tidy, to_mm
     if not tris:
         return dict(checks=[], overhang_tris=[], thin_tris=[],
                     summary="nothing to check")
     lo, hi = bounds(tris)
     height = hi[2] - lo[2]
+    k = to_mm(unit)
+    u = symbol(unit)
+    min_wall, layer = min_wall / k, layer / k       # now in model units
     checks = []
+    if not printable(unit):
+        size = " × ".join(tidy((hi[i] - lo[i]) * k, 4) for i in range(3))
+        checks.append(dict(
+            name="Scale", status="warn",
+            message=f"Modelled in {name(unit)}: printed 1:1 the part is "
+                    f"{size} mm, and the checks below judge it at that "
+                    "size. Export the STL 1:1 (1 " + u + " → 1 mm) to "
+                    "print it as a model."))
 
     water = watertight(tris)
     if water["ok"]:
@@ -402,11 +419,17 @@ def print_check(tris, overhang_deg: float = DEFAULT_OVERHANG,
                     f"than {overhang_deg:g}° — needs supports, or "
                     "re-orient the part."))
 
-    grid = _Grid(tris)
-    stride = max(1, len(tris) // THIN_SAMPLES)
+    extent = max(hi[i] - lo[i] for i in range(3))
     thin_tris = []
     thinnest = None
-    for i in range(0, len(tris), stride):
+    # a minimum wall wider than the whole part: every wall is thin, and
+    # probing that far would walk far more grid cells than the part has
+    whole = min_wall >= extent
+    if whole:
+        thin_tris = list(tris)
+    grid = None if whole else _Grid(tris)
+    stride = max(1, len(tris) // THIN_SAMPLES)
+    for i in range(0, 0 if whole else len(tris), stride):
         tri = tris[i]
         n, area = _normal_area(tri)
         if area <= 0:
@@ -428,16 +451,22 @@ def print_check(tris, overhang_deg: float = DEFAULT_OVERHANG,
         if best is not None:
             thin_tris.append(tri)
             thinnest = best if thinnest is None else min(thinnest, best)
-    if thinnest is None:
+    if whole:
+        checks.append(dict(
+            name="Wall thickness", status="fail",
+            message=f"The whole part ({length(extent, unit)} at its "
+                    f"widest) is thinner than the {length(min_wall, unit)}"
+                    " minimum wall — it cannot print at this size."))
+    elif thinnest is None:
         checks.append(dict(name="Wall thickness", status="pass",
-                           message=f"No wall thinner than {min_wall:g} mm "
-                                   "found."))
+                           message=f"No wall thinner than "
+                                   f"{length(min_wall, unit)} found."))
     else:
         checks.append(dict(
             name="Wall thickness",
             status="fail" if thinnest < min_wall * 0.6 else "warn",
-            message=f"Walls down to {thinnest:.2f} mm (minimum "
-                    f"{min_wall:g}) — may not print, or breaks."))
+            message=f"Walls down to {thinnest:.2f} {u} (minimum "
+                    f"{tidy(min_wall)}) — may not print, or breaks."))
 
     if height > 0:
         ratio = plate_area / (height * height)
@@ -448,12 +477,13 @@ def print_check(tris, overhang_deg: float = DEFAULT_OVERHANG,
         elif ratio < FOOTPRINT_RATIO:
             checks.append(dict(
                 name="Footprint", status="warn",
-                message=f"{plate_area:.0f} mm² on the plate for a "
-                        f"{height:.0f} mm tall part — may tip or peel; "
+                message=f"{plate_area:.0f} {u}² on the plate for a "
+                        f"{height:.0f} {u} tall part — may tip or peel; "
                         "add a brim or lay it flat."))
         else:
             checks.append(dict(name="Footprint", status="pass",
-                               message=f"{plate_area:.0f} mm² on the plate."))
+                               message=f"{plate_area:.0f} {u}² on the "
+                                       "plate."))
     worst = "pass"
     for c in checks:
         if c["status"] == "fail":

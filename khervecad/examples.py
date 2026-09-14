@@ -1382,3 +1382,4 @@ def load_example(model: DocumentModel, build) -> None:
     """Replace the document with the example built by *build*."""
     model.root = build()
     model.structure_changed.emit()
+    model.set_unit("mm")                 # every example is drawn in mm

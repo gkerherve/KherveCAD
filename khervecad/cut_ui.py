@@ -15,6 +15,13 @@ from PyQt5.QtWidgets import (QAction, QActionGroup, QGridLayout, QLabel,
                              QSlider, QToolButton, QWidget)
 
 
+def _unit(view) -> str:
+    """The unit symbol of the document the 3D *view* shows."""
+    from .units import symbol
+    model = getattr(view.window(), "model", None)
+    return symbol(getattr(model, "unit", "mm"))
+
+
 class CutBar(QWidget):
     """Floating controls for View ▸ Cut Through, along the bottom of the
     3D view while a cut is on: the axis the model is sliced across, a
@@ -83,7 +90,8 @@ class CutBar(QWidget):
         self.slider.setValue(int(round(cut["position"] * 1000)))
         self.slider.blockSignals(False)
         self.readout.setText(f"{cut['axis'].upper()} = "
-                             f"{cut.get('offset', 0.0):.1f} mm")
+                             f"{cut.get('offset', 0.0):.1f} "
+                             f"{_unit(self.view)}")
 
 
 def build_menu(win, view_menu):
@@ -126,7 +134,8 @@ def set_cut(win, on=True, axis=None, position=None, flip=None):
     win.view3d.set_cut(axis=axis, position=position, flip=flip)
     cut = win.view3d.cut_state()
     win.statusBar().showMessage(
-        f"Cut through {cut['axis'].upper()} at {cut['offset']:.1f} mm — "
+        f"Cut through {cut['axis'].upper()} at {cut['offset']:.1f} "
+        f"{_unit(win.view3d)} — "
         "slide it along the bar at the bottom of the 3D view; Ctrl+Alt+X "
         "shows the whole model again.", 8000)
 

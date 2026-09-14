@@ -78,6 +78,31 @@ into a new module and import.
                        params may hold expression strings like
                        `i * 10` so loop variables work everywhere.
   - `document.py`    — `.kcad` JSON (de)serialisation, `.scad` export.
+  - `units.py`       — the **document unit** (Qt-free):
+                       `DocumentModel.unit` ("nm", "um", "mm", "cm",
+                       "m", "in"; default "mm"; Edit ▸ Document Units…,
+                       MCP `set_render_options unit`) says what one model
+                       unit means. A LABEL, never a rescale — OpenSCAD is
+                       unitless, and a 100 nm quartz particle of 0.4913 nm
+                       lattice cells is written 100 and 0.4913. Every
+                       readout uses `symbol()` (status bar, 2D scale bar /
+                       live size / measure / auto dimensions, Cut Through,
+                       Blueprint UNITS cell, Analyse, Printables text);
+                       what is physically dimensioned goes through
+                       `to_mm()`: mass via true cm³, print time and cost
+                       only for `PRINTABLE` units (mm, cm, in), the print
+                       check converts its printer-mm thresholds (a
+                       minimum wall wider than the part fails without
+                       probing), and STL/3MF — which slicers read as mm —
+                       are written 1:1 unless the user (Export STL's
+                       question) or `export_document scale_to_mm` asks;
+                       `scale_mesh_file` scales the written file (3MF by
+                       rewriting its vertex attributes). MCP keys ending
+                       `_mm`/`_mm2`/`_mm3` are always TRUE millimetres
+                       (`significant` figures, so 1e-13 survives); plain
+                       keys are document units. The unit is in the undo
+                       snapshot (one Ctrl+Z); new documents and examples
+                       are mm.
   - `scadparse.py`   — **.scad import**: tokenizer + recursive-descent
                        parser for the generated subset plus common
                        variations (d= diameters, scalar rotate/scale,
@@ -1968,7 +1993,8 @@ colour when its exact mesh landed).
 where each node dict has `"type"`, `"name"`, `"visible"`, `"params"`
 and nested `"children"`. When a node gains new persisted properties,
 bump `FORMAT_VERSION` in `document.py` and keep loading backward
-compatible.
+compatible. Version 9 adds the top-level `"unit"` (units.py); a file
+without it, or with a unit it does not know, opens as millimetres.
 
 ## UI conventions
 

@@ -22,7 +22,7 @@ from PyQt5.QtWidgets import (QGraphicsEllipseItem, QGraphicsItem,
                              QGraphicsPolygonItem, QGraphicsRectItem,
                              QGraphicsScene, QGraphicsView)
 
-from . import expr
+from . import expr, units
 from .model import SHAPE_2D, SHAPE_3D, CadNode, DocumentModel
 
 SELECT, LINE, RECT, CIRCLE, POLYGON, TEXT, MEASURE, DIMENSION = (
@@ -62,10 +62,10 @@ def _pen(color: str, width=_SHAPE_PEN_W) -> QPen:
     return pen
 
 
-def _fmt_mm(value: float) -> str:
-    """A tidy millimetre label: no trailing zeros (30, 30.5, 36.06)."""
-    text = f"{value:.2f}".rstrip("0").rstrip(".")
-    return f"{text or '0'} mm"
+def _fmt_len(value: float, unit: str = "mm") -> str:
+    """A tidy length label in the document's unit: no trailing zeros
+    (30 mm, 30.5 nm, 36.06 µm)."""
+    return units.length(value, unit)
 
 
 def _resize_cursor(ax: float, ay: float):
@@ -782,11 +782,17 @@ class SketchScene(QGraphicsScene):
             self.measure_changed.emit("")
             self.update()
 
+    def unit(self) -> str:
+        """The document unit's symbol, for every length this view
+        prints ("mm", "nm", "µm", ...)."""
+        return units.symbol(getattr(self.model, "unit", "mm"))
+
     def _emit_measure(self, a, b):
         dx, dy = b.x() - a.x(), b.y() - a.y()
         dist = (dx * dx + dy * dy) ** 0.5
+        u = self.unit()
         self.measure_changed.emit(
-            f"distance: {dist:.2f} mm    Δ {dx:.2f}, {dy:.2f} mm")
+            f"distance: {dist:.2f} {u}    Δ {dx:.2f}, {dy:.2f} {u}")
 
     def rebuild(self):
         self.updating = True
@@ -1439,14 +1445,15 @@ class SketchScene(QGraphicsScene):
                 length = ((pos.x() - start.x()) ** 2 +
                           (pos.y() - start.y()) ** 2) ** 0.5
                 self.measure_changed.emit(
-                    f"length: {length:.1f} mm   "
+                    f"length: {length:.1f} {self.unit()}   "
                     f"Δ {pos.x() - start.x():.1f}, "
-                    f"{pos.y() - start.y():.1f} mm")
+                    f"{pos.y() - start.y():.1f} {self.unit()}")
             elif self.tool == RECT:
                 rect = QRectF(start, pos).normalized()
                 self._draft.setRect(rect)
                 self.measure_changed.emit(
-                    f"{rect.width():.1f} × {rect.height():.1f} mm")
+                    f"{rect.width():.1f} × {rect.height():.1f} "
+                    f"{self.unit()}")
             elif self.tool == CIRCLE:
                 radius = ((pos.x() - start.x()) ** 2 +
                           (pos.y() - start.y()) ** 2) ** 0.5
@@ -1454,7 +1461,8 @@ class SketchScene(QGraphicsScene):
                                     start.y() - radius,
                                     2 * radius, 2 * radius)
                 self.measure_changed.emit(
-                    f"r = {radius:.1f} mm   Ø {2 * radius:.1f} mm")
+                    f"r = {radius:.1f} {self.unit()}   "
+                    f"Ø {2 * radius:.1f} {self.unit()}")
             event.accept()
             return
         if self.tool == POLYGON and self._poly_points:
@@ -1563,7 +1571,13 @@ class SketchView(QGraphicsView):
         self.centerOn(30, 20)
 
     def px_per_mm(self) -> float:
+        """Pixels per model unit (a millimetre unless the document says
+        otherwise)."""
         return abs(self.transform().m11())
+
+    def _unit(self) -> str:
+        scene = self.scene()
+        return scene.unit() if hasattr(scene, "unit") else "mm"
 
     # ------------------------------------------------ middle-button pan
     def mousePressEvent(self, event):
@@ -1726,7 +1740,8 @@ class SketchView(QGraphicsView):
         painter.setPen(QPen(color, 1.4))
         self._draw_origin_gizmo(painter, ai, bi)
 
-        # scale bar (everything is millimetres)
+        # scale bar, in the document's unit (a label: one model unit is
+        # one scene unit whatever it stands for)
         ppm = self.px_per_mm()
         bar_mm = None
         for k in range(-3, 6):
@@ -1745,7 +1760,7 @@ class SketchView(QGraphicsView):
             painter.drawLine(x0, y0 - 5, x0, y0 + 5)
             painter.drawLine(int(x0 + px), y0 - 5, int(x0 + px),
                              y0 + 5)
-            label = f"{bar_mm:g} mm"
+            label = f"{bar_mm:g} {self._unit()}"
             painter.setFont(font)
             painter.drawText(int(x0 + px / 2 - 20), y0 - 8, label)
         # measurement + dimension annotations, drawn in view space so
@@ -1812,12 +1827,12 @@ class SketchView(QGraphicsView):
 
     def _draw_dim(self, painter, a_scene, b_scene, *, color, bg,
                   text=None, offset=0.0, dots=True):
-        """Dimension between two *scene* points (mm)."""
+        """Dimension between two *scene* points (model units)."""
         from math import hypot
         if text is None:
             dist = hypot(a_scene.x() - b_scene.x(),
                          a_scene.y() - b_scene.y())
-            text = _fmt_mm(dist)
+            text = _fmt_len(dist, self._unit())
         self._dim_screen(painter,
                          QPointF(self.mapFromScene(a_scene)),
                          QPointF(self.mapFromScene(b_scene)),
@@ -1918,7 +1933,7 @@ class SketchView(QGraphicsView):
                            QPointF(c.x() - r, c.y()),
                            QPointF(c.x() + r, c.y()),
                            color=color, bg=bg, dots=False,
-                           text="⌀ " + _fmt_mm(2 * r))
+                           text="⌀ " + _fmt_len(2 * r, self._unit()))
             return
         if isinstance(item, LineShapeItem):          # length beside it
             ln = item.line()
@@ -1936,11 +1951,14 @@ class SketchView(QGraphicsView):
         ys = [p.y() for p in pts]
         sl, sr, stop, sbot = min(xs), max(xs), min(ys), max(ys)
         # width below the box, height on the right (screen space)
+        unit = self._unit()
         self._dim_screen(painter, QPointF(sl, sbot), QPointF(sr, sbot),
-                         color=color, bg=bg, text=_fmt_mm(lr.width()),
+                         color=color, bg=bg,
+                         text=_fmt_len(lr.width(), unit),
                          offset=22, dots=False)
         self._dim_screen(painter, QPointF(sr, sbot), QPointF(sr, stop),
-                         color=color, bg=bg, text=_fmt_mm(lr.height()),
+                         color=color, bg=bg,
+                         text=_fmt_len(lr.height(), unit),
                          offset=22, dots=False)
 
     def wheelEvent(self, event):

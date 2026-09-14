@@ -45,4 +45,5 @@ def make_layout(window, *, sheet="A4", views=STANDARD, dimensions=True,
     return drawing.layout(tris, sheet=sheet, views=views,
                           dimensions=dimensions, section_axis=section_axis,
                           title=title or name, scale=scale,
-                          hidden_lines=hidden_lines)
+                          hidden_lines=hidden_lines,
+                          unit=getattr(window.model, "unit", "mm"))

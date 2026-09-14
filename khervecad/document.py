@@ -18,8 +18,9 @@ import os
 
 from .meshimport import relative_for_save, resolve_paths
 from .model import NODE_TYPES, CadNode, DocumentModel
+from .units import coerce
 
-FORMAT_VERSION = 8          # 4: "component" (Object) node type
+FORMAT_VERSION = 9          # 4: "component" (Object) node type
                             # 5: instances (reference->component) may
                             #    carry a "mate" record
                             # 6: organic/mesh node types; color nodes
@@ -29,6 +30,8 @@ FORMAT_VERSION = 8          # 4: "component" (Object) node type
                             #    the mesh is inside the document folder
                             # 8: "drawing" — the Blueprint sheet (views,
                             #    annotations, title block); absent = none
+                            # 9: "unit" — the display unit (units.py);
+                            #    absent = "mm"
 
 
 def node_to_dict(node: CadNode) -> dict:
@@ -55,6 +58,7 @@ def save_kcad(model: DocumentModel, path: str):
     data = {"format": "kcad", "version": FORMAT_VERSION,
             "global_fn": int(model.global_fn),
             "global_fn_on": bool(model.global_fn_on),
+            "unit": model.unit,
             "dimensions": model.dimensions,
             "references": model.reference_images,
             "tree": node_to_dict(model.root)}
@@ -78,11 +82,14 @@ def load_kcad(model: DocumentModel, path: str):
     model.dimensions = [dict(d) for d in data.get("dimensions", [])]
     model.reference_images = [dict(r) for r in data.get("references", [])]
     model.drawing = data.get("drawing") or None
+    old_unit, model.unit = model.unit, coerce(data.get("unit", "mm"))
     model.group_variables()               # gather loose top-level vars
     model.structure_changed.emit()
     model.dimensions_changed.emit()
     model.references_changed.emit()
     model.drawing_changed.emit()
+    if model.unit != old_unit:
+        model.unit_changed.emit(model.unit)
 
 
 def export_scad(model: DocumentModel, path: str):

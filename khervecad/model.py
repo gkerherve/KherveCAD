@@ -940,6 +940,8 @@ class DocumentModel(QObject):
     drawing_changed = pyqtSignal()
     #: a mate was dropped because its placement was edited by hand.
     mate_released = pyqtSignal(object)
+    #: the document's display unit (units.py) was changed.
+    unit_changed = pyqtSignal(str)
 
     #: the placement params a mate drives — typing into one of these
     #: releases the mate (see set_param).
@@ -967,6 +969,10 @@ class DocumentModel(QObject):
         #: out of the undo snapshots — the Blueprint window has its own
         #: undo, and a Ctrl+Z in the model must not rewind the drawing.
         self.drawing = None
+        #: what one model unit means ("nm", "um", "mm", "cm", "m",
+        #: "in") — a label for every readout, never a rescale of the
+        #: geometry (see units.py)
+        self.unit = "mm"
         self.undo_stack = QUndoStack(self)
         self._restoring = False
         self._last_state = self._serialize()
@@ -978,13 +984,15 @@ class DocumentModel(QObject):
         self.node_changed.connect(lambda _n: self._schedule_capture())
         self.dimensions_changed.connect(self._schedule_capture)
         self.references_changed.connect(self._schedule_capture)
+        self.unit_changed.connect(lambda _u: self._schedule_capture())
 
     # ------------------------------------------------------ undo/redo
     def _serialize(self) -> str:
         from .document import node_to_dict
         return json.dumps({"tree": node_to_dict(self.root),
                            "dimensions": self.dimensions,
-                           "references": self.reference_images})
+                           "references": self.reference_images,
+                           "unit": self.unit})
 
     def _schedule_capture(self):
         """Capture one undo snapshot per event-loop cycle, so a
@@ -1011,10 +1019,26 @@ class DocumentModel(QObject):
             self.dimensions = [dict(d) for d in data.get("dimensions", [])]
             self.reference_images = [dict(r) for r in
                                      data.get("references", [])]
+            unit = data.get("unit", "mm")
+            unit_moved = unit != self.unit
+            self.unit = unit
             self._last_state = state
             self.structure_changed.emit()
+            if unit_moved:
+                self.unit_changed.emit(unit)
         finally:
             self._restoring = False
+
+    # ---------------------------------------------------------- units
+    def set_unit(self, unit) -> str:
+        """Set the display unit (any spelling `units.normalise` takes);
+        the geometry is untouched. One undo step. Returns the code."""
+        from .units import normalise
+        code = normalise(unit)
+        if code != self.unit:
+            self.unit = code
+            self.unit_changed.emit(code)
+        return code
 
     # ---------------------------------------------------- dimensions
     def add_dimension(self, a, b, plane: str):
@@ -1584,6 +1608,7 @@ class DocumentModel(QObject):
         self.root = CadNode("root")
         self.structure_changed.emit()
         self.drawing_changed.emit()
+        self.set_unit("mm")
 
 
 class _SnapshotCommand(QUndoCommand):

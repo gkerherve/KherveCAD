@@ -160,7 +160,7 @@ def _paint_title_block(painter, lay, k, pt, frame, font):
     big.setBold(True)
     cells = [(cols[0], cols[1], "TITLE", lay["title"], big),
              (cols[1], cols[2], "SCALE", lay["scale_label"], font),
-             (cols[2], cols[3], "UNITS", "mm", font),
+             (cols[2], cols[3], "UNITS", lay.get("units", "mm"), font),
              (cols[3], cols[4], "DATE / SHEET",
               f"{datetime.date.today().isoformat()}   {lay['sheet']}  "
               f"1 / 1", font)]

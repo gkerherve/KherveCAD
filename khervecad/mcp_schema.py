@@ -136,12 +136,15 @@ TOOLS = [
     {
         "name": "get_document_info",
         "description": (
-            "The document as a whole: file path and unsaved state, node "
+            "The document as a whole: file path and unsaved state, the "
+            "document UNIT (`unit`: nm, um, mm, cm, m or in — what one "
+            "model unit means; every size and coordinate in every tool "
+            "is in it, and keys ending _mm are true millimetres), node "
             "and Object counts, the global segment count, whether the "
             "OpenSCAD engine was found (without it booleans are only "
             "approximated in the preview), which Object the user is "
-            "editing, the model's bounding box in mm, and any "
-            "validation errors. Call this first."
+            "editing, the model's bounding box, and any validation "
+            "errors. Call this first."
         ),
         "input_schema": _obj({}),
     },
@@ -392,7 +395,8 @@ TOOLS = [
         "name": "get_node_bounds",
         "description": (
             "World-space bounding box of one or more nodes — min, max, "
-            "size and centre in mm, where the object really sits in "
+            "size and centre in the document's unit (`unit`), where the "
+            "object really sits in "
             "the assembly (every ancestor transform applied). Use it to "
             "check a part's size or position without reading the tree "
             "by hand. `approximate` flags a subtree whose booleans the "
@@ -641,8 +645,9 @@ TOOLS = [
         "name": "section",
         "description": (
             "Cut the model with a plane and get the cross-section: a "
-            "hatched PNG with a mm grid, plus the outlines — each "
-            "closed or not, its area (holes negative) and extent. Shows "
+            "hatched PNG with a grid, plus the outlines — each "
+            "closed or not, its area (holes negative; `area` in the "
+            "document's unit², `area_mm2` true mm²) and extent. Shows "
             "what a shaded render cannot: wall thickness, whether a "
             "bore goes through, what is inside a closed shell. By "
             "default it cuts what the 3D view shows after waiting for "
@@ -656,8 +661,9 @@ TOOLS = [
                                     "horizontally (a plan), 'y' a "
                                     "front section, 'x' a side one."},
             "offset": {"type": "number",
-                       "description": "Where along the axis, in mm. "
-                                      "Defaults to the model's middle."},
+                       "description": "Where along the axis, in the "
+                                      "document's unit. Defaults to "
+                                      "the model's middle."},
             "node_id": {"type": "integer",
                         "description": "Cut just this node instead of "
                                        "the whole view."},
@@ -1058,12 +1064,24 @@ TOOLS = [
         "name": "set_render_options",
         "description": (
             "The document-wide segment count ($fn) for round objects, "
-            "and the 3D camera. Higher segments are smoother and slower "
-            "— raise it for an export, not while iterating."
+            "the document unit, and the 3D camera. Higher segments are "
+            "smoother and slower — raise it for an export, not while "
+            "iterating."
         ),
         "input_schema": _obj({
             "segments": {"type": "integer",
                          "description": "Global $fn (3-512)."},
+            "unit": {"type": "string",
+                     "enum": ["nm", "um", "mm", "cm", "m", "in"],
+                     "description": "What one model unit means — a "
+                                    "LABEL for every readout (status "
+                                    "bar, 2D view, Analyse, Blueprint, "
+                                    "these tools); the geometry is not "
+                                    "rescaled. Set it before building a "
+                                    "model at another scale: a 100 nm "
+                                    "particle is written 100 in a nm "
+                                    "document. Saved with the file; one "
+                                    "undo step."},
             "segments_on": {"type": "boolean",
                             "description": "False lets each object keep "
                                            "its own $fn."},
@@ -1272,6 +1290,16 @@ TOOLS = [
                          "description": "PNG only: picture the assembly "
                                         "exploded — every part pulled "
                                         "away from the centre."},
+            "scale_to_mm": {"type": "boolean",
+                            "description": "STL/3MF of a document not in "
+                                           "mm: multiply every length to "
+                                           "real millimetres (a 100 nm "
+                                           "part becomes 0.0001 mm). "
+                                           "Default false: written 1:1, "
+                                           "so a slicer reads 1 unit as "
+                                           "1 mm — what printing a "
+                                           "scale model wants. The "
+                                           "result says which."},
         }, ["path"]),
     },
     {
@@ -1419,10 +1447,12 @@ TOOLS = [
         "name": "mass_properties",
         "description": (
             "Volume, surface area, centre of mass and bounding box of "
-            "nodes (mm), plus mass and material cost for a material "
-            "and a print-time estimate (rough). Without node_ids: the "
-            "whole scope. `approximate` flags a preview mesh with "
-            "uncut booleans."
+            "nodes (in the document's unit; volume_mm3 / area_mm2 are "
+            "true mm), plus mass at true size for a material, and — "
+            "for a mm, cm or inch document only — material cost and a "
+            "print-time estimate (rough). Without node_ids: the whole "
+            "scope. `approximate` flags a preview mesh with uncut "
+            "booleans."
         ),
         "input_schema": _obj({
             "node_ids": _IDS,
@@ -1442,12 +1472,15 @@ TOOLS = [
             "thinner than min_wall, and the footprint on the build "
             "plate — each pass / warn / fail with a plain-language "
             "message. Run it after building anything meant to be "
-            "printed and fix what it names."
+            "printed and fix what it names. The part is judged at 1:1 "
+            "in the document's unit (a nanometre model is flagged)."
         ),
         "input_schema": _obj({
             "node_ids": _IDS,
             "overhang_deg": {"type": "number", "description": "Default 45."},
-            "min_wall": {"type": "number", "description": "mm; default 0.8."},
+            "min_wall": {"type": "number",
+                         "description": "Real printer mm, whatever the "
+                                        "document unit; default 0.8."},
         }),
     },
     {

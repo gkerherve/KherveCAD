@@ -305,6 +305,17 @@ Properties.</li>
 land on it; the <b>Grid</b> box sets the spacing (down to 0.01 mm). The
 <b>Plane</b> box picks which plane you draw on: Top (XY) for plates and
 footprints, Front (XZ) for profiles you will revolve, Side (YZ).</p>
+<h3>Document units</h3>
+<p>A model is in millimetres unless you say otherwise: <b>Edit &rsaquo;
+Document Units&hellip;</b> picks nanometres, micrometres, centimetres,
+metres or inches. It changes what the numbers are <i>called</i>, not the
+model &mdash; a 100&nbsp;nm particle is typed 100 in a nanometre
+document, and the status bar, the scale bar, measurements, the Analyse
+windows and the Blueprint's UNITS box all say nm. Mass is worked out at
+true size; print time and cost only for mm, cm and inches. An STL is
+read as millimetres by every slicer, so Export STL asks whether to keep
+it 1:1 or scale it to real millimetres. The unit is saved with the
+document.</p>
 <h3>Measuring</h3>
 <p><b>Measure</b> {K("M")}: click two points &mdash; the distance shows in
 the status bar and nothing is added. <b>Add dimension</b> {K("D")}: the

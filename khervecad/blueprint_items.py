@@ -1438,7 +1438,8 @@ class TitleBlockItem(SheetItem):
     def primitives(self):
         cells = drawing.title_block_cells(self.data.get("fields") or {},
                                           self.data.get("scale_label", ""),
-                                          self.data.get("sheet", ""))
+                                          self.data.get("sheet", ""),
+                                          self.data.get("units", "mm"))
         W, H = drawing.TITLE_W, drawing.TITLE_H
         out = [poly("frame", [(0, 0), (W, 0), (W, H), (0, H)])]
         for cell in cells:

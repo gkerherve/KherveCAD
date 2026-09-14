@@ -95,11 +95,12 @@ def test_view_repaints_fully_so_dim_labels_dont_ghost(window):
             == QGraphicsView.FullViewportUpdate)
 
 
-def test_fmt_mm_trims_trailing_zeros():
-    assert view2d._fmt_mm(30.0) == "30 mm"
-    assert view2d._fmt_mm(30.5) == "30.5 mm"
-    assert view2d._fmt_mm(36.056) == "36.06 mm"
-    assert view2d._fmt_mm(0.0) == "0 mm"
+def test_fmt_len_trims_trailing_zeros():
+    assert view2d._fmt_len(30.0) == "30 mm"
+    assert view2d._fmt_len(30.5) == "30.5 mm"
+    assert view2d._fmt_len(36.056) == "36.06 mm"
+    assert view2d._fmt_len(0.0) == "0 mm"
+    assert view2d._fmt_len(49.13, "nm") == "49.13 nm"   # document unit
 
 
 def test_placed_dimension_saves_and_reloads(window, tmp_path):

@@ -286,7 +286,9 @@ class PropertiesPanel(QWidget):
 
     def _describe(self, item):
         if isinstance(item, bi.DimensionItem):
-            unit = "°" if item.data.get("kind") == "angle" else " mm"
+            from .units import symbol
+            unit = ("°" if item.data.get("kind") == "angle"
+                    else " " + symbol(self.win.scene.unit))
             return (f"Measured on the model: "
                     f"{bi.fmt(item.value(), 4)}{unit}. Drag the dimension "
                     f"to move it; type a Text to override the number.")
@@ -351,7 +353,8 @@ class PropertiesPanel(QWidget):
         if isinstance(item, bi.TitleBlockItem) and key == "mass":
             edit.setPlaceholderText(
                 "auto: " + (mass_text(self.win.scene.geometry.volume(),
-                                      str(item.field("material")))
+                                      str(item.field("material")),
+                                      self.win.scene.unit)
                             or "set a known material"))
         edit.editingFinished.connect(lambda: commit(edit.text()))
         return edit
@@ -495,6 +498,7 @@ class BlueprintWindow(QMainWindow):
         self.model = main.model
         self.resize(1400, 900)
         self.scene = BlueprintScene(self)
+        self.scene.unit = self.model.unit
         self.scene.on_edit = self.commit
         self.scene.picture = self._picture
         self.sheet = SheetView(self.scene, self)
@@ -511,7 +515,14 @@ class BlueprintWindow(QMainWindow):
         self.model.structure_changed.connect(self._model_changed)
         self.model.node_changed.connect(lambda _n: self._model_changed())
         self.model.drawing_changed.connect(self._drawing_replaced)
+        self.model.unit_changed.connect(self._unit_changed)
         self.load()
+
+    def _unit_changed(self, unit):
+        """The title block's UNITS and mass follow the document; the
+        dimensions are the model's numbers and need nothing."""
+        self.scene.unit = unit
+        self.scene.refresh_title()
 
     # -- building the UI
     def _action(self, glyph, text, slot=None, shortcut="", tip="",
@@ -910,8 +921,9 @@ class BlueprintWindow(QMainWindow):
         if view is not None and view.data.get("kind") != "shaded":
             q = view.mapFromScene(pos)
             u, v = view.to_model((q.x(), q.y()))
-            text = f"{view.label_text().title()}: {u:.2f}, {v:.2f} mm" \
-                   f"   ·   sheet {text}"
+            from .units import symbol
+            text = f"{view.label_text().title()}: {u:.2f}, {v:.2f} " \
+                   f"{symbol(self.scene.unit)}   ·   sheet {text}"
         self.position_label.setText(text)
 
     def ask_text(self, title, label, default="", multiline=False):
@@ -1190,6 +1202,7 @@ def export_saved(main, path):
     if getattr(main, "engine", None) is not None:
         wait_until_idle(main.engine, 60.0)
     scene = BlueprintScene()
+    scene.unit = main.model.unit
     scene.geometry = Geometry(list(main.view3d.model_mesh or ()))
     scene.load_state(main.model.drawing)
     blueprint_export.export(scene, path)

@@ -51,6 +51,15 @@ and a **picture of the 3D preview**.
   of the standard views, or `all`, one numbered file per view with
   the front-right isometric first; optional `width`, `height`,
   `transparent`).
+- **Units** — a document has a unit (`get_document_info` → `unit`:
+  nm, um, mm, cm, m or in; `set_render_options unit` changes it). It
+  is a label, never a rescale: every coordinate and size in every tool
+  is in that unit, so a 100 nm particle is written `100` in a
+  nanometre document. Keys ending `_mm`, `_mm2`, `_mm3` are always
+  true millimetres. Mass is computed at true size; cost and print time
+  only for mm, cm and inch documents. An STL/3MF of another unit is
+  written 1:1 (a slicer reads 1 unit as 1 mm) unless
+  `export_document` gets `scale_to_mm: true`.
 - **Sharing** — `publish_to_printables` assembles a Printables upload
   folder from the open model: STL, 3MF, the parametric .scad, the
   .kcad project, preview renders and a description the assistant

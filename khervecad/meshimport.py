@@ -60,13 +60,15 @@ def local_bounds(node, env=None):
     return lo, hi
 
 
-def size_text(node, env=None) -> str:
-    """" (40 × 41.5 × 73 mm)" — the mesh's size, for the status bar."""
+def size_text(node, env=None, unit="mm") -> str:
+    """" (40 × 41.5 × 73 mm)" — the mesh's size in the document's
+    unit, for the status bar."""
+    from .units import symbol
     box = local_bounds(node, env)
     if box is None:
         return ""
     dims = " × ".join(f"{b - a:.4g}" for a, b in zip(*box))
-    return f" ({dims} mm)"
+    return f" ({dims} {symbol(unit)})"
 
 
 def place(model, node, floor=False, env=None) -> bool:

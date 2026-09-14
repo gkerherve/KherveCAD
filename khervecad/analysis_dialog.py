@@ -19,7 +19,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog,
                              QFormLayout, QHBoxLayout, QLabel,
                              QPushButton, QTextBrowser, QVBoxLayout)
 
-from . import analysis, mesh
+from . import analysis, mesh, units
 
 _SETTINGS = ("Kherve", "KherveCAD")
 
@@ -51,27 +51,45 @@ def assembly_parts(window):
 
 
 def _fmt(v, digits=2):
+    """Thousands separators; three significant figures when the fixed
+    form would print a real quantity as 0 (a nanoparticle's grams)."""
+    if v and abs(v) < 0.5 * 10 ** -digits:
+        return f"{v:.3g}"
     return f"{v:,.{digits}f}"
 
 
-def mass_html(props, material, price, currency) -> str:
-    grams = analysis.mass(props["volume"], material)
-    hours = analysis.print_time(props["volume"])
+def mass_html(props, material, price, currency, unit="mm") -> str:
+    """The Mass properties table. *props* are in the document's *unit*;
+    mass goes through true cm³, and print time and cost are given only
+    where a printer works 1:1 (units.PRINTABLE)."""
+    u = units.symbol(unit)
+    volume_mm3 = units.mm(props["volume"], unit, 3)
+    grams = analysis.mass(volume_mm3, material)
+    hours = analysis.print_time(volume_mm3)
     rows = [
-        ("Volume", f"{_fmt(props['volume'] / 1000, 3)} cm³ "
-                   f"({_fmt(props['volume'], 0)} mm³)"),
-        ("Surface area", f"{_fmt(props['area'] / 100, 2)} cm²"),
-        ("Size", " × ".join(_fmt(s, 2) for s in props["size"]) + " mm"),
+        ("Volume", f"{_fmt(volume_mm3 / 1000, 3)} cm³ "
+                   f"({_fmt(props['volume'], 0)} {u}³)"),
+        ("Surface area", f"{_fmt(units.mm(props['area'], unit, 2) / 100, 2)}"
+                         f" cm²"),
+        ("Size", " × ".join(_fmt(s, 2) for s in props["size"]) + f" {u}"),
         ("Centre of mass", ", ".join(_fmt(c, 2) for c in props["centroid"])
-                           + " mm"),
+                           + f" {u}"),
         ("Bounding box", f"{[round(v, 2) for v in props['min']]} to "
-                         f"{[round(v, 2) for v in props['max']]}"),
+                         f"{[round(v, 2) for v in props['max']]} {u}"),
         (f"Mass ({material}, solid)", f"{_fmt(grams, 1)} g"),
-        ("Material cost", f"{currency}{_fmt(analysis.cost(grams, price), 2)}"
-                          f" at {currency}{price:g}/kg"),
-        ("Print time (rough)", f"about {hours:.1f} h at "
-                               f"{analysis.PRINT_MM3_PER_S:g} mm³/s"),
     ]
+    if units.printable(unit):
+        rows += [
+            ("Material cost",
+             f"{currency}{_fmt(analysis.cost(grams, price), 2)}"
+             f" at {currency}{price:g}/kg"),
+            ("Print time (rough)", f"about {hours:.1f} h at "
+                                   f"{analysis.PRINT_MM3_PER_S:g} mm³/s"),
+        ]
+    else:
+        rows.append(("Cost, print time",
+                     f"not estimated — the model is in {units.name(unit)}, "
+                     "a scale no printer works at 1:1"))
     body = "".join(f"<tr><td><b>{k}</b></td><td>{v}</td></tr>"
                    for k, v in rows)
     return f"<table cellpadding='4'>{body}</table>"
@@ -213,13 +231,15 @@ class AnalysisDialog(QDialog):
             settings.setValue("analysis/price_per_kg", price)
             self.report = analysis.mass_properties(tris)
             self.browser.setHtml(mass_html(self.report, material, price,
-                                           self.currency))
+                                           self.currency,
+                                           self.window_.model.unit))
         else:
             settings.setValue("analysis/overhang", self.overhang.value())
             settings.setValue("analysis/min_wall", self.min_wall.value())
             self.report = analysis.print_check(
                 tris, overhang_deg=self.overhang.value(),
-                min_wall=self.min_wall.value())
+                min_wall=self.min_wall.value(),
+                unit=self.window_.model.unit)
             self.browser.setHtml(print_html(self.report))
             if self._highlighted:
                 self._toggle_highlight(True)

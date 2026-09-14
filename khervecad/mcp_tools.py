@@ -33,7 +33,7 @@ from pathlib import Path
 
 from PyQt5.QtCore import QBuffer, QByteArray, Qt
 
-from . import anchors, document, mates, mesh
+from . import anchors, document, mates, mesh, units
 from .mcp_schema import (CATEGORIES, DEFAULT_CATEGORY,
                          DEFAULT_LICENSE, DEFAULT_ORIGIN,
                          DEFAULT_VIEWS, FORMATS, ORIENTATIONS,
@@ -164,6 +164,27 @@ class McpToolExecutor:
                 "max": [round(v, 3) for v in hi],
                 "size": [round(hi[i] - lo[i], 3) for i in range(3)]}
 
+    # ── Units ───────────────────────────────────────────────────
+    # Coordinates and sizes are in the document's unit, like every node
+    # param. A key ending _mm / _mm2 / _mm3 is always TRUE millimetres:
+    # the same number in a mm document, converted (to significant
+    # figures, so 1e-13 survives) in any other.
+
+    def _unit(self) -> str:
+        return units.coerce(self._model.unit)
+
+    def _in_mm(self, value, power=1, digits=3):
+        if value is None:
+            return None
+        if self._unit() == "mm":
+            return round(value, digits)
+        return units.significant(units.mm(value, self._unit(), power))
+
+    def _box_in_mm(self, box):
+        if box is None:
+            return None
+        return {k: [self._in_mm(v) for v in vals] for k, vals in box.items()}
+
     # ── Inspection ──────────────────────────────────────────────
 
     def _t_get_document_info(self, _params) -> dict:
@@ -174,10 +195,19 @@ class McpToolExecutor:
                     "instances": len(model.instances_of(c))}
                    for c in model.components()]
         masters = model.masters_group()
+        unit = self._unit()
+        bounds = self._bbox()
         return {
             "path": win._path,
             "unsaved_changes": bool(win._dirty),
-            "units": "millimetres",
+            "units": units.name(unit),
+            "unit": unit,
+            "unit_symbol": units.symbol(unit),
+            "mm_per_unit": units.to_mm(unit),
+            "units_note": (
+                "Every size and coordinate is in the document's unit — "
+                "a label only, the geometry is never rescaled. Keys "
+                "ending _mm are true millimetres."),
             "node_count": sum(1 for _ in model.root.walk()) - 1,
             "top_level": [n.name for n in model.root.children],
             "objects": objects,
@@ -203,7 +233,8 @@ class McpToolExecutor:
                          "difference() by showing its first operand, so "
                          "holes look uncut. Edit > Locate OpenSCAD."),
             },
-            "bounds_mm": self._bbox(),
+            "bounds": bounds,
+            "bounds_mm": self._box_in_mm(bounds),
             "reference_images": self._references(),
             "errors": [{"id": nid, "message": msg}
                        for nid, msg in errors.items()],
@@ -641,7 +672,7 @@ class McpToolExecutor:
             out.append({"id": node.id, "name": node.name,
                         **self._box_dict(lo, hi),
                         "approximate": mesh.uses_booleans(node)})
-        result = {"nodes": out}
+        result = {"nodes": out, "unit": self._unit()}
         if len(out) > 1:
             result["combined"] = self._box_dict(
                 [min(lo[i] for lo in los) for i in range(3)],
@@ -826,7 +857,8 @@ class McpToolExecutor:
         out = {"a": {"at": la, "point": [round(v, 3) for v in pa]},
                "b": {"at": lb, "point": [round(v, 3) for v in pb]},
                "delta": [round(v, 3) for v in delta],
-               "distance": round(math.sqrt(sum(d * d for d in delta)), 3)}
+               "distance": round(math.sqrt(sum(d * d for d in delta)), 3),
+               "unit": self._unit()}
         if box_a and box_b and box_a[0] is not box_b[0]:
             _na, alo, ahi = box_a
             _nb, blo, bhi = box_b
@@ -872,7 +904,8 @@ class McpToolExecutor:
         outlines = []
         for o in sec["outlines"]:
             entry = {"closed": o["closed"], "vertices": len(o["points"]),
-                     "area_mm2": round(o["area"], 3),
+                     "area": round(o["area"], 3),
+                     "area_mm2": self._in_mm(o["area"], 2),
                      "hole": o["closed"] and o["area"] < 0}
             if params.get("include_points"):
                 entry["points"] = [[round(u, 3), round(v, 3)]
@@ -881,8 +914,9 @@ class McpToolExecutor:
         result = {IMAGE_KEY: self._png(image), "axis": axis,
                   "offset": round(sec["offset"], 3),
                   "plane": {"u": u_name, "v": v_name},
-                  "outlines": outlines,
-                  "area_mm2": round(sec["area"], 3),
+                  "outlines": outlines, "unit": self._unit(),
+                  "area": round(sec["area"], 3),
+                  "area_mm2": self._in_mm(sec["area"], 2),
                   "source": source, "render_complete": complete}
         if sec["bounds"]:
             u0, v0, u1, v1 = sec["bounds"]
@@ -893,7 +927,8 @@ class McpToolExecutor:
             vals = [v[k] for tri in tris for v in tri]
             result["note"] = (
                 f"The plane misses the model: it spans {axis} = "
-                f"{min(vals):g} to {max(vals):g} mm.")
+                f"{min(vals):g} to {max(vals):g} "
+                f"{units.symbol(self._unit())}.")
         if any(not o["closed"] for o in sec["outlines"]):
             result["note"] = (
                 "An outline did not close (drawn dashed red): the mesh "
@@ -1420,6 +1455,11 @@ class McpToolExecutor:
             value = params.get("segments")
             model.set_global_fn(on, None if value is None
                                 else max(3, min(512, int(value))))
+        if params.get("unit") is not None:
+            try:
+                model.set_unit(params["unit"])
+            except ValueError as exc:
+                raise ToolError(str(exc))
         if params.get("orientation"):
             name = params["orientation"]
             if name not in ORIENTATIONS:
@@ -1467,6 +1507,7 @@ class McpToolExecutor:
                 win.view3d.set_cut(axis=axis, position=position,
                                    flip=params.get("cut_flip"))
         return {"exploded": win.explode_state(),
+                "unit": self._unit(),
                 "global_segments": int(model.global_fn),
                 "global_segments_on": bool(model.global_fn_on),
                 "projection": win.view3d.projection,
@@ -1694,20 +1735,37 @@ class McpToolExecutor:
         if suffix not in (".stl", ".3mf"):
             raise ToolError(
                 "Export path must end in .scad, .stl, .3mf or .png.")
+        unit = self._unit()
+        factor = units.to_mm(unit) if params.get("scale_to_mm") else 1.0
+
+        def sized(result):
+            """Scale the written file to mm if asked, and say which."""
+            if factor != 1.0:
+                units.scale_mesh_file(path, factor)
+            if unit != "mm":
+                result["unit"] = unit
+                result["scale"] = factor
+                result["units_note"] = (
+                    f"Scaled to millimetres (×{factor:g}): the file is "
+                    "real size." if factor != 1.0 else
+                    units.export_note(unit) + " Written 1:1; pass "
+                    "scale_to_mm: true for real size.")
+            return result
+
         if self._w.engine.available:
             error = self._w.engine.export_mesh(self._model.to_scad(),
                                                path)
             if error:
                 raise ToolError(f"OpenSCAD export failed:\n{error}")
-            return {"exported": path, "format": suffix[1:],
-                    "exact": True}
+            return sized({"exported": path, "format": suffix[1:],
+                          "exact": True})
         if suffix == ".3mf":
             raise ToolError(
                 "3MF is written by OpenSCAD and it was not found. "
                 "Export .stl, or point the app at OpenSCAD "
                 "(Edit > Locate OpenSCAD).")
         write_stl(mesh.tessellate(self._model.root, fn=self._fn()), path)
-        return {
+        return sized({
             "exported": path, "format": "stl", "exact": False,
             "warning": (
                 "Exported with the built-in tessellator because "
@@ -1719,7 +1777,7 @@ class McpToolExecutor:
                 "Exported with the built-in tessellator (OpenSCAD not "
                 "found). This model uses no booleans, so the geometry "
                 "is faithful."),
-        }
+        })
 
     def _t_publish_to_printables(self, params) -> dict:
         from . import printables
@@ -2220,20 +2278,33 @@ class McpToolExecutor:
                             + ", ".join(analysis.MATERIALS))
         price = float(params.get("price_per_kg") or analysis.DEFAULT_PRICE)
         p = analysis.mass_properties(tris)
-        grams = analysis.mass(p["volume"], material)
-        out = {"nodes": [n.id for n in nodes],
-               "volume_mm3": round(p["volume"], 3),
-               "area_mm2": round(p["area"], 3),
+        unit = self._unit()
+        volume_mm3 = units.mm(p["volume"], unit, 3)
+        grams = analysis.mass(volume_mm3, material)
+        out = {"nodes": [n.id for n in nodes], "unit": unit,
+               "volume": round(p["volume"], 3),
+               "area": round(p["area"], 3),
+               "volume_mm3": self._in_mm(p["volume"], 3),
+               "area_mm2": self._in_mm(p["area"], 2),
                "centre_of_mass": [round(v, 3) for v in p["centroid"]],
                "min": [round(v, 3) for v in p["min"]],
                "max": [round(v, 3) for v in p["max"]],
                "size": [round(v, 3) for v in p["size"]],
-               "material": material, "mass_g": round(grams, 2),
-               "cost": round(analysis.cost(grams, price), 2),
+               "material": material,
+               "mass_g": (round(grams, 2) if abs(grams) >= 0.01
+                          else units.significant(grams)),
                "price_per_kg": price,
-               "print_time_h_rough": round(analysis.print_time(
-                   p["volume"]), 2),
                "approximate": approx}
+        if units.printable(unit):
+            out["cost"] = round(analysis.cost(grams, price), 2)
+            out["print_time_h_rough"] = round(
+                analysis.print_time(volume_mm3), 2)
+        else:
+            out["cost"] = out["print_time_h_rough"] = None
+            out["units_warning"] = (
+                f"The document is in {units.name(unit)}: mass is at true "
+                "size, but cost and print time are not estimated — no "
+                "printer works at that scale 1:1.")
         if approx:
             out["note"] = self._APPROX_NOTE
         return out
@@ -2246,14 +2317,14 @@ class McpToolExecutor:
             overhang_deg=float(params.get("overhang_deg")
                                or analysis.DEFAULT_OVERHANG),
             min_wall=float(params.get("min_wall")
-                           or analysis.DEFAULT_MIN_WALL))
+                           or analysis.DEFAULT_MIN_WALL),
+            unit=self._unit())
         out = {"nodes": [n.id for n in nodes], "summary": report["summary"],
-               "checks": report["checks"],
+               "checks": report["checks"], "unit": self._unit(),
                "overhang_fraction": round(report["overhang_fraction"], 4),
-               "thinnest_wall_mm": (None if report["thinnest"] is None
-                                    else round(report["thinnest"], 3)),
-               "plate_area_mm2": round(report["plate_area"], 2),
-               "height_mm": round(report["height"], 3),
+               "thinnest_wall_mm": self._in_mm(report["thinnest"]),
+               "plate_area_mm2": self._in_mm(report["plate_area"], 2, 2),
+               "height_mm": self._in_mm(report["height"]),
                "approximate": approx}
         if approx:
             out["note"] = self._APPROX_NOTE

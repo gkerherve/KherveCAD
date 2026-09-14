@@ -106,12 +106,14 @@ class Geometry:
         return self._volume
 
 
-def mass_text(volume, material):
-    """The title block's mass, from the volume and the material's
-    density — blank for a material the table does not know."""
+def mass_text(volume, material, unit="mm"):
+    """The title block's mass, from the volume (in the document's
+    *unit*³) and the material's density — blank for a material the
+    table does not know."""
+    from .units import mm
     if material not in analysis.MATERIALS or volume <= 0:
         return ""
-    grams = analysis.mass(volume, material)
+    grams = analysis.mass(mm(volume, unit, 3), material)
     return (f"{grams / 1000.0:.3g} kg" if grams >= 1000.0
             else f"{grams:.3g} g")
 
@@ -155,6 +157,9 @@ class BlueprintScene(QGraphicsScene):
         self.W, self.H = drawing.SHEETS[self.sheet]
         self.scale = 1.0
         self.hidden_lines = True
+        #: the document's unit: the title block's UNITS cell and the mass
+        #: (the sheet itself is always paper millimetres)
+        self.unit = "mm"
         self.fields = {}
         self.views = {}
         self.note_items = []
@@ -194,13 +199,15 @@ class BlueprintScene(QGraphicsScene):
         out = dict(self.fields)
         if not str(out.get("mass") or "").strip():
             out["mass"] = mass_text(self.geometry.volume(),
-                                    str(out.get("material", "")))
+                                    str(out.get("material", "")),
+                                    self.unit)
         return out
 
     def refresh_title(self):
+        from .units import symbol
         self.title.data.update(fields=self.display_fields(),
                                scale_label=drawing.scale_label(self.scale),
-                               sheet=self.sheet)
+                               sheet=self.sheet, units=symbol(self.unit))
         self.title.rebuild()
 
     def title_text(self):
