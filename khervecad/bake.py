@@ -107,6 +107,18 @@ NODE_TYPES = {
         icon="mdi.circle-multiple-outline",
         params=dict(levels=2),
         schema=[("levels", "Levels", "int", 1, 4)]),
+    "human": dict(
+        label="Human figure", category=SHAPE_3D, icon="mdi.human",
+        params=dict(gender=0.0, age=0.0, weight=0.0, height=0.0,
+                    stature=1700.0),
+        schema=[("gender", "Gender (0 female .. 1 male)", "float",
+                 0.0, 1.0),
+                ("age", "Age (0 young .. 1 old)", "float", 0.0, 1.0),
+                ("weight", "Build (-1 thin .. 1 heavy)", "float",
+                 -1.0, 1.0),
+                ("height", "Proportions (-1 stocky .. 1 long-limbed)",
+                 "float", -1.0, 1.0),
+                ("stature", "Height (mm)", "float", 1.0, 1e6)]),
     "sculpt": dict(
         label="Sculpt (brush strokes)", category=OPERATION,
         icon="mdi.brush",
@@ -138,7 +150,7 @@ from . import fillet as _fillet  # noqa: E402
 
 NODE_TYPES.update(_fillet.NODE_TYPES)
 TYPES = frozenset(NODE_TYPES)
-LEAVES = frozenset({"polyhedron", "loft"})
+LEAVES = frozenset({"polyhedron", "loft", "human"})
 WRAPPERS = frozenset({"sweep", "section_loft", "blend", "bend", "twist",
                       "taper", "lattice", "subdivide", "fillet", "shell",
                       "sculpt"})
@@ -158,6 +170,8 @@ _BAKED = {
     "shell": [("thickness", 2), ("open", "none"), ("open_angle", 30),
               ("detail", 2)],
     "sculpt": [("strokes", []), ("detail", 1.5), ("mirror", "none")],
+    "human": [("gender", 0), ("age", 0), ("weight", 0), ("height", 0),
+              ("stature", 1700)],
 }
 #: parameters written as quoted OpenSCAD strings
 _CHOICES = {"axis", "toward", "open", "mirror"}
@@ -377,6 +391,11 @@ def _compute(node, env) -> list:
         return section_loft.loft_sections(
             section_loft.child_sections(node, env), heights,
             smooth=int(num("smooth", 0.0)))
+    if t == "human":
+        from . import human
+        return human.build(num("gender", 0.0), num("age", 0.0),
+                           num("weight", 0.0), num("height", 0.0),
+                           num("stature", human.DEFAULT_STATURE))
     src = [tri for tri, _c, _s in
            mesh._children_mesh(node, env, None, frozenset(), False)]
     if t == "subdivide":
@@ -683,6 +702,12 @@ def _check_baked(node, env):
                     "fastest, then y, then z")
     if t == "sculpt":
         return _check_sculpt(p, env)
+    if t == "human":
+        from . import human, mesh
+        if not human.available():
+            return "the human body data (khervecad/human) is missing"
+        if mesh.rv(p.get("stature", 1700.0), env, 1700.0) <= 0:
+            return "human: the height must be more than 0 mm"
     return None
 
 

@@ -122,6 +122,8 @@ things a cube and a `difference()` do not give you:
 | `blend` | melts its children together with a fillet of the given radius — a head onto a neck onto a body | `kcad_blend(radius, detail, …) { … }` |
 | `bend`, `twist`, `taper`, `lattice` | reshape the surface of whatever is inside — model straight, then curve a limb or squash a head | `kcad_bend(axis, toward, angle, detail, …) { … }` … |
 | `subdivide` | Loop subdivision: a coarse cage (a polyhedron, a few boxes) becomes a smooth organic form | `kcad_subdivide(levels, …) { … }` |
+| `human` | a realistic body — MakeHuman's base mesh with gender, age, build and proportion sliders, at any height in mm — to clothe, pose and sculpt a face on | `kcad_human(gender, age, weight, height, stature, …)` |
+| `paint` | colours every face inside from a picture projected onto an axis plane (placed like a reference image) — the photo's skin, eyes and lips on the sculpted head; the preview shows it, OpenSCAD keeps one colour per solid | `kcad_paint(image, plane, x, y, width, height) { … }` |
 | `sculpt` | brush strokes on whatever is inside — grab, inflate, smooth, flatten, pinch, each with a radius and a falloff, mirrored across a plane if asked: the free-form surface a likeness needs | `kcad_sculpt(strokes, detail, mirror, …) { … }` |
 | `symmetry` | its children **plus** their mirror image — edit one half | `kcad_symmetry(n, c) { ... }` |
 | `joint` | rotates its children about a pivot, within limits | `kcad_joint(pivot, a, limits) { ... }` |

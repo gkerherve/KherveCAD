@@ -92,6 +92,10 @@ def set_scale(model, node, factor: float):
 
 # ------------------------------------------------------------------ paths
 
+#: node type -> the parameter holding a file path the document refers to
+PATH_PARAMS = {"stl_import": "path", "paint": "image"}
+
+
 def relative_for_save(data: dict, doc_path: str):
     """In the node dicts about to be written to *doc_path*, rewrite each
     mesh path that lies in or under the document's folder as a path
@@ -104,16 +108,17 @@ def relative_for_save(data: dict, doc_path: str):
     while stack:
         d = stack.pop()
         stack.extend(d.get("children", []))
-        if d.get("type") != "stl_import":
+        key = PATH_PARAMS.get(d.get("type"))
+        if key is None:
             continue
-        raw = str(d.get("params", {}).get("path", "")).strip()
+        raw = str(d.get("params", {}).get(key, "")).strip()
         if not raw or not os.path.isabs(raw):
             continue
         try:
             rel = Path(raw).resolve().relative_to(folder)
         except (ValueError, OSError):
             continue
-        d["params"] = dict(d["params"], path=rel.as_posix())
+        d["params"] = dict(d["params"], **{key: rel.as_posix()})
 
 
 def resolve_paths(root, base_dir: str):
@@ -124,17 +129,18 @@ def resolve_paths(root, base_dir: str):
     by file name in *base_dir*."""
     base = os.path.abspath(base_dir)
     for n in root.walk():
-        if n.type != "stl_import":
+        key = PATH_PARAMS.get(n.type)
+        if key is None:
             continue
-        raw = str(n.params.get("path", "")).strip()
+        raw = str(n.params.get(key, "")).strip()
         if not raw:
             continue
         foreign = bool(PureWindowsPath(raw).drive) or raw.startswith("\\\\")
         if not foreign and not os.path.isabs(raw):
-            n.params["path"] = os.path.normpath(os.path.join(base, raw))
+            n.params[key] = os.path.normpath(os.path.join(base, raw))
             continue
         if os.path.exists(raw):
             continue
         beside = os.path.join(base, PureWindowsPath(raw).name)
         if os.path.exists(beside):
-            n.params["path"] = beside
+            n.params[key] = beside

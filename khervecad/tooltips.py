@@ -121,6 +121,20 @@ TIPS = {
          "Set Height and the bottom and top radius.",
          "Center stands it on its middle instead of its base."],
         "Inside a Difference, a cylinder drills a hole."),
+    "human": (
+        "Human figure",
+        "A realistic body — the MakeHuman base mesh (CC0) with its macro "
+        "targets: gender, age, build and proportions as sliders, any "
+        "height in mm. Real anatomy under the clothes, where capsules "
+        "and lofts never get there.",
+        ["Click to add it: a figure standing on the floor, facing -Y, "
+         "arms slightly out.",
+         "Set Gender, Age, Build and Proportions in Properties; Height "
+         "scales the whole figure.",
+         "Wrap it in a Sculpt to shape the face, and clothe it with "
+         "lofts and shells drawn over it."],
+        "Its OpenSCAD is one baked polyhedron, so it exports and prints "
+        "like any solid."),
     "capsule": (
         "Capsule",
         "A rod with rounded ends between two points — arms, legs, "
@@ -231,6 +245,21 @@ TIPS = {
         "and right, (0, 1, 0) front and back, (0, 0, 1) up and down.",
         [_SELECTION, "Click Mirror.", "Set the plane's normal X/Y/Z."],
         "The original is not kept — use Symmetry to keep both halves."),
+    "paint": (
+        "Paint from photo",
+        "Colours every face of the selection from a picture projected "
+        "onto an axis plane — skin, eyes and lips from the photo, a "
+        "label on a bottle, a livery on a hull. The preview shows it; "
+        "a print is one colour per part, as before.",
+        [_SELECTION + " (a sculpted head, a generated mesh, a body).",
+         "Click Paint from photo, then in Properties pick the picture "
+         "and where it sits: plane, lower-left corner and width in mm — "
+         "the same numbers as a reference image, so line it up with "
+         "one first.",
+         "Faces outside the picture keep their own colour."],
+        "A front photo projects straight through the part, so the back "
+        "gets it mirrored — add a second Paint with a back photo on the "
+        "same plane, inside the first, to paint the back properly."),
     "symmetry": (
         "Symmetry (mirror copy)",
         "Keeps its contents AND their mirror image: model one arm, one "

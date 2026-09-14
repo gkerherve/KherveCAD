@@ -51,7 +51,7 @@ MEASURE_TOOLS = [
 
 #: 3D primitives added with one click.
 PRIMITIVES = ["cube", "sphere", "cylinder", "capsule", "ellipsoid",
-              "rounded_box", "loft"]
+              "rounded_box", "loft", "human"]
 
 #: the operation families of the horizontal bar, in order (applied to
 #: the selection — Group and the control-flow tools insert an empty
@@ -64,7 +64,7 @@ OPERATION_GROUPS = [
     ("finish", ["fillet", "hull", "minkowski"]),
     ("deform", ["blend", "bend", "twist", "taper", "lattice",
                 "subdivide", "shell", "sculpt"]),
-    ("character", ["symmetry", "joint"]),
+    ("character", ["symmetry", "joint", "paint"]),
     ("logic", ["for_loop", "while_loop", "if_else", "pattern"]),
 ]
 OPERATIONS = [op for _key, ops in OPERATION_GROUPS for op in ops]

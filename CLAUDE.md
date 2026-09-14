@@ -1319,6 +1319,46 @@ into a new module and import.
                        direct connections (a queued one could land after
                        the pump stopped). Tests use the local backend
                        with a script that writes a GLB.
+  - `human.py`       — the **`human` node**: MakeHuman's CC0 base mesh
+                       (`khervecad/human/base_body.obj.gz`, the closed
+                       13,380-vertex "body" group, re-indexed) blended
+                       with its macro targets (`*.target.gz`: caucasian
+                       female/male × young/old, universal weight and
+                       height per gender — sparse decimetre offsets,
+                       re-indexed; LICENSE.txt records the CC0 origin,
+                       ~1 MB, in the spec's `datas`). `weights()` is the
+                       macro blend (gender × age over the four ethnic
+                       targets, |weight| and |height| per gender on top),
+                       `build()` turns Y-up decimetres into Z-up mm facing
+                       -Y, stood on Z = 0, centred, scaled to `stature`.
+                       A baked LEAF (`bake.LEAVES` + `_BAKED`:
+                       `kcad_human(gender=, age=, weight=, height=,
+                       stature=, points=, faces=)`), a toolbar
+                       primitive, and the base a Sculpt shapes a face on.
+                       Why: correct anatomy under the clothes, which
+                       capsules and lofts never give.
+  - `paint.py`       — **Paint from photo** (Qt-free): the `paint`
+                       wrapper (organic.py registers it; Character
+                       family) gives every face of its children the
+                       colour of a picture projected onto an axis plane
+                       — the same placement as a reference image
+                       (plane, lower-left `x`/`y`, `width`, `height` 0 =
+                       aspect); faces outside keep their own, alpha and
+                       material are kept. The projection runs through
+                       the part, so a front photo paints the back
+                       mirrored. `read_png` is a pure-Python 8-bit PNG
+                       decoder (filters 0-4, RGB/RGBA/grey/palette),
+                       QImage the fallback for JPEG; `Picture.at(s, t)`
+                       samples t-up; `load` caches by mtime. Compiles to
+                       `kcad_paint(...) { children }` (helper renders
+                       children unchanged, like kcad_material) and
+                       re-imports. The picture path saves relative and
+                       resolves like a mesh path
+                       (`meshimport.PATH_PARAMS`). Why: OpenSCAD has
+                       one colour per solid and no textures; a colour
+                       per face is what the preview has, and it is
+                       enough to put a face's skin, eyes and lips where
+                       the photo has them.
   - `shading.py`     — Blender-solid-view **cavity shading and edge
                        lines** (Qt-free): `analyse(tris)` → `MeshInfo`
                        with per-face normals, a signed `cavity` term

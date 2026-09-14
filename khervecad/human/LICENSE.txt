@@ -1,0 +1,13 @@
+The files in this folder derive from the MakeHuman project
+(https://github.com/makehumancommunity/makehuman):
+
+  base_body.obj.gz   the MakeHuman base mesh, "body" group only,
+                     vertices re-indexed
+  *.target.gz        MakeHuman macro targets (caucasian-*, universal
+                     weight, height), re-indexed to base_body.obj.gz
+
+MakeHuman explicitly released these assets under the Creative Commons
+CC0 1.0 Universal public domain dedication (LICENSE.ASSETS.md in the
+MakeHuman repository, September 2020). They are redistributed here
+unchanged in substance; the KherveCAD code that reads them is GPL-3.0
+like the rest of the application.

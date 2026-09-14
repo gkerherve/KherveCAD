@@ -61,6 +61,10 @@ if os.path.isdir(_help_dir):
 _parts_dir = os.path.join(_ROOT, "khervecad", "parts")
 if os.path.isdir(_parts_dir):
     datas.append((_parts_dir, os.path.join("khervecad", "parts")))
+# The human figure's base mesh and targets (human.py): khervecad/human/.
+_human_dir = os.path.join(_ROOT, "khervecad", "human")
+if os.path.isdir(_human_dir):
+    datas.append((_human_dir, os.path.join("khervecad", "human")))
 # Finished models for Examples > Showcase (examples._showcase).
 _showcase_dir = os.path.join(_ROOT, "khervecad", "showcase")
 if os.path.isdir(_showcase_dir):

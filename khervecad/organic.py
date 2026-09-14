@@ -39,6 +39,8 @@ the Free Software Foundation, either version 3 of the License, or
 
 from __future__ import annotations
 
+import os
+
 from . import bake
 from . import pattern, sheetmetal
 
@@ -106,6 +108,19 @@ NODE_TYPES = {
            ("max_angle", "Max angle°", "float", -360.0, 360.0)]),
 }
 
+NODE_TYPES["paint"] = dict(
+    label="Paint from photo", category=OPERATION, icon="mdi.image-filter-hdr",
+    params=dict(image="", plane="Front (XZ)", x=0.0, y=0.0, width=100.0,
+                height=0.0),
+    schema=[("image", "Picture file", "str", None, None),
+            ("plane", "Projected onto", "choice",
+             ["Top (XY)", "Front (XZ)", "Side (YZ)"], None),
+            ("x", "Lower-left, along the plane (mm)", "float", -1e6, 1e6),
+            ("y", "Lower-left, up the plane (mm)", "float", -1e6, 1e6),
+            ("width", "Width (mm)", "float", 0.01, 1e6),
+            ("height", "Height (mm, 0 = from the picture)", "float",
+             0.0, 1e6)])
+
 #: this module's own types; bake.py's join the registry below
 _OWN = frozenset(NODE_TYPES)
 NODE_TYPES.update(bake.NODE_TYPES)
@@ -114,11 +129,12 @@ NODE_TYPES.update(sheetmetal.NODE_TYPES)
 TYPES = frozenset(NODE_TYPES)
 LEAVES = frozenset({"capsule", "ellipsoid", "rounded_box"}) | bake.LEAVES
 LEAVES = LEAVES | sheetmetal.LEAVES
-WRAPPERS = frozenset({"symmetry", "joint"}) | bake.WRAPPERS
+WRAPPERS = frozenset({"symmetry", "joint", "paint"}) | bake.WRAPPERS
 WRAPPERS = WRAPPERS | pattern.WRAPPERS
 
 #: helper module per type, emitted in this order above the program
-_ORDER = ("capsule", "ellipsoid", "rounded_box", "symmetry", "joint")
+_ORDER = ("capsule", "ellipsoid", "rounded_box", "symmetry", "joint",
+          "paint")
 HELPERS = {
     "capsule": """\
 module kcad_capsule(a = [0, 0, 0], b = [0, 0, 1], r = 1) {
@@ -151,6 +167,13 @@ module kcad_symmetry(n = [1, 0, 0], c = [0, 0, 0]) {
     "joint": """\
 module kcad_joint(pivot = [0, 0, 0], a = [0, 0, 0], limits = [-180, 180]) {
     translate(pivot) rotate(a) translate(-pivot) children();
+}""",
+    # OpenSCAD has no textures either: the photo paints the preview's
+    # faces, and this keeps the placement so the node re-imports
+    "paint": """\
+module kcad_paint(image = "", plane = "Front (XZ)", x = 0, y = 0,
+                  width = 100, height = 0) {
+    children();
 }""",
     # OpenSCAD has no materials: this renders its children unchanged
     # and exists so a colour's material survives export and import
@@ -226,6 +249,13 @@ def statement(node, fmt, fn) -> str:
                 f"a = {vec('rx', 'ry', 'rz')}, "
                 f"limits = [{fmt(p['min_angle'])}, "
                 f"{fmt(p['max_angle'])}])")
+    if t == "paint":
+        from .model import scad_str
+        return (f"kcad_paint(image = {scad_str(str(p.get('image', '')))}, "
+                f"plane = {scad_str(str(p.get('plane', 'Front (XZ)')))}, "
+                f"x = {fmt(p.get('x', 0.0))}, y = {fmt(p.get('y', 0.0))}, "
+                f"width = {fmt(p.get('width', 100.0))}, "
+                f"height = {fmt(p.get('height', 0.0))})")
     raise ValueError(f"not an organic type: {t}")   # pragma: no cover
 
 
@@ -303,8 +333,25 @@ def _b_joint(parser, positional, named):
         min_angle=_num(lo, -180.0), max_angle=_num(hi, 180.0)))
 
 
+def _b_paint(parser, positional, named):
+    from . import paint as paint_mod
+    from .model import CadNode
+    from .scadparse import _num
+    plane = str(named.get("plane", DEFAULT_PAINT_PLANE))
+    if plane not in paint_mod.PLANES:
+        plane = DEFAULT_PAINT_PLANE
+    return CadNode("paint", "Paint", dict(
+        image=str(named.get("image", positional[0] if positional else "")),
+        plane=plane, x=_num(named.get("x", 0.0)), y=_num(named.get("y", 0.0)),
+        width=_num(named.get("width", 100.0), 100.0),
+        height=_num(named.get("height", 0.0))))
+
+
+DEFAULT_PAINT_PLANE = "Front (XZ)"
+
 #: parser builders, merged into scadparse._BUILDERS
 BUILDERS = {
+    "kcad_paint": _b_paint,
     "kcad_capsule": _b_capsule, "kcad_ellipsoid": _b_ellipsoid,
     "kcad_rounded_box": _b_rounded_box, "kcad_symmetry": _b_symmetry,
     "kcad_joint": _b_joint,
@@ -360,6 +407,18 @@ def check(node, env):
     if node.type in sheetmetal.TYPES:
         return sheetmetal.check(node, env)
     p = node.params
+    if node.type == "paint":
+        from . import paint as paint_mod
+        image = str(p.get("image", "")).strip()
+        if not image:
+            return "paint: choose a picture file"
+        if not os.path.isfile(image):
+            return f"paint: picture not found: {image}"
+        if paint_mod.load(image) is None:
+            return f"paint: cannot read {os.path.basename(image)}"
+        if str(p.get("plane", "")) not in paint_mod.PLANES:
+            return "paint: the plane must be Top (XY), Front (XZ) or Side (YZ)"
+        return None
 
     def val(key, default=0.0):
         try:
@@ -405,6 +464,14 @@ def tess(node, env, color, sel, selected):
     p = mesh.rp(node, env)
     if t in WRAPPERS:
         kids = mesh._children_mesh(node, env, color, sel, selected)
+        if t == "paint":
+            from . import paint as paint_mod
+            raw = node.params
+            return paint_mod.paint(
+                kids, paint_mod.load(str(raw.get("image", ""))),
+                str(raw.get("plane", DEFAULT_PAINT_PLANE)),
+                p.get("x", 0.0), p.get("y", 0.0), p.get("width", 100.0),
+                p.get("height", 0.0))
         if t == "joint":
             px, py, pz = p["px"], p["py"], p["pz"]
             m = mesh.mat_mul(mesh.mat_translate(px, py, pz),
