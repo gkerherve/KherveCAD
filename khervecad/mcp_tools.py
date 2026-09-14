@@ -1880,7 +1880,7 @@ class McpToolExecutor:
                 raise ToolError("'mirror' is none, x, y or z.")
             target.params["mirror"] = params["mirror"]
         if params.get("detail") is not None:
-            target.params["detail"] = max(0.05, float(params["detail"]))
+            target.params["detail"] = max(0.0, float(params["detail"]))
         specs = list(params.get("strokes") or [])
         if params.get("kind") is not None or params.get("at") is not None:
             specs.append({k: params.get(k) for k in

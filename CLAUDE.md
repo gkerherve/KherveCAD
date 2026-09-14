@@ -1256,7 +1256,10 @@ into a new module and import.
                        plane so a face is sculpted from one side. The
                        mesh is welded once (`Mesh`) so vertices moving
                        never open it. Baked like the deformers (in
-                       `_BAKED`, after `split_long_edges` at `detail`).
+                       `_BAKED`; `detail` > 0 first refines with
+                       `split_long_edges`, default 0 = the mesh as it
+                       is — a blend or a scan is dense already, and
+                       1.5 mm on a human figure made 360k triangles).
                        `to_local` maps a world point + direction the
                        view picked back into the node's frame: nearest
                        vertex twin (same tessellation, same order) plus

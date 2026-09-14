@@ -122,13 +122,14 @@ NODE_TYPES = {
     "sculpt": dict(
         label="Sculpt (brush strokes)", category=OPERATION,
         icon="mdi.brush",
-        params=dict(strokes=[], detail=1.5, mirror="none"),
+        params=dict(strokes=[], detail=0.0, mirror="none"),
         schema=[("strokes", "Strokes (kind 0 grab 1 inflate 2 smooth "
                             "3 flatten 4 pinch; centre; radius; "
                             "strength; direction)", "rows",
                  ["Kind", "X", "Y", "Z", "Radius", "Strength",
                   "dX", "dY", "dZ"], None),
-                ("detail", "Max edge (mm)", "float", 0.05, 1e4),
+                ("detail", "Refine to max edge (mm, 0 = as is)", "float",
+                 0.0, 1e4),
                 ("mirror", "Mirror strokes across", "choice",
                  ["none", "x", "y", "z"], None)]),
     "shell": dict(
@@ -169,7 +170,7 @@ _BAKED = {
     "subdivide": [("levels", 1)],
     "shell": [("thickness", 2), ("open", "none"), ("open_angle", 30),
               ("detail", 2)],
-    "sculpt": [("strokes", []), ("detail", 1.5), ("mirror", "none")],
+    "sculpt": [("strokes", []), ("detail", 0), ("mirror", "none")],
     "human": [("gender", 0), ("age", 0), ("weight", 0), ("height", 0),
               ("stature", 1700)],
 }
@@ -400,7 +401,10 @@ def _compute(node, env) -> list:
            mesh._children_mesh(node, env, None, frozenset(), False)]
     if t == "subdivide":
         return deform.loop_subdivide(src, int(num("levels", 1.0)))
-    src = deform.split_long_edges(src, num("detail", 2.0))
+    # a sculpt keeps the mesh it is given unless asked to refine it (a
+    # dense blend or a scan needs nothing; a cube needs vertices to push)
+    src = deform.split_long_edges(src, num("detail", 0.0 if t == "sculpt"
+                                           else 2.0))
     if t == "sculpt":
         from . import sculpt
         rows = [[mesh.rv(v, env) for v in row]

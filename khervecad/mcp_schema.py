@@ -545,9 +545,11 @@ TOOLS = [
                        "description": "Repeat strokes across this plane "
                                       "of the part (set on the node)."},
             "detail": {"type": "number",
-                       "description": "Max edge length in mm the surface "
-                                      "is refined to before sculpting "
-                                      "(default 1.5)."},
+                       "description": "Refine the surface to this max "
+                                      "edge length in mm before "
+                                      "sculpting (default 0: as it is — "
+                                      "a blend or a scan is dense "
+                                      "already; a cube needs it)."},
         }, ["node_id"]),
     },
     {

@@ -132,6 +132,7 @@ def _sculpted_cube(app):
     cube = doc.add_node("cube")
     node = doc.wrap_nodes([cube], "sculpt")
     node.params["strokes"] = [[1, 10, 10, 20, 6, 3, 0, 0, 0]]
+    node.params["detail"] = 2.0              # a cube needs vertices to push
     return doc, node
 
 
@@ -141,7 +142,7 @@ def test_the_sculpt_node_previews_bakes_and_round_trips(app, tmp_path):
     assert _closed(tris) and max(v[2] for t in tris for v in t) == pytest.approx(23)
     code = doc.to_scad()
     assert ('kcad_sculpt(strokes = [[1, 10, 10, 20, 6, 3, 0, 0, 0]], '
-            'detail = 1.5, mirror = "none",') in code
+            'detail = 2, mirror = "none",') in code
     path = tmp_path / "sculpt.scad"
     document.export_scad(doc, str(path))
     other = DocumentModel()
@@ -188,6 +189,7 @@ def test_the_panel_lands_a_stroke_per_click_in_the_local_frame(window):
     move = doc.add_node("translate", dict(x=50.0))
     cube = doc.add_node("cube", parent=move)
     node = doc.wrap_nodes([cube], "sculpt")
+    node.params["detail"] = 2.0
     panel = sculpt_ui.start(window, node)
     assert window.view3d._pick_cb is not None
     panel.radius.setValue(6.0)
@@ -214,7 +216,7 @@ def test_sculpt_stroke_tool_wraps_maps_and_batches(window):
     cube = doc.add_node("cube", parent=move)
     out = ex.execute("sculpt_stroke", {
         "node_id": cube.id, "kind": "inflate", "at": [60, 10, 20],
-        "radius": 6, "strength": 3, "mirror": "none"})
+        "radius": 6, "strength": 3, "mirror": "none", "detail": 2})
     assert "error" not in out, out
     node = doc.find(out["sculpt"]) if hasattr(doc, "find") else \
         next(n for n in doc.root.walk() if n.id == out["sculpt"])
