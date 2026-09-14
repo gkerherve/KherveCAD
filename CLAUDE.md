@@ -1875,9 +1875,15 @@ into a new module and import.
   `kcad_*` helper-module calls with the helpers emitted once at the
   top of the program, and re-import losslessly.
 - Control flow (`for_loop`, `while_loop`, `if_else`, `assign`).
-  `while` has no OpenSCAD equivalent, so codegen unrolls it into a
-  value-list `for` (capped at 1000 iterations); it re-imports as a
-  list-form for loop. `if_else` keeps its else branch in a child
+  `while` has no OpenSCAD statement, so codegen writes it as a `for`
+  over a C-style list comprehension — `for (x = [for (x = s, _w = 0;
+  (cond) && _w < 1000; x = upd, _w = _w + 1) x])` — which OpenSCAD
+  evaluates per iteration, so the condition may read document variables
+  and enclosing loop variables (a dome's layers per column); `_w` caps it
+  at 1000 like the preview. scadparse reads that form back as a
+  `while_loop` (`_parse_c_for`). It used to be unrolled with no
+  environment at all, exporting any loop that read a variable as
+  `for (x = [0])`. `if_else` keeps its else branch in a child
   union named "Else" (auto-created).
 - Organisational groups: `variables` (leading assignments, transparent
   in codegen) and `masters` (a **definitions store**). A `masters`

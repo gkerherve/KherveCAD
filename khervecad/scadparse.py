@@ -499,8 +499,13 @@ class Parser:
             self.expect(",")
         outer = current = None
         for var, params in loops:
-            params["variable"] = var
-            node = CadNode("for_loop", f"For {var}", params)
+            loop = params.pop("while", None)
+            if loop is not None:
+                node = CadNode("while_loop", f"While {var}",
+                               dict(variable=var, **loop))
+            else:
+                params["variable"] = var
+                node = CadNode("for_loop", f"For {var}", params)
             if current is not None:
                 current.add(node)
             current = node
@@ -508,9 +513,59 @@ class Parser:
         self._children_into(current)
         return outer
 
+    def _parse_c_for(self):
+        """`[for (x = s, _w = 0; (cond) && _w < N; x = upd, _w = _w + 1)
+        x]` -> {"while": params}: how codegen writes a while loop (OpenSCAD
+        has no while statement). A hand-written C-style loop without the
+        `_w` guard reads the same. Anything else raises ScadParseError, so
+        the caller falls back to an ordinary list comprehension."""
+        import re
+        self.expect("[")
+        self.expect("for")
+        self.expect("(")
+        var = self.next()[1]
+        self.expect("=")
+        start = self._expr_param()
+        if self.accept(","):
+            self._c_for_guard()
+        self.expect(";")
+        condition = self._scan_expr(stop=(";",))[1]
+        guard = re.fullmatch(r"\((.*)\)\s*&&\s*_w\s*<\s*\d+", condition,
+                             re.S)
+        if guard:
+            condition = guard.group(1).strip()
+        self.expect(";")
+        if self.next()[1] != var:
+            raise ScadParseError("C-style for updates another variable")
+        self.expect("=")
+        update = self._scan_expr(stop=(",", ")"))[1]
+        if self.accept(","):
+            self._c_for_guard()
+        self.expect(")")
+        if self.next()[1] != var:
+            raise ScadParseError("C-style for yields an expression")
+        self.expect("]")
+        return {"while": dict(start=start, condition=condition,
+                              update=update)}
+
+    def _c_for_guard(self):
+        """Skip the `_w = ...` iteration guard of a C-style for."""
+        if self.next()[1] != "_w":
+            raise ScadParseError("C-style for with several variables")
+        self.expect("=")
+        self._scan_expr(stop=(",", ";", ")"))
+
     def _parse_range(self):
-        """[a:b], [a:s:b], [v1, v2, ...] or a single expression."""
+        """[a:b], [a:s:b], [v1, v2, ...], a C-style `[for (..; ..; ..) x]`
+        (a while loop) or a single expression."""
         token = self.peek()
+        if token is not None and token[1] == "[" and \
+                (self.peek(1) or ("", ""))[1] == "for":
+            start = self.i
+            try:
+                return self._parse_c_for()
+            except ScadParseError:
+                self.i = start                   # an ordinary comprehension
         if token is not None and token[1] == "[":
             self.expect("[")
             first = self._expr_param()

@@ -896,13 +896,17 @@ class CadNode:
             return (f"for ({var} = [{fmt(p['start'])} : "
                     f"{fmt(p['step'])} : {fmt(p['end'])}])")
         if t == "while_loop":
-            # OpenSCAD has no while — unroll to a concrete value list,
-            # which is a plain (and valid) for loop.
+            # OpenSCAD has no while statement, but its list comprehension
+            # has a C-style for: OpenSCAD itself computes the values, per
+            # iteration, so a condition may read document variables and
+            # enclosing loop variables. Unrolling here (no environment)
+            # turned any such loop into `for (x = [0])`. `_w` caps it at
+            # MAX_WHILE_ITERATIONS, as the preview does.
             var = str(p.get("variable", "x")) or "x"
-            values = self.loop_values() or [0]
-            body = ", ".join(fmt(float(v)) for v in values)
-            return (f"for ({var} = [{body}]) "
-                    f"/* while {fmt(p['condition'])} */")
+            return (f"for ({var} = [for ({var} = {fmt(p['start'])}, "
+                    f"_w = 0; ({fmt(p['condition'])}) && "
+                    f"_w < {MAX_WHILE_ITERATIONS}; "
+                    f"{var} = {fmt(p['update'])}, _w = _w + 1) {var}])")
         if t == "assign":
             return f"{p['variable']} = {fmt(p['value'])}"
         if t == "stl_import":

@@ -140,14 +140,43 @@ def test_for_loop_value_list(model):
     assert loop.loop_values() == [3, 7, 12]
 
 
-def test_while_loop_unrolls_to_valid_for(model):
+def test_while_loop_codegen_is_a_c_style_for(model):
     loop = model.add_node("while_loop", dict(
         variable="x", start=1.0, condition="x < 20", update="x * 2"))
     model.add_node("sphere", dict(radius="x"), parent=loop)
     assert loop.loop_values() == [1, 2, 4, 8, 16]
     code = model.root.to_scad()
-    assert "for (x = [1, 2, 4, 8, 16])" in code
+    # OpenSCAD has no while statement: its list comprehension's C-style
+    # for computes the values itself, capped like the preview
+    assert ("for (x = [for (x = 1, _w = 0; (x < 20) && _w < 1000; "
+            "x = x * 2, _w = _w + 1) x])") in code
     assert "sphere(r=x" in code
+
+
+def test_while_loop_reads_outer_variables_and_round_trips(model):
+    """A while inside a for may read the loop variable and document
+    variables. Codegen once unrolled it with no environment at all, so
+    such a loop exported as `for (k = [0])` — one layer per column."""
+    from khervecad import scadparse
+    model.add_node("assign", dict(variable="r", value=5.0))
+    outer = model.add_node("for_loop", dict(
+        variable="i", start=0.0, end=2.0, step=1.0))
+    loop = model.add_node("while_loop", dict(
+        variable="k", start=0.0, condition="k * k + i < r",
+        update="k + 1"), parent=outer)
+    model.add_node("sphere", dict(radius=0.1), parent=loop)
+    assert loop.loop_values({"r": 5.0, "i": 1.0}) == [0, 1]
+    code = model.root.to_scad()
+    root, warnings = scadparse.parse_scad(code)
+    assert not warnings
+    back = next(n for n in root.walk() if n.type == "while_loop")
+    assert back.parent.type == "for_loop"
+    assert {k: back.params[k] for k in ("variable", "start", "condition",
+                                        "update")} == dict(
+        variable="k", start=0.0, condition="k * k + i < r", update="k + 1")
+    header = next(line.strip() for line in code.splitlines()
+                  if "_w = 0" in line)
+    assert header in root.to_scad()
 
 
 def test_while_loop_never_infinite(model):
