@@ -740,6 +740,58 @@ class McpToolExecutor:
             out["note"] = self._APPROX_NOTE
         return out
 
+    def _t_sample_surface(self, params) -> dict:
+        from . import analysis, analysis_dialog
+        nodes = self._nodes(params.get("node_ids"))
+        try:
+            count = int(20 if params.get("count") is None
+                        else params["count"])
+            seed = int(1 if params.get("seed") is None else params["seed"])
+        except (TypeError, ValueError):
+            raise ToolError("'count' and 'seed' must be whole numbers.")
+        if count < 1 or count > 5000:
+            raise ToolError("'count' must be between 1 and 5000.")
+        spacing = self._number(params, "spacing") or 0.0
+        if spacing < 0:
+            raise ToolError("'spacing' must be 0 or more.")
+        facing = self._vec3(params, "facing")
+        if facing is not None and \
+                math.sqrt(sum(c * c for c in facing)) < 1e-12:
+            raise ToolError("'facing' has zero length.")
+        max_angle = self._number(params, "max_angle")
+        max_angle = 90.0 if max_angle is None else max_angle
+        within = params.get("within")
+        box = None
+        if within is not None:
+            if not isinstance(within, dict):
+                raise ToolError("'within' is {\"min\": [x, y, z], "
+                                "\"max\": [x, y, z]}.")
+            lo, hi = self._vec3(within, "min"), self._vec3(within, "max")
+            if lo is None or hi is None:
+                raise ToolError("'within' needs both 'min' and 'max'.")
+            box = ([min(lo[i], hi[i]) for i in range(3)],
+                   [max(lo[i], hi[i]) for i in range(3)])
+        tris, approx = analysis_dialog.part_tris(self._w, nodes)
+        if not tris:
+            raise ToolError("Those nodes have no surface to sample — "
+                            "hidden, empty, or 2D-only.")
+        samples = analysis.surface_samples(
+            tris, count, spacing, facing, max_angle, box, seed)
+        out = {"points": [{"point": [round(v, 3) for v in s["point"]],
+                           "normal": [round(v, 4) for v in s["normal"]]}
+                          for s in samples],
+               "count": len(samples), "wanted": count,
+               "seed": seed, "approximate": approx}
+        if not samples:
+            out["note"] = ("No face passed the filters — widen "
+                           "'max_angle' or the 'within' box.")
+        elif len(samples) < count:
+            out["note"] = (f"Only {len(samples)} points fit at this "
+                           "spacing; lower 'spacing' for more.")
+        elif approx:
+            out["note"] = self._APPROX_NOTE
+        return out
+
     def _t_measure(self, params) -> dict:
         pa, box_a, la = self._where(params.get("a"), "a")
         pb, box_b, lb = self._where(params.get("b"), "b")

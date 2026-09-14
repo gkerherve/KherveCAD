@@ -742,3 +742,34 @@ def test_offscreen_fit_frames_the_model_not_the_platform(ex, window):
         assert view.distance == on_screen        # the user's camera stays
     finally:
         view.set_stage(False)
+
+
+# ── sample_surface: points scattered over a part ───────────────────
+
+def test_sample_surface_scatters_points_with_normals(ex):
+    ident = cube(ex, width=20.0, depth=20.0, height=20.0)
+    out = call(ex, "sample_surface", node_ids=[ident], count=8,
+               facing=[0, 0, 1], max_angle=5, seed=2)
+    assert out["count"] == 8 and len(out["points"]) == 8
+    for p in out["points"]:
+        assert p["point"][2] == pytest.approx(20)
+        assert p["normal"] == pytest.approx([0, 0, 1])
+    again = call(ex, "sample_surface", node_ids=[ident], count=8,
+                 facing=[0, 0, 1], max_angle=5, seed=2)
+    assert again["points"] == out["points"]
+    boxed = call(ex, "sample_surface", node_ids=[ident], count=5,
+                 within={"min": [-1, -1, -1], "max": [21, 1, 21]})
+    assert all(p["point"][1] == pytest.approx(0) for p in boxed["points"])
+    full = call(ex, "sample_surface", node_ids=[ident], count=100,
+                spacing=15.0)
+    assert full["count"] < 100 and "note" in full
+    assert "error" in ex.execute("sample_surface", {"node_ids": [ident],
+                                                    "count": 0})
+    assert "error" in ex.execute("sample_surface", {"node_ids": [ident],
+                                                    "within": {"min": [0, 0, 0]}})
+    assert "error" in ex.execute("sample_surface", {"node_ids": [987654]})
+
+
+def test_sample_surface_is_read_only(ex):
+    from khervecad.mcp_bridge import _READ_ONLY_TOOLS
+    assert "sample_surface" in _READ_ONLY_TOOLS

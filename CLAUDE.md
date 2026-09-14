@@ -1394,7 +1394,7 @@ into a new module and import.
                        check orthographically. The MCP `_INSTRUCTIONS`
                        carry the same rule ("Modelling a real object")
                        to every connected client.
-  - `mcp_schema.py`  — the **MCP tool table**: 41 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 42 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -1421,7 +1421,14 @@ into a new module and import.
                        every crossing nearest first — how an assistant
                        puts an eye or a tubercle ON a loft without
                        re-deriving its geometry outside the app (the
-                       whale needed a side script for that). The
+                       whale needed a side script for that);
+                       `sample_surface` (`analysis.surface_samples`:
+                       area-weighted darts kept `spacing` apart, seeded,
+                       filtered by `facing`/`max_angle` and a `within`
+                       box) scatters N points + normals over a part for
+                       the details that come in numbers — the Queen's
+                       hair curls were placed by a formula in a side
+                       script before it. The
                        offscreen `render_view` fit frames the MODEL
                        (`_model_frame`), where the on-screen fit takes
                        the platform in and left the model small.
@@ -1547,7 +1554,7 @@ into a new module and import.
                        caps a pattern at `MAX_COPIES` (1000) and needs
                        every count ≥ 1. Examples ▸ Mechanical ▸ Bolt
                        circle & stair (pattern).
-- `docs/MCP.md` — how to connect an assistant, what the 41 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 42 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -1807,7 +1814,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **41 tools**: the object tree, OpenSCAD in
+client gets the whole app as **42 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

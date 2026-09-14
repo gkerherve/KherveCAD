@@ -262,6 +262,69 @@ def surface_hits(origin, direction, parts, limit: int = 0) -> list:
     return merged[:limit] if limit > 0 else merged
 
 
+def surface_samples(tris, count: int = 20, spacing: float = 0.0,
+                    facing=None, max_angle: float = 90.0, within=None,
+                    seed: int = 1) -> list:
+    """*count* points spread over the mesh's surface, each with its
+    outward unit normal — where a row of curls, tubercles, rivets or
+    pebbles goes. Area-weighted random darts, rejected closer than
+    *spacing* to one already placed (0 = about the spacing an even
+    grid of *count* points would have on the kept area), so the set
+    reads as evenly scattered, never clumped; *seed* makes it
+    repeatable. *facing* keeps only faces within *max_angle* degrees of
+    that direction (the top of a head, the side of a hull); *within*
+    is a ``(lo, hi)`` box in world mm keeping faces whose centroid it
+    holds. Returns ``[{"point", "normal"}]``, fewer than *count* when
+    the surface is full at that spacing."""
+    import random
+    f = _unit(facing) if facing is not None else None
+    cos_max = math.cos(math.radians(max(0.0, min(float(max_angle), 180.0))))
+    kept = []
+    for tri in tris:
+        n, area = _normal_area(tri)
+        if area <= 0.0:
+            continue
+        if f is not None and _dot(n, f) < cos_max - 1e-9:
+            continue
+        if within is not None:
+            lo, hi = within
+            c = [(tri[0][i] + tri[1][i] + tri[2][i]) / 3.0 for i in range(3)]
+            if any(c[i] < lo[i] or c[i] > hi[i] for i in range(3)):
+                continue
+        kept.append((tri, n, area))
+    if not kept or count <= 0:
+        return []
+    total = sum(a for _t, _n, a in kept)
+    gap = float(spacing)
+    if gap <= 0.0:
+        # an even scatter of *count* discs over the area, a little loose
+        gap = 0.8 * math.sqrt(total / (count * math.pi))
+    cumulative, acc = [], 0.0
+    for _t, _n, a in kept:
+        acc += a
+        cumulative.append(acc)
+    import bisect
+    rng = random.Random(int(seed))
+    out = []
+    for _attempt in range(int(count) * 40):
+        if len(out) >= count:
+            break
+        tri, n, _a = kept[bisect.bisect_left(cumulative,
+                                             rng.random() * total)]
+        r1, r2 = rng.random(), rng.random()
+        if r1 + r2 > 1.0:                 # uniform in the triangle
+            r1, r2 = 1.0 - r1, 1.0 - r2
+        a, b, c = tri
+        pt = [a[i] + (b[i] - a[i]) * r1 + (c[i] - a[i]) * r2
+              for i in range(3)]
+        if gap > 0.0 and any(
+                _dot(_sub(pt, q["point"]), _sub(pt, q["point"])) < gap * gap
+                for q in out):
+            continue
+        out.append({"point": pt, "normal": list(n)})
+    return out
+
+
 def _unit(v):
     try:
         length = math.sqrt(_dot(v, v))

@@ -458,6 +458,45 @@ TOOLS = [
         }, ["from"]),
     },
     {
+        "name": "sample_surface",
+        "description": (
+            "Scatter N points over a part's surface, each with its "
+            "outward normal — for the details that come in numbers: "
+            "curls of hair over a head, tubercles along a whale, rivets "
+            "on a hull, pebbles on a base. Evenly spread (random darts "
+            "kept `spacing` mm apart, repeatable with `seed`), limited "
+            "to faces looking within `max_angle` of `facing` (the top "
+            "of a head: [0, 0, 1]) and/or to a `within` box, so the "
+            "face or the front stays clear. Then add one sphere or "
+            "part per point, sunk `inset` mm along the normal. Fewer "
+            "points come back when the surface is full at that "
+            "spacing. Built-in tessellation (booleans approximated)."
+        ),
+        "input_schema": _obj({
+            "node_ids": _IDS,
+            "count": {"type": "integer",
+                      "description": "Points wanted (default 20)."},
+            "spacing": {"type": "number",
+                        "description": "Minimum distance between points "
+                                       "in mm (default: an even spread "
+                                       "of `count`)."},
+            "facing": _vec3("Keep faces looking this way, e.g. [0, 0, 1] "
+                            "for the top."),
+            "max_angle": {"type": "number",
+                          "description": "Degrees off `facing` still "
+                                         "kept (default 90)."},
+            "within": {"type": "object",
+                       "description": "World box keeping faces whose "
+                                      "centre lies inside: {\"min\": "
+                                      "[x, y, z], \"max\": [x, y, z]}.",
+                       "properties": {"min": _vec3("Low corner."),
+                                      "max": _vec3("High corner.")}},
+            "seed": {"type": "integer",
+                     "description": "Random seed (default 1): the same "
+                                    "seed gives the same points."},
+        }, ["node_ids"]),
+    },
+    {
         "name": "section",
         "description": (
             "Cut the model with a plane and get the cross-section: a "

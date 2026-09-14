@@ -202,3 +202,35 @@ def test_surface_hits_skips_parts_the_ray_misses():
                                  [("near", near)]) == []
     assert analysis.surface_hits((5, 5, 50), (0, 0, 0),
                                  [("near", near)]) == []
+
+
+def test_surface_samples_spread_over_the_faces_asked_for():
+    box = _box(0, 0, 0, 20, 20, 20)
+    top = analysis.surface_samples(box, 12, 0.0, facing=(0, 0, 1),
+                                   max_angle=10, seed=3)
+    assert len(top) == 12
+    for s in top:
+        assert s["point"][2] == pytest.approx(20)          # on the top face
+        assert 0 <= s["point"][0] <= 20 and 0 <= s["point"][1] <= 20
+        assert s["normal"] == pytest.approx([0, 0, 1])
+    # the default spacing keeps them apart
+    for i, a in enumerate(top):
+        for b in top[i + 1:]:
+            d = sum((a["point"][k] - b["point"][k]) ** 2 for k in range(3))
+            assert d > 1.0
+    # repeatable, and a different seed differs
+    assert analysis.surface_samples(box, 12, 0.0, (0, 0, 1), 10, seed=3) == top
+    assert analysis.surface_samples(box, 12, 0.0, (0, 0, 1), 10, seed=4) != top
+
+
+def test_surface_samples_respect_a_box_and_a_spacing():
+    box = _box(0, 0, 0, 20, 20, 20)
+    front = analysis.surface_samples(
+        box, 50, 0.0, within=([-1, -1, -1], [21, 1, 21]), seed=1)
+    assert front and all(s["point"][1] == pytest.approx(0) for s in front)
+    sparse = analysis.surface_samples(box, 200, 15.0, seed=1)
+    assert 0 < len(sparse) < 30                    # the surface fills up
+    assert analysis.surface_samples(box, 10, 0.0, facing=(0, 0, 1),
+                                    max_angle=10,
+                                    within=([0, 0, 0], [5, 5, 5])) == []
+    assert analysis.surface_samples([], 10) == []

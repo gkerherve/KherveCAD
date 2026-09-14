@@ -6,7 +6,7 @@ Cursor, Zed, Continue, or anything else that speaks the Model Context
 Protocol — can build in an open document directly.
 
 The built-in chat replies with an OpenSCAD program you then apply. An
-MCP client gets the **whole application** instead: 41 tools over the
+MCP client gets the **whole application** instead: 42 tools over the
 object tree, the code, the part library, assemblies, the document —
 and a **picture of the 3D preview**.
 
@@ -157,6 +157,13 @@ part — with every crossing along the ray listed nearest first. That
 is how a detail goes *on* a curved surface: probe down onto a lofted
 body where the eye should be, then place the sphere at the hit point
 plus the normal times its inset. No geometry to derive by hand.
+
+**`sample_surface`** does the same for details that come in numbers:
+it scatters N evenly spread points, each with its normal, over a
+part's surface — only the faces looking a given way, or inside a box
+— so curls of hair go over the top and back of a head, tubercles along
+a whale's jaw, rivets down a hull, one sphere per point. The same seed
+gives the same points.
 
 **`set_reference_image`** puts a photo or sketch on an axis plane
 (Top, Front, Side) at a width in millimetres — the 2D view shows it
