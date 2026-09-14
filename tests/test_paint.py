@@ -226,3 +226,34 @@ def test_two_pictures_blend_by_facing(app, halves, tmp_path):
     document.load_kcad(loaded, str(kcad))
     back = next(n for n in loaded.root.walk() if n.type == "paint")
     assert back.params["image2"] == str(side_path)
+
+
+def test_a_region_keeps_the_paint_to_part_of_the_surface(app, halves, tmp_path):
+    from khervecad.model import CadNode
+    root = CadNode("root", "root")
+    root.add(CadNode("cube", "c", dict(x=-20.0, y=-5.0, z=0.0, width=40.0,
+                                       depth=10.0, height=20.0)))
+    items = [(t, None, False) for t in mesh.tessellate(root)]
+    picture = paint.load(halves)
+    low = paint.paint_many(items, [(picture, "Front (XZ)", -20.0, 0.0, 40.0, 20.0)],
+                           region=[[-30, -30, -1], [30, 30, 10]])
+    front = [(t, c) for t, c, _s in low if paint._facing(t, 1) < -0.9]
+    assert front
+    for t, c in front:
+        cz = sum(v[2] for v in t) / 3
+        assert (c is not None) == (cz <= 10)
+    doc = DocumentModel()
+    cube = doc.add_node("cube")
+    node = doc.wrap_nodes([cube], "paint")
+    node.params.update(image=halves, region=[[0, 0, 0], [20, 20, 10]])
+    assert node.id not in validate(doc.root)
+    code = doc.to_scad()
+    assert "region = [[0, 0, 0], [20, 20, 10]]" in code
+    other = DocumentModel()
+    path = tmp_path / "region.scad"
+    document.export_scad(doc, str(path))
+    assert not scadparse.import_scad(other, str(path))
+    back = next(n for n in other.root.walk() if n.type == "paint")
+    assert back.params["region"] == [[0.0, 0.0, 0.0], [20.0, 20.0, 10.0]]
+    node.params["region"] = [[1, 2]]
+    assert "two corners" in validate(doc.root)[node.id]

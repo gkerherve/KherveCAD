@@ -112,7 +112,7 @@ NODE_TYPES["paint"] = dict(
     label="Paint from photo", category=OPERATION, icon="mdi.image-filter-hdr",
     params=dict(image="", plane="Front (XZ)", x=0.0, y=0.0, width=100.0,
                 height=0.0, sides="front", image2="", plane2="Side (YZ)",
-                x2=0.0, y2=0.0, width2=100.0, height2=0.0),
+                x2=0.0, y2=0.0, width2=100.0, height2=0.0, region=[]),
     schema=[("image", "Picture file", "str", None, None),
             ("plane", "Projected onto", "choice",
              ["Top (XY)", "Front (XZ)", "Side (YZ)"], None),
@@ -130,7 +130,9 @@ NODE_TYPES["paint"] = dict(
             ("y2", "Second: lower-left up (mm)", "float", -1e6, 1e6),
             ("width2", "Second: width (mm)", "float", 0.01, 1e6),
             ("height2", "Second: height (mm, 0 = aspect)", "float",
-             0.0, 1e6)])
+             0.0, 1e6),
+            ("region", "Only faces inside (two corners, mm)", "rows",
+             ["X", "Y", "Z"], None)])
 
 #: this module's own types; bake.py's join the registry below
 _OWN = frozenset(NODE_TYPES)
@@ -185,7 +187,7 @@ module kcad_joint(pivot = [0, 0, 0], a = [0, 0, 0], limits = [-180, 180]) {
 module kcad_paint(image = "", plane = "Front (XZ)", x = 0, y = 0,
                   width = 100, height = 0, sides = "front", image2 = "",
                   plane2 = "Side (YZ)", x2 = 0, y2 = 0, width2 = 100,
-                  height2 = 0) {
+                  height2 = 0, region = []) {
     children();
 }""",
     # OpenSCAD has no materials: this renders its children unchanged
@@ -276,6 +278,11 @@ def statement(node, fmt, fn) -> str:
                    f"width2 = {fmt(p.get('width2', 100.0))}, "
                    f"height2 = {fmt(p.get('height2', 0.0))}"
                    if str(p.get("image2", "")).strip() else "")
+                + (", region = [" + ", ".join(
+                    "[" + ", ".join(fmt(v) for v in r) + "]"
+                    for r in p.get("region") or []
+                    if isinstance(r, list) and len(r) == 3) + "]"
+                   if p.get("region") else "")
                 + ")")
     raise ValueError(f"not an organic type: {t}")   # pragma: no cover
 
@@ -374,7 +381,10 @@ def _b_paint(parser, positional, named):
         image2=str(named.get("image2", "")), plane2=plane2,
         x2=_num(named.get("x2", 0.0)), y2=_num(named.get("y2", 0.0)),
         width2=_num(named.get("width2", 100.0), 100.0),
-        height2=_num(named.get("height2", 0.0))))
+        height2=_num(named.get("height2", 0.0)),
+        region=[[_num(v) for v in row] for row in named.get("region", [])
+                if isinstance(row, list) and len(row) == 3]
+        if isinstance(named.get("region"), list) else []))
 
 
 DEFAULT_PAINT_PLANE = "Front (XZ)"
@@ -448,6 +458,10 @@ def check(node, env):
             return f"paint: cannot read {os.path.basename(image)}"
         if str(p.get("plane", "")) not in paint_mod.PLANES:
             return "paint: the plane must be Top (XY), Front (XZ) or Side (YZ)"
+        region = p.get("region") or []
+        if region and (len(region) != 2 or any(
+                not isinstance(r, list) or len(r) != 3 for r in region)):
+            return "paint: 'region' is two corners [x, y, z], or empty"
         image2 = str(p.get("image2", "")).strip()
         if image2 and not os.path.isfile(image2):
             return f"paint: second picture not found: {image2}"
@@ -512,8 +526,12 @@ def tess(node, env, color, sel, selected):
                                  p.get("x2", 0.0), p.get("y2", 0.0),
                                  p.get("width2", 100.0),
                                  p.get("height2", 0.0)))
+            region = [[mesh.rv(v, env) for v in row]
+                      for row in raw.get("region") or []
+                      if isinstance(row, list) and len(row) == 3]
             return paint_mod.paint_many(kids, pictures,
-                                        str(raw.get("sides", "front")))
+                                        str(raw.get("sides", "front")),
+                                        region if len(region) == 2 else None)
         if t == "joint":
             px, py, pz = p["px"], p["py"], p["pz"]
             m = mesh.mat_mul(mesh.mat_translate(px, py, pz),

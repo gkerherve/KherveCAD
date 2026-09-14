@@ -55,14 +55,21 @@ def _solve(a, b):
             for i in range(n)]
 
 
-def least_squares(jac, residual, lam=0.05, lo=-1.0, hi=1.0, rounds=4):
-    """Weights w minimising |J w + r|² + lam |w|² with lo <= w <= hi:
-    a ridge solve, then the weights that left the box are pinned there
-    and the rest solved again (a few rounds settle it)."""
+def least_squares(jac, residual, lam=0.3, lo=-1.0, hi=1.0, rounds=6):
+    """Weights w minimising |J w + r|² + lam' |w|² with lo <= w <= hi
+    (each a number or a list per weight): a ridge solve, then the
+    weights that left the box are pinned there and the rest solved
+    again (a few rounds settle it). *lam* is relative to the problem —
+    it multiplies the mean diagonal of JᵀJ — so 0.3 means the same
+    stiffness whatever the units."""
     n = len(jac[0]) if jac else 0
     if n == 0:
         return []
     m = len(jac)
+    los = list(lo) if isinstance(lo, (list, tuple)) else [lo] * n
+    his = list(hi) if isinstance(hi, (list, tuple)) else [hi] * n
+    diag = [sum(jac[k][i] * jac[k][i] for k in range(m)) for i in range(n)]
+    ridge = lam * (sum(diag) / n if n else 1.0) + 1e-9
     fixed = {}
     for _ in range(rounds):
         free = [i for i in range(n) if i not in fixed]
@@ -72,16 +79,16 @@ def least_squares(jac, residual, lam=0.05, lo=-1.0, hi=1.0, rounds=4):
         r = [residual[k] + sum(jac[k][i] * v for i, v in fixed.items())
              for k in range(m)]
         a = [[sum(jac[k][i] * jac[k][j] for k in range(m))
-              + (lam if i == j else 0.0) for j in free] for i in free]
+              + (ridge if i == j else 0.0) for j in free] for i in free]
         b = [-sum(jac[k][i] * r[k] for k in range(m)) for i in free]
         sol = _solve(a, b)
         clipped = False
         for i, v in zip(free, sol):
-            if v < lo:
-                fixed[i] = lo
+            if v < los[i]:
+                fixed[i] = los[i]
                 clipped = True
-            elif v > hi:
-                fixed[i] = hi
+            elif v > his[i]:
+                fixed[i] = his[i]
                 clipped = True
         if not clipped:
             w = dict(fixed)
@@ -93,21 +100,29 @@ def least_squares(jac, residual, lam=0.05, lo=-1.0, hi=1.0, rounds=4):
     return [w[i] for i in range(n)]
 
 
-def fit(project, sliders, lam=0.05, delta=1.0):
+def fit(project, sliders, lam=0.3, delta=1.0, bounds=None):
     """*project(weights)* -> residual vector (model minus observed, in
     mm) for a weight dict; the face is linear in its weights, so one
-    difference per slider is the exact Jacobian. Returns
-    ``(weights dict, rms before, rms after)``."""
+    difference per slider is the exact Jacobian. *bounds* maps a
+    parameter to its (lo, hi) — a shape slider runs 0..1, an angle
+    ±40 — else ±1; *delta* likewise (a number, or a dict per name).
+    Returns ``(weights dict, rms before, rms after)``."""
     base = project({})
     m = len(base)
     if m == 0 or not sliders:
         return {}, _rms(base), _rms(base)
+    bounds = bounds or {}
     jac_cols = []
+    steps = []
     for name in sliders:
-        col = project({name: delta})
-        jac_cols.append([(col[k] - base[k]) / delta for k in range(m)])
+        step = delta.get(name, 1.0) if isinstance(delta, dict) else delta
+        steps.append(step)
+        col = project({name: step})
+        jac_cols.append([(col[k] - base[k]) / step for k in range(m)])
     jac = [[jac_cols[i][k] for i in range(len(sliders))] for k in range(m)]
-    w = least_squares(jac, base, lam)
+    lo = [bounds.get(name, (-1.0, 1.0))[0] for name in sliders]
+    hi = [bounds.get(name, (-1.0, 1.0))[1] for name in sliders]
+    w = least_squares(jac, base, lam, lo, hi)
     weights = {name: round(v, 4) for name, v in zip(sliders, w)
                if abs(v) > 1e-4}
     after = project(weights)

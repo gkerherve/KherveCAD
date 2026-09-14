@@ -2027,23 +2027,51 @@ class McpToolExecutor:
         if bad:
             raise ToolError(f"No face slider named {bad[0]!r}.")
         lam = self._number(params, "stiffness")
-        lam = 0.05 if lam is None else max(lam, 1e-4)
+        lam = 0.3 if lam is None else max(lam, 1e-4)
         kw = self._human_kwargs(node)
         base_targets = {str(r[0]): float(r[1]) for r in kw["targets"]
                         if isinstance(r, list) and len(r) == 2}
+        base_pose = {str(r[0]): [float(v) for v in r[1:4]]
+                     for r in (node.params.get("pose") or [])
+                     if isinstance(r, list) and len(r) == 4}
         m = mesh.ancestor_matrix(node, self._env())
-        axes = {name: paint.PLANES[plane][:2] for name, plane, _u, _v in obs}
+        # the head's turn, tilt and nod are unknowns too: a photo is
+        # rarely square on, and a wrong angle would be forced into the
+        # face instead
+        HEAD = {"head_turn": ("head", 2), "head_tilt": ("head", 1),
+                "head_nod": ("head", 0)}
+        fit_head = bool(params.get("fit_head", True))
+        names = list(sliders) + (list(HEAD) if fit_head else [])
+        bounds = {}
+        for name in sliders:
+            pairs = table[name]
+            bounds[name] = (0.0, 1.0) if all(p[0] is None for p in pairs) \
+                else (-1.0, 1.0)
+        for name in HEAD:
+            bounds[name] = (-45.0, 45.0)
+        delta = {name: 5.0 for name in HEAD}
 
         def merged(weights):
             t = dict(base_targets)
             for k, v in weights.items():
-                t[k] = max(-1.0, min(1.0, t.get(k, 0.0) + v))
+                if k in HEAD:
+                    continue
+                lo, hi = bounds.get(k, (-1.0, 1.0))
+                t[k] = max(lo, min(hi, t.get(k, 0.0) + v))
             return [[k, v] for k, v in t.items() if v]
+
+        def posed(weights):
+            rows = {k: list(v) for k, v in base_pose.items()}
+            for k, v in weights.items():
+                if k in HEAD:
+                    bone, axis = HEAD[k]
+                    rows.setdefault(bone, [0.0, 0.0, 0.0])[axis] += v
+            return [[k] + v for k, v in rows.items() if any(v)]
 
         def project(weights, warp=None, rows=None):
             lm = human.landmark_points(**dict(
                 kw, targets=merged(weights) if rows is None else rows,
-                warp=warp))
+                warp=warp, pose=posed(weights)))
             out = []
             for name, plane, u, v in obs:
                 world = mesh.mat_apply(m, lm[name])
@@ -2051,8 +2079,12 @@ class McpToolExecutor:
                 out.extend((world[a] - u, world[b] - v))
             return out
         weights, before, after = facefit.fit(lambda w: project(w, None),
-                                             sliders, lam)
+                                             names, lam, delta, bounds)
         targets = merged(weights)
+        pose = posed(weights)
+        head = {k: round(v, 2) for k, v in weights.items() if k in HEAD}
+        weights = {k: v for k, v in weights.items() if k not in HEAD}
+        kw = dict(kw, pose=pose)
         warp_rows = []
         if params.get("warp", True):
             lm = human.landmark_points(**dict(kw, targets=targets, warp=None))
@@ -2068,9 +2100,10 @@ class McpToolExecutor:
                 [row + [0.0] for row in inv], d)) for name, d in need.items()]
             warp_rows = facefit.residual_warp(errors)
         self._model.set_param(node, "targets", targets)
+        self._model.set_param(node, "pose", pose)
         self._model.set_param(node, "warp", warp_rows)
         final = project({}, warp_rows, targets) if warp_rows else None
-        kw2 = self._human_kwargs(node)
+        kw2 = dict(self._human_kwargs(node), pose=pose)
         lm = human.landmark_points(**kw2)
         per = []
         for name, plane, u, v in obs:
@@ -2079,7 +2112,7 @@ class McpToolExecutor:
             per.append({"name": name, "error_mm": round(
                 ((world[a] - u) ** 2 + (world[b] - v) ** 2) ** 0.5, 2)})
         return {"node": node.id, "sliders": weights, "targets": targets,
-                "warp_rows": len(warp_rows),
+                "head": head, "pose": pose, "warp_rows": len(warp_rows),
                 "rms_mm": {"before": round(before, 2),
                            "sliders": round(after, 2),
                            "warp": round(facefit._rms(final), 2)

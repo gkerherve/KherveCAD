@@ -172,14 +172,16 @@ def _facing(tri, axis):
     return n[axis] / length if length > 1e-15 else 0.0
 
 
-def paint_many(items, pictures, sides="front") -> list:
+def paint_many(items, pictures, sides="front", region=None) -> list:
     """Several pictures at once — ``[(picture, plane, x, y, width,
     height)]``, a front photo and a side photo, say. Every face takes
     the pictures its centre projects into, blended by how squarely it
     looks at each (weight = facing minus the grazing cutoff), so the
     cheek turns from the front photo to the side photo without a
     seam. With *sides* "both" a picture also reaches the faces turned
-    away from it."""
+    away from it. *region* (two corners) keeps the paint to the faces
+    whose centre lies in that box — the face, not the forehead under
+    a hat the photo shows."""
     plans = []
     for picture, plane, x, y, width, height in pictures:
         if picture is None or width <= 0:
@@ -193,8 +195,17 @@ def paint_many(items, pictures, sides="front") -> list:
     if not plans:
         return items
     front_only = sides != "both"
+    box = None
+    if region and len(region) == 2 and all(len(r) == 3 for r in region):
+        box = ([min(region[0][i], region[1][i]) for i in range(3)],
+               [max(region[0][i], region[1][i]) for i in range(3)])
     out = []
     for tri, colour, selected in items:
+        if box is not None:
+            c = [(tri[0][i] + tri[1][i] + tri[2][i]) / 3.0 for i in range(3)]
+            if any(c[i] < box[0][i] or c[i] > box[1][i] for i in range(3)):
+                out.append((tri, colour, selected))
+                continue
         rgb = [0.0, 0.0, 0.0]
         total = 0.0
         for picture, u, v, n_axis, sign, x, y, width, height in plans:

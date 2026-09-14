@@ -607,7 +607,8 @@ TOOLS = [
             "smooth warp carries each landmark the rest of the way. One "
             "photo pins the two axes of its plane; a front and a side "
             "photo pin all three. The figure may be turned (the fit "
-            "reads its placement). Sets the node's `targets` and `warp` "
+            "reads its placement) and the head's own turn, tilt and nod "
+            "are solved with it. Sets the node's `targets`, `pose` and `warp` "
             "— this is what turns the generic head into a likeness; "
             "sculpt afterwards for what landmarks cannot say."
         ),
@@ -627,8 +628,13 @@ TOOLS = [
                      "description": "Carry the residual with a warp "
                                     "(default true)."},
             "stiffness": {"type": "number",
-                          "description": "Regularisation, 0.01 loose .. 1 "
-                                         "stiff (default 0.05)."},
+                          "description": "Regularisation, 0.05 loose .. 2 "
+                                         "stiff (default 0.3)."},
+            "fit_head": {"type": "boolean",
+                         "description": "Also solve the head's turn, tilt "
+                                        "and nod (the head bone's pose), "
+                                        "default true — a photo is rarely "
+                                        "square on."},
         }, ["node_id", "landmarks"]),
     },
     {

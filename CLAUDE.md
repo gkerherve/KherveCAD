@@ -1390,7 +1390,18 @@ into a new module and import.
                        (a few rounds); `residual_warp()` turns what the
                        sliders could not reach into warp rows.
                        `DEFAULT_SLIDERS` are the proportions a photo pins
-                       down. MCP `face_landmarks` (local, world and the
+                       down. Regularisation is RELATIVE (`lam` × the mean
+                       diagonal of JᵀJ, default 0.3: with 14 landmarks and
+                       28 sliders the absolute 0.05 pinned everything at
+                       ±1 and made the fit worse); bounds are per
+                       parameter (a shape slider 0..1). The tool also
+                       fits the head bone's turn / tilt / nod
+                       (`fit_head`, ±45°, step 5°) as three more
+                       parameters, since a photo is rarely square on and
+                       a wrong angle would otherwise be forced into the
+                       face; `fit_face` writes `targets`, `pose` and
+                       `warp`. The Queen fit: rms 6.2 -> 5.2 (sliders) ->
+                       0.2 mm (warp), every landmark within a pixel. MCP `face_landmarks` (local, world and the
                        PIXEL position on every reference image, so an
                        assistant compares with the photo it can see) and
                        `fit_face` (landmark pixels on a reference image
@@ -1435,7 +1446,10 @@ into a new module and import.
                        cutoff), so a cheek turns from the front photo to
                        the side photo without a seam. Both paths save
                        relative (`meshimport.PATH_PARAMS` now lists
-                       several per type). `read_png` is a pure-Python 8-bit PNG
+                       several per type). `region` rows (two corners in
+                       the children's frame) keep the paint to the face:
+                       without it the hat in the portrait painted the
+                       forehead magenta. `read_png` is a pure-Python 8-bit PNG
                        decoder (filters 0-4, RGB/RGBA/grey/palette),
                        QImage the fallback for JPEG; `Picture.at(s, t)`
                        samples t-up; `load` caches by mtime. Compiles to
