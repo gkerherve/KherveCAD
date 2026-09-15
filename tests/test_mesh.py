@@ -144,6 +144,27 @@ def test_line_capsule_outline():
     assert max(xs) == pytest.approx(11.0, abs=0.05)
 
 
+def test_plus_sign_text_has_no_hole_where_its_strokes_cross():
+    """DejaVu Sans draws "+" as two separate, overlapping same-winding
+    rectangles (a horizontal and a vertical bar) rather than one outer
+    contour with a nested hole. `QPainterPath.simplified()` resolved
+    that overlap with the odd-even fill rule, which treats the doubly
+    covered centre square as OUTSIDE — the "+" came back as four
+    disjoint arms with a square hole exactly where they should meet."""
+    from khervecad.model import CadNode
+    node = CadNode("text", params=dict(x=0.0, y=0.0, text="+", size=0.22))
+    outlines = mesh._oriented(node, mesh.node_outlines(node, {}))
+    assert len(outlines) == 2
+    # both strokes are solids (their corners never fall inside the
+    # other stroke, so neither is classified as a hole) ...
+    assert all(mesh.polygon_area(o) > 0 for o in outlines)
+    # ... and their union covers the centre where they cross.
+    xs = [x for o in outlines for x, _y in o]
+    ys = [y for o in outlines for _x, y in o]
+    centre = ((min(xs) + max(xs)) / 2.0, (min(ys) + max(ys)) / 2.0)
+    assert any(mesh._inside(centre, o) for o in outlines)
+
+
 def test_rp_survives_a_list_param_that_is_not_points():
     """`rp` resolves every param, and a list one is normally polygon
     points — but an Object's "anchors" is a list of dicts. Unpacking

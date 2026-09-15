@@ -361,18 +361,42 @@ def _capsule(x1, y1, x2, y2, r):
 
 
 def _text_outlines(p):
-    """Glyph outlines via Qt (preview only; OpenSCAD renders exactly)."""
+    """Glyph outlines via Qt (preview only; OpenSCAD renders exactly).
+
+    Rendered at a fixed, generously large reference point size and
+    scaled down geometrically — at the sub-millimetre sizes a molecule
+    label or a "+" between reaction terms uses, `QFont` clamps/hints
+    the glyph outline at tiny point sizes and distorts it.
+
+    `path.simplified()` is deliberately NOT used: some glyphs ("+",
+    "=", ...) are built from several separate SAME-winding, OVERLAPPING
+    strokes (e.g. a horizontal bar and a vertical bar) rather than one
+    outer contour with nested holes. `simplified()` resolves overlaps
+    with the path's fill rule, which treats a doubly-covered region as
+    OUTSIDE (even crossing count) — it does not union them, so a "+"
+    came back as four separate arms with the centre square missing.
+    The raw (un-simplified) subpaths are each simple, well-formed
+    glyph-component contours by construction; `_oriented()`'s own
+    nesting-depth test already tells a real hole (a contour's first
+    point lies inside another, like the counter of an "O") from a
+    same-depth overlapping stroke (a "+"'s bars, neither containing
+    the other's corner points) and extrudes/unions them accordingly.
+    """
     try:
         from PyQt5.QtGui import QFont, QPainterPath
     except ImportError:                      # pragma: no cover
         return []
+    size = max(float(p["size"]), 1e-6)
+    ref = 100.0
     font = QFont("DejaVu Sans")
-    font.setPointSizeF(max(float(p["size"]), 0.5))
+    font.setPointSizeF(ref)
     path = QPainterPath()
     path.addText(0, 0, font, str(p["text"]))
+    scale = size / ref
     outlines = []
-    for poly in path.simplified().toSubpathPolygons():
-        pts = [(p["x"] + pt.x(), p["y"] - pt.y()) for pt in poly]
+    for poly in path.toSubpathPolygons():
+        pts = [(p["x"] + pt.x() * scale, p["y"] - pt.y() * scale)
+              for pt in poly]
         if len(pts) >= 3:
             outlines.append(pts)
     return outlines
