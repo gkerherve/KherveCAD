@@ -1727,8 +1727,10 @@ into a new module and import.
                        check orthographically. The MCP `_INSTRUCTIONS`
                        carry the same rule ("Modelling a real object")
                        to every connected client.
-  - `tools/butt_hinge.py` — writes `parts/Brackets/Butt Hinge.kcad`
-                       (`python -m khervecad.tools.butt_hinge [OUT]`): a
+  - `tools/butt_hinge.py` — writes `parts/Brackets/Butt Hinge.kcad` and
+                       `Butt Hinge 2.kcad` (`python -m
+                       khervecad.tools.butt_hinge` for both, `--style
+                       screw|slide OUT` for one): a
                        butt hinge in THREE printable Objects, each at its
                        own origin in its print pose — Leaf A (knuckles 1,
                        3, 5; the last one tapped and blind), Leaf B
@@ -1747,6 +1749,16 @@ into a new module and import.
                        `test_butt_hinge` pins the shipped file to the
                        builder and, with OpenSCAD, watertightness, bed
                        contact and a clear 0-180° swing.
+                       **Butt Hinge 2** (`style="slide"`): the same
+                       Leaf B, Leaf A's end knuckle a plain blind bore
+                       with a groove, and a **Pin** that slides in — its
+                       tip slit into two prongs whose side lugs (only
+                       |z| < LUG_HALF: the prongs flex sideways) stand
+                       0.3 mm proud of the bore and click into the
+                       groove; sloped back faces let a firm pull take it
+                       out. The test also checks the pin 6 mm short of
+                       home DOES press on the bore — or it would never
+                       hold.
   - `mcp_schema.py`  — the **MCP tool table**: 48 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested

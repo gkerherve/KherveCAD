@@ -1,0 +1,2714 @@
+{
+ "format": "kcad",
+ "version": 9,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Leaf A",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#d1ad59",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Leaf A",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Leaf and knuckles",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Plate",
+          "visible": true,
+          "params": {
+           "height": 4.5,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "polygon",
+            "name": "Plate outline",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "points": [
+              [
+               74.99,
+               1.5
+              ],
+              [
+               74.99,
+               -34.0
+              ],
+              [
+               74.9131,
+               -34.7804
+              ],
+              [
+               74.6855,
+               -35.5307
+              ],
+              [
+               74.3159,
+               -36.2223
+              ],
+              [
+               73.8184,
+               -36.8284
+              ],
+              [
+               73.2123,
+               -37.3259
+              ],
+              [
+               72.5207,
+               -37.6955
+              ],
+              [
+               71.7704,
+               -37.9231
+              ],
+              [
+               70.99,
+               -38.0
+              ],
+              [
+               4.01,
+               -38.0
+              ],
+              [
+               3.2296,
+               -37.9231
+              ],
+              [
+               2.4793,
+               -37.6955
+              ],
+              [
+               1.7877,
+               -37.3259
+              ],
+              [
+               1.1816,
+               -36.8284
+              ],
+              [
+               0.6841,
+               -36.2223
+              ],
+              [
+               0.3145,
+               -35.5307
+              ],
+              [
+               0.0869,
+               -34.7804
+              ],
+              [
+               0.01,
+               -34.0
+              ],
+              [
+               0.01,
+               1.5
+              ]
+             ]
+            }
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Knuckle 1",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Knuckle 1",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Knuckle 1 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   8.5,
+                   0.0
+                  ],
+                  [
+                   9.0,
+                   0.5
+                  ],
+                  [
+                   9.0,
+                   14.3
+                  ],
+                  [
+                   8.5,
+                   14.8
+                  ],
+                  [
+                   0.0,
+                   14.8
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Fillet 1",
+          "visible": true,
+          "params": {
+           "x": 0.7,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Profile on YZ",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 90.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Fillet 1",
+              "visible": true,
+              "params": {
+               "height": 13.4,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Fillet 1 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   -11.3248,
+                   4.0
+                  ],
+                  [
+                   -11.3248,
+                   4.5
+                  ],
+                  [
+                   -10.8906,
+                   4.538
+                  ],
+                  [
+                   -10.4696,
+                   4.6508
+                  ],
+                  [
+                   -10.0746,
+                   4.835
+                  ],
+                  [
+                   -9.7176,
+                   5.0851
+                  ],
+                  [
+                   -9.4094,
+                   5.3933
+                  ],
+                  [
+                   -9.1595,
+                   5.7503
+                  ],
+                  [
+                   -8.9754,
+                   6.1454
+                  ],
+                  [
+                   -8.8626,
+                   6.5664
+                  ],
+                  [
+                   -8.8248,
+                   7.0006
+                  ],
+                  [
+                   -8.8628,
+                   7.4348
+                  ],
+                  [
+                   -4.0,
+                   7.4348
+                  ],
+                  [
+                   -4.0,
+                   4.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Knuckle 3",
+          "visible": true,
+          "params": {
+           "x": 30.2,
+           "y": 0.0,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Knuckle 3",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Knuckle 3 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   8.5,
+                   0.0
+                  ],
+                  [
+                   9.0,
+                   0.5
+                  ],
+                  [
+                   9.0,
+                   14.1
+                  ],
+                  [
+                   8.5,
+                   14.6
+                  ],
+                  [
+                   0.0,
+                   14.6
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Fillet 3",
+          "visible": true,
+          "params": {
+           "x": 30.9,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Profile on YZ",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 90.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Fillet 3",
+              "visible": true,
+              "params": {
+               "height": 13.2,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Fillet 3 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   -11.3248,
+                   4.0
+                  ],
+                  [
+                   -11.3248,
+                   4.5
+                  ],
+                  [
+                   -10.8906,
+                   4.538
+                  ],
+                  [
+                   -10.4696,
+                   4.6508
+                  ],
+                  [
+                   -10.0746,
+                   4.835
+                  ],
+                  [
+                   -9.7176,
+                   5.0851
+                  ],
+                  [
+                   -9.4094,
+                   5.3933
+                  ],
+                  [
+                   -9.1595,
+                   5.7503
+                  ],
+                  [
+                   -8.9754,
+                   6.1454
+                  ],
+                  [
+                   -8.8626,
+                   6.5664
+                  ],
+                  [
+                   -8.8248,
+                   7.0006
+                  ],
+                  [
+                   -8.8628,
+                   7.4348
+                  ],
+                  [
+                   -4.0,
+                   7.4348
+                  ],
+                  [
+                   -4.0,
+                   4.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Knuckle 5",
+          "visible": true,
+          "params": {
+           "x": 60.2,
+           "y": 0.0,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Knuckle 5",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Knuckle 5 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   8.5,
+                   0.0
+                  ],
+                  [
+                   9.0,
+                   0.5
+                  ],
+                  [
+                   9.0,
+                   14.3
+                  ],
+                  [
+                   8.5,
+                   14.8
+                  ],
+                  [
+                   0.0,
+                   14.8
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Fillet 5",
+          "visible": true,
+          "params": {
+           "x": 60.9,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Profile on YZ",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 90.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Fillet 5",
+              "visible": true,
+              "params": {
+               "height": 13.4,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Fillet 5 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   -11.3248,
+                   4.0
+                  ],
+                  [
+                   -11.3248,
+                   4.5
+                  ],
+                  [
+                   -10.8906,
+                   4.538
+                  ],
+                  [
+                   -10.4696,
+                   4.6508
+                  ],
+                  [
+                   -10.0746,
+                   4.835
+                  ],
+                  [
+                   -9.7176,
+                   5.0851
+                  ],
+                  [
+                   -9.4094,
+                   5.3933
+                  ],
+                  [
+                   -9.1595,
+                   5.7503
+                  ],
+                  [
+                   -8.9754,
+                   6.1454
+                  ],
+                  [
+                   -8.8626,
+                   6.5664
+                  ],
+                  [
+                   -8.8248,
+                   7.0006
+                  ],
+                  [
+                   -8.8628,
+                   7.4348
+                  ],
+                  [
+                   -4.0,
+                   7.4348
+                  ],
+                  [
+                   -4.0,
+                   4.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "union",
+        "name": "Swing clearance 2",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Swing clearance",
+          "visible": true,
+          "params": {
+           "x": 14.79,
+           "y": 0.0,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Swing clearance",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.42,
+               "radius_bottom": 9.4,
+               "radius_top": 9.4,
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cube",
+          "name": "Feather-edge trim",
+          "visible": true,
+          "params": {
+           "x": 14.79,
+           "y": -4.9356,
+           "z": -1.0,
+           "width": 15.42,
+           "depth": 9.8712,
+           "height": 2.2,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "union",
+        "name": "Swing clearance 4",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Swing clearance",
+          "visible": true,
+          "params": {
+           "x": 44.790000000000006,
+           "y": 0.0,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Swing clearance",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.42,
+               "radius_bottom": 9.4,
+               "radius_top": 9.4,
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cube",
+          "name": "Feather-edge trim",
+          "visible": true,
+          "params": {
+           "x": 44.79,
+           "y": -4.9356,
+           "z": -1.0,
+           "width": 15.42,
+           "depth": 9.8712,
+           "height": 2.2,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Bore",
+        "visible": true,
+        "params": {
+         "x": -1.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Profile on YZ",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 90.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Bore",
+            "visible": true,
+            "params": {
+             "height": 74.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Bore profile",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 -3.7477,
+                 12.7477
+                ],
+                [
+                 -4.097,
+                 12.3623
+                ],
+                [
+                 -4.4068,
+                 11.9445
+                ],
+                [
+                 -4.6742,
+                 11.4984
+                ],
+                [
+                 -4.8966,
+                 11.0282
+                ],
+                [
+                 -5.0718,
+                 10.5385
+                ],
+                [
+                 -5.1982,
+                 10.034
+                ],
+                [
+                 -5.2745,
+                 9.5195
+                ],
+                [
+                 -5.3,
+                 9.0
+                ],
+                [
+                 -5.2745,
+                 8.4805
+                ],
+                [
+                 -5.1982,
+                 7.966
+                ],
+                [
+                 -5.0718,
+                 7.4615
+                ],
+                [
+                 -4.8966,
+                 6.9718
+                ],
+                [
+                 -4.6742,
+                 6.5016
+                ],
+                [
+                 -4.4068,
+                 6.0555
+                ],
+                [
+                 -4.097,
+                 5.6377
+                ],
+                [
+                 -3.7477,
+                 5.2523
+                ],
+                [
+                 -3.3623,
+                 4.903
+                ],
+                [
+                 -2.9445,
+                 4.5932
+                ],
+                [
+                 -2.4984,
+                 4.3258
+                ],
+                [
+                 -2.0282,
+                 4.1034
+                ],
+                [
+                 -1.5385,
+                 3.9282
+                ],
+                [
+                 -1.034,
+                 3.8018
+                ],
+                [
+                 -0.5195,
+                 3.7255
+                ],
+                [
+                 -0.0,
+                 3.7
+                ],
+                [
+                 0.5195,
+                 3.7255
+                ],
+                [
+                 1.034,
+                 3.8018
+                ],
+                [
+                 1.5385,
+                 3.9282
+                ],
+                [
+                 2.0282,
+                 4.1034
+                ],
+                [
+                 2.4984,
+                 4.3258
+                ],
+                [
+                 2.9445,
+                 4.5932
+                ],
+                [
+                 3.3623,
+                 4.903
+                ],
+                [
+                 3.7477,
+                 5.2523
+                ],
+                [
+                 4.097,
+                 5.6377
+                ],
+                [
+                 4.4068,
+                 6.0555
+                ],
+                [
+                 4.6742,
+                 6.5016
+                ],
+                [
+                 4.8966,
+                 6.9718
+                ],
+                [
+                 5.0718,
+                 7.4615
+                ],
+                [
+                 5.1982,
+                 7.966
+                ],
+                [
+                 5.2745,
+                 8.4805
+                ],
+                [
+                 5.3,
+                 9.0
+                ],
+                [
+                 5.2745,
+                 9.5195
+                ],
+                [
+                 5.1982,
+                 10.034
+                ],
+                [
+                 5.0718,
+                 10.5385
+                ],
+                [
+                 4.8966,
+                 11.0282
+                ],
+                [
+                 4.6742,
+                 11.4984
+                ],
+                [
+                 4.4068,
+                 11.9445
+                ],
+                [
+                 4.097,
+                 12.3623
+                ],
+                [
+                 3.7477,
+                 12.7477
+                ],
+                [
+                 1.5593,
+                 14.936
+                ],
+                [
+                 -1.5593,
+                 14.936
+                ]
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Snap groove",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 9.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Along X",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate_extrude",
+            "name": "Snap groove",
+            "visible": true,
+            "params": {
+             "angle": 360.0,
+             "segments": 96
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Snap groove profile",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 4.5,
+                 68.5
+                ],
+                [
+                 5.1,
+                 68.5
+                ],
+                [
+                 5.9,
+                 69.3
+                ],
+                [
+                 5.9,
+                 71.4
+                ],
+                [
+                 5.1,
+                 72.2
+                ],
+                [
+                 4.5,
+                 72.2
+                ]
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Pin entry",
+        "visible": true,
+        "params": {
+         "x": -0.5,
+         "y": 0.0,
+         "z": 9.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Along X",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Pin entry",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 1.6,
+             "radius_bottom": 6.6,
+             "radius_top": 5.0,
+             "segments": 96,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Lead-in",
+        "visible": true,
+        "params": {
+         "x": 59.7,
+         "y": 0.0,
+         "z": 9.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Along X",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Lead-in",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 1.6,
+             "radius_bottom": 6.6,
+             "radius_top": 5.0,
+             "segments": 96,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cylinder",
+        "name": "Screw hole",
+        "visible": true,
+        "params": {
+         "x": 15.0,
+         "y": -17.0,
+         "z": -0.01,
+         "height": 4.52,
+         "radius_bottom": 2.25,
+         "radius_top": 2.25,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Countersink",
+        "visible": true,
+        "params": {
+         "x": 15.0,
+         "y": -17.0,
+         "z": 2.25,
+         "height": 2.26,
+         "radius_bottom": 2.25,
+         "radius_top": 4.51,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Screw hole",
+        "visible": true,
+        "params": {
+         "x": 60.0,
+         "y": -17.0,
+         "z": -0.01,
+         "height": 4.52,
+         "radius_bottom": 2.25,
+         "radius_top": 2.25,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Countersink",
+        "visible": true,
+        "params": {
+         "x": 60.0,
+         "y": -17.0,
+         "z": 2.25,
+         "height": 2.26,
+         "radius_bottom": 2.25,
+         "radius_top": 4.51,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Screw hole",
+        "visible": true,
+        "params": {
+         "x": 37.5,
+         "y": -30.0,
+         "z": -0.01,
+         "height": 4.52,
+         "radius_bottom": 2.25,
+         "radius_top": 2.25,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Countersink",
+        "visible": true,
+        "params": {
+         "x": 37.5,
+         "y": -30.0,
+         "z": 2.25,
+         "height": 2.26,
+         "radius_bottom": 2.25,
+         "radius_top": 4.51,
+         "segments": 32,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Leaf B",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#d1ad59",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Leaf B",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Leaf and knuckles",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Plate",
+          "visible": true,
+          "params": {
+           "height": 4.5,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "polygon",
+            "name": "Plate outline",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "points": [
+              [
+               0.01,
+               -1.5
+              ],
+              [
+               0.01,
+               34.0
+              ],
+              [
+               0.0869,
+               34.7804
+              ],
+              [
+               0.3145,
+               35.5307
+              ],
+              [
+               0.6841,
+               36.2223
+              ],
+              [
+               1.1816,
+               36.8284
+              ],
+              [
+               1.7877,
+               37.3259
+              ],
+              [
+               2.4793,
+               37.6955
+              ],
+              [
+               3.2296,
+               37.9231
+              ],
+              [
+               4.01,
+               38.0
+              ],
+              [
+               70.99,
+               38.0
+              ],
+              [
+               71.7704,
+               37.9231
+              ],
+              [
+               72.5207,
+               37.6955
+              ],
+              [
+               73.2123,
+               37.3259
+              ],
+              [
+               73.8184,
+               36.8284
+              ],
+              [
+               74.3159,
+               36.2223
+              ],
+              [
+               74.6855,
+               35.5307
+              ],
+              [
+               74.9131,
+               34.7804
+              ],
+              [
+               74.99,
+               34.0
+              ],
+              [
+               74.99,
+               -1.5
+              ]
+             ]
+            }
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Knuckle 2",
+          "visible": true,
+          "params": {
+           "x": 15.2,
+           "y": 0.0,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Knuckle 2",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Knuckle 2 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   8.5,
+                   0.0
+                  ],
+                  [
+                   9.0,
+                   0.5
+                  ],
+                  [
+                   9.0,
+                   14.1
+                  ],
+                  [
+                   8.5,
+                   14.6
+                  ],
+                  [
+                   0.0,
+                   14.6
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Fillet 2",
+          "visible": true,
+          "params": {
+           "x": 15.9,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Profile on YZ",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 90.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Fillet 2",
+              "visible": true,
+              "params": {
+               "height": 13.2,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Fillet 2 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   11.3248,
+                   4.0
+                  ],
+                  [
+                   11.3248,
+                   4.5
+                  ],
+                  [
+                   10.8906,
+                   4.538
+                  ],
+                  [
+                   10.4696,
+                   4.6508
+                  ],
+                  [
+                   10.0746,
+                   4.835
+                  ],
+                  [
+                   9.7176,
+                   5.0851
+                  ],
+                  [
+                   9.4094,
+                   5.3933
+                  ],
+                  [
+                   9.1595,
+                   5.7503
+                  ],
+                  [
+                   8.9754,
+                   6.1454
+                  ],
+                  [
+                   8.8626,
+                   6.5664
+                  ],
+                  [
+                   8.8248,
+                   7.0006
+                  ],
+                  [
+                   8.8628,
+                   7.4348
+                  ],
+                  [
+                   4.0,
+                   7.4348
+                  ],
+                  [
+                   4.0,
+                   4.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Knuckle 4",
+          "visible": true,
+          "params": {
+           "x": 45.2,
+           "y": 0.0,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Knuckle 4",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Knuckle 4 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   8.5,
+                   0.0
+                  ],
+                  [
+                   9.0,
+                   0.5
+                  ],
+                  [
+                   9.0,
+                   14.1
+                  ],
+                  [
+                   8.5,
+                   14.6
+                  ],
+                  [
+                   0.0,
+                   14.6
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Fillet 4",
+          "visible": true,
+          "params": {
+           "x": 45.9,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Profile on YZ",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 90.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Fillet 4",
+              "visible": true,
+              "params": {
+               "height": 13.2,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Fillet 4 profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   11.3248,
+                   4.0
+                  ],
+                  [
+                   11.3248,
+                   4.5
+                  ],
+                  [
+                   10.8906,
+                   4.538
+                  ],
+                  [
+                   10.4696,
+                   4.6508
+                  ],
+                  [
+                   10.0746,
+                   4.835
+                  ],
+                  [
+                   9.7176,
+                   5.0851
+                  ],
+                  [
+                   9.4094,
+                   5.3933
+                  ],
+                  [
+                   9.1595,
+                   5.7503
+                  ],
+                  [
+                   8.9754,
+                   6.1454
+                  ],
+                  [
+                   8.8626,
+                   6.5664
+                  ],
+                  [
+                   8.8248,
+                   7.0006
+                  ],
+                  [
+                   8.8628,
+                   7.4348
+                  ],
+                  [
+                   4.0,
+                   7.4348
+                  ],
+                  [
+                   4.0,
+                   4.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "union",
+        "name": "Swing clearance 1",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Swing clearance",
+          "visible": true,
+          "params": {
+           "x": -1.0,
+           "y": 0.0,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Swing clearance",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 16.21,
+               "radius_bottom": 9.4,
+               "radius_top": 9.4,
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cube",
+          "name": "Feather-edge trim",
+          "visible": true,
+          "params": {
+           "x": -1.0,
+           "y": -4.9356,
+           "z": -1.0,
+           "width": 16.21,
+           "depth": 9.8712,
+           "height": 2.2,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "union",
+        "name": "Swing clearance 3",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Swing clearance",
+          "visible": true,
+          "params": {
+           "x": 29.79,
+           "y": 0.0,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Swing clearance",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.42,
+               "radius_bottom": 9.4,
+               "radius_top": 9.4,
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cube",
+          "name": "Feather-edge trim",
+          "visible": true,
+          "params": {
+           "x": 29.79,
+           "y": -4.9356,
+           "z": -1.0,
+           "width": 15.42,
+           "depth": 9.8712,
+           "height": 2.2,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "union",
+        "name": "Swing clearance 5",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Swing clearance",
+          "visible": true,
+          "params": {
+           "x": 59.790000000000006,
+           "y": 0.0,
+           "z": 9.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Swing clearance",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 16.21,
+               "radius_bottom": 9.4,
+               "radius_top": 9.4,
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cube",
+          "name": "Feather-edge trim",
+          "visible": true,
+          "params": {
+           "x": 59.79,
+           "y": -4.9356,
+           "z": -1.0,
+           "width": 16.21,
+           "depth": 9.8712,
+           "height": 2.2,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Bore",
+        "visible": true,
+        "params": {
+         "x": -1.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Profile on YZ",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 90.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Bore",
+            "visible": true,
+            "params": {
+             "height": 77.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Bore profile",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 -3.7477,
+                 12.7477
+                ],
+                [
+                 -4.097,
+                 12.3623
+                ],
+                [
+                 -4.4068,
+                 11.9445
+                ],
+                [
+                 -4.6742,
+                 11.4984
+                ],
+                [
+                 -4.8966,
+                 11.0282
+                ],
+                [
+                 -5.0718,
+                 10.5385
+                ],
+                [
+                 -5.1982,
+                 10.034
+                ],
+                [
+                 -5.2745,
+                 9.5195
+                ],
+                [
+                 -5.3,
+                 9.0
+                ],
+                [
+                 -5.2745,
+                 8.4805
+                ],
+                [
+                 -5.1982,
+                 7.966
+                ],
+                [
+                 -5.0718,
+                 7.4615
+                ],
+                [
+                 -4.8966,
+                 6.9718
+                ],
+                [
+                 -4.6742,
+                 6.5016
+                ],
+                [
+                 -4.4068,
+                 6.0555
+                ],
+                [
+                 -4.097,
+                 5.6377
+                ],
+                [
+                 -3.7477,
+                 5.2523
+                ],
+                [
+                 -3.3623,
+                 4.903
+                ],
+                [
+                 -2.9445,
+                 4.5932
+                ],
+                [
+                 -2.4984,
+                 4.3258
+                ],
+                [
+                 -2.0282,
+                 4.1034
+                ],
+                [
+                 -1.5385,
+                 3.9282
+                ],
+                [
+                 -1.034,
+                 3.8018
+                ],
+                [
+                 -0.5195,
+                 3.7255
+                ],
+                [
+                 -0.0,
+                 3.7
+                ],
+                [
+                 0.5195,
+                 3.7255
+                ],
+                [
+                 1.034,
+                 3.8018
+                ],
+                [
+                 1.5385,
+                 3.9282
+                ],
+                [
+                 2.0282,
+                 4.1034
+                ],
+                [
+                 2.4984,
+                 4.3258
+                ],
+                [
+                 2.9445,
+                 4.5932
+                ],
+                [
+                 3.3623,
+                 4.903
+                ],
+                [
+                 3.7477,
+                 5.2523
+                ],
+                [
+                 4.097,
+                 5.6377
+                ],
+                [
+                 4.4068,
+                 6.0555
+                ],
+                [
+                 4.6742,
+                 6.5016
+                ],
+                [
+                 4.8966,
+                 6.9718
+                ],
+                [
+                 5.0718,
+                 7.4615
+                ],
+                [
+                 5.1982,
+                 7.966
+                ],
+                [
+                 5.2745,
+                 8.4805
+                ],
+                [
+                 5.3,
+                 9.0
+                ],
+                [
+                 5.2745,
+                 9.5195
+                ],
+                [
+                 5.1982,
+                 10.034
+                ],
+                [
+                 5.0718,
+                 10.5385
+                ],
+                [
+                 4.8966,
+                 11.0282
+                ],
+                [
+                 4.6742,
+                 11.4984
+                ],
+                [
+                 4.4068,
+                 11.9445
+                ],
+                [
+                 4.097,
+                 12.3623
+                ],
+                [
+                 3.7477,
+                 12.7477
+                ],
+                [
+                 1.5593,
+                 14.936
+                ],
+                [
+                 -1.5593,
+                 14.936
+                ]
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cylinder",
+        "name": "Screw hole",
+        "visible": true,
+        "params": {
+         "x": 15.0,
+         "y": 17.0,
+         "z": -0.01,
+         "height": 4.52,
+         "radius_bottom": 2.25,
+         "radius_top": 2.25,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Countersink",
+        "visible": true,
+        "params": {
+         "x": 15.0,
+         "y": 17.0,
+         "z": 2.25,
+         "height": 2.26,
+         "radius_bottom": 2.25,
+         "radius_top": 4.51,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Screw hole",
+        "visible": true,
+        "params": {
+         "x": 60.0,
+         "y": 17.0,
+         "z": -0.01,
+         "height": 4.52,
+         "radius_bottom": 2.25,
+         "radius_top": 2.25,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Countersink",
+        "visible": true,
+        "params": {
+         "x": 60.0,
+         "y": 17.0,
+         "z": 2.25,
+         "height": 2.26,
+         "radius_bottom": 2.25,
+         "radius_top": 4.51,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Screw hole",
+        "visible": true,
+        "params": {
+         "x": 37.5,
+         "y": 30.0,
+         "z": -0.01,
+         "height": 4.52,
+         "radius_bottom": 2.25,
+         "radius_top": 2.25,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Countersink",
+        "visible": true,
+        "params": {
+         "x": 37.5,
+         "y": 30.0,
+         "z": 2.25,
+         "height": 2.26,
+         "radius_bottom": 2.25,
+         "radius_top": 4.51,
+         "segments": 32,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Pin",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 4.4,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#a8843f",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Pin",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Head, shank and lugs",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Head",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 4.6
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate_extrude",
+              "name": "Head",
+              "visible": true,
+              "params": {
+               "angle": 360.0,
+               "segments": 96
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Head profile",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   -6.0
+                  ],
+                  [
+                   8.0,
+                   -6.0
+                  ],
+                  [
+                   9.0,
+                   -5.0
+                  ],
+                  [
+                   9.0,
+                   -0.5
+                  ],
+                  [
+                   8.5,
+                   0.0
+                  ],
+                  [
+                   0.0,
+                   0.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Shank",
+          "visible": true,
+          "params": {
+           "x": -0.5,
+           "y": 0.0,
+           "z": 4.6
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Along X",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Shank",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 73.0,
+               "radius_bottom": 4.95,
+               "radius_top": 4.95,
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "intersection",
+          "name": "Lugs",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Lug ring",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 4.6
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Along X",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate_extrude",
+                "name": "Lug ring",
+                "visible": true,
+                "params": {
+                 "angle": 360.0,
+                 "segments": 96
+                },
+                "children": [
+                 {
+                  "type": "polygon",
+                  "name": "Lug ring profile",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "points": [
+                    [
+                     4.5,
+                     68.9
+                    ],
+                    [
+                     4.9,
+                     68.9
+                    ],
+                    [
+                     5.6,
+                     69.7
+                    ],
+                    [
+                     5.6,
+                     70.8
+                    ],
+                    [
+                     4.9,
+                     72.05
+                    ],
+                    [
+                     4.5,
+                     72.05
+                    ]
+                   ]
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Sides only",
+            "visible": true,
+            "params": {
+             "x": 68.4,
+             "y": -9.0,
+             "z": 2.0999999999999996,
+             "width": 4.1499999999999915,
+             "depth": 18.0,
+             "height": 5.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Print flat",
+        "visible": true,
+        "params": {
+         "x": -7.0,
+         "y": -10.0,
+         "z": -10.0,
+         "width": 80.5,
+         "depth": 20.0,
+         "height": 10.0,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Slit",
+        "visible": true,
+        "params": {
+         "x": 58.5,
+         "y": -0.6,
+         "z": -1.0,
+         "width": 15.0,
+         "depth": 1.2,
+         "height": 20.0,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Slit relief",
+        "visible": true,
+        "params": {
+         "x": 58.5,
+         "y": 0.0,
+         "z": -1.0,
+         "height": 20.0,
+         "radius_bottom": 0.9,
+         "radius_top": 0.9,
+         "segments": 24,
+         "center": false
+        }
+       },
+       {
+        "type": "translate",
+        "name": "Tip chamfer",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 4.6
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Along X",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate_extrude",
+            "name": "Tip chamfer",
+            "visible": true,
+            "params": {
+             "angle": 360.0,
+             "segments": 96
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Tip chamfer profile",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 2.3232,
+                 73.5
+                ],
+                [
+                 6.5,
+                 69.3232
+                ],
+                [
+                 6.5,
+                 73.5
+                ]
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

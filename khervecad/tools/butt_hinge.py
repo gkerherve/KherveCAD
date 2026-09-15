@@ -1,8 +1,11 @@
-"""Write the three-part printable butt hinge (parts/Brackets/Butt Hinge.kcad).
+"""Write the three-part printable butt hinges of the Brackets library:
+parts/Brackets/Butt Hinge.kcad (a bolt screws in) and Butt Hinge 2.kcad
+(a pin slides in and clicks home).
 
-    python -m khervecad.tools.butt_hinge [OUT.kcad ...]
+    python -m khervecad.tools.butt_hinge            # both, into parts/
+    python -m khervecad.tools.butt_hinge --style slide OUT.kcad ...
 
-The hinge prints as three separate parts, put together after printing:
+Each hinge prints as three separate parts, put together after printing:
 
 * **Leaf A** — three knuckles (both ends and the middle). The far end
   knuckle is tapped and blind: the bolt screws into it, so it cannot
@@ -14,6 +17,14 @@ The hinge prints as three separate parts, put together after printing:
   an Allen key. It prints lying down on a flat, so its layers run
   along it: stood on end, the sideways load a hinge puts on its pin
   would shear it between two layers.
+
+**Butt Hinge 2** has the same leaves and a **Pin** instead of the bolt:
+no thread, it slides in. Its tip is slit into two prongs with a lug on
+each side; the lugs stand 0.3 mm proud of the bore, so the prongs flex
+to pass it and spring out into a groove inside the blind end knuckle —
+the pin clicks home and a firm pull on its head takes it out again
+(the lugs' back faces slope, they are not square). The lugs sit only
+on the sides: the prongs flex sideways, never up or down.
 
 Every mating surface has an FDM clearance: FIT between the bolt and
 the bores and thread, GAP between knuckles, SWING round the other
@@ -80,6 +91,19 @@ SLICES_PER_TURN = 24   # a coarser helix misses FIT by its chord sag
 SEGMENTS = 96
 BRASS = "#d1ad59"
 BOLT_COLOUR = "#a8843f"
+
+# Butt Hinge 2's slide-in pin (x along the hinge, r from the axis)
+LUG_R = 5.6            # 0.3 over the bore: how far each prong flexes
+LUG_HALF = 2.5         # lugs only where |z| < this, on the prongs' sides
+LUG_X = (68.9, 69.7, 70.8, 72.05)     # back face, crest, lead-in ramp
+GROOVE_R = 5.9         # the lugs sit free in it, 0.3 all round
+GROOVE_X = (68.5, 69.3, 71.4, 72.2)   # 45° flanks
+SLIT_W = 1.2           # lets each prong move 0.6, twice what it needs
+SLIT_START = 58.5      # 14 mm prongs: about 1 % strain to pass the bore
+SLIT_RELIEF = 0.9      # a round end, so the slit does not crack on
+
+#: style -> the library file it writes
+STYLES = {"screw": "Butt Hinge", "slide": "Butt Hinge 2"}
 
 BORE_R = BOLT_D / 2.0 + FIT
 
@@ -270,8 +294,9 @@ def _screw_holes(s):
     return holes
 
 
-def leaf(which):
-    """Leaf "A" (tapped, three knuckles) or "B" (two knuckles)."""
+def leaf(which, style="screw"):
+    """Leaf "A" (three knuckles, the last one tapped for the bolt or
+    grooved for the pin) or "B" (two knuckles, the same for both)."""
     s = -1 if which == "A" else 1
     mine = owned(which)
     theirs = [k for k in range(KNUCKLES) if k not in mine]
@@ -290,7 +315,18 @@ def leaf(which):
                                      _fillet_profile(s), x0 + stop,
                                      x1 - stop))
     cuts = [_scoop(k) for k in theirs]
-    if which == "A":
+    if which == "A" and style == "slide":
+        # a plain blind bore, and the groove the pin's lugs click into
+        cuts.append(_profile_along_x("Bore", _teardrop(), -1.0, TAP_END))
+        g0, g1, g2, g3 = GROOVE_X
+        cuts.append(_revolved_x("Snap groove", [
+            (BORE_R - 0.8, g0), (BORE_R - 0.2, g0), (GROOVE_R, g1),
+            (GROOVE_R, g2), (BORE_R - 0.2, g3), (BORE_R - 0.8, g3)],
+            z=KNUCKLE_R))
+        cuts.append(_entry_chamfer("Pin entry", 0.0))
+        cuts.append(_entry_chamfer("Lead-in",
+                                   knuckle_span(KNUCKLES - 1)[0]))
+    elif which == "A":
         cuts.append(_profile_along_x("Bore", _teardrop(), -1.0,
                                      THREAD_START + 1.0))
         cuts.append(thread("Tapped thread", BOLT_D + 2 * FIT,
@@ -310,48 +346,92 @@ def leaf(which):
 
 # ------------------------------------------------------------------ bolt
 
+def _head():
+    """The round head, the knuckles' size, bearing face at x = 0."""
+    rk = KNUCKLE_R
+    return _revolved_x("Head", [
+        (0.0, -HEAD_L), (rk - 1.0, -HEAD_L), (rk, -HEAD_L + 1.0),
+        (rk, -EDGE), (rk - EDGE, 0.0), (0.0, 0.0)], z=FLAT)
+
+
+def _print_flat():
+    """Everything below the bed: the flat the bolt or pin prints on."""
+    rk = KNUCKLE_R
+    return _node("cube", "Print flat", x=-HEAD_L - 1.0, y=-rk - 1.0,
+                 z=-rk - 1.0, width=BOLT_END + HEAD_L + 2.0,
+                 depth=2 * rk + 2.0, height=rk + 1.0, center=False)
+
+
+def _tip_chamfer():
+    """A 45° cone meeting the tip's end face at r_in, under the thread's
+    root; drawn on past the face so the two cross rather than touch.
+    0.45 and not 0.5: at 0.5 it crossed the root exactly on one of the
+    thread's slice planes, a doubled edge."""
+    r = BOLT_D / 2.0
+    r_in = r - 0.6134 * PITCH - 0.45
+    return _revolved_x("Tip chamfer", [
+        (r_in - 1.0, BOLT_END + 1.0),
+        (r + 1.5, BOLT_END - (r + 1.5 - r_in)),
+        (r + 1.5, BOLT_END + 1.0)], z=FLAT)
+
+
 def bolt():
     """The bolt in its print pose: axis along +X, FLAT above the bed,
     the head's bearing face at x = 0."""
-    rk, r = KNUCKLE_R, BOLT_D / 2.0
-    head = _revolved_x("Head", [
-        (0.0, -HEAD_L), (rk - 1.0, -HEAD_L), (rk, -HEAD_L + 1.0),
-        (rk, -EDGE), (rk - EDGE, 0.0), (0.0, 0.0)], z=FLAT)
+    rk = KNUCKLE_R
+    head = _head()
     shank = _cone_x("Shank", SHANK_D / 2, SHANK_D / 2, -0.5,
                     THREAD_START + 0.5, FLAT)
     body = _node("union", "Head, shank and thread", [
         head, shank, thread("Thread", BOLT_D, THREAD_START, BOLT_END,
                             FLAT)])
-    length = BOLT_END + HEAD_L
-    flat = _node("cube", "Print flat", x=-HEAD_L - 1.0, y=-rk - 1.0,
-                 z=-rk - 1.0, width=length + 2.0, depth=2 * rk + 2.0,
-                 height=rk + 1.0, center=False)
+    flat = _print_flat()
     socket = _along_x("Hex socket", _node(
         "cylinder", "Hex socket", x=0.0, y=0.0, z=0.0,
         height=SOCKET_DEPTH + 0.01,
         radius_bottom=round(SOCKET / math.sqrt(3.0), 4),
         radius_top=round(SOCKET / math.sqrt(3.0), 4), segments=6,
         center=False), x=-HEAD_L - 0.01, z=FLAT)
-    # a 45° cone meeting the tip's end face at r_in, under the thread's
-    # root; drawn on past the face so the two cross rather than touch.
-    # 0.45 and not 0.5: at 0.5 it crossed the root exactly on one of the
-    # thread's slice planes, a doubled edge
-    r_in = r - 0.6134 * PITCH - 0.45
-    tip = _revolved_x("Tip chamfer", [
-        (r_in - 1.0, BOLT_END + 1.0),
-        (r + 1.5, BOLT_END - (r + 1.5 - r_in)),
-        (r + 1.5, BOLT_END + 1.0)], z=FLAT)
-    solid = _node("difference", "Bolt", [body, flat, socket, tip])
+    solid = _node("difference", "Bolt", [body, flat, socket,
+                                         _tip_chamfer()])
     return _node("component", "Bolt", [solid], color=BOLT_COLOUR,
                  alpha=1.0, z=round(KNUCKLE_R - FLAT, 4))
 
 
-def parts():
+def pin():
+    """Butt Hinge 2's pin, posed like the bolt: plain, its tip slit into
+    two prongs with a lug on each side that clicks into the groove of
+    Leaf A's blind end knuckle."""
+    rk, r = KNUCKLE_R, SHANK_D / 2.0
+    shank = _cone_x("Shank", r, r, -0.5, BOLT_END, FLAT)
+    l0, l1, l2, l3 = LUG_X
+    ring = _revolved_x("Lug ring", [
+        (r - 0.45, l0), (r - 0.05, l0), (LUG_R, l1), (LUG_R, l2),
+        (r - 0.05, l3), (r - 0.45, l3)], z=FLAT)
+    sides = _node("cube", "Sides only", x=l0 - 0.5, y=-rk,
+                  z=FLAT - LUG_HALF, width=l3 - l0 + 1.0, depth=2 * rk,
+                  height=2 * LUG_HALF, center=False)
+    body = _node("union", "Head, shank and lugs", [
+        _head(), shank, _node("intersection", "Lugs", [ring, sides])])
+    slit = _node("cube", "Slit", x=SLIT_START, y=-SLIT_W / 2, z=-1.0,
+                 width=BOLT_END - SLIT_START + 1.0, depth=SLIT_W,
+                 height=2 * rk + 2.0, center=False)
+    relief = _node("cylinder", "Slit relief", x=SLIT_START, y=0.0, z=-1.0,
+                   height=2 * rk + 2.0, radius_bottom=SLIT_RELIEF,
+                   radius_top=SLIT_RELIEF, segments=24, center=False)
+    solid = _node("difference", "Pin", [body, _print_flat(), slit, relief,
+                                        _tip_chamfer()])
+    return _node("component", "Pin", [solid], color=BOLT_COLOUR,
+                 alpha=1.0, z=round(KNUCKLE_R - FLAT, 4))
+
+
+def parts(style="screw"):
     """The three Objects, placed as the assembled hinge lying open."""
-    return [leaf("A"), leaf("B"), bolt()]
+    return [leaf("A", style), leaf("B", style),
+            bolt() if style == "screw" else pin()]
 
 
-def write(path):
+def write(path, style="screw"):
     from PyQt5.QtWidgets import QApplication
     from khervecad import document
     from khervecad.model import DocumentModel
@@ -360,22 +440,30 @@ def write(path):
     # the document-wide $fn would round the 6-sided socket (no key could
     # turn the bolt) and coarsen the 96-sided knuckles
     doc.global_fn_on = False
-    for part in parts():
+    for part in parts(style):
         doc.root.add(part)
     document.save_kcad(doc, str(path))
 
 
-def default_paths():
+def default_path(style):
     from khervecad import library_kcad
-    return [library_kcad.PARTS_DIR / "Brackets" / "Butt Hinge.kcad"]
+    return library_kcad.PARTS_DIR / "Brackets" / f"{STYLES[style]}.kcad"
 
 
 def main(argv=None):
+    import argparse
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-    argv = sys.argv[1:] if argv is None else argv
-    for path in (argv or default_paths()):
-        write(path)
-        print(f"wrote {path}")
+    ap = argparse.ArgumentParser(description="Write the butt hinges.")
+    ap.add_argument("--style", choices=sorted(STYLES),
+                    help="screw (Butt Hinge) or slide (Butt Hinge 2)")
+    ap.add_argument("out", nargs="*", help="where to write it")
+    args = ap.parse_args(argv)
+    if args.out and not args.style:
+        ap.error("name the --style to write to OUT")
+    for style in ([args.style] if args.style else list(STYLES)):
+        for path in (args.out or [default_path(style)]):
+            write(path, style)
+            print(f"wrote {path}")
     return 0
 
 
