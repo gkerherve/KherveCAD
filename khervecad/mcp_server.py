@@ -252,6 +252,22 @@ cells = 3000 SiO2") and which prefixed variables reshape it (radius, \
 block size, gap on the Variables tab). Look with render_view: \
 orthographic from Top shows the lattice down the c-axis.
 
+Molecules and chemical reactions:
+- Build molecules with build_molecule — from the compound library \
+(list_molecules: gases, acids, bases and ions, VSEPR shapes, \
+hydrocarbons, alcohols, carbonyls, acids, solvents, biomolecules and \
+drugs) or from any SMILES you know (ethanol CCO, caffeine \
+Cn1cnc2c1c(=O)n(C)c(=O)n2C). NEVER place atoms by hand: the builder \
+gives every atom its VSEPR shape (lone pairs included) and closes the \
+rings. Nanometres, like the crystals.
+- Write reactions with build_reaction the way a chemist writes them: \
+'2 H2 + O2 -> 2 H2O', 'N2 + 3 H2 <=> 2 NH3'. Leave coefficients out \
+and it balances them; it always reports whether atoms and charge \
+balance — tell the user when they do not rather than hiding it. \
+Species outside the library go in as smiles:... .
+- Every library compound is also a Part Library part (insert_part \
+"molecule_<key>", categories "Molecules: ...").
+
 Look at what you built:
 - render_view returns a PNG of the 3D preview as an image. LOOK AT IT \
 after anything non-trivial, and use `orientation` to check another side \

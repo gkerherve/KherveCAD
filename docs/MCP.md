@@ -6,7 +6,7 @@ Cursor, Zed, Continue, or anything else that speaks the Model Context
 Protocol — can build in an open document directly.
 
 The built-in chat replies with an OpenSCAD program you then apply. An
-MCP client gets the **whole application** instead: 48 tools over the
+MCP client gets the **whole application** instead: 51 tools over the
 object tree, the code, the part library, assemblies, the document —
 and a **picture of the 3D preview**.
 
@@ -152,6 +152,26 @@ never to type a crystal's atoms by hand. Every library crystal is also
 a ready Part Library part — `crystal_<key>` (the unit cell) and
 `supercell_<key>` (2×2×2 to 6×6×6) — for `insert_part` and the
 Library menu.
+
+## Molecules and chemical reactions
+
+`list_molecules` is a compound library of about 80 molecules — gases,
+inorganic acids, bases and ions, VSEPR shapes (BF₃, SF₆, XeF₄…),
+hydrocarbons, alcohols, carbonyls, acids and esters, nitrogen
+compounds and solvents, biomolecules and drugs — each with its formula
+and SMILES. `build_molecule` builds one of them, or any SMILES, in 3D
+(nm) as one Object: every atom gets its VSEPR shape (lone pairs
+included), rings are placed whole and the result relaxed — ball and
+stick, space filling or sticks.
+
+`build_reaction` writes an equation the way chemists do — `2 H2 + O2
+-> 2 H2O`, `N2 + 3 H2 <=> 2 NH3` — balancing missing coefficients
+(exact, smallest whole numbers), always reporting the atom and charge
+balance, and lays it out left to right with coefficients, + and the
+arrow in 3D. Species are library keys, names, formulas (charges
+included: `NH4+`, `SO4^2-`) or `smiles:…`. Every compound is also a
+Part Library part, `molecule_<key>`. The same builder is **Library ▸
+Compound Builder…** in the app.
 
 ## Characters and organic shapes
 

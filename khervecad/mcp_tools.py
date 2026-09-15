@@ -1311,6 +1311,27 @@ class McpToolExecutor:
         except crystal_build.BuildError as exc:
             raise ToolError(str(exc))
 
+    def _t_list_molecules(self, params) -> dict:
+        from . import molecule_build
+        try:
+            return molecule_build.list_molecules(params)
+        except molecule_build.BuildError as exc:
+            raise ToolError(str(exc))
+
+    def _t_build_molecule(self, params) -> dict:
+        from . import molecule_build
+        try:
+            return molecule_build.build_molecule(self._w, params)
+        except molecule_build.BuildError as exc:
+            raise ToolError(str(exc))
+
+    def _t_build_reaction(self, params) -> dict:
+        from . import molecule_build
+        try:
+            return molecule_build.build_reaction(self._w, params)
+        except molecule_build.BuildError as exc:
+            raise ToolError(str(exc))
+
     def _t_make_object(self, params) -> dict:
         nodes = self._nodes(params.get("ids"))
         model = self._model

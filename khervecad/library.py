@@ -1193,7 +1193,8 @@ PARTS = {
 # each entry carries its own `build` callable, dispatched by build_part.
 from . import (library_cards, library_chem, library_crystal,  # noqa: E402
                library_home, library_kcad, library_lego, library_lego_sets,
-               library_pots, library_room, library_vacuum)
+               library_molecule, library_pots, library_room,
+               library_vacuum)
 PARTS.update(library_vacuum.PARTS)
 PARTS.update(library_chem.PARTS)
 PARTS.update(library_room.PARTS)
@@ -1204,6 +1205,7 @@ PARTS.update(library_lego.PARTS)
 PARTS.update(library_lego_sets.PARTS)
 PARTS.update(library_kcad.PARTS)
 PARTS.update(library_crystal.PARTS)
+PARTS.update(library_molecule.PARTS)
 
 #: dialog fields holding a count (integer spin box, no "mm" suffix)
 _COUNT_FIELDS = ({"bolts"} | library_lego.COUNT_FIELDS

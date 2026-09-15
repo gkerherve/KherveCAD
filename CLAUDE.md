@@ -469,6 +469,49 @@ into a new module and import.
                        `library.prepare_document` runs it from every
                        insert path (menu, dialog, MCP) — crystals switch
                        an empty document to nm and drop to 12 segments.
+  - `molecule.py`    — **molecules** (Qt-free): SMILES in, 3D atoms out.
+                       `parse_smiles` (organic subset, aromatic, bracket
+                       atoms with H and charge, bond orders, branches,
+                       ring closures, '.'; chirality ignored),
+                       `add_hydrogens` (valences; an aromatic atom takes
+                       its lowest), `embed`: VSEPR domains (neighbours +
+                       lone pairs; `ideal_angle` squeezes for lone pairs —
+                       water 104.5°), rings (`find_rings`) placed WHOLE as
+                       regular polygons (sp3 rings puckered, a fused ring
+                       on its shared edge — walked as chains they came out
+                       zig-zags the relaxation could not close), the rest
+                       in free template slots turned anti/planar (the
+                       frame takes the first slot NOT opposite slot 0: the
+                       linear and octahedral templates collapsed), then
+                       `_relax` (bonds, 1-3 distances, a non-bonded
+                       floor). Bonds = covalent radii × 1 / 0.93 / 0.87 /
+                       0.79. `formula_counts` ("Ca(OH)2", "CuSO4·5H2O"),
+                       `hill_formula` ("O4S 2-").
+  - `molecule_library.py` — ~80 compounds as name + SMILES + the formula
+                       they must give (the tests build every one), in
+                       8 families.
+  - `molecule_build.py` — the **Compound Builder**: `molecule_program`
+                       (ball and stick with half-bonds in each atom's
+                       colour, double/triple bonds as parallel sticks, an
+                       aromatic bond plus a thin stick toward its ring;
+                       space filling; sticks) and `reaction_program`:
+                       "2 H2 + O2 -> 2 H2O" (-> <=> → ⇌ =, fractions;
+                       species by key, name, formula — a charge magnitude
+                       only after ^ or a space, so NH4+ is +1 — or
+                       smiles:…), `balance` (exact RREF null space,
+                       smallest whole numbers), `balance_check`, and a
+                       left-to-right XZ layout (each molecule built once
+                       and instanced, coefficients / + / formulas as
+                       upright 3D text, a shaft + cone arrow, two half
+                       arrows for ⇌). `apply` and the MCP bodies
+                       (`list_molecules`, `build_molecule`,
+                       `build_reaction`) live here.
+  - `molecule_dialog.py` — Library ▸ Compound Builder…: Molecule and
+                       Reaction tabs with a live formula / balance
+                       preview; a bad SMILES or reaction disables Build.
+  - `library_molecule.py` — every compound as a Part Library part
+                       `molecule_<key>` ("Molecules: <family>"), ball and
+                       stick, the crystals' `prepare` reused.
   - `legoize.py`     — **Object ↔ Lego** (Qt-free). `column_hits` casts
                        a ray up each grid column and records every
                        surface as an entry (+1, facing down) or an exit
@@ -1775,7 +1818,7 @@ into a new module and import.
                        out. The test also checks the pin 6 mm short of
                        home DOES press on the bore — or it would never
                        hold.
-  - `mcp_schema.py`  — the **MCP tool table**: 48 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 51 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -1935,7 +1978,7 @@ into a new module and import.
                        caps a pattern at `MAX_COPIES` (1000) and needs
                        every count ≥ 1. Examples ▸ Mechanical ▸ Bolt
                        circle & stair (pattern).
-- `docs/MCP.md` — how to connect an assistant, what the 48 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 51 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -2209,7 +2252,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **48 tools**: the object tree, OpenSCAD in
+client gets the whole app as **51 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

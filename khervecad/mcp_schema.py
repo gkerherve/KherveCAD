@@ -1133,6 +1133,82 @@ TOOLS = [
         }),
     },
     {
+        "name": "list_molecules",
+        "description": (
+            "The compound library: about 80 common compounds — gases, "
+            "inorganic acids, bases and ions, VSEPR shapes (BF3, SF6, "
+            "XeF4…), hydrocarbons, alcohols, carbonyls, acids, esters, "
+            "nitrogen compounds and solvents, biomolecules and drugs "
+            "(amino acids, glucose, caffeine, aspirin) — with formula and "
+            "SMILES. Pass `compound` for one in full (3D atoms in nm, "
+            "bonds). Anything else is built from its SMILES."
+        ),
+        "input_schema": _obj({
+            "category": {"type": "string",
+                         "description": "Filter to one family."},
+            "compound": {"type": "string",
+                         "description": "A key, name or formula, e.g. "
+                                        "'caffeine', 'Water', 'CO2'."},
+        }),
+    },
+    {
+        "name": "build_molecule",
+        "description": (
+            "Build a molecule in 3D, in nanometres, as one Object — from "
+            "the library (`compound`: key, name or formula) or from any "
+            "SMILES. Every atom gets its VSEPR shape (lone pairs "
+            "included: water bent, XeF4 square), rings are placed whole "
+            "and the result relaxed — a faithful sketch of the shape, "
+            "not a quantum-chemistry optimum. Never place atoms by hand."
+        ),
+        "input_schema": _obj({
+            "compound": {"type": "string",
+                         "description": "Library key, name or formula."},
+            "smiles": {"type": "string",
+                       "description": "Any SMILES, e.g. 'CCO', "
+                                      "'c1ccccc1O', '[NH4+]'."},
+            "name": {"type": "string"},
+            "style": {"type": "string",
+                      "enum": ["ball_and_stick", "space_filling",
+                               "sticks"]},
+            "segments": {"type": "integer",
+                         "description": "Round segments (default 16)."},
+            "dry_run": {"type": "boolean",
+                        "description": "Formula, atoms and triangles "
+                                       "only; build nothing."},
+        }),
+    },
+    {
+        "name": "build_reaction",
+        "description": (
+            "Write a chemical reaction in 3D: '2 H2 + O2 -> 2 H2O', 'CH4 "
+            "+ 2 O2 -> CO2 + 2 H2O', 'N2 + 3 H2 <=> 2 NH3' (arrows -> <=> "
+            "→ ⇌ =, spaces round them and round '+'; coefficients may be "
+            "fractions; species are library keys, names, formulas with "
+            "charges — NH4+, SO4^2- — or smiles:...). Checks the atom "
+            "and charge balance and, with balance (default true), finds "
+            "the missing coefficients. Lays the molecules out left to "
+            "right with coefficients, + and the arrow in 3D, the formula "
+            "under each; returns the balanced equation and the "
+            "per-element table."
+        ),
+        "input_schema": _obj({
+            "equation": {"type": "string"},
+            "balance": {"type": "boolean",
+                        "description": "Find missing coefficients "
+                                       "(default true)."},
+            "labels": {"type": "boolean",
+                       "description": "Formula under each molecule "
+                                      "(default true)."},
+            "style": {"type": "string",
+                      "enum": ["ball_and_stick", "space_filling",
+                               "sticks"]},
+            "segments": {"type": "integer"},
+            "dry_run": {"type": "boolean",
+                        "description": "Balance and count only."},
+        }, ["equation"]),
+    },
+    {
         "name": "select_nodes",
         "description": (
             "Select nodes in the window, so the user sees what you mean "

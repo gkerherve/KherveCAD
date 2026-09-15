@@ -531,6 +531,9 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         menu.addAction(icons.icon("mdi.atom"), "Crystal Builder...",
                        lambda: crystal_dialog.open_builder(self))
+        from . import molecule_dialog
+        menu.addAction(icons.icon("mdi.molecule"), "Compound Builder...",
+                       lambda: molecule_dialog.open_builder(self))
 
     def _build_examples_menu(self, menubar):
         """An Examples menu of complete demo models; picking one replaces

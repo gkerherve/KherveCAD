@@ -836,6 +836,35 @@ Part Library: <b>Crystals (unit cells)</b> and <b>Crystals
 click each.</p>
 """),
 
+        ("molecules", "Molecules and reactions", """
+<p><b>Library &#9656; Compound Builder&hellip;</b> builds molecules in 3D
+and writes chemical reactions with them.</p>
+<p>On the <b>Molecule</b> tab pick a compound from the library &mdash;
+about 80, from water and CO<sub>2</sub> through acids, ions, solvents
+and hydrocarbons to glucose, caffeine and aspirin &mdash; or type any
+molecule as <b>SMILES</b>, the line notation chemists use (ethanol is
+<tt>CCO</tt>, phenol <tt>c1ccccc1O</tt>, the ammonium ion
+<tt>[NH4+]</tt>). Every atom gets the shape its bonds and lone pairs
+give it &mdash; water bent at 104.5&deg;, methane tetrahedral,
+XeF<sub>4</sub> square &mdash; and rings come out as rings: benzene
+flat, cyclohexane puckered. Draw it <b>ball and stick</b> (each half of
+a bond in its atom's colour, double and triple bonds as parallel
+sticks), <b>space filling</b> or as <b>sticks</b>.</p>
+<p>On the <b>Reaction</b> tab write the equation as you would on paper:
+<tt>2 H2 + O2 -&gt; 2 H2O</tt>, <tt>N2 + 3 H2 &lt;=&gt; 2 NH3</tt>. Leave
+the numbers out and <b>Balance it</b> finds them; the panel always
+shows whether the atoms and charges balance before you build. The
+reaction is laid out left to right with its coefficients, plus signs,
+arrow and the formula under each molecule. Species are names or
+formulas from the library (<tt>ethanol</tt>, <tt>H2O</tt>,
+<tt>SO4^2-</tt>) or <tt>smiles:</tt>&hellip; for anything else.</p>
+<p>Molecules are built in <b>nanometres</b>, and every library compound
+is also ready-made in the <b>Library</b> menu (<b>Molecules: </b>&hellip;
+families). An assistant connected over MCP uses the same builder
+(<tt>list_molecules</tt>, <tt>build_molecule</tt>,
+<tt>build_reaction</tt>).</p>
+"""),
+
         ("code", "OpenSCAD code", f"""
 <p>The <b>Code</b> tab shows the OpenSCAD program written from the tree.
 Selecting an object highlights its lines; broken objects are tinted
