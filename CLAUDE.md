@@ -570,46 +570,88 @@ into a new module and import.
                        room type (living room, bedroom, kitchen, ...)
                        for the picker, minus the fixtures (door, wall
                        panel) the House Builder itself provides.
-  - `house_items.py` — the floor-plan canvas's QGraphicsItems:
-                       `RoomItem` (draggable body, eight `Handle`s —
-                       corners and edge midpoints, 12 px — that resize
-                       it, both snapped to `GRID` so adjacent rooms stay
-                       wall-exact; roles are COMPASS sides in the Y-up
-                       frame, `HANDLE_ROLES`: naming them from Qt's
-                       y-down `topLeft()` once put the handle drawn at
-                       the bottom in charge of the top edge; the
-                       selected room is raised so a shared corner grabs
-                       ITS handle, and pressing a handle selects its
-                       room) and
-                       `FurnitureItem` (a small draggable position
-                       marker — rotation is edited in the dialog's
-                       table, not on canvas). Self-contained: every drag
-                       writes straight back into the `house.Room` /
-                       `house.Furniture` dataclass it represents, no
-                       CadNode/DocumentModel coupling, unlike view2d.py's
-                       similar handle-drag items which are tied to the
-                       document tree.
+  - `house_items.py` — the floor-plan canvas's QGraphicsItems, drawn
+                       like an architect's plan (Sep 2026 rework — the
+                       first canvas had 400 mm tan squares for every
+                       piece, no doors or windows, and read as noise):
+                       `RoomItem` (draggable floor painted INSIDE the
+                       walls, `inset` = half the wall; moving it shifts
+                       its furniture too; eight `Handle`s, shown on the
+                       selected room only, that resize it, both snapped
+                       to `GRID` so adjacent rooms stay wall-exact;
+                       roles are COMPASS sides in the Y-up frame,
+                       `HANDLE_ROLES`: naming them from Qt's y-down
+                       `topLeft()` once put the handle drawn at the
+                       bottom in charge of the top edge; the selected
+                       room is raised so a shared corner grabs ITS
+                       handle; its caption — name, size, m² — is a
+                       separate top-level `Label` at the centre, z above
+                       the furniture, since a child label hid under
+                       whatever stood against its wall), `WallsItem`
+                       (every `collect_walls` wall at its thickness, the
+                       openings' `_opening_spans` left as gaps —
+                       `wall_pieces`; under the rooms, click-through,
+                       recomputed each paint so it follows drags),
+                       `OpeningItem` (a door's leaf + swing arc or a
+                       window's frame + glass line, in a local frame set
+                       by `setTransform`: x along the side, y INWARD;
+                       dragging slides it along its wall and hops to the
+                       room's nearest side, `nearest_side`),
+                       `FurnitureItem` (the part's REAL top view —
+                       `planview.part_view`, a cached coloured picture
+                       plus outline — turned by `setRotation(rz)`, which
+                       is CCW in the Y-up scene like OpenSCAD's rz;
+                       double-click turns 90°, Shift the other way,
+                       `rotate_by` keeps (-180, 180]; its name `Label`
+                       shows only when it fits) and `GardenItem`.
+                       Self-contained: every drag writes straight back
+                       into the `house` dataclass it represents and
+                       reports via callbacks, no CadNode/DocumentModel
+                       coupling, unlike view2d.py's handle-drag items
+                       which are tied to the document tree.
+  - `planview.py`    — **coloured projected faces** for 2D views:
+                       `plan_faces(colored, plane, cut)` turns
+                       `mesh.tessellate_colored` (now with a `detail`
+                       cap) into painter-ordered (polygon, QColor) pairs
+                       — edge-on faces dropped, shaded by how squarely
+                       they face the viewer, sorted far -> near along
+                       the viewing axis (`DEPTH`); `paint_faces` draws
+                       them (a same-colour hairline hides seams);
+                       `part_view` renders a library part's top view once
+                       (`lru_cache`) for the House Builder.
   - `house_dialog.py` — Library ▸ **House Builder…**: a non-modal
                        window (one per main window, `open_builder`) with
                        its OWN 2D floor-plan canvas (`FloorCanvas`, Y-up
-                       like view2d, a light 1 m grid) — separate from
-                       the document's own 2D sketch/assembly view, since
-                       a floor plan is a different kind of drawing.
-                       Floor list + floor-wide wall height/thickness/
-                       slab settings, room list + selected-room fields
-                       (name, x/y/w/d), a doors & windows table and a
-                       furniture table (Add furniture… opens a small
-                       room-type -> part picker over
-                       `house.FURNITURE_CATALOG`) all mirror what is
-                       selected on the canvas and vice versa
-                       (`_pick_room`/`_pick_furniture` from a canvas
-                       click, `_room_edited`/`_furniture_edited` from a
-                       canvas drag). Garden width/depth/gap sits under
-                       the canvas. The window opens on the document's
+                       like view2d, an adaptive grid painted in
+                       `drawBackground`, drag on empty space pans) —
+                       separate from the document's own 2D
+                       sketch/assembly view. The left side is the steps
+                       in order, in a scroll area: **1 Floor** (combo +
+                       ceiling height / wall / slab), **2 Rooms** (list
+                       captioned with sizes + name, size, position),
+                       **3 In <room>** (one list of its doors, windows
+                       and furniture) and **4 Selected item** (a stacked
+                       editor: an opening's type/wall/offset/size/sill,
+                       a piece's size and colour combos from the Part
+                       Library spec — `_fill_look_combos`, dims rebuilt
+                       by `house.part_dims` — its position IN the room
+                       and rotation with ±90° buttons). Lengths are
+                       `MetreSpin`s: metres on screen, mm in the model,
+                       keyboard tracking off. A toolbar + hint line sit
+                       over the plan; Delete removes, R turns. The list
+                       and the plan follow each other (`_pick_*` from a
+                       click, `_*_dragged` from a drag, `canvas.select`
+                       back) with `quiet()` stopping echoes; a piece
+                       dropped in another room moves to that room's list
+                       (`_furniture_released`). Add furniture… is a
+                       searchable catalogue opened on the section the
+                       room's name suggests (`_guess_category`). The
+                       garden (checkbox + width/depth/gap) is drawn where
+                       Build puts it. The window opens on the document's
                        house (`load_from_document`: `model.house`, from
                        an earlier Build, the build_house MCP tool —
                        which also refreshes an open builder — or a
-                       saved .kcad), framed by `fit_floor`; reopening
+                       saved .kcad), framed by `canvas.fit`; reopening
                        skips the reload when that design is already the
                        one shown, so unbuilt edits survive. **Build**
                        (`house.apply`) replaces the house built last
@@ -941,7 +983,22 @@ into a new module and import.
                        and the 2D view matches the 3D one. A soup path
                        is **filled, never stroked** — a pen traces
                        every internal facet and the part reads as
-                       hatching (`PartItem`); dropping
+                       hatching (`PartItem`). An overview part is
+                       painted in its **own colours**, faces far ->
+                       near (`planview.plan_faces`, `PartItem._faces`;
+                       the path stays its shape and hit area) — one
+                       flat translucent fill made a house a single tan
+                       rectangle — and a House Builder floor is cut at
+                       its slab + `house.PLAN_CUT` in the Top view
+                       (`_plan_cut`, found by name in `model.house`),
+                       so its rooms show, not its roof. The scene rect
+                       is NOT fixed: `fit_scene_rect` (after every
+                       rebuild, zoom and fit) grows it to the drawing
+                       plus its own span and the visible area — a fixed
+                       4 m square left most of a 14 m house off-scene,
+                       so Fit could not frame it. The grid coarsens by
+                       5x until lines are 6 px apart (it coarsened once
+                       and took 1.6 s a frame zoomed out). Dropping
                        commits into a
                        translate node ("Position (...)"). A **selected
                        part is draggable at any depth** when it carries

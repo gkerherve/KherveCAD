@@ -455,12 +455,16 @@ class PartItem(QGraphicsPathItem):
     """
 
     def __init__(self, node, scene, path, label, movable=True,
-                 dashed=True, dims=None, blue=False):
+                 dashed=True, dims=None, blue=False, faces=None):
         super().__init__()
         self.node = node
         self._scene = scene
         self._movable = movable
         self._dims = dims or []            # dimension-edit handle specs
+        #: the part's own coloured faces, painter-ordered
+        #: (`planview.plan_faces`): drawn instead of the flat fill, so an
+        #: overview part looks like itself — the path stays its shape
+        self._faces = faces
         self.handles = []
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         if movable:
@@ -502,7 +506,15 @@ class PartItem(QGraphicsPathItem):
         self._label_pos = QPointF(rect.left(), rect.bottom())
 
     def paint(self, painter, option, widget=None):
-        super().paint(painter, option, widget)
+        if self._faces:
+            from .planview import paint_faces
+            paint_faces(painter, self._faces)
+            if self.isSelected():               # tint, don't hide, it
+                tint = QColor(self._label_color)
+                tint.setAlpha(70)
+                painter.fillPath(self.path(), tint)
+        else:
+            super().paint(painter, option, widget)
         painter.save()
         painter.translate(self._label_pos)
         painter.scale(1, -1)                  # the view is Y-flipped
@@ -797,7 +809,30 @@ class SketchScene(QGraphicsScene):
         self.measure_changed.emit(
             f"distance: {dist:.2f} {u}    Δ {dx:.2f}, {dy:.2f} {u}")
 
+    #: the sketch area that always exists, mm; the scene grows past it
+    #: to take in whatever is drawn. It used to be fixed: a 14 m house
+    #: sat mostly outside a 4 m square, so Fit could not frame it and
+    #: the view would not scroll or zoom out onto the rest of it.
+    BASE_RECT = QRectF(-2000.0, -2000.0, 4000.0, 4000.0)
+
+    def fit_scene_rect(self):
+        """Size the scene to everything drawn plus its own span of margin
+        each side, and never smaller than what a view shows now (so a
+        zoomed-out view keeps its place)."""
+        rect = QRectF(self.BASE_RECT).united(self.itemsBoundingRect())
+        pad = max(rect.width(), rect.height())
+        rect = rect.adjusted(-pad, -pad, pad, pad)
+        for view in self.views():
+            rect = rect.united(
+                view.mapToScene(view.viewport().rect()).boundingRect())
+        if rect != self.sceneRect():
+            self.setSceneRect(rect)
+
     def rebuild(self):
+        self._rebuild_items()
+        self.fit_scene_rect()
+
+    def _rebuild_items(self):
         self.updating = True
         selected = {n.id for n in self.selected_nodes()}
         for item in list(self._items.values()) \
@@ -1169,13 +1204,45 @@ class SketchScene(QGraphicsScene):
         cross tube used to read as an octagon and a flange as a plain
         rectangle, so the 2D view looked nothing like the 3D one. The
         tessellation is capped to a low detail, which keeps the path
-        cheap enough to rebuild on every change."""
+        cheap enough to rebuild on every change.
+
+        It is painted in the part's **own colours**, faces ordered far
+        -> near along the viewing axis (`planview.plan_faces`): one flat
+        translucent fill made a house a single tan rectangle. A floor the
+        House Builder built is cut like a floor plan in the Top view
+        (`_plan_cut`), so its rooms show rather than its roof."""
         from . import mesh as mesh_mod
-        tris = mesh_mod.tessellate(node, self.env_for(node),
-                                   fn=self.model.effective_fn(),
-                                   detail=OUTLINE_DETAIL)
-        return None if not tris else PartItem(
-            node, self, self._projected_path(tris), node.name)
+        from . import planview
+        colored = mesh_mod.tessellate_colored(
+            node, self.env_for(node), fn=self.model.effective_fn(),
+            detail=OUTLINE_DETAIL)
+        cut = self._plan_cut(node, colored)
+        if cut is not None:
+            colored = [(t, c) for t, c in colored
+                       if min(v[2] for v in t) < cut]
+        if not colored:
+            return None
+        tris = [t for t, _c in colored]
+        return PartItem(node, self, self._projected_path(tris), node.name,
+                        faces=planview.plan_faces(colored, self.plane))
+
+    def _plan_cut(self, node, colored):
+        """The z a House Builder floor is cut at when seen from the Top
+        (its slab top + `house.PLAN_CUT`), or None for anything else —
+        an ordinary part is seen whole, roof and all."""
+        house = getattr(self.model, "house", None) or {}
+        if self.plane != "Top (XY)" or not colored or \
+                node.type != "component" or \
+                node.name not in (house.get("objects") or []):
+            return None
+        floor = next((f for f in house.get("floors") or []
+                      if f.get("name") == node.name), None)
+        if floor is None:
+            return None                     # the Garden: nothing over it
+        from .house import PLAN_CUT, SLAB_THICKNESS
+        slab = float(floor.get("slab_thickness", SLAB_THICKNESS))
+        bottom = min(v[2] for t, _c in colored for v in t)
+        return bottom + slab + PLAN_CUT
 
     def _anchor_snap(self, node, delta):
         """Magnetic assembly snap: if dropping *node* puts one of its
@@ -1639,8 +1706,11 @@ class SketchView(QGraphicsView):
         from .style import tokens
         t = tokens()
         g = scene.grid_size
-        if g * self.transform().m11() < 4:
-            g *= 5                              # keep the grid readable
+        # keep the lines at least 6 px apart, however far out: coarsening
+        # only once left a 0.5 mm grid drawing ~10^5 lines (1.6 s a
+        # frame) when zoomed out onto a house
+        while g * abs(self.transform().m11()) < 6:
+            g *= 5
         minor = QPen(QColor(t["border"]))
         minor.setCosmetic(True)
         major = QPen(QColor(t["border"]).darker(115))
@@ -1972,6 +2042,8 @@ class SketchView(QGraphicsView):
         current = abs(self.transform().m11())
         if MIN_ZOOM < current * factor < MAX_ZOOM:
             self.scale(factor, factor)
+            if hasattr(self.scene(), "fit_scene_rect"):
+                self.scene().fit_scene_rect()   # room to zoom out onto
         self.zoom_changed.emit(self.px_per_mm())
 
     def zoom_reset(self):
@@ -1992,6 +2064,8 @@ class SketchView(QGraphicsView):
         scale = max(min(scale, MAX_ZOOM), MIN_ZOOM)
         self.resetTransform()
         self.scale(scale, -scale)
+        if hasattr(self.scene(), "fit_scene_rect"):
+            self.scene().fit_scene_rect()       # or centerOn is clamped
         self.centerOn(rect.center())
         self.zoom_changed.emit(self.px_per_mm())
 

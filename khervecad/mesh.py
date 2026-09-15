@@ -1164,16 +1164,20 @@ def tessellate(node: CadNode, env=None, fn=None, detail=None):
         _clear_refs()
 
 
-def tessellate_colored(node: CadNode, env=None, fn=None):
+def tessellate_colored(node: CadNode, env=None, fn=None, detail=None):
     """Like tessellate but returns [(triangle, (color, alpha) | None)]
     with per-face colours from color() nodes — the built-in preview
-    shows them (STL from the engine is geometry-only)."""
+    shows them (STL from the engine is geometry-only). *detail* caps
+    segment counts, for the 2D views' coloured plans."""
+    global _DETAIL
+    _DETAIL = detail
     _set_fn(fn)
     _set_refs(node)
     try:
         return [(t, c) for t, c, _s in
                 _tess(node, dict(env or {}), None, frozenset(), False)]
     finally:
+        _DETAIL = None
         _set_fn(None)
         _clear_refs()
 

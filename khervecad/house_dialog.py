@@ -1,16 +1,24 @@
 """AI/Library ▸ House Builder…: a non-modal window with its OWN 2D
 floor-plan canvas (separate from the sketch/assembly view) — lay out
-rectangular rooms floor by floor, cut door/window openings into their
+rectangular rooms floor by floor, put doors and windows in their
 walls, place furniture from the Part Library's room/home catalogue,
 size a garden, then Build compiles the design into the document: one
 Object per floor (stacked in Z, so it reads as a real house) and one
 "Garden" Object beside it — see `house.py` for the geometry and
-`house_items.py` for the canvas's draggable/resizable items.
+`house_items.py` for the plan's items.
 
-One-per-window like `crystal_dialog.py` / `molecule_dialog.py`; each
-Build is a fresh insert (like the Part Library's Insert), so clicking
-it again after further edits adds another house rather than trying to
-patch the first one in place.
+The window is laid out as the steps you take, top to bottom on the
+left: 1 Floor, 2 Rooms (+ the selected room's name and size), 3 what is
+in that room (doors, windows, furniture), then an editor for whichever
+of those is selected — on the list or on the plan, they follow each
+other. The plan above the garden fields draws what Build will make:
+walls at their thickness with the openings' gaps, door swings, window
+glass, every piece of furniture at its real size seen from above.
+Lengths read in metres (stored in mm, like the rest of the house).
+
+One-per-window like `crystal_dialog.py` / `molecule_dialog.py`; Build
+replaces the house the last Build made, so editing and building again
+updates it.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -23,134 +31,325 @@ the Free Software Foundation, either version 3 of the License, or
 import json
 
 from PyQt5.QtCore import QRectF, Qt
-from PyQt5.QtGui import QColor, QPainter, QPen
-from PyQt5.QtWidgets import (QAbstractItemView, QComboBox, QDialog,
-                             QDoubleSpinBox, QFormLayout, QGraphicsScene,
-                             QGraphicsView, QGroupBox, QHBoxLayout, QLabel,
-                             QLineEdit, QListWidget, QListWidgetItem,
-                             QMessageBox, QPushButton, QSplitter,
-                             QTableWidget, QTableWidgetItem, QVBoxLayout,
-                             QWidget)
+from PyQt5.QtGui import QColor, QFont, QPainter, QPen
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
+                             QFormLayout, QFrame, QGraphicsScene,
+                             QGraphicsView, QGridLayout, QGroupBox,
+                             QHBoxLayout, QLabel, QLineEdit, QListWidget,
+                             QListWidgetItem, QMessageBox, QPushButton,
+                             QScrollArea, QSplitter, QStackedWidget,
+                             QToolButton, QVBoxLayout, QWidget)
 
 from . import house as H
 from . import house_items as HI
 from . import icons
 from .library import PARTS as LIBRARY_PARTS
 
-MIN_ROOM_UI = 500.0
+MIN_ROOM_M = HI.MIN_ROOM / 1000.0
 _floor_default_name = H.floor_default_name
 
+#: the wall combo: side -> how people say it (the plan's top is north)
+SIDE_NAMES = (("S", "Bottom wall (south)"), ("N", "Top wall (north)"),
+              ("W", "Left wall (west)"), ("E", "Right wall (east)"))
+SIDE_SHORT = {"S": "bottom wall", "N": "top wall", "W": "left wall",
+              "E": "right wall"}
 
-def _spin(lo, hi, value, step=50.0, suffix=" mm", decimals=0):
-    box = QDoubleSpinBox()
-    box.setRange(lo, hi)
-    box.setSingleStep(step)
-    box.setDecimals(decimals)
-    box.setSuffix(suffix)
-    box.setValue(value)
-    return box
+HINT = ("Drag a room to move it (its furniture comes along) and its blue "
+        "squares to resize it · drag a door or window along its wall · "
+        "double-click furniture to turn it 90° · Delete removes, R turns "
+        "· wheel zooms, drag empty space to pan")
+
+
+def _label(part_id) -> str:
+    return LIBRARY_PARTS.get(part_id, {}).get("label", part_id)
+
+
+class MetreSpin(QDoubleSpinBox):
+    """A length shown in metres — what people measure rooms in — and
+    read/written in millimetres, the house's own unit. Reports only
+    finished values (no rebuild per keystroke)."""
+
+    def __init__(self, lo_m, hi_m, step=0.05, decimals=2):
+        super().__init__()
+        self.setRange(lo_m, hi_m)
+        self.setSingleStep(step)
+        self.setDecimals(decimals)
+        self.setSuffix(" m")
+        self.setKeyboardTracking(False)
+
+    def mm(self) -> float:
+        return round(self.value() * 1000.0, 3)
+
+    def set_mm(self, mm):
+        self.setValue(mm / 1000.0)
+
+
+def _hint(text) -> QLabel:
+    label = QLabel(text)
+    label.setWordWrap(True)
+    label.setStyleSheet("color: #6b7280; font-size: 11px;")
+    return label
+
+
+def _step_box(number, title) -> QGroupBox:
+    return QGroupBox(f"{number}  ·  {title}")
 
 
 class FloorCanvas(QGraphicsView):
-    """The floor plan's own 2D canvas — Y-up, millimetres, a light grid,
-    draggable/resizable Room rectangles and Furniture markers."""
-
-    def __init__(self, dialog):
-        super().__init__(QGraphicsScene())
-        self.dialog = dialog
-        self.setRenderHint(QPainter.Antialiasing)
-        self.setBackgroundBrush(QColor("#f4f5f7"))
-        self.setDragMode(QGraphicsView.RubberBandDrag)
-        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-        self.scale(0.09, -0.09)                # mm -> px, Y-up
-
-    def rebuild(self, floor):
-        scene = self.scene()
-        scene.clear()
-        if floor is None:
-            return
-        bounds = floor.bounds() or (0.0, 0.0, 4000.0, 4000.0)
-        self._draw_grid(bounds)
-        for room in floor.rooms:
-            item = HI.RoomItem(room, on_change=self.dialog._room_edited,
-                               on_pick=self.dialog._pick_room)
-            item.setSelected(room is self.dialog.current_room)
-            scene.addItem(item)
-            for f in room.furniture:
-                label = LIBRARY_PARTS.get(f.part_id, {}).get(
-                    "label", f.part_id)
-                fi = HI.FurnitureItem(
-                    f, label, on_change=self.dialog._furniture_edited,
-                    on_pick=lambda it, r=room: self.dialog._pick_furniture(
-                        r, it))
-                fi.setSelected(f is self.dialog.current_furniture)
-                scene.addItem(fi)
-        pad = 1500.0
-        scene.setSceneRect(bounds[0] - pad, bounds[1] - pad,
-                           (bounds[2] - bounds[0]) + 2 * pad,
-                           (bounds[3] - bounds[1]) + 2 * pad)
-
-    def fit_floor(self, floor):
-        """Frame *floor*'s rooms with a metre of margin."""
-        bounds = floor.bounds() if floor is not None else None
-        if not bounds:
-            return
-        x0, y0, x1, y1 = bounds
-        pad = 1000.0
-        self.fitInView(QRectF(x0 - pad, y0 - pad, (x1 - x0) + 2 * pad,
-                              (y1 - y0) + 2 * pad), Qt.KeepAspectRatio)
-
-    def _draw_grid(self, bounds):
-        x0, y0, x1, y1 = (bounds[0] - 1000.0, bounds[1] - 1000.0,
-                          bounds[2] + 1000.0, bounds[3] + 1000.0)
-        pen = QPen(QColor("#dfe2e6"), 0)
-        step = 1000.0
-        x = step * (int(x0 // step))
-        while x <= x1:
-            self.scene().addLine(x, y0, x, y1, pen)
-            x += step
-        y = step * (int(y0 // step))
-        while y <= y1:
-            self.scene().addLine(x0, y, x1, y, pen)
-            y += step
-        origin_pen = QPen(QColor("#adb3ba"), 0)
-        self.scene().addLine(x0, 0.0, x1, 0.0, origin_pen)
-        self.scene().addLine(0.0, y0, 0.0, y1, origin_pen)
+    """The floor plan's own 2D canvas — Y-up, millimetres, an adaptive
+    grid, and the `house_items` items for one floor plus the garden."""
 
     #: canvas zoom range, px per mm — a 100 m site down to a doorframe
     MIN_ZOOM, MAX_ZOOM = 0.002, 5.0
 
-    def wheelEvent(self, event):
-        factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15
-        current = abs(self.transform().m11())
-        if self.MIN_ZOOM < current * factor < self.MAX_ZOOM:
+    def __init__(self, dialog):
+        super().__init__(QGraphicsScene())
+        self.dialog = dialog
+        self.setRenderHints(QPainter.Antialiasing
+                            | QPainter.SmoothPixmapTransform)
+        self.setBackgroundBrush(QColor("#eef0f3"))
+        self.setDragMode(QGraphicsView.NoDrag)
+        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.scale(0.09, -0.09)                # mm -> px, Y-up
+        self.items_by_obj = {}                 # id(model obj) -> item
+        self.walls = None
+        self.garden_item = None
+        self._pan = None
+
+    # ----------------------------------------------------------- items
+    def rebuild(self, floor, house, selected=None):
+        scene = self.scene()
+        scene.clear()
+        self.items_by_obj = {}
+        self.walls = self.garden_item = None
+        if floor is None:
+            return
+        d = self.dialog
+        self.walls = HI.WallsItem(floor)
+        scene.addItem(self.walls)
+        inset = floor.wall_thickness / 2.0
+        for room in floor.rooms:
+            item = HI.RoomItem(room, on_change=d._room_dragged,
+                               on_pick=d._pick_room, inset=inset)
+            scene.addItem(item)
+            self.items_by_obj[id(room)] = item
+            for op in room.openings:
+                oi = HI.OpeningItem(room, op, floor,
+                                    on_change=d._opening_dragged,
+                                    on_pick=d._pick_opening)
+                scene.addItem(oi)
+                self.items_by_obj[id(op)] = oi
+            for f in room.furniture:
+                fi = HI.FurnitureItem(f, _label(f.part_id),
+                                      on_change=d._furniture_dragged,
+                                      on_pick=d._pick_furniture,
+                                      on_release=d._furniture_released)
+                scene.addItem(fi)
+                self.items_by_obj[id(f)] = fi
+        self.place_garden(house)
+        item = self.items_by_obj.get(id(selected)) if selected else None
+        if item is not None:
+            item.setSelected(True)
+        rect = self.content_rect(floor)
+        pad = max(rect.width(), rect.height(), 20000.0)
+        scene.setSceneRect(rect.adjusted(-pad, -pad, pad, pad))
+        self.update_labels()
+
+    def place_garden(self, house):
+        """(Re)draw the garden where Build puts it: beside the house's
+        east side, `gap` away, level with its south wall."""
+        if self.garden_item is not None:
+            self.scene().removeItem(self.garden_item)
+            self.garden_item = None
+        g = house.garden if house is not None else None
+        bounds = house.bounds() if house is not None else None
+        if g is None or not bounds or g.width <= 0 or g.depth <= 0:
+            return
+        x0, y0, x1, _y1 = bounds
+        self.garden_item = HI.GardenItem(
+            QRectF(x1 + g.gap, y0, g.width, g.depth))
+        self.scene().addItem(self.garden_item)
+
+    def sync_room(self, room):
+        """A room moved or resized: its doors, windows and furniture
+        follow, the walls are recomputed."""
+        for obj in list(room.openings) + list(room.furniture):
+            item = self.items_by_obj.get(id(obj))
+            if item is not None:
+                item.apply()
+        if self.walls is not None:
+            self.walls.refresh()
+        self.place_garden(self.dialog.house)
+
+    def select(self, obj):
+        """Select *obj*'s item (a room, opening or furniture) on the
+        plan, quietly — the dialog is already showing it."""
+        scene = self.scene()
+        item = self.items_by_obj.get(id(obj)) if obj is not None else None
+        with self.dialog.quiet():
+            scene.clearSelection()
+            if item is not None:
+                item.setSelected(True)
+                self.ensureVisible(item.sceneBoundingRect(), 40, 40)
+        self.update_labels()
+
+    def content_rect(self, floor=None) -> QRectF:
+        floor = floor or self.dialog.current_floor
+        b = floor.bounds() if floor is not None else None
+        rect = QRectF(b[0], b[1], b[2] - b[0], b[3] - b[1]) if b \
+            else QRectF(0.0, 0.0, 4000.0, 4000.0)
+        if self.garden_item is not None:
+            rect = rect.united(self.garden_item.rect())
+        return rect
+
+    # ------------------------------------------------------------ zoom
+    def fit(self):
+        """Frame the floor and the garden with a metre of margin."""
+        rect = self.content_rect()
+        self.fitInView(rect.adjusted(-1000.0, -1000.0, 1000.0, 1000.0),
+                       Qt.KeepAspectRatio)
+        self.update_labels()
+
+    def px_per_mm(self) -> float:
+        return abs(self.transform().m11())
+
+    def zoom(self, factor):
+        if self.MIN_ZOOM < self.px_per_mm() * factor < self.MAX_ZOOM:
             self.scale(factor, factor)
+            self.update_labels()
+
+    def wheelEvent(self, event):
+        self.zoom(1.15 if event.angleDelta().y() > 0 else 1 / 1.15)
+
+    def update_labels(self):
+        """Name a piece of furniture only when the name fits on it (or
+        it is selected) — a plan full of overlapping names read as
+        noise; the tooltip always has it."""
+        ppm = self.px_per_mm()
+        for item in self.items_by_obj.values():
+            if isinstance(item, HI.FurnitureItem):
+                item.label.setVisible(
+                    item.isSelected()
+                    or item.screen_width(ppm) >= item.label.width() + 4)
+
+    def drawBackground(self, painter, rect):
+        super().drawBackground(painter, rect)
+        ppm = self.px_per_mm()
+        step = 1000.0                          # a metre...
+        while step * ppm < 12:
+            step *= 5.0                        # ...or coarser, never dense
+        for major, color in ((False, "#dde1e6"), (True, "#c7ccd3")):
+            s = step * 5 if major else step
+            pen = QPen(QColor(color), 0)
+            pen.setCosmetic(True)
+            painter.setPen(pen)
+            x = s * int(rect.left() // s)
+            while x <= rect.right():
+                painter.drawLine(int(x), int(rect.top()), int(x),
+                                 int(rect.bottom()))
+                x += s
+            y = s * int(rect.top() // s)
+            while y <= rect.bottom():
+                painter.drawLine(int(rect.left()), int(y),
+                                 int(rect.right()), int(y))
+                y += s
+
+    # ----------------------------------------------------------- input
+    def mousePressEvent(self, event):
+        empty = self.itemAt(event.pos()) is None
+        if event.button() == Qt.MiddleButton or \
+                (event.button() == Qt.LeftButton and empty):
+            self._pan = event.pos()
+            self.setCursor(Qt.ClosedHandCursor)
+            if empty and event.button() == Qt.LeftButton:
+                self.scene().clearSelection()
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self._pan is not None:
+            delta = event.pos() - self._pan
+            self._pan = event.pos()
+            self.horizontalScrollBar().setValue(
+                self.horizontalScrollBar().value() - delta.x())
+            self.verticalScrollBar().setValue(
+                self.verticalScrollBar().value() - delta.y())
+            event.accept()
+            return
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if self._pan is not None:
+            self._pan = None
+            self.unsetCursor()
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key in (Qt.Key_Delete, Qt.Key_Backspace):
+            self.dialog._remove_selected()
+        elif key == Qt.Key_R:
+            self.dialog._rotate_selected(
+                -90.0 if event.modifiers() & Qt.ShiftModifier else 90.0)
+        elif key == Qt.Key_Escape:
+            self.scene().clearSelection()
+        else:
+            super().keyPressEvent(event)
+
+
+class _Quiet:
+    """``with dialog.quiet():`` — selection/field changes made by the
+    dialog itself don't echo back into it."""
+
+    def __init__(self, dialog):
+        self.dialog = dialog
+
+    def __enter__(self):
+        self.saved = self.dialog._syncing
+        self.dialog._syncing = True
+
+    def __exit__(self, *exc):
+        self.dialog._syncing = self.saved
 
 
 class HouseBuilder(QDialog):
-    """The House Builder window: floor/room lists and properties on the
-    left, the floor-plan canvas on the right, garden + Build at the
-    bottom."""
+    """The House Builder window: the numbered steps on the left, the
+    floor plan (with its toolbar and hint line) on the right, the garden
+    under it and Build at the bottom."""
 
     def __init__(self, window):
         super().__init__(window)
         self.window = window
         self.setWindowTitle("House Builder")
         self.setModal(False)
-        self.resize(1180, 760)
+        self.resize(1280, 820)
         self.house = H.House(
             floors=[H.Floor(_floor_default_name(0), rooms=[
                 H.Room("Living room", 0.0, 0.0, 5000.0, 4000.0)])],
             garden=H.Garden())
         self.current_floor_index = 0
         self.current_room = self.house.floors[0].rooms[0]
-        self.current_furniture = None
-        self._building_ui = True
+        self.current_item = None           # an Opening or a Furniture
+        self._syncing = True
+        self._fitted = False
         self._build_ui()
-        self._building_ui = False
+        self._syncing = False
         self._loaded = None               # the design last loaded / built
         self._sync_all()
         self.load_from_document()
+
+    def quiet(self):
+        return _Quiet(self)
+
+    @property
+    def current_furniture(self):
+        return self.current_item if isinstance(self.current_item,
+                                               H.Furniture) else None
 
     def load_from_document(self, force=False) -> bool:
         """Fill the builder with the house the document holds
@@ -172,18 +371,19 @@ class HouseBuilder(QDialog):
         self.current_floor_index = 0
         floor = house.floors[0]
         self.current_room = floor.rooms[0] if floor.rooms else None
-        self.current_furniture = None
-        garden = house.garden or H.Garden()
-        self._building_ui = True
-        self.garden_w.setValue(garden.width)
-        self.garden_d.setValue(garden.depth)
-        self.garden_gap.setValue(garden.gap)
-        self._building_ui = False
+        self.current_item = None
+        self._sync_garden_fields()
         self._sync_all()
-        self.canvas.fit_floor(floor)
+        self.canvas.fit()
         self.status.setText("Editing the document's house — Build "
                             "updates it.")
         return True
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not self._fitted:              # the view has its size now
+            self._fitted = True
+            self.canvas.fit()
 
     # ------------------------------------------------------------ ui
     def _build_ui(self):
@@ -193,31 +393,39 @@ class HouseBuilder(QDialog):
 
         left = QWidget()
         left_l = QVBoxLayout(left)
-        left_l.setContentsMargins(4, 4, 4, 4)
-        left.setMaximumWidth(420)
-        splitter.addWidget(left)
-
-        left_l.addWidget(self._floors_group())
-        left_l.addWidget(self._floor_settings_group())
+        left_l.setContentsMargins(4, 4, 8, 4)
+        left_l.addWidget(self._floor_group())
         left_l.addWidget(self._rooms_group())
-        left_l.addWidget(self._room_fields_group())
-        left_l.addWidget(self._openings_group(), 1)
-        left_l.addWidget(self._furniture_group(), 1)
+        left_l.addWidget(self._contents_group())
+        left_l.addWidget(self._editor_group())
+        left_l.addStretch(1)
+        scroll = QScrollArea()
+        scroll.setWidget(left)
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setMinimumWidth(440)       # every row fits, none clipped
+        scroll.setMaximumWidth(520)
+        splitter.addWidget(scroll)
 
         right = QWidget()
         right_l = QVBoxLayout(right)
         right_l.setContentsMargins(4, 4, 4, 4)
         self.canvas = FloorCanvas(self)
+        right_l.addLayout(self._toolbar())
+        right_l.addWidget(_hint(HINT))
         right_l.addWidget(self.canvas, 1)
         right_l.addWidget(self._garden_group())
         splitter.addWidget(right)
         splitter.setStretchFactor(1, 1)
+        splitter.setSizes([420, 860])
 
         bottom = QHBoxLayout()
         self.status = QLabel("")
         bottom.addWidget(self.status, 1)
         build_btn = QPushButton(icons.icon("mdi.home-city-outline"),
-                                "Build")
+                                "Build house")
+        build_btn.setDefault(True)
         build_btn.setToolTip(
             "Build the design into the document: one Object per floor, "
             "stacked, each piece of furniture an Object inside it, plus "
@@ -227,130 +435,278 @@ class HouseBuilder(QDialog):
         bottom.addWidget(build_btn)
         root.addLayout(bottom)
 
-    def _floors_group(self):
-        box = QGroupBox("Floors")
-        lay = QVBoxLayout(box)
-        self.floor_list = QListWidget()
-        self.floor_list.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.floor_list.currentRowChanged.connect(self._floor_row_changed)
-        lay.addWidget(self.floor_list)
+    def _tool(self, icon, text, tip, slot):
+        b = QToolButton()
+        b.setIcon(icons.icon(icon))
+        b.setText(text)
+        b.setToolTip(tip)
+        b.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        b.setAutoRaise(True)
+        b.clicked.connect(slot)
+        return b
+
+    def _toolbar(self):
         row = QHBoxLayout()
-        add = QPushButton("+ Floor")
+        for icon, text, tip, slot in (
+                ("mdi.floor-plan", "Room", "Add a room beside the others",
+                 self._add_room),
+                ("mdi.door", "Door", "Add a door to the selected room",
+                 lambda: self._add_opening("door")),
+                ("mdi.window-closed-variant", "Window",
+                 "Add a window to the selected room",
+                 lambda: self._add_opening("window")),
+                ("mdi.sofa-outline", "Furniture…",
+                 "Add a piece of furniture to the selected room",
+                 self._add_furniture)):
+            row.addWidget(self._tool(icon, text, tip, slot))
+        row.addSpacing(12)
+        row.addWidget(self._tool("mdi.rotate-left", "Turn 90°",
+                                 "Turn the selected furniture 90° (R)",
+                                 lambda: self._rotate_selected(90.0)))
+        row.addWidget(self._tool("mdi.delete-outline", "Delete",
+                                 "Remove the selected door, window, "
+                                 "furniture or room (Delete)",
+                                 self._remove_selected))
+        row.addStretch(1)
+        for icon, tip, slot in (
+                ("mdi.magnify-minus-outline", "Zoom out",
+                 lambda: self.canvas.zoom(1 / 1.25)),
+                ("mdi.magnify-plus-outline", "Zoom in",
+                 lambda: self.canvas.zoom(1.25)),
+                ("mdi.fit-to-page-outline", "Show the whole floor",
+                 lambda: self.canvas.fit())):
+            b = self._tool(icon, "", tip, slot)
+            b.setToolButtonStyle(Qt.ToolButtonIconOnly)
+            row.addWidget(b)
+        return row
+
+    def _floor_group(self):
+        box = _step_box(1, "Floor")
+        lay = QVBoxLayout(box)
+        row = QHBoxLayout()
+        self.floor_combo = QComboBox()
+        self.floor_combo.setToolTip("The storey shown on the plan")
+        self.floor_combo.currentIndexChanged.connect(self._floor_changed)
+        row.addWidget(self.floor_combo, 1)
+        add = QPushButton("+ Add floor")
+        add.setToolTip("Add a storey on top, starting with one room")
         add.clicked.connect(self._add_floor)
-        rm = QPushButton("Remove floor")
+        rm = QPushButton("Remove")
+        rm.setToolTip("Remove this floor")
         rm.clicked.connect(self._remove_floor)
         row.addWidget(add)
         row.addWidget(rm)
         lay.addLayout(row)
-        return box
-
-    def _floor_settings_group(self):
-        box = QGroupBox("Floor settings")
-        form = QFormLayout(box)
-        self.wall_height = _spin(1500.0, 6000.0, H.WALL_HEIGHT)
-        self.wall_thickness = _spin(50.0, 500.0, H.WALL_THICKNESS)
-        self.slab_thickness = _spin(50.0, 500.0, H.SLAB_THICKNESS)
-        for w, key in ((self.wall_height, "wall_height"),
-                      (self.wall_thickness, "wall_thickness"),
-                      (self.slab_thickness, "slab_thickness")):
+        form = QFormLayout()
+        self.wall_height = MetreSpin(1.5, 6.0, 0.05)
+        self.wall_thickness = MetreSpin(0.05, 0.5, 0.01)
+        self.slab_thickness = MetreSpin(0.05, 0.5, 0.01)
+        for w, key, tip in (
+                (self.wall_height, "wall_height",
+                 "Floor-to-ceiling height of this storey"),
+                (self.wall_thickness, "wall_thickness",
+                 "Thickness of every wall on this floor"),
+                (self.slab_thickness, "slab_thickness",
+                 "Thickness of the floor slab under the rooms")):
+            w.setToolTip(tip)
             w.valueChanged.connect(
-                lambda v, k=key: self._floor_field_changed(k, v))
-        form.addRow("Wall height:", self.wall_height)
+                lambda _v, k=key, s=w: self._floor_field_changed(k, s.mm()))
+        form.addRow("Ceiling height:", self.wall_height)
         form.addRow("Wall thickness:", self.wall_thickness)
-        form.addRow("Slab thickness:", self.slab_thickness)
+        form.addRow("Floor slab:", self.slab_thickness)
+        lay.addLayout(form)
         return box
 
     def _rooms_group(self):
-        box = QGroupBox("Rooms on this floor")
+        box = _step_box(2, "Rooms")
         lay = QVBoxLayout(box)
         self.room_list = QListWidget()
+        self.room_list.setMaximumHeight(110)
         self.room_list.currentRowChanged.connect(self._room_row_changed)
         lay.addWidget(self.room_list)
         row = QHBoxLayout()
-        add = QPushButton("+ Room")
+        add = QPushButton("+ Add room")
+        add.setToolTip("Add a room to the right of the others")
         add.clicked.connect(self._add_room)
         rm = QPushButton("Remove room")
         rm.clicked.connect(self._remove_room)
         row.addWidget(add)
         row.addWidget(rm)
         lay.addLayout(row)
-        return box
-
-    def _room_fields_group(self):
-        box = QGroupBox("Selected room")
-        form = QFormLayout(box)
+        form = QFormLayout()
         self.room_name = QLineEdit()
+        self.room_name.setPlaceholderText("e.g. Kitchen")
         self.room_name.editingFinished.connect(self._room_name_changed)
-        self.room_x = _spin(-1e5, 1e5, 0.0)
-        self.room_y = _spin(-1e5, 1e5, 0.0)
-        self.room_w = _spin(MIN_ROOM_UI, 1e5, 4000.0)
-        self.room_d = _spin(MIN_ROOM_UI, 1e5, 3000.0)
+        self.room_w = MetreSpin(MIN_ROOM_M, 100.0)
+        self.room_d = MetreSpin(MIN_ROOM_M, 100.0)
+        self.room_x = MetreSpin(-100.0, 100.0)
+        self.room_y = MetreSpin(-100.0, 100.0)
+        self.room_x.setToolTip("Where its left wall is, from the origin")
+        self.room_y.setToolTip("Where its bottom wall is, from the origin")
         for w, key in ((self.room_x, "x"), (self.room_y, "y"),
                       (self.room_w, "w"), (self.room_d, "d")):
             w.valueChanged.connect(
-                lambda v, k=key: self._room_field_changed(k, v))
+                lambda _v, k=key, s=w: self._room_field_changed(k, s.mm()))
+        size = QHBoxLayout()
+        size.addWidget(self.room_w)
+        size.addWidget(QLabel("×"))
+        size.addWidget(self.room_d)
+        pos = QHBoxLayout()
+        pos.addWidget(self.room_x)
+        pos.addWidget(QLabel(","))
+        pos.addWidget(self.room_y)
         form.addRow("Name:", self.room_name)
-        form.addRow("X:", self.room_x)
-        form.addRow("Y:", self.room_y)
-        form.addRow("Width:", self.room_w)
-        form.addRow("Depth:", self.room_d)
+        form.addRow("Size (w × d):", size)
+        form.addRow("Position (x, y):", pos)
+        lay.addLayout(form)
         return box
 
-    def _openings_group(self):
-        box = QGroupBox("Doors && windows (selected room)")
-        lay = QVBoxLayout(box)
-        self.openings_table = QTableWidget(0, 6)
-        self.openings_table.setHorizontalHeaderLabels(
-            ["Side", "Type", "Offset", "Width", "Height", "Sill"])
-        self.openings_table.verticalHeader().setVisible(False)
-        lay.addWidget(self.openings_table)
-        row = QHBoxLayout()
-        add_door = QPushButton("+ Door")
-        add_door.clicked.connect(lambda: self._add_opening("door"))
-        add_win = QPushButton("+ Window")
-        add_win.clicked.connect(lambda: self._add_opening("window"))
-        rm = QPushButton("Remove")
-        rm.clicked.connect(self._remove_opening)
-        row.addWidget(add_door)
-        row.addWidget(add_win)
-        row.addWidget(rm)
-        lay.addLayout(row)
-        return box
+    def _contents_group(self):
+        self.contents_box = _step_box(3, "In this room")
+        lay = QVBoxLayout(self.contents_box)
+        self.items_list = QListWidget()
+        self.items_list.setMaximumHeight(150)
+        self.items_list.currentRowChanged.connect(self._item_row_changed)
+        lay.addWidget(self.items_list)
+        grid = QGridLayout()
+        for i, (text, icon, slot) in enumerate((
+                ("+ Door", "mdi.door", lambda: self._add_opening("door")),
+                ("+ Window", "mdi.window-closed-variant",
+                 lambda: self._add_opening("window")),
+                ("+ Furniture…", "mdi.sofa-outline", self._add_furniture),
+                ("Remove", "mdi.delete-outline", self._remove_item))):
+            b = QPushButton(icons.icon(icon), text)
+            b.clicked.connect(slot)
+            grid.addWidget(b, i // 2, i % 2)
+        lay.addLayout(grid)
+        return self.contents_box
 
-    def _furniture_group(self):
-        box = QGroupBox("Furniture (selected room)")
-        lay = QVBoxLayout(box)
-        self.furniture_table = QTableWidget(0, 4)
-        self.furniture_table.setHorizontalHeaderLabels(
-            ["Part", "X", "Y", "Rotation"])
-        self.furniture_table.verticalHeader().setVisible(False)
-        lay.addWidget(self.furniture_table)
-        row = QHBoxLayout()
-        add = QPushButton("+ Add furniture…")
-        add.clicked.connect(self._add_furniture)
-        rm = QPushButton("Remove")
-        rm.clicked.connect(self._remove_furniture)
-        row.addWidget(add)
-        row.addWidget(rm)
-        lay.addLayout(row)
-        return box
+    def _editor_group(self):
+        self.editor_box = _step_box(4, "Selected item")
+        lay = QVBoxLayout(self.editor_box)
+        self.editor = QStackedWidget()
+        lay.addWidget(self.editor)
+        self.editor.addWidget(_hint(
+            "Click a door, window or piece of furniture — in the list "
+            "above or on the plan — to change it here."))
+        self.editor.addWidget(self._opening_editor())
+        self.editor.addWidget(self._furniture_editor())
+        return self.editor_box
+
+    def _opening_editor(self):
+        page = QWidget()
+        form = QFormLayout(page)
+        form.setContentsMargins(0, 0, 0, 0)
+        self.op_kind = QComboBox()
+        self.op_kind.addItem(icons.icon("mdi.door"), "Door", "door")
+        self.op_kind.addItem(icons.icon("mdi.window-closed-variant"),
+                             "Window", "window")
+        self.op_kind.currentIndexChanged.connect(
+            lambda _i: self._opening_field("kind",
+                                           self.op_kind.currentData()))
+        self.op_side = QComboBox()
+        for side, name in SIDE_NAMES:
+            self.op_side.addItem(name, side)
+        self.op_side.currentIndexChanged.connect(
+            lambda _i: self._opening_field("side",
+                                           self.op_side.currentData()))
+        self.op_offset = MetreSpin(0.0, 100.0)
+        self.op_offset.setToolTip(
+            "From the wall's left end (top and bottom walls) or its "
+            "bottom end (left and right walls)")
+        self.op_width = MetreSpin(0.3, 20.0)
+        self.op_height = MetreSpin(0.3, 6.0)
+        self.op_sill = MetreSpin(0.0, 3.0)
+        self.op_sill.setToolTip("Height of the window's bottom edge above "
+                                "the floor")
+        for w, key in ((self.op_offset, "offset"), (self.op_width, "width"),
+                      (self.op_height, "height"), (self.op_sill, "sill")):
+            w.valueChanged.connect(
+                lambda _v, k=key, s=w: self._opening_field(k, s.mm()))
+        form.addRow("Type:", self.op_kind)
+        form.addRow("In the:", self.op_side)
+        form.addRow("From the corner:", self.op_offset)
+        form.addRow("Width:", self.op_width)
+        form.addRow("Height:", self.op_height)
+        form.addRow("Sill height:", self.op_sill)
+        form.addRow(_hint("Tip: drag it on the plan — along its wall, or "
+                          "onto another wall of the room."))
+        return page
+
+    def _furniture_editor(self):
+        page = QWidget()
+        form = QFormLayout(page)
+        form.setContentsMargins(0, 0, 0, 0)
+        self.fu_title = QLabel()
+        font = QFont(self.fu_title.font())
+        font.setBold(True)
+        self.fu_title.setFont(font)
+        form.addRow(self.fu_title)
+        self.fu_size = QComboBox()
+        self.fu_size.currentIndexChanged.connect(self._furniture_look)
+        self.fu_color = QComboBox()
+        self.fu_color.currentIndexChanged.connect(self._furniture_look)
+        form.addRow("Size:", self.fu_size)
+        form.addRow("Colour:", self.fu_color)
+        self.fu_x = MetreSpin(-100.0, 100.0, 0.05)
+        self.fu_y = MetreSpin(-100.0, 100.0, 0.05)
+        self.fu_x.setToolTip("Its centre, from the room's left wall")
+        self.fu_y.setToolTip("Its centre, from the room's bottom wall")
+        self.fu_x.valueChanged.connect(
+            lambda _v: self._furniture_field("x", self.fu_x.mm()))
+        self.fu_y.valueChanged.connect(
+            lambda _v: self._furniture_field("y", self.fu_y.mm()))
+        pos = QHBoxLayout()
+        pos.addWidget(self.fu_x)
+        pos.addWidget(QLabel(","))
+        pos.addWidget(self.fu_y)
+        form.addRow("In the room (x, y):", pos)
+        self.fu_rz = QDoubleSpinBox()
+        self.fu_rz.setRange(-180.0, 180.0)
+        self.fu_rz.setWrapping(True)
+        self.fu_rz.setSingleStep(15.0)
+        self.fu_rz.setDecimals(0)
+        self.fu_rz.setSuffix("°")
+        self.fu_rz.setKeyboardTracking(False)
+        self.fu_rz.valueChanged.connect(
+            lambda v: self._furniture_field("rz", v))
+        turn = QHBoxLayout()
+        turn.addWidget(self.fu_rz, 1)
+        for icon, step, tip in (("mdi.rotate-left", 90.0,
+                                 "Turn 90° anticlockwise"),
+                                ("mdi.rotate-right", -90.0,
+                                 "Turn 90° clockwise")):
+            b = QToolButton()
+            b.setIcon(icons.icon(icon))
+            b.setToolTip(tip)
+            b.clicked.connect(lambda _c=False, s=step:
+                              self._rotate_selected(s))
+            turn.addWidget(b)
+        form.addRow("Rotation:", turn)
+        form.addRow(_hint("Tip: on the plan, drag it to move it and "
+                          "double-click it to turn it 90°."))
+        return page
 
     def _garden_group(self):
-        box = QGroupBox("Garden (beside the house)")
-        form = QHBoxLayout(box)
-        self.garden_w = _spin(0.0, 5e4, 4000.0)
-        self.garden_d = _spin(0.0, 5e4, 6000.0)
-        self.garden_gap = _spin(0.0, 1e4, 1500.0)
+        box = QGroupBox("Garden")
+        row = QHBoxLayout(box)
+        self.garden_on = QCheckBox("Add a garden beside the house")
+        self.garden_on.toggled.connect(self._garden_toggled)
+        row.addWidget(self.garden_on)
+        self.garden_w = MetreSpin(0.5, 200.0, 0.5)
+        self.garden_d = MetreSpin(0.5, 200.0, 0.5)
+        self.garden_gap = MetreSpin(0.0, 50.0, 0.5)
         for w, key in ((self.garden_w, "width"), (self.garden_d, "depth"),
                       (self.garden_gap, "gap")):
             w.valueChanged.connect(
-                lambda v, k=key: self._garden_field_changed(k, v))
-        form.addWidget(QLabel("Width:"))
-        form.addWidget(self.garden_w)
-        form.addWidget(QLabel("Depth:"))
-        form.addWidget(self.garden_d)
-        form.addWidget(QLabel("Gap from house:"))
-        form.addWidget(self.garden_gap)
+                lambda _v, k=key, s=w: self._garden_field_changed(k,
+                                                                  s.mm()))
+        for text, w in (("Width:", self.garden_w), ("Depth:", self.garden_d),
+                        ("Gap from the house:", self.garden_gap)):
+            row.addWidget(QLabel(text))
+            row.addWidget(w)
+        row.addStretch(1)
+        self._sync_garden_fields()
         return box
 
     # --------------------------------------------------------- floors
@@ -364,6 +720,10 @@ class HouseBuilder(QDialog):
         index = len(self.house.floors)
         floor = H.Floor(_floor_default_name(index))
         prev = self.house.floors[-1] if self.house.floors else None
+        if prev is not None:
+            floor.wall_height = prev.wall_height
+            floor.wall_thickness = prev.wall_thickness
+            floor.slab_thickness = prev.slab_thickness
         if prev and prev.rooms:
             x0, y0, x1, y1 = prev.bounds()
             floor.rooms.append(H.Room(f"Room {index + 1}", x0, y0,
@@ -374,8 +734,10 @@ class HouseBuilder(QDialog):
         self.house.floors.append(floor)
         self.current_floor_index = index
         self.current_room = floor.rooms[0]
-        self.current_furniture = None
+        self.current_item = None
         self._sync_all()
+        self.status.setText(f"Added the {floor.name.lower()} — draw its "
+                            "rooms on the plan.")
 
     def _remove_floor(self):
         if len(self.house.floors) <= 1:
@@ -386,23 +748,25 @@ class HouseBuilder(QDialog):
         self.current_floor_index = max(0, self.current_floor_index - 1)
         floor = self.current_floor
         self.current_room = floor.rooms[0] if floor.rooms else None
-        self.current_furniture = None
+        self.current_item = None
         self._sync_all()
 
-    def _floor_row_changed(self, row):
-        if self._building_ui or row < 0:
+    def _floor_changed(self, index):
+        if self._syncing or index < 0:
             return
-        self.current_floor_index = row
+        self.current_floor_index = index
         floor = self.current_floor
         self.current_room = floor.rooms[0] if floor and floor.rooms \
             else None
-        self.current_furniture = None
+        self.current_item = None
         self._sync_all()
+        self.canvas.fit()
 
     def _floor_field_changed(self, key, value):
-        if self._building_ui or self.current_floor is None:
+        if self._syncing or self.current_floor is None:
             return
         setattr(self.current_floor, key, value)
+        self._rebuild_canvas()
 
     # ---------------------------------------------------------- rooms
     def _add_room(self):
@@ -412,252 +776,426 @@ class HouseBuilder(QDialog):
         x, y = 0.0, 0.0
         if floor.rooms:
             x0, y0, x1, y1 = floor.bounds()
-            x = x1
+            x, y = x1, y0
         room = H.Room(f"Room {len(floor.rooms) + 1}", x, y, 4000.0, 3000.0)
         floor.rooms.append(room)
         self.current_room = room
+        self.current_item = None
         self._sync_all()
+        self.room_name.setFocus()
+        self.room_name.selectAll()
+        self.status.setText("Added a room — name it, then drag it into "
+                            "place or type its size.")
 
     def _remove_room(self):
         floor = self.current_floor
-        if floor is None or self.current_room is None:
+        room = self.current_room
+        if floor is None or room is None:
             return
-        floor.rooms.remove(self.current_room)
+        if room.openings or room.furniture:
+            answer = QMessageBox.question(
+                self, "House Builder",
+                f'Remove "{room.name}" with its {len(room.openings)} '
+                f"door(s)/window(s) and {len(room.furniture)} piece(s) of "
+                "furniture?")
+            if answer != QMessageBox.Yes:
+                return
+        floor.rooms.remove(room)
         self.current_room = floor.rooms[0] if floor.rooms else None
-        self.current_furniture = None
+        self.current_item = None
         self._sync_all()
 
     def _room_row_changed(self, row):
-        if self._building_ui or row < 0 or self.current_floor is None:
+        if self._syncing or row < 0 or self.current_floor is None:
             return
         rooms = self.current_floor.rooms
         self.current_room = rooms[row] if row < len(rooms) else None
-        self.current_furniture = None
+        self.current_item = None
         self._sync_room_fields()
-        self._sync_openings_table()
-        self._sync_furniture_table()
-        self._rebuild_canvas()
+        self._sync_items()
+        self.canvas.select(self.current_room)
 
     def _pick_room(self, room):
+        """A room was clicked on the plan."""
+        if self._syncing:
+            return
         self.current_room = room
-        self.current_furniture = None
+        self.current_item = None
         self._sync_room_list_selection()
         self._sync_room_fields()
-        self._sync_openings_table()
-        self._sync_furniture_table()
+        self._sync_items()
 
-    def _room_edited(self):
-        """A drag/resize on the canvas changed the selected room."""
-        self._sync_room_fields()
+    def _room_dragged(self, room):
+        """A drag/resize on the plan changed *room*."""
+        self.canvas.sync_room(room)
+        if room is self.current_room:
+            self._sync_room_fields()
+        self._sync_room_captions()
 
     def _room_name_changed(self):
-        if self.current_room is None:
+        if self._syncing or self.current_room is None:
             return
-        self.current_room.name = self.room_name.text().strip() or \
-            self.current_room.name
-        self._sync_room_list()
+        name = self.room_name.text().strip()
+        if not name or name == self.current_room.name:
+            return
+        self.current_room.name = name
+        self._sync_room_captions()
+        self._sync_items()
         self._rebuild_canvas()
 
     def _room_field_changed(self, key, value):
-        if self._building_ui or self.current_room is None:
+        room = self.current_room
+        if self._syncing or room is None:
             return
-        setattr(self.current_room, key, value)
+        if key in ("x", "y"):                 # its contents come along
+            delta = value - getattr(room, key)
+            for f in room.furniture:
+                setattr(f, key, getattr(f, key) + delta)
+        setattr(room, key, value)
+        self._sync_room_captions()
         self._rebuild_canvas()
 
-    # ------------------------------------------------------- openings
+    # ----------------------------------------------- openings/furniture
+    def _room_of(self, obj):
+        floor = self.current_floor
+        for room in floor.rooms if floor else []:
+            if obj in room.openings or obj in room.furniture:
+                return room
+        return None
+
     def _add_opening(self, kind):
-        if self.current_room is None:
-            return
-        if kind == "door":
-            w, h, sill = H.DOOR_SIZE
-        else:
-            w, h, sill = H.WINDOW_SIZE
-        self.current_room.openings.append(H.Opening(kind, "S", 0.0, w, h,
-                                                     sill))
-        self._sync_openings_table()
-        self._rebuild_canvas()
-
-    def _remove_opening(self):
-        if self.current_room is None:
-            return
-        row = self.openings_table.currentRow()
-        if 0 <= row < len(self.current_room.openings):
-            del self.current_room.openings[row]
-            self._sync_openings_table()
-            self._rebuild_canvas()
-
-    def _sync_openings_table(self):
-        t = self.openings_table
-        t.setRowCount(0)
         room = self.current_room
         if room is None:
+            self.status.setText("Select a room first.")
             return
-        t.setRowCount(len(room.openings))
-        for row, op in enumerate(room.openings):
-            side = QComboBox()
-            side.addItems(list(H.SIDES))
-            side.setCurrentText(op.side)
-            side.currentTextChanged.connect(
-                lambda v, r=row: self._opening_field(r, "side", v))
-            t.setCellWidget(row, 0, side)
-            kind = QComboBox()
-            kind.addItems(["door", "window"])
-            kind.setCurrentText(op.kind)
-            kind.currentTextChanged.connect(
-                lambda v, r=row: self._opening_field(r, "kind", v))
-            t.setCellWidget(row, 1, kind)
-            for col, key, val in ((2, "offset", op.offset),
-                                  (3, "width", op.width),
-                                  (4, "height", op.height),
-                                  (5, "sill", op.sill)):
-                spin = _spin(0.0, 2e4, val)
-                spin.valueChanged.connect(
-                    lambda v, r=row, k=key: self._opening_field(r, k, v))
-                t.setCellWidget(row, col, spin)
-
-    def _opening_field(self, row, key, value):
-        if self.current_room is None or row >= len(self.current_room.
-                                                     openings):
-            return
-        setattr(self.current_room.openings[row], key, value)
+        w, h, sill = H.DOOR_SIZE if kind == "door" else H.WINDOW_SIZE
+        # a door in the bottom wall, a window in the top one, centred
+        side = "S" if kind == "door" else "N"
+        length = room.w
+        op = H.Opening(kind, side, max(0.0, (length - w) / 2.0), w, h, sill)
+        room.openings.append(op)
+        self.current_item = op
+        self._sync_items()
         self._rebuild_canvas()
+        self.status.setText(f"Added a {kind} in the {SIDE_SHORT[side]} of "
+                            f"{room.name} — drag it where you want it.")
 
-    # ------------------------------------------------------ furniture
     def _add_furniture(self):
-        if self.current_room is None:
-            QMessageBox.information(self, "House Builder",
-                                    "Select a room first.")
+        room = self.current_room
+        if room is None:
+            self.status.setText("Select a room first.")
             return
-        part_id = _pick_furniture_part(self)
+        part_id = _pick_furniture_part(self, room.name)
         if not part_id:
             return
-        room = self.current_room
         f = H.Furniture(part_id, room.x + room.w / 2.0,
-                        room.y + room.d / 2.0, 0.0)
+                        room.y + room.d / 2.0, 0.0,
+                        dims=H.part_dims(part_id))
         room.furniture.append(f)
-        self.current_furniture = f
-        self._sync_furniture_table()
+        self.current_item = f
+        self._sync_items()
+        self._rebuild_canvas()
+        self.status.setText(f"Added {_label(part_id).lower()} to "
+                            f"{room.name} — drag it into place, "
+                            "double-click to turn it.")
+
+    def _remove_item(self):
+        room, obj = self.current_room, self.current_item
+        if room is None or obj is None:
+            self.status.setText("Select a door, window or piece of "
+                                "furniture to remove.")
+            return
+        owner = self._room_of(obj) or room
+        if obj in owner.openings:
+            owner.openings.remove(obj)
+        elif obj in owner.furniture:
+            owner.furniture.remove(obj)
+        self.current_item = None
+        self._sync_items()
         self._rebuild_canvas()
 
-    def _remove_furniture(self):
-        if self.current_room is None:
-            return
-        row = self.furniture_table.currentRow()
-        if 0 <= row < len(self.current_room.furniture):
-            del self.current_room.furniture[row]
-            self.current_furniture = None
-            self._sync_furniture_table()
-            self._rebuild_canvas()
+    def _remove_selected(self):
+        """Delete key / toolbar: the selected item, else the room."""
+        if self.current_item is not None:
+            self._remove_item()
+        elif self.current_room is not None:
+            self._remove_room()
 
-    def _pick_furniture(self, room, item):
+    def _rotate_selected(self, step):
+        f = self.current_furniture
+        item = self.canvas.items_by_obj.get(id(f)) if f else None
+        if item is None:
+            self.status.setText("Select a piece of furniture to turn it.")
+            return
+        item.rotate_by(step)
+
+    def _item_row_changed(self, row):
+        if self._syncing or self.current_room is None or row < 0:
+            return
+        objs = self._room_items(self.current_room)
+        self.current_item = objs[row] if row < len(objs) else None
+        self._sync_editor()
+        self.canvas.select(self.current_item or self.current_room)
+
+    def _pick_opening(self, room, op):
+        if self._syncing:
+            return
         self.current_room = room
-        self.current_furniture = item
+        self.current_item = op
+        self._sync_after_pick()
+
+    def _pick_furniture(self, f):
+        if self._syncing:
+            return
+        self.current_room = self._room_of(f) or self.current_room
+        self.current_item = f
+        self._sync_after_pick()
+
+    def _sync_after_pick(self):
         self._sync_room_list_selection()
         self._sync_room_fields()
-        self._sync_openings_table()
-        self._sync_furniture_table()
+        self._sync_items()
+        self.canvas.update_labels()
 
-    def _furniture_edited(self):
-        self._sync_furniture_table()
+    def _opening_dragged(self, item):
+        if self.canvas.walls is not None:
+            self.canvas.walls.update()
+        if item.opening is self.current_item:
+            self._sync_editor()
+            self._sync_item_captions()
 
-    def _sync_furniture_table(self):
-        t = self.furniture_table
-        t.setRowCount(0)
-        room = self.current_room
-        if room is None:
+    def _furniture_dragged(self, item):
+        if item.item is self.current_item:
+            self._sync_editor()
+
+    def _furniture_released(self, item):
+        """A piece dropped in another room now belongs to that room."""
+        f = item.item
+        floor = self.current_floor
+        owner = self._room_of(f)
+        target = next((r for r in floor.rooms
+                       if r.x <= f.x <= r.x + r.w
+                       and r.y <= f.y <= r.y + r.d), None) if floor else None
+        if owner is None or target is None or target is owner:
             return
-        t.setRowCount(len(room.furniture))
-        for row, f in enumerate(room.furniture):
-            label = LIBRARY_PARTS.get(f.part_id, {}).get("label",
-                                                          f.part_id)
-            item = QTableWidgetItem(label)
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-            t.setItem(row, 0, item)
-            for col, key, val, suffix in ((1, "x", f.x, " mm"),
-                                          (2, "y", f.y, " mm"),
-                                          (3, "rz", f.rz, "°")):
-                spin = _spin(-1e5, 1e5, val, suffix=suffix)
-                spin.valueChanged.connect(
-                    lambda v, r=row, k=key: self._furniture_field(r, k, v))
-                t.setCellWidget(row, col, spin)
+        owner.furniture.remove(f)
+        target.furniture.append(f)
+        self.current_room = target
+        self._sync_after_pick()
+        self.status.setText(f"{_label(f.part_id)} moved into "
+                            f"{target.name}.")
 
-    def _furniture_field(self, row, key, value):
-        if self.current_room is None or row >= len(self.current_room.
-                                                     furniture):
+    def _opening_field(self, key, value):
+        op = self.current_item
+        if self._syncing or not isinstance(op, H.Opening):
             return
-        setattr(self.current_room.furniture[row], key, value)
+        setattr(op, key, value)
+        if key == "kind":                    # its usual size and sill
+            op.width, op.height, op.sill = (H.DOOR_SIZE if value == "door"
+                                            else H.WINDOW_SIZE)
+            self._sync_editor()
+        if op.kind == "door":
+            op.sill = 0.0
+        self._sync_item_captions()
         self._rebuild_canvas()
 
+    def _furniture_field(self, key, value):
+        f = self.current_furniture
+        room = self._room_of(f) if f is not None else None
+        if self._syncing or f is None or room is None:
+            return
+        if key == "x":
+            f.x = room.x + value
+        elif key == "y":
+            f.y = room.y + value
+        else:
+            f.rz = value
+        item = self.canvas.items_by_obj.get(id(f))
+        if item is not None:
+            item.apply()
+            self.canvas.update_labels()
+
+    def _furniture_look(self, _index=None):
+        """The size or colour combo changed: rebuild the part's dims."""
+        f = self.current_furniture
+        if self._syncing or f is None:
+            return
+        size = self.fu_size.currentData()
+        color = self.fu_color.currentData()
+        try:
+            f.dims = H.part_dims(f.part_id, size, color)
+        except H.HouseError as exc:
+            self.status.setText(str(exc))
+            return
+        self._sync_item_captions()
+        self._rebuild_canvas()
+
+    def _room_items(self, room):
+        return list(room.openings) + list(room.furniture)
+
     # --------------------------------------------------------- garden
+    def _garden_toggled(self, on):
+        if self._syncing:
+            return
+        self.house.garden = H.Garden(width=self.garden_w.mm(),
+                                     depth=self.garden_d.mm(),
+                                     gap=self.garden_gap.mm()) if on \
+            else None
+        self._sync_garden_fields()
+        self.canvas.place_garden(self.house)
+
     def _garden_field_changed(self, key, value):
-        if self._building_ui:
+        if self._syncing:
             return
         if self.house.garden is None:
             self.house.garden = H.Garden()
         setattr(self.house.garden, key, value)
+        self.canvas.place_garden(self.house)
+
+    def _sync_garden_fields(self):
+        g = self.house.garden
+        with self.quiet():
+            self.garden_on.setChecked(g is not None)
+            shown = g or H.Garden()
+            self.garden_w.set_mm(shown.width)
+            self.garden_d.set_mm(shown.depth)
+            self.garden_gap.set_mm(shown.gap)
+            for w in (self.garden_w, self.garden_d, self.garden_gap):
+                w.setEnabled(g is not None)
 
     # ---------------------------------------------------------- sync
     def _sync_all(self):
-        self._sync_floor_list()
+        self._sync_floor_combo()
         self._sync_floor_fields()
         self._sync_room_list()
         self._sync_room_fields()
-        self._sync_openings_table()
-        self._sync_furniture_table()
+        self._sync_items()
         self._rebuild_canvas()
 
-    def _sync_floor_list(self):
-        self._building_ui = True
-        self.floor_list.clear()
-        for floor in self.house.floors:
-            self.floor_list.addItem(QListWidgetItem(floor.name))
-        self.floor_list.setCurrentRow(self.current_floor_index)
-        self._building_ui = False
+    def _sync_floor_combo(self):
+        with self.quiet():
+            self.floor_combo.clear()
+            for floor in self.house.floors:
+                self.floor_combo.addItem(icons.icon("mdi.layers-outline"),
+                                         floor.name)
+            self.floor_combo.setCurrentIndex(self.current_floor_index)
 
     def _sync_floor_fields(self):
         floor = self.current_floor
-        self._building_ui = True
-        if floor is not None:
-            self.wall_height.setValue(floor.wall_height)
-            self.wall_thickness.setValue(floor.wall_thickness)
-            self.slab_thickness.setValue(floor.slab_thickness)
-        self._building_ui = False
+        with self.quiet():
+            if floor is not None:
+                self.wall_height.set_mm(floor.wall_height)
+                self.wall_thickness.set_mm(floor.wall_thickness)
+                self.slab_thickness.set_mm(floor.slab_thickness)
+
+    def _room_caption(self, room) -> str:
+        return f"{room.name}    {room.w / 1000:.2f} × {room.d / 1000:.2f} m"
 
     def _sync_room_list(self):
-        self._building_ui = True
-        self.room_list.clear()
-        floor = self.current_floor
-        if floor is not None:
-            for room in floor.rooms:
-                self.room_list.addItem(QListWidgetItem(room.name))
+        with self.quiet():
+            self.room_list.clear()
+            floor = self.current_floor
+            for room in floor.rooms if floor else []:
+                self.room_list.addItem(QListWidgetItem(
+                    icons.icon("mdi.floor-plan"), self._room_caption(room)))
         self._sync_room_list_selection()
-        self._building_ui = False
+
+    def _sync_room_captions(self):
+        floor = self.current_floor
+        for i, room in enumerate(floor.rooms if floor else []):
+            item = self.room_list.item(i)
+            if item is not None:
+                item.setText(self._room_caption(room))
 
     def _sync_room_list_selection(self):
         floor = self.current_floor
         if floor is None or self.current_room not in floor.rooms:
             return
-        self._building_ui = True
-        self.room_list.setCurrentRow(floor.rooms.index(self.current_room))
-        self._building_ui = False
+        with self.quiet():
+            self.room_list.setCurrentRow(
+                floor.rooms.index(self.current_room))
 
     def _sync_room_fields(self):
-        self._building_ui = True
         room = self.current_room
-        enabled = room is not None
-        for w in (self.room_name, self.room_x, self.room_y, self.room_w,
-                 self.room_d):
-            w.setEnabled(enabled)
-        if room is not None:
-            self.room_name.setText(room.name)
-            self.room_x.setValue(room.x)
-            self.room_y.setValue(room.y)
-            self.room_w.setValue(room.w)
-            self.room_d.setValue(room.d)
-        self._building_ui = False
+        with self.quiet():
+            for w in (self.room_name, self.room_x, self.room_y,
+                      self.room_w, self.room_d):
+                w.setEnabled(room is not None)
+            if room is not None:
+                self.room_name.setText(room.name)
+                self.room_x.set_mm(room.x)
+                self.room_y.set_mm(room.y)
+                self.room_w.set_mm(room.w)
+                self.room_d.set_mm(room.d)
+
+    def _item_caption(self, obj):
+        if isinstance(obj, H.Opening):
+            return (f"{obj.kind.capitalize()} — {SIDE_SHORT[obj.side]}, "
+                    f"{obj.width / 1000:.2f} m wide")
+        size = _size_name(obj)
+        return _label(obj.part_id) + (f" ({size})" if size else "")
+
+    def _item_icon(self, obj):
+        if isinstance(obj, H.Opening):
+            return icons.icon("mdi.door" if obj.kind == "door"
+                              else "mdi.window-closed-variant")
+        return icons.icon("mdi.sofa-outline")
+
+    def _sync_items(self):
+        """The room's contents list, its title, and the item editor."""
+        room = self.current_room
+        self.contents_box.setTitle(
+            f"3  ·  In {room.name}" if room else "3  ·  In this room")
+        with self.quiet():
+            self.items_list.clear()
+            objs = self._room_items(room) if room else []
+            for obj in objs:
+                self.items_list.addItem(QListWidgetItem(
+                    self._item_icon(obj), self._item_caption(obj)))
+            if self.current_item in objs:
+                self.items_list.setCurrentRow(objs.index(self.current_item))
+        self._sync_editor()
+
+    def _sync_item_captions(self):
+        room = self.current_room
+        for i, obj in enumerate(self._room_items(room) if room else []):
+            item = self.items_list.item(i)
+            if item is not None:
+                item.setText(self._item_caption(obj))
+                item.setIcon(self._item_icon(obj))
+
+    def _sync_editor(self):
+        obj = self.current_item
+        with self.quiet():
+            if isinstance(obj, H.Opening):
+                self.editor.setCurrentIndex(1)
+                self.editor_box.setTitle(f"4  ·  {obj.kind.capitalize()}")
+                self.op_kind.setCurrentIndex(
+                    self.op_kind.findData(obj.kind))
+                self.op_side.setCurrentIndex(
+                    self.op_side.findData(obj.side))
+                self.op_offset.set_mm(obj.offset)
+                self.op_width.set_mm(obj.width)
+                self.op_height.set_mm(obj.height)
+                self.op_sill.set_mm(obj.sill)
+                self.op_sill.setEnabled(obj.kind == "window")
+            elif isinstance(obj, H.Furniture):
+                room = self._room_of(obj) or self.current_room
+                self.editor.setCurrentIndex(2)
+                self.editor_box.setTitle("4  ·  Furniture")
+                self.fu_title.setText(_label(obj.part_id))
+                _fill_look_combos(obj, self.fu_size, self.fu_color)
+                self.fu_x.set_mm(obj.x - room.x)
+                self.fu_y.set_mm(obj.y - room.y)
+                self.fu_rz.setValue(obj.rz)
+            else:
+                self.editor.setCurrentIndex(0)
+                self.editor_box.setTitle("4  ·  Selected item")
 
     def _rebuild_canvas(self):
-        self.canvas.rebuild(self.current_floor)
+        with self.quiet():
+            self.canvas.rebuild(self.current_floor, self.house,
+                                self.current_item or self.current_room)
 
     # ---------------------------------------------------------- build
     def _build(self):
@@ -673,39 +1211,113 @@ class HouseBuilder(QDialog):
         self.window.view3d.fit()
 
 
-def _pick_furniture_part(parent) -> str:
-    """A small modal picker: category -> part. Returns a part id, or
-    "" if cancelled."""
+# ----------------------------------------------------------- furniture
+def _size_name(f) -> str:
+    """The Part Library size *f*'s dims were made from, or ""."""
+    sizes = LIBRARY_PARTS.get(f.part_id, {}).get("sizes") or {}
+    for name, dims in sizes.items():
+        if all(f.dims.get(k) == v for k, v in dims.items()):
+            return name
+    return ""
+
+
+def _fill_look_combos(f, size_combo, color_combo):
+    """Offer *f*'s part sizes and colours, the current ones selected."""
+    spec = LIBRARY_PARTS.get(f.part_id, {})
+    size_combo.clear()
+    sizes = spec.get("sizes") or {}
+    current = _size_name(f)
+    if current == "" and sizes:
+        size_combo.addItem("Custom", None)
+    for name in sizes:
+        size_combo.addItem(name, name)
+    size_combo.setCurrentIndex(max(0, size_combo.findData(current or None)))
+    size_combo.setEnabled(len(sizes) > 1)
+    color_combo.clear()
+    colors = spec.get("colors") or []
+    for name in colors:
+        color_combo.addItem(name, name)
+    if not colors:
+        color_combo.addItem("—", None)
+    index = color_combo.findData(f.dims.get("_color"))
+    color_combo.setCurrentIndex(max(0, index))
+    color_combo.setEnabled(bool(colors))
+
+
+def _guess_category(room_name) -> str:
+    """The catalogue section a room's name suggests ("Main bedroom" ->
+    "Bedroom"), or ""."""
+    words = room_name.lower()
+    for category in H.FURNITURE_CATALOG:
+        key = category.split()[0].lower()
+        if key in words or (key == "office" and "study" in words):
+            return category
+    return ""
+
+
+def _pick_furniture_part(parent, room_name="") -> str:
+    """A searchable list of the furniture catalogue, grouped by room
+    type, opened on the section the room's name suggests. Returns a
+    part id, or "" if cancelled."""
     dlg = QDialog(parent)
     dlg.setWindowTitle("Add furniture")
+    dlg.resize(380, 520)
     lay = QVBoxLayout(dlg)
-    form = QFormLayout()
-    lay.addLayout(form)
-    category = QComboBox()
-    category.addItems(list(H.FURNITURE_CATALOG))
-    part = QComboBox()
+    search = QLineEdit()
+    search.setPlaceholderText("Search: sofa, bed, table…")
+    search.setClearButtonEnabled(True)
+    lay.addWidget(search)
+    parts = QListWidget()
+    lay.addWidget(parts, 1)
+    bold = QFont(parts.font())
+    bold.setBold(True)
+    rows = []                               # (header, [items])
+    for category, ids in H.FURNITURE_CATALOG.items():
+        header = QListWidgetItem(category)
+        header.setFlags(Qt.NoItemFlags)
+        header.setFont(bold)
+        parts.addItem(header)
+        items = []
+        for pid in ids:
+            item = QListWidgetItem(icons.icon("mdi.sofa-outline"),
+                                   "   " + _label(pid))
+            item.setData(Qt.UserRole, pid)
+            parts.addItem(item)
+            items.append(item)
+        rows.append((header, category, items))
 
-    def _fill_parts():
-        part.clear()
-        for pid in H.FURNITURE_CATALOG[category.currentText()]:
-            label = LIBRARY_PARTS.get(pid, {}).get("label", pid)
-            part.addItem(label, pid)
+    def _filter(text):
+        text = text.strip().lower()
+        for header, category, items in rows:
+            shown = 0
+            for item in items:
+                hide = bool(text) and text not in item.text().lower() \
+                    and text not in category.lower()
+                item.setHidden(hide)
+                shown += not hide
+            header.setHidden(shown == 0)
 
-    category.currentTextChanged.connect(_fill_parts)
-    _fill_parts()
-    form.addRow("Room type:", category)
-    form.addRow("Furniture:", part)
+    search.textChanged.connect(_filter)
+    guess = _guess_category(room_name)
+    for header, category, items in rows:
+        if category == guess and items:
+            parts.setCurrentItem(items[0])
+            parts.scrollToItem(header, QListWidget.PositionAtTop)
+            break
     row = QHBoxLayout()
-    ok = QPushButton("Add")
-    ok.clicked.connect(dlg.accept)
+    row.addWidget(_hint("Double-click to add"), 1)
     cancel = QPushButton("Cancel")
     cancel.clicked.connect(dlg.reject)
-    row.addStretch(1)
+    ok = QPushButton("Add")
+    ok.setDefault(True)
+    ok.clicked.connect(dlg.accept)
     row.addWidget(cancel)
     row.addWidget(ok)
     lay.addLayout(row)
-    if dlg.exec_() == QDialog.Accepted and part.currentIndex() >= 0:
-        return part.currentData()
+    parts.itemDoubleClicked.connect(
+        lambda item: dlg.accept() if item.data(Qt.UserRole) else None)
+    if dlg.exec_() == QDialog.Accepted and parts.currentItem() is not None:
+        return parts.currentItem().data(Qt.UserRole) or ""
     return ""
 
 

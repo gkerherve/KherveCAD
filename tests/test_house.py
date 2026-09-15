@@ -144,14 +144,14 @@ def test_dialog_add_edit_and_build(window):
     panel._add_opening("door")
     panel._add_opening("window")
     assert len(panel.current_room.openings) == 2
-    assert panel.openings_table.rowCount() == 2
+    assert panel.items_list.count() == 2
 
     room = panel.current_floor.rooms[0]
     furniture = H.Furniture("home_sofa", room.x + 2000.0, room.y + 3500.0,
                             180.0)
     room.furniture.append(furniture)
-    panel._sync_furniture_table()
-    assert panel.furniture_table.rowCount() == 1
+    panel._sync_items()
+    assert panel.items_list.count() == 3      # door, window, sofa
 
     panel._add_floor()
     assert [f.name for f in panel.house.floors] == \
@@ -341,7 +341,7 @@ def test_builder_opens_on_the_documents_house_and_updates_it(window):
     assert [f.part_id for f in rooms[0].furniture] == \
         ["home_sofa", "home_bookcase"]
     assert panel.room_list.count() == 2
-    assert panel.furniture_table.rowCount() == 2
+    assert panel.items_list.count() == 3      # a door + two pieces
     # edit by hand, Build: the same house is updated in place
     rooms[1].w = 3500.0
     panel._build()
@@ -398,3 +398,124 @@ def test_3d_zoom_reaches_house_scale(window):
         viewnav.zoom_3d(view, 0.5)
     assert view.distance == view.MAX_DISTANCE
     assert view.MAX_DISTANCE >= 100_000.0     # a 100 m site, not 5 m
+
+
+# ------------------------------------------------- the plan's own items
+class _SceneEvent:
+    """The bits of a QGraphicsSceneMouseEvent the plan items read —
+    PyQt5 cannot construct the real one."""
+
+    def __init__(self, pos=(0.0, 0.0), modifiers=None):
+        from PyQt5.QtCore import QPointF, Qt
+        self._pos = QPointF(*pos)
+        self._mods = modifiers if modifiers is not None else Qt.NoModifier
+
+    def scenePos(self):
+        return self._pos
+
+    def modifiers(self):
+        return self._mods
+
+    def accept(self):
+        pass
+
+
+def _scene_event(_kind, pos=(0.0, 0.0), modifiers=None):
+    return _SceneEvent(pos, modifiers)
+
+
+def test_furniture_is_drawn_at_its_real_size_and_turns_on_double_click(app):
+    from PyQt5.QtCore import Qt
+
+    from khervecad import house_items as HI
+    f = H.Furniture("home_sofa", 2000.0, 1000.0, 0.0,
+                    H.part_dims("home_sofa", "3-seater"))
+    item = HI.FurnitureItem(f, "Sofa")
+    # the sofa's real 2.2 m x 0.95 m footprint, not a 0.4 m marker
+    assert item.rect().width() == pytest.approx(2200.0, abs=20.0)
+    assert item.rect().height() == pytest.approx(950.0, abs=20.0)
+    item.mouseDoubleClickEvent(_scene_event("GraphicsSceneMouseDoubleClick"))
+    assert f.rz == 90.0 and item.rotation() == 90.0
+    item.mouseDoubleClickEvent(_scene_event(
+        "GraphicsSceneMouseDoubleClick", modifiers=Qt.ShiftModifier))
+    assert f.rz == 0.0                        # Shift turns it back
+    for _ in range(3):
+        item.rotate_by(90.0)
+    assert f.rz == -90.0                      # kept in (-180, 180]
+
+
+def test_dragging_a_door_slides_it_along_and_onto_another_wall(app):
+    from khervecad import house_items as HI
+    room = H.Room("A", 0.0, 0.0, 4000.0, 3000.0)
+    door = H.Opening("door", "S", 0.0, 900.0, 2000.0)
+    room.openings.append(door)
+    item = HI.OpeningItem(room, door, H.Floor("G", rooms=[room]))
+    item._grab = 450.0                        # held by its middle
+    item.mouseMoveEvent(_scene_event("GraphicsSceneMouseMove", (2000, 50)))
+    assert (door.side, door.offset) == ("S", 1550.0)
+    item.mouseMoveEvent(_scene_event("GraphicsSceneMouseMove",
+                                     (3950, 1500)))
+    assert (door.side, door.offset) == ("E", 1050.0)
+
+
+def test_plan_walls_leave_a_gap_for_each_opening():
+    from khervecad import house_items as HI
+    pieces = HI.wall_pieces((0.0, 0.0), (5000.0, 0.0),
+                            [(1000.0, 900.0, 2000.0, 0.0, "door")],
+                            200.0, 2400.0)
+    # half a wall past each end closes the corners; the door is a gap
+    assert [(r.left(), r.right()) for r in pieces] == \
+        [(-100.0, 1000.0), (1900.0, 5100.0)]
+    assert all(r.height() == 200.0 for r in pieces)
+
+
+def test_moving_a_room_carries_its_furniture(app):
+    from PyQt5.QtWidgets import QGraphicsScene
+
+    from khervecad import house_items as HI
+    room = H.Room("A", 0.0, 0.0, 4000.0, 3000.0,
+                  furniture=[H.Furniture("room_chair", 1000.0, 1000.0)])
+    scene = QGraphicsScene()
+    item = HI.RoomItem(room)
+    scene.addItem(item)
+    item.setPos(500.0, 250.0)
+    assert (room.x, room.y) == (500.0, 250.0)
+    chair = room.furniture[0]
+    assert (chair.x, chair.y) == (1500.0, 1250.0)
+
+
+def test_builder_edits_the_selected_door_or_furniture(window):
+    from khervecad import house_dialog
+    H.build_house(window, SPEC)
+    panel = house_dialog.open_builder(window)
+    living = panel.current_floor.rooms[0]
+    panel.items_list.setCurrentRow(1)                 # the sofa
+    assert panel.current_item is living.furniture[0]
+    assert panel.editor.currentIndex() == 2
+    assert panel.fu_size.currentText().startswith("3-seater")
+    panel._rotate_selected(90.0)
+    assert living.furniture[0].rz == 90.0
+    panel.items_list.setCurrentRow(0)                 # the door
+    assert panel.editor.currentIndex() == 1
+    panel.op_side.setCurrentIndex(panel.op_side.findData("N"))
+    assert living.openings[0].side == "N"
+    panel.close()
+
+
+# --------------------------------------------- the main window's 2D view
+def test_2d_view_frames_the_whole_house_and_draws_its_plan(window):
+    H.build_house(window, SPEC)
+    scene, view = window.scene, window.view2d
+    drawn = scene.itemsBoundingRect()
+    # the scene used to be a fixed 4 m square: most of the house fell
+    # outside it, so Fit could not frame it nor the view scroll to it
+    assert scene.sceneRect().contains(drawn)
+    view.fit_content()
+    shown = view.mapToScene(view.viewport().rect()).boundingRect()
+    assert shown.contains(drawn)
+    ground = scene._part_items[window.model.root.children[0].id]
+    colours = {c.name() for _poly, c in ground._faces}
+    # its own colours (walls, floors, glass, furniture), not one blob,
+    # and cut like a floor plan: the roof is not drawn over the rooms
+    assert len(colours) > 4
+    assert H.ROOF_COLOR not in colours

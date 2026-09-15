@@ -50,6 +50,10 @@ ROOF_EAVE = 300.0
 DOOR_SIZE = (900.0, 2000.0, 0.0)      # width, height, sill
 WINDOW_SIZE = (1200.0, 1200.0, 900.0)
 GARDEN_THICKNESS = 50.0
+#: a floor plan is the floor cut this high above its slab and seen from
+#: above — the 2D Top view draws a built floor that way, so its walls,
+#: openings and furniture show instead of the roof over them
+PLAN_CUT = 1200.0
 
 SLAB_COLOR = "#c9c4ba"
 WALL_COLOR = "#f2efe9"
