@@ -19,9 +19,10 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-from PyQt5.QtCore import QEvent, Qt
+from PyQt5.QtCore import QEvent, QPointF, Qt
+from PyQt5.QtGui import QColor, QPainter, QPen, QPolygonF
 from PyQt5.QtWidgets import (QAbstractScrollArea, QFrame, QHBoxLayout,
-                             QToolButton, QWidget)
+                             QMenu, QToolButton, QWidget)
 
 #: the same dark glass as the 3D view's lighting bar
 _STYLE = (
@@ -32,7 +33,12 @@ _STYLE = (
     "#navBar QToolButton:hover { background: rgba(255, 255, 255, 30); }"
     "#navBar QToolButton:pressed { background: rgba(255, 255, 255, 55); }"
     "#navBar QToolButton:checked { background: rgba(224, 123, 57, 170); }"
-    "#navBar QFrame { color: rgba(255, 255, 255, 45); }")
+    "#navBar QFrame { color: rgba(255, 255, 255, 45); }"
+    # a button with options (MenuButton): room for the painted chevron
+    "#navBar QToolButton[popupMode=\"1\"] { padding-right: 12px; }"
+    "#navBar QToolButton::menu-button { border: none;"
+    " background: transparent; width: 10px; }"
+    "#navBar QToolButton::menu-arrow { image: none; }")
 
 #: pan step, as a fraction of the view
 PAN_STEP = 0.12
@@ -104,6 +110,57 @@ class NavBar(QWidget):
         area = self._area()
         self.move(area.right() - self.width() - 8, area.top() + 8)
         self.raise_()
+
+
+class MenuButton(QToolButton):
+    """A bar button with options: a click on the icon switches the
+    feature, the slim arrow beside it opens every option. The look of
+    the main toolbar's GroupButton — the theme hides menu arrows, so
+    the chevron is painted."""
+
+    ARROW_W = 10
+
+    def __init__(self, parent, menu):
+        super().__init__(parent)
+        self.setMenu(menu)
+        self.setPopupMode(QToolButton.MenuButtonPopup)
+        self.setCheckable(True)
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(QPen(QColor(230, 233, 236, 200), 1.3))
+        cx = self.width() - self.ARROW_W / 2.0 - 1.0
+        cy = self.height() / 2.0 + 1.0
+        painter.drawPolyline(QPolygonF([QPointF(cx - 2.5, cy - 1.3),
+                                        QPointF(cx, cy + 1.3),
+                                        QPointF(cx + 2.5, cy - 1.3)]))
+        painter.end()
+
+
+def add_menu_button(bar, key, glyph, fallback, tip, actions, on_click):
+    """Append a separator and a MenuButton to *bar*. Its menu holds
+    *actions* — pass a View menu's own, so a tick in one is a tick in
+    the other; *on_click(checked)* runs for a click on the icon."""
+    from . import icons
+    menu = QMenu(bar)
+    menu.addActions(list(actions))
+    line = QFrame(bar)
+    line.setFrameShape(QFrame.VLine)
+    bar.layout().addWidget(line)
+    button = MenuButton(bar, menu)
+    art = icons.icon(glyph, "#e6e9ec")
+    if art.isNull():                           # qtawesome missing
+        button.setText(fallback)
+    else:
+        button.setIcon(art)
+    button.setToolTip(tip)
+    button.clicked.connect(on_click)
+    bar.layout().addWidget(button)
+    bar.buttons[key] = button
+    bar.place()
+    return button
 
 
 # ------------------------------------------------------------------ 2D

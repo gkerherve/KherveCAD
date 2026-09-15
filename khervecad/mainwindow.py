@@ -426,6 +426,7 @@ class MainWindow(QMainWindow):
         view_menu.addAction(self._gl_act)
         self._build_explode_menu(view_menu)
         self._build_cut_menu(view_menu)
+        self._add_view_toggles()
         view_menu.addSeparator()
         theme_menu = view_menu.addMenu("&Theme")
         theme_group = QActionGroup(self)
@@ -1356,6 +1357,32 @@ class MainWindow(QMainWindow):
             if on else "Panels back — edit by hand.", 6000)
 
     # --------------------------------------------------- cut through
+    def _add_view_toggles(self):
+        """Exploded View and Cut Through on the 3D view's floating bar:
+        a button that switches each, and an arrow holding every option —
+        the View menu's own actions, so the two always agree."""
+        from . import viewnav
+        bar = getattr(self.view3d, "nav_bar", None)
+        if bar is None:
+            return
+        explode = viewnav.add_menu_button(
+            bar, "explode", "mdi.cube-unfolded", "✥",
+            "Exploded view: pull the parts apart to show how they go "
+            "together (Ctrl+Shift+X). With a part selected, the assembly "
+            "it belongs to comes apart. The arrow: distance and direction.",
+            self._explode_menu.actions(),
+            lambda on: self.set_explode(bool(on)))
+        explode.setChecked(self._explode["on"])
+        self._explode_act.toggled.connect(explode.setChecked)
+        cut = viewnav.add_menu_button(
+            bar, "cut", "mdi.content-cut", "✂",
+            "Cut through: slice the model to see inside it (Ctrl+Alt+X). "
+            "The arrow: which axis, where, and which half stays.",
+            self._cut_menu.actions(), lambda on: self.set_cut(bool(on)))
+        cut.setChecked(self.view3d.cut_state() is not None)
+        self.view3d.cut_changed.connect(
+            lambda *_: cut.setChecked(self.view3d.cut_state() is not None))
+
     def _build_cut_menu(self, view_menu):
         """View ▸ Cut Through (cut_ui.py)."""
         from . import cut_ui
@@ -1374,8 +1401,8 @@ class MainWindow(QMainWindow):
     def _build_explode_menu(self, view_menu):
         """View ▸ Exploded View: on/off, how far, which way."""
         from . import explode
-        menu = view_menu.addMenu(icons.icon("mdi.arrow-expand-all"),
-                                 "E&xploded View")
+        menu = self._explode_menu = view_menu.addMenu(
+            icons.icon("mdi.arrow-expand-all"), "E&xploded View")
         self._explode_act = QAction("&Explode the Assembly", self,
                                     checkable=True)
         self._explode_act.setShortcut("Ctrl+Shift+X")

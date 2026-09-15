@@ -754,6 +754,14 @@ into a new module and import.
                        `MainWindow` (`attach_2d`/`attach_3d`, stored as
                        `view.nav_bar`); pick mode hides the 3D one like
                        the lighting bar. Snapshot twins get none.
+                       The 3D bar also carries **Exploded View** and
+                       **Cut Through** as `MenuButton`s
+                       (`add_menu_button`, added by
+                       `MainWindow._add_view_toggles`): a click on the
+                       icon switches the feature, the painted chevron
+                       opens a menu of the View menu's OWN actions, so
+                       ticks never disagree; the buttons follow the
+                       state whoever changes it.
   - `tooltips.py`    — what every toolbar icon does and how to use it:
                        `TIPS[key] = (title, what, steps, tip)`, rendered
                        by `rich()` as a fixed-width HTML tooltip and by

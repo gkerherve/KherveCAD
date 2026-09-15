@@ -244,7 +244,8 @@ is a way of <i>looking</i>: the model itself does not move.</p>
 <ul>
 <li><b>View &rsaquo; Exploded View &rsaquo; Explode the Assembly</b>
 {K("Ctrl+Shift+X")} switches it on and off; {K("Ctrl+F")} frames the
-spread-out parts.</li>
+spread-out parts. The same switch is on the bar in the top-right corner
+of the 3D view, with every option under its arrow.</li>
 <li><b>What comes apart</b>: with a part selected, the assembly it
 belongs to &mdash; select one leaf of a hinge and the whole hinge comes
 apart, while everything else stays put and the selection follows its
@@ -273,7 +274,10 @@ exploded view it is a way of <i>looking</i>: the model, its exports and
 its drawings stay whole.</p>
 <ul>
 <li>Click the <b>scissors</b> on the toolbar, or <b>View &rsaquo; Cut
-Through</b> {K("Ctrl+Alt+X")}.</li>
+Through</b> {K("Ctrl+Alt+X")}, or the scissors on the bar in the
+top-right corner of the 3D view &mdash; its arrow lists every option:
+the axis, where the cut goes (a quarter, the middle, three quarters)
+and which half stays.</li>
 <li>A bar appears along the bottom of the 3D view: pick <b>X</b>,
 <b>Y</b> or <b>Z</b>, and drag the slider to move the cut through the
 model; the readout gives its position in millimetres.</li>

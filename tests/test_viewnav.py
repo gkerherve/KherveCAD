@@ -97,6 +97,37 @@ def test_3d_bar_sits_top_right_and_hides_for_a_pick(app):
     view.close()
 
 
+def test_3d_bar_carries_exploded_view_and_cut_through(app):
+    """Both switches on the 3D view's own bar, every option under the
+    arrow — the View menu's very actions, so the two always agree."""
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        win.model.add_node("cube")
+        win._refresh_preview()
+        bar = win.view3d.nav_bar
+        explode, cut = bar.buttons["explode"], bar.buttons["cut"]
+        assert explode.menu().actions() == win._explode_menu.actions()
+        assert cut.menu().actions() == win._cut_menu.actions()
+        explode.click()
+        assert win.explode_state()["on"] and win._explode_act.isChecked()
+        win.set_explode(False)                  # the menu, say
+        assert not explode.isChecked()
+        cut.click()
+        assert win.view3d.cut_state() is not None and win._cut_act.isChecked()
+        quarter = next(a for a in win._cut_positions.actions()
+                       if a.data() == 0.25)
+        assert quarter in cut.menu().actions()
+        quarter.trigger()
+        assert abs(win.view3d.cut_state()["position"] - 0.25) < 1e-6
+        assert quarter.isChecked()
+        win.set_cut(False)
+        assert not cut.isChecked() and not quarter.isChecked()
+    finally:
+        win._dirty = False
+        win.close()
+
+
 def test_2d_bar_zooms_and_focuses_an_offset_part(app):
     from khervecad.model import DocumentModel
     from khervecad.view2d import SketchScene, SketchView

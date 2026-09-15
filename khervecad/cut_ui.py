@@ -97,7 +97,8 @@ class CutBar(QWidget):
 def build_menu(win, view_menu):
     """View ▸ Cut Through: on/off, which axis, which half."""
     from . import icons
-    menu = view_menu.addMenu(icons.icon("mdi.content-cut"), "C&ut Through")
+    menu = win._cut_menu = view_menu.addMenu(icons.icon("mdi.content-cut"),
+                                             "C&ut Through")
     win._cut_act = QAction("&Cut Through the Model", win, checkable=True)
     win._cut_act.setShortcut("Ctrl+Alt+X")
     win._cut_act.setStatusTip(
@@ -114,6 +115,19 @@ def build_menu(win, view_menu):
         act.setData(axis)
         act.triggered.connect(lambda _=False, a=axis: win.set_cut(True, axis=a))
         win._cut_axes.addAction(act)
+        menu.addAction(act)
+    menu.addSeparator()
+    # where the cut goes — the bar's slider does it finely, but a menu
+    # (and the 3D view's own button) has no slider
+    win._cut_positions = QActionGroup(win)
+    for value, label in ((0.25, "Cut at a &Quarter"),
+                         (0.5, "Cut Through the &Middle"),
+                         (0.75, "Cut at &Three Quarters")):
+        act = QAction(label, win, checkable=True)
+        act.setData(value)
+        act.triggered.connect(
+            lambda _=False, v=value: win.set_cut(True, position=v))
+        win._cut_positions.addAction(act)
         menu.addAction(act)
     menu.addSeparator()
     other = QAction("Keep the &Other Half", win)
@@ -152,3 +166,7 @@ def sync(win):
     group = getattr(win, "_cut_axes", None)
     for act in (group.actions() if group is not None else ()):
         act.setChecked(cut is not None and act.data() == cut["axis"])
+    group = getattr(win, "_cut_positions", None)
+    for act in (group.actions() if group is not None else ()):
+        act.setChecked(cut is not None and
+                       abs(float(act.data()) - cut["position"]) < 0.005)
