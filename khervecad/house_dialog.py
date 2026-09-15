@@ -20,7 +20,9 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-from PyQt5.QtCore import Qt
+import json
+
+from PyQt5.QtCore import QRectF, Qt
 from PyQt5.QtGui import QColor, QPainter, QPen
 from PyQt5.QtWidgets import (QAbstractItemView, QComboBox, QDialog,
                              QDoubleSpinBox, QFormLayout, QGraphicsScene,
@@ -88,6 +90,16 @@ class FloorCanvas(QGraphicsView):
                            (bounds[2] - bounds[0]) + 2 * pad,
                            (bounds[3] - bounds[1]) + 2 * pad)
 
+    def fit_floor(self, floor):
+        """Frame *floor*'s rooms with a metre of margin."""
+        bounds = floor.bounds() if floor is not None else None
+        if not bounds:
+            return
+        x0, y0, x1, y1 = bounds
+        pad = 1000.0
+        self.fitInView(QRectF(x0 - pad, y0 - pad, (x1 - x0) + 2 * pad,
+                              (y1 - y0) + 2 * pad), Qt.KeepAspectRatio)
+
     def _draw_grid(self, bounds):
         x0, y0, x1, y1 = (bounds[0] - 1000.0, bounds[1] - 1000.0,
                           bounds[2] + 1000.0, bounds[3] + 1000.0)
@@ -136,7 +148,42 @@ class HouseBuilder(QDialog):
         self._building_ui = True
         self._build_ui()
         self._building_ui = False
+        self._loaded = None               # the design last loaded / built
         self._sync_all()
+        self.load_from_document()
+
+    def load_from_document(self, force=False) -> bool:
+        """Fill the builder with the house the document holds
+        (``model.house``: built here, by build_house, or saved in the
+        .kcad) so its rooms, openings and furniture can be edited and
+        built again. Skipped when that design is already the one shown,
+        so reopening the window keeps edits not yet built — unless
+        *force*. Returns whether it loaded."""
+        spec = self.window.model.house
+        key = json.dumps(spec, sort_keys=True) if spec else None
+        if not spec or (key == self._loaded and not force):
+            return False
+        try:
+            house = H.house_from_spec(spec)
+        except H.HouseError:
+            return False
+        self._loaded = key
+        self.house = house
+        self.current_floor_index = 0
+        floor = house.floors[0]
+        self.current_room = floor.rooms[0] if floor.rooms else None
+        self.current_furniture = None
+        garden = house.garden or H.Garden()
+        self._building_ui = True
+        self.garden_w.setValue(garden.width)
+        self.garden_d.setValue(garden.depth)
+        self.garden_gap.setValue(garden.gap)
+        self._building_ui = False
+        self._sync_all()
+        self.canvas.fit_floor(floor)
+        self.status.setText("Editing the document's house — Build "
+                            "updates it.")
+        return True
 
     # ------------------------------------------------------------ ui
     def _build_ui(self):
@@ -172,9 +219,10 @@ class HouseBuilder(QDialog):
         build_btn = QPushButton(icons.icon("mdi.home-city-outline"),
                                 "Build")
         build_btn.setToolTip(
-            "Insert the current design into the document: one Object "
-            "per floor, stacked, plus a Garden Object beside the "
-            "house. Clicking Build again adds another copy.")
+            "Build the design into the document: one Object per floor, "
+            "stacked, each piece of furniture an Object inside it, plus "
+            "a Garden Object. Building again replaces the house built "
+            "last time; the design is saved with the document.")
         build_btn.clicked.connect(self._build)
         bottom.addWidget(build_btn)
         root.addLayout(bottom)
@@ -618,6 +666,7 @@ class HouseBuilder(QDialog):
         except H.HouseError as exc:
             QMessageBox.warning(self, "House Builder", str(exc))
             return
+        self._loaded = json.dumps(self.window.model.house, sort_keys=True)
         names = ", ".join(c.name for c in inserted)
         self.status.setText(f"Built: {names}")
         self.window.builder.tree.select_nodes(inserted)
@@ -664,6 +713,8 @@ def open_builder(window):
     panel = getattr(window, "_house_builder", None)
     if panel is None:
         panel = window._house_builder = HouseBuilder(window)
+    else:
+        panel.load_from_document()    # a house opened/built since
     panel.show()
     panel.raise_()
     panel.activateWindow()

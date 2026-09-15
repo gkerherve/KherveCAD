@@ -991,6 +991,11 @@ class DocumentModel(QObject):
         #: out of the undo snapshots — the Blueprint window has its own
         #: undo, and a Ctrl+Z in the model must not rewind the drawing.
         self.drawing = None
+        #: the House Builder design (house.house_to_spec + "objects", the
+        #: names of the Objects it built) or None — saved in the .kcad
+        #: and IN the undo snapshots, so the builder reopens on the
+        #: house the document holds and a Ctrl+Z of a Build rewinds both
+        self.house = None
         #: what one model unit means ("nm", "um", "mm", "cm", "m",
         #: "in") — a label for every readout, never a rescale of the
         #: geometry (see units.py)
@@ -1014,7 +1019,8 @@ class DocumentModel(QObject):
         return json.dumps({"tree": node_to_dict(self.root),
                            "dimensions": self.dimensions,
                            "references": self.reference_images,
-                           "unit": self.unit})
+                           "unit": self.unit,
+                           "house": self.house})
 
     def _schedule_capture(self):
         """Capture one undo snapshot per event-loop cycle, so a
@@ -1041,6 +1047,7 @@ class DocumentModel(QObject):
             self.dimensions = [dict(d) for d in data.get("dimensions", [])]
             self.reference_images = [dict(r) for r in
                                      data.get("references", [])]
+            self.house = data.get("house")
             unit = data.get("unit", "mm")
             unit_moved = unit != self.unit
             self.unit = unit
@@ -1627,6 +1634,7 @@ class DocumentModel(QObject):
     def clear(self):
         self.reference_images = []
         self.drawing = None
+        self.house = None
         self.root = CadNode("root")
         self.structure_changed.emit()
         self.drawing_changed.emit()

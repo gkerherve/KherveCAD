@@ -555,7 +555,14 @@ into a new module and import.
                        placement params survive `make_component`'s
                        in-place type change to "component" unmodified)
                        plus one "Garden" Object beside the house's
-                       footprint — one Python call, one undo step, no
+                       footprint, and stores the design as
+                       `model.house` (`house_to_spec` + "objects", the
+                       names it built; saved in the .kcad, FORMAT_VERSION
+                       10, and IN the undo snapshots). A later apply
+                       `remove_built`s those Objects first, so building
+                       again UPDATES the house. `house_from_spec` /
+                       `house_to_spec` round-trip (saved furniture
+                       `dims` are used verbatim) — one Python call, one undo step, no
                        flush needed (a dialog button's `clicked` slot
                        already returns to the event loop before the
                        0 ms snapshot timer fires). `FURNITURE_CATALOG`
@@ -598,12 +605,15 @@ into a new module and import.
                        (`_pick_room`/`_pick_furniture` from a canvas
                        click, `_room_edited`/`_furniture_edited` from a
                        canvas drag). Garden width/depth/gap sits under
-                       the canvas. **Build** (`house.apply`) is
-                       repeatable like the Part Library's Insert — it
-                       always adds a fresh set of Objects for the
-                       current design, so clicking it again after
-                       further edits adds another house rather than
-                       trying to patch the first one in place.
+                       the canvas. The window opens on the document's
+                       house (`load_from_document`: `model.house`, from
+                       an earlier Build, the build_house MCP tool —
+                       which also refreshes an open builder — or a
+                       saved .kcad), framed by `fit_floor`; reopening
+                       skips the reload when that design is already the
+                       one shown, so unbuilt edits survive. **Build**
+                       (`house.apply`) replaces the house built last
+                       time, so hand edits update it in place.
   - `legoize.py`     — **Object ↔ Lego** (Qt-free). `column_hits` casts
                        a ray up each grid column and records every
                        surface as an entry (+1, facing down) or an exit

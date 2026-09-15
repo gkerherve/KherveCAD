@@ -353,13 +353,33 @@ def build_garden(garden: Garden, house_bounds) -> CadNode:
 
 
 # --------------------------------------------------------------- apply
-def apply(model, house: House) -> list:
+def remove_built(model) -> int:
+    """Take out the top-level Objects the document's last House Builder
+    build made (named in ``model.house["objects"]``); returns how many."""
+    names = set((model.house or {}).get("objects") or [])
+    gone = [c for c in list(model.root.children)
+            if c.type == "component" and c.name in names]
+    for comp in gone:
+        model.root.remove(comp)
+    return len(gone)
+
+
+def apply(model, house: House, replace: bool = True) -> list:
     """Insert *house* into the document: one Object per floor (stacked
     in Z, so "Ground floor" sits at z=0 and "First floor" above it) and
-    one "Garden" Object beside the house's footprint. Returns the
+    one "Garden" Object beside the house's footprint, and store the
+    design as ``model.house`` so the House Builder reopens on it and it
+    is saved with the document. With *replace* (the default) the house
+    the last build made is swapped out, so editing and building again
+    UPDATES the house instead of adding a second one. Returns the
     inserted component nodes, one call = one undo step."""
     if not house.floors:
         raise HouseError("Add at least one floor with a room.")
+    for floor in house.floors:
+        if not floor.rooms:
+            raise HouseError(f'"{floor.name}" has no rooms.')
+    if replace:
+        remove_built(model)
     inserted = []
     z = 0.0
     taken = {n.name for n in model.root.walk()}
@@ -377,8 +397,37 @@ def apply(model, house: House) -> list:
             g = build_garden(house.garden, bounds)
             model.root.add(g)
             inserted.append(model.enclose_as_part(g, name="Garden"))
+    model.house = dict(house_to_spec(house),
+                       objects=[c.name for c in inserted])
     model.structure_changed.emit()
     return inserted
+
+
+def house_to_spec(house: House) -> dict:
+    """*house* as the JSON-shaped spec `house_from_spec` reads back —
+    what the document saves. Furniture keeps its exact dims (size and
+    colour already resolved) and its x/y relative to its room, so the
+    two functions round-trip."""
+    spec = {"floors": [{
+        "name": floor.name, "wall_height": floor.wall_height,
+        "wall_thickness": floor.wall_thickness,
+        "slab_thickness": floor.slab_thickness,
+        "rooms": [{
+            "name": r.name, "x": r.x, "y": r.y, "w": r.w, "d": r.d,
+            "openings": [{"kind": o.kind, "side": o.side,
+                          "offset": o.offset, "width": o.width,
+                          "height": o.height, "sill": o.sill}
+                         for o in r.openings],
+            "furniture": [{"part_id": f.part_id, "x": f.x - r.x,
+                           "y": f.y - r.y, "z": f.z, "rz": f.rz,
+                           "dims": dict(f.dims), "name": f.name}
+                          for f in r.furniture]}
+            for r in floor.rooms]}
+        for floor in house.floors]}
+    if house.garden is not None:
+        g = house.garden
+        spec["garden"] = {"width": g.width, "depth": g.depth, "gap": g.gap}
+    return spec
 
 
 # ---------------------------------------------------- spec (MCP / JSON)
@@ -464,8 +513,12 @@ def _furniture_from_spec(spec: dict, room: Room, floor: Floor) -> Furniture:
     if not isinstance(spec, dict):
         raise HouseError("Each furniture entry must be an object.")
     part_id = str(spec.get("part_id", "")).strip()
-    dims = part_dims(part_id, spec.get("size"), spec.get("color"),
-                     spec.get("dims"))
+    if "dims" in spec and not spec.get("size") and not spec.get("color"):
+        part_dims(part_id)                   # checks the part exists
+        dims = dict(spec["dims"] or {})      # saved dims, used as they are
+    else:
+        dims = part_dims(part_id, spec.get("size"), spec.get("color"),
+                         spec.get("dims"))
     if spec.get("wall"):
         x, y, rz = against_wall(room, floor.wall_thickness, part_id, dims,
                                 spec["wall"], spec.get("along"),
@@ -564,6 +617,9 @@ def build_house(window, params: dict) -> dict:
         return {"dry_run": True, "floors": floors}
     inserted = apply(window.model, house)
     window.view3d.fit()
+    panel = getattr(window, "_house_builder", None)
+    if panel is not None:                 # an open builder shows it now
+        panel.load_from_document(force=True)
     return {"objects": [{"id": c.id, "name": c.name,
                          "contains": [n.name for n in c.walk()
                                       if n.type == "component"

@@ -297,6 +297,64 @@ def test_build_house_tool_inserts_and_reports(window):
     assert dry["dry_run"] and len(window.model.root.children) == 2
 
 
+# ------------------------------------ design saved with the document
+def test_house_to_spec_round_trips():
+    house = H.house_from_spec(SPEC)
+    again = H.house_from_spec(H.house_to_spec(house))
+    assert H.house_to_spec(again) == H.house_to_spec(house)
+    sofa = again.floors[0].rooms[0].furniture[0]
+    assert sofa.dims["_color"] == "Grey" and sofa.dims["w"] == 2200.0
+
+
+def test_build_again_replaces_the_house_and_stores_the_design(window):
+    model = window.model
+    H.build_house(window, SPEC)
+    assert model.house["objects"] == ["Ground floor", "Garden"]
+    spec = dict(model.house)
+    spec["floors"][0]["rooms"][0]["w"] = 6000.0
+    H.apply(model, H.house_from_spec(spec))
+    names = [c.name for c in model.root.children]
+    assert names == ["Ground floor", "Garden"]      # updated, not copied
+    assert model.house["floors"][0]["rooms"][0]["w"] == 6000.0
+    assert '"house"' in model._serialize()          # in undo snapshots
+
+
+def test_house_design_saves_and_loads_with_the_kcad(window, tmp_path):
+    from khervecad.document import load_kcad, save_kcad
+    from khervecad.model import DocumentModel
+    H.build_house(window, SPEC)
+    path = str(tmp_path / "house.kcad")
+    save_kcad(window.model, path)
+    other = DocumentModel()
+    load_kcad(other, path)
+    assert other.house == window.model.house
+    other.clear()
+    assert other.house is None
+
+
+def test_builder_opens_on_the_documents_house_and_updates_it(window):
+    from khervecad import house_dialog
+    H.build_house(window, SPEC)
+    panel = house_dialog.open_builder(window)
+    rooms = panel.current_floor.rooms
+    assert [r.name for r in rooms] == ["Living room", "Kitchen"]
+    assert [f.part_id for f in rooms[0].furniture] == \
+        ["home_sofa", "home_bookcase"]
+    assert panel.room_list.count() == 2
+    assert panel.furniture_table.rowCount() == 2
+    # edit by hand, Build: the same house is updated in place
+    rooms[1].w = 3500.0
+    panel._build()
+    assert [c.name for c in window.model.root.children] == \
+        ["Ground floor", "Garden"]
+    assert window.model.house["floors"][0]["rooms"][1]["w"] == 3500.0
+    # an AI build while the builder is open refreshes it
+    H.build_house(window, {"floors": [{"rooms": [
+        {"name": "Studio", "w": 4000, "d": 4000}]}]})
+    assert [r.name for r in panel.current_floor.rooms] == ["Studio"]
+    panel.close()
+
+
 # ------------------------------------------------------ canvas handles
 def test_room_handles_move_the_side_they_sit_on(app):
     from PyQt5.QtCore import QPointF
