@@ -516,6 +516,80 @@ into a new module and import.
   - `library_molecule.py` — every compound as a Part Library part
                        `molecule_<key>` ("Molecules: <family>"), ball and
                        stick, the crystals' `prepare` reused.
+  - `house.py`       — the **House Builder**'s geometry (Qt-free): a
+                       `House` is `Floor`s stacked in Z, each a set of
+                       rectangular `Room`s (footprint only — wall height
+                       and thickness are the FLOOR's, so two rooms
+                       sharing an edge never get a double-thickness wall
+                       between them) with `Opening`s (door/window) cut
+                       into their walls and `Furniture` placed from the
+                       Part Library, plus a `Garden`. `collect_walls`
+                       finds every distinct wall segment of a floor (two
+                       rooms' shared edge dedupes to ONE wall, canonical
+                       key rounded to 0.1 mm, `house_items.GRID` snapping
+                       keeps rooms drawn edge-to-edge exact) and gathers
+                       whichever room(s) put an opening on it; every
+                       wall is axis-aligned (rooms are rectangles) so
+                       it is always purely horizontal or vertical — no
+                       rotation is ever needed, `_wall_node` just emits
+                       a box or, when it has openings, a
+                       `difference()` of the box minus each opening (a
+                       window also gets a thin `Glass`-material pane).
+                       `build_floor` returns one group per floor (slabs,
+                       walls, a flat roof + eave on the top floor,
+                       furniture from `library.build_part` wrapped in a
+                       placement group since some parts return a
+                       "color" node, which has no x/y/z of its own, and
+                       some a "union", which does — wrapping uniformly
+                       means placement works either way); `apply`
+                       inserts each floor as its OWN visible Object
+                       (`enclose_as_part`, stacked by setting the
+                       group's own `z` before wrapping — a "union"'s
+                       placement params survive `make_component`'s
+                       in-place type change to "component" unmodified)
+                       plus one "Garden" Object beside the house's
+                       footprint — one Python call, one undo step, no
+                       flush needed (a dialog button's `clicked` slot
+                       already returns to the event loop before the
+                       0 ms snapshot timer fires). `FURNITURE_CATALOG`
+                       groups `library_room`/`library_home` part ids by
+                       room type (living room, bedroom, kitchen, ...)
+                       for the picker, minus the fixtures (door, wall
+                       panel) the House Builder itself provides.
+  - `house_items.py` — the floor-plan canvas's QGraphicsItems:
+                       `RoomItem` (draggable body, four corner `Handle`s
+                       that resize it, both snapped to `GRID` so
+                       adjacent rooms stay wall-exact) and
+                       `FurnitureItem` (a small draggable position
+                       marker — rotation is edited in the dialog's
+                       table, not on canvas). Self-contained: every drag
+                       writes straight back into the `house.Room` /
+                       `house.Furniture` dataclass it represents, no
+                       CadNode/DocumentModel coupling, unlike view2d.py's
+                       similar handle-drag items which are tied to the
+                       document tree.
+  - `house_dialog.py` — Library ▸ **House Builder…**: a non-modal
+                       window (one per main window, `open_builder`) with
+                       its OWN 2D floor-plan canvas (`FloorCanvas`, Y-up
+                       like view2d, a light 1 m grid) — separate from
+                       the document's own 2D sketch/assembly view, since
+                       a floor plan is a different kind of drawing.
+                       Floor list + floor-wide wall height/thickness/
+                       slab settings, room list + selected-room fields
+                       (name, x/y/w/d), a doors & windows table and a
+                       furniture table (Add furniture… opens a small
+                       room-type -> part picker over
+                       `house.FURNITURE_CATALOG`) all mirror what is
+                       selected on the canvas and vice versa
+                       (`_pick_room`/`_pick_furniture` from a canvas
+                       click, `_room_edited`/`_furniture_edited` from a
+                       canvas drag). Garden width/depth/gap sits under
+                       the canvas. **Build** (`house.apply`) is
+                       repeatable like the Part Library's Insert — it
+                       always adds a fresh set of Objects for the
+                       current design, so clicking it again after
+                       further edits adds another house rather than
+                       trying to patch the first one in place.
   - `legoize.py`     — **Object ↔ Lego** (Qt-free). `column_hits` casts
                        a ray up each grid column and records every
                        surface as an entry (+1, facing down) or an exit

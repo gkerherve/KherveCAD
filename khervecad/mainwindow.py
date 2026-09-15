@@ -557,6 +557,11 @@ class MainWindow(QMainWindow):
         menu.addAction(icons.icon("mdi.cube-outline"),
                        "Fuse Lego into One Solid",
                        lambda: lego_convert.fuse_lego(self))
+        from . import house_dialog
+        menu.addSeparator()
+        menu.addAction(icons.icon("mdi.home-city-outline"),
+                       "House Builder...",
+                       lambda: house_dialog.open_builder(self))
 
     def _build_examples_menu(self, menubar):
         """An Examples menu of complete demo models; picking one replaces
