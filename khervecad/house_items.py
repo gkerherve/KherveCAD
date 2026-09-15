@@ -65,6 +65,11 @@ GARDEN_FILL = QColor(90, 156, 74, 80)
 GARDEN_EDGE = QColor("#3f7d33")
 FURN_LINE = QColor("#5b3d27")
 SELECT = QColor("#2176c7")
+#: an outdoor area's ground: lawn or paving (house.SURFACES)
+OUTDOOR_FILLS = {"garden": QColor("#cfe6c4"), "paving": QColor("#e4e0d8")}
+GARAGE_LINE = QColor("#6b7078")
+GARAGE_FILL = QColor(216, 218, 221, 230)
+ROOF_LINE = QColor(138, 90, 58, 180)
 
 #: every resize handle: compass role -> (fx, fy), its place as a
 #: fraction of the room's width/depth (Y-up: fy = 1 is the N edge)
@@ -91,7 +96,8 @@ def room_caption(room) -> str:
     """"Kitchen / 3.00 × 4.50 m · 13.5 m²" — what a plan writes in a
     room."""
     return (f"{room.name}\n{room.w / 1000:.2f} × {room.d / 1000:.2f} m"
-            f"  ·  {room.w * room.d / 1e6:.1f} m²")
+            f"  ·  {room.w * room.d / 1e6:.1f} m²"
+            + ("" if room.indoor else "  ·  outdoor"))
 
 
 def nearest_side(room, point):
@@ -322,10 +328,11 @@ class RoomItem(QGraphicsRectItem):
             self.on_change(self.room)
 
     def paint(self, painter, option, widget=None):
-        inner = self.rect().adjusted(self.inset, self.inset, -self.inset,
-                                     -self.inset)
+        inset = self.inset if self.room.indoor else 0.0   # no walls outside
+        inner = self.rect().adjusted(inset, inset, -inset, -inset)
         painter.setPen(Qt.NoPen)
-        painter.setBrush(ROOM_FILL_SEL if self.isSelected() else ROOM_FILL)
+        painter.setBrush(ROOM_FILL_SEL if self.isSelected() else
+                         OUTDOOR_FILLS.get(self.room.surface, ROOM_FILL))
         painter.drawRect(inner)
         if self.isSelected():
             painter.setPen(_cosmetic(SELECT, 1.5, Qt.DashLine))
@@ -411,8 +418,9 @@ class OpeningItem(QGraphicsItem):
 
     def boundingRect(self):
         body = self._body()
-        reach = self.opening.width if self.opening.kind == "door" \
-            else 0.0
+        reach = {"door": self.opening.width,
+                 "garage door": min(self.opening.height, 2200.0) * 0.9
+                 }.get(self.opening.kind, 0.0)
         return QRectF(body.left(), body.top(), body.width(),
                       body.height() / 2.0 + max(reach, body.height() / 2.0)
                       ).adjusted(-40.0, -40.0, 40.0, 40.0)
@@ -431,6 +439,15 @@ class OpeningItem(QGraphicsItem):
             painter.setBrush(WINDOW_FILL)
             painter.drawRect(body)
             painter.drawLine(QPointF(0.0, 0.0), QPointF(w, 0.0))
+        elif self.opening.kind == "garage door":
+            painter.setPen(_cosmetic(GARAGE_LINE, 1.4))
+            painter.setBrush(GARAGE_FILL)
+            painter.drawRect(body)
+            # an up-and-over door: how far it swings into the garage
+            painter.setPen(_cosmetic(GARAGE_LINE, 1.0, Qt.DashLine))
+            painter.setBrush(Qt.NoBrush)
+            painter.drawRect(QRectF(0.0, 0.0, w, min(self.opening.height,
+                                                      2200.0) * 0.9))
         else:
             painter.setPen(Qt.NoPen)
             painter.setBrush(ROOM_FILL)
@@ -522,6 +539,9 @@ class FurnitureItem(QGraphicsItem):
         self.setPos(self.item.x, self.item.y)
         self.setRotation(self.item.rz)     # CCW in the Y-up scene
         self._syncing = False
+        # a piece set higher is drawn over what it stands on (a TV over
+        # its unit, a pendant over the table)
+        self.setZValue(5.0 + min(max(self.item.z, 0.0), 3000.0) / 1000.0)
 
     def screen_width(self, px_per_mm) -> float:
         r = self.rect()
@@ -603,3 +623,28 @@ class GardenItem(QGraphicsRectItem):
         self.setToolTip("Garden — set its size in the Garden fields")
         label = Label(self, "Garden")
         label.setPos(rect.center())
+
+
+class RoofItem(QGraphicsItem):
+    """The top floor's roof seen from above — its eaves dashed, its
+    ridge, hips or fall line drawn thin (`house.roof_outline`) — so the
+    way it runs shows before Build. Click-through, over everything."""
+
+    def __init__(self, outline):
+        super().__init__()
+        x0, y0, x1, y1 = outline["eave"]
+        self.eave = QRectF(x0, y0, x1 - x0, y1 - y0)
+        self.lines = outline["lines"]
+        self.setZValue(8.0)
+        self.setAcceptedMouseButtons(Qt.NoButton)
+
+    def boundingRect(self):
+        return self.eave.adjusted(-50.0, -50.0, 50.0, 50.0)
+
+    def paint(self, painter, option, widget=None):
+        painter.setBrush(Qt.NoBrush)
+        painter.setPen(_cosmetic(ROOF_LINE, 1.2, Qt.DashLine))
+        painter.drawRect(self.eave)
+        painter.setPen(_cosmetic(ROOF_LINE, 1.0, Qt.DashDotLine))
+        for (ax, ay), (bx, by) in self.lines:
+            painter.drawLine(QPointF(ax, ay), QPointF(bx, by))

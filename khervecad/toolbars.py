@@ -171,6 +171,14 @@ def build_tool_bar(win):
         bar.addAction(_action(
             win, spec["icon"], spec["label"], prim,
             lambda _=False, t=prim: win._add_primitive(t)))
+    bar.addSeparator()
+
+    def _house_builder():
+        from . import house_dialog
+        house_dialog.open_builder(win)
+
+    bar.addAction(_action(win, "mdi.home-city-outline", "House Builder",
+                          "house_builder", _house_builder))
     return bar
 
 

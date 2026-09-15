@@ -573,6 +573,59 @@ into a new module and import.
                        room type (living room, bedroom, kitchen, ...)
                        for the picker, minus the fixtures (door, wall
                        panel) the House Builder itself provides.
+  - House Builder, second pass (2026-09-15): **roofs** — `house.Roof`
+                       (style Flat/Gable/Hip/Pyramid/Lean-to, pitch 5-60°,
+                       overhang, ridge auto/x/y, covering from
+                       `ROOF_COLORS`) on the top floor's INDOOR rooms,
+                       built by `build_roof` from `hull()`s of thin boxes
+                       (sloped boards over a wall-coloured gable/wedge
+                       infill; one convex hull for hip/pyramid) — no
+                       boolean, so the preview is exact; a spec with no
+                       "roof" stays Flat (older saved houses rebuild
+                       unchanged); `roof_outline` feeds the plan's dashed
+                       `RoofItem`. **Outdoor areas**: `Room.surface`
+                       "garden"/"paving" (porch, patio, driveway) get
+                       ground only — no walls (`collect_walls` skips
+                       them), no slab, not under the roof
+                       (`Floor.indoor_bounds`). **Garage door** is a third
+                       opening kind (`OPENING_KINDS`, `opening_size`): a
+                       solid Metal panel, drawn with its up-and-over
+                       travel on the plan. **Room presets** `ROOM_TYPES`
+                       (corridor, reception, entrance, garage, stairwell,
+                       porch, garden…) behind the builder's Room menu.
+                       **Furniture height**: `Furniture.z` is edited in
+                       the builder ("Height above floor" + "Sit on what's
+                       below"); `surface_below` ray-casts the other pieces'
+                       own triangles (`part_tris`, cached) under the
+                       piece's centre and takes the highest UPWARD face
+                       within `STACK_REACH` with room above it for the
+                       piece — so a microwave lands on the worktop, not
+                       on the wall cupboards; pieces with a part-spec
+                       `on_top` (lamp, laptop, microwave, plant; plus
+                       `ON_TOP_PARTS` TV/monitor) do it by themselves on
+                       add and drop, `rest_z` pieces (pendant, wall shelf,
+                       mirror cabinet, wall light) start at their height
+                       and hold nothing. MCP: furniture `on_top`, room
+                       `surface`, `roof`. The plan draws raised pieces
+                       over lower ones (z value from `Furniture.z`).
+  - `library_home_more.py` / `library_home_extra.py` — ~60 more pieces
+                       for every room (`FURNITURE_CATALOG` now has 15
+                       sections incl. Kids' room, Hallway / corridor,
+                       Entrance / porch, Reception, Stairs, Garage,
+                       Utility, Garden / outdoor): corner sofa, piano,
+                       fireplace, pendant, bunk bed, cot, island, bar
+                       stool, microwave, dishwasher, towel radiator, desk,
+                       office chair, washing machine…; straight and spiral
+                       stairs (a storey high), car, bicycle, wheelie bin,
+                       reception desk, waiting chairs, trees (broadleaf in
+                       4 looks, conifer, birch), shrub, hedge, flower bed,
+                       patio set, barbecue. Same rules as library_home
+                       (no booleans, front -Y, on z = 0, true size);
+                       `_disc_y` / `_disc_x` make portholes and wheels via
+                       translate+rotate. Tested in
+                       `tests/test_library_home_more.py`. The vertical
+                       toolbar ends with a House Builder button
+                       (`toolbars.build_tool_bar`, tip `house_builder`).
   - `house_items.py` — the floor-plan canvas's QGraphicsItems, drawn
                        like an architect's plan (Sep 2026 rework — the
                        first canvas had 400 mm tan squares for every

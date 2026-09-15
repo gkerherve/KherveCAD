@@ -1145,7 +1145,13 @@ TOOLS = [
             "with `wall` ('N'/'S'/'E'/'W': back flush against that wall, "
             "turned to face the room, `along` = its centre's distance "
             "from the room's W or S corner, default the middle) or with "
-            "x/y from the room's corner and rz. Never assemble walls or "
+            "x/y from the room's corner and rz; `z` lifts it (wall and "
+            "ceiling pieces default to their own height) and `on_top: "
+            "true` sets it down on the furniture under it (a TV on its "
+            "unit, a microwave on the worktop). A room's `surface` "
+            "'garden' or 'paving' is an outdoor area (porch, patio, "
+            "driveway, lawn) with no walls or roof. `roof` picks the top "
+            "floor's roof (flat by default). Never assemble walls or "
             "furniture by hand."
         ),
         "input_schema": _obj({
@@ -1164,10 +1170,14 @@ TOOLS = [
                             "y": {"type": "number"},
                             "w": {"type": "number"},
                             "d": {"type": "number"},
+                            "surface": {"type": "string",
+                                        "enum": ["indoor", "garden",
+                                                 "paving"]},
                             "openings": {"type": "array", "items": {
                                 "type": "object", "properties": {
                                     "kind": {"type": "string",
-                                             "enum": ["door", "window"]},
+                                             "enum": ["door", "window",
+                                                      "garage door"]},
                                     "side": {"type": "string",
                                              "enum": ["N", "S", "E", "W"]},
                                     "offset": {
@@ -1192,10 +1202,25 @@ TOOLS = [
                                     "x": {"type": "number"},
                                     "y": {"type": "number"},
                                     "z": {"type": "number"},
-                                    "rz": {"type": "number"}},
+                                    "rz": {"type": "number"},
+                                    "on_top": {"type": "boolean"}},
                                 "required": ["part_id"]}}},
                         "required": ["w", "d"]}}}},
             },
+            "roof": {"type": "object",
+                     "description": "The top floor's roof; omit for flat.",
+                     "properties": {
+                         "style": {"type": "string",
+                                   "enum": ["Flat", "Gable", "Hip",
+                                            "Pyramid", "Lean-to"]},
+                         "pitch": {"type": "number",
+                                   "description": "Degrees, 5-60."},
+                         "overhang": {"type": "number"},
+                         "ridge": {"type": "string",
+                                   "enum": ["auto", "x", "y"]},
+                         "color": {"type": "string",
+                                   "enum": ["Brown tiles", "Red clay",
+                                            "Slate", "Green", "Zinc"]}}},
             "garden": {"type": "object",
                        "description": "Lawn beside the house; omit for "
                                       "none.",

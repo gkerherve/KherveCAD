@@ -522,3 +522,165 @@ def test_2d_view_frames_the_whole_house_and_draws_its_plan(window):
     # and cut like a floor plan: the roof is not drawn over the rooms
     assert len(colours) > 4
     assert H.ROOF_COLOR not in colours
+
+
+# ---------------------------------------------------------------- roofs
+_ROOF_PARTS = ("Roof", "Roof slope", "Gable", "Wedge")
+
+
+@pytest.mark.parametrize("style", H.ROOF_STYLES)
+def test_every_roof_style_builds_over_the_top_floor(style):
+    floor = H.Floor("Ground floor", rooms=[H.Room("A", 0, 0, 8000, 5000)])
+    roof = H.Roof(style, H.ROOF_PITCH[style] or 35.0)
+    group = H.build_floor(floor, is_top=True, roof=roof)
+    assert not validate(group)
+    assert "difference" not in _types(group)
+    pieces = [n for n in group.children if n.name in _ROOF_PARTS]
+    assert pieces
+    top = max(p[2] for n in pieces for t in mesh.tessellate(n, fn=8)
+              for p in t)
+    if style == "Flat":
+        assert top == pytest.approx(H.WALL_HEIGHT + H.ROOF_THICKNESS)
+    else:
+        assert top > H.WALL_HEIGHT + 800.0        # it really rises
+    _root, warnings = parse_scad(group.to_scad())
+    assert not warnings
+
+
+def test_the_ridge_runs_along_the_long_side_unless_told():
+    floor = H.Floor("G", rooms=[H.Room("A", 0, 0, 8000, 4000)])
+    (a, b), = H.roof_outline(H.Roof("Gable"), floor)["lines"]
+    assert a[1] == b[1] == 2000.0                 # along X
+    (a, b), = H.roof_outline(H.Roof("Gable", ridge="y"), floor)["lines"]
+    assert a[0] == b[0] == 4000.0                 # along Y
+    hip = H.roof_outline(H.Roof("Hip"), floor)["lines"]
+    assert len(hip) == 5                          # a ridge and four hips
+
+
+def test_outdoor_areas_get_no_walls_and_no_roof():
+    floor = H.Floor("G", rooms=[
+        H.Room("House", 0, 0, 6000, 4000),
+        H.Room("Patio", 6000, 0, 4000, 4000, surface="paving")])
+    assert len(H.collect_walls(floor)) == 4       # the house's four only
+    eave = H.roof_outline(H.Roof("Gable"), floor)["eave"]
+    assert eave[2] == pytest.approx(6000.0 + H.ROOF_EAVE)
+    group = H.build_floor(floor, is_top=True, roof=H.Roof("Gable"))
+    assert not validate(group)
+    patio = next(n for n in group.children if n.name == "Patio")
+    assert patio.params["color"] == H.PAVING_COLOR
+
+
+def test_roofs_and_surfaces_round_trip_and_old_designs_stay_flat():
+    spec = dict(SPEC, roof={"style": "hipped", "pitch": 25,
+                            "color": "slate"})
+    spec["floors"][0]["rooms"][1]["surface"] = "garden"
+    house = H.house_from_spec(spec)
+    assert (house.roof.style, house.roof.pitch, house.roof.color) == \
+        ("Hip", 25.0, "Slate")
+    again = H.house_from_spec(H.house_to_spec(house))
+    assert again.roof == house.roof
+    assert again.floors[0].rooms[1].surface == "garden"
+    spec["floors"][0]["rooms"][1]["surface"] = "indoor"
+    assert H.house_from_spec(SPEC).roof.style == "Flat"
+    with pytest.raises(H.HouseError, match="pitch"):
+        H.house_from_spec(dict(SPEC, roof={"style": "gable", "pitch": 80}))
+
+
+def test_a_garage_door_is_a_solid_panel():
+    wall, panel = H._wall_node((0.0, 0.0), (5000.0, 0.0),
+                               [(1000.0, 2400.0, 2100.0, 0.0,
+                                 "garage door")], 200.0, 2400.0)
+    assert panel.params["material"] == "Metal"
+    assert panel.params["alpha"] == 1.0
+    house = H.house_from_spec({"floors": [{"rooms": [
+        {"w": 3500, "d": 6000, "openings": [{"kind": "garage"}]}]}]})
+    assert house.floors[0].rooms[0].openings[0].width == 2400.0
+
+
+# ------------------------------------------------ furniture on furniture
+def _one_room(*pieces):
+    return H.Floor("G", rooms=[H.Room("A", 0, 0, 5000, 4000,
+                                      furniture=list(pieces))])
+
+
+def test_a_tv_sits_on_its_stand_even_when_turned():
+    for rz in (0.0, 90.0):
+        unit = H.Furniture("home_sideboard", 2000, 2000, rz,
+                           H.part_dims("home_sideboard", "TV unit"))
+        tv = H.Furniture("room_tv", 2000, 2000, rz,
+                         H.part_dims("room_tv", "55"))
+        assert H.surface_below(_one_room(unit, tv), tv) == \
+            pytest.approx(560.0, abs=1.0)
+    lone = H.Furniture("room_tv", 500, 500, 0.0, H.part_dims("room_tv"))
+    assert H.surface_below(_one_room(lone), lone) == 0.0
+
+
+def test_a_microwave_goes_on_the_worktop_not_the_wall_cupboards():
+    kitchen = H.Furniture("home_kitchen", 2500, 3000, 0.0,
+                          H.part_dims("home_kitchen"))
+    micro = H.Furniture("home_microwave", 2800, 3000, 0.0,
+                        H.part_dims("home_microwave"))
+    assert H.surface_below(_one_room(kitchen, micro), micro) == \
+        pytest.approx(900.0, abs=1.0)
+
+
+def test_wall_pieces_hold_nothing_and_on_top_works_from_a_spec():
+    shelf = H.Furniture("home_wall_shelf", 1000, 1000, 0.0,
+                        H.part_dims("home_wall_shelf"), z=1300.0)
+    lamp = H.Furniture("home_table_lamp", 1000, 1000, 0.0,
+                       H.part_dims("home_table_lamp"))
+    assert H.surface_below(_one_room(shelf, lamp), lamp) == 0.0
+    room = H.house_from_spec({"floors": [{"rooms": [{
+        "w": 4000, "d": 4000, "furniture": [
+            {"part_id": "home_pendant"},
+            {"part_id": "home_side_table", "x": 1000, "y": 1000},
+            {"part_id": "home_table_lamp", "x": 1000, "y": 1000,
+             "on_top": True}]}]}]}).floors[0].rooms[0]
+    assert room.furniture[0].z == H.part_rest_z("home_pendant")
+    assert room.furniture[2].z == pytest.approx(550.0, abs=1.0)
+
+
+def test_builder_sets_a_piece_on_what_is_under_it(window):
+    from khervecad import house_dialog
+    H.build_house(window, SPEC)
+    panel = house_dialog.open_builder(window)
+    living = panel.current_floor.rooms[0]
+    unit = H.Furniture("home_sideboard", living.x + 1500, living.y + 1500,
+                       0.0, H.part_dims("home_sideboard", "TV unit"))
+    tv = H.Furniture("room_tv", unit.x, unit.y, 0.0, H.part_dims("room_tv"))
+    living.furniture += [unit, tv]
+    panel.current_room = living
+    panel._sync_items()
+    panel._rebuild_canvas()
+    panel.items_list.setCurrentRow(panel.items_list.count() - 1)   # the TV
+    assert panel.current_item is tv
+    panel._sit_selected()
+    assert tv.z == pytest.approx(560.0, abs=1.0)
+    assert panel.fu_z.value() == pytest.approx(0.56, abs=0.001)
+    assert "m up" in panel.items_list.currentItem().text()
+    panel.fu_z.setValue(1.0)
+    assert tv.z == 1000.0
+    panel.close()
+
+
+def test_builder_adds_rooms_by_kind_and_changes_the_roof(window):
+    from khervecad import house_dialog
+    panel = house_dialog.open_builder(window)
+    panel._add_room("Garage")
+    garage = panel.current_room
+    assert (garage.name, garage.w, garage.d, garage.surface) == \
+        ("Garage", 3500.0, 6000.0, "indoor")
+    panel._add_opening("garage door")
+    assert garage.openings[-1].width == 2400.0
+    panel._add_room("Garden")
+    assert panel.current_room.surface == "garden"
+    panel._add_opening("door")
+    assert not panel.current_room.openings        # no walls outdoors
+    assert house_dialog._guess_category("Front porch") == "Entrance / porch"
+    assert house_dialog._guess_category("Kids bedroom") == "Kids' room"
+    panel.roof_style.setCurrentText("Hip")
+    assert panel.house.roof.style == "Hip"
+    assert panel.house.roof.pitch == H.ROOF_PITCH["Hip"]
+    panel._build()
+    assert window.model.house["roof"]["style"] == "Hip"
+    panel.close()

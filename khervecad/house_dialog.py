@@ -31,12 +31,13 @@ the Free Software Foundation, either version 3 of the License, or
 import json
 
 from PyQt5.QtCore import QRectF, Qt
-from PyQt5.QtGui import QColor, QFont, QPainter, QPen
+from PyQt5.QtGui import QColor, QFont, QIcon, QPainter, QPen, QPixmap
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
                              QFormLayout, QFrame, QGraphicsScene,
                              QGraphicsView, QGridLayout, QGroupBox,
                              QHBoxLayout, QLabel, QLineEdit, QListWidget,
-                             QListWidgetItem, QMessageBox, QPushButton,
+                             QListWidgetItem, QMenu, QMessageBox,
+                             QPushButton,
                              QScrollArea, QSplitter, QStackedWidget,
                              QToolButton, QVBoxLayout, QWidget)
 
@@ -149,6 +150,11 @@ class FloorCanvas(QGraphicsView):
                 scene.addItem(fi)
                 self.items_by_obj[id(f)] = fi
         self.place_garden(house)
+        floors = house.floors if house is not None else []
+        if floors and floor is floors[-1]:     # the roof is the top floor's
+            outline = H.roof_outline(house.roof or H.Roof(), floor)
+            if outline is not None:
+                scene.addItem(HI.RoofItem(outline))
         item = self.items_by_obj.get(id(selected)) if selected else None
         if item is not None:
             item.setSelected(True)
@@ -331,7 +337,8 @@ class HouseBuilder(QDialog):
         self.house = H.House(
             floors=[H.Floor(_floor_default_name(0), rooms=[
                 H.Room("Living room", 0.0, 0.0, 5000.0, 4000.0)])],
-            garden=H.Garden())
+            garden=H.Garden(),
+            roof=H.Roof("Gable", pitch=H.ROOF_PITCH["Gable"]))
         self.current_floor_index = 0
         self.current_room = self.house.floors[0].rooms[0]
         self.current_item = None           # an Opening or a Furniture
@@ -373,6 +380,7 @@ class HouseBuilder(QDialog):
         self.current_room = floor.rooms[0] if floor.rooms else None
         self.current_item = None
         self._sync_garden_fields()
+        self._sync_roof_fields()
         self._sync_all()
         self.canvas.fit()
         self.status.setText("Editing the document's house — Build "
@@ -404,7 +412,7 @@ class HouseBuilder(QDialog):
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setMinimumWidth(440)       # every row fits, none clipped
+        scroll.setMinimumWidth(470)       # every row fits, none clipped
         scroll.setMaximumWidth(520)
         splitter.addWidget(scroll)
 
@@ -415,6 +423,7 @@ class HouseBuilder(QDialog):
         right_l.addLayout(self._toolbar())
         right_l.addWidget(_hint(HINT))
         right_l.addWidget(self.canvas, 1)
+        right_l.addWidget(self._roof_group())
         right_l.addWidget(self._garden_group())
         splitter.addWidget(right)
         splitter.setStretchFactor(1, 1)
@@ -447,9 +456,14 @@ class HouseBuilder(QDialog):
 
     def _toolbar(self):
         row = QHBoxLayout()
+        room_btn = self._tool("mdi.floor-plan", "Room",
+                              "Add a room — pick its kind: bedroom, garage, "
+                              "corridor, reception, porch, garden…",
+                              lambda: None)
+        room_btn.setMenu(self._room_menu())
+        room_btn.setPopupMode(QToolButton.InstantPopup)
+        row.addWidget(room_btn)
         for icon, text, tip, slot in (
-                ("mdi.floor-plan", "Room", "Add a room beside the others",
-                 self._add_room),
                 ("mdi.door", "Door", "Add a door to the selected room",
                  lambda: self._add_opening("door")),
                 ("mdi.window-closed-variant", "Window",
@@ -526,8 +540,9 @@ class HouseBuilder(QDialog):
         lay.addWidget(self.room_list)
         row = QHBoxLayout()
         add = QPushButton("+ Add room")
-        add.setToolTip("Add a room to the right of the others")
-        add.clicked.connect(self._add_room)
+        add.setToolTip("Add a room to the right of the others — pick its "
+                       "kind")
+        add.setMenu(self._room_menu())
         rm = QPushButton("Remove room")
         rm.clicked.connect(self._remove_room)
         row.addWidget(add)
@@ -556,6 +571,18 @@ class HouseBuilder(QDialog):
         pos.addWidget(QLabel(","))
         pos.addWidget(self.room_y)
         form.addRow("Name:", self.room_name)
+        self.room_kind = QComboBox()
+        for label, surface in (("Indoor room (walls)", "indoor"),
+                               ("Garden (lawn, no walls)", "garden"),
+                               ("Paving (porch, patio, drive)", "paving")):
+            self.room_kind.addItem(label, surface)
+        self.room_kind.setToolTip("An indoor room gets walls and sits under "
+                                  "the roof; a garden or paved area is "
+                                  "outdoors, ground only")
+        self.room_kind.currentIndexChanged.connect(
+            lambda _i: self._room_field_changed(
+                "surface", self.room_kind.currentData()))
+        form.addRow("Kind:", self.room_kind)
         form.addRow("Size (w × d):", size)
         form.addRow("Position (x, y):", pos)
         lay.addLayout(form)
@@ -601,6 +628,8 @@ class HouseBuilder(QDialog):
         self.op_kind.addItem(icons.icon("mdi.door"), "Door", "door")
         self.op_kind.addItem(icons.icon("mdi.window-closed-variant"),
                              "Window", "window")
+        self.op_kind.addItem(icons.icon("mdi.garage"), "Garage door",
+                             "garage door")
         self.op_kind.currentIndexChanged.connect(
             lambda _i: self._opening_field("kind",
                                            self.op_kind.currentData()))
@@ -661,6 +690,22 @@ class HouseBuilder(QDialog):
         pos.addWidget(QLabel(","))
         pos.addWidget(self.fu_y)
         form.addRow("In the room (x, y):", pos)
+        self.fu_z = MetreSpin(0.0, 5.0, 0.05)
+        self.fu_z.setToolTip("How high its base sits above the floor — a TV "
+                             "on its stand, a shelf or a mirror on the wall")
+        self.fu_z.valueChanged.connect(
+            lambda _v: self._furniture_field("z", self.fu_z.mm()))
+        sit = QToolButton()
+        sit.setIcon(icons.icon("mdi.arrow-collapse-down"))
+        sit.setText("Sit on what's below")
+        sit.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        sit.setToolTip("Set it down on top of the furniture under it — a TV "
+                       "on its unit, a lamp on a table — or on the floor")
+        sit.clicked.connect(self._sit_selected)
+        height = QHBoxLayout()
+        height.addWidget(self.fu_z, 1)
+        height.addWidget(sit)
+        form.addRow("Height above floor:", height)
         self.fu_rz = QDoubleSpinBox()
         self.fu_rz.setRange(-180.0, 180.0)
         self.fu_rz.setWrapping(True)
@@ -769,7 +814,23 @@ class HouseBuilder(QDialog):
         self._rebuild_canvas()
 
     # ---------------------------------------------------------- rooms
-    def _add_room(self):
+    def _room_menu(self):
+        """The kinds of room "+ Room" offers, each with its usual size."""
+        menu = QMenu(self)
+        menu.addAction(icons.icon("mdi.floor-plan"), "Plain room (4 × 3 m)",
+                       lambda: self._add_room())
+        menu.addSeparator()
+        for name, (w, d, surface) in H.ROOM_TYPES.items():
+            outdoor = surface != "indoor"
+            menu.addAction(
+                icons.icon("mdi.tree-outline" if outdoor
+                           else "mdi.floor-plan"),
+                f"{name}    {w / 1000:g} × {d / 1000:g} m"
+                + ("  (outdoor)" if outdoor else ""),
+                lambda n=name: self._add_room(n))
+        return menu
+
+    def _add_room(self, kind=None):
         floor = self.current_floor
         if floor is None:
             return
@@ -777,7 +838,16 @@ class HouseBuilder(QDialog):
         if floor.rooms:
             x0, y0, x1, y1 = floor.bounds()
             x, y = x1, y0
-        room = H.Room(f"Room {len(floor.rooms) + 1}", x, y, 4000.0, 3000.0)
+        if kind in H.ROOM_TYPES:
+            w, d, surface = H.ROOM_TYPES[kind]
+            names = {r.name for r in floor.rooms}
+            name, i = kind, 2
+            while name in names:
+                name, i = f"{kind} {i}", i + 1
+        else:
+            w, d, surface = 4000.0, 3000.0, "indoor"
+            name = f"Room {len(floor.rooms) + 1}"
+        room = H.Room(name, x, y, w, d, surface=surface)
         floor.rooms.append(room)
         self.current_room = room
         self.current_item = None
@@ -868,9 +938,14 @@ class HouseBuilder(QDialog):
         if room is None:
             self.status.setText("Select a room first.")
             return
-        w, h, sill = H.DOOR_SIZE if kind == "door" else H.WINDOW_SIZE
-        # a door in the bottom wall, a window in the top one, centred
-        side = "S" if kind == "door" else "N"
+        if not room.indoor:
+            self.status.setText(f"{room.name} is outdoors and has no walls "
+                                "— put the door or window on the room "
+                                "next to it.")
+            return
+        w, h, sill = H.opening_size(kind)
+        # doors in the bottom wall, a window in the top one, centred
+        side = "N" if kind == "window" else "S"
         length = room.w
         op = H.Opening(kind, side, max(0.0, (length - w) / 2.0), w, h, sill)
         room.openings.append(op)
@@ -890,8 +965,11 @@ class HouseBuilder(QDialog):
             return
         f = H.Furniture(part_id, room.x + room.w / 2.0,
                         room.y + room.d / 2.0, 0.0,
-                        dims=H.part_dims(part_id))
+                        dims=H.part_dims(part_id),
+                        z=H.part_rest_z(part_id))    # a shelf on the wall
         room.furniture.append(f)
+        if H.sits_on_top(part_id):                   # a lamp on the table
+            f.z = H.surface_below(self.current_floor, f)
         self.current_item = f
         self._sync_items()
         self._rebuild_canvas()
@@ -969,13 +1047,25 @@ class HouseBuilder(QDialog):
             self._sync_editor()
 
     def _furniture_released(self, item):
-        """A piece dropped in another room now belongs to that room."""
+        """A drag ended. A piece dropped in another room now belongs to
+        that room; a lamp, TV, microwave... is set down on whatever it
+        was dropped on (`house.surface_below`)."""
         f = item.item
         floor = self.current_floor
+        if floor is None:
+            return
+        if H.sits_on_top(f.part_id):
+            z = H.surface_below(floor, f)
+            if abs(z - f.z) > 0.5:
+                f.z = z
+                item.apply()
+                if f is self.current_item:
+                    self._sync_editor()
+                    self._sync_item_captions()
         owner = self._room_of(f)
         target = next((r for r in floor.rooms
                        if r.x <= f.x <= r.x + r.w
-                       and r.y <= f.y <= r.y + r.d), None) if floor else None
+                       and r.y <= f.y <= r.y + r.d), None)
         if owner is None or target is None or target is owner:
             return
         owner.furniture.remove(f)
@@ -991,10 +1081,9 @@ class HouseBuilder(QDialog):
             return
         setattr(op, key, value)
         if key == "kind":                    # its usual size and sill
-            op.width, op.height, op.sill = (H.DOOR_SIZE if value == "door"
-                                            else H.WINDOW_SIZE)
+            op.width, op.height, op.sill = H.opening_size(value)
             self._sync_editor()
-        if op.kind == "door":
+        if op.kind != "window":
             op.sill = 0.0
         self._sync_item_captions()
         self._rebuild_canvas()
@@ -1008,12 +1097,16 @@ class HouseBuilder(QDialog):
             f.x = room.x + value
         elif key == "y":
             f.y = room.y + value
+        elif key == "z":
+            f.z = value
         else:
             f.rz = value
         item = self.canvas.items_by_obj.get(id(f))
         if item is not None:
             item.apply()
             self.canvas.update_labels()
+        if key == "z":
+            self._sync_item_captions()
 
     def _furniture_look(self, _index=None):
         """The size or colour combo changed: rebuild the part's dims."""
@@ -1032,6 +1125,107 @@ class HouseBuilder(QDialog):
 
     def _room_items(self, room):
         return list(room.openings) + list(room.furniture)
+
+    def _sit_selected(self):
+        """Set the selected piece down on the furniture under it (or on
+        the floor when there is none)."""
+        f = self.current_furniture
+        if f is None or self.current_floor is None:
+            self.status.setText("Select a piece of furniture first.")
+            return
+        f.z = H.surface_below(self.current_floor, f)
+        item = self.canvas.items_by_obj.get(id(f))
+        if item is not None:
+            item.apply()
+        self._sync_editor()
+        self._sync_item_captions()
+        name = _label(f.part_id)
+        self.status.setText(
+            f"{name} sits {f.z / 1000:.2f} m up, on what is under it."
+            if f.z > 0 else
+            f"Nothing under {name.lower()} to stand on — it is on the "
+            "floor.")
+
+    # ----------------------------------------------------------- roof
+    def _roof_group(self):
+        box = QGroupBox("Roof (on the top floor)")
+        row = QHBoxLayout(box)
+        self.roof_style = QComboBox()
+        self.roof_style.addItems(list(H.ROOF_STYLES))
+        self.roof_style.setToolTip("The roof's shape. The plan shows its "
+                                   "eaves and ridge dashed; Build makes it "
+                                   "in 3D.")
+        self.roof_pitch = QDoubleSpinBox()
+        self.roof_pitch.setRange(*H.ROOF_PITCH_RANGE)
+        self.roof_pitch.setDecimals(0)
+        self.roof_pitch.setSingleStep(5.0)
+        self.roof_pitch.setSuffix("°")
+        self.roof_pitch.setKeyboardTracking(False)
+        self.roof_pitch.setToolTip("How steep the roof is")
+        self.roof_overhang = MetreSpin(0.0, 2.0, 0.05)
+        self.roof_overhang.setToolTip("How far the roof reaches past the "
+                                      "walls")
+        self.roof_ridge = QComboBox()
+        for label, key in (("Along the long side", "auto"),
+                           ("Left–right (X)", "x"),
+                           ("Bottom–top (Y)", "y")):
+            self.roof_ridge.addItem(label, key)
+        self.roof_ridge.setToolTip("Which way the ridge runs (a lean-to "
+                                   "rises across it)")
+        self.roof_color = QComboBox()
+        for name, (hexcol, _mat) in H.ROOF_COLORS.items():
+            self.roof_color.addItem(_swatch(hexcol), name, name)
+        self.roof_style.currentIndexChanged.connect(
+            lambda _i: self._roof_changed(style_changed=True))
+        self.roof_pitch.valueChanged.connect(lambda _v: self._roof_changed())
+        self.roof_overhang.valueChanged.connect(
+            lambda _v: self._roof_changed())
+        for combo in (self.roof_ridge, self.roof_color):
+            combo.currentIndexChanged.connect(lambda _i: self._roof_changed())
+        for text, w in (("Style:", self.roof_style),
+                        ("Pitch:", self.roof_pitch),
+                        ("Overhang:", self.roof_overhang),
+                        ("Ridge:", self.roof_ridge),
+                        ("Covering:", self.roof_color)):
+            row.addWidget(QLabel(text))
+            row.addWidget(w)
+        row.addStretch(1)
+        self._sync_roof_fields()
+        return box
+
+    def _roof_changed(self, style_changed=False):
+        if self._syncing:
+            return
+        style = self.roof_style.currentText()
+        if style_changed and style != "Flat":
+            with self.quiet():                # its usual pitch
+                self.roof_pitch.setValue(H.ROOF_PITCH[style])
+        self.house.roof = H.Roof(style, self.roof_pitch.value(),
+                                 self.roof_overhang.mm(),
+                                 self.roof_ridge.currentData(),
+                                 self.roof_color.currentData())
+        self._enable_roof_fields()
+        self._rebuild_canvas()
+        pitch = "" if style == "Flat" else f", {self.roof_pitch.value():.0f}°"
+        self.status.setText(f"Roof: {style.lower()}{pitch} — Build to see "
+                            "it in 3D.")
+
+    def _enable_roof_fields(self):
+        sloped = (self.house.roof or H.Roof()).style != "Flat"
+        self.roof_pitch.setEnabled(sloped)
+        self.roof_ridge.setEnabled(sloped)
+
+    def _sync_roof_fields(self):
+        r = self.house.roof or H.Roof()
+        with self.quiet():
+            self.roof_style.setCurrentText(r.style)
+            self.roof_pitch.setValue(r.pitch)
+            self.roof_overhang.set_mm(r.overhang)
+            self.roof_ridge.setCurrentIndex(
+                max(0, self.roof_ridge.findData(r.ridge)))
+            self.roof_color.setCurrentIndex(
+                max(0, self.roof_color.findData(r.color)))
+        self._enable_roof_fields()
 
     # --------------------------------------------------------- garden
     def _garden_toggled(self, on):
@@ -1119,10 +1313,12 @@ class HouseBuilder(QDialog):
         room = self.current_room
         with self.quiet():
             for w in (self.room_name, self.room_x, self.room_y,
-                      self.room_w, self.room_d):
+                      self.room_w, self.room_d, self.room_kind):
                 w.setEnabled(room is not None)
             if room is not None:
                 self.room_name.setText(room.name)
+                self.room_kind.setCurrentIndex(
+                    max(0, self.room_kind.findData(room.surface)))
                 self.room_x.set_mm(room.x)
                 self.room_y.set_mm(room.y)
                 self.room_w.set_mm(room.w)
@@ -1133,12 +1329,14 @@ class HouseBuilder(QDialog):
             return (f"{obj.kind.capitalize()} — {SIDE_SHORT[obj.side]}, "
                     f"{obj.width / 1000:.2f} m wide")
         size = _size_name(obj)
-        return _label(obj.part_id) + (f" ({size})" if size else "")
+        up = f"  ·  {obj.z / 1000:.2f} m up" if obj.z > 0.5 else ""
+        return _label(obj.part_id) + (f" ({size})" if size else "") + up
 
     def _item_icon(self, obj):
         if isinstance(obj, H.Opening):
-            return icons.icon("mdi.door" if obj.kind == "door"
-                              else "mdi.window-closed-variant")
+            return icons.icon({"door": "mdi.door",
+                               "garage door": "mdi.garage"}.get(
+                obj.kind, "mdi.window-closed-variant"))
         return icons.icon("mdi.sofa-outline")
 
     def _sync_items(self):
@@ -1188,6 +1386,7 @@ class HouseBuilder(QDialog):
                 self.fu_x.set_mm(obj.x - room.x)
                 self.fu_y.set_mm(obj.y - room.y)
                 self.fu_rz.setValue(obj.rz)
+                self.fu_z.set_mm(obj.z)
             else:
                 self.editor.setCurrentIndex(0)
                 self.editor_box.setTitle("4  ·  Selected item")
@@ -1244,15 +1443,42 @@ def _fill_look_combos(f, size_combo, color_combo):
     color_combo.setEnabled(bool(colors))
 
 
+#: words in a room's name -> the catalogue section it suggests, tried in
+#: this order ("Kids bedroom" is a kids' room, "Bathroom" not a bedroom)
+CATEGORY_WORDS = (
+    ("Kids' room", ("kid", "child", "nursery", "baby", "play")),
+    ("Bathroom", ("bath", "shower", "toilet", "wc", "en-suite", "ensuite",
+                  "cloakroom")),
+    ("Bedroom", ("bedroom", "bed room", "guest", "master")),
+    ("Dining room", ("dining",)),
+    ("Living room", ("living", "lounge", "sitting", "family", "snug")),
+    ("Kitchen", ("kitchen",)),
+    ("Office / study", ("office", "study", "work")),
+    ("Reception", ("reception", "waiting", "lobby")),
+    ("Garage", ("garage", "carport", "drive")),
+    ("Utility / laundry", ("utility", "laundry")),
+    ("Stairs", ("stair",)),
+    ("Entrance / porch", ("entrance", "entry", "porch", "vestibule")),
+    ("Hallway / corridor", ("hall", "corridor", "landing")),
+    ("Garden / outdoor", ("garden", "patio", "yard", "terrace", "lawn",
+                          "outdoor")),
+)
+
+
 def _guess_category(room_name) -> str:
     """The catalogue section a room's name suggests ("Main bedroom" ->
-    "Bedroom"), or ""."""
+    "Bedroom", "Front porch" -> "Entrance / porch"), or ""."""
     words = room_name.lower()
-    for category in H.FURNITURE_CATALOG:
-        key = category.split()[0].lower()
-        if key in words or (key == "office" and "study" in words):
+    for category, keys in CATEGORY_WORDS:
+        if category in H.FURNITURE_CATALOG and any(k in words for k in keys):
             return category
     return ""
+
+
+def _swatch(hexcol) -> QIcon:
+    pix = QPixmap(14, 14)
+    pix.fill(QColor(hexcol))
+    return QIcon(pix)
 
 
 def _pick_furniture_part(parent, room_name="") -> str:

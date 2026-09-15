@@ -1,6 +1,7 @@
 """The House Builder's geometry (Qt-free): a house is FLOORS stacked on
 top of each other, each floor a set of rectangular ROOMS with door/
-window openings cut into their walls, plus a GARDEN beside the house.
+window openings cut into their walls, plus a GARDEN beside the house
+and a ROOF on the top floor.
 `house_dialog.py` is the 2D floor-plan editor that builds this data
 model; `apply()` compiles it into the document as real Objects, one
 per floor (so "Ground floor", "First floor", ... are each an ordinary
@@ -13,18 +14,23 @@ keeping two rooms that share an edge from getting a double-thickness
 wall between them. `collect_walls()` finds every distinct wall segment
 of a floor (two rooms sharing an edge produce ONE wall, not two) and
 gathers the door/window openings that belong to it; `_wall_node()`
-turns a segment into a plain box, or a `difference()` of the box minus
-each opening when there are any. Every wall segment is axis-aligned
-(rooms are rectangles), so a wall is always purely horizontal (its
-length along X) or purely vertical (its length along Y) — no rotation
-is ever needed, only two symmetric branches.
+turns a segment into solid pieces around its openings. Every wall
+segment is axis-aligned (rooms are rectangles), so a wall is always
+purely horizontal or purely vertical — no rotation is ever needed.
+
+A room's `surface` says what it is: "indoor" (walls, a floor slab, under
+the roof) or an outdoor area — "garden" (lawn) or "paving" (a porch,
+patio or driveway) — which gets no walls and no roof, only its ground.
+
+The roof (`Roof`, `build_roof`) is flat, gable, hip, pyramid or
+lean-to over the top floor's indoor rooms, built from `hull()`s of thin
+boxes — sloped boards and a wedge — so it has no boolean and previews
+exactly.
 
 Furniture is placed by calling the existing Part Library builders
-(`library.build_part`) and wrapping whatever they return in a small
-placement group — some library parts return a plain "union" node
-(which already accepts x/y/rz directly) and some return a "color"-
-wrapped node (which does not), so wrapping uniformly is what makes
-placement work for either kind without needing to special-case parts.
+(`library.build_part`) and wrapping whatever they return in its own
+placed Object. `surface_below` finds how high a piece sits when set on
+another (a TV on its stand, a microwave on the worktop).
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -36,8 +42,10 @@ the Free Software Foundation, either version 3 of the License, or
 
 from __future__ import annotations
 
+import json
 import math
 from dataclasses import dataclass, field
+from functools import lru_cache
 
 from .model import CadNode
 
@@ -49,6 +57,7 @@ ROOF_THICKNESS = 200.0
 ROOF_EAVE = 300.0
 DOOR_SIZE = (900.0, 2000.0, 0.0)      # width, height, sill
 WINDOW_SIZE = (1200.0, 1200.0, 900.0)
+GARAGE_DOOR_SIZE = (2400.0, 2100.0, 0.0)
 GARDEN_THICKNESS = 50.0
 #: a floor plan is the floor cut this high above its slab and seen from
 #: above — the 2D Top view draws a built floor that way, so its walls,
@@ -65,34 +74,123 @@ GLASS_ALPHA = 0.3                     # see-through in preview and render
 #: as a solid frosted panel in 3D. 0.15 is glrender's floor.
 DOOR_GLASS_ALPHA = 0.15
 GLASS_THICKNESS = 6.0
+GARAGE_DOOR_COLOR = "#d8dadd"
+GARAGE_DOOR_THICKNESS = 40.0
 GRASS_COLOR = "#5a9c4a"
+PAVING_COLOR = "#b9b3a8"
 
 SIDES = ("N", "S", "E", "W")
+OPENING_KINDS = ("door", "window", "garage door")
+#: what a room is: indoors (walls, slab, roof) or an outdoor area
+SURFACES = ("indoor", "garden", "paving")
+SURFACE_COLORS = {"garden": GRASS_COLOR, "paving": PAVING_COLOR}
 
 FLOOR_NAMES = ("Ground floor", "First floor", "Second floor",
                "Third floor", "Fourth floor", "Fifth floor")
+
+#: roof shapes the House Builder offers
+ROOF_STYLES = ("Flat", "Gable", "Hip", "Pyramid", "Lean-to")
+#: the pitch each style reads right at, degrees (the builder's default)
+ROOF_PITCH = {"Flat": 0.0, "Gable": 35.0, "Hip": 30.0, "Pyramid": 30.0,
+              "Lean-to": 12.0}
+#: roof coverings: name -> (colour, material)
+ROOF_COLORS = {"Brown tiles": (ROOF_COLOR, "Default"),
+               "Red clay": ("#a4492f", "Clay"),
+               "Slate": ("#4b5057", "Default"),
+               "Green": ("#4f6b4a", "Matte"),
+               "Zinc": ("#8a9096", "Metal")}
+#: which way the ridge runs: along the longer side, or along X / Y
+ROOF_RIDGES = ("auto", "x", "y")
+ROOF_PITCH_RANGE = (5.0, 60.0)
 
 
 def floor_default_name(index: int) -> str:
     return FLOOR_NAMES[index] if index < len(FLOOR_NAMES) \
         else f"Floor {index}"
 
+
 #: furniture catalogue for the Add furniture picker, grouped by room
-#: type — part ids from library_room.PARTS / library_home.PARTS, minus
-#: the fixtures (door, wall panel) the House Builder itself provides.
+#: type — Part Library ids (library_room, library_home, library_home_more,
+#: library_home_extra), minus the fixtures (door, wall panel) the House
+#: Builder itself provides. A piece may sit in several rooms.
 FURNITURE_CATALOG = {
-    "Living room": ["home_sofa", "home_armchair", "home_coffee_table",
-                    "home_sideboard", "home_bookcase", "home_floor_lamp",
-                    "room_tv"],
-    "Dining room": ["home_dining_table", "home_dining_chair"],
+    "Living room": ["home_sofa", "home_corner_sofa", "home_armchair",
+                    "home_coffee_table", "home_side_table", "home_ottoman",
+                    "home_sideboard", "room_tv", "home_bookcase",
+                    "home_floor_lamp", "home_table_lamp", "home_rug",
+                    "home_plant", "home_piano", "home_fireplace",
+                    "home_wall_light"],
+    "Dining room": ["home_dining_table", "home_round_table",
+                    "home_dining_chair", "home_bench",
+                    "home_display_cabinet", "home_sideboard",
+                    "home_pendant", "home_rug", "home_plant"],
+    "Kitchen": ["home_kitchen", "home_island", "home_fridge",
+                "home_dishwasher", "home_microwave", "home_bar_stool",
+                "home_round_table", "home_dining_chair", "home_pendant",
+                "home_wheelie_bin"],
     "Bedroom": ["home_bed", "home_bedside_table", "home_wardrobe",
-                "home_chest"],
-    "Kitchen": ["home_kitchen", "home_fridge"],
+                "home_chest", "home_dressing_table", "home_ottoman",
+                "home_table_lamp", "home_rug", "home_wall_mirror",
+                "home_desk", "room_tv"],
+    "Kids' room": ["home_bunk_bed", "home_cot", "home_toy_box", "home_desk",
+                   "home_chest", "home_wardrobe", "home_rug",
+                   "home_table_lamp"],
     "Bathroom": ["home_toilet", "home_washbasin", "home_bath",
-                "home_shower"],
-    "Office / study": ["room_table", "room_chair", "room_monitor",
-                       "home_bookcase"],
+                 "home_shower", "home_towel_radiator", "home_bath_cabinet",
+                 "home_laundry_basket", "home_wall_mirror", "home_plant"],
+    "Office / study": ["home_desk", "home_office_chair",
+                       "home_filing_cabinet", "home_laptop", "room_monitor",
+                       "home_bookcase", "home_wall_shelf", "room_table",
+                       "room_chair", "home_plant", "home_table_lamp"],
+    "Hallway / corridor": ["home_console_table", "home_coat_stand",
+                           "home_shoe_cabinet", "home_rug", "home_plant",
+                           "home_wall_light", "home_wall_mirror",
+                           "home_umbrella_stand", "home_bench"],
+    "Entrance / porch": ["home_doormat", "home_coat_stand",
+                         "home_shoe_cabinet", "home_umbrella_stand",
+                         "home_bench", "home_planter", "home_wall_light",
+                         "home_garden_bench"],
+    "Reception": ["home_reception_desk", "home_waiting_chairs",
+                  "home_office_chair", "home_water_cooler",
+                  "home_coffee_table", "home_plant", "home_rug",
+                  "home_wall_light", "room_monitor", "home_laptop"],
+    "Stairs": ["home_stairs_straight", "home_stairs_spiral"],
+    "Garage": ["home_car", "home_bicycle", "home_garage_shelving",
+               "room_workbench", "home_wheelie_bin", "home_lawn_mower",
+               "home_tumble_dryer", "home_washing_machine"],
+    "Utility / laundry": ["home_washing_machine", "home_tumble_dryer",
+                          "home_laundry_basket", "home_wall_shelf",
+                          "home_garage_shelving"],
+    "Garden / outdoor": ["home_tree_broadleaf", "home_tree_conifer",
+                         "home_tree_birch", "home_shrub", "home_hedge",
+                         "home_flower_bed", "home_planter",
+                         "home_garden_bench", "home_patio_set", "home_bbq",
+                         "home_lawn_mower", "home_car", "home_bicycle",
+                         "home_wheelie_bin"],
     "Other": ["room_carpet", "room_stool", "room_workbench"],
+}
+
+#: room presets for the builder's "+ Room" menu: name -> (w, d, surface)
+ROOM_TYPES = {
+    "Living room": (5000.0, 4000.0, "indoor"),
+    "Kitchen": (3500.0, 3000.0, "indoor"),
+    "Dining room": (3500.0, 3500.0, "indoor"),
+    "Bedroom": (3500.0, 3500.0, "indoor"),
+    "Kids' room": (3000.0, 3000.0, "indoor"),
+    "Bathroom": (2500.0, 2000.0, "indoor"),
+    "Toilet": (1500.0, 1200.0, "indoor"),
+    "Office / study": (3000.0, 2500.0, "indoor"),
+    "Hallway": (3000.0, 1500.0, "indoor"),
+    "Corridor": (5000.0, 1200.0, "indoor"),
+    "Entrance": (2000.0, 2000.0, "indoor"),
+    "Reception": (4000.0, 3500.0, "indoor"),
+    "Stairwell": (2400.0, 4000.0, "indoor"),
+    "Utility room": (2000.0, 2000.0, "indoor"),
+    "Garage": (3500.0, 6000.0, "indoor"),
+    "Porch": (2500.0, 1500.0, "paving"),
+    "Patio": (4000.0, 3000.0, "paving"),
+    "Driveway": (3000.0, 6000.0, "paving"),
+    "Garden": (8000.0, 6000.0, "garden"),
 }
 
 
@@ -103,8 +201,8 @@ class HouseError(ValueError):
 # --------------------------------------------------------------- model
 @dataclass
 class Opening:
-    """A door or window cut into one room's wall side."""
-    kind: str                          # "door" | "window"
+    """A door, window or garage door cut into one room's wall side."""
+    kind: str                          # "door" | "window" | "garage door"
     side: str                          # "N" | "S" | "E" | "W"
     offset: float                      # from the side's start corner, mm
     width: float
@@ -112,12 +210,18 @@ class Opening:
     sill: float = 0.0                  # height off the floor, mm
 
 
+def opening_size(kind: str):
+    """(width, height, sill) an opening of *kind* starts with."""
+    return {"door": DOOR_SIZE, "window": WINDOW_SIZE,
+            "garage door": GARAGE_DOOR_SIZE}.get(kind, DOOR_SIZE)
+
+
 @dataclass
 class Furniture:
     """One placed piece of furniture: a Part Library part id, its
     position in the floor's coordinates and a rotation about Z. *z*
-    lifts it off the floor (a TV on its unit); *name* names its Object
-    (default: the part's own name)."""
+    lifts it off the floor (a TV on its unit, a shelf on the wall);
+    *name* names its Object (default: the part's own name)."""
     part_id: str
     x: float
     y: float
@@ -130,7 +234,8 @@ class Furniture:
 @dataclass
 class Room:
     """A rectangular room: footprint only — wall thickness and ceiling
-    height are the floor's."""
+    height are the floor's. *surface* "indoor" gets walls and a slab; a
+    "garden" or "paving" area is outdoors: ground only."""
     name: str
     x: float
     y: float
@@ -138,6 +243,11 @@ class Room:
     d: float
     openings: list = field(default_factory=list)
     furniture: list = field(default_factory=list)
+    surface: str = "indoor"
+
+    @property
+    def indoor(self) -> bool:
+        return self.surface not in SURFACE_COLORS
 
     def edges(self) -> dict:
         x, y, w, d = self.x, self.y, self.w, self.d
@@ -145,6 +255,13 @@ class Room:
                 "N": ((x, y + d), (x + w, y + d)),
                 "W": ((x, y), (x, y + d)),
                 "E": ((x + w, y), (x + w, y + d))}
+
+
+def _bounds_of(rooms):
+    if not rooms:
+        return None
+    return (min(r.x for r in rooms), min(r.y for r in rooms),
+            max(r.x + r.w for r in rooms), max(r.y + r.d for r in rooms))
 
 
 @dataclass
@@ -158,13 +275,11 @@ class Floor:
 
     def bounds(self):
         """(x0, y0, x1, y1) of every room's footprint, or None."""
-        if not self.rooms:
-            return None
-        x0 = min(r.x for r in self.rooms)
-        y0 = min(r.y for r in self.rooms)
-        x1 = max(r.x + r.w for r in self.rooms)
-        y1 = max(r.y + r.d for r in self.rooms)
-        return x0, y0, x1, y1
+        return _bounds_of(self.rooms)
+
+    def indoor_bounds(self):
+        """Like `bounds`, the indoor rooms only — what the roof covers."""
+        return _bounds_of([r for r in self.rooms if r.indoor])
 
 
 @dataclass
@@ -175,16 +290,30 @@ class Garden:
 
 
 @dataclass
+class Roof:
+    """The roof on the top floor: *style* (ROOF_STYLES), *pitch* in
+    degrees, *overhang* past the walls (mm), which way the *ridge* runs
+    ("auto" = along the longer side, "x", "y"; a lean-to rises across
+    it) and its covering *color* (ROOF_COLORS)."""
+    style: str = "Flat"
+    pitch: float = 35.0
+    overhang: float = ROOF_EAVE
+    ridge: str = "auto"
+    color: str = "Brown tiles"
+
+
+@dataclass
 class House:
     floors: list = field(default_factory=list)
     garden: Garden = None
+    roof: Roof = field(default_factory=Roof)
 
     def bounds(self):
         boxes = [f.bounds() for f in self.floors if f.bounds()]
         if not boxes:
             return None
         return (min(b[0] for b in boxes), min(b[1] for b in boxes),
-               max(b[2] for b in boxes), max(b[3] for b in boxes))
+                max(b[2] for b in boxes), max(b[3] for b in boxes))
 
 
 # ------------------------------------------------------------ geometry
@@ -198,12 +327,15 @@ def _canon(p1, p2):
 
 
 def collect_walls(floor: Floor):
-    """Every distinct wall segment of *floor*: (p1, p2, openings) with
-    p1 -> p2 the segment's canonical direction and each opening's
-    offset measured from p1 — two rooms sharing an edge contribute to
-    the SAME segment instead of each getting their own wall."""
+    """Every distinct wall segment of *floor*'s indoor rooms: (p1, p2,
+    openings) with p1 -> p2 the segment's canonical direction and each
+    opening's offset measured from p1 — two rooms sharing an edge
+    contribute to the SAME segment instead of each getting their own
+    wall. Outdoor areas have no walls."""
     walls = {}
     for room in floor.rooms:
+        if not room.indoor:
+            continue
         for side, (p1, p2) in room.edges().items():
             key = _canon(p1, p2)
             length = math.dist(p1, p2)
@@ -243,8 +375,9 @@ def _wall_node(p1, p2, openings, thickness, height, name="Wall"):
     rather than a box minus cutters. With no boolean in it, the
     built-in preview shows the openings exactly (it only approximates a
     difference, drawing the uncut box) and OpenSCAD has nothing to cut.
-    Each opening gets a transparent Glass pane at the wall's mid-plane:
-    a window's glazing, or a door's glazed leaf."""
+    Each opening gets a transparent Glass pane at the wall's mid-plane
+    (a window's glazing, a door's glazed leaf), a garage door a solid
+    panel."""
     horizontal = abs(p1[1] - p2[1]) < 1e-6
     if horizontal:
         x0, x1 = sorted((p1[0], p2[0]))
@@ -277,12 +410,19 @@ def _wall_node(p1, p2, openings, thickness, height, name="Wall"):
             wall.add(piece("Sill", start, end, 0.0, sill))
         if height - top > 1e-6:
             wall.add(piece("Lintel", start, end, top, height))
-        pane = piece("Door glass" if kind == "door" else "Glazing",
-                     start, end, sill, top, depth=GLASS_THICKNESS,
-                     inset=(thickness - GLASS_THICKNESS) / 2.0)
-        alpha = DOOR_GLASS_ALPHA if kind == "door" else GLASS_ALPHA
-        glazing.append(_color(pane, GLASS_COLOR, material="Glass",
-                              alpha=alpha))
+        if kind == "garage door":
+            t = min(GARAGE_DOOR_THICKNESS, thickness)
+            glazing.append(_color(piece("Garage door", start, end, sill,
+                                        top, depth=t,
+                                        inset=(thickness - t) / 2.0),
+                                  GARAGE_DOOR_COLOR, material="Metal"))
+        else:
+            pane = piece("Door glass" if kind == "door" else "Glazing",
+                         start, end, sill, top, depth=GLASS_THICKNESS,
+                         inset=(thickness - GLASS_THICKNESS) / 2.0)
+            alpha = DOOR_GLASS_ALPHA if kind == "door" else GLASS_ALPHA
+            glazing.append(_color(pane, GLASS_COLOR, material="Glass",
+                                  alpha=alpha))
         cursor = end
     if length - cursor > 1e-6:
         wall.add(piece("Pier", cursor, length, 0.0, height))
@@ -319,36 +459,171 @@ def _furniture_object(node, f: Furniture, taken) -> CadNode:
     return comp
 
 
-def build_floor(floor: Floor, is_top: bool, taken=None) -> CadNode:
+def build_floor(floor: Floor, is_top: bool, taken=None,
+                roof: Roof | None = None) -> CadNode:
     """*floor*'s slabs, walls, glazing and furniture as one group in
-    the floor's own frame (z = 0 at the floor's own slab top); each
-    piece of furniture is a nested Object (see `_furniture_object`)."""
+    the floor's own frame (z = 0 at the floor's own slab top), with
+    *roof* (flat by default) over it when it *is_top*; each piece of
+    furniture is a nested Object (see `_furniture_object`)."""
     taken = set() if taken is None else taken
     if not floor.rooms:
         raise HouseError(f'"{floor.name}" has no rooms.')
     group = CadNode("union", floor.name, {})
     for room in floor.rooms:
-        group.add(_color(CadNode("cube", f"{room.name} floor", dict(
-            x=room.x, y=room.y, z=-floor.slab_thickness, width=room.w,
-            depth=room.d, height=floor.slab_thickness, center=False)),
-            SLAB_COLOR))
+        if room.indoor:
+            group.add(_color(CadNode("cube", f"{room.name} floor", dict(
+                x=room.x, y=room.y, z=-floor.slab_thickness, width=room.w,
+                depth=room.d, height=floor.slab_thickness, center=False)),
+                SLAB_COLOR))
+        else:
+            group.add(_color(CadNode("cube", room.name, dict(
+                x=room.x, y=room.y, z=-GARDEN_THICKNESS, width=room.w,
+                depth=room.d, height=GARDEN_THICKNESS, center=False)),
+                SURFACE_COLORS[room.surface], material="Matte"))
     for p1, p2, openings in collect_walls(floor):
         for node in _wall_node(p1, p2, openings, floor.wall_thickness,
                                floor.wall_height):
             group.add(node)
     if is_top:
-        x0, y0, x1, y1 = floor.bounds()
-        group.add(_color(CadNode("cube", "Roof", dict(
-            x=x0 - ROOF_EAVE, y=y0 - ROOF_EAVE, z=floor.wall_height,
-            width=(x1 - x0) + 2 * ROOF_EAVE,
-            depth=(y1 - y0) + 2 * ROOF_EAVE, height=ROOF_THICKNESS,
-            center=False)), ROOF_COLOR))
+        for node in build_roof(roof or Roof(), floor):
+            group.add(node)
     from . import library
     for room in floor.rooms:
         for f in room.furniture:
             node = library.build_part(f.part_id, dict(f.dims))
             group.add(_furniture_object(node, f, taken))
     return group
+
+
+# ---------------------------------------------------------------- roof
+def _roof_frame(roof: Roof, floor: Floor):
+    """(along_x, (u0, u1, v0, v1)): the roof's own frame, u along the
+    ridge and v across it, over the floor's indoor rooms (None if it has
+    none)."""
+    b = floor.indoor_bounds()
+    if b is None:
+        return None
+    x0, y0, x1, y1 = b
+    along_x = roof.ridge == "x" or (roof.ridge != "y"
+                                    and x1 - x0 >= y1 - y0)
+    return along_x, ((x0, x1, y0, y1) if along_x else (y0, y1, x0, x1))
+
+
+def _pitch_tan(roof: Roof) -> float:
+    lo, hi = ROOF_PITCH_RANGE
+    return math.tan(math.radians(min(max(float(roof.pitch), lo), hi)))
+
+
+def build_roof(roof: Roof, floor: Floor) -> list:
+    """The roof over *floor*'s indoor rooms as coloured nodes: a flat
+    slab, or sloped boards (`hull` of two thin bars: one at the eave,
+    one at the ridge) over a wall-coloured gable / wedge infill, or one
+    convex hull for a hip or pyramid roof. No booleans, so the preview
+    shows it exactly. Empty when the floor has no indoor room."""
+    frame = _roof_frame(roof, floor)
+    if frame is None:
+        return []
+    along_x, (u0, u1, v0, v1) = frame
+    H = floor.wall_height
+    e = max(0.0, float(roof.overhang))
+    t = ROOF_THICKNESS
+    hw = floor.wall_thickness / 2.0
+    color, material = ROOF_COLORS.get(roof.color, ROOF_COLORS["Brown tiles"])
+    style = roof.style if roof.style in ROOF_STYLES else "Flat"
+
+    def cube(name, ua, va, z, du, dv, h):
+        """A box in the roof's (u, v) frame."""
+        box = (dict(x=ua, y=va, width=du, depth=dv) if along_x
+               else dict(x=va, y=ua, width=dv, depth=du))
+        return CadNode("cube", name, dict(z=z, height=h, center=False,
+                                          **box))
+
+    def hull(name, parts, colour=color, mat=material):
+        node = CadNode("hull", name, {})
+        for p in parts:
+            node.add(p)
+        return _color(node, colour, mat)
+
+    L, span = u1 - u0, v1 - v0
+    if style == "Flat":
+        return [_color(cube("Roof", u0 - e, v0 - e, H, L + 2 * e,
+                            span + 2 * e, t), color, material)]
+    tan = _pitch_tan(roof)
+    thin = 1.0
+    vc = (v0 + v1) / 2.0
+    ue, le = u0 - e, L + 2 * e             # eaves run past the gables too
+    eave_z = H - e * tan
+    wall_u, wall_l = u0 - hw, L + 2 * hw
+    plate = cube("Wall plate", wall_u, v0 - hw, H, wall_l, span + 2 * hw,
+                 thin)
+    if style == "Gable":
+        top = H + span / 2.0 * tan
+        return [
+            hull("Roof slope", [cube("Eave", ue, v0 - e, eave_z, le, thin, t),
+                                cube("Ridge", ue, vc - thin, top, le, thin,
+                                     t)]),
+            hull("Roof slope", [cube("Eave", ue, v1 + e - thin, eave_z, le,
+                                     thin, t),
+                                cube("Ridge", ue, vc, top, le, thin, t)]),
+            hull("Gable", [plate, cube("Apex", wall_u, vc - thin / 2.0,
+                                       top - thin, wall_l, thin, thin)],
+                 WALL_COLOR, "Default")]
+    if style == "Lean-to":
+        high = H + (span + e) * tan
+        return [
+            hull("Roof slope", [cube("Low eave", ue, v0 - e, eave_z, le, thin,
+                                     t),
+                                cube("High eave", ue, v1 + e - thin, high,
+                                     le, thin, t)]),
+            hull("Wedge", [plate, cube("High wall", wall_u, v1 + hw - thin,
+                                       H + (span + hw) * tan - thin, wall_l,
+                                       thin, thin)], WALL_COLOR, "Default")]
+    # hip and pyramid: one convex solid from the eaves to a ridge / apex
+    rise = (min(L, span) if style == "Pyramid" else span) / 2.0 * tan
+    rl = max(L - span, thin) if style == "Hip" else thin
+    uc = (u0 + u1) / 2.0
+    return [hull("Roof", [cube("Eaves", ue, v0 - e, eave_z, le, span + 2 * e,
+                               t),
+                          cube("Ridge", uc - rl / 2.0, vc - thin / 2.0,
+                               H + rise, rl, thin, t)])]
+
+
+def roof_outline(roof: Roof, floor: Floor):
+    """The roof seen from above, for the plan: {"eave": (x0, y0, x1, y1),
+    "lines": [((x, y), (x, y)), ...]} — ridge, hips, or the lean-to's
+    fall line — or None when the floor has no indoor room."""
+    frame = _roof_frame(roof, floor)
+    if frame is None:
+        return None
+    along_x, (u0, u1, v0, v1) = frame
+    e = max(0.0, float(roof.overhang))
+
+    def xy(u, v):
+        return (u, v) if along_x else (v, u)
+
+    ea, eb = xy(u0 - e, v0 - e), xy(u1 + e, v1 + e)
+    eave = (min(ea[0], eb[0]), min(ea[1], eb[1]),
+            max(ea[0], eb[0]), max(ea[1], eb[1]))
+    vc, uc = (v0 + v1) / 2.0, (u0 + u1) / 2.0
+    L, span = u1 - u0, v1 - v0
+    style = roof.style
+    corners = [(u0 - e, v0 - e), (u1 + e, v0 - e), (u1 + e, v1 + e),
+               (u0 - e, v1 + e)]
+    lines = []
+    if style == "Gable":
+        lines = [(xy(u0 - e, vc), xy(u1 + e, vc))]
+    elif style == "Hip":
+        half = max(L - span, 0.0) / 2.0
+        a, b = (uc - half, vc), (uc + half, vc)
+        lines = [(xy(*a), xy(*b))]
+        for cu, cv in corners:
+            end = a if cu < uc else b
+            lines.append((xy(cu, cv), xy(*end)))
+    elif style == "Pyramid":
+        lines = [(xy(cu, cv), xy(uc, vc)) for cu, cv in corners]
+    elif style == "Lean-to":
+        lines = [(xy(uc, v0 - e), xy(uc, v1 + e))]
+    return {"eave": eave, "lines": lines}
 
 
 def build_garden(garden: Garden, house_bounds) -> CadNode:
@@ -359,6 +634,90 @@ def build_garden(garden: Garden, house_bounds) -> CadNode:
         x=gx, y=gy, z=-GARDEN_THICKNESS, width=garden.width,
         depth=garden.depth, height=GARDEN_THICKNESS, center=False))
     return _color(box, GRASS_COLOR, material="Matte")
+
+
+# ---------------------------------------------------------- stacking
+#: a piece set down on another stops at surfaces within reach — a
+#: microwave goes on the worktop, not on the wall cupboards over it
+STACK_REACH = 1800.0
+#: parts from other modules that sit on what is under them
+ON_TOP_PARTS = {"room_tv", "room_monitor"}
+
+
+@lru_cache(maxsize=256)
+def _part_tris(part_id, dims_key):
+    from . import library, mesh
+    return tuple(mesh.tessellate(
+        library.build_part(part_id, json.loads(dims_key)), fn=12))
+
+
+def part_tris(part_id, dims):
+    """The part's own triangles (cached), in its own frame."""
+    return _part_tris(part_id, json.dumps(dims or {}, sort_keys=True,
+                                          default=str))
+
+
+def part_rest_z(part_id) -> float:
+    """How high a piece is put when added: 0 on the floor, more for one
+    hung on a wall or a ceiling (the part's ``rest_z``)."""
+    from . import library
+    return float((library.PARTS.get(part_id) or {}).get("rest_z", 0.0))
+
+
+def sits_on_top(part_id) -> bool:
+    """Whether a piece is set down on whatever is under it (a lamp, a
+    TV, a microwave) rather than on the floor."""
+    from . import library
+    return part_id in ON_TOP_PARTS or \
+        bool((library.PARTS.get(part_id) or {}).get("on_top"))
+
+
+def _hits(tris, x, y):
+    """(z, facing up) of every face of *tris* straight above or below
+    the point (x, y)."""
+    out = []
+    for a, b, c in tris:
+        det = (b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1])
+        if abs(det) < 1e-9:
+            continue                        # a vertical face
+        l1 = ((b[1] - c[1]) * (x - c[0]) + (c[0] - b[0]) * (y - c[1])) / det
+        l2 = ((c[1] - a[1]) * (x - c[0]) + (a[0] - c[0]) * (y - c[1])) / det
+        l3 = 1.0 - l1 - l2
+        if min(l1, l2, l3) < -1e-7:
+            continue
+        out.append((l1 * a[2] + l2 * b[2] + l3 * c[2], det > 0))
+    return out
+
+
+def surface_below(floor: Floor, f: Furniture,
+                  reach: float = STACK_REACH) -> float:
+    """How high *f* sits when set down on the furniture under its
+    centre: the highest upward-facing surface of another piece there
+    that is within *reach* and has room above it for *f* — so a TV lands
+    on its stand and a microwave on the worktop, not on the wall
+    cupboards — else 0, the floor. Pieces hung on a wall or a ceiling
+    hold nothing."""
+    own = part_tris(f.part_id, f.dims)
+    height = max((p[2] for t in own for p in t), default=0.0)
+    best = 0.0
+    for room in floor.rooms:
+        for g in room.furniture:
+            if g is f or part_rest_z(g.part_id) > 0:
+                continue
+            a = math.radians(g.rz)
+            dx, dy = f.x - g.x, f.y - g.y
+            lx = dx * math.cos(a) + dy * math.sin(a)
+            ly = -dx * math.sin(a) + dy * math.cos(a)
+            hits = sorted(_hits(part_tris(g.part_id, g.dims), lx, ly))
+            for i, (z, up) in enumerate(hits):
+                top = g.z + z
+                if not up or top > reach or top <= best:
+                    continue
+                above = [h for h, _u in hits[i + 1:] if h > z + 1.0]
+                if above and above[0] - z < height:
+                    continue                # no room for it there
+                best = top
+    return round(best, 1)
 
 
 # --------------------------------------------------------------- apply
@@ -375,13 +734,14 @@ def remove_built(model) -> int:
 
 def apply(model, house: House, replace: bool = True) -> list:
     """Insert *house* into the document: one Object per floor (stacked
-    in Z, so "Ground floor" sits at z=0 and "First floor" above it) and
-    one "Garden" Object beside the house's footprint, and store the
-    design as ``model.house`` so the House Builder reopens on it and it
-    is saved with the document. With *replace* (the default) the house
-    the last build made is swapped out, so editing and building again
-    UPDATES the house instead of adding a second one. Returns the
-    inserted component nodes, one call = one undo step."""
+    in Z, so "Ground floor" sits at z=0 and "First floor" above it, the
+    roof on the top one) and one "Garden" Object beside the house's
+    footprint, and store the design as ``model.house`` so the House
+    Builder reopens on it and it is saved with the document. With
+    *replace* (the default) the house the last build made is swapped
+    out, so editing and building again UPDATES the house instead of
+    adding a second one. Returns the inserted component nodes, one call
+    = one undo step."""
     if not house.floors:
         raise HouseError("Add at least one floor with a room.")
     for floor in house.floors:
@@ -394,7 +754,7 @@ def apply(model, house: House, replace: bool = True) -> list:
     taken = {n.name for n in model.root.walk()}
     for i, floor in enumerate(house.floors):
         content = build_floor(floor, is_top=(i == len(house.floors) - 1),
-                              taken=taken)
+                              taken=taken, roof=house.roof)
         content.params["z"] = z
         model.root.add(content)
         comp = model.enclose_as_part(content, name=floor.name)
@@ -423,6 +783,7 @@ def house_to_spec(house: House) -> dict:
         "slab_thickness": floor.slab_thickness,
         "rooms": [{
             "name": r.name, "x": r.x, "y": r.y, "w": r.w, "d": r.d,
+            "surface": r.surface,
             "openings": [{"kind": o.kind, "side": o.side,
                           "offset": o.offset, "width": o.width,
                           "height": o.height, "sill": o.sill}
@@ -436,6 +797,10 @@ def house_to_spec(house: House) -> dict:
     if house.garden is not None:
         g = house.garden
         spec["garden"] = {"width": g.width, "depth": g.depth, "gap": g.gap}
+    r = house.roof or Roof()
+    spec["roof"] = {"style": r.style, "pitch": r.pitch,
+                    "overhang": r.overhang, "ridge": r.ridge,
+                    "color": r.color}
     return spec
 
 
@@ -500,12 +865,11 @@ def against_wall(room: Room, thickness: float, part_id: str, dims: dict,
     corner (E/W walls), in the room's own centre-line frame like the
     room's x/y; None centres it. The depth comes from the built part
     itself, so any library part lands flush without a lookup."""
-    from . import library, mesh
     wall = str(wall).strip().upper()
     if wall not in _WALL_RZ:
         raise HouseError(f"'wall' must be one of N, S, E, W — not "
                          f"{wall!r}.")
-    tris = mesh.tessellate(library.build_part(part_id, dict(dims)), fn=8)
+    tris = part_tris(part_id, dims)
     back = max((p[1] for tri in tris for p in tri), default=0.0)
     inner = thickness / 2.0 + gap + back
     rz = _WALL_RZ[wall]
@@ -537,7 +901,8 @@ def _furniture_from_spec(spec: dict, room: Room, floor: Floor) -> Furniture:
         x = room.x + _num(spec, "x", room.w / 2.0)
         y = room.y + _num(spec, "y", room.d / 2.0)
         rz = _num(spec, "rz", 0.0)
-    return Furniture(part_id, x, y, rz, dims, z=_num(spec, "z", 0.0),
+    return Furniture(part_id, x, y, rz, dims,
+                     z=_num(spec, "z", part_rest_z(part_id)),
                      name=str(spec.get("name") or ""))
 
 
@@ -545,24 +910,61 @@ def _opening_from_spec(spec: dict) -> Opening:
     if not isinstance(spec, dict):
         raise HouseError("Each opening must be an object.")
     kind = str(spec.get("kind", "door")).strip().lower()
-    if kind not in ("door", "window"):
-        raise HouseError(f"Opening 'kind' must be door or window, not "
-                         f"{kind!r}.")
+    if kind == "garage":
+        kind = "garage door"
+    if kind not in OPENING_KINDS:
+        raise HouseError(f"Opening 'kind' must be one of "
+                         f"{', '.join(OPENING_KINDS)} — not {kind!r}.")
     side = str(spec.get("side", "S")).strip().upper()
     if side not in SIDES:
         raise HouseError(f"Opening 'side' must be one of N, S, E, W — "
                          f"not {side!r}.")
-    w, h, sill = DOOR_SIZE if kind == "door" else WINDOW_SIZE
+    w, h, sill = opening_size(kind)
     return Opening(kind, side, _num(spec, "offset", 0.0),
                    _num(spec, "width", w), _num(spec, "height", h),
                    _num(spec, "sill", sill))
 
 
+def roof_from_spec(spec) -> Roof:
+    """A `Roof` from the spec's "roof" entry; none means the flat roof
+    every house had before roofs could be chosen."""
+    if not spec:
+        return Roof()
+    if not isinstance(spec, dict):
+        raise HouseError("'roof' must be an object.")
+    names = {s.lower(): s for s in ROOF_STYLES}
+    names.update({"shed": "Lean-to", "lean to": "Lean-to",
+                  "hipped": "Hip", "pitched": "Gable"})
+    style = names.get(str(spec.get("style", "Gable")).strip().lower())
+    if style is None:
+        raise HouseError(f"Roof 'style' must be one of "
+                         f"{', '.join(ROOF_STYLES)}.")
+    ridge = str(spec.get("ridge", "auto")).strip().lower()
+    if ridge not in ROOF_RIDGES:
+        raise HouseError("Roof 'ridge' must be auto, x or y.")
+    colors = {c.lower(): c for c in ROOF_COLORS}
+    color = colors.get(str(spec.get("color", "Brown tiles")).strip().lower())
+    if color is None:
+        raise HouseError(f"Roof 'color' must be one of "
+                         f"{', '.join(ROOF_COLORS)}.")
+    pitch = _num(spec, "pitch", ROOF_PITCH[style] or 35.0)
+    if style != "Flat" and not (ROOF_PITCH_RANGE[0] <= pitch
+                                <= ROOF_PITCH_RANGE[1]):
+        raise HouseError(f"Roof 'pitch' must be between "
+                         f"{ROOF_PITCH_RANGE[0]:g} and "
+                         f"{ROOF_PITCH_RANGE[1]:g} degrees.")
+    overhang = _num(spec, "overhang", ROOF_EAVE)
+    if overhang < 0:
+        raise HouseError("Roof 'overhang' cannot be negative.")
+    return Roof(style, pitch, overhang, ridge, color)
+
+
 def house_from_spec(spec: dict) -> House:
     """A `House` from a JSON-shaped *spec* (the build_house tool's
     input): floors -> rooms -> openings / furniture, plus an optional
-    garden. Furniture x/y are measured from its room's (x, y) corner,
-    or resolved by `against_wall` when it names a `wall`."""
+    garden and roof. Furniture x/y are measured from its room's (x, y)
+    corner, or resolved by `against_wall` when it names a `wall`; one
+    marked `on_top` is set down on what is under it (`surface_below`)."""
     floors_in = spec.get("floors")
     if not isinstance(floors_in, list) or not floors_in:
         raise HouseError("Give 'floors': a list with at least one floor "
@@ -581,25 +983,38 @@ def house_from_spec(spec: dict) -> House:
         for j, rspec in enumerate(rooms_in):
             if not isinstance(rspec, dict):
                 raise HouseError("Each room must be an object.")
+            surface = str(rspec.get("surface", "indoor")).strip().lower()
+            if surface not in SURFACES:
+                raise HouseError(f"Room 'surface' must be one of "
+                                 f"{', '.join(SURFACES)}.")
             room = Room(str(rspec.get("name") or f"Room {j + 1}"),
                         _num(rspec, "x", 0.0), _num(rspec, "y", 0.0),
-                        _num(rspec, "w"), _num(rspec, "d"))
+                        _num(rspec, "w"), _num(rspec, "d"),
+                        surface=surface)
             if room.w <= 0 or room.d <= 0:
                 raise HouseError(f'Room "{room.name}" needs a positive '
                                  "w and d.")
             room.openings = [_opening_from_spec(o)
                              for o in rspec.get("openings") or []]
             floor.rooms.append(room)
+        stacked = []
         for room, rspec in zip(floor.rooms, rooms_in):
-            room.furniture = [_furniture_from_spec(f, room, floor)
-                              for f in rspec.get("furniture") or []]
+            room.furniture = []
+            for fs in rspec.get("furniture") or []:
+                f = _furniture_from_spec(fs, room, floor)
+                room.furniture.append(f)
+                if isinstance(fs, dict) and fs.get("on_top"):
+                    stacked.append(f)
+        for f in stacked:                   # once everything else stands
+            f.z = surface_below(floor, f)
         floors.append(floor)
     garden = spec.get("garden")
     if garden:
         garden = Garden(width=_num(garden, "width", Garden.width),
                         depth=_num(garden, "depth", Garden.depth),
                         gap=_num(garden, "gap", Garden.gap))
-    return House(floors=floors, garden=garden or None)
+    return House(floors=floors, garden=garden or None,
+                 roof=roof_from_spec(spec.get("roof")))
 
 
 def build_house(window, params: dict) -> dict:
@@ -615,15 +1030,17 @@ def build_house(window, params: dict) -> dict:
             "name": floor.name,
             "walls": len(collect_walls(floor)),
             "rooms": [{"name": r.name, "x": r.x, "y": r.y, "w": r.w,
-                       "d": r.d, "openings": len(r.openings),
+                       "d": r.d, "surface": r.surface,
+                       "openings": len(r.openings),
                        "furniture": [{"part_id": f.part_id,
                                       "x": round(f.x, 1),
                                       "y": round(f.y, 1),
                                       "z": f.z, "rz": f.rz}
                                      for f in r.furniture]}
                       for r in floor.rooms]})
+    roof = {"style": house.roof.style, "pitch": house.roof.pitch}
     if params.get("dry_run"):
-        return {"dry_run": True, "floors": floors}
+        return {"dry_run": True, "floors": floors, "roof": roof}
     inserted = apply(window.model, house)
     window.view3d.fit()
     panel = getattr(window, "_house_builder", None)
@@ -634,4 +1051,4 @@ def build_house(window, params: dict) -> dict:
                                       if n.type == "component"
                                       and n is not c]}
                         for c in inserted],
-            "floors": floors}
+            "floors": floors, "roof": roof}

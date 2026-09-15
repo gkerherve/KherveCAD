@@ -77,6 +77,18 @@ TIPS = {
          "Type the words and the Size in Properties.",
          "Extrude it to make raised or engraved lettering."],
         "Put extruded text in a Difference to engrave it into a part."),
+    "house_builder": (
+        "House Builder",
+        "Opens the House Builder: draw a house floor by floor on a floor "
+        "plan — rooms, doors, windows, furniture, stairs, garden and roof "
+        "— then build it into the document as real Objects.",
+        ["Add rooms from the Room menu (bedroom, garage, corridor, porch, "
+         "garden…) and drag them into place.",
+         "Put doors and windows in the walls, then add furniture — "
+         "double-click a piece to turn it.",
+         "Pick a roof, then click Build house."],
+        "Building again updates the same house, and the design is saved "
+        "with the document."),
     "measure": (
         "Measure distance",
         "Measures between two points without changing the model. It "

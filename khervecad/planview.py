@@ -71,13 +71,16 @@ def face_color(colour) -> QColor:
     return c
 
 
-def plan_faces(colored, plane="Top (XY)", cut=None):
+def plan_faces(colored, plane="Top (XY)", cut=None, cull=False):
     """Painter-ordered ``[(QPolygonF, QColor)]`` of *colored* triangles
     ``[(tri, colour)]`` projected into *plane*: faces seen edge-on are
     dropped, the rest shaded by how squarely they face the viewer and
     sorted far -> near. With *cut* (Top only) a face lying wholly above
     z = *cut* is left out — a floor plan's cut, which is what lets a
-    house's rooms show under its roof."""
+    house's rooms show under its roof. With *cull*, faces turned away
+    from the viewer are dropped too — only for meshes known to be wound
+    outward (library parts): a centroid sort let a tree's branches show
+    through its crown."""
     from .view2d import PLANES
     (ai, bi), _keys = PLANES[plane]
     di, sign = DEPTH[plane]
@@ -95,6 +98,8 @@ def plan_faces(colored, plane="Top (XY)", cut=None):
         v = (c[0] - a[0], c[1] - a[1], c[2] - a[2])
         n = (u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2],
              u[0] * v[1] - u[1] * v[0])
+        if cull and sign * n[di] <= 0:
+            continue                      # faces away from the viewer
         length = math.sqrt(n[0] ** 2 + n[1] ** 2 + n[2] ** 2) or 1.0
         lit = SHADE_MIN + (1.0 - SHADE_MIN) * abs(n[di]) / length
         key = (colour if colour is None else
@@ -168,7 +173,7 @@ def part_view(part_id, dims):
 def _part_view(part_id, dims_key):
     from . import library, mesh
     node = library.build_part(part_id, json.loads(dims_key))
-    faces = plan_faces(mesh.tessellate_colored(node, fn=16))
+    faces = plan_faces(mesh.tessellate_colored(node, fn=16), cull=True)
     if not faces:
         return None
     rect = QRectF()

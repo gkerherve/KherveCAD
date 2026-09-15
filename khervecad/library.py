@@ -1192,13 +1192,16 @@ PARTS = {
 # parts contributed by sibling modules (chemistry, room & furniture);
 # each entry carries its own `build` callable, dispatched by build_part.
 from . import (library_cards, library_chem, library_crystal,  # noqa: E402
-               library_home, library_kcad, library_lego, library_lego_sets,
-               library_molecule, library_pots, library_room,
-               library_vacuum)
+               library_home, library_home_extra, library_home_more,
+               library_kcad,
+               library_lego, library_lego_sets, library_molecule,
+               library_pots, library_room, library_vacuum)
 PARTS.update(library_vacuum.PARTS)
 PARTS.update(library_chem.PARTS)
 PARTS.update(library_room.PARTS)
 PARTS.update(library_home.PARTS)
+PARTS.update(library_home_more.PARTS)
+PARTS.update(library_home_extra.PARTS)
 PARTS.update(library_pots.PARTS)
 PARTS.update(library_cards.PARTS)
 PARTS.update(library_lego.PARTS)
@@ -1209,7 +1212,9 @@ PARTS.update(library_molecule.PARTS)
 
 #: dialog fields holding a count (integer spin box, no "mm" suffix)
 _COUNT_FIELDS = ({"bolts"} | library_lego.COUNT_FIELDS
-                 | library_home.COUNT_FIELDS | library_crystal.COUNT_FIELDS)
+                 | library_home.COUNT_FIELDS | library_crystal.COUNT_FIELDS
+                 | library_home_more.COUNT_FIELDS
+                 | library_home_extra.COUNT_FIELDS)
 
 
 def prepare_document(model, part_id: str) -> str:
