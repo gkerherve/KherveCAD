@@ -772,6 +772,9 @@ class MainWindow(QMainWindow):
         """Draw the selected object's geometry highlighted in both
         the 2D (projected outline) and 3D (glowing faces) views."""
         self._selected_ids = {n.id for n in nodes}
+        if self._explode["on"]:
+            # which assembly comes apart follows the selection
+            self._refresh_preview()
         self.scene.set_highlight(nodes)
         # zoom the 2D view to the selected object (a part silhouette or
         # an edited profile) so it is framed and centred, not clipped
@@ -1180,7 +1183,13 @@ class MainWindow(QMainWindow):
             return []
         root = self._render_scope()[0]
         iso = root if root is not self.model.root else None
+        plan = getattr(self, "_explode_plan", None)
         with self._isolated_frame(iso):
+            if plan is not None and plan.group is not None:
+                # exploded: the tint goes where its part went
+                from . import explode
+                return explode.highlight(root, ids, plan,
+                                         fn=self.model.effective_fn())
             return mesh.selected_world_tris(
                 root, ids, fn=self.model.effective_fn())
 
@@ -1227,15 +1236,19 @@ class MainWindow(QMainWindow):
         root, scad = self._render_scope()
         iso = root if root is not self.model.root else None
         exploding = self._explode["on"]
+        plan = None
         with self._isolated_frame(iso):
             if exploding:
                 from . import anchors, explode
-                colored = explode.exploded_colored(
+                plan = explode.plan(
                     root, anchors.doc_env(self.model), fn,
-                    self._explode["amount"], self._explode["mode"])
+                    self._explode["amount"], self._explode["mode"],
+                    self._explode_selection(root))
+                colored = plan.items
             else:
                 colored = mesh.tessellate_colored(root, fn=fn)
             booleans = mesh.uses_booleans(root)
+        self._explode_plan = plan
         tris = [t for t, _c in colored]
         colors = [c for _t, c in colored]
         has_colors = any(c is not None for c in colors)
@@ -1247,8 +1260,9 @@ class MainWindow(QMainWindow):
             label += f" — {exact}/{total} parts exact"
         if booleans and not self.engine.available:
             label += " (booleans approximated)"
-        if exploding:
-            label += " — exploded"
+        if plan is not None:
+            label += (" — exploded" if plan.group is not None
+                      else " — nothing to pull apart")
         self.view3d.set_mesh(tris, label,
                              colors if has_colors else None)
         if getattr(self, "_selected_ids", set()):
@@ -1404,8 +1418,23 @@ class MainWindow(QMainWindow):
             act.setChecked(act.data() == state["mode"])
 
     def explode_state(self) -> dict:
-        """{on, amount, mode} of the exploded view."""
-        return dict(self._explode)
+        """{on, amount, mode} of the exploded view — plus, while it is
+        on, the parts it pulled apart and the status-bar note."""
+        state = dict(self._explode)
+        plan = getattr(self, "_explode_plan", None)
+        if state["on"] and plan is not None:
+            state["note"] = plan.note
+            state["parts"] = [part.name for part, _move in plan.pieces]
+        return state
+
+    def _explode_selection(self, root):
+        """The selected nodes inside *root*: an exploded view pulls apart
+        the assembly they belong to. Pictures (explode.showing) show the
+        whole assembly whatever is selected."""
+        ids = getattr(self, "_selected_ids", set())
+        if not ids or getattr(self, "_explode_whole", False):
+            return []
+        return [n for n in root.walk() if n.id in ids]
 
     def set_explode(self, on=None, amount=None, mode=None):
         """Switch the exploded view and/or change how far and which
@@ -1424,11 +1453,20 @@ class MainWindow(QMainWindow):
         settings.setValue("explode/mode", state["mode"])
         self._sync_explode_menu()
         self._refresh_preview()
-        self.statusBar().showMessage(
-            f"Exploded view — {int(round(state['amount'] * 100))} %, "
-            f"{state['mode'].lower()}; Ctrl+F frames it, Ctrl+Shift+X "
-            "puts the parts back." if state["on"] else
-            "Parts back together.", 5000)
+        plan = getattr(self, "_explode_plan", None)
+        if not state["on"]:
+            message = "Parts back together."
+        elif plan is None or plan.group is None:
+            # say so: switching it on and seeing nothing move read as a
+            # broken menu item
+            message = plan.note if plan is not None else \
+                "Nothing to pull apart."
+        else:
+            message = (f"Exploded view — {plan.note}, "
+                       f"{int(round(state['amount'] * 100))} %, "
+                       f"{state['mode'].lower()}; Ctrl+F frames it, "
+                       "Ctrl+Shift+X puts the parts back.")
+        self.statusBar().showMessage(message, 8000)
 
     def force_refresh(self):
         """Redraw everything from the object tree: drop the mesh caches

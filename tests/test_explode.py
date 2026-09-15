@@ -78,12 +78,120 @@ def test_one_part_does_not_move(app):
         mesh.tessellate_colored(m.root)
 
 
+def _hinge_like(model, beside=True):
+    """One Group holding two Objects — what a library insert or Make
+    Object gives — and, optionally, a loose part beside it."""
+    group = model.add_node("union", dict())
+    group.name = "Hinge"
+    a = model.new_component("Leaf A")
+    model.remove_node(a)
+    group.add(a)
+    model.add_node("cube", dict(width=20.0, depth=20.0, height=4.0), parent=a)
+    b = model.new_component("Leaf B")
+    model.remove_node(b)
+    group.add(b)
+    model.add_node("cube", dict(y=25.0, width=20.0, depth=20.0, height=4.0),
+                   parent=b)
+    c = None
+    if beside:
+        c = model.new_component("Beside")
+        model.add_node("cube", dict(x=80.0, width=10.0, depth=10.0,
+                                    height=10.0), parent=c)
+    return group, a, b, c
+
+
+def _ys(items):
+    return [v[1] for tri, _c in items for v in tri]
+
+
+def test_a_lone_group_is_looked_into(app):
+    """A document holding one Group of parts used to count as one part,
+    and the exploded view silently did nothing."""
+    m = DocumentModel()
+    group, _a, _b, _c = _hinge_like(m, beside=False)
+    plan = explode.plan(m.root, amount=1.0)
+    assert plan.group is m.root and plan.path[-1] == group.id
+    assert [p.name for p, _move in plan.pieces] == ["Leaf A", "Leaf B"]
+    assert "the 2 parts of Hinge" == plan.note
+    from khervecad import mesh
+    together = mesh.tessellate_colored(m.root)
+    assert max(_ys(plan.items)) - min(_ys(plan.items)) > \
+        max(_ys(together)) - min(_ys(together)) + 10
+    assert explode.part_count(m.root) == 2
+
+
+def test_selecting_a_part_takes_its_assembly_apart_and_nothing_else(app):
+    m = DocumentModel()
+    group, a, _b, c = _hinge_like(m)
+    plan = explode.plan(m.root, amount=1.0, selected=[a])
+    assert plan.group is group
+    moves = {p.name: move for p, move in plan.pieces}
+    assert moves["Leaf A"][1] < 0 < moves["Leaf B"][1]
+    # the part beside the hinge stays exactly where it is
+    from khervecad import mesh
+    beside = sorted(t for t, _c in mesh.tessellate_colored(c))
+    assert sorted(t for t, _col in plan.items
+                  if min(v[0] for v in t) >= 80.0 - 1e-9) == beside
+
+
+def test_a_boolean_is_one_part(app):
+    """Pulling a bore out of its plate would show nothing true."""
+    m = DocumentModel()
+    part = m.new_component("Plate")
+    cut = m.add_node("difference", dict(), parent=part)
+    m.add_node("cube", dict(width=20.0, depth=20.0, height=4.0), parent=cut)
+    bore = m.add_node("cylinder", dict(x=10.0, y=10.0, z=-1.0, height=6.0,
+                                       radius_bottom=3.0, radius_top=3.0),
+                      parent=cut)
+    plan = explode.plan(m.root, amount=2.0, selected=[bore])
+    from khervecad import mesh
+    assert plan.group is None and plan.pieces == []
+    assert plan.items == mesh.tessellate_colored(m.root)
+    assert plan.note.startswith("Nothing to pull apart")
+
+
 def _window(app):
     from khervecad.mainwindow import MainWindow
     w = MainWindow()
     _two_parts(w.model)
     w._refresh_preview()
     return w
+
+
+def test_window_explodes_the_selected_part_s_assembly(app):
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    _group, a, _b, _c = _hinge_like(w.model)
+    w.model.structure_changed.emit()
+    w._refresh_preview()
+    w.builder.tree.select_nodes([a])
+    app.processEvents()
+    tint = lambda: (min(v[1] for t in w.view3d.highlight_mesh for v in t),
+                    max(v[1] for t in w.view3d.highlight_mesh for v in t))
+    assert tint() == pytest.approx((0.0, 20.0))
+    w.set_explode(True, amount=1.0, mode="Radial")
+    assert "the 2 parts of Hinge" in w.statusBar().currentMessage()
+    assert w.explode_state()["parts"] == ["Leaf A", "Leaf B"]
+    # Leaf A moved 12.5 mm towards -y, and its tint went with it
+    assert tint() == pytest.approx((-12.5, 7.5))
+    # a picture shows the whole assembly, whatever is selected
+    with explode.showing(w):
+        assert w._explode_plan.group is w.model.root
+        assert len(w._explode_plan.pieces) == 2          # Hinge, Beside
+    w.set_explode(False)
+    assert tint() == pytest.approx((0.0, 20.0))
+
+
+def test_window_says_when_nothing_can_come_apart(app):
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    part = w.model.new_component("Alone")
+    w.model.add_node("cube", parent=part)
+    w._refresh_preview()
+    w.set_explode(True)
+    assert "Nothing to pull apart" in w.statusBar().currentMessage()
+    assert "nothing to pull apart" in w.view3d.source
+    w.set_explode(False)
 
 
 def test_view_menu_explodes_the_3d_view(app):

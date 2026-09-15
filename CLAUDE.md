@@ -509,10 +509,22 @@ into a new module and import.
                        current file path, File > Show in File Explorer
                        reveals it.
   - `explode.py`     — **exploded views**, a display only (the tree is
-                       untouched): `part_meshes` tessellates each
-                       top-level part of the scope on its own (document
-                       variables applied, colours and cached exact
-                       meshes kept), `offsets` moves each along
+                       untouched): `plan` picks what comes apart — the
+                       nearest assembly holding the SELECTION, else the
+                       scope's parts, looking through a lone Group /
+                       Object / colour (a library part or Make Object
+                       wraps a whole assembly in one; such a document
+                       used to have "one part" and the view silently did
+                       nothing). Only `STRUCTURAL` containers are opened
+                       — never a boolean or loop. Each part is
+                       tessellated alone through the normal path (NOT a
+                       selection pass: those bypass the Object cache and
+                       exact meshes) and placed by `mesh.node_matrix` of
+                       the containers above; the rest is drawn with the
+                       group hidden. `highlight` moves the tint with its
+                       part; the status bar says when nothing can come
+                       apart; `showing()` (pictures) ignores the
+                       selection. `offsets` moves each along
                        assembly-centre -> part-centre times `amount`
                        (Radial, or one axis X/Y/Z), `exploded_colored`
                        is what `_refresh_preview` draws while

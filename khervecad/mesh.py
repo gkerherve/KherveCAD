@@ -104,35 +104,38 @@ def ancestor_matrix(node, env=None, stop=None):
     ancestors' translate / rotate / scale / mirror and Group / Object /
     instance placements, exactly as the tessellator applies them.
     Expressions resolve with *env*."""
-    env = env or {}
     chain = []
     probe = node.parent
     while probe is not None and probe is not stop:
         chain.append(probe)
         probe = probe.parent
-
-    def num(n, key, default=0.0):
-        return rv(n.params.get(key, default), env, default)
     m = mat_identity()
     for anc in reversed(chain):
-        t = anc.type
-        if t == "translate":
-            m = mat_mul(m, mat_translate(num(anc, "x"), num(anc, "y"),
-                                         num(anc, "z")))
-        elif t == "rotate":
-            m = mat_mul(m, mat_rotate(num(anc, "x"), num(anc, "y"),
-                                      num(anc, "z")))
-        elif t == "scale":
-            m = mat_mul(m, mat_scale(num(anc, "x", 1.0), num(anc, "y", 1.0),
-                                     num(anc, "z", 1.0)))
-        elif t == "mirror":
-            m = mat_mul(m, mat_mirror(num(anc, "x", 1.0), num(anc, "y"),
-                                      num(anc, "z")))
-        elif t in ("union", "component", "reference"):
-            m = mat_mul(m, mat_mul(
-                mat_translate(num(anc, "x"), num(anc, "y"), num(anc, "z")),
-                mat_rotate(num(anc, "rx"), num(anc, "ry"), num(anc, "rz"))))
+        m = mat_mul(m, node_matrix(anc, env))
     return m
+
+
+def node_matrix(node, env=None):
+    """The transform *node* applies to what it holds: a translate /
+    rotate / scale / mirror, or a Group / Object / instance placement
+    (translate · rotate); the identity for anything else."""
+    env = env or {}
+
+    def num(key, default=0.0):
+        return rv(node.params.get(key, default), env, default)
+    t = node.type
+    if t == "translate":
+        return mat_translate(num("x"), num("y"), num("z"))
+    if t == "rotate":
+        return mat_rotate(num("x"), num("y"), num("z"))
+    if t == "scale":
+        return mat_scale(num("x", 1.0), num("y", 1.0), num("z", 1.0))
+    if t == "mirror":
+        return mat_mirror(num("x", 1.0), num("y"), num("z"))
+    if t in ("union", "component", "reference"):
+        return mat_mul(mat_translate(num("x"), num("y"), num("z")),
+                       mat_rotate(num("rx"), num("ry"), num("rz")))
+    return mat_identity()
 
 
 def mat_apply(m, p):

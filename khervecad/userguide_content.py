@@ -245,6 +245,13 @@ is a way of <i>looking</i>: the model itself does not move.</p>
 <li><b>View &rsaquo; Exploded View &rsaquo; Explode the Assembly</b>
 {K("Ctrl+Shift+X")} switches it on and off; {K("Ctrl+F")} frames the
 spread-out parts.</li>
+<li><b>What comes apart</b>: with a part selected, the assembly it
+belongs to &mdash; select one leaf of a hinge and the whole hinge comes
+apart, while everything else stays put and the selection follows its
+part. With nothing selected, the parts of the document (or of the
+Object you are editing); a single Group or Object holding them all is
+looked into. A boolean is one solid and never comes apart. When there
+is only one part, the status bar says so.</li>
 <li><b>Distance</b> 50&ndash;300&nbsp;%: at 100&nbsp;% each part moves
 as far again as it already sits from the centre.</li>
 <li><b>Outwards (radial)</b> spreads parts in every direction;
