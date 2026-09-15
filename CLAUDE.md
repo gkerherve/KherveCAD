@@ -487,9 +487,13 @@ into a new module and import.
                        floor). Bonds = covalent radii × 1 / 0.93 / 0.87 /
                        0.79. `formula_counts` ("Ca(OH)2", "CuSO4·5H2O"),
                        `hill_formula` ("O4S 2-").
-  - `molecule_library.py` — ~80 compounds as name + SMILES + the formula
+  - `molecule_library.py` — ~240 compounds as name + SMILES + the formula
                        they must give (the tests build every one), in
-                       8 families.
+                       9 families (gases, inorganic acids/bases/ions,
+                       salts/oxides/minerals, VSEPR shapes, hydrocarbons,
+                       alcohols/ethers/carbonyls, acids & esters, nitrogen
+                       compounds & solvents, biomolecules & drugs — amino
+                       acids, nucleobases and sugars included).
   - `molecule_build.py` — the **Compound Builder**: `molecule_program`
                        (ball and stick with half-bonds in each atom's
                        colour, double/triple bonds as parallel sticks, an
