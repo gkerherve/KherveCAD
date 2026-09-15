@@ -1332,6 +1332,13 @@ class McpToolExecutor:
         except molecule_build.BuildError as exc:
             raise ToolError(str(exc))
 
+    def _t_build_house(self, params) -> dict:
+        from . import house
+        try:
+            return house.build_house(self._w, params)
+        except house.HouseError as exc:
+            raise ToolError(str(exc))
+
     def _t_make_object(self, params) -> dict:
         nodes = self._nodes(params.get("ids"))
         model = self._model

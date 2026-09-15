@@ -255,7 +255,8 @@ def pan_3d(view, dx, dy):
 
 def zoom_3d(view, factor):
     """factor > 1 moves in."""
-    view.distance = max(2.0, min(5000.0, view.distance / factor))
+    view.distance = max(view.MIN_DISTANCE,
+                        min(view.MAX_DISTANCE, view.distance / factor))
     view.user_moved = True
     view.update()
 

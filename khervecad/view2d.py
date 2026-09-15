@@ -54,6 +54,9 @@ PLANES = {
 
 _SHAPE_PEN_W = 1.6
 HANDLE_SIZE = 9.0
+#: zoom range, px per mm — from a whole house or site plan (tens of
+#: metres across) down to sub-millimetre detail
+MIN_ZOOM, MAX_ZOOM = 0.001, 400.0
 
 
 def _pen(color: str, width=_SHAPE_PEN_W) -> QPen:
@@ -1967,7 +1970,7 @@ class SketchView(QGraphicsView):
 
     def zoom(self, factor):
         current = abs(self.transform().m11())
-        if 0.05 < current * factor < 400:
+        if MIN_ZOOM < current * factor < MAX_ZOOM:
             self.scale(factor, factor)
         self.zoom_changed.emit(self.px_per_mm())
 
@@ -1986,7 +1989,7 @@ class SketchView(QGraphicsView):
                              rect.height() * 0.08)
         scale = min(self.viewport().width() / rect.width(),
                     self.viewport().height() / rect.height())
-        scale = max(min(scale, 400.0), 0.05)
+        scale = max(min(scale, MAX_ZOOM), MIN_ZOOM)
         self.resetTransform()
         self.scale(scale, -scale)
         self.centerOn(rect.center())

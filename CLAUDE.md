@@ -532,16 +532,23 @@ into a new module and import.
                        wall is axis-aligned (rooms are rectangles) so
                        it is always purely horizontal or vertical — no
                        rotation is ever needed, `_wall_node` just emits
-                       a box or, when it has openings, a
-                       `difference()` of the box minus each opening (a
-                       window also gets a thin `Glass`-material pane).
-                       `build_floor` returns one group per floor (slabs,
-                       walls, a flat roof + eave on the top floor,
-                       furniture from `library.build_part` wrapped in a
-                       placement group since some parts return a
-                       "color" node, which has no x/y/z of its own, and
-                       some a "union", which does — wrapping uniformly
-                       means placement works either way); `apply`
+                       a box or, when it has openings, a union of SOLID
+                       pieces (full-height piers between openings, a
+                       sill under and a lintel over each) — NOT a
+                       `difference()`: the built-in preview draws a
+                       difference as its uncut first operand, so walls
+                       looked solid until OpenSCAD finished. Every
+                       opening gets a see-through `Glass` pane
+                       (`GLASS_ALPHA`): a window's glazing or a door's
+                       glazed leaf. `_opening_spans` clamps openings
+                       into the wall and makes overlapping ones
+                       disjoint. `build_floor` returns one group per
+                       floor (slabs, walls, a flat roof + eave on the
+                       top floor, and each piece of furniture from
+                       `library.build_part` as its OWN nested Object —
+                       a "component" carrying x/y/z/rz, names unique
+                       across the house, so "Ground floor" calls
+                       "Toilet", "Sofa", "Chair 2"...); `apply`
                        inserts each floor as its OWN visible Object
                        (`enclose_as_part`, stacked by setting the
                        group's own `z` before wrapping — a "union"'s
@@ -557,9 +564,16 @@ into a new module and import.
                        for the picker, minus the fixtures (door, wall
                        panel) the House Builder itself provides.
   - `house_items.py` — the floor-plan canvas's QGraphicsItems:
-                       `RoomItem` (draggable body, four corner `Handle`s
-                       that resize it, both snapped to `GRID` so
-                       adjacent rooms stay wall-exact) and
+                       `RoomItem` (draggable body, eight `Handle`s —
+                       corners and edge midpoints, 12 px — that resize
+                       it, both snapped to `GRID` so adjacent rooms stay
+                       wall-exact; roles are COMPASS sides in the Y-up
+                       frame, `HANDLE_ROLES`: naming them from Qt's
+                       y-down `topLeft()` once put the handle drawn at
+                       the bottom in charge of the top edge; the
+                       selected room is raised so a shared corner grabs
+                       ITS handle, and pressing a handle selects its
+                       room) and
                        `FurnitureItem` (a small draggable position
                        marker — rotation is edited in the dialog's
                        table, not on canvas). Self-contained: every drag

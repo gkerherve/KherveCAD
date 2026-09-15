@@ -1,10 +1,19 @@
 """QGraphicsItems for the House Builder's floor-plan canvas
-(`house_dialog.py`): a draggable, corner-resizable rectangle for each
-Room, and a small draggable marker for each placed Furniture item.
-Self-contained (no CadNode/DocumentModel coupling) — every drag writes
-straight back into the `house.Room`/`house.Furniture` dataclass the
-item represents, and the scene is Y-up like the rest of the app's 2D
-views (the dialog flips the view, not these items).
+(`house_dialog.py`): a draggable rectangle for each Room, resizable
+from its four corners and four edges, and a small draggable marker for
+each placed Furniture item. Self-contained (no CadNode/DocumentModel
+coupling) — every drag writes straight back into the
+`house.Room`/`house.Furniture` dataclass the item represents, and the
+scene is Y-up like the rest of the app's 2D views (the dialog flips the
+view, not these items).
+
+Handles are named by COMPASS side (N = +Y, the top of the flipped view)
+rather than by Qt's y-down rect corners: naming them "top" from
+`QRectF.topLeft()` put the handle drawn at the bottom of the room in
+charge of its top edge, so a drag on the right spot moved the wrong
+side. The selected room is raised above its neighbours, so where two
+rooms share a corner the handle under the cursor is the selected
+room's.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -32,18 +41,27 @@ ROOM_LINE = QColor("#2e3440")
 FURN_FILL = QColor(200, 168, 120, 220)
 FURN_LINE = QColor("#5b3d27")
 
+#: every resize handle: compass role -> (fx, fy), its place as a
+#: fraction of the room's width/depth (Y-up: fy = 1 is the N edge)
+HANDLE_ROLES = {"SW": (0.0, 0.0), "S": (0.5, 0.0), "SE": (1.0, 0.0),
+                "E": (1.0, 0.5), "NE": (1.0, 1.0), "N": (0.5, 1.0),
+                "NW": (0.0, 1.0), "W": (0.0, 0.5)}
+
 
 def _snap(v: float) -> float:
     return round(v / GRID) * GRID
 
 
 class Handle(QGraphicsRectItem):
-    """Square corner handle, constant size on screen, that resizes the
+    """Square resize handle, constant size on screen, that resizes the
     parent RoomItem when dragged."""
 
-    SIZE = 8.0
-    _CURSORS = {"TL": Qt.SizeFDiagCursor, "BR": Qt.SizeFDiagCursor,
-               "TR": Qt.SizeBDiagCursor, "BL": Qt.SizeBDiagCursor}
+    SIZE = 12.0
+    # the view is Y-flipped, so on screen NE/SW run "/" and NW/SE "\"
+    _CURSORS = {"NW": Qt.SizeFDiagCursor, "SE": Qt.SizeFDiagCursor,
+               "NE": Qt.SizeBDiagCursor, "SW": Qt.SizeBDiagCursor,
+               "N": Qt.SizeVerCursor, "S": Qt.SizeVerCursor,
+               "E": Qt.SizeHorCursor, "W": Qt.SizeHorCursor}
 
     def __init__(self, role, parent):
         s = self.SIZE
@@ -51,12 +69,17 @@ class Handle(QGraphicsRectItem):
         self.role = role
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations, True)
         self.setBrush(QBrush(QColor("#ffffff")))
-        self.setPen(QPen(QColor("#2176c7"), 1.2))
+        self.setPen(QPen(QColor("#2176c7"), 1.5))
         self.setCursor(self._CURSORS[role])
         self.setZValue(10.0)
         self.setAcceptedMouseButtons(Qt.LeftButton)
 
     def mousePressEvent(self, event):
+        room = self.parentItem()
+        if not room.isSelected():         # a handle press picks its room
+            if room.scene() is not None:
+                room.scene().clearSelection()
+            room.setSelected(True)
         event.accept()
 
     def mouseMoveEvent(self, event):
@@ -67,8 +90,10 @@ class Handle(QGraphicsRectItem):
 
 
 class RoomItem(QGraphicsRectItem):
-    """A draggable, corner-resizable rectangle bound to a `house.Room`.
-    *on_change* is called after every move/resize (position or size)."""
+    """A draggable, edge- and corner-resizable rectangle bound to a
+    `house.Room`. *on_change* is called after every move/resize."""
+
+    Z_IDLE, Z_SELECTED = 0.0, 1.0
 
     def __init__(self, room, on_change=None, on_pick=None):
         super().__init__()
@@ -83,8 +108,7 @@ class RoomItem(QGraphicsRectItem):
         self.setCursor(Qt.SizeAllCursor)
         self.label = QGraphicsSimpleTextItem(room.name, self)
         self.label.setFlag(QGraphicsItem.ItemIgnoresTransformations, True)
-        self.handles = [Handle(role, self)
-                        for role in ("TL", "TR", "BL", "BR")]
+        self.handles = [Handle(role, self) for role in HANDLE_ROLES]
         self.apply_room()
 
     def apply_room(self):
@@ -92,15 +116,14 @@ class RoomItem(QGraphicsRectItem):
         self.setPos(self.room.x, self.room.y)
         self.setRect(0.0, 0.0, self.room.w, self.room.d)
         self.label.setText(self.room.name)
-        self.label.setPos(6.0, 6.0)
+        # the label ignores the flip, so anchor it at the N-W corner
+        self.label.setPos(60.0, self.room.d - 60.0)
         self._position_handles()
 
     def _position_handles(self):
-        r = self.rect()
-        pts = {"TL": r.topLeft(), "TR": r.topRight(),
-               "BL": r.bottomLeft(), "BR": r.bottomRight()}
         for h in self.handles:
-            h.setPos(pts[h.role])
+            fx, fy = HANDLE_ROLES[h.role]
+            h.setPos(fx * self.room.w, fy * self.room.d)
 
     def itemChange(self, change, value):
         if change == QGraphicsItem.ItemPositionChange:
@@ -110,22 +133,23 @@ class RoomItem(QGraphicsRectItem):
             self.room.x, self.room.y = self.pos().x(), self.pos().y()
             if self.on_change:
                 self.on_change()
-        elif change == QGraphicsItem.ItemSelectedHasChanged and value \
-                and self.on_pick:
-            self.on_pick(self.room)
+        elif change == QGraphicsItem.ItemSelectedHasChanged:
+            self.setZValue(self.Z_SELECTED if value else self.Z_IDLE)
+            if value and self.on_pick:
+                self.on_pick(self.room)
         return super().itemChange(change, value)
 
     def handle_dragged(self, role, scene_pos):
         x0, y0 = self.room.x, self.room.y
         x1, y1 = x0 + self.room.w, y0 + self.room.d
         px, py = _snap(scene_pos.x()), _snap(scene_pos.y())
-        if "L" in role:
+        if "W" in role:
             x0 = min(px, x1 - MIN_ROOM)
-        if "R" in role:
+        if "E" in role:
             x1 = max(px, x0 + MIN_ROOM)
-        if "B" in role:
+        if "S" in role:
             y0 = min(py, y1 - MIN_ROOM)
-        if "T" in role:
+        if "N" in role:
             y1 = max(py, y0 + MIN_ROOM)
         self.room.x, self.room.y = x0, y0
         self.room.w, self.room.d = x1 - x0, y1 - y0
@@ -159,7 +183,7 @@ class FurnitureItem(QGraphicsRectItem):
         self.setToolTip(label)
         text = QGraphicsSimpleTextItem(label, self)
         text.setFlag(QGraphicsItem.ItemIgnoresTransformations, True)
-        text.setPos(-FURNITURE_MARK / 2.0 + 4.0, -FURNITURE_MARK / 2.0 + 4.0)
+        text.setPos(-FURNITURE_MARK / 2.0 + 4.0, FURNITURE_MARK / 2.0 - 4.0)
         self.setPos(item.x, item.y)
 
     def itemChange(self, change, value):

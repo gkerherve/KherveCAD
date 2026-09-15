@@ -181,3 +181,162 @@ def test_furniture_catalogue_parts_all_exist():
     for parts in H.FURNITURE_CATALOG.values():
         for part_id in parts:
             assert part_id in PARTS, part_id
+
+
+# ------------------------------------------------ openings, no booleans
+def _types(node):
+    return {n.type for n in node.walk()}
+
+
+def test_a_wall_with_openings_is_solid_pieces_not_a_difference():
+    # the preview draws a difference as its uncut first operand, which
+    # hid every door and window until OpenSCAD finished
+    nodes = H._wall_node((0.0, 0.0), (5000.0, 0.0),
+                         [(1000.0, 900.0, 2000.0, 0.0, "door"),
+                          (3000.0, 1200.0, 1200.0, 900.0, "window")],
+                         200.0, 2400.0)
+    wall, door_glass, window_glass = nodes
+    assert "difference" not in _types(wall)
+    names = sorted(c.name for c in wall.children[0].children)
+    # 3 piers, a lintel over the door, a sill + lintel for the window
+    assert names == ["Lintel", "Lintel", "Pier", "Pier", "Pier", "Sill"]
+    # the wall's solid volume is the box minus both openings, exactly
+    tris = mesh.tessellate(wall, fn=8)
+    assert tris
+    vol = sum(c.params["width"] * c.params["depth"] * c.params["height"]
+              for c in wall.children[0].children)
+    assert vol == pytest.approx(200.0 * (5000.0 * 2400.0
+                                         - 900.0 * 2000.0
+                                         - 1200.0 * 1200.0))
+    for glass in (door_glass, window_glass):
+        assert glass.params["material"] == "Glass"
+        assert glass.params["alpha"] < 1.0      # see-through
+    assert door_glass.children[0].name == "Door glass"
+
+
+def test_overlapping_openings_do_not_overlap_pieces():
+    spans = H._opening_spans([(0.0, 1000.0, 2000.0, 0.0, "door"),
+                              (500.0, 1000.0, 2000.0, 0.0, "door")],
+                             4000.0, 2400.0)
+    assert spans[0][:2] == (0.0, 1000.0)
+    assert spans[1][:2] == (1000.0, 1500.0)
+
+
+# ------------------------------------------- furniture as nested Objects
+def test_each_piece_of_furniture_is_its_own_object_inside_the_floor(window):
+    house = H.House(floors=[H.Floor("Ground floor", rooms=[
+        H.Room("Toilet", 0, 0, 2000, 1600, furniture=[
+            H.Furniture("home_toilet", 1000, 500, 180.0),
+            H.Furniture("room_chair", 500, 1000),
+            H.Furniture("room_chair", 1500, 1000)])])])
+    ground, = H.apply(window.model, house)
+    inner = [n for n in ground.walk()
+             if n.type == "component" and n is not ground]
+    assert [n.name for n in inner] == ["Toilet", "Chair", "Chair 2"]
+    assert inner[0].params["rz"] == 180.0
+    code = window.model.to_scad()
+    assert "module Toilet()" in code and "Toilet();" in code
+    for node in window.model.root.walk():
+        assert not validate(node)
+
+
+# ----------------------------------------------------- build_house spec
+SPEC = {"floors": [{"rooms": [
+    {"name": "Living room", "x": 0, "y": 0, "w": 5000, "d": 4500,
+     "openings": [{"kind": "door", "side": "S", "offset": 3400}],
+     "furniture": [{"part_id": "home_sofa", "size": "3-seater",
+                    "color": "Grey", "wall": "N"},
+                   {"part_id": "home_bookcase", "wall": "E",
+                    "along": 1000}]},
+    {"name": "Kitchen", "x": 5000, "y": 0, "w": 3000, "d": 4500,
+     "furniture": [{"part_id": "home_kitchen", "size": "3 units",
+                    "wall": "E"},
+                   {"part_id": "room_table", "x": 1500, "y": 2000}]},
+]}], "garden": {"width": 3000}}
+
+
+def test_house_from_spec_puts_backs_flush_against_walls():
+    house = H.house_from_spec(SPEC)
+    floor = house.floors[0]
+    living, kitchen = floor.rooms
+    sofa, bookcase = living.furniture
+    # sofa: 950 deep, back against N's inside face (4500 - 100)
+    assert sofa.rz == 0.0 and sofa.x == 2500.0
+    assert sofa.y == pytest.approx(4400.0 - 475.0, abs=1.0)
+    assert sofa.dims["_color"] == "Grey" and sofa.dims["w"] == 2200.0
+    # bookcase turned to face W, its back on the shared wall's face
+    assert bookcase.rz == -90.0 and bookcase.y == 1000.0
+    assert bookcase.x == pytest.approx(4900.0 - 150.0, abs=1.0)
+    units, table = kitchen.furniture
+    assert units.x == pytest.approx(7900.0 - 300.0, abs=1.0)
+    assert (table.x, table.y) == (6500.0, 2000.0)     # room-relative
+    assert house.garden.width == 3000.0
+
+
+@pytest.mark.parametrize("bad, words", [
+    ({}, "floors"),
+    ({"floors": [{"rooms": [{"w": 1000}]}]}, "'d'"),
+    ({"floors": [{"rooms": [{"w": 1, "d": 1, "openings": [
+        {"side": "Q"}]}]}]}, "side"),
+    ({"floors": [{"rooms": [{"w": 1, "d": 1, "furniture": [
+        {"part_id": "nope"}]}]}]}, "No library part"),
+    ({"floors": [{"rooms": [{"w": 1, "d": 1, "furniture": [
+        {"part_id": "home_sofa", "size": "huge"}]}]}]}, "no size"),
+])
+def test_house_from_spec_refuses_with_a_reason(bad, words):
+    with pytest.raises(H.HouseError, match=words):
+        H.house_from_spec(bad)
+
+
+def test_build_house_tool_inserts_and_reports(window):
+    out = H.build_house(window, SPEC)
+    names = [o["name"] for o in out["objects"]]
+    assert names == ["Ground floor", "Garden"]
+    assert "Sofa" in out["objects"][0]["contains"]
+    dry = H.build_house(window, dict(SPEC, dry_run=True))
+    assert dry["dry_run"] and len(window.model.root.children) == 2
+
+
+# ------------------------------------------------------ canvas handles
+def test_room_handles_move_the_side_they_sit_on(app):
+    from PyQt5.QtCore import QPointF
+
+    from khervecad import house_items as HI
+    room = H.Room("A", 0.0, 0.0, 4000.0, 3000.0)
+    item = HI.RoomItem(room)
+    by_role = {h.role: h for h in item.handles}
+    assert len(by_role) == 8
+    # Y-up: the N handles sit on the top edge (y = d), S on y = 0
+    assert by_role["N"].pos().y() == 3000.0
+    assert by_role["SW"].pos() == QPointF(0.0, 0.0)
+    item.handle_dragged("N", QPointF(2000.0, 3600.0))
+    assert (room.y, room.d) == (0.0, 3600.0)        # top edge moved
+    item.handle_dragged("SW", QPointF(-500.0, 500.0))
+    assert (room.x, room.y, room.w, room.d) == (-500.0, 500.0, 4500.0,
+                                                3100.0)
+    item.handle_dragged("E", QPointF(4100.0, 9999.0))
+    assert room.w == 4600.0 and room.d == 3100.0    # E only moves x
+
+
+def test_selected_room_sits_above_its_neighbours(app):
+    from PyQt5.QtWidgets import QGraphicsScene
+
+    from khervecad import house_items as HI
+    scene = QGraphicsScene()
+    a = HI.RoomItem(H.Room("A", 0, 0, 4000, 3000))
+    b = HI.RoomItem(H.Room("B", 4000, 0, 4000, 3000))
+    scene.addItem(a)
+    scene.addItem(b)
+    a.setSelected(True)
+    assert a.zValue() > b.zValue()
+
+
+# ---------------------------------------------------------- zoom range
+def test_3d_zoom_reaches_house_scale(window):
+    from khervecad import viewnav
+    view = window.view3d
+    view.distance = 4000.0
+    for _ in range(40):
+        viewnav.zoom_3d(view, 0.5)
+    assert view.distance == view.MAX_DISTANCE
+    assert view.MAX_DISTANCE >= 100_000.0     # a 100 m site, not 5 m

@@ -1133,6 +1133,81 @@ TOOLS = [
         }),
     },
     {
+        "name": "build_house",
+        "description": (
+            "The House Builder in one call: floors of rectangular rooms "
+            "(x, y, w, d in mm — wall centre-lines, so rooms sharing an "
+            "edge share ONE wall), doors and windows on each room's N/S/"
+            "E/W side (see-through glass panes, openings built from solid "
+            "wall pieces so the preview shows them), and furniture from "
+            "the Part Library. Each floor is an Object stacked in Z; every "
+            "piece of furniture is its own Object inside it. Place a piece "
+            "with `wall` ('N'/'S'/'E'/'W': back flush against that wall, "
+            "turned to face the room, `along` = its centre's distance "
+            "from the room's W or S corner, default the middle) or with "
+            "x/y from the room's corner and rz. Never assemble walls or "
+            "furniture by hand."
+        ),
+        "input_schema": _obj({
+            "floors": {
+                "type": "array",
+                "description": "Bottom to top.",
+                "items": {"type": "object", "properties": {
+                    "name": {"type": "string"},
+                    "wall_height": {"type": "number"},
+                    "wall_thickness": {"type": "number"},
+                    "slab_thickness": {"type": "number"},
+                    "rooms": {"type": "array", "items": {
+                        "type": "object", "properties": {
+                            "name": {"type": "string"},
+                            "x": {"type": "number"},
+                            "y": {"type": "number"},
+                            "w": {"type": "number"},
+                            "d": {"type": "number"},
+                            "openings": {"type": "array", "items": {
+                                "type": "object", "properties": {
+                                    "kind": {"type": "string",
+                                             "enum": ["door", "window"]},
+                                    "side": {"type": "string",
+                                             "enum": ["N", "S", "E", "W"]},
+                                    "offset": {
+                                        "type": "number",
+                                        "description": "From the side's "
+                                        "W (N/S sides) or S (E/W sides) "
+                                        "corner."},
+                                    "width": {"type": "number"},
+                                    "height": {"type": "number"},
+                                    "sill": {"type": "number"}}}},
+                            "furniture": {"type": "array", "items": {
+                                "type": "object", "properties": {
+                                    "part_id": {"type": "string"},
+                                    "size": {"type": "string"},
+                                    "color": {"type": "string"},
+                                    "dims": {"type": "object"},
+                                    "name": {"type": "string"},
+                                    "wall": {"type": "string",
+                                             "enum": ["N", "S", "E", "W"]},
+                                    "along": {"type": "number"},
+                                    "gap": {"type": "number"},
+                                    "x": {"type": "number"},
+                                    "y": {"type": "number"},
+                                    "z": {"type": "number"},
+                                    "rz": {"type": "number"}},
+                                "required": ["part_id"]}}},
+                        "required": ["w", "d"]}}}},
+            },
+            "garden": {"type": "object",
+                       "description": "Lawn beside the house; omit for "
+                                      "none.",
+                       "properties": {"width": {"type": "number"},
+                                      "depth": {"type": "number"},
+                                      "gap": {"type": "number"}}},
+            "dry_run": {"type": "boolean",
+                        "description": "Check and resolve placements; "
+                                       "build nothing."},
+        }),
+    },
+    {
         "name": "list_molecules",
         "description": (
             "The compound library: about 80 common compounds — gases, "

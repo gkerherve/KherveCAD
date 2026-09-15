@@ -35,13 +35,8 @@ from . import house_items as HI
 from . import icons
 from .library import PARTS as LIBRARY_PARTS
 
-_ORDINALS = ("Ground floor", "First floor", "Second floor", "Third floor",
-            "Fourth floor", "Fifth floor")
 MIN_ROOM_UI = 500.0
-
-
-def _floor_default_name(index: int) -> str:
-    return _ORDINALS[index] if index < len(_ORDINALS) else f"Floor {index}"
+_floor_default_name = H.floor_default_name
 
 
 def _spin(lo, hi, value, step=50.0, suffix=" mm", decimals=0):
@@ -64,6 +59,7 @@ class FloorCanvas(QGraphicsView):
         self.setRenderHint(QPainter.Antialiasing)
         self.setBackgroundBrush(QColor("#f4f5f7"))
         self.setDragMode(QGraphicsView.RubberBandDrag)
+        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.scale(0.09, -0.09)                # mm -> px, Y-up
 
     def rebuild(self, floor):
@@ -109,9 +105,14 @@ class FloorCanvas(QGraphicsView):
         self.scene().addLine(x0, 0.0, x1, 0.0, origin_pen)
         self.scene().addLine(0.0, y0, 0.0, y1, origin_pen)
 
+    #: canvas zoom range, px per mm — a 100 m site down to a doorframe
+    MIN_ZOOM, MAX_ZOOM = 0.002, 5.0
+
     def wheelEvent(self, event):
         factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15
-        self.scale(factor, factor)
+        current = abs(self.transform().m11())
+        if self.MIN_ZOOM < current * factor < self.MAX_ZOOM:
+            self.scale(factor, factor)
 
 
 class HouseBuilder(QDialog):

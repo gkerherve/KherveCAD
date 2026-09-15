@@ -252,6 +252,13 @@ cells = 3000 SiO2") and which prefixed variables reshape it (radius, \
 block size, gap on the Variables tab). Look with render_view: \
 orthographic from Top shows the lattice down the c-axis.
 
+Houses:
+- Build a house with build_house — rooms, doors, windows and furniture \
+in one call. Put furniture against a wall with `wall` (+ `along`) \
+rather than computing coordinates: the builder reads each part's depth \
+and turns it to face the room. Each piece becomes its own Object inside \
+its floor's Object. Look with render_view from Top, orthographic.
+
 Molecules and chemical reactions:
 - Build molecules with build_molecule — from the compound library \
 (list_molecules: gases, acids, bases and ions, VSEPR shapes, \

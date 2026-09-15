@@ -181,6 +181,10 @@ class View3D(QWidget):
     #: the camera's near clipping distance (mm). Geometry closer than
     #: this is cut away at the plane, never dropped whole (paintEvent).
     NEAR_PLANE = 0.1
+    #: camera distance range, mm — wide enough to frame a whole house
+    #: (or a site plan) as well as a 2 mm close-up of a screw thread
+    MIN_DISTANCE = 2.0
+    MAX_DISTANCE = 1.0e6
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1702,7 +1706,8 @@ class View3D(QWidget):
     def wheelEvent(self, event):
         self.user_moved = True
         factor = 0.87 if event.angleDelta().y() > 0 else 1.15
-        self.distance = max(2.0, min(5000.0, self.distance * factor))
+        self.distance = max(self.MIN_DISTANCE,
+                            min(self.MAX_DISTANCE, self.distance * factor))
         self._begin_fast()                # draft while zooming...
         self._idle.start()                # ...back to crisp when it stops
         self.update()
