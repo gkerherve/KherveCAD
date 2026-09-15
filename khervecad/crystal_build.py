@@ -100,6 +100,10 @@ class Spec:
     min_gap: float = 1.0                   # nm between particles
     substrate: bool = True
     random_turn: bool = True
+    #: write the counts in as numbers instead of document variables: a
+    #: Part Library crystal must stand alone, and OpenSCAD modules only
+    #: see top-level variables
+    inline: bool = False
 
     def check(self):
         def bad(msg):
@@ -745,12 +749,20 @@ def program(spec: Spec):
         f"// Source: {c.source}. Covalent radii (Cordero et al. 2008).",
         "// UNITS: nanometres. Built by KherveCAD's Crystal Builder.",
     ]
+    body = "\n".join(modules) + "\n" + "".join(
+        f"{at}{scale}{name}();  // {label}\n" for at, name, label in calls)
+    if spec.inline and variables:
+        # a part that must stand alone: its numbers written in (whole
+        # words only, so quartz_N never touches the local quartz_ni)
+        values = {name: _n(value) if isinstance(value, float)
+                  else str(value) for name, value, _c in variables}
+        body = re.sub(r"\b(" + "|".join(map(re.escape, values)) + r")\b",
+                      lambda m: values[m.group(1)], body)
+        variables = []
     text = "\n".join(head) + "\n"
     text += "".join(f"{name} = {_n(value) if isinstance(value, float) else value};"
                     f"  // {comment}\n" for name, value, comment in variables)
-    text += "\n" + "\n".join(modules) + "\n"
-    text += "".join(f"{at}{scale}{name}();  // {label}\n"
-                    for at, name, label in calls)
+    text += "\n" + body
     return text, stats
 
 

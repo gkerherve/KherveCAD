@@ -220,6 +220,26 @@ def test_scatter_repeats_with_its_seed_and_owns_up_when_full():
     assert any("particles asked for" in note for note in stats["notes"])
 
 
+def test_every_crystal_is_a_library_unit_cell_and_supercell():
+    from khervecad import library
+    for key in LIBRARY:
+        for part_id in (f"crystal_{key}", f"supercell_{key}"):
+            assert library.build_part(part_id, {"cells": 2}).children, \
+                part_id
+
+
+def test_a_library_supercell_stands_alone(window):
+    """Inserted inside an Object, a supercell must not lean on variables
+    its module cannot see in OpenSCAD: the counts are written in."""
+    from khervecad.mcp_tools import McpToolExecutor
+    out = McpToolExecutor(window).execute(
+        "insert_part", {"part_id": "supercell_quartz", "size": "3x3x3"})
+    assert window.model.unit == "nm" and "nanometres" in out["note"]
+    assert "quartz_na" not in window.model.to_scad()
+    # 27 cells of three SiO4 tetrahedra, and the supercell's box
+    assert len(mesh.tessellate(window.model.root)) == 27 * 3 * 4 + 12
+
+
 def test_dialog_counts_refuses_and_builds(window):
     from khervecad import crystal_dialog
     panel = crystal_dialog.open_builder(window)

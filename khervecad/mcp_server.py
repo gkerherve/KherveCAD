@@ -227,7 +227,9 @@ alpha-quartz, graphite, h-BN — with space group, cell, atoms per cell, \
 density and polyhedra; build_crystal builds from it, or from `custom` \
 (a, b, c, alpha, beta, gamma and every atom of the conventional cell in \
 fractional coordinates, from a paper or a CIF) when the material is \
-missing.
+missing. Every library crystal is a ready Part Library part too: \
+insert_part with part_id "crystal_<key>" (its unit cell) or \
+"supercell_<key>" (size "2x2x2" to "6x6x6") — the quickest start.
 - Work in NANOMETRES (build_crystal switches an empty document to nm) \
 and in the builder's hierarchy, each level its own Object: the UNIT \
 CELL (atoms at covalent radii, the lattice box, coordination polyhedra \

@@ -547,7 +547,8 @@ class MainWindow(QMainWindow):
                 lambda _=False, b=build: self._load_example(b))
 
     def _insert_library_part(self, part_id):
-        from .library import default_part
+        from .library import default_part, prepare_document
+        note = prepare_document(self.model, part_id)
         try:
             node = default_part(part_id)
         except Exception as exc:
@@ -558,6 +559,8 @@ class MainWindow(QMainWindow):
         self.model.structure_changed.emit()
         self.builder.tree.select_nodes([node])
         self.view3d.fit()
+        if note:
+            self.statusBar().showMessage(note, 10000)
 
     def _load_example(self, build):
         if not self._confirm_discard():

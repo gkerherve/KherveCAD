@@ -1191,8 +1191,8 @@ PARTS = {
 
 # parts contributed by sibling modules (chemistry, room & furniture);
 # each entry carries its own `build` callable, dispatched by build_part.
-from . import (library_cards, library_chem, library_home,  # noqa: E402
-               library_kcad, library_lego, library_lego_sets,
+from . import (library_cards, library_chem, library_crystal,  # noqa: E402
+               library_home, library_kcad, library_lego, library_lego_sets,
                library_pots, library_room, library_vacuum)
 PARTS.update(library_vacuum.PARTS)
 PARTS.update(library_chem.PARTS)
@@ -1203,10 +1203,19 @@ PARTS.update(library_cards.PARTS)
 PARTS.update(library_lego.PARTS)
 PARTS.update(library_lego_sets.PARTS)
 PARTS.update(library_kcad.PARTS)
+PARTS.update(library_crystal.PARTS)
 
 #: dialog fields holding a count (integer spin box, no "mm" suffix)
 _COUNT_FIELDS = ({"bolts"} | library_lego.COUNT_FIELDS
-                 | library_home.COUNT_FIELDS)
+                 | library_home.COUNT_FIELDS | library_crystal.COUNT_FIELDS)
+
+
+def prepare_document(model, part_id: str) -> str:
+    """Let a part set the document up before it lands — a crystal
+    switches an empty document to nanometres — and say what changed (or
+    why it may read wrong). Every insert path calls it."""
+    prepare = (PARTS.get(part_id) or {}).get("prepare")
+    return prepare(model) if callable(prepare) else ""
 
 
 #: electropolished stainless steel — the colour of UHV hardware
@@ -1519,6 +1528,7 @@ class PartLibraryDialog(QDialog):
             dims["_size"] = self._size.currentText()
         if PARTS[part_id].get("colors"):
             dims["_color"] = self._color.currentText()
+        note = prepare_document(self.model, part_id)
         node = build_part(part_id, dims)
         size = self._size.currentText().split(" ")[0] \
             if self._size.isEnabled() else ""
@@ -1532,3 +1542,6 @@ class PartLibraryDialog(QDialog):
         comp = self.model.enclose_as_part(node)
         self.inserted = comp
         self.part_inserted.emit(comp)
+        window = self.parent()
+        if note and hasattr(window, "statusBar"):
+            window.statusBar().showMessage(note, 10000)

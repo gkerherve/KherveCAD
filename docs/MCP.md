@@ -148,7 +148,10 @@ itself. The radius, block size and gap become document variables named
 after the crystal (`quartz_r`, `quartz_N`), so the Variables tab
 reshapes the build afterwards. The same builder is **Library ▸ Crystal
 Builder…** in the app, and the server's instructions tell a client
-never to type a crystal's atoms by hand.
+never to type a crystal's atoms by hand. Every library crystal is also
+a ready Part Library part — `crystal_<key>` (the unit cell) and
+`supercell_<key>` (2×2×2 to 6×6×6) — for `insert_part` and the
+Library menu.
 
 ## Characters and organic shapes
 

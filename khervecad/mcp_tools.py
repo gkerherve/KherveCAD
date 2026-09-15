@@ -1442,6 +1442,7 @@ class McpToolExecutor:
                     + (f". It offers: {', '.join(colors)}." if colors
                        else " — it has no colour choice."))
             dims["_color"] = match[0]
+        note = library.prepare_document(self._model, part_id)
         node = library.build_part(part_id, dims)
         label = size_key.split(" ")[0] if size_key else ""
         if label and not node.name.startswith(label):
@@ -1451,8 +1452,11 @@ class McpToolExecutor:
         # A library part is a finished part: one opaque row in the Main
         # assembly, its construction editable in the Object tab.
         comp = self._model.enclose_as_part(node, params.get("name", ""))
-        return {"inserted": comp.id, "name": comp.name,
-                "part_id": part_id, "size": size_key or None}
+        result = {"inserted": comp.id, "name": comp.name,
+                  "part_id": part_id, "size": size_key or None}
+        if note:
+            result["note"] = note
+        return result
 
     def _t_select_nodes(self, params) -> dict:
         nodes = self._nodes(params["ids"]) if params.get("ids") else []

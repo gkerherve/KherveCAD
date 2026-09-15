@@ -458,6 +458,17 @@ into a new module and import.
   - `crystal_dialog.py` — Library ▸ Crystal Builder…: a non-modal panel
                        over crystal_build with a live count; a refused
                        build disables Build and says why.
+  - `library_crystal.py` — every library crystal as Part Library parts:
+                       `crystal_<key>` ("Crystals (unit cells)") and
+                       `supercell_<key>` ("Crystals (supercells)", sizes
+                       2x2x2..6x6x6, "cells" count field), built with
+                       `Spec.inline` — the counts written in as numbers,
+                       because a library part lands inside an enclosing
+                       Object and OpenSCAD modules only see top-level
+                       variables. A part spec may carry `prepare(model)`:
+                       `library.prepare_document` runs it from every
+                       insert path (menu, dialog, MCP) — crystals switch
+                       an empty document to nm and drop to 12 segments.
   - `legoize.py`     — **Object ↔ Lego** (Qt-free). `column_hits` casts
                        a ray up each grid column and records every
                        surface as an entry (+1, facing down) or an exit

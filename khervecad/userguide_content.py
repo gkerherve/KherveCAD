@@ -830,6 +830,10 @@ become variables named after the crystal &mdash; <tt>quartz_r</tt>,
 <tt>quartz_N</tt> &mdash; so the <b>Variables</b> tab reshapes the build
 afterwards. An assistant connected over MCP uses the same builder
 (<tt>list_crystals</tt>, <tt>build_crystal</tt>).</p>
+<p>Every crystal is also ready-made in the <b>Library</b> menu and the
+Part Library: <b>Crystals (unit cells)</b> and <b>Crystals
+(supercells)</b>, 2&times;2&times;2 to 6&times;6&times;6 cells, one
+click each.</p>
 """),
 
         ("code", "OpenSCAD code", f"""
