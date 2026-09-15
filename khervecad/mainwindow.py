@@ -37,6 +37,18 @@ from .toolbars import build_options_bar, build_tool_bar
 from .view2d import PLANES, SketchScene, SketchView
 from .view3d import View3D
 
+#: library categories gathered into the Library ▸ Lego menu, with the
+#: submenu each becomes ("&&" is a literal & in a Qt menu title)
+LEGO_CATEGORIES = {"Lego": "Bricks && plates", "Lego sets": "Lego sets"}
+#: library categories fused into Library ▸ House & home, sorted by room
+HOME_CATEGORIES = ("Home furniture", "Room & furniture")
+
+
+def _menu_text(text) -> str:
+    """*text* as a Qt menu title: a lone "&" marks the shortcut letter,
+    so "Patio table & parasol" read "Patio table  parasol"."""
+    return str(text).replace("&", "&&")
+
 
 class MainWindow(QMainWindow):
     #: every open window, so a second instance isn't garbage-collected.
@@ -508,11 +520,24 @@ class MainWindow(QMainWindow):
                        "Ctrl+L")
         menu.addSeparator()
         submenus = {}
-        crystals_menu = molecules_menu = None
-        crystal_subs, molecule_subs = {}, {}
+        crystals_menu = molecules_menu = lego_menu = home_menu = None
+        crystal_subs, molecule_subs, lego_subs = {}, {}, {}
         for part_id, spec in PARTS.items():
             cat = spec.get("category", "Other")
-            if cat.startswith("Crystals ("):
+            if cat in HOME_CATEGORIES:
+                # House & home: its builder on top, the pieces by room
+                # (built once, from the House Builder's own catalogue)
+                if home_menu is None:
+                    home_menu = self._build_home_menu(menu, PARTS)
+                continue
+            if cat in LEGO_CATEGORIES:
+                if lego_menu is None:
+                    lego_menu = self._build_lego_menu(menu)
+                sub = lego_subs.get(cat)
+                if sub is None:
+                    sub = lego_subs[cat] = lego_menu.addMenu(
+                        LEGO_CATEGORIES[cat])
+            elif cat.startswith("Crystals ("):
                 if crystals_menu is None:
                     from . import crystal_dialog
                     crystals_menu = menu.addMenu(icons.icon("mdi.atom"),
@@ -525,7 +550,8 @@ class MainWindow(QMainWindow):
                 name = cat[len("Crystals ("):-1].capitalize()
                 sub = crystal_subs.get(name)
                 if sub is None:
-                    sub = crystal_subs[name] = crystals_menu.addMenu(name)
+                    sub = crystal_subs[name] = crystals_menu.addMenu(
+                        _menu_text(name))
             elif cat.startswith("Molecules: "):
                 if molecules_menu is None:
                     from . import molecule_dialog
@@ -538,30 +564,69 @@ class MainWindow(QMainWindow):
                 name = cat[len("Molecules: "):]
                 sub = molecule_subs.get(name)
                 if sub is None:
-                    sub = molecule_subs[name] = molecules_menu.addMenu(name)
+                    sub = molecule_subs[name] = molecules_menu.addMenu(
+                        _menu_text(name))
             else:
                 sub = submenus.get(cat)
                 if sub is None:
-                    sub = submenus[cat] = menu.addMenu(cat)
+                    sub = submenus[cat] = menu.addMenu(_menu_text(cat))
             sub.addAction(
-                spec["label"],
+                _menu_text(spec["label"]),
                 lambda _=False, pid=part_id: self._insert_library_part(pid))
+
+    def _build_lego_menu(self, menu):
+        """Library ▸ Lego: the Lego tools on top, then the bricks and the
+        sets — everything Lego in one place."""
         from . import lego_builder, lego_convert
-        menu.addSeparator()
-        menu.addAction(icons.icon("mdi.toy-brick-outline"),
-                       "Lego Builder...",
+        lego = menu.addMenu(icons.icon("mdi.toy-brick-outline"), "Lego")
+        lego.addAction(icons.icon("mdi.toy-brick-outline"), "Lego Builder...",
                        lambda: lego_builder.open_builder(self))
-        menu.addAction(icons.icon("mdi.toy-brick-plus-outline"),
+        lego.addAction(icons.icon("mdi.toy-brick-plus-outline"),
                        "Convert Selection to Lego...",
                        lambda: lego_convert.convert_to_lego(self))
-        menu.addAction(icons.icon("mdi.cube-outline"),
+        lego.addAction(icons.icon("mdi.cube-outline"),
                        "Fuse Lego into One Solid",
                        lambda: lego_convert.fuse_lego(self))
+        lego.addSeparator()
+        return lego
+
+    def _build_home_menu(self, menu, parts):
+        """Library ▸ House & home: the House Builder on top, then every
+        home and room piece in a submenu per room — the House Builder's
+        own catalogue, so the menu and the builder offer the same things
+        (a piece may sit in several rooms) — and whatever no room lists
+        under Fixtures & other."""
         from . import house_dialog
-        menu.addSeparator()
-        menu.addAction(icons.icon("mdi.home-city-outline"),
+        from .house import FURNITURE_CATALOG
+        home = menu.addMenu(icons.icon("mdi.home-city-outline"),
+                            "House && home")
+        home.addAction(icons.icon("mdi.home-city-outline"),
                        "House Builder...",
                        lambda: house_dialog.open_builder(self))
+        home.addSeparator()
+
+        def add(sub, pid):
+            sub.addAction(_menu_text(parts[pid]["label"]),
+                          lambda _=False, p=pid: self._insert_library_part(p))
+
+        listed = set()
+        for room, ids in FURNITURE_CATALOG.items():
+            ids = [pid for pid in ids if pid in parts]
+            if not ids:
+                continue
+            sub = home.addMenu(_menu_text(room if room != "Other"
+                                          else "Other pieces"))
+            for pid in ids:
+                add(sub, pid)
+            listed.update(ids)
+        rest = [pid for pid, spec in parts.items()
+                if spec.get("category") in HOME_CATEGORIES
+                and pid not in listed]
+        if rest:
+            sub = home.addMenu("Fixtures && other")
+            for pid in rest:
+                add(sub, pid)
+        return home
 
     def _build_examples_menu(self, menubar):
         """An Examples menu of complete demo models; picking one replaces
