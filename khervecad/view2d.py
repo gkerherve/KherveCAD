@@ -1416,6 +1416,21 @@ class SketchScene(QGraphicsScene):
                 if isinstance(item, (ShapeItem, PartItem))]
 
     def emit_selection(self):
+        """Report the selection on the **next event-loop turn**.
+
+        This runs from an item's `itemChange` while Qt is still inside
+        `QGraphicsItem::mousePressEvent`; listeners call `set_highlight`,
+        which rebuilds the scene and frees the item being clicked — Qt
+        then touched the freed item and the process segfaulted (clicking
+        a House Builder floor in the 2D view). Coalesced, so a
+        clearSelection + select pair reports once."""
+        if getattr(self, "_selection_pending", False):
+            return
+        self._selection_pending = True
+        QTimer.singleShot(0, self._flush_selection)
+
+    def _flush_selection(self):
+        self._selection_pending = False
         self.selection_changed.emit(self.selected_nodes())
 
     def select_nodes(self, nodes):
