@@ -163,6 +163,34 @@ def add_menu_button(bar, key, glyph, fallback, tip, actions, on_click):
     return button
 
 
+def add_options_button(bar, key, glyph, fallback, tip, actions):
+    """Append a separator and a plain dropdown button to *bar*: any
+    click opens *actions* — a View menu's own checkable actions, so a
+    tick in one is a tick in the other. Unlike `add_menu_button` there
+    is no single feature to switch from the icon itself (the actions
+    are independent looks, not variations of one thing), so the whole
+    button is the menu launcher."""
+    from . import icons
+    menu = QMenu(bar)
+    menu.addActions(list(actions))
+    line = QFrame(bar)
+    line.setFrameShape(QFrame.VLine)
+    bar.layout().addWidget(line)
+    button = QToolButton(bar)
+    button.setMenu(menu)
+    button.setPopupMode(QToolButton.InstantPopup)
+    art = icons.icon(glyph, "#e6e9ec")
+    if art.isNull():                           # qtawesome missing
+        button.setText(fallback)
+    else:
+        button.setIcon(art)
+    button.setToolTip(tip)
+    bar.layout().addWidget(button)
+    bar.buttons[key] = button
+    bar.place()
+    return button
+
+
 # ------------------------------------------------------------------ 2D
 def pan_2d(view, dx, dy):
     """Scroll the sketch by a fraction of its size (dx > 0 shows more to

@@ -128,6 +128,29 @@ def test_3d_bar_carries_exploded_view_and_cut_through(app):
         win.close()
 
 
+def test_3d_bar_carries_the_display_options_menu(app):
+    """Platform & shadow, cavity shading, edge lines, scale bar, smooth
+    shading, reference overlay and hardware rendering — the View
+    menu's own actions, opened from one button on the 3D bar."""
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        bar = win.view3d.nav_bar
+        display = bar.buttons["display"]
+        expected = [win._stage_act, win._cavity_act, win._edges_act,
+                   win._scale_bar_act, win._smooth_act, win._overlay_act,
+                   win._gl_act]
+        assert display.menu().actions() == expected
+        assert not win._cavity_act.isChecked()
+        win._cavity_act.trigger()
+        assert win.view3d.cavity
+        win.view3d.set_cavity(False)            # the toolbar, say
+        assert not win._cavity_act.isChecked()
+    finally:
+        win._dirty = False
+        win.close()
+
+
 def test_2d_bar_zooms_and_focuses_an_offset_part(app):
     from khervecad.model import DocumentModel
     from khervecad.view2d import SketchScene, SketchView
