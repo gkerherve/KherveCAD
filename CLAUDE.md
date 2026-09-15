@@ -626,6 +626,18 @@ into a new module and import.
                        `tests/test_library_home_more.py`. The vertical
                        toolbar ends with a House Builder button
                        (`toolbars.build_tool_bar`, tip `house_builder`).
+  - `library_prusa.py` — the **Prusa** section (2026-09-15, the user's
+                       request): "Little Prusa man", an original chibi
+                       figure in the spirit of the Little Josef Prusa
+                       character (ellipsoid head, hair and beard, glasses
+                       as a dark rim disc behind a clear lens, orange
+                       T-shirt, jeans; built at 100 mm and scaled to the
+                       size's height), and an Original Prusa MINI+ at its
+                       real 380 × 330 × 380 mm (Z column left, cantilevered
+                       X arm, sliding PEI bed, orange parts, front display)
+                       printing a 40 mm Prusa man; 1:4 desk size too.
+                       Nothing from the Printables files is used — modelled
+                       from scratch. Tested in `tests/test_library_prusa.py`.
   - `house_items.py` — the floor-plan canvas's QGraphicsItems, drawn
                        like an architect's plan (Sep 2026 rework — the
                        first canvas had 400 mm tan squares for every
