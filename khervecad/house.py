@@ -60,6 +60,10 @@ WALL_COLOR = "#f2efe9"
 ROOF_COLOR = "#6b4a3a"
 GLASS_COLOR = "#bfe0e8"
 GLASS_ALPHA = 0.3                     # see-through in preview and render
+#: a door's leaf is clearer than a window: the Glass style lifts alpha
+#: toward 0.45 with its highlight, and at 0.3 a near-white door pane read
+#: as a solid frosted panel in 3D. 0.15 is glrender's floor.
+DOOR_GLASS_ALPHA = 0.15
 GLASS_THICKNESS = 6.0
 GRASS_COLOR = "#5a9c4a"
 
@@ -276,8 +280,9 @@ def _wall_node(p1, p2, openings, thickness, height, name="Wall"):
         pane = piece("Door glass" if kind == "door" else "Glazing",
                      start, end, sill, top, depth=GLASS_THICKNESS,
                      inset=(thickness - GLASS_THICKNESS) / 2.0)
+        alpha = DOOR_GLASS_ALPHA if kind == "door" else GLASS_ALPHA
         glazing.append(_color(pane, GLASS_COLOR, material="Glass",
-                              alpha=GLASS_ALPHA))
+                              alpha=alpha))
         cursor = end
     if length - cursor > 1e-6:
         wall.add(piece("Pier", cursor, length, 0.0, height))

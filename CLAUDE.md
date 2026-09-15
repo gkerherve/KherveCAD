@@ -540,7 +540,10 @@ into a new module and import.
                        looked solid until OpenSCAD finished. Every
                        opening gets a see-through `Glass` pane
                        (`GLASS_ALPHA`): a window's glazing or a door's
-                       glazed leaf. `_opening_spans` clamps openings
+                       glazed leaf — the door clearer (`DOOR_GLASS_ALPHA`
+                       0.15, glrender's floor): the Glass style lifts
+                       alpha with its highlight, and at 0.3 a near-white
+                       door read as a solid frosted panel in 3D. `_opening_spans` clamps openings
                        into the wall and makes overlapping ones
                        disjoint. `build_floor` returns one group per
                        floor (slabs, walls, a flat roof + eave on the

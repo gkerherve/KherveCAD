@@ -212,6 +212,9 @@ def test_a_wall_with_openings_is_solid_pieces_not_a_difference():
         assert glass.params["material"] == "Glass"
         assert glass.params["alpha"] < 1.0      # see-through
     assert door_glass.children[0].name == "Door glass"
+    # a door reads as an open doorway: clearer than a window's glazing
+    assert door_glass.params["alpha"] == H.DOOR_GLASS_ALPHA
+    assert H.DOOR_GLASS_ALPHA < window_glass.params["alpha"]
 
 
 def test_overlapping_openings_do_not_overlap_pieces():
