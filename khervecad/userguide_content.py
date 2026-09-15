@@ -812,6 +812,11 @@ cylinder, hexagonal prism or octahedron filled with every cell whose
 centre lies inside &mdash; or, for big particles, with blocks of
 N&times;N&times;N cells. A sphere's columns are stacked by a
 <i>while</i> loop.</td></tr>
+<tr><td><b>Scatter</b></td><td>several particles spread over an area,
+never touching, each resting on the surface (a half sphere flat on it)
+and turned at random &mdash; a dispersion on a substrate. The particle
+is built once and repeated, so twenty cost little more than one, and
+the seed brings the same arrangement back.</td></tr>
 </table>
 <p>The panel counts the build as you change it &mdash; cells, atoms,
 polyhedra and the triangles the 3D view will draw &mdash; and will not

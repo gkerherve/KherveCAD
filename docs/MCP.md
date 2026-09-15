@@ -133,7 +133,12 @@ paper — into Objects, in nanometres:
 - **particle** — a sphere, hemisphere, cube, box, cylinder, hexagonal
   prism or octahedron filled with every cell (atoms or polyhedra) or
   every N × N × N block of cells whose centre is inside; spheres and
-  hemispheres stack each column with a `while` loop.
+  hemispheres stack each column with a `while` loop;
+- **scatter** — `count` copies of one particle spread over an
+  `area_nm` patch, never touching (`min_gap_nm`), each resting on the
+  plane and turned at random (`seed` repeats an arrangement), on an
+  optional substrate — nanoparticles dispersed on a surface. The
+  particle is built once and instanced, so the copies are nearly free.
 
 `build: "hierarchy"` makes all three side by side. The build is
 counted before anything is drawn — cells, atoms, polyhedra, triangles —

@@ -45,7 +45,7 @@ from functools import lru_cache
 from . import crystal as cr
 
 NM = 0.1                                   # nm per Å
-BUILDS = ("unit_cell", "supercell", "particle", "hierarchy")
+BUILDS = ("unit_cell", "supercell", "particle", "hierarchy", "scatter")
 REPRESENTATIONS = ("auto", "atoms", "polyhedra", "both")
 FILLS = ("auto", "atoms", "polyhedra", "blocks")
 #: shape -> what `size` measures
@@ -92,6 +92,14 @@ class Spec:
     fn: int = 12                           # sphere segments
     scale: float = 1.0                     # model units per nm
     prefix: str = ""
+    #: build "scatter": particles spread over a patch, as a dispersion
+    #: on a substrate reads under an electron microscope
+    count: int = 12
+    area: tuple = (100.0, 100.0)           # nm, the patch they sit on
+    seed: int = 1                          # the same scatter comes back
+    min_gap: float = 1.0                   # nm between particles
+    substrate: bool = True
+    random_turn: bool = True
 
     def check(self):
         def bad(msg):
@@ -122,6 +130,13 @@ class Spec:
         if self.box is not None and (len(self.box) != 3
                                      or min(self.box) <= 0):
             bad("box_nm is three positive edges.")
+        if self.build == "scatter":
+            if not 1 <= int(self.count) <= 500:
+                bad("count runs from 1 to 500 particles.")
+            if len(self.area) != 2 or min(self.area) <= 0:
+                bad("area_nm is [x, y] nanometres, both above 0.")
+            if self.min_gap < 0:
+                bad("min_gap_nm cannot be negative.")
 
 
 # ---------------------------------------------------------------- text
@@ -358,6 +373,53 @@ def _uses_while(spec, V):
             and abs(V[2][0]) < 1e-12 and abs(V[2][1]) < 1e-12)
 
 
+def _footprint(spec) -> float:
+    """Radius of the particle's shadow on the plane, nm: what keeps two
+    scattered particles apart."""
+    s = spec.size
+    if spec.shape == "cube":
+        return s * math.sqrt(2) / 2
+    if spec.shape == "box":
+        bx = spec.box or (s, s, s)
+        return math.hypot(bx[0], bx[1]) / 2
+    return s / 2              # sphere, hemisphere, cylinder, prism, octahedron
+
+
+def _lift(spec) -> float:
+    """How high the particle's centre sits when it rests on the plane (a
+    hemisphere is built standing on z = 0 already)."""
+    s = spec.size
+    if spec.shape == "hemisphere":
+        return 0.0
+    if spec.shape == "box":
+        return (spec.box or (s, s, s))[2] / 2
+    if spec.shape in ("cylinder", "hexagonal_prism"):
+        return (spec.height or s) / 2
+    return s / 2
+
+
+def _scatter_spots(spec):
+    """[(x, y, z, turn)]: dart throwing over the area, no two closer than
+    their footprints plus min_gap, each resting on the plane. The same
+    seed gives the same arrangement; fewer than asked when it is full."""
+    import random
+    rng = random.Random(int(spec.seed))
+    r, lift = _footprint(spec), _lift(spec)
+    reach = [max(side / 2 - r, 0.0) for side in spec.area]
+    apart = (2 * r + spec.min_gap) ** 2
+    spots = []
+    for _dart in range(max(int(spec.count) * 400, 4000)):
+        if len(spots) >= spec.count:
+            break
+        x = rng.uniform(-reach[0], reach[0])
+        y = rng.uniform(-reach[1], reach[1])
+        if all((x - sx) ** 2 + (y - sy) ** 2 >= apart
+               for sx, sy, _z, _t in spots):
+            spots.append((x, y, lift, rng.uniform(0.0, 360.0)
+                          if spec.random_turn else 0.0))
+    return spots
+
+
 def _count_particle(spec, V, S):
     """Cells (or blocks) the particle keeps, counted with the same loops
     and tests the program runs — or from the volume past
@@ -466,8 +528,10 @@ def program(spec: Spec):
     p = spec.prefix or re.sub(r"\W", "_", c.key.lower())
     I = _ident(c.key)
     V = vectors_nm(c)
+    scatter = spec.build == "scatter"
     levels = (["particle", "supercell", "unit_cell"]
-              if spec.build == "hierarchy" else [spec.build])
+              if spec.build == "hierarchy"
+              else ["particle"] if scatter else [spec.build])
     stats = {"crystal": c.key, "name": c.name, "unit": "nm",
              "levels": levels, "notes": []}
     variables, modules, cells_done, calls = [], [], set(), []
@@ -494,12 +558,14 @@ def program(spec: Spec):
                                   " — filled with atoms.")
         cells, exact = _count_particle(spec, V, 1)
         _l, na, npoly, per_cell = _content(c, rep, False, spec)
+        # a scatter draws its particle `count` times: share the budget
+        share = max(1, int(spec.count)) if scatter else 1
         if fill == "auto":
-            fill = rep if cells * per_cell <= COMFORT else "blocks"
+            fill = rep if cells * per_cell * share <= COMFORT else "blocks"
         N = spec.block
         if fill == "blocks":
             blocks, exact = _count_particle(spec, V, N)
-            while blocks > MAX_BLOCKS:
+            while blocks * share > MAX_BLOCKS:
                 bigger = [b for b in _BLOCK_SIZES if b > N]
                 if not bigger:
                     break
@@ -540,8 +606,38 @@ def program(spec: Spec):
         rb = _shape(spec, p)[1]
         label = (f"{c.name} {spec.shape.replace('_', ' ')} "
                  f"{_n(spec.size)} nm ({fill})")
-        calls.append(("", f"{I}_particle", label))
-        placement = rb + max(2.0, 0.15 * rb)
+        if scatter:
+            spots = _scatter_spots(spec)
+            if len(spots) < spec.count:
+                stats["notes"].append(
+                    f"The area holds {len(spots)} of the {spec.count} "
+                    "particles asked for — make it bigger, the particles "
+                    "smaller or the gap tighter.")
+            ax, ay = spec.area
+            lines = []
+            if spec.substrate:
+                lines += ['color("#8a8f98", 0.35)  // Substrate',
+                          f"translate([{_n(-ax / 2)}, {_n(-ay / 2)}, -0.4]) "
+                          f"cube([{_n(ax)}, {_n(ay)}, 0.4]);  "
+                          "// Substrate slab"]
+            rows = ", ".join("[" + ", ".join(_n(v) for v in spot) + "]"
+                             for spot in spots)
+            lines += [f"for (t = [{rows}])  // Particles on the area",
+                      "  translate([t[0], t[1], t[2]]) rotate([0, 0, t[3]]) "
+                      f"{I}_particle();"]
+            modules.append(_module(f"{I}_scatter", lines))
+            drawn = tris * len(spots) + (12 if spec.substrate else 0)
+            stats["scatter"] = {"particles": len(spots),
+                                "area_nm": [ax, ay],
+                                "per_particle_triangles": tris,
+                                "triangles": drawn}
+            total += drawn - tris              # the copies, not the one
+            calls.append(("", f"{I}_scatter",
+                          f"{len(spots)} {c.name} particles on "
+                          f"{_n(ax)} x {_n(ay)} nm"))
+        else:
+            calls.append(("", f"{I}_particle", label))
+            placement = rb + max(2.0, 0.15 * rb)
         if spec.build == "hierarchy" and fill == "blocks":
             spec = replace(spec, supercell=(N, N, N))
 
@@ -751,7 +847,14 @@ def spec_from_params(params: dict) -> Spec:
             gap=float(params.get("gap", 0.03)),
             atom_scale=float(params.get("atom_scale", 1.0)),
             cell_box=bool(params.get("cell_box", True)),
-            fn=int(params.get("segments", 12)))
+            fn=int(params.get("segments", 12)),
+            count=int(params.get("count", 12)),
+            area=tuple(float(v) for v in params.get("area_nm",
+                                                    (100.0, 100.0))),
+            seed=int(params.get("seed", 1)),
+            min_gap=float(params.get("min_gap_nm", 1.0)),
+            substrate=bool(params.get("substrate", True)),
+            random_turn=bool(params.get("random_turn", True)))
     except (TypeError, ValueError) as exc:
         raise BuildError(f"Bad argument: {exc}")
     spec.check()

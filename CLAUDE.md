@@ -439,7 +439,12 @@ into a new module and import.
                        centre is inside; spheres/hemispheres on an upright
                        c-axis stack each column with a `while`, else `for`
                        + `if`); `build: "hierarchy"` = all three side by
-                       side. NANOMETRES; tunables are prefixed document
+                       side; `build: "scatter"` = `count` instances of ONE
+                       particle dart-thrown over an `area` (footprints +
+                       `min_gap` apart, resting on z = 0, turned at
+                       random, seeded; optional substrate slab) — the
+                       budget is shared across the copies.
+                       NANOMETRES; tunables are prefixed document
                        variables (`quartz_r`, `quartz_N`; a second build
                        gets `quartz2_`). Counts cells/atoms/polyhedra/
                        triangles with the program's own loops (by volume

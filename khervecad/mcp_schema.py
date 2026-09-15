@@ -1060,7 +1060,33 @@ TOOLS = [
                                       "conventional cell, fractional."},
             "build": {"type": "string",
                       "enum": ["hierarchy", "unit_cell", "supercell",
-                               "particle"]},
+                               "particle", "scatter"],
+                      "description": "'scatter' spreads `count` copies "
+                                     "of the particle over an area, each "
+                                     "sitting on the plane and turned at "
+                                     "random — a dispersion on a "
+                                     "substrate. One particle is built "
+                                     "and instanced, so the copies are "
+                                     "nearly free."},
+            "count": {"type": "integer",
+                      "description": "scatter: how many particles "
+                                     "(default 12)."},
+            "area_nm": {"type": "array", "items": {"type": "number"},
+                        "description": "scatter: the patch [x, y] they "
+                                       "are spread over, nm."},
+            "seed": {"type": "integer",
+                     "description": "scatter: the same seed gives the "
+                                    "same arrangement."},
+            "min_gap_nm": {"type": "number",
+                           "description": "scatter: smallest gap between "
+                                          "two particles (default 1)."},
+            "substrate": {"type": "boolean",
+                          "description": "scatter: draw a thin slab under "
+                                         "the patch (default true)."},
+            "random_turn": {"type": "boolean",
+                            "description": "scatter: turn each particle "
+                                           "at random about z (default "
+                                           "true)."},
             "representation": {"type": "string",
                                "enum": ["auto", "atoms", "polyhedra",
                                         "both"],

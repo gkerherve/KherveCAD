@@ -187,6 +187,39 @@ def test_mcp_tools(window):
                                    {"crystal": "unobtainium"})["error"]
 
 
+def test_scatter_spreads_particles_over_the_area(window):
+    """Several particles sparse over a patch: inside it, on the plane,
+    never touching."""
+    spec = cb.Spec(get("au"), build="scatter", shape="hemisphere", size=6,
+                   count=15, area=(60.0, 40.0), seed=3, min_gap=1.0)
+    root, stats = _built(spec)
+    assert stats["scatter"]["particles"] == 15
+    spots = cb._scatter_spots(spec)
+    for i, (x, y, z, _turn) in enumerate(spots):
+        assert abs(x) <= 30 and abs(y) <= 20 and z == 0
+        for x2, y2, _z2, _t2 in spots[i + 1:]:
+            gap = ((x - x2) ** 2 + (y - y2) ** 2) ** 0.5
+            assert gap >= 6 + 1 - 1e-9        # two footprints and the gap
+    assert len(mesh.tessellate(root, fn=spec.fn)) == stats["triangles"]
+
+
+def test_a_scattered_sphere_rests_on_the_plane():
+    spec = cb.Spec(get("cu"), build="scatter", shape="sphere", size=5,
+                   count=3, area=(50.0, 50.0))
+    assert all(z == pytest.approx(2.5) for _x, _y, z, _t
+               in cb._scatter_spots(spec))
+
+
+def test_scatter_repeats_with_its_seed_and_owns_up_when_full():
+    same = [cb._scatter_spots(cb.Spec(get("cu"), build="scatter", seed=7))
+            for _ in range(2)]
+    assert same[0] == same[1]
+    _root, stats = _built(cb.Spec(get("cu"), build="scatter", size=10,
+                                  count=50, area=(30.0, 30.0)))
+    assert stats["scatter"]["particles"] < 50
+    assert any("particles asked for" in note for note in stats["notes"])
+
+
 def test_dialog_counts_refuses_and_builds(window):
     from khervecad import crystal_dialog
     panel = crystal_dialog.open_builder(window)

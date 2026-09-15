@@ -235,7 +235,9 @@ such as SiO4 tetrahedra), a SUPERCELL (for loops over na x nb x nc \
 cells), a PARTICLE (sphere, hemisphere, cube, box, cylinder, hexagonal \
 prism or octahedron filled with cells or with N x N x N blocks). build \
 "hierarchy" makes all three side by side — the clearest answer to "show \
-me what this nanoparticle is made of".
+me what this nanoparticle is made of"; build "scatter" spreads `count` \
+copies of one particle over `area_nm`, each resting on the plane and \
+never touching — nanoparticles dispersed on a substrate.
 - Mind the scale: a 10 nm particle holds tens of thousands of atoms and \
 a 100 nm one tens of millions. Atoms are the costliest to draw, \
 polyhedra (one solid per coordination unit) about ten times lighter, \

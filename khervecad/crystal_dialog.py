@@ -2,14 +2,15 @@
 
 A non-modal panel over `crystal_build`: pick a crystal from the library
 (grouped by family, with its space group, cell, density and polyhedra
-shown), choose what to build — the unit cell, a supercell, a particle
-or all three side by side — and how the cells are drawn (atoms at
-covalent radii, coordination polyhedra, or both), the particle's shape
-and size in nanometres and what fills it (cells, or N x N x N blocks of
-cells). Every change re-counts the build: cells, atoms, polyhedra and
-triangles, and a build the 3D view could not draw says so and what to
-change instead of building. Build adds the Objects to Main as one undo
-step; the Variables tab then reshapes them.
+shown), choose what to build — the unit cell, a supercell, a particle,
+all three side by side, or a SCATTER of particles over an area — and
+how the cells are drawn (atoms at covalent radii, coordination
+polyhedra, or both), the particle's shape and size in nanometres and
+what fills it (cells, or N x N x N blocks of cells). Every change
+re-counts the build: cells, atoms, polyhedra and triangles, and a build
+the 3D view could not draw says so and what to change instead of
+building. Build adds the Objects to Main as one undo step; the
+Variables tab then reshapes them.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -32,7 +33,8 @@ from .crystal_library import CATEGORIES, LIBRARY
 
 BUILD_CHOICES = (("Unit cell, supercell and particle", "hierarchy"),
                  ("Unit cell", "unit_cell"), ("Supercell", "supercell"),
-                 ("Particle", "particle"))
+                 ("Particle", "particle"),
+                 ("Scatter particles over an area", "scatter"))
 REP_CHOICES = (("Automatic", "auto"), ("Atoms", "atoms"),
                ("Polyhedra", "polyhedra"), ("Atoms and polyhedra", "both"))
 FILL_CHOICES = (("Automatic", "auto"), ("Atoms", "atoms"),
@@ -126,6 +128,32 @@ class CrystalBuilder(QDialog):
         form.addRow("Block:", self.block)
         self.gap = _spin(0.0, 0.45, 0.03, 0.01, 2)
         form.addRow("Gap between blocks:", self.gap)
+        # ---- scatter
+        self.count = QSpinBox()
+        self.count.setRange(1, 500)
+        self.count.setValue(12)
+        self.count.setSuffix(" particles")
+        form.addRow("Scatter:", self.count)
+        area = QHBoxLayout()
+        self.area = [_spin(1.0, 100000, 100.0, 10.0, 1, " nm")
+                     for _ in range(2)]
+        for box in self.area:
+            area.addWidget(box)
+        form.addRow("Over an area (x, y):", area)
+        self.min_gap = _spin(0.0, 1000.0, 1.0, 0.5, 2, " nm")
+        form.addRow("Smallest gap:", self.min_gap)
+        self.seed = QSpinBox()
+        self.seed.setRange(1, 99999)
+        self.seed.setValue(1)
+        self.seed.setToolTip("The same seed gives the same arrangement")
+        form.addRow("Arrangement seed:", self.seed)
+        self.substrate = QCheckBox("Draw a substrate under them")
+        self.substrate.setChecked(True)
+        form.addRow(self.substrate)
+        self.random_turn = QCheckBox("Turn each particle at random")
+        self.random_turn.setChecked(True)
+        form.addRow(self.random_turn)
+        # ---- common
         self.atom_scale = _spin(0.05, 3.0, 1.0, 0.05, 2,
                                 " × covalent radius")
         form.addRow("Atom size:", self.atom_scale)
@@ -151,14 +179,16 @@ class CrystalBuilder(QDialog):
         self._timer.setInterval(200)
         self._timer.timeout.connect(self._refresh)
         for widget in ([self.crystal, self.build, self.rep, self.shape,
-                        self.fill] + self.counts + [self.size, self.height,
-                        self.block, self.gap, self.atom_scale]
-                       + self.edges):
+                        self.fill] + self.counts
+                       + [self.size, self.height, self.block, self.gap,
+                          self.atom_scale, self.count, self.min_gap,
+                          self.seed] + self.edges + self.area):
             signal = (widget.currentIndexChanged
                       if isinstance(widget, QComboBox)
                       else widget.valueChanged)
             signal.connect(self._timer.start)
-        self.cell_box.toggled.connect(self._timer.start)
+        for check in (self.cell_box, self.substrate, self.random_turn):
+            check.toggled.connect(self._timer.start)
         self._refresh()
 
     # ------------------------------------------------------------ state
@@ -175,12 +205,18 @@ class CrystalBuilder(QDialog):
             box=tuple(b.value() for b in self.edges),
             fill=self.fill.currentData(), block=self.block.value(),
             gap=self.gap.value(), atom_scale=self.atom_scale.value(),
-            cell_box=self.cell_box.isChecked())
+            cell_box=self.cell_box.isChecked(),
+            count=self.count.value(),
+            area=tuple(b.value() for b in self.area),
+            seed=self.seed.value(), min_gap=self.min_gap.value(),
+            substrate=self.substrate.isChecked(),
+            random_turn=self.random_turn.isChecked())
 
     def _refresh(self):
         c = self.crystal_obj()
         build, shape = self.build.currentData(), self.shape.currentData()
-        particle = build in ("particle", "hierarchy")
+        particle = build in ("particle", "hierarchy", "scatter")
+        scatter = build == "scatter"
         for widget in [self.shape, self.size, self.fill, self.block,
                        self.gap]:
             widget.setEnabled(particle)
@@ -193,6 +229,9 @@ class CrystalBuilder(QDialog):
         self.size.setEnabled(particle and shape != "box")
         self.size_label.setText(cb.SHAPES[shape].split(";")[0]
                                 .split(" (")[0].capitalize() + ":")
+        for widget in ([self.count, self.min_gap, self.seed,
+                        self.substrate, self.random_turn] + self.area):
+            widget.setEnabled(scatter)
         summary = c.summary()
         comp = " ".join(f"{el}{n}" for el, n in summary["composition"]
                         .items())
@@ -230,6 +269,11 @@ class CrystalBuilder(QDialog):
 def describe(stats: dict) -> str:
     """The estimate line: what each level holds and what it costs."""
     rows = []
+    scatter = stats.get("scatter")
+    if scatter:
+        rows.append(f"Scatter: {scatter['particles']} particles over "
+                    f"{scatter['area_nm'][0]:g} × {scatter['area_nm'][1]:g}"
+                    " nm")
     part = stats.get("particle")
     if part:
         if part.get("blocks"):
@@ -241,7 +285,7 @@ def describe(stats: dict) -> str:
                 what += f", {part['polyhedra']:,} polyhedra"
             if part.get("atoms"):
                 what += f", {part['atoms']:,} atoms"
-        rows.append(f"Particle: {what}"
+        rows.append(f"{'Each particle' if scatter else 'Particle'}: {what}"
                     + ("" if part.get("exact_count", True) else " (about)"))
     sc = stats.get("supercell")
     if sc:
