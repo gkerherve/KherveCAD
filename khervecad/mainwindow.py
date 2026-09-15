@@ -508,11 +508,41 @@ class MainWindow(QMainWindow):
                        "Ctrl+L")
         menu.addSeparator()
         submenus = {}
+        crystals_menu = molecules_menu = None
+        crystal_subs, molecule_subs = {}, {}
         for part_id, spec in PARTS.items():
             cat = spec.get("category", "Other")
-            sub = submenus.get(cat)
-            if sub is None:
-                sub = submenus[cat] = menu.addMenu(cat)
+            if cat.startswith("Crystals ("):
+                if crystals_menu is None:
+                    from . import crystal_dialog
+                    crystals_menu = menu.addMenu(icons.icon("mdi.atom"),
+                                                  "Crystals")
+                    crystals_menu.addAction(
+                        "Crystal Builder...",
+                        lambda: crystal_dialog.open_builder(self))
+                    crystals_menu.addSeparator()
+                # "Crystals (unit cells)" -> "Unit cells"
+                name = cat[len("Crystals ("):-1].capitalize()
+                sub = crystal_subs.get(name)
+                if sub is None:
+                    sub = crystal_subs[name] = crystals_menu.addMenu(name)
+            elif cat.startswith("Molecules: "):
+                if molecules_menu is None:
+                    from . import molecule_dialog
+                    molecules_menu = menu.addMenu(icons.icon("mdi.molecule"),
+                                                   "Molecules")
+                    molecules_menu.addAction(
+                        "Compound Builder...",
+                        lambda: molecule_dialog.open_builder(self))
+                    molecules_menu.addSeparator()
+                name = cat[len("Molecules: "):]
+                sub = molecule_subs.get(name)
+                if sub is None:
+                    sub = molecule_subs[name] = molecules_menu.addMenu(name)
+            else:
+                sub = submenus.get(cat)
+                if sub is None:
+                    sub = submenus[cat] = menu.addMenu(cat)
             sub.addAction(
                 spec["label"],
                 lambda _=False, pid=part_id: self._insert_library_part(pid))
@@ -527,13 +557,6 @@ class MainWindow(QMainWindow):
         menu.addAction(icons.icon("mdi.cube-outline"),
                        "Fuse Lego into One Solid",
                        lambda: lego_convert.fuse_lego(self))
-        from . import crystal_dialog
-        menu.addSeparator()
-        menu.addAction(icons.icon("mdi.atom"), "Crystal Builder...",
-                       lambda: crystal_dialog.open_builder(self))
-        from . import molecule_dialog
-        menu.addAction(icons.icon("mdi.molecule"), "Compound Builder...",
-                       lambda: molecule_dialog.open_builder(self))
 
     def _build_examples_menu(self, menubar):
         """An Examples menu of complete demo models; picking one replaces

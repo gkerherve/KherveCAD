@@ -147,7 +147,7 @@ class CompoundBuilder(QDialog):
         self.balance.setChecked(True)
         form.addRow(self.balance)
         self.labels = QCheckBox("Formula under each molecule")
-        self.labels.setChecked(True)
+        self.labels.setChecked(False)
         form.addRow(self.labels)
         self.rx_style = _styles()
         form.addRow("Style:", self.rx_style)

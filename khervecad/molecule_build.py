@@ -17,9 +17,12 @@ A **reaction** is written the way chemists write it —
 checked for atom and charge balance (or balanced: the smallest whole
 coefficients from the null space of the element matrix, exact in
 fractions) and laid out left to right in the XZ plane, read from the
-front: each distinct molecule built once and placed where it appears,
-coefficients, "+" and the arrow (⇌ for a reversible one) as 3D text and
-solids, the formula under every molecule.
+front: a coefficient up to REPEAT_MAX places that many copies of the
+molecule side by side (2 H2 draws two H2 molecules) rather than a "2"
+in front of one, so the picture reads as molecules and "+"/arrow
+symbols only, no coefficient numerals; a larger or fractional
+coefficient falls back to a numeral prefix so the model stays light.
+The formula under every molecule is optional (off by default).
 
 Everything is in NANOMETRES; the triangles are counted before anything
 is applied.
@@ -437,9 +440,15 @@ def _text_width(s, size) -> float:
     return 0.62 * size * len(s)
 
 
+#: a coefficient up to this many draws that many copies of the molecule
+#: side by side instead of a numeral in front of one; above it (or for
+#: a fraction) a numeral prefix is kept so the model stays light.
+REPEAT_MAX = 12
+
+
 def reaction_program(text: str, balance_it: bool = True,
                      style: str = "ball_and_stick", fn: int = 16,
-                     labels: bool = True):
+                     labels: bool = False):
     """(program, stats) for a reaction laid out left to right."""
     if style not in STYLES:
         raise BuildError(f"style is one of {', '.join(STYLES)}.")
@@ -478,27 +487,32 @@ def reaction_program(text: str, balance_it: bool = True,
     low = min(extent(m, style)[0][2] for m, _t in species.values())
     for side_idx, (terms, cs) in enumerate(
             ((left, coefs[:len(left)]), (right, coefs[len(left):]))):
-        for k, (term, c) in enumerate(zip(terms, cs)):
-            if k:
-                lines.append(_text("+", x, -size / 2, size))
-                x += _text_width("+", size) + gap
-            if c != 1:
-                s = _fmt_coef(c)
-                lines.append(_text(s, x, -size / 2, size))
-                x += _text_width(s, size) + gap * 0.6
-            m, t = species[term.molecule.smiles]
-            lo, hi = extent(m, style)
-            cx = x - lo[0]
-            lines.append(f"translate([{_n(cx)}, 0, 0]) "
-                         f"{idents[term.molecule.smiles]}();  "
-                         f"// {_label(m.name)}")
-            tris += t
-            if labels:
-                s = m.formula
-                w = _text_width(s, size * 0.6)
-                lines.append(_text(s, cx + (lo[0] + hi[0]) / 2 - w / 2,
-                                   low - size * 1.2, size * 0.6))
-            x = cx + hi[0] + gap
+        first = True
+        for term, c in zip(terms, cs):
+            repeats = (int(c) if c.denominator == 1 and 1 <= c <= REPEAT_MAX
+                       else None)
+            for i in range(repeats or 1):
+                if not first:
+                    lines.append(_text("+", x, -size / 2, size))
+                    x += _text_width("+", size) + gap
+                first = False
+                if repeats is None and i == 0 and c != 1:
+                    s = _fmt_coef(c)
+                    lines.append(_text(s, x, -size / 2, size))
+                    x += _text_width(s, size) + gap * 0.6
+                m, t = species[term.molecule.smiles]
+                lo, hi = extent(m, style)
+                cx = x - lo[0]
+                lines.append(f"translate([{_n(cx)}, 0, 0]) "
+                             f"{idents[term.molecule.smiles]}();  "
+                             f"// {_label(m.name)}")
+                tris += t
+                if labels:
+                    s = m.formula
+                    w = _text_width(s, size * 0.6)
+                    lines.append(_text(s, cx + (lo[0] + hi[0]) / 2 - w / 2,
+                                       low - size * 1.2, size * 0.6))
+                x = cx + hi[0] + gap
         if side_idx == 0:
             L = max(1.0, 3 * size)
             if reversible:
