@@ -126,3 +126,32 @@ def test_builder_window_places_edits_and_builds(window):
     names = [c.name for c in window.model.root.children]
     assert "City buildings" in names and "City roads" in names
     panel.close()
+
+
+def test_a_city_is_built_on_a_landscape():
+    spec = {"layout": "village", "seed": 2,
+            "terrain": {"kind": "hills", "height": 25000, "seed": 3}}
+    r = city.build(spec)
+    assert r["spec"]["terrain"]["kind"] == "hills"
+    root = CadNode("union", "root", {})
+    for node in r["nodes"].values():
+        root.add(node)
+    assert not validate(root)
+    from khervecad import bake
+    for p in root.walk():
+        if p.type == "polyhedron":
+            assert bake._check_polyhedron(p.params) is None, p.name
+    # buildings stand on their pads, lights at ground height
+    from khervecad.city_ground import Ground
+    s = r["spec"]
+    land = Ground(s["terrain"], city._extent(s), s["roads"], s["buildings"],
+                  margin=max(s["ground"]["margin"], 10000.0),
+                  road_style=city.road_style)
+    comp = r["nodes"]["City buildings"]
+    placed = [n for n in comp.children if n.type == "translate"]
+    assert placed and all(abs(n.params["z"] - pad) < 1.0
+                          for n, pad in zip(placed, land.pads))
+    assert max(land.pads) - min(land.pads) > 1000     # really on a hill
+    heights = [max(v[2] for t in mesh.tessellate(n) for v in t)
+               for n in placed[:3]]
+    assert all(h > 3000 for h in heights)

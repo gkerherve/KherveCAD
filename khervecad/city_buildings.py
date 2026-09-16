@@ -66,6 +66,7 @@ ROOFS = {
 }
 
 WHITE = "#f3f1ec"
+FOUNDATION_COLOUR = "#8a857c"
 #: window glass is opaque and glossy: the Glass material caps alpha at
 #: 0.45, and a dark pane over brick then simply vanished into the wall
 GLASS = "#2f4556"

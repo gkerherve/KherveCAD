@@ -1875,6 +1875,15 @@ TOOLS = [
             "buildings": {"type": "array", "items": {"type": "object"}},
             "lights": {"description": "[{x, y, rz}, ...] or {spacing}."},
             "trees": {"type": "array", "items": {"type": "object"}},
+            "terrain": {"type": "object",
+                        "description": "Build the city ON a landscape: "
+                                       "{kind: hills|mountain|cliff|valley|"
+                                       "mesa|island|canyon|dunes, height "
+                                       "(relief, mm), seed, cells}. Roads "
+                                       "follow the slopes, buildings stand "
+                                       "on levelled pads, trees/lights/"
+                                       "props at ground height — a street "
+                                       "grid on hills is San Francisco."},
             "props": {"type": "array", "items": {"type": "object"},
                       "description": "Library pieces: {part_id, x, y, rz, "
                                      "color, dims}."},

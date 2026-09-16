@@ -99,6 +99,7 @@ class CityCanvas(QGraphicsView):
     def rebuild(self, spec, selected=None):
         scene = self.scene()
         scene.clearSelection()
+        self._relief = None                    # clear() deletes it
         scene.clear()
         self.items_by_id = {}
         self.draft = None
@@ -126,6 +127,48 @@ class CityCanvas(QGraphicsView):
             item = self.items_by_id.get(id(selected))
             if item is not None:
                 item.setSelected(True)
+
+    def show_relief(self, spec):
+        """The landscape under the plan as a shaded picture (hill-shade,
+        darker green low, lighter high), redrawn when the terrain or the
+        plan's extent changes."""
+        from PyQt5.QtGui import QImage, QPixmap
+        from PyQt5.QtWidgets import QGraphicsPixmapItem
+        from .city_ground import Ground, resolve
+        old = getattr(self, "_relief", None)
+        if old is not None and old.scene() is self.scene():
+            self.scene().removeItem(old)
+        self._relief = None
+        try:
+            tspec = resolve(spec.get("terrain"))
+        except ValueError:
+            tspec = None
+        ext = C._extent(spec)
+        if tspec is None:
+            return
+        if ext is None:
+            ext = (-60000.0, -60000.0, 60000.0, 60000.0)
+        margin = (spec.get("ground") or {}).get("margin", 30000.0)
+        land = Ground(dict(tspec, cells=64), ext, margin=max(margin, 10000.0))
+        shade = land.shade_image()
+        n = land.n
+        image = QImage(n + 1, n + 1, QImage.Format_RGB32)
+        for j in range(n + 1):
+            for i in range(n + 1):
+                light, h = shade[j][i]
+                r, g, b = 70 + 110 * h, 120 + 90 * h, 60 + 70 * h
+                image.setPixelColor(i, j, QColor(
+                    int(min(r * light, 255)), int(min(g * light, 255)),
+                    int(min(b * light, 255))))
+        item = QGraphicsPixmapItem(QPixmap.fromImage(image))
+        item.setTransformationMode(Qt.SmoothTransformation)
+        from PyQt5.QtGui import QTransform
+        item.setTransform(QTransform.fromScale(land.dx, land.dy))
+        item.setPos(land.x0 - land.dx / 2, land.y0 - land.dy / 2)
+        item.setZValue(-100)
+        item.setOpacity(0.85)
+        self.scene().addItem(item)
+        self._relief = item
 
     def _add(self, item, spec):
         self.scene().addItem(item)
@@ -352,6 +395,7 @@ class CityBuilder(QDialog):
         col.addWidget(self._place_group())
         col.addWidget(self._editor_group())
         col.addWidget(self._along_group())
+        col.addWidget(self._ground_group())
         col.addStretch(1)
         scroll = QScrollArea()
         scroll.setWidget(side)
@@ -629,6 +673,47 @@ class CityBuilder(QDialog):
         f.addRow("Rotation", self.p_rz)
         return w
 
+    def _ground_group(self):
+        """5 Ground: flat grass, or a landscape the city is built on —
+        roads follow its slopes, buildings stand on levelled pads."""
+        from .city_ground import KINDS
+        box = QGroupBox("5  Ground")
+        form = QFormLayout(box)
+        self.terrain_kind = QComboBox()
+        self.terrain_kind.addItem("Flat", "flat")
+        for kind in KINDS:
+            self.terrain_kind.addItem(kind.capitalize(), kind)
+        self.terrain_relief = MetreSpin(1.0, 500.0, 5.0, decimals=0)
+        self.terrain_relief.set_mm(30000)
+        self.terrain_seed = QSpinBox()
+        self.terrain_seed.setRange(1, 99999)
+        for w in (self.terrain_kind, self.terrain_relief, self.terrain_seed):
+            sig = (w.currentIndexChanged if isinstance(w, QComboBox)
+                   else w.valueChanged)
+            sig.connect(self._terrain_changed)
+        form.addRow("Landscape", self.terrain_kind)
+        form.addRow("Relief", self.terrain_relief)
+        form.addRow("Shape", self.terrain_seed)
+        form.addRow(_hint("The city is built on it: streets climb and dip "
+                          "with the hills, every building gets a levelled "
+                          "pad and a foundation. The plan shades the "
+                          "relief."))
+        return box
+
+    def _terrain_changed(self, _v=None):
+        if self._quiet:
+            return
+        kind = self.terrain_kind.currentData()
+        if kind == "flat":
+            self.spec.pop("terrain", None)
+        else:
+            self.spec["terrain"] = dict(kind=kind,
+                                        height=self.terrain_relief.mm(),
+                                        seed=self.terrain_seed.value())
+        self.terrain_relief.setEnabled(kind != "flat")
+        self.terrain_seed.setEnabled(kind != "flat")
+        self.canvas.show_relief(self.spec)
+
     def _along_group(self):
         box = QGroupBox("4  Along the roads")
         form = QFormLayout(box)
@@ -675,9 +760,18 @@ class CityBuilder(QDialog):
         if fit:
             self.canvas.fit()
         g = self.spec.get("ground") or {}
+        t = self.spec.get("terrain") or {}
         self._quiet = True
         self.margin.set_mm(float(g.get("margin", 0.0)))
+        index = self.terrain_kind.findData(t.get("kind", "flat"))
+        self.terrain_kind.setCurrentIndex(max(index, 0))
+        if t:
+            self.terrain_relief.set_mm(float(t.get("height", 30000)))
+            self.terrain_seed.setValue(int(t.get("seed", 1)))
+        self.terrain_relief.setEnabled(bool(t))
+        self.terrain_seed.setEnabled(bool(t))
         self._quiet = False
+        self.canvas.show_relief(self.spec)
         self._show_selection()
         self._update_counts()
 
@@ -1024,7 +1118,8 @@ class CityBuilder(QDialog):
         try:
             spec = C.resolve(dict(layout=self.layout_combo.currentText(),
                                   blocks=self.blocks.value(),
-                                  seed=self.seed.value()))
+                                  seed=self.seed.value(),
+                                  terrain=self.spec.get("terrain")))
         except C.CityError as exc:
             QMessageBox.warning(self, "Generate", str(exc))
             return

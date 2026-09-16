@@ -218,10 +218,22 @@ def build(kind="hills", length=200000.0, width=200000.0, height=30000.0,
     """The landscape as a group of coloured closed columns plus water."""
     n = max(8, min(int(cells), 128))
     hs, water = height_field(kind, n, length, width, height, seed)
+    return from_heights(kind, hs, water, -length / 2, -width / 2, length,
+                        width, height, seed, base_depth)
+
+
+def from_heights(kind, hs, water, x0, y0, length, width, height, seed=1,
+                 base_depth=None, paved=None):
+    """Coloured columns for a height field *hs* ((n+1) rows of n+1 mm
+    heights) laid over [x0, x0+length] x [y0, y0+width] — so a caller
+    may edit the field first (the City Builder levels it under roads and
+    buildings). *paved* (i, j) -> True marks cells under a pavement,
+    which are grass whatever their slope."""
+    n = len(hs) - 1
     nz = Noise(seed + 101)
     dx, dy = length / n, width / n
-    x0, y0 = -length / 2, -width / 2
-    base = -(base_depth if base_depth is not None else 1500.0)
+    base = min(min(min(row) for row in hs), 0.0) - (
+        base_depth if base_depth is not None else 1500.0)
     grid = []
     for j in range(n):
         row = []
@@ -233,6 +245,9 @@ def build(kind="hills", length=200000.0, width=200000.0, height=30000.0,
             sy = abs((h01 + h11) - (h00 + h10)) / 2 / dy
             slope = math.hypot(sx, sy)
             # woodland patches a few dozen metres across, whatever the grid
+            if paved and paved(i, j):
+                row.append("grass")
+                continue
             row.append(surface_of(kind, mean, slope, height, water,
                                   nz.fbm(i * dx / 40000.0, j * dy / 40000.0,
                                          3)))

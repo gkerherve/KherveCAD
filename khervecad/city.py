@@ -402,7 +402,7 @@ def resolve(spec: dict) -> dict:
                         int(_f(spec.get("seed"), 1)))
         for key in ("roads", "buildings", "trees"):
             base[key] = base.get(key, []) + list(spec.get(key) or [])
-        for key in ("lights", "street_trees", "ground", "name"):
+        for key in ("lights", "street_trees", "ground", "name", "terrain"):
             if key in spec:
                 base[key] = spec[key]
         spec = base
@@ -478,9 +478,14 @@ def resolve(spec: dict) -> dict:
             name, k = f"{base} {k}", k + 1
         item["name"] = name
         taken.add(name)
+    try:
+        from .city_ground import resolve as resolve_terrain
+        terrain_spec = resolve_terrain(spec.get("terrain"))
+    except ValueError as exc:
+        raise CityError(str(exc))
     return dict(name=spec.get("name", "City"), roads=roads,
                 buildings=buildings, lights=lights, trees=trees,
-                props=props, ground=ground)
+                props=props, ground=ground, terrain=terrain_spec)
 
 
 def _road_distance(x, y, ribbons):
@@ -567,23 +572,43 @@ def build(spec: dict) -> dict:
         raise CityError("Nothing to build: give roads, buildings or trees, "
                         'or a layout ("village", "town", "city").')
     nodes = {}
-    ground = build_ground(spec)
-    if ground is not None:
-        nodes["City ground"] = ground
+    land = None
+    ext = _extent(spec)
+    if spec.get("terrain") and ext:
+        from .city_ground import Ground
+        margin = (spec.get("ground") or {}).get("margin", 30000.0)
+        land = Ground(spec["terrain"], ext, spec["roads"], spec["buildings"],
+                      margin=max(margin, 10000.0), road_style=road_style)
+        nodes["City ground"] = land.node("Ground")
+    else:
+        ground = build_ground(spec)
+        if ground is not None:
+            nodes["City ground"] = ground
     if spec["roads"]:
-        nodes["City roads"] = build_roads(spec["roads"])
+        nodes["City roads"] = (
+            land.roads_node(spec["roads"], KERB, ROAD_THICKNESS,
+                            (ASPHALT, PAVEMENT, DASH))
+            if land else build_roads(spec["roads"]))
     if spec["buildings"]:
         g = _group("Buildings")
         for i, b in enumerate(spec["buildings"]):
-            g.add(build_building(b, i))
+            node = build_building(b, i)
+            if land:
+                _stand_on_pad(node, b, land.pads[i])
+            g.add(node)
         nodes["City buildings"] = g
     if spec["lights"]:
         nodes["Street lights"] = build_lights(
-            [(p["x"], p["y"], p["rz"]) for p in spec["lights"]], KERB)
+            [(p["x"], p["y"], p["rz"], land.z(p["x"], p["y"]) if land
+              else 0.0) for p in spec["lights"]], KERB)
     if spec["trees"]:
-        nodes["City trees"] = build_trees(spec["trees"])
+        trees = spec["trees"]
+        if land:
+            trees = [dict(t, z=_f(t.get("z")) + land.z(t["x"], t["y"]))
+                     for t in trees]
+        nodes["City trees"] = build_trees(trees)
     if spec["props"]:
-        nodes["City props"] = build_props(spec["props"])
+        nodes["City props"] = build_props(spec["props"], land)
     return dict(nodes=nodes, spec=spec, counts=dict(
         roads=len(spec["roads"]), buildings=len(spec["buildings"]),
         lights=len(spec["lights"]), trees=len(spec["trees"]),
@@ -591,7 +616,24 @@ def build(spec: dict) -> dict:
         name=spec["name"])
 
 
-def build_props(props) -> CadNode:
+def _stand_on_pad(node, b, pad):
+    """Lift a placed building to its levelled pad and give it a stone
+    foundation below, so a downhill corner never floats."""
+    from .city_buildings import FOUNDATION_COLOUR, footprint
+    from .city_ground import FOUNDATION
+    node.params["z"] = pad
+    body = node.children[0].children[0] if node.children and \
+        node.children[0].children else None
+    if body is None:
+        return
+    _r, wings = footprint(b)
+    for x0, y0, w, d in wings:
+        body.add(_color(_box("Foundation", x0 - 80, y0 - 80, -FOUNDATION,
+                             w + 160, d + 160, FOUNDATION + 20),
+                        FOUNDATION_COLOUR, "Stone"), 0)
+
+
+def build_props(props, land=None) -> CadNode:
     """Every library piece placed in the city, each at its x/y and turned
     by rz — one placed Move per piece, named after it, so it can be
     picked and dragged in the main window too."""
@@ -601,8 +643,9 @@ def build_props(props) -> CadNode:
         node = build_part(prop["part_id"], dict(prop["dims"]))
         turn = CadNode("rotate", "Turn", dict(x=0.0, y=0.0, z=prop["rz"]))
         turn.add(node)
+        z = land.z(prop["x"], prop["y"]) if land else 0.0
         placed = CadNode("translate", prop["name"], dict(x=prop["x"],
-                                                        y=prop["y"], z=0.0))
+                                                        y=prop["y"], z=z))
         placed.add(turn)
         group.add(placed)
     return group

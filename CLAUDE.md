@@ -732,6 +732,91 @@ into a new module and import.
                        colour); Build = `city.apply`. Items set `_syncing`
                        BEFORE their flags: itemChange runs inside setPos in
                        the constructor, and an exception there aborted.
+  - `treegen.py`     — **grown trees** (Qt-free, 2026-09-16): 13 species
+                       (`SPECIES`: oak, maple, lime, birch, cherry, apple,
+                       willow, poplar, pine, spruce, cypress, palm, shrub) as
+                       a branching skeleton — bending tapered polylines,
+                       children along the parent turned by the golden angle,
+                       per-species depth/angle/ratio/gravity/crown envelope,
+                       scaled so the top meets the height (`_fit_height`) —
+                       each branch ONE closed tube (`Mesh.tube`, parallel
+                       transport), leaves as closed flat diamonds (8 tris)
+                       or tetrahedra (4) in a CLOUD round every twig
+                       (`_foliage`; needles in sprays or tufts, willow
+                       strands hanging, palm fronds of leaflets, fruit).
+                       Written as `polyhedron` nodes point by point, NEVER
+                       welded (coincident vertices of two pieces would pair
+                       an edge three times and fail validation). `DETAIL`
+                       high / medium / city: city grows foliage CLUMPS
+                       (`Mesh.clump`, a jittered split octahedron,
+                       `CITY_CLUMPS` max) with a few loose leaves — sparse
+                       big leaves read as a bare tree at town scale.
+                       `SEASONS` recolour deciduous leaves (Winter = bare).
+                       Nothing grows below z = 0. `library_trees.py`: every
+                       species as a Trees part (Young/Mature/Old, Variation
+                       seed, season as the colour combo).
+  - `library_lighting.py` — **Lighting & signals**: Victorian lamp (fluted
+                       column, hexagonal lantern), LED single/double arm,
+                       park globe lamp, bollard, wall lantern, floodlight
+                       mast, traffic light on a pole / mast arm (open
+                       visors — a solid hood hid the lens; the colour combo
+                       picks the lit aspect, Emissive), pedestrian signal,
+                       Belisha beacon, stop sign.
+  - `library_park.py` — **Park & sport**: football pitch (mown stripes, every
+                       marking as 2D polygons under ONE linear_extrude,
+                       goals with nets of looped threads, corner flags),
+                       tennis (surfaces, net, chain-link fence of loops),
+                       basketball (markings scale with the court: a 15 m
+                       court with full-size arcs crossed itself), lake /
+                       pond (seeded shore, opaque glossy water — translucent
+                       water showed the bed's fan triangles as streaks —
+                       reeds, lily pads, jetty), playground, bench, picnic
+                       table, bin, fountain, gazebo (`ring` = revolved
+                       rectangle: a solid disc covered the water), and
+                       `build_park`: facilities kept clear of the lake loop
+                       and promenade, trees kept off everything (`keep`).
+  - `terrain.py` / `library_landscape.py` — **Landscape**: `height_field`
+                       (seeded value-noise fBm / ridged, per kind: hills,
+                       mountain, cliff, valley, mesa, island, canyon, dunes;
+                       noise in 70 m units) -> per-cell SURFACE by height and
+                       slope (grass, woodland, scree, rock strata, snow,
+                       sand, desert, riverbed) -> one closed COLUMN per
+                       surface (`_column`: top tris, their shadow on the
+                       base, walls down every boundary edge). A surface
+                       touching itself at a corner only would pinch (one
+                       vertical edge in four walls): `_unpinch` hands such
+                       cells to a neighbour first. `from_heights` takes an
+                       edited field (the city levels it). Boulders and
+                       outcrops are `Mesh.clump`s.
+  - `city_ground.py` — **a city ON a landscape**: spec `terrain` {kind,
+                       height, seed, cells}. `Ground` builds the field over
+                       the city's extent + margin and EDITS it: each road's
+                       centre-line profile (smoothed along it) levels the
+                       ground across its width, blending out over
+                       `ROAD_BLEND`; each building gets a levelled pad at the
+                       mean ground under its footprint (`pads`, a stone
+                       foundation added by `city._stand_on_pad`); graded
+                       cells are grassed (`paved`). `z(x, y)` places lights
+                       (a 4th loop value), trees and props; roads are DRAPED
+                       closed ribbons (`_ribbon`, rectangular tube wound
+                       like `Mesh.tube`) — tarmac between two pavements —
+                       and dash prisms. The builder's Ground section picks
+                       it and `CityCanvas.show_relief` shades it under the
+                       plan.
+  - City Builder, second pass (2026-09-16): any click on a piece SELECTS it
+                       whatever the tool (Shift+click still places — placing
+                       over a house was how it got lost), a `RotateHandle`
+                       turns the selected piece through 0-360° (5°, Shift
+                       15°; `city_items.wrap`), Shift+drag on empty ground
+                       rubber-bands several (move / R / Delete act on all),
+                       spec `props` places any Park / Lighting / Landscape /
+                       Trees library part (`PropItem` = its real top view;
+                       `planview` skips the merged outline past
+                       `OUTLINE_FACES` — a whole park's took minutes) built
+                       into a "City props" Object, and `city.sync_from_
+                       document` reads back buildings/props moved or turned
+                       in the main window (matched by their unique names;
+                       every placed piece has a Turn, even at 0°).
   - **Surface materials** (`glrender.SURFACES`, 2026-09-16): Brick,
                        Concrete, Render, Roof tiles, Slate, Stone, Bark,
                        Leaves are `model.MATERIALS` drawn by the fragment

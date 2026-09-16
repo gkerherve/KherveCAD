@@ -104,10 +104,13 @@ def build_lights(points, kerb=150.0) -> CadNode:
     rot = CadNode("rotate", "Face the road", dict(x=0.0, y=0.0, z="p[2]"))
     rot.add(metal)
     rot.add(glow)
-    at = CadNode("translate", "At", dict(x="p[0]", y="p[1]", z=kerb))
+    # a fourth value is the ground height under a light (a hilly city)
+    at = CadNode("translate", "At", dict(x="p[0]", y="p[1]",
+                                         z=f"p[3] + {_num(kerb)}"))
     at.add(rot)
     lp = CadNode("for_loop", "Lights", dict(
         variable="p", start=0.0, end=0.0, step=1.0,
-        values=_values([(p[0], p[1], p[2]) for p in points])))
+        values=_values([(p[0], p[1], p[2], p[3] if len(p) > 3 else 0.0)
+                        for p in points])))
     lp.add(at)
     return group("Street lights", [lp])
