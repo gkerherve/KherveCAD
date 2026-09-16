@@ -1869,6 +1869,46 @@ TOOLS = [
                         "description": "Count only; build nothing."},
         }),
     },
+    {
+        "name": "build_city",
+        "description": (
+            "The City Builder: a village, town or city of OUTSIDE-ONLY "
+            "buildings (a shell, windows on the facades, a roof — nothing "
+            "inside, so hundreds stay light), roads with pavements and "
+            "centre lines, street lights and trees. Either `layout` "
+            "('village' | 'town' | 'city', with `blocks` and `seed`) "
+            "generates one, or give the parts yourself; both may be "
+            "combined (your roads/buildings/trees are added). All mm, "
+            "Z up. roads: [{points: [[x, y], ...], kind: avenue|street|"
+            "lane|path, width, sidewalk}]. buildings: [{x, y (centre), w, "
+            "d, rz, style: cottage|house|terrace|shop|block|tower|round "
+            "tower|L-shape|church, floors, floor_height, color, "
+            "roof_color, roof: flat|gable|hip|cone, name}] — rz turns "
+            "the front (-Y) to face its road. lights: [[x, y, rz], ...] "
+            "or {spacing} along every road; trees: [{x, y, kind: "
+            "broadleaf|conifer|round, height}]; street_trees: {spacing, "
+            "kind}; ground: {margin, color} or null. Inserts the Objects "
+            "City ground / City roads / City buildings / Street lights / "
+            "City trees, replacing the last build's (replace: false "
+            "keeps them). Repeated items are for-loops over value lists."
+        ),
+        "input_schema": _obj({
+            "layout": {"type": "string",
+                       "enum": ["village", "town", "city"]},
+            "blocks": {"type": "integer",
+                       "description": "Grid size (town 3, city 5)."},
+            "seed": {"type": "integer"},
+            "roads": {"type": "array", "items": {"type": "object"}},
+            "buildings": {"type": "array", "items": {"type": "object"}},
+            "lights": {"description": "[[x, y, rz], ...] or {spacing}."},
+            "trees": {"type": "array", "items": {"type": "object"}},
+            "street_trees": {"type": "object"},
+            "ground": {"description": "{margin, color}, or null."},
+            "replace": {"type": "boolean"},
+            "dry_run": {"type": "boolean",
+                        "description": "Count only; build nothing."},
+        }),
+    },
 ]
 
 #: Name -> definition, for the executor and the access-level checks.

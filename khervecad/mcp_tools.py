@@ -1339,6 +1339,13 @@ class McpToolExecutor:
         except house.HouseError as exc:
             raise ToolError(str(exc))
 
+    def _t_build_city(self, params) -> dict:
+        from . import city
+        try:
+            return city.build_city(self._w, params)
+        except city.CityError as exc:
+            raise ToolError(str(exc))
+
     def _t_make_object(self, params) -> dict:
         nodes = self._nodes(params.get("ids"))
         model = self._model

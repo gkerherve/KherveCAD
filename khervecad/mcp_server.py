@@ -252,6 +252,10 @@ cells = 3000 SiO2") and which prefixed variables reshape it (radius, \
 block size, gap on the Variables tab). Look with render_view: \
 orthographic from Top shows the lattice down the c-axis.
 
+Villages, towns and cities:
+- build_city lays out roads, street lights, trees and outside-only \
+buildings (layout village/town/city, or your own lists) as five Objects.
+
 Houses:
 - Build a house with build_house — rooms, doors, windows and furniture \
 in one call. Put furniture against a wall with `wall` (+ `along`) \

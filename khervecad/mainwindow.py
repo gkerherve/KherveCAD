@@ -521,6 +521,7 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         submenus = {}
         crystals_menu = molecules_menu = lego_menu = home_menu = None
+        self._build_city_menu(menu)
         crystal_subs, molecule_subs, lego_subs = {}, {}, {}
         for part_id, spec in PARTS.items():
             cat = spec.get("category", "Other")
@@ -589,6 +590,25 @@ class MainWindow(QMainWindow):
                        lambda: lego_convert.fuse_lego(self))
         lego.addSeparator()
         return lego
+
+    def _build_city_menu(self, menu):
+        """Library ▸ City: generate a village, town or city of outside-
+        only buildings, roads, lights and trees (`city.py`); building
+        again replaces the last one. Assistants design their own through
+        the build_city MCP tool."""
+        from . import city
+        sub = menu.addMenu(icons.icon("mdi.city-variant-outline"), "City")
+
+        def build(layout):
+            seed = getattr(self, "_city_seed", 0) + 1
+            self._city_seed = seed
+            city.apply(self.model, {"layout": layout, "seed": seed})
+            self.view3d.fit()
+
+        for layout in ("village", "town", "city"):
+            sub.addAction(f"New {layout} (random)",
+                          lambda _=False, l=layout: build(l))
+        return sub
 
     def _build_home_menu(self, menu, parts):
         """Library ▸ House & home: the House Builder on top, then every
