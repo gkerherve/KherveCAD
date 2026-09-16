@@ -100,9 +100,16 @@ def _smooth(e0, e1, x):
 
 
 # ---------------------------------------------------------- the heights
-def height_field(kind, n, length, width, height, seed):
+def height_field(kind, n, length, width, height, seed, roughness=0.5):
     """(n+1) x (n+1) heights in mm, index [j][i] (y rows, x columns),
-    and the water level (None for dry land)."""
+    and the water level (None for dry land). *roughness* 0..1 (0.5 is the
+    landscape as it always was): lower spreads the features wider and
+    smooths them, higher packs them closer and adds small bumps and
+    hollows on top."""
+    rough = min(max(float(roughness), 0.0), 1.0)
+    freq = 2.0 ** ((rough - 0.5) * 3.0)          # 0.35x .. 2.8x
+    bumps = max(0.0, rough - 0.5) * 2.0         # 0 .. 1 above the middle
+    smooth = max(0.0, 0.5 - rough) * 2.0        # 0 .. 1 below the middle
     nz = Noise(seed)
     water = None
     rows = []
@@ -113,7 +120,8 @@ def height_field(kind, n, length, width, height, seed):
             u = i / n
             # noise coordinates in units of 70 m: hills and ridges at a
             # landscape's scale, not a rock garden's
-            x, y = u * length / 70000.0, v * width / 70000.0
+            x = u * length / 70000.0 * freq
+            y = v * width / 70000.0 * freq
             f = nz.fbm(x * 0.9 + 3.1, y * 0.9 + 7.7)
             if kind == "hills":
                 h = height * (0.1 + 0.9 * _smooth(0.2, 0.8, f)) \
@@ -163,8 +171,21 @@ def height_field(kind, n, length, width, height, seed):
                                  math.pi)
                 h = height * (0.5 + 0.35 * ridge * abs(ridge) +
                               0.3 * (f - 0.5))
+            if bumps:                      # small hummocks and hollows
+                h += height * 0.12 * bumps * (nz.fbm(x * 5.0 + 11.0,
+                                                     y * 5.0 + 5.0) - 0.5)
             row.append(max(h, 0.0))
         rows.append(row)
+    if smooth:                              # relax towards the neighbours
+        for _pass in range(int(1 + smooth * 3)):
+            new = [r[:] for r in rows]
+            for j in range(1, n):
+                for i in range(1, n):
+                    avg = (rows[j][i - 1] + rows[j][i + 1] + rows[j - 1][i]
+                           + rows[j + 1][i]) / 4
+                    new[j][i] = rows[j][i] * (1 - 0.6 * smooth) + \
+                        avg * 0.6 * smooth
+            rows = new
     return rows, water
 
 
@@ -216,10 +237,11 @@ def _unpinch(cells, n):
 
 
 def build(kind="hills", length=200000.0, width=200000.0, height=30000.0,
-          seed=1, cells=48, base_depth=None):
+          seed=1, cells=48, base_depth=None, roughness=0.5):
     """The landscape as a group of coloured closed columns plus water."""
     n = max(8, min(int(cells), 128))
-    hs, water = height_field(kind, n, length, width, height, seed)
+    hs, water = height_field(kind, n, length, width, height, seed,
+                             roughness)
     return from_heights(kind, hs, water, -length / 2, -width / 2, length,
                         width, height, seed, base_depth)
 

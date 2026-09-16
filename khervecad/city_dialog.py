@@ -680,15 +680,26 @@ class CityBuilder(QDialog):
             self.terrain_kind.addItem(kind.capitalize(), kind)
         self.terrain_relief = MetreSpin(1.0, 500.0, 5.0, decimals=0)
         self.terrain_relief.set_mm(30000)
+        self.terrain_kind.addItem("Measured (map import)", "heights")
         self.terrain_seed = QSpinBox()
         self.terrain_seed.setRange(1, 99999)
-        for w in (self.terrain_kind, self.terrain_relief, self.terrain_seed):
+        self.terrain_rough = QSpinBox()
+        self.terrain_rough.setRange(0, 100)
+        self.terrain_rough.setSingleStep(10)
+        self.terrain_rough.setSuffix(" %")
+        self.terrain_rough.setValue(50)
+        self.terrain_rough.setToolTip(
+            "0 %: long smooth swells · 50 %: as generated · 100 %: tight, "
+            "bumpy ground with hummocks and hollows")
+        for w in (self.terrain_kind, self.terrain_relief, self.terrain_seed,
+                  self.terrain_rough):
             sig = (w.currentIndexChanged if isinstance(w, QComboBox)
                    else w.valueChanged)
             sig.connect(self._terrain_changed)
         form.addRow("Landscape", self.terrain_kind)
         form.addRow("Relief", self.terrain_relief)
         form.addRow("Shape", self.terrain_seed)
+        form.addRow("Roughness", self.terrain_rough)
         form.addRow(_hint("The city is built on it: streets climb and dip "
                           "with the hills, every building gets a levelled "
                           "pad and a foundation. The plan shades the "
@@ -699,14 +710,28 @@ class CityBuilder(QDialog):
         if self._quiet:
             return
         kind = self.terrain_kind.currentData()
+        current = self.spec.get("terrain") or {}
         if kind == "flat":
             self.spec.pop("terrain", None)
+        elif kind == "heights":
+            if current.get("kind") != "heights":
+                # a measured ground only comes from a map import
+                self._quiet = True
+                self.terrain_kind.setCurrentIndex(max(
+                    self.terrain_kind.findData(current.get("kind", "flat")),
+                    0))
+                self._quiet = False
+                return
         else:
             self.spec["terrain"] = dict(kind=kind,
                                         height=self.terrain_relief.mm(),
-                                        seed=self.terrain_seed.value())
-        self.terrain_relief.setEnabled(kind != "flat")
-        self.terrain_seed.setEnabled(kind != "flat")
+                                        seed=self.terrain_seed.value(),
+                                        roughness=self.terrain_rough.value()
+                                        / 100.0)
+        generated = kind not in ("flat", "heights")
+        self.terrain_relief.setEnabled(generated)
+        self.terrain_seed.setEnabled(generated)
+        self.terrain_rough.setEnabled(generated)
         self.canvas.show_relief(self.spec)
 
     def _along_group(self):
@@ -760,11 +785,15 @@ class CityBuilder(QDialog):
         self.margin.set_mm(float(g.get("margin", 0.0)))
         index = self.terrain_kind.findData(t.get("kind", "flat"))
         self.terrain_kind.setCurrentIndex(max(index, 0))
-        if t:
+        generated = bool(t) and t.get("kind") != "heights"
+        if generated:
             self.terrain_relief.set_mm(float(t.get("height", 30000)))
             self.terrain_seed.setValue(int(t.get("seed", 1)))
-        self.terrain_relief.setEnabled(bool(t))
-        self.terrain_seed.setEnabled(bool(t))
+            self.terrain_rough.setValue(int(round(
+                float(t.get("roughness", 0.5)) * 100)))
+        self.terrain_relief.setEnabled(generated)
+        self.terrain_seed.setEnabled(generated)
+        self.terrain_rough.setEnabled(generated)
         self._quiet = False
         self.canvas.show_relief(self.spec)
         self._show_selection()

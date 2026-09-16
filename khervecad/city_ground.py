@@ -78,7 +78,8 @@ def resolve(spec):
                          + ", ".join(KINDS))
     return dict(kind=kind, height=max(0.0, _f(spec.get("height"), 25000)),
                 seed=int(_f(spec.get("seed"), 1)),
-                cells=int(_f(spec.get("cells"), 0)))
+                cells=int(_f(spec.get("cells"), 0)),
+                roughness=min(max(_f(spec.get("roughness"), 0.5), 0.0), 1.0))
 
 
 class Ground:
@@ -100,7 +101,7 @@ class Ground:
         self.n = max(24, min(cells, 128))
         self.hs, self.water = terrain.height_field(
             tspec["kind"], self.n, self.length, self.width, tspec["height"],
-            tspec["seed"])
+            tspec["seed"], tspec.get("roughness", 0.5))
         self.dx = self.length / self.n
         self.dy = self.width / self.n
         self.road_style = road_style

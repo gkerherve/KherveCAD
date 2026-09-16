@@ -929,7 +929,12 @@ into a new module and import.
                        (a 4th loop value), trees and props; roads are DRAPED
                        closed ribbons (`_ribbon`, rectangular tube wound
                        like `Mesh.tube`) — tarmac between two pavements —
-                       and dash prisms. The builder's Ground section picks
+                       and dash prisms. Terrain `roughness` 0..1
+                       (`terrain.height_field`: 0.5 is the old ground exactly;
+                       below it the features spread and the field is relaxed,
+                       above it they tighten and hummocks are added); the
+                       Ground section's Roughness % sets it and lists a map
+                       import's ground as "Measured". The builder's Ground section picks
                        it and `CityCanvas.show_relief` shades it under the
                        plan.
   - City Builder, second pass (2026-09-16): any click on a piece SELECTS it

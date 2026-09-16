@@ -333,3 +333,21 @@ def test_spec_round_trips_through_a_file(tmp_path):
     bad.write_text("[1, 2]")
     with pytest.raises(map_import.MapImportError):
         map_import.load_spec(str(bad))
+
+
+def test_roughness_changes_the_generated_ground():
+    from khervecad import terrain
+
+    def bumpiness(r):
+        hs, _ = terrain.height_field("hills", 48, 300000, 300000, 30000, 3, r)
+        return sum(abs(row[i + 1] - row[i]) for row in hs
+                   for i in range(len(row) - 1))
+    smooth, middle, rough = bumpiness(0.0), bumpiness(0.5), bumpiness(1.0)
+    assert smooth < middle < rough
+    # 0.5 is the landscape as it was before the setting existed
+    old, _ = terrain.height_field("hills", 16, 100000, 100000, 20000, 2)
+    same, _ = terrain.height_field("hills", 16, 100000, 100000, 20000, 2, 0.5)
+    assert old == same
+    spec = city.build({"terrain": {"kind": "hills", "roughness": 0.9},
+                       "buildings": [dict(style="house")]})["spec"]
+    assert spec["terrain"]["roughness"] == 0.9
