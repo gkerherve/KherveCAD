@@ -830,6 +830,23 @@ into a new module and import.
                        Measured ground is terrain kind `heights` (`rows`,
                        x0/y0/length/width) in `city_ground.Ground`
                        (`_init_measured`), surfaces grass/scree only.
+  - `planetcraft.py` / `planetcraft_dialog.py` — **Send to PlanetCraft**
+                       (File menu, MCP `send_to_planetcraft`, 2026-09-16):
+                       the model or one node as a walking creature in the
+                       KhervePlanet game — `creatures/<slug>.json` +
+                       `index.json` (format `kherveCAD-creature` v1: kind
+                       `kc_<slug>`, height/speed/health/wild, parts with
+                       role, pivot, size, positions about the pivot, per-vertex
+                       colours). Parts by NAME (`role_of`: head, tail,
+                       wing L/R, leg front/back left/right — whole words, so
+                       "Legend" is not a leg); unnamed legs by `_auto_legs`
+                       (triangle CENTROIDS under 38 % of the height, split by
+                       quadrant, only if the middle underneath is clear).
+                       Axes game = (-x, z, y) — a proper rotation, so winding
+                       survives; KherveCAD +x is the creature's LEFT. Joints:
+                       leg top, head back-bottom (neck), tail front-top.
+                       Real size (1 block = 1 m) unless `height`. The game side
+                       is documented in KhervePlanet's CLAUDE.md.
   - `city_trees.py`  — trees (broadleaf, conifer, round, birch, poplar:
                        tapered Bark trunk, branches, Leaves clumps in two
                        greens; one loop per kind) and street lights. A

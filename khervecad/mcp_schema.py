@@ -2020,6 +2020,38 @@ TOOLS = [
         }),
     },
     {
+        "name": "send_to_planetcraft",
+        "description": (
+            "Send the model (or one node) to the PlanetCraft game as a "
+            "WALKING CREATURE: writes creatures/<name>.json into the "
+            "KhervePlanet folder, where the game loads it at start-up, puts "
+            "a pair near the player and adds it to the wild herds. Parts "
+            "are chosen by NAME — nodes named Head, Tail, Wing (left/right) "
+            "or Leg (front/back, left/right) become joints (legs swing at "
+            "their top, the head nods at its neck); unnamed legs under a "
+            "clear middle are found automatically. Real size (1 block = 1 "
+            "m) unless `height` (blocks). Build creatures with the front "
+            "facing -Y, Z up."
+        ),
+        "input_schema": _obj({
+            "name": {"type": "string"},
+            "node_id": {"type": "integer",
+                        "description": "Send only this subtree."},
+            "height": {"type": "number",
+                       "description": "Height in blocks (default: real "
+                                      "size)."},
+            "speed": {"type": "number"},
+            "health": {"type": "integer"},
+            "wild": {"type": "boolean",
+                     "description": "Roams wild herds (default true)."},
+            "path": {"type": "string",
+                     "description": "The PlanetCraft (KhervePlanet) folder; "
+                                    "found automatically when omitted."},
+            "dry_run": {"type": "boolean",
+                        "description": "Report the parts, write nothing."},
+        }, ["name"]),
+    },
+    {
         "name": "get_city",
         "description": (
             "Read before build_city. Returns `catalog` — the valid "

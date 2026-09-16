@@ -242,6 +242,12 @@ class MainWindow(QMainWindow):
                             "&Publish to Printables...",
                             self.publish_to_printables,
                             "Ctrl+Shift+P")
+
+        def _planetcraft():
+            from . import planetcraft_dialog
+            planetcraft_dialog.open_dialog(self)
+        file_menu.addAction(icons.icon("mdi.earth"),
+                            "Send to Planet&Craft...", _planetcraft)
         file_menu.addSeparator()
         # Qt moves an action called "Exit" into the macOS application
         # menu unless told otherwise, so File had no way out on a Mac.

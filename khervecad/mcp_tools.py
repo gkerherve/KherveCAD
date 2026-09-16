@@ -1410,6 +1410,25 @@ class McpToolExecutor:
     def _model_path(self):
         return getattr(self._w, "_path", None)
 
+    def _t_send_to_planetcraft(self, params) -> dict:
+        from . import planetcraft
+        node = None
+        if params.get("node_id") is not None:
+            node = self._node(params["node_id"])
+        try:
+            args = dict(name=str(params.get("name") or "Creature"),
+                        node=node, height=params.get("height"),
+                        speed=float(params.get("speed") or 1.0),
+                        health=int(params.get("health") or 12),
+                        wild=params.get("wild", True))
+            if params.get("dry_run"):
+                return {"dry_run": True, **planetcraft.summary(
+                    planetcraft.build_creature(self._model, **args))}
+            return planetcraft.export(self._model, folder=params.get("path"),
+                                      **args)
+        except planetcraft.PlanetCraftError as exc:
+            raise ToolError(str(exc))
+
     def _t_make_object(self, params) -> dict:
         nodes = self._nodes(params.get("ids"))
         model = self._model
