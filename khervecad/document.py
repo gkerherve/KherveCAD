@@ -20,7 +20,7 @@ from .meshimport import relative_for_save, resolve_paths
 from .model import NODE_TYPES, CadNode, DocumentModel
 from .units import coerce
 
-FORMAT_VERSION = 10         # 4: "component" (Object) node type
+FORMAT_VERSION = 11         # 4: "component" (Object) node type
                             # 5: instances (reference->component) may
                             #    carry a "mate" record
                             # 6: organic/mesh node types; color nodes
@@ -34,6 +34,8 @@ FORMAT_VERSION = 10         # 4: "component" (Object) node type
                             #    absent = "mm"
                             # 10: "house" — the House Builder design
                             #    (house.house_to_spec); absent = none
+                            # 11: "city" — the City Builder design
+                            #    (city.resolve); absent = none
 
 
 def node_to_dict(node: CadNode) -> dict:
@@ -68,6 +70,8 @@ def save_kcad(model: DocumentModel, path: str):
         data["drawing"] = model.drawing
     if model.house:
         data["house"] = model.house
+    if model.city:
+        data["city"] = model.city
     relative_for_save(data["tree"], path)   # the folder travels whole
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=1)
@@ -87,6 +91,7 @@ def load_kcad(model: DocumentModel, path: str):
     model.reference_images = [dict(r) for r in data.get("references", [])]
     model.drawing = data.get("drawing") or None
     model.house = data.get("house") or None
+    model.city = data.get("city") or None
     old_unit, model.unit = model.unit, coerce(data.get("unit", "mm"))
     model.group_variables()               # gather loose top-level vars
     model.structure_changed.emit()

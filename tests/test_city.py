@@ -70,3 +70,59 @@ def test_build_city_tool_replaces_previous_build(window):
     assert top.count("City buildings") == 1
     dry = city.build_city(window, {"layout": "town", "dry_run": True})
     assert dry["dry_run"] and dry["counts"]["roads"] == 8
+
+
+def test_spec_is_resolved_saved_and_undone(window, tmp_path):
+    from khervecad import document
+    from khervecad.model import DocumentModel
+    city.build_city(window, {"layout": "village", "seed": 2})
+    stored = window.model.city
+    assert stored and stored["buildings"][0]["wall"] in \
+        ("brick", "concrete", "render", "stone")
+    assert isinstance(stored["lights"], list) and stored["lights"]
+    path = tmp_path / "v.kcad"
+    document.save_kcad(window.model, str(path))
+    other = DocumentModel()
+    document.load_kcad(other, str(path))
+    assert other.city == stored
+
+
+def test_every_wall_roof_and_tree_kind_builds():
+    from khervecad import city_buildings as B, city_trees as T
+    for wall in B.WALLS:
+        for roof in B.ROOF_KINDS:
+            for mat in B.ROOFS:
+                n = B.build_building(dict(style="house", wall=wall,
+                                          roof=roof, roof_material=mat))
+                assert mesh.tessellate(n)
+    for kind in T.TREE_KINDS:
+        assert len(mesh.tessellate(T.build_trees([dict(kind=kind)]))) < 1200
+
+
+def test_surface_materials_are_known_everywhere():
+    from khervecad import glrender, view3d
+    from khervecad.model import MATERIALS
+    assert set(glrender.SURFACES) <= set(MATERIALS)
+    assert set(glrender.SURFACES) <= set(view3d.MATERIAL_STYLES)
+
+
+def test_builder_window_places_edits_and_builds(window):
+    from PyQt5.QtCore import QPointF
+    from khervecad import city_dialog
+    panel = city_dialog.open_builder(window)
+    panel._add_road([[-30000, 0], [30000, 0]])
+    panel.style_combo.setCurrentText("cottage")
+    panel._place("building", QPointF(0, 12000))
+    b = panel.spec["buildings"][-1]
+    assert abs(((b["rz"] + 180) % 360) - 180) in (0, 180)
+    panel.b_wall.setCurrentText("brick")
+    panel._wall_changed()
+    assert b["wall"] == "brick"
+    panel._place("tree", QPointF(5000, -6000))
+    panel._place("light", QPointF(-5000, 5000))
+    panel._rotate_selected(90)
+    panel._build()
+    assert window.model.city["buildings"][0]["wall"] == "brick"
+    names = [c.name for c in window.model.root.children]
+    assert "City buildings" in names and "City roads" in names
+    panel.close()

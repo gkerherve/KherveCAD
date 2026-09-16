@@ -25,7 +25,9 @@ ORIENTATIONS = ["Isometric", "Top", "Bottom", "Front", "Back", "Right",
 
 #: colour materials (model.MATERIALS — repeated for the same reason).
 MATERIALS = ["Default", "Plastic", "Metal", "Matte", "Clay", "Glass",
-             "Rubber", "Skin", "Gold", "Copper", "Emissive"]
+             "Rubber", "Skin", "Gold", "Copper", "Emissive",
+             "Brick", "Concrete", "Render", "Roof tiles", "Slate", "Stone",
+             "Bark", "Leaves"]
 
 #: 3D projections (view3d.PROJECTIONS — repeated here because this
 #: module must not import Qt).
@@ -1833,24 +1835,29 @@ TOOLS = [
         "name": "build_city",
         "description": (
             "The City Builder: a village, town or city of OUTSIDE-ONLY "
-            "buildings (a shell, windows on the facades, a roof — nothing "
-            "inside, so hundreds stay light), roads with pavements and "
-            "centre lines, street lights and trees. Either `layout` "
-            "('village' | 'town' | 'city', with `blocks` and `seed`) "
-            "generates one, or give the parts yourself; both may be "
-            "combined (your roads/buildings/trees are added). All mm, "
-            "Z up. roads: [{points: [[x, y], ...], kind: avenue|street|"
-            "lane|path, width, sidewalk}]. buildings: [{x, y (centre), w, "
-            "d, rz, style: cottage|house|terrace|shop|block|tower|round "
-            "tower|L-shape|church, floors, floor_height, color, "
-            "roof_color, roof: flat|gable|hip|cone, name}] — rz turns "
-            "the front (-Y) to face its road. lights: [[x, y, rz], ...] "
-            "or {spacing} along every road; trees: [{x, y, kind: "
-            "broadleaf|conifer|round, height}]; street_trees: {spacing, "
-            "kind}; ground: {margin, color} or null. Inserts the Objects "
-            "City ground / City roads / City buildings / Street lights / "
-            "City trees, replacing the last build's (replace: false "
-            "keeps them). Repeated items are for-loops over value lists."
+            "buildings (nothing inside, so hundreds stay light) with "
+            "detailed facades — framed windows with sills, doors, "
+            "plinths, balconies, curtain walls — and detailed roofs "
+            "(tiles or slate, ridge caps, fascia, gutters, chimneys, "
+            "dormers; flat roofs with parapets and plant), roads with "
+            "pavements, street lights and modelled trees. Walls are "
+            "textured brick / concrete / render / stone in the 3D view. "
+            "Either `layout` ('village' | 'town' | 'city', with `blocks` "
+            "and `seed`) generates one, or give the pieces yourself; both "
+            "combine. All mm, Z up. roads: [{points: [[x, y], ...], kind: "
+            "avenue|street|lane|path, width, sidewalk}]. buildings: [{x, "
+            "y (centre), w, d, rz, style: cottage|house|terrace|shop|"
+            "block|tower|round tower|L-shape|church, floors, "
+            "floor_height, wall: brick|concrete|render|stone, color, "
+            "roof: gable|hip|flat|cone, roof_material: tiles|slate, "
+            "roof_color, name}] — the front is -Y, rz turns it to its "
+            "road. lights: [{x, y, rz}, ...] or {spacing}; trees: [{x, y, "
+            "kind: broadleaf|conifer|round|birch|poplar, height}]; "
+            "street_trees: {spacing, kind}; ground: {margin, color} or "
+            "null. Inserts the Objects City ground / City roads / City "
+            "buildings / Street lights / City trees, replacing the last "
+            "build's, and stores the design (Library ▸ City ▸ City "
+            "Builder edits it piece by piece; it is saved in the .kcad)."
         ),
         "input_schema": _obj({
             "layout": {"type": "string",
@@ -1860,47 +1867,7 @@ TOOLS = [
             "seed": {"type": "integer"},
             "roads": {"type": "array", "items": {"type": "object"}},
             "buildings": {"type": "array", "items": {"type": "object"}},
-            "lights": {"description": "[[x, y, rz], ...] or {spacing}."},
-            "trees": {"type": "array", "items": {"type": "object"}},
-            "street_trees": {"type": "object"},
-            "ground": {"description": "{margin, color}, or null."},
-            "replace": {"type": "boolean"},
-            "dry_run": {"type": "boolean",
-                        "description": "Count only; build nothing."},
-        }),
-    },
-    {
-        "name": "build_city",
-        "description": (
-            "The City Builder: a village, town or city of OUTSIDE-ONLY "
-            "buildings (a shell, windows on the facades, a roof — nothing "
-            "inside, so hundreds stay light), roads with pavements and "
-            "centre lines, street lights and trees. Either `layout` "
-            "('village' | 'town' | 'city', with `blocks` and `seed`) "
-            "generates one, or give the parts yourself; both may be "
-            "combined (your roads/buildings/trees are added). All mm, "
-            "Z up. roads: [{points: [[x, y], ...], kind: avenue|street|"
-            "lane|path, width, sidewalk}]. buildings: [{x, y (centre), w, "
-            "d, rz, style: cottage|house|terrace|shop|block|tower|round "
-            "tower|L-shape|church, floors, floor_height, color, "
-            "roof_color, roof: flat|gable|hip|cone, name}] — rz turns "
-            "the front (-Y) to face its road. lights: [[x, y, rz], ...] "
-            "or {spacing} along every road; trees: [{x, y, kind: "
-            "broadleaf|conifer|round, height}]; street_trees: {spacing, "
-            "kind}; ground: {margin, color} or null. Inserts the Objects "
-            "City ground / City roads / City buildings / Street lights / "
-            "City trees, replacing the last build's (replace: false "
-            "keeps them). Repeated items are for-loops over value lists."
-        ),
-        "input_schema": _obj({
-            "layout": {"type": "string",
-                       "enum": ["village", "town", "city"]},
-            "blocks": {"type": "integer",
-                       "description": "Grid size (town 3, city 5)."},
-            "seed": {"type": "integer"},
-            "roads": {"type": "array", "items": {"type": "object"}},
-            "buildings": {"type": "array", "items": {"type": "object"}},
-            "lights": {"description": "[[x, y, rz], ...] or {spacing}."},
+            "lights": {"description": "[{x, y, rz}, ...] or {spacing}."},
             "trees": {"type": "array", "items": {"type": "object"}},
             "street_trees": {"type": "object"},
             "ground": {"description": "{margin, color}, or null."},

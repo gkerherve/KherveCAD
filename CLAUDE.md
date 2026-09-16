@@ -683,6 +683,65 @@ into a new module and import.
                        printing a 40 mm Prusa man; 1:4 desk size too.
                        Nothing from the Printables files is used — modelled
                        from scratch. Tested in `tests/test_library_prusa.py`.
+  - `city.py`        — the **City Builder** (Qt-free): villages, towns
+                       and cities of OUTSIDE-ONLY buildings, so hundreds
+                       stay light. A spec of explicit lists — roads
+                       (polylines, kind avenue/street/lane/path), buildings,
+                       lights `{x, y, rz}`, trees — or a `layout` + seed
+                       that `generate` expands; `resolve` makes everything
+                       explicit and is what `apply` stores as `model.city`
+                       (.kcad "city", FORMAT_VERSION 11, in the undo
+                       snapshots) and what the window edits. `apply`
+                       inserts five Objects (City ground / roads /
+                       buildings / Street lights / City trees) and
+                       `remove_built`s the last build's first. Repeated
+                       things are for-loops over value lists (every light
+                       is ONE loop). Built for the SOFTWARE painter too,
+                       which sorts whole faces by centre: pavements lie
+                       BESIDE the tarmac (never under it), a pavement tile
+                       on another road is dropped, and the grass is tiles
+                       (`ground_tiles`: 20 m, 5 m beside roads) that leave
+                       the roads out — one big ground slab, or tarmac on a
+                       pavement slab, painted grass wedges over the roads.
+                       `along_roads` skips points on another road.
+                       MCP `build_city`.
+  - `city_buildings.py` — a building's outside, detailed: punched windows
+                       (frame, glass, mullion, transom, sill — one loop body
+                       per facade), curtain walls / glass ribbons + fins,
+                       balconies, plinth, string courses, door with step and
+                       canopy, shop front; pitched roofs (tiled slopes,
+                       gable walls, ridge cap, fascia, gutters, bargeboards,
+                       chimney with pots, dormer), flat roofs (parapet,
+                       coping, stair housing, plant, water tank), church
+                       tower + spire. `STYLES` style -> floors, roof,
+                       glazing, wall; `WALLS` brick/concrete/render/stone,
+                       `ROOFS` tiles/slate, each a surface material + palette.
+                       Window glass is opaque Plastic: the Glass material
+                       caps alpha at 0.45 and a dark pane vanished into brick.
+  - `city_trees.py`  — trees (broadleaf, conifer, round, birch, poplar:
+                       tapered Bark trunk, branches, Leaves clumps in two
+                       greens; one loop per kind) and street lights. A
+                       single-row loop value list is bracketed once more —
+                       a lone vector is iterated element by element.
+  - `city_items.py` / `city_dialog.py` — Library ▸ City ▸ **City
+                       Builder…**: a 2D plan (Y-up, 0.5 m grid) to Generate
+                       a layout, then place / drag / turn (R) / delete every
+                       road (clicked point by point, vertex handles),
+                       building, tree and light, with a side editor (style,
+                       floors, size, walls + colour, roof + covering +
+                       colour); Build = `city.apply`. Items set `_syncing`
+                       BEFORE their flags: itemChange runs inside setPos in
+                       the constructor, and an exception there aborted.
+  - **Surface materials** (`glrender.SURFACES`, 2026-09-16): Brick,
+                       Concrete, Render, Roof tiles, Slate, Stone, Bark,
+                       Leaves are `model.MATERIALS` drawn by the fragment
+                       shader from world millimetres (`surface()`: stretcher
+                       bond, board-marked concrete, pantiles, Voronoi stone,
+                       ...) — zero triangles. The id rides the gloss-power
+                       slot as a negative number; joints are antialiased
+                       over a pixel (`joint`) and the pattern fades to its
+                       mean once finer than ~a pixel (moire). The painter
+                       draws them as Matte (`view3d.SURFACE_STYLES`).
   - `house_items.py` — the floor-plan canvas's QGraphicsItems, drawn
                        like an architect's plan (Sep 2026 rework — the
                        first canvas had 400 mm tan squares for every

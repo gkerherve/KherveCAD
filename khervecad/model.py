@@ -41,7 +41,9 @@ MAX_WHILE_ITERATIONS = 1000
 #: no materials, so codegen records it as a kcad_material() prefix that
 #: renders as nothing but brings the material back on import.
 MATERIALS = ["Default", "Plastic", "Metal", "Matte", "Clay", "Glass",
-             "Rubber", "Skin", "Gold", "Copper", "Emissive"]
+             "Rubber", "Skin", "Gold", "Copper", "Emissive",
+             "Brick", "Concrete", "Render", "Roof tiles", "Slate", "Stone",
+             "Bark", "Leaves"]
 
 #: param schema entry: (key, label, kind, minimum, maximum)
 #: kinds: "float", "int", "bool", "str", "points" (list of [x, y]).
@@ -996,6 +998,9 @@ class DocumentModel(QObject):
         #: and IN the undo snapshots, so the builder reopens on the
         #: house the document holds and a Ctrl+Z of a Build rewinds both
         self.house = None
+        #: the City Builder design (city.resolve + "objects") or None —
+        #: saved and in the undo snapshots, like the house
+        self.city = None
         #: what one model unit means ("nm", "um", "mm", "cm", "m",
         #: "in") — a label for every readout, never a rescale of the
         #: geometry (see units.py)
@@ -1020,7 +1025,8 @@ class DocumentModel(QObject):
                            "dimensions": self.dimensions,
                            "references": self.reference_images,
                            "unit": self.unit,
-                           "house": self.house})
+                           "house": self.house,
+                           "city": self.city})
 
     def _schedule_capture(self):
         """Capture one undo snapshot per event-loop cycle, so a
@@ -1048,6 +1054,7 @@ class DocumentModel(QObject):
             self.reference_images = [dict(r) for r in
                                      data.get("references", [])]
             self.house = data.get("house")
+            self.city = data.get("city")
             unit = data.get("unit", "mm")
             unit_moved = unit != self.unit
             self.unit = unit
@@ -1635,6 +1642,7 @@ class DocumentModel(QObject):
         self.reference_images = []
         self.drawing = None
         self.house = None
+        self.city = None
         self.root = CadNode("root")
         self.structure_changed.emit()
         self.drawing_changed.emit()

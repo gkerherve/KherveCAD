@@ -592,18 +592,24 @@ class MainWindow(QMainWindow):
         return lego
 
     def _build_city_menu(self, menu):
-        """Library ▸ City: generate a village, town or city of outside-
-        only buildings, roads, lights and trees (`city.py`); building
-        again replaces the last one. Assistants design their own through
-        the build_city MCP tool."""
-        from . import city
+        """Library ▸ City: the City Builder (a 2D plan to place every
+        road, building, tree and light) and quick random layouts; a
+        build replaces the last one. Assistants use build_city."""
+        from . import city, city_dialog
         sub = menu.addMenu(icons.icon("mdi.city-variant-outline"), "City")
+        sub.addAction(icons.icon("mdi.city-variant-outline"),
+                      "City Builder...",
+                      lambda: city_dialog.open_builder(self))
+        sub.addSeparator()
 
         def build(layout):
             seed = getattr(self, "_city_seed", 0) + 1
             self._city_seed = seed
             city.apply(self.model, {"layout": layout, "seed": seed})
             self.view3d.fit()
+            panel = getattr(self, "_city_builder", None)
+            if panel is not None:
+                panel.load_from_document()
 
         for layout in ("village", "town", "city"):
             sub.addAction(f"New {layout} (random)",

@@ -37,6 +37,13 @@ from PyQt5.QtGui import QColor
 STYLES = {"Shaded", "Matte", "Clay", "Toon", "Brushed metal", "Gold",
           "Copper", "Glass", "Rubber", "Skin", "Emissive"}
 
+#: surface materials the fragment shader draws from world position
+#: (`surface()`): name -> pattern id, carried in the gloss-power slot as
+#: a negative number. Zero extra triangles, so a whole town can wear
+#: bricks; the painter fallback shows them as flat Matte.
+SURFACES = {"Brick": 1, "Concrete": 2, "Render": 3, "Roof tiles": 4,
+            "Slate": 5, "Stone": 6, "Bark": 7, "Leaves": 8}
+
 GL_FLOAT = 0x1406
 GL_TRIANGLES = 0x0004
 GL_LINES = 0x0001
@@ -73,7 +80,9 @@ varying float v_alpha;
 varying vec4 v_mat;
 varying float v_cav;
 varying vec3 v_to_eye;
+varying vec3 v_pos;
 void main() {
+    v_pos = a_pos;
     vec3 d = a_pos - u_eye;
     float cx = dot(d, u_right);
     float cy = dot(d, u_up);
@@ -106,17 +115,140 @@ varying float v_alpha;
 varying vec4 v_mat;
 varying float v_cav;
 varying vec3 v_to_eye;
+varying vec3 v_pos;
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+float noise(vec2 p) {
+    vec2 i = floor(p), f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
+               f.y);
+}
+float fbm(vec2 p) {
+    return 0.5 * noise(p) + 0.3 * noise(p * 2.03) + 0.2 * noise(p * 4.1);
+}
+// Surface materials drawn in world millimetres (see SURFACES): the
+// pattern multiplies the face colour and, for relief, returns a darker
+// joint. uv: along the wall / up it; a roof's v runs up its slope.
+// a joint line of width w at the start of a cell, antialiased over one
+// pixel (px mm), so thin mortar greys out instead of aliasing
+float joint(float f, float w, float px) {
+    return 1.0 - smoothstep(w - px, w + px, f);
+}
+vec3 surface(float id, vec3 n, vec3 rgb, float px) {
+    vec3 an = abs(n);
+    vec2 uv;
+    if (an.z > 0.75 && id != 4.0 && id != 5.0) uv = v_pos.xy;
+    else if (an.z > 0.97) uv = v_pos.xy;
+    else {
+        float along = (an.x > an.y) ? v_pos.y : v_pos.x;
+        float up = v_pos.z;
+        if (id == 4.0 || id == 5.0)
+            up = v_pos.z / max(length(n.xy), 0.25);
+        uv = vec2(along, up);
+    }
+    if (id == 1.0) {                       // brick, stretcher bond
+        vec2 b = vec2(225.0, 75.0);
+        float row = floor(uv.y / b.y);
+        float x = uv.x / b.x + 0.5 * mod(row, 2.0);
+        vec2 cell = vec2(floor(x), row);
+        vec2 f = vec2(fract(x) * b.x, fract(uv.y / b.y) * b.y);
+        float mortar = max(joint(f.x, 10.0, px), joint(f.y, 10.0, px));
+        float tone = 0.78 + 0.34 * hash(cell) + 0.12 * (noise(uv * 0.08) - 0.5);
+        vec3 brick = rgb * tone;
+        brick *= 1.0 - 0.18 * smoothstep(55.0, 75.0, f.y);   // lower lip
+        vec3 mortarc = vec3(0.74, 0.71, 0.66);
+        return mix(brick, mortarc, clamp(mortar, 0.0, 1.0));
+    }
+    if (id == 2.0) {                       // board-marked concrete
+        vec2 p = vec2(1200.0, 600.0);
+        vec2 f = mod(uv, p);
+        float jl = max(joint(f.x, 8.0, px), joint(f.y, 8.0, px));
+        vec2 tie = abs(mod(uv + vec2(0.0, 150.0), vec2(600.0, 300.0))
+                       - vec2(300.0, 150.0));
+        float hole = 1.0 - step(18.0, length(tie));
+        float speck = 0.9 + 0.2 * fbm(uv * 0.02) + 0.08 * (hash(floor(uv / 6.0)) - 0.5);
+        vec3 c = rgb * speck;
+        c *= 1.0 - 0.25 * jl - 0.4 * hole;
+        return c;
+    }
+    if (id == 3.0) {                       // render / stucco
+        return rgb * (0.9 + 0.16 * fbm(uv * 0.01) + 0.06 * (hash(floor(uv / 4.0)) - 0.5));
+    }
+    if (id == 4.0 || id == 5.0) {          // clay roof tiles / slate
+        vec2 t = (id == 4.0) ? vec2(260.0, 190.0) : vec2(300.0, 150.0);
+        float row = floor(uv.y / t.y);
+        float x = uv.x / t.x + 0.5 * mod(row, 2.0);
+        vec2 cell = vec2(floor(x), row);
+        float fy = fract(uv.y / t.y), fx = fract(x);
+        float tone = (id == 4.0 ? 0.8 + 0.3 * hash(cell)
+                                : 0.85 + 0.2 * hash(cell));
+        vec3 c = rgb * tone;
+        c *= 0.62 + 0.38 * smoothstep(0.0, 0.35 + px / t.y, fy);        // course shadow
+        if (id == 4.0) c *= 0.85 + 0.15 * sin(fx * 3.14159);  // pantile roll
+        else c *= 1.0 - 0.35 * max(joint(fx * t.x, 9.0, px), joint((1.0 - fx) * t.x, 9.0, px));
+        c *= 0.92 + 0.12 * fbm(uv * 0.004);                  // weathering
+        return c;
+    }
+    if (id == 6.0) {                       // random stone
+        vec2 g = uv / vec2(420.0, 260.0);
+        vec2 i = floor(g), f = fract(g);
+        float d = 9.0, d2 = 9.0; vec2 best = i;
+        for (int y = -1; y <= 1; y++)
+            for (int x = -1; x <= 1; x++) {
+                vec2 o = vec2(float(x), float(y));
+                vec2 pt = o + vec2(hash(i + o), hash(i + o + 7.3)) - f;
+                float l = length(pt);
+                if (l < d) { d2 = d; d = l; best = i + o; }
+                else if (l < d2) d2 = l;
+            }
+        float seam = 1.0 - smoothstep(0.02, 0.09, d2 - d);
+        vec3 c = rgb * (0.75 + 0.4 * hash(best)) * (0.9 + 0.2 * fbm(uv * 0.02));
+        return mix(c, vec3(0.62, 0.6, 0.56), seam);
+    }
+    if (id == 7.0) {                       // bark: vertical furrows
+        float a = atan(n.y, n.x) * 180.0;
+        float f = noise(vec2(a * 0.12, v_pos.z * 0.004)) * 0.6
+                  + noise(vec2(a * 0.5, v_pos.z * 0.02)) * 0.4;
+        return rgb * (0.55 + 0.7 * f);
+    }
+    if (id == 8.0) {                       // leaves: dappled clumps
+        vec2 p = vec2(v_pos.x + v_pos.z * 0.7, v_pos.y - v_pos.z * 0.5);
+        float f = fbm(p * 0.006) * 0.6 + hash(floor(p / 45.0)) * 0.4;
+        vec3 c = rgb * (0.55 + 0.75 * f);
+        return c + vec3(0.05, 0.08, 0.0) * step(0.8, f);
+    }
+    return rgb;
+}
+
 void main() {
     vec3 n = normalize(v_nrm);
     float shade = abs(dot(n, u_light));
     if (u_toon > 0.5) shade = floor(shade * 3.0 + 0.5) / 3.0;
     vec3 h = normalize(u_light + v_to_eye);
     float spec = max(dot(n, h), 0.0);
-    float gloss = v_mat.z * pow(spec, v_mat.w);
+    float gloss = (v_mat.w > 0.0) ? v_mat.z * pow(spec, v_mat.w) : 0.0;
     float v = v_mat.x + v_mat.y * shade;
     v = (v - 0.5) * u_gain + 0.5 + u_offset;
     if (u_cavity > 0.5) v *= v_cav;
-    vec3 rgb = clamp(v_rgb * v + vec3(gloss), 0.0, 1.0);
+    vec3 base = v_rgb;
+    if (v_mat.w < -0.5) {
+        // fade the pattern to its mean where it is finer than a few
+        // pixels, or bricks and slates shimmer into moire at a distance
+        float id = -v_mat.w;
+        float feat = (id == 1.0) ? 75.0 : (id == 2.0) ? 300.0 :
+                     (id == 3.0) ? 60.0 : (id == 4.0) ? 190.0 :
+                     (id == 5.0) ? 150.0 : (id == 6.0) ? 260.0 :
+                     (id == 7.0) ? 150.0 : 45.0;
+        float px = length(fwidth(v_pos));
+        float fade = smoothstep(feat * 0.5, feat * 1.2, px);
+        vec3 mean = v_rgb * ((id == 1.0) ? 0.93 : (id == 4.0) ? 0.82 : 0.95);
+        base = mix(surface(id, n, v_rgb, px), mean, fade);
+    }
+    vec3 rgb = clamp(base * v + vec3(gloss), 0.0, 1.0);
     float a = v_alpha;
     if (v_alpha < 0.99) a = clamp(v_alpha + 0.4 * gloss, 0.0, 1.0);
     gl_FragColor = vec4(rgb, a);
@@ -168,6 +300,8 @@ def material(style):
         "Rubber": (0.12, 0.38, 0.0, 1.0, 0.85, 1.0),
         "Skin": (0.58, 0.32, 0.08, 4.0, 0.9, 1.0),
         "Emissive": (1.0, 0.0, 0.0, 1.0, 1.0, 1.0),
+        **{name: (0.52, 0.48, 0.0, -float(pid), 0.8, 1.0)
+           for name, pid in SURFACES.items()},
     }.get(style, (0.30, 0.70, 0.45, 10.0, 1.1, 1.0))          # Shaded
 
 

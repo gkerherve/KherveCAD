@@ -46,7 +46,14 @@ MATERIAL_STYLES = {
     "Plastic": "Shaded", "Metal": "Brushed metal", "Matte": "Matte",
     "Clay": "Clay", "Glass": "Glass", "Rubber": "Rubber", "Skin": "Skin",
     "Gold": "Gold", "Copper": "Copper", "Emissive": "Emissive",
+    # surfaces: textured by the OpenGL shader (glrender.SURFACES)
+    "Brick": "Brick", "Concrete": "Concrete", "Render": "Render",
+    "Roof tiles": "Roof tiles", "Slate": "Slate", "Stone": "Stone",
+    "Bark": "Bark", "Leaves": "Leaves",
 }
+
+SURFACE_STYLES = {"Brick", "Concrete", "Render", "Roof tiles", "Slate",
+                  "Stone", "Bark", "Leaves"}
 
 #: 3D viewport backgrounds. "Theme" tracks the app theme; the rest are
 #: explicit (top, bottom) pairs painted as a vertical gradient.
@@ -1381,6 +1388,8 @@ class View3D(QWidget):
         draw edges only (wireframe)."""
         if style == "Wireframe":
             return None, None
+        if style in SURFACE_STYLES:
+            style = "Matte"          # textured only by the OpenGL shader
         if style == "X-ray":
             # translucent glass — the form reads through overlapping faces
             c = QColor.fromHsvF(hue, sat * 0.6,
