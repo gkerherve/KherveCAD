@@ -53,3 +53,21 @@ def test_signals_light_the_chosen_aspect():
     lit = [n for n in node.walk() if n.type == "color"
            and n.params.get("material") == "Emissive"]
     assert [n.children[0].name for n in lit] == ["Green"]
+
+
+def test_park_facilities_do_not_overlap_the_paths_or_each_other():
+    from khervecad import library_park as P
+    node = P.build_park(dict(w=220000, d=150000, seed=1))
+    names = [c.name for c in node.children]
+    for want in ("Lake", "Football pitch", "Tennis court",
+                 "Basketball court", "Playground", "Fountain", "Trees"):
+        assert want in names, want
+
+
+def test_pitch_markings_and_goal_nets():
+    node = build_part("park_football", dict(length=105000, width=68000))
+    marks = [n for n in node.walk() if n.name == "Markings"
+             and n.type == "linear_extrude"]
+    assert marks and len(marks[0].children) > 25
+    assert len([n for n in node.walk() if n.name == "Goal"
+                and n.type == "translate"]) == 2
