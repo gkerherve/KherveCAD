@@ -78,7 +78,7 @@ _NO_SNAPSHOT_TOOLS = _READ_ONLY_TOOLS | {
 _FILE_TOOLS = frozenset({
     "open_document", "save_document", "export_document",
     "export_drawing", "publish_to_printables", "set_reference_image",
-    "mesh_from_photo",
+    "mesh_from_photo", "build_city", "import_map",
 })
 
 
@@ -95,7 +95,9 @@ def _names_a_path(name: str, tool_input: dict) -> bool:
     """
     if name == "publish_to_printables":
         return True
-    return name in _FILE_TOOLS and bool((tool_input or {}).get("path"))
+    tool_input = tool_input or {}
+    return name in _FILE_TOOLS and bool(tool_input.get("path")
+                                        or tool_input.get("save_to"))
 
 
 #: What a connected client is allowed to do, weakest first.  "full" is

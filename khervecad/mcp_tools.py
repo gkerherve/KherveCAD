@@ -1358,9 +1358,57 @@ class McpToolExecutor:
     def _t_build_city(self, params) -> dict:
         from . import city
         try:
-            return city.build_city(self._w, params)
+            params = dict(params or {})
+            if params.get("path"):
+                from . import map_import
+                spec = map_import.load_spec(params.pop("path"))
+                spec.update(params)
+                params = spec
+            save_to = params.pop("save_to", None)
+            result = city.build_city(self._w, params)
+            if save_to and self._model.city:
+                from . import map_import
+                map_import.save_spec({k: v for k, v in self._model.city.items()
+                                      if k != "objects"}, save_to)
+                result["saved"] = save_to
+            return result
         except city.CityError as exc:
             raise ToolError(str(exc))
+        except Exception as exc:
+            from . import map_import
+            if isinstance(exc, map_import.MapImportError):
+                raise ToolError(str(exc))
+            raise
+
+    def _t_import_map(self, params) -> dict:
+        from . import city, map_import
+        import os
+        params = dict(params or {})
+        folder = None
+        if self._model_path():
+            folder = os.path.dirname(self._model_path())
+        try:
+            spec, report, ref = map_import.import_map(params,
+                                                      aerial_dir=folder)
+        except map_import.MapImportError as exc:
+            raise ToolError(str(exc))
+        if params.get("path"):
+            report["saved"] = params["path"]
+            report["saved_bytes"] = map_import.save_spec(spec,
+                                                          params["path"])
+        if params.get("build", True):
+            try:
+                built = city.build_city(self._w, dict(spec))
+            except city.CityError as exc:
+                raise ToolError(str(exc))
+            report.update(objects=built["objects"], counts=built["counts"])
+        if ref is not None:
+            self._model.add_reference_image(ref)
+            report["reference_images"] = self._references()
+        return report
+
+    def _model_path(self):
+        return getattr(self._w, "_path", None)
 
     def _t_make_object(self, params) -> dict:
         nodes = self._nodes(params.get("ids"))

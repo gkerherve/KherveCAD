@@ -1960,6 +1960,63 @@ TOOLS = [
                                     "already built."},
             "dry_run": {"type": "boolean",
                         "description": "Count only; build nothing."},
+            "detail": {"type": "string", "enum": ["auto", "low", "full"],
+                       "description": "Building detail: full (windows, "
+                                      "gutters, chimneys), low (walls and "
+                                      "roof, ~1/15 the triangles) or auto "
+                                      "(low past 150 buildings)."},
+            "path": {"type": "string",
+                     "description": "Read the whole spec from this JSON "
+                                    "file instead (other keys given here "
+                                    "override it) — for large cities, so "
+                                    "nothing passes through the chat."},
+            "save_to": {"type": "string",
+                        "description": "Also write the resolved spec to "
+                                       "this JSON file."},
+        }),
+    },
+    {
+        "name": "import_map",
+        "description": (
+            "Import a REAL place as a City Builder design, downloaded by "
+            "the app itself (nothing to paste): OpenStreetMap roads, the "
+            "real building outlines (footprints) with heights and roof "
+            "shapes from the map tags; in England the Environment "
+            "Agency's 1 m LiDAR for the measured ground (roads and pads "
+            "levelled on it), the height of every untagged building, and "
+            "tree tops found in the canopy (species chosen from each "
+            "tree's measured height and crown); optionally the aerial "
+            "photo laid on the ground as a reference image. Give center "
+            "[lat, lon] + radius_m (default 300) or bbox [south, west, "
+            "north, east]. Builds it (replacing the city) unless build is "
+            "false; `path` saves the spec JSON, which build_city can load "
+            "later. Takes a while (downloads): a 300 m radius is ~30-60 s."
+        ),
+        "input_schema": _obj({
+            "center": {"type": "array", "items": {"type": "number"},
+                       "description": "[latitude, longitude]"},
+            "radius_m": {"type": "number"},
+            "bbox": {"type": "array", "items": {"type": "number"},
+                     "description": "[south, west, north, east] degrees"},
+            "heights": {"type": "string", "enum": ["lidar", "flat"],
+                        "description": "Ground and building heights from "
+                                       "LiDAR (England; default) or flat."},
+            "trees": {"type": "string",
+                      "enum": ["auto", "lidar", "osm", "both", "none"],
+                      "description": "Where trees come from (auto: lidar "
+                                     "when heights are lidar)."},
+            "tree_step_m": {"type": "number",
+                            "description": "Canopy sampling step, m "
+                                           "(default 1.5)."},
+            "detail": {"type": "string", "enum": ["auto", "low", "full"]},
+            "aerial": {"type": "boolean",
+                       "description": "Lay the aerial photo on the ground "
+                                      "as a reference image."},
+            "name": {"type": "string"},
+            "build": {"type": "boolean",
+                      "description": "Build it now (default true)."},
+            "path": {"type": "string",
+                     "description": "Save the spec JSON here."},
         }),
     },
     {

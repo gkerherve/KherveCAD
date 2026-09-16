@@ -267,6 +267,12 @@ front faces -Y and rz (0-360) turns it towards its road.
 - build_city REPLACES the city by default. To change one: get_city, \
 edit `current` (move a building, add a road...), send it back whole. \
 To add pieces to what is there, pass mode "add".
+- A REAL place (a named street, village, an address): use import_map \
+with center [lat, lon] + radius_m — the app downloads OpenStreetMap \
+outlines and roads, England's LiDAR ground, building heights and trees, \
+and optionally the aerial photo. Never transcribe map coordinates into \
+build_city by hand. Large specs go through files: import_map path=, \
+build_city path= / save_to=.
 - Single pieces for any document: insert_part with a part_id from \
 list_parts (categories Buildings, Trees, Park & sport, Lighting & \
 signals, Landscape, Landmarks, Skyscrapers, Bridges) and x, y, z, rz to \
