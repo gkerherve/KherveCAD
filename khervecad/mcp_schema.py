@@ -349,8 +349,15 @@ TOOLS = [
             "manipulators), ISO-threaded fasteners, chemistry glassware, "
             "room furniture, home furniture for every room (kitchen, "
             "bathroom, bedroom, living and dining room), ready-made cars "
-            "and hand tools, and LEGO-compatible bricks, plates, tiles, "
-            "slopes and baseplates — with each part's standard sizes, "
+            "and hand tools, LEGO-compatible bricks, plates, tiles, "
+            "slopes and baseplates, and the City sections: Buildings "
+            "(houses, blocks, towers, church), Trees (13 grown species, "
+            "seasons), Park & sport (pitches, courts, lake, playground, "
+            "complete park), Lighting & signals (street lamps, traffic "
+            "lights), Landscape (hills, mountain, cliff, canyon...), "
+            "Landmarks (Eiffel Tower, Big Ben...), Skyscrapers and "
+            "Bridges (Golden Gate...), true size with model scales — "
+            "with each part's standard sizes, "
             "the dimensions you may override and, where it has them, "
             "its colours. Use a library part rather than modelling a CF "
             "flange or a brick from scratch."
@@ -1008,9 +1015,16 @@ TOOLS = [
                      "description": "Dimension overrides in mm."},
             "color": {"type": "string",
                       "description": "For parts that come in colours "
-                                     "(Lego): one of the names "
-                                     "list_parts gives, e.g. 'Red'."},
+                                     "(Lego bricks, tree seasons, wall "
+                                     "materials, lit signal): one of the "
+                                     "names list_parts gives, e.g. "
+                                     "'Red', 'Autumn', 'Brick'."},
             "name": {"type": "string"},
+            "x": {"type": "number", "description": "Placement, mm."},
+            "y": {"type": "number"},
+            "z": {"type": "number"},
+            "rz": {"type": "number",
+                   "description": "Turn about Z, degrees."},
         }, ["part_id"]),
     },
     {
@@ -1886,36 +1900,35 @@ TOOLS = [
     {
         "name": "build_city",
         "description": (
-            "The City Builder: a village, town or city of OUTSIDE-ONLY "
-            "buildings (nothing inside, so hundreds stay light) with "
-            "detailed facades — framed windows with sills, doors, "
-            "plinths, balconies, curtain walls — and detailed roofs "
-            "(tiles or slate, ridge caps, fascia, gutters, chimneys, "
-            "dormers; flat roofs with parapets and plant), roads with "
-            "pavements, street lights and modelled trees. Walls are "
-            "textured brick / concrete / render / stone in the 3D view. "
-            "Either `layout` ('village' | 'town' | 'city', with `blocks` "
-            "and `seed`) generates one, or give the pieces yourself; both "
-            "combine. All mm, Z up. roads: [{points: [[x, y], ...], kind: "
-            "avenue|street|lane|path, width, sidewalk}]. buildings: [{x, "
-            "y (centre), w, d, rz, style: cottage|house|terrace|shop|"
-            "block|tower|round tower|L-shape|church, floors, "
-            "floor_height, wall: brick|concrete|render|stone, color, "
-            "roof: gable|hip|flat|cone, roof_material: tiles|slate, "
-            "roof_color, name}] — the front is -Y, rz turns it to its "
-            "road. lights: [{x, y, rz}, ...] or {spacing}; trees: [{x, y, "
-            "kind: oak|maple|lime|birch|cherry|apple|willow|poplar|pine|"
-            "spruce|cypress|palm|shrub, height}]; "
-            "street_trees: {spacing, kind}; ground: {margin, color} or "
-            "null. props: [{part_id, x, y, rz, color, dims}] places any "
-            "Part Library piece — a park_complete, park_football, "
-            "signal_traffic, light_victorian, land_hills... (list_parts "
-            "categories Park & sport, Lighting & signals, Landscape, "
-            "Trees). Inserts the Objects City ground / City roads / City "
-            "buildings / Street lights / City trees / City props, "
-            "replacing the last "
-            "build's, and stores the design (Library ▸ City ▸ City "
-            "Builder edits it piece by piece; it is saved in the .kcad)."
+            "The City Builder: villages, towns and cities — optionally ON "
+            "a landscape (hills, mountain, valley...: roads follow the "
+            "slopes, buildings get levelled pads). Call get_city FIRST: it "
+            "lists every valid building style (with default size and "
+            "floor range), wall, roof, road kind, tree species, terrain "
+            "and library piece id, an example spec, and the city the "
+            "document already holds. All mm, Z up, centred on the origin. "
+            "Two ways, which combine: `layout` ('village' | 'town' | "
+            "'city' + `blocks`, `seed`) generates a whole plan; or give "
+            "the pieces — roads [{points: [[x, y], ...], kind}], buildings "
+            "[{style, x, y (centre), w, d, rz, floors, wall, roof, "
+            "roof_material, color, roof_color, name}] (a building's FRONT "
+            "faces -Y; rz 0-360 turns it to face its road), lights "
+            "[{x, y, rz}] or {spacing} along every road, trees [{kind, x, "
+            "y, height}], street_trees {spacing, kind}, props [{part_id, "
+            "x, y, rz, color, dims}] for any library piece (a park, a "
+            "football pitch, a traffic light, a landmark, a bridge), "
+            "terrain {kind, height, seed}, ground {margin, color}. "
+            "`mode`: 'replace' (default) makes this spec THE city — every "
+            "earlier City Object is removed — so to CHANGE an existing "
+            "city, take get_city's `current`, edit it and send it back "
+            "whole; 'add' appends your roads / buildings / trees / lights "
+            "/ props to the city already built. The result is up to six "
+            "Objects (City ground, City roads, City buildings, Street "
+            "lights, City trees, City props); the design is saved in the "
+            ".kcad and opens in Library > City > City Builder. dry_run "
+            "counts without building. Check with render_view "
+            "(orientation Top, or azimuth/elevation/target/distance for a "
+            "street view)."
         ),
         "input_schema": _obj({
             "layout": {"type": "string",
@@ -1941,9 +1954,34 @@ TOOLS = [
                                      "color, dims}."},
             "street_trees": {"type": "object"},
             "ground": {"description": "{margin, color}, or null."},
-            "replace": {"type": "boolean"},
+            "mode": {"type": "string", "enum": ["replace", "add"],
+                     "description": "replace (default): this spec is the "
+                                    "whole city; add: append to the city "
+                                    "already built."},
             "dry_run": {"type": "boolean",
                         "description": "Count only; build nothing."},
+        }),
+    },
+    {
+        "name": "get_city",
+        "description": (
+            "Read before build_city. Returns `catalog` — the valid "
+            "building styles (floors range, default footprint, default "
+            "roof and wall), walls, roofs, roof materials, road kinds "
+            "(widths), tree species (natural heights), terrains, layouts, "
+            "every library piece usable as a prop (Buildings, Park & "
+            "sport, Lighting & signals, Landscape, Trees, Landmarks, "
+            "Skyscrapers, Bridges: part ids, sizes, colours) and a worked "
+            "example spec — and `current`: the city this document holds "
+            "(resolved: every building with its position, size, rz and "
+            "name, lights and street trees as positions; pieces the user "
+            "moved in the main window read back), or null. Edit `current` "
+            "and pass it to build_city to change the city."
+        ),
+        "input_schema": _obj({
+            "catalog": {"type": "boolean",
+                        "description": "Include the catalogue (default "
+                                       "true)."},
         }),
     },
 ]

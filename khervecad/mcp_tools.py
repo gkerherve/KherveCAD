@@ -1351,6 +1351,10 @@ class McpToolExecutor:
         except house.HouseError as exc:
             raise ToolError(str(exc))
 
+    def _t_get_city(self, params) -> dict:
+        from . import city
+        return city.get_city(self._w, params)
+
     def _t_build_city(self, params) -> dict:
         from . import city
         try:
@@ -1499,6 +1503,16 @@ class McpToolExecutor:
         # A library part is a finished part: one opaque row in the Main
         # assembly, its construction editable in the Object tab.
         comp = self._model.enclose_as_part(node, params.get("name", ""))
+        placed = False
+        for key in ("x", "y", "z", "rz"):
+            if params.get(key) is not None:
+                try:
+                    comp.params[key] = float(params[key])
+                except (TypeError, ValueError):
+                    raise ToolError(f"'{key}' must be a number.")
+                placed = True
+        if placed:
+            self._model.node_changed.emit(comp)
         result = {"inserted": comp.id, "name": comp.name,
                   "part_id": part_id, "size": size_key or None}
         if note:

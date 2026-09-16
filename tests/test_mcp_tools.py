@@ -773,3 +773,15 @@ def test_sample_surface_scatters_points_with_normals(ex):
 def test_sample_surface_is_read_only(ex):
     from khervecad.mcp_bridge import _READ_ONLY_TOOLS
     assert "sample_surface" in _READ_ONLY_TOOLS
+
+
+def test_insert_part_places_a_city_piece(ex):
+    out = call(ex, "insert_part", part_id="building_cottage", x=12000,
+               y=-3000, rz=90)
+    from khervecad.mcp_bridge import _READ_ONLY_TOOLS
+    assert "get_city" in _READ_ONLY_TOOLS
+    comps = [n for n in ex._model.root.children if n.id == out["inserted"]]
+    assert comps and comps[0].params["x"] == 12000.0
+    assert comps[0].params["rz"] == 90.0
+    got = call(ex, "get_city")
+    assert got["current"] is None and "catalog" in got

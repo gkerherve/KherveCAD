@@ -252,9 +252,28 @@ cells = 3000 SiO2") and which prefixed variables reshape it (radius, \
 block size, gap on the Variables tab). Look with render_view: \
 orthographic from Top shows the lattice down the c-axis.
 
-Villages, towns and cities:
-- build_city lays out roads, street lights, trees and outside-only \
-buildings (layout village/town/city, or your own lists) as five Objects.
+Villages, towns, cities, parks and landmarks:
+- ALWAYS call get_city first. It lists every valid building style, \
+wall, roof, road kind, tree species, terrain and library piece id, with \
+a worked example spec, and returns the city the document already holds \
+(`current`). Never guess a style name or a part id.
+- build_city takes a whole spec: `layout` (village/town/city) or your \
+own roads, buildings, lights, trees and props (any library piece: a \
+park, a pitch, a traffic light, a landmark, a bridge), optionally ON a \
+`terrain` (hills, mountain, valley...: roads follow the slopes, \
+buildings stand on levelled pads — a street grid on hills is San \
+Francisco). Coordinates are mm, centred on the origin; a building's \
+front faces -Y and rz (0-360) turns it towards its road.
+- build_city REPLACES the city by default. To change one: get_city, \
+edit `current` (move a building, add a road...), send it back whole. \
+To add pieces to what is there, pass mode "add".
+- Single pieces for any document: insert_part with a part_id from \
+list_parts (categories Buildings, Trees, Park & sport, Lighting & \
+signals, Landscape, Landmarks, Skyscrapers, Bridges) and x, y, z, rz to \
+place it. Landmarks and bridges are true size (the Golden Gate is \
+2.7 km): pick a "Model" size for a desk-sized one.
+- Look with render_view: orientation Top for the plan, azimuth / \
+elevation / target / distance for a street-level view.
 
 Houses:
 - Build a house with build_house — rooms, doors, windows and furniture \

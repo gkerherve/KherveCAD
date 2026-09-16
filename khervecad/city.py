@@ -721,10 +721,111 @@ def apply(model, spec: dict, replace: bool = True) -> dict:
     return dict(result, inserted=inserted)
 
 
+#: library sections a city's `props` draw from
+PROP_CATEGORIES = ("Buildings", "Park & sport", "Lighting & signals",
+                   "Landscape", "Trees", "Landmarks", "Skyscrapers",
+                   "Bridges")
+
+
+def catalog() -> dict:
+    """Everything a city spec may name — what the get_city MCP tool
+    hands an assistant so it never guesses a style, a species or a
+    part id."""
+    from . import city_buildings as B
+    from . import treegen
+    from .city_ground import KINDS as TERRAINS
+    from .library import PARTS
+    return {
+        "units": "mm, Z up, the city centred on the origin; a building's "
+                 "front faces -Y before rz turns it (rz degrees, 0-360, "
+                 "counter-clockwise)",
+        "layouts": {"village": "a crossroads, cottages, a church",
+                    "town": "a 3x3 street grid, houses, shops, a park",
+                    "city": "a 5x5 avenue grid, towers in the middle"},
+        "building_styles": {
+            style: {"floors": list(STYLES[style][0]),
+                    "default_size_mm": list(B.DEFAULT_SIZE[style]),
+                    "roof": STYLES[style][1], "wall": STYLES[style][3]}
+            for style in STYLES},
+        "walls": list(B.WALLS), "roofs": list(B.ROOF_KINDS),
+        "roof_materials": list(B.ROOFS),
+        "floor_height_mm": B.FLOOR_HEIGHT,
+        "road_kinds": {k: {"width_mm": w, "pavement_mm": p,
+                           "centre_line": dash}
+                       for k, (w, p, dash) in ROAD_KINDS.items()},
+        "tree_kinds": {k: {"label": sp["label"],
+                           "natural_height_mm": sp["height"]}
+                       for k, sp in treegen.SPECIES.items()},
+        "terrains": list(TERRAINS),
+        "props": {cat: [{"part_id": pid, "label": spec["label"],
+                         "sizes": list(spec.get("sizes") or {}),
+                         "colors": list(spec.get("colors") or [])}
+                        for pid, spec in PARTS.items()
+                        if spec.get("category") == cat]
+                  for cat in PROP_CATEGORIES},
+        "example": {
+            "terrain": {"kind": "hills", "height": 40000, "seed": 3},
+            "roads": [{"kind": "street",
+                       "points": [[-60000, 0], [60000, 0]]},
+                      {"kind": "street",
+                       "points": [[0, -60000], [0, 60000]]}],
+            "buildings": [{"style": "terrace", "x": -20000, "y": 12000,
+                           "w": 7000, "d": 9000, "rz": 180, "floors": 3,
+                           "wall": "render", "name": "Painted lady"},
+                          {"style": "tower", "x": 25000, "y": -20000,
+                           "floors": 20, "name": "Office"}],
+            "lights": {"spacing": 25000},
+            "street_trees": {"spacing": 25000, "kind": "lime"},
+            "trees": [{"kind": "oak", "x": -30000, "y": -30000}],
+            "props": [{"part_id": "park_basketball", "x": 30000,
+                       "y": 30000, "rz": 90},
+                      {"part_id": "signal_traffic", "x": 6500, "y": 6500,
+                       "rz": 225}]},
+    }
+
+
+def get_city(window, params: dict) -> dict:
+    """The get_city MCP tool: the catalogue, and the design the document
+    holds now (resolved — every building's defaults filled in, lights and
+    street trees as positions) to edit and send back to build_city."""
+    model = window.model
+    current = None
+    if model.city:
+        sync_from_document(model)
+        current = {k: v for k, v in model.city.items() if k != "objects"}
+    out = {"current": current,
+           "built_objects": list((model.city or {}).get("objects") or [])}
+    if params.get("catalog", True):
+        out["catalog"] = catalog()
+    return out
+
+
 def build_city(window, params: dict) -> dict:
-    """The build_city MCP tool."""
+    """The build_city MCP tool. `mode` "replace" (the default) makes the
+    spec THE city; "add" appends its pieces to the city already built
+    (its terrain / ground kept unless the spec gives new ones)."""
     params = dict(params or {})
     replace = params.pop("replace", True)
+    mode = params.pop("mode", "replace")
+    if mode not in ("replace", "add"):
+        raise CityError('mode must be "replace" or "add"')
+    if mode == "add" and window.model.city:
+        sync_from_document(window.model)
+        base = {k: v for k, v in window.model.city.items()
+                if k != "objects"}
+        extra = resolve(dict(params, ground=params.get(
+            "ground", base.get("ground")))) if not params.get("layout") \
+            else resolve(params)
+        for key in ("roads", "buildings", "lights", "trees", "props"):
+            base[key] = list(base.get(key) or []) + list(extra.get(key)
+                                                         or [])
+        for key in ("terrain", "ground"):
+            if key in params:
+                base[key] = params[key]
+        for flag in ("dry_run",):
+            if flag in params:
+                base[flag] = params[flag]
+        params = base
     if params.pop("dry_run", False):
         r = build(params)
         return {"dry_run": True, "counts": r["counts"],

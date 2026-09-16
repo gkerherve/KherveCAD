@@ -6,7 +6,7 @@ Cursor, Zed, Continue, or anything else that speaks the Model Context
 Protocol — can build in an open document directly.
 
 The built-in chat replies with an OpenSCAD program you then apply. An
-MCP client gets the **whole application** instead: 59 tools over the
+MCP client gets the **whole application** instead: 60 tools over the
 object tree, the code, the part library, assemblies, the document —
 and a **picture of the 3D preview**.
 
@@ -172,6 +172,35 @@ arrow in 3D. Species are library keys, names, formulas (charges
 included: `NH4+`, `SO4^2-`) or `smiles:…`. Every compound is also a
 Part Library part, `molecule_<key>`. The same builder is **Library ▸
 Compound Builder…** in the app.
+
+## Cities, parks, landscapes and landmarks
+
+Say "build a village on hills", "add a park next to the church" or
+"put the Golden Gate across the bay" — the assistant works like this:
+
+1. **`get_city`** (read-only) returns the catalogue — every building
+   style with its floor range and default footprint, walls (brick,
+   concrete, render, stone), roofs, road kinds, the 13 tree species,
+   terrains, and every library piece usable in a city with its part id,
+   sizes and colours — a worked example spec, and `current`: the city
+   the document already holds, with pieces the user moved in the main
+   window read back.
+2. **`build_city`** takes a whole spec: a generated `layout` (village,
+   town, city) or its own `roads`, `buildings`, `lights`, `trees` and
+   `props` (any piece: a complete park, a pitch, a traffic light, a
+   landmark), optionally on a `terrain` (hills, mountain, valley, cliff,
+   mesa, island, canyon, dunes) — roads follow the slopes and every
+   building stands on a levelled pad. Millimetres, centred on the origin;
+   a building's front faces −Y and `rz` (0–360°) turns it to its road.
+   It **replaces** the city by default: to change one, edit `current`
+   and send it back whole; `mode: "add"` appends pieces instead.
+3. **`insert_part`** places a single piece anywhere — Buildings, Trees,
+   Park & sport, Lighting & signals, Landscape, Landmarks, Skyscrapers,
+   Bridges — with `x`, `y`, `z`, `rz`. Landmarks and bridges are true
+   size (the Golden Gate is 2.7 km); a "Model" size makes a small one.
+
+The result opens in Library ▸ City ▸ City Builder, where every piece can
+be dragged, turned and edited by hand.
 
 ## Characters and organic shapes
 

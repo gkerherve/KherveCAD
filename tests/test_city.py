@@ -155,3 +155,27 @@ def test_a_city_is_built_on_a_landscape():
     heights = [max(v[2] for t in mesh.tessellate(n) for v in t)
                for n in placed[:3]]
     assert all(h > 3000 for h in heights)
+
+
+def test_get_city_catalogue_and_add_mode(window):
+    out = city.get_city(window, {})
+    cat = out["catalog"]
+    assert "house" in cat["building_styles"] and "oak" in cat["tree_kinds"]
+    assert "hills" in cat["terrains"]
+    ids = {p["part_id"] for parts in cat["props"].values() for p in parts}
+    assert {"park_complete", "signal_traffic", "bridge_golden_gate",
+            "building_house"} <= ids
+    # the worked example builds as it stands
+    city.build_city(window, dict(cat["example"]))
+    current = city.get_city(window, {"catalog": False})["current"]
+    assert len(current["buildings"]) == 2
+    # add appends, replace swaps
+    city.build_city(window, {"mode": "add", "buildings": [
+        {"style": "cottage", "x": -40000, "y": -30000}]})
+    current = city.get_city(window, {"catalog": False})["current"]
+    assert len(current["buildings"]) == 3
+    current["buildings"][0]["x"] += 5000
+    city.build_city(window, current)
+    again = city.get_city(window, {"catalog": False})["current"]
+    assert len(again["buildings"]) == 3
+    assert again["buildings"][0]["x"] == current["buildings"][0]["x"]

@@ -753,7 +753,13 @@ into a new module and import.
                        the roads out — one big ground slab, or tarmac on a
                        pavement slab, painted grass wedges over the roads.
                        `along_roads` skips points on another road.
-                       MCP `build_city`.
+                       MCP `get_city` (catalogue of every valid style,
+                       species, terrain and prop id + the current design,
+                       read back) and `build_city` (`mode` replace — the
+                       default, the spec IS the city — or add); the MCP
+                       instructions tell assistants to call get_city first
+                       (Claude could not build a city from the tool
+                       description alone). insert_part takes x/y/z/rz.
   - `city_buildings.py` — a building's outside, detailed: punched windows
                        (frame, glass, mullion, transom, sill — one loop body
                        per facade), curtain walls / glass ribbons + fins,
@@ -2310,7 +2316,7 @@ into a new module and import.
                        out. The test also checks the pin 6 mm short of
                        home DOES press on the bore — or it would never
                        hold.
-  - `mcp_schema.py`  — the **MCP tool table**: 59 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 60 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -2470,7 +2476,7 @@ into a new module and import.
                        caps a pattern at `MAX_COPIES` (1000) and needs
                        every count ≥ 1. Examples ▸ Mechanical ▸ Bolt
                        circle & stair (pattern).
-- `docs/MCP.md` — how to connect an assistant, what the 59 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 60 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -2744,7 +2750,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **59 tools**: the object tree, OpenSCAD in
+client gets the whole app as **60 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.
