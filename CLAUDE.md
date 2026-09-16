@@ -935,6 +935,29 @@ into a new module and import.
                        `DEFAULT_SIZE` and the style's floor range; the look
                        combo picks the wall material), also offered by the
                        City Builder's library-piece tool.
+  - `library_landmarks_world.py` — ten more Landmarks (2026-09-16): CN
+                       Tower, Space Needle (hourglass leg pairs as paths),
+                       Gateway Arch (the published weighted catenary in feet,
+                       equilateral section hulled segment to segment), London
+                       Eye (rim truss, cable spokes, 32 egg capsules, A-frame),
+                       Atomium (cube on its vertex; spheres are sphere nodes —
+                       Kit.sphere is a lumpy clump), Brandenburg Gate,
+                       Parthenon (as it stands, unroofed), Stonehenge (fallen
+                       stones), Sydney Opera House (`_shell`: hull of an arch
+                       and a back point) and St Basil's (onion domes banded in
+                       two colours by slicing `_onion`'s profile). The same
+                       day Burj Khalifa (rounded Y wings round a hex core,
+                       spiral setbacks, fins, terraces, glass top, sectioned
+                       spire), Taipei 101 (segments with floor bands,
+                       mullions, corner ornaments, ruyi) and the Shard (eight
+                       shards to different heights, fractures, floor lines,
+                       open spire lattice) were rebuilt in
+                       library_skyscrapers.py. The vertical toolbar has a
+                       City Builder button after House Builder
+                       (`city_builder` tip). Light trees
+                       (`city_trees.low_tree`) are a forked trunk with
+                       foliage clumps / tiered cones, ~220 tris; a cone
+                       ring must stay planar or the fan base winds wrong.
   - `landmark_kit.py` — `Kit`: bars, cable paths, boxes, turned boxes,
                        frustums, cones/pyramids, convex prisms and hulls
                        (`solid`, via `geom3d.convex_hull`), trusses and

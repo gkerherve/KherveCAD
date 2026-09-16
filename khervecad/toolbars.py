@@ -179,6 +179,13 @@ def build_tool_bar(win):
 
     bar.addAction(_action(win, "mdi.home-city-outline", "House Builder",
                           "house_builder", _house_builder))
+
+    def _city_builder():
+        from . import city_dialog
+        city_dialog.open_builder(win)
+
+    bar.addAction(_action(win, "mdi.city-variant-outline", "City Builder",
+                          "city_builder", _city_builder))
     return bar
 
 

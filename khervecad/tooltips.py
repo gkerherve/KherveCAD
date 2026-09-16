@@ -89,6 +89,20 @@ TIPS = {
          "Pick a roof, then click Build house."],
         "Building again updates the same house, and the design is saved "
         "with the document."),
+    "city_builder": (
+        "City Builder",
+        "Opens the City Builder: a 2D plan of a village, town or city — "
+        "roads, buildings in many styles (incl. mosque and houses from "
+        "around the world), trees, street lights and library pieces "
+        "(parks, landmarks, bridges) — optionally on a landscape, then "
+        "builds it into the document.",
+        ["Generate a village, town or city layout, or draw roads point by "
+         "point.",
+         "Place buildings, trees and props; drag, press R to turn, Delete "
+         "to remove.",
+         "Click Build."],
+        "Real places come from an assistant's import_map (OpenStreetMap "
+        "and LiDAR); the result opens here to edit by hand."),
     "measure": (
         "Measure distance",
         "Measures between two points without changing the model. It "
