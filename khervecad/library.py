@@ -1193,7 +1193,8 @@ PARTS = {
 # each entry carries its own `build` callable, dispatched by build_part.
 from . import (library_cards, library_chem, library_crystal,  # noqa: E402
                library_home, library_home_extra, library_home_more,
-               library_bridges, library_kcad, library_landmarks,
+               library_bridges, library_city_buildings, library_kcad,
+               library_landmarks,
                library_landscape, library_skyscrapers,
                library_lighting,
                library_park, library_prusa,
@@ -1207,6 +1208,7 @@ PARTS.update(library_home.PARTS)
 PARTS.update(library_home_more.PARTS)
 PARTS.update(library_home_extra.PARTS)
 PARTS.update(library_prusa.PARTS)
+PARTS.update(library_city_buildings.PARTS)
 PARTS.update(library_trees.PARTS)
 PARTS.update(library_lighting.PARTS)
 PARTS.update(library_park.PARTS)
@@ -1228,6 +1230,7 @@ _COUNT_FIELDS = ({"bolts"} | library_lego.COUNT_FIELDS
                  | library_home_more.COUNT_FIELDS
                  | library_home_extra.COUNT_FIELDS
                  | library_trees.COUNT_FIELDS
+                 | library_city_buildings.COUNT_FIELDS
                  | library_lighting.COUNT_FIELDS
                  | library_park.COUNT_FIELDS
                  | library_landscape.COUNT_FIELDS)

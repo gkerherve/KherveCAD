@@ -50,6 +50,13 @@ STYLES = {
 
 ROOF_KINDS = ("gable", "hip", "flat", "cone")
 
+#: a new building's footprint by style, mm (width along the front, depth)
+DEFAULT_SIZE = {"cottage": (9000, 7000), "house": (10000, 8000),
+                "terrace": (7000, 9000), "shop": (9000, 10000),
+                "block": (16000, 12000), "tower": (18000, 18000),
+                "round tower": (14000, 14000), "L-shape": (14000, 12000),
+                "church": (22000, 11000)}
+
 #: wall kind -> (shader material, colour palette)
 WALLS = {
     "brick": ("Brick", ["#9c4a32", "#a8583c", "#b5694a", "#8a3f2c",

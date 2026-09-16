@@ -838,6 +838,12 @@ into a new module and import.
                        document` reads back buildings/props moved or turned
                        in the main window (matched by their unique names;
                        every placed piece has a Turn, even at 0°).
+  - `library_city_buildings.py` — Library ▸ City ▸ **Buildings**: every
+                       `city_buildings.STYLES` style as a Part Library piece
+                       (Small / Standard / Large footprint and floors from
+                       `DEFAULT_SIZE` and the style's floor range; the look
+                       combo picks the wall material), also offered by the
+                       City Builder's library-piece tool.
   - `landmark_kit.py` — `Kit`: bars, cable paths, boxes, turned boxes,
                        frustums, cones/pyramids, convex prisms and hulls
                        (`solid`, via `geom3d.convex_hull`), trusses and

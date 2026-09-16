@@ -18,7 +18,7 @@ from khervecad import mesh
 from khervecad.library import PARTS, build_part
 from khervecad.model import validate
 
-SECTIONS = ("Lighting & signals", "Park & sport", "Landscape", "Bridges",
+SECTIONS = ("Buildings", "Lighting & signals", "Park & sport", "Landscape", "Bridges",
             "Landmarks", "Skyscrapers")
 IDS = [pid for pid, spec in PARTS.items()
        if spec.get("category") in SECTIONS]
@@ -95,3 +95,14 @@ def test_unpinch_leaves_no_corner_only_contacts():
     out = _unpinch([row[:] for row in cells], 2)
     assert not (out[0][0] == out[1][1] and out[0][1] != out[0][0]
                 and out[1][0] != out[0][0])
+
+
+def test_buildings_section_offers_every_style_and_wall():
+    from khervecad import city_buildings as B
+    ids = [p for p, s in PARTS.items() if s.get("category") == "Buildings"]
+    assert len(ids) == len(B.STYLES)
+    node = build_part("building_house", dict(w=12000, d=9000, floors=3,
+                                              _color="Stone"))
+    mats = {n.params.get("material") for n in node.walk()
+            if n.type == "color"}
+    assert "Stone" in mats

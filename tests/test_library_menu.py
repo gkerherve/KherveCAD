@@ -87,3 +87,5 @@ def test_city_menu_holds_builder_layouts_and_trees(window):
     trees = _texts(_menu(city, "Trees"))
     assert "Oak" in trees and "Weeping willow" in trees
     assert "Trees" not in _texts(library)
+    buildings = _texts(_menu(city, "Buildings"))
+    assert "Cottage" in buildings and "Office tower" in buildings

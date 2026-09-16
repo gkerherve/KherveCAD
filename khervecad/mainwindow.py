@@ -43,7 +43,7 @@ LEGO_CATEGORIES = {"Lego": "Bricks && plates", "Lego sets": "Lego sets"}
 #: library categories fused into Library ▸ House & home, sorted by room
 HOME_CATEGORIES = ("Home furniture", "Room & furniture")
 #: library categories that live in Library ▸ City, in this order
-CITY_CATEGORIES = ("Trees", "Park & sport", "Lighting & signals",
+CITY_CATEGORIES = ("Buildings", "Trees", "Park & sport", "Lighting & signals",
                    "Landscape", "Landmarks", "Skyscrapers", "Bridges")
 
 

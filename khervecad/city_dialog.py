@@ -42,12 +42,7 @@ from . import icons
 from .city_trees import TREE_KINDS
 from .house_dialog import MetreSpin
 
-#: a new building's footprint by style, mm
-DEFAULT_SIZE = {"cottage": (9000, 7000), "house": (10000, 8000),
-                "terrace": (7000, 9000), "shop": (9000, 10000),
-                "block": (16000, 12000), "tower": (18000, 18000),
-                "round tower": (14000, 14000), "L-shape": (14000, 12000),
-                "church": (22000, 11000)}
+from .city_buildings import DEFAULT_SIZE  # noqa: E402
 
 TOOLS = (("select", "mdi.cursor-default-outline", "Select and move (S)"),
          ("road", "mdi.road-variant", "Draw a road: click its points, "
@@ -59,8 +54,8 @@ TOOLS = (("select", "mdi.cursor-default-outline", "Select and move (S)"),
           "lamp, traffic light, landscape (P)"))
 
 #: library sections the piece tool offers
-PROP_CATEGORIES = ("Park & sport", "Lighting & signals", "Landscape",
-                   "Trees", "Landmarks", "Skyscrapers", "Bridges")
+PROP_CATEGORIES = ("Buildings", "Park & sport", "Lighting & signals",
+                   "Landscape", "Trees", "Landmarks", "Skyscrapers", "Bridges")
 
 
 def _hint(text):
