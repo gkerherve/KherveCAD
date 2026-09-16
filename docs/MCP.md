@@ -6,7 +6,7 @@ Cursor, Zed, Continue, or anything else that speaks the Model Context
 Protocol — can build in an open document directly.
 
 The built-in chat replies with an OpenSCAD program you then apply. An
-MCP client gets the **whole application** instead: 60 tools over the
+MCP client gets the **whole application** instead: 61 tools over the
 object tree, the code, the part library, assemblies, the document —
 and a **picture of the 3D preview**.
 
@@ -201,6 +201,34 @@ Say "build a village on hills", "add a park next to the church" or
 
 The result opens in Library ▸ City ▸ City Builder, where every piece can
 be dragged, turned and edited by hand.
+
+### A real place: `import_map`
+
+`import_map` builds an existing village or street from open data, with
+the app doing every download — nothing is pasted through the chat:
+
+- **OpenStreetMap** (Overpass API): roads clipped to the area, every
+  building's **real outline** (`footprint`), heights from `height` /
+  `building:levels`, roof shapes from `roof:shape`, mapped trees and woods.
+- **Environment Agency LiDAR, 1 m** (England, Open Government Licence):
+  the measured ground (`terrain` kind `heights` — roads and pads are
+  levelled on it), each untagged building's eaves and roof pitch from the
+  surface model, and **tree tops found in the canopy** (DSM − DTM) with
+  their measured height and a species that fits their shape.
+- **Aerial photo** (`aerial: true`, Esri World Imagery): laid on the
+  ground as a Top reference image — View ▸ Compare to Reference Image
+  shows it over the model.
+
+Give `center` [lat, lon] + `radius_m`, or `bbox`. `detail` "auto" builds
+light buildings and trees (walls + roof, trunk + crown: ~1/15 of the
+triangles) past 150 of them. `path` saves the spec as JSON;
+**`build_city path=…`** loads one (keys given alongside override it) and
+`save_to` writes the resolved city — so a large design never travels
+through the conversation. Both count as file access (level *full*).
+
+Sources are credited in the result and in the spec's `geo.sources`:
+© OpenStreetMap contributors (ODbL); Environment Agency LiDAR (OGL);
+imagery © Esri and its providers.
 
 ## Characters and organic shapes
 

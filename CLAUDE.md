@@ -785,6 +785,51 @@ into a new module and import.
                        (jharokha, chhatris) and Pakistani (boundary wall +
                        gate, car porch, roof tank) houses; `PALETTES` give
                        each its own wall/roof colours. Same no-boolean rule.
+  - **Map import** (2026-09-16, the user's request after hand-pasting
+                       Dornden Drive through tool calls timed out):
+                       `geo.py` (local tangent projection lat/lon <-> mm,
+                       bbox from center + radius, slippy tiles, `urlopen`
+                       with certifi — python.org's macOS Python has no CA
+                       bundle), `geotiff.py` (pure-Python one-band GeoTIFF:
+                       strips/tiles, none/Deflate/LZW/PackBits, predictors,
+                       ModelTransformation or scale+tiepoint, GDAL nodata),
+                       `osm_import.py` (Overpass fetch; roads clipped
+                       Liang-Barsky; buildings keep their REAL outline as
+                       `footprint` in the frame of their minimum-area
+                       rectangle, so x/y/w/d/rz still drive the plan, pads
+                       and dragging; style from tags; height from
+                       height/building:levels; roof from roof:shape),
+                       `lidar.py` (Environment Agency 1 m DTM + first-return
+                       DSM over WCS, reprojected by the service via
+                       subsettingCrs=EPSG:4326 so no OSGB maths;
+                       `ground_grid`, `building_shape` = eaves as the median
+                       DSM-DTM within 1.5 m of the outline and ridge as the
+                       90th percentile — the roof pitch comes from both;
+                       `detect_trees` = canopy local maxima >= 4 m off
+                       building masks, crowns measured, suppressed by
+                       crown), `aerial.py` (Esri tiles stitched and cropped
+                       with QImage -> a Top reference image), `map_import.py`
+                       (the pipeline + `save_spec`/`load_spec`). MCP
+                       `import_map`; `build_city` gained `path` (load a spec
+                       file), `save_to` and `detail`; both are file tools.
+                       Every downloader is injectable, so
+                       `tests/test_map_import.py` is offline (fake Overpass,
+                       a fake WCS writing real GeoTIFFs).
+  - `city_footprint.py` — buildings from an outline: walls = the polygon
+                       extruded (counter-clockwise, so each edge's outside is
+                       -y in its own frame, where window loops and the door
+                       go); a pitched roof over the rectangle only when the
+                       outline fills >= 80 % of it (a hull over an L
+                       overhangs the inside corner), else a flat slab;
+                       `roof_pitch` honoured. **Detail**: spec `detail`
+                       auto/low/full, auto = low past 150
+                       (`LOW_DETAIL_ABOVE`): low buildings are walls + roof
+                       (`build_low`, any style), low trees a trunk + crown
+                       (`city_trees.low_tree`, ~60 tris vs ~1500) — a
+                       100-house import went from ~1M to ~110k triangles.
+                       Measured ground is terrain kind `heights` (`rows`,
+                       x0/y0/length/width) in `city_ground.Ground`
+                       (`_init_measured`), surfaces grass/scree only.
   - `city_trees.py`  — trees (broadleaf, conifer, round, birch, poplar:
                        tapered Bark trunk, branches, Leaves clumps in two
                        greens; one loop per kind) and street lights. A

@@ -785,3 +785,21 @@ def test_insert_part_places_a_city_piece(ex):
     assert comps[0].params["rz"] == 90.0
     got = call(ex, "get_city")
     assert got["current"] is None and "catalog" in got
+
+
+def test_build_city_reads_and_writes_spec_files(ex, window, tmp_path):
+    import json
+    spec = {"buildings": [{"style": "house", "x": 0, "y": 0,
+                           "footprint": [[-5000, -4000], [5000, -4000],
+                                         [5000, 4000], [-5000, 4000]]}],
+            "roads": [{"kind": "lane",
+                       "points": [[-20000, -9000], [20000, -9000]]}]}
+    src = tmp_path / "village.json"
+    src.write_text(json.dumps(spec))
+    out = tmp_path / "resolved.json"
+    r = call(ex, "build_city", path=str(src), detail="low",
+             save_to=str(out))
+    assert r["counts"]["buildings"] == 1 and r["saved"] == str(out)
+    saved = json.loads(out.read_text())
+    assert saved["buildings"][0]["footprint"] and saved["detail"] == "low"
+    assert window.model.city["buildings"][0]["detail"] == "low"
