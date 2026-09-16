@@ -71,3 +71,25 @@ def test_pitch_markings_and_goal_nets():
     assert marks and len(marks[0].children) > 25
     assert len([n for n in node.walk() if n.name == "Goal"
                 and n.type == "translate"]) == 2
+
+
+def test_terrain_columns_are_closed_and_coloured_by_surface():
+    from khervecad import bake, terrain
+    for kind in terrain.KINDS:
+        node = terrain.build(kind, length=60000, width=60000, height=12000,
+                             seed=2, cells=24)
+        polys = [n for n in node.walk() if n.type == "polyhedron"]
+        assert polys, kind
+        for p in polys:
+            assert bake._check_polyhedron(p.params) is None, kind
+    mountain = terrain.build("mountain", height=60000, cells=40)
+    names = {n.name for n in mountain.walk() if n.type == "color"}
+    assert "Snow" in names and ("Rock" in names or "Rock2" in names)
+
+
+def test_unpinch_leaves_no_corner_only_contacts():
+    from khervecad.terrain import _unpinch
+    cells = [["a", "b"], ["b", "a"]]
+    out = _unpinch([row[:] for row in cells], 2)
+    assert not (out[0][0] == out[1][1] and out[0][1] != out[0][0]
+                and out[1][0] != out[0][0])
