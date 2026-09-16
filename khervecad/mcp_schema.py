@@ -1197,6 +1197,18 @@ TOOLS = [
             "furniture by hand."
         ),
         "input_schema": _obj({
+            "template": {"type": "string",
+                         "enum": ["Chemistry lab", "Physics lab",
+                                  "Company office"],
+                         "description": "Start from a whole furnished "
+                                        "building (fume hoods, benches, "
+                                        "optical tables, UHV chambers, "
+                                        "bench desks, meeting and server "
+                                        "rooms…). Its floors are used "
+                                        "unless you pass your own; other "
+                                        "keys (roof, walls) override it. "
+                                        "Lab and office pieces are "
+                                        "lab_* / office_* part ids."},
             "floors": {
                 "type": "array",
                 "description": "Bottom to top.",

@@ -396,6 +396,35 @@ class HouseBuilder(QDialog):
                             "updates it.")
         return True
 
+    def load_template(self, name, ask=True) -> bool:
+        """Replace the design on the plan with the building template
+        *name* (house_templates); Build then puts it in the document."""
+        from . import house_templates
+        has_rooms = any(f.rooms for f in self.house.floors)
+        if ask and has_rooms and QMessageBox.question(
+                self, "House Builder",
+                f"Replace the design on the plan with the {name} "
+                "template?") != QMessageBox.Yes:
+            return False
+        try:
+            house = H.house_from_spec(house_templates.spec(name))
+        except (KeyError, H.HouseError) as exc:
+            self.status.setText(str(exc))
+            return False
+        self.house = house
+        self.current_floor_index = 0
+        floor = house.floors[0]
+        self.current_room = floor.rooms[0] if floor.rooms else None
+        self.current_item = None
+        self._sync_garden_fields()
+        self._sync_roof_fields()
+        self._sync_wall_fields()
+        self._sync_all()
+        self.canvas.fit()
+        self.status.setText(f"{name} template loaded — edit it, then "
+                            "Build.")
+        return True
+
     def showEvent(self, event):
         super().showEvent(event)
         if not self._fitted:              # the view has its size now
@@ -472,6 +501,18 @@ class HouseBuilder(QDialog):
         room_btn.setMenu(self._room_menu())
         room_btn.setPopupMode(QToolButton.InstantPopup)
         row.addWidget(room_btn)
+        tmpl_btn = self._tool("mdi.office-building-outline", "Template",
+                              "Start from a whole furnished building: a "
+                              "chemistry lab, a physics lab or a company "
+                              "office", lambda: None)
+        tmpl_menu = QMenu(self)
+        from . import house_templates
+        for name in house_templates.names():
+            tmpl_menu.addAction(icons.icon("mdi.office-building-outline"),
+                                name, lambda n=name: self.load_template(n))
+        tmpl_btn.setMenu(tmpl_menu)
+        tmpl_btn.setPopupMode(QToolButton.InstantPopup)
+        row.addWidget(tmpl_btn)
         for icon, text, tip, slot in (
                 ("mdi.door", "Door", "Add a door to the selected room",
                  lambda: self._add_opening("door")),
@@ -1513,6 +1554,12 @@ def _fill_look_combos(f, size_combo, color_combo):
 #: words in a room's name -> the catalogue section it suggests, tried in
 #: this order ("Kids bedroom" is a kids' room, "Bathroom" not a bedroom)
 CATEGORY_WORDS = (
+    ("Chemistry lab", ("chem", "fume", "wet lab")),
+    ("Physics lab", ("physic", "laser", "optic", "vacuum", "clean room")),
+    ("Server room", ("server", "data")),
+    ("Meeting room", ("meeting", "conference", "board")),
+    ("Break room", ("break", "canteen", "cafe", "staff room")),
+    ("Open-plan office", ("open-plan", "open plan", "desks")),
     ("Kids' room", ("kid", "child", "nursery", "baby", "play")),
     ("Bathroom", ("bath", "shower", "toilet", "wc", "en-suite", "ensuite",
                   "cloakroom")),

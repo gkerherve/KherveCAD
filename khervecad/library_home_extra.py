@@ -699,3 +699,10 @@ PARTS = {
 
 #: dialog fields holding a count (integer spin box, no "mm" suffix)
 COUNT_FIELDS = {"seats"}
+
+# laboratory and company pieces join the home catalogue (the House
+# Builder furnishes labs and offices from it)
+from . import library_lab  # noqa: E402
+
+PARTS.update(library_lab.PARTS)
+COUNT_FIELDS |= library_lab.COUNT_FIELDS

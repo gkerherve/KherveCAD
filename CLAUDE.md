@@ -704,6 +704,34 @@ into a new module and import.
                        printing a 40 mm Prusa man; 1:4 desk size too.
                        Nothing from the Printables files is used — modelled
                        from scratch. Tested in `tests/test_library_prusa.py`.
+  - `library_lab.py` — **labs and companies** (2026-09-16): 35 pieces in
+                       the home catalogue (registered from the bottom of
+                       `library_home_extra`, so library.py is untouched):
+                       chemistry (island bench with reagent shelf and gas
+                       taps, sink bench, fume hood, safety shower +
+                       eyewash, safety cabinets, lab fridge, drying oven,
+                       centrifuge, rotavap, glassware tray, stool,
+                       extinguisher, first aid), physics (optical table,
+                       laser, optics on posts, scope, supply, signal
+                       generator, 19" rack, UHV chamber on its frame, LN2
+                       dewar, electronics bench, whiteboard) and company
+                       (bench desks, cubicle, meeting table, light task
+                       chair, printer, server rack, lockers, coffee and
+                       vending machines, phone booth, partition). Local
+                       `_box`/`_cyl`/`_rod`/`_disc_y` keep small rounds
+                       square and small cylinders at 8 sides: under the
+                       document's $fn 45 a bench desk of rounded boxes and
+                       detailed chairs was 60k triangles, a company floor
+                       640k. FURNITURE_CATALOG sections + ROOM_TYPES:
+                       Chemistry lab, Physics lab, Open-plan office,
+                       Meeting room, Server room, Break room.
+  - `house_templates.py` — whole furnished buildings as build_house specs:
+                       Chemistry lab, Physics lab, Company office
+                       (reception, open plan, meeting, manager, break,
+                       server, toilets, corridor). The House Builder's
+                       **Template** button (`load_template`) and build_house
+                       `template` (`expand`: the caller's keys win). Bench
+                       instruments are `on_top` and tested to land > 500 mm.
   - `city.py`        — the **City Builder** (Qt-free): villages, towns
                        and cities of OUTSIDE-ONLY buildings, so hundreds
                        stay light. A spec of explicit lists — roads

@@ -207,6 +207,36 @@ FURNITURE_CATALOG = {
                          "home_garden_bench", "home_patio_set", "home_bbq",
                          "home_lawn_mower", "home_car", "home_bicycle",
                          "home_wheelie_bin"],
+    "Chemistry lab": ["lab_bench", "lab_sink_bench", "lab_fume_hood",
+                      "lab_safety_shower", "lab_safety_cabinet",
+                      "lab_fridge", "lab_drying_oven", "lab_centrifuge",
+                      "lab_rotavap", "lab_glassware", "chem_balance",
+                      "chem_hotplate", "chem_stand", "chem_bunsen",
+                      "chem_gas_cylinder", "lab_stool", "lab_whiteboard",
+                      "lab_fire_extinguisher", "lab_first_aid",
+                      "office_lockers"],
+    "Physics lab": ["lab_optical_table", "lab_laser", "lab_optics",
+                    "lab_oscilloscope", "lab_power_supply",
+                    "lab_signal_generator", "lab_instrument_rack",
+                    "lab_uhv_chamber", "lab_dewar", "lab_electronics_bench",
+                    "chem_gas_cylinder", "lab_stool", "lab_whiteboard",
+                    "room_workbench", "lab_fire_extinguisher",
+                    "lab_first_aid"],
+    "Open-plan office": ["office_bench_desks", "office_cubicle",
+                         "office_partition", "office_phone_booth",
+                         "office_printer", "office_lockers", "home_desk",
+                         "office_task_chair", "home_office_chair",
+                         "room_monitor", "home_plant",
+                         "home_filing_cabinet"],
+    "Meeting room": ["office_meeting_table", "lab_whiteboard", "room_tv",
+                     "home_sideboard", "office_coffee_machine", "home_plant"],
+    "Server room": ["office_server_rack", "lab_instrument_rack",
+                    "lab_fire_extinguisher", "office_task_chair",
+                    "home_desk", "room_monitor", "office_lockers"],
+    "Break room": ["home_kitchen", "home_fridge", "office_coffee_machine",
+                   "office_vending_machine", "home_round_table",
+                   "home_dining_chair", "home_sofa", "home_sideboard",
+                   "home_microwave", "home_plant"],
     "Other": ["room_carpet", "room_stool", "room_workbench"],
 }
 
@@ -227,6 +257,14 @@ ROOM_TYPES = {
     "Stairwell": (2400.0, 4000.0, "indoor"),
     "Utility room": (2000.0, 2000.0, "indoor"),
     "Garage": (3500.0, 6000.0, "indoor"),
+    "Chemistry lab": (12000.0, 9000.0, "indoor"),
+    "Physics lab": (10000.0, 8000.0, "indoor"),
+    "Chemical store": (4000.0, 3000.0, "indoor"),
+    "Open-plan office": (12000.0, 10000.0, "indoor"),
+    "Meeting room": (6000.0, 5000.0, "indoor"),
+    "Manager's office": (5000.0, 4000.0, "indoor"),
+    "Server room": (3000.0, 3000.0, "indoor"),
+    "Break room": (6000.0, 4000.0, "indoor"),
     "Porch": (2500.0, 1500.0, "paving"),
     "Patio": (4000.0, 3000.0, "paving"),
     "Driveway": (3000.0, 6000.0, "paving"),
@@ -879,7 +917,10 @@ def build_garden(garden: Garden, house_bounds) -> CadNode:
 #: microwave goes on the worktop, not on the wall cupboards over it
 STACK_REACH = 1800.0
 #: parts from other modules that sit on what is under them
-ON_TOP_PARTS = {"room_tv", "room_monitor"}
+ON_TOP_PARTS = {"room_tv", "room_monitor", "chem_balance", "chem_hotplate",
+                "chem_stand", "chem_rack", "chem_bunsen", "chem_beaker",
+                "chem_erlenmeyer", "chem_round_flask", "chem_cylinder",
+                "chem_wash_bottle", "chem_petri", "chem_tripod"}
 
 
 @lru_cache(maxsize=256)

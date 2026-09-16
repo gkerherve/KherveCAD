@@ -1342,6 +1342,11 @@ class McpToolExecutor:
     def _t_build_house(self, params) -> dict:
         from . import house
         try:
+            from . import house_templates
+            try:
+                params = house_templates.expand(params)
+            except KeyError as exc:
+                raise ToolError(str(exc.args[0]))
             return house.build_house(self._w, params)
         except house.HouseError as exc:
             raise ToolError(str(exc))
