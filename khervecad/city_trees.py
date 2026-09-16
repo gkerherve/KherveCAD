@@ -18,6 +18,8 @@ the Free Software Foundation, either version 3 of the License, or
 
 from __future__ import annotations
 
+import math
+
 from .city_buildings import _f, _num, box, color, cyl, group, move, turn
 from .model import CadNode
 
@@ -53,27 +55,55 @@ def tree_body(kind, seed=1, detail="city", season="Summer"):
 
 
 def low_tree(kind, seed=1):
-    """Trunk + crown at natural height: a cone for conifers and poplars,
-    a squashed 8-sided ball for broadleaves."""
+    """A light tree at natural height (~150-250 triangles): a trunk that
+    forks into a few branches, each ending in an irregular foliage clump
+    (`treegen.Mesh.clump`) over a core clump; conifers and poplars are
+    tiers of drooping cones. Seeded, so each variant has its own
+    silhouette."""
+    import random
+    rng = random.Random(seed * 7919 + len(kind))
     h = TREE_KINDS[kind]
-    trunk_h = h * (0.25 if kind in CONIFERS else 0.4)
-    r = h * (0.14 if kind in CONIFERS else 0.3) * (0.9 + 0.1 * (seed % 3))
-    parts = [color(cyl("Trunk", 0, 0, 0, trunk_h + r * 0.3, h * 0.025,
-                       h * 0.015, seg=5), "#6b4a32", "Bark")]
+    wood, leaves = treegen.Mesh(), treegen.Mesh()
     leaf = DARK_LEAF[kind] if seed % 2 else LIGHT_LEAF[kind]
     if kind in CONIFERS:
-        parts.append(color(cyl("Crown", 0, 0, trunk_h * 0.6, h - trunk_h * 0.6,
-                               r, 0.0, seg=7), leaf, "Leaves"))
+        narrow = 0.55 if kind in ("poplar", "cypress") else 1.0
+        trunk_top = h * 0.95
+        wood.tube([(0, 0, 0), (0, 0, trunk_top)], [h * 0.02, h * 0.006], 5)
+        tiers = 4
+        base = h * (0.2 if kind != "cypress" else 0.08)
+        for t in range(tiers):
+            z0 = base + (h - base) * t / tiers * 0.9 + rng.uniform(
+                -0.02, 0.02) * h
+            z1 = z0 + (h - base) / tiers * 1.6
+            r = h * 0.2 * narrow * (1 - t / (tiers + 0.6))
+            ring = [(math.cos(2 * math.pi * k / 7 + t) * r,
+                     math.sin(2 * math.pi * k / 7 + t) * r,
+                     z0) for k in range(7)]
+            pts = ring + [(0, 0, min(z1, h))]
+            tris = [(0, k, k + 1) for k in range(1, 6)]
+            tris += [(k, (k + 1) % 7, 7) for k in range(7)]
+            leaves.convex(pts, tris)
     else:
-        ball = CadNode("sphere", "Crown", dict(x=0.0, y=0.0, z=0.0, radius=r,
-                                               segments=8))
-        sc = CadNode("scale", "Crown", dict(x=1.0, y=1.0,
-                                            z=(h - trunk_h) / (2 * r)))
-        sc.add(ball)
-        parts.append(color(move(sc, 0, 0, trunk_h + (h - trunk_h) / 2,
-                                "Crown"), leaf, "Leaves"))
-    return parts
-
+        trunk_top = h * rng.uniform(0.34, 0.44)
+        wood.tube([(0, 0, 0), (0, 0, trunk_top)], [h * 0.028, h * 0.02], 5)
+        crown_r = h * 0.3
+        centre_z = trunk_top + (h - trunk_top) * 0.48
+        leaves.clump(rng, (0, 0, centre_z), crown_r * 0.72)
+        arms = rng.randint(4, 5)
+        for k in range(arms):
+            a = 2 * math.pi * k / arms + rng.uniform(-0.4, 0.4)
+            out = crown_r * rng.uniform(0.45, 0.62)
+            tip = (math.cos(a) * out, math.sin(a) * out,
+                   centre_z + rng.uniform(-0.25, 0.35) * crown_r)
+            wood.tube([(0, 0, trunk_top * 0.95),
+                       (tip[0] * 0.6, tip[1] * 0.6, tip[2] * 0.85)],
+                      [h * 0.014, h * 0.006], 4)
+            leaves.clump(rng, tip, crown_r * rng.uniform(0.42, 0.55))
+        leaves.clump(rng, (rng.uniform(-0.1, 0.1) * crown_r,
+                           rng.uniform(-0.1, 0.1) * crown_r,
+                           h - crown_r * 0.45), crown_r * 0.45)
+    return [color(wood.node("Trunk"), "#6b4a32", "Bark"),
+            color(leaves.node("Crown"), leaf, "Leaves")]
 
 def _values(rows):
     """Rows as a loop value list. A single row is bracketed once more:

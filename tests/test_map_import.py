@@ -307,7 +307,7 @@ def test_low_detail_is_much_lighter():
         "City trees"])
     low_t = mesh.tessellate(city.build({"trees": trees, "detail": "low"})[
         "nodes"]["City trees"])
-    assert len(low_t) * 5 < len(full_t)
+    assert len(low_t) * 3 < len(full_t)
 
 
 def test_measured_terrain_levels_the_ground():
