@@ -54,7 +54,13 @@ TOOLS = (("select", "mdi.cursor-default-outline", "Select and move (S)"),
           "double-click or Enter to finish (D)"),
          ("building", "mdi.home-city-outline", "Place a building (B)"),
          ("tree", "mdi.pine-tree", "Plant a tree (T)"),
-         ("light", "mdi.lightbulb-outline", "Place a street light (L)"))
+         ("light", "mdi.lightbulb-outline", "Place a street light (L)"),
+         ("prop", "mdi.shape-plus", "Place a library piece — park, court, "
+          "lamp, traffic light, landscape (P)"))
+
+#: library sections the piece tool offers
+PROP_CATEGORIES = ("Park & sport", "Lighting & signals", "Landscape",
+                   "Trees")
 
 
 def _hint(text):
@@ -66,7 +72,7 @@ def _hint(text):
 
 def empty_spec():
     return dict(name="City", roads=[], buildings=[], lights=[], trees=[],
-                ground=dict(margin=20000.0, color=C.GRASS))
+                props=[], ground=dict(margin=20000.0, color=C.GRASS))
 
 
 class CityCanvas(QGraphicsView):
@@ -107,6 +113,12 @@ class CityCanvas(QGraphicsView):
             self._add(CI.TreeItem(t, **kw), t)
         for p in spec["lights"]:
             self._add(CI.LightItem(p, **kw), p)
+        for p in spec.get("props") or []:
+            self._add(CI.PropItem(p, **kw), p)
+        for item in self.items_by_id.values():
+            if isinstance(item, CI._Movable):
+                item.on_turn = d._item_turned
+        scene.selectionChanged.connect(d._selection_changed)
         rect = self.content_rect()
         pad = max(rect.width(), rect.height(), 200000.0)
         scene.setSceneRect(rect.adjusted(-pad, -pad, pad, pad))
@@ -169,8 +181,28 @@ class CityCanvas(QGraphicsView):
         p = self.mapToScene(event.pos())
         return QPointF(CI.snap(p.x()), CI.snap(p.y()))
 
+    def _piece_at(self, pos):
+        for item in self.items(pos):
+            if isinstance(item, (CI._Movable, CI.RotateHandle, CI.Handle)):
+                return item
+        return None
+
     def mousePressEvent(self, event):
         tool = self.dialog.tool
+        shift = event.modifiers() & Qt.ShiftModifier
+        # a click on a piece selects it whatever the tool (Shift+click
+        # places on top of it instead) — placing over a house by mistake
+        # was the easy way to lose it
+        on_piece = self._piece_at(event.pos()) is not None
+        if event.button() == Qt.LeftButton and tool not in ("select", "road") \
+                and on_piece and not shift:
+            super().mousePressEvent(event)
+            return
+        if event.button() == Qt.LeftButton and tool == "select" and shift \
+                and not on_piece:
+            self.setDragMode(QGraphicsView.RubberBandDrag)
+            super().mousePressEvent(event)
+            return
         if event.button() == Qt.LeftButton and tool != "select":
             pt = self._scene_pt(event)
             if tool == "road":
@@ -227,6 +259,8 @@ class CityCanvas(QGraphicsView):
             event.accept()
             return
         super().mouseReleaseEvent(event)
+        if self.dragMode() == QGraphicsView.RubberBandDrag:
+            self.setDragMode(QGraphicsView.NoDrag)
 
     def finish_road(self):
         draft, self.draft = self.draft, None
@@ -262,10 +296,11 @@ class CityCanvas(QGraphicsView):
         elif key == Qt.Key_R:
             d._rotate_selected(-90.0 if event.modifiers() & Qt.ShiftModifier
                                else 90.0)
-        elif key in (Qt.Key_S, Qt.Key_D, Qt.Key_B, Qt.Key_T, Qt.Key_L):
+        elif key in (Qt.Key_S, Qt.Key_D, Qt.Key_B, Qt.Key_T, Qt.Key_L,
+                     Qt.Key_P):
             d.set_tool({Qt.Key_S: "select", Qt.Key_D: "road",
                         Qt.Key_B: "building", Qt.Key_T: "tree",
-                        Qt.Key_L: "light"}[key])
+                        Qt.Key_L: "light", Qt.Key_P: "prop"}[key])
         else:
             super().keyPressEvent(event)
 
@@ -328,10 +363,11 @@ class CityBuilder(QDialog):
         self.canvas = CityCanvas(self)
         right.addWidget(self._toolbar())
         right.addWidget(_hint(
-            "Drag a piece to move it (0.5 m grid), R / Shift+R turns it, "
-            "Delete removes it. Roads: click each point, double-click or "
-            "Enter to finish; select a road to drag its points. Drag empty "
-            "space to pan, wheel to zoom."))
+            "Click a piece to select it (with any tool), drag to move it "
+            "(0.5 m grid), drag its round handle to turn it 0-360° or press "
+            "R / Shift+R; Shift+drag on empty ground selects several. "
+            "Delete removes. Roads: click each point, double-click or Enter "
+            "to finish. Drag empty space to pan, wheel to zoom."))
         right.addWidget(self.canvas, 1)
         bottom = QHBoxLayout()
         self.coords = QLabel("")
@@ -410,7 +446,53 @@ class CityBuilder(QDialog):
         form.addRow("Building", self.style_combo)
         form.addRow("Tree", self.tree_combo)
         form.addRow("Road", self.road_combo)
+        from .library import PARTS
+        self.prop_combo = QComboBox()
+        for cat in PROP_CATEGORIES:
+            for pid, spec in PARTS.items():
+                if spec.get("category") == cat:
+                    self.prop_combo.addItem(f"{cat}: {spec['label']}", pid)
+        self.prop_combo.setCurrentIndex(max(0, self.prop_combo.findData(
+            "park_complete")))
+        self.prop_size = QComboBox()
+        self.prop_colour = QComboBox()
+        self.prop_combo.currentIndexChanged.connect(self._fill_prop_combos)
+        form.addRow("Library piece", self.prop_combo)
+        form.addRow("  size", self.prop_size)
+        form.addRow("  look", self.prop_colour)
+        self._fill_prop_combos()
         return box
+
+    def _fill_prop_combos(self, _i=None, part_id=None, size=None, look=None):
+        """The chosen piece's sizes and colours (as the Part Library
+        dialog offers them)."""
+        from .library import PARTS
+        pid = part_id or self.prop_combo.currentData()
+        spec = PARTS.get(pid) or {}
+        for combo, items, current in (
+                (self.prop_size, list(spec.get("sizes") or {}), size),
+                (self.prop_colour, list(spec.get("colors") or []), look)):
+            combo.blockSignals(True)
+            combo.clear()
+            combo.addItems(items)
+            combo.setEnabled(bool(items))
+            if current and current in items:
+                combo.setCurrentText(current)
+            elif combo is self.prop_size and len(items) > 1:
+                combo.setCurrentIndex(1)
+            combo.blockSignals(False)
+
+    def _prop_dims(self, pid, size_combo, colour_combo):
+        from .library import PARTS
+        spec = PARTS.get(pid) or {}
+        sizes = spec.get("sizes") or {}
+        key = size_combo.currentText()
+        dims = dict(sizes.get(key) or {})
+        if key:
+            dims["_size"] = key
+        if colour_combo.isEnabled() and colour_combo.currentText():
+            dims["_color"] = colour_combo.currentText()
+        return dims
 
     def _editor_group(self):
         box = QGroupBox("3  Selected")
@@ -424,6 +506,7 @@ class CityBuilder(QDialog):
         self.stack.addWidget(self._road_editor())
         self.stack.addWidget(self._tree_editor())
         self.stack.addWidget(self._light_editor())
+        self.stack.addWidget(self._prop_editor())
         lay.addWidget(self.stack)
         return box
 
@@ -450,7 +533,9 @@ class CityBuilder(QDialog):
         self.b_d = MetreSpin(2.0, 200.0, 0.5)
         self.b_d.valueChanged.connect(lambda _v: self._set_b("d", self.b_d.mm()))
         self.b_rz = QDoubleSpinBox()
-        self.b_rz.setRange(-180, 180)
+        self.b_rz.setRange(0.0, 360.0)
+        self.b_rz.setWrapping(True)
+        self.b_rz.setSingleStep(5.0)
         self.b_rz.setSuffix("°")
         self.b_rz.setKeyboardTracking(False)
         self.b_rz.valueChanged.connect(lambda v: self._set_b("rz", v))
@@ -513,7 +598,9 @@ class CityBuilder(QDialog):
         w = QWidget()
         f = QFormLayout(w)
         self.l_rz = QDoubleSpinBox()
-        self.l_rz.setRange(-180, 180)
+        self.l_rz.setRange(0.0, 360.0)
+        self.l_rz.setWrapping(True)
+        self.l_rz.setSingleStep(5.0)
         self.l_rz.setSuffix("°")
         self.l_rz.setKeyboardTracking(False)
         self.l_rz.valueChanged.connect(lambda v: self._set_l(v))
@@ -521,6 +608,25 @@ class CityBuilder(QDialog):
         face.clicked.connect(self._face_road)
         f.addRow("Facing", self.l_rz)
         f.addRow(face)
+        return w
+
+    def _prop_editor(self):
+        w = QWidget()
+        f = QFormLayout(w)
+        self.p_size = QComboBox()
+        self.p_look = QComboBox()
+        self.p_size.activated.connect(self._prop_look_changed)
+        self.p_look.activated.connect(self._prop_look_changed)
+        self.p_rz = QDoubleSpinBox()
+        self.p_rz.setRange(0.0, 360.0)
+        self.p_rz.setWrapping(True)
+        self.p_rz.setSingleStep(5.0)
+        self.p_rz.setSuffix("°")
+        self.p_rz.setKeyboardTracking(False)
+        self.p_rz.valueChanged.connect(self._set_p_rz)
+        f.addRow("Size", self.p_size)
+        f.addRow("Look", self.p_look)
+        f.addRow("Rotation", self.p_rz)
         return w
 
     def _along_group(self):
@@ -548,6 +654,8 @@ class CityBuilder(QDialog):
     def load_from_document(self, force=False):
         """Show the document's city (model.city), unless it is already
         the one on screen — unbuilt edits survive reopening."""
+        # pieces moved or turned in the main window since the last build
+        C.sync_from_document(self.window.model)
         stored = self.window.model.city
         key = json.dumps(stored, sort_keys=True) if stored else None
         if not force and key == self._loaded:
@@ -555,7 +663,7 @@ class CityBuilder(QDialog):
         self._loaded = key
         spec = copy.deepcopy(stored) if stored else empty_spec()
         spec.pop("objects", None)
-        for k in ("roads", "buildings", "lights", "trees"):
+        for k in ("roads", "buildings", "lights", "trees", "props"):
             spec.setdefault(k, [])
         self.spec = spec
         self.selected = None
@@ -577,7 +685,8 @@ class CityBuilder(QDialog):
         s = self.spec
         self.counts.setText(
             f"{len(s['roads'])} roads · {len(s['buildings'])} buildings · "
-            f"{len(s['trees'])} trees · {len(s['lights'])} lights")
+            f"{len(s['trees'])} trees · {len(s['lights'])} lights · "
+            f"{len(s.get('props') or [])} library pieces")
 
     def set_tool(self, tool):
         if tool != "road":
@@ -591,7 +700,7 @@ class CityBuilder(QDialog):
         return self.road_combo.currentText()
 
     def _kind_of(self, spec):
-        for kind in ("roads", "buildings", "trees", "lights"):
+        for kind in ("roads", "buildings", "trees", "lights", "props"):
             if any(x is spec for x in self.spec[kind]):
                 return kind
         return None
@@ -648,9 +757,25 @@ class CityBuilder(QDialog):
                 self.t_kind.setCurrentText(s.get("kind", "broadleaf"))
                 self.t_height.set_mm(float(s.get("height", 6000)))
                 self.stack.setCurrentIndex(3)
-            else:
+            elif kind == "lights":
                 self.l_rz.setValue(float(s.get("rz", 0.0)))
                 self.stack.setCurrentIndex(4)
+            else:
+                from .library import PARTS
+                spec = PARTS.get(s.get("part_id")) or {}
+                dims = s.get("dims") or {}
+                for combo, items, current in (
+                        (self.p_size, list(spec.get("sizes") or {}),
+                         dims.get("_size")),
+                        (self.p_look, list(spec.get("colors") or []),
+                         dims.get("_color"))):
+                    combo.clear()
+                    combo.addItems(items)
+                    combo.setEnabled(bool(items))
+                    if current in items:
+                        combo.setCurrentText(current)
+                self.p_rz.setValue(float(s.get("rz", 0.0)))
+                self.stack.setCurrentIndex(5)
         finally:
             self._quiet = False
 
@@ -666,6 +791,8 @@ class CityBuilder(QDialog):
             return
         if key == "name" and not value:
             return
+        if key == "rz":
+            value = CI.wrap(value)
         self.selected[key] = value
         if key == "style":                     # a style brings its looks
             (lo, hi), roof, _g, wall = B.STYLES[value]
@@ -735,7 +862,7 @@ class CityBuilder(QDialog):
     def _set_l(self, value):
         if self._quiet or self._kind_of(self.selected) != "lights":
             return
-        self.selected["rz"] = value
+        self.selected["rz"] = CI.wrap(value)
         self._sync_selected()
 
     def _face_road(self):
@@ -763,7 +890,8 @@ class CityBuilder(QDialog):
         if best is None:
             return None
         _d, px, py = best
-        return round(math.degrees(math.atan2(py - y, px - x)) + 90.0, 1)
+        return CI.wrap(round(math.degrees(math.atan2(py - y, px - x)) + 90.0,
+                             1))
 
     def _margin_changed(self, _v=None):
         if self._quiet:
@@ -796,6 +924,20 @@ class CityBuilder(QDialog):
         elif tool == "light":
             spec = dict(x=x, y=y, rz=self._facing(x, y) or 0.0)
             self.spec["lights"].append(spec)
+        elif tool == "prop":
+            from .library import PARTS
+            pid = self.prop_combo.currentData()
+            if pid not in PARTS:
+                return
+            names = {p.get("name") for p in self.spec["props"]}
+            base = PARTS[pid]["label"]
+            name, k = base, 2
+            while name in names:
+                name, k = f"{base} {k}", k + 1
+            spec = dict(part_id=pid, x=x, y=y, rz=0.0, name=name,
+                        dims=self._prop_dims(pid, self.prop_size,
+                                             self.prop_colour))
+            self.spec["props"].append(spec)
         else:
             return
         self.selected = spec
@@ -808,26 +950,69 @@ class CityBuilder(QDialog):
         self._refresh()
 
     def _remove_selected(self):
-        kind = self._kind_of(self.selected)
-        if kind is None:
+        doomed = self._selected_specs()
+        if not doomed:
             return
-        self.spec[kind] = [x for x in self.spec[kind]
-                           if x is not self.selected]
+        for kind in ("roads", "buildings", "trees", "lights", "props"):
+            self.spec[kind] = [x for x in self.spec.get(kind, [])
+                               if not any(x is d for d in doomed)]
         self.selected = None
         self._refresh()
 
+    def _selected_specs(self):
+        """The spec dicts of every selected piece (the rubber band can
+        take several)."""
+        out = []
+        for item in self.canvas.scene().selectedItems():
+            spec = getattr(item, "spec", None)
+            if spec is not None and self._kind_of(spec):
+                out.append(spec)
+        if not out and self.selected is not None and \
+                self._kind_of(self.selected):
+            out.append(self.selected)
+        return out
+
     def _rotate_selected(self, step):
-        kind = self._kind_of(self.selected)
-        if kind not in ("buildings", "lights"):
-            return
-        rz = float(self.selected.get("rz", 0.0)) + step
-        while rz > 180:
-            rz -= 360
-        while rz <= -180:
-            rz += 360
-        self.selected["rz"] = rz
-        self._sync_selected()
+        for spec in self._selected_specs():
+            if self._kind_of(spec) == "roads":
+                continue
+            spec["rz"] = CI.wrap(float(spec.get("rz", 0.0)) + step)
+            item = self.canvas.items_by_id.get(id(spec))
+            if item is not None:
+                item.sync()
         self._show_selection()
+
+    def _item_turned(self, item):
+        """A drag of the rotate handle: follow it in the panel."""
+        self._quiet = True
+        try:
+            for spin in (self.b_rz, self.l_rz, self.p_rz):
+                spin.setValue(float(item.spec.get("rz", 0.0)))
+        finally:
+            self._quiet = False
+
+    def _selection_changed(self):
+        try:
+            items = self.canvas.scene().selectedItems()
+        except RuntimeError:                   # the scene is being cleared
+            return
+        if len(items) > 1:
+            self.sel_label.setText(f"{len(items)} pieces selected — drag one "
+                                   "to move them all, R turns each, Delete "
+                                   "removes them.")
+
+    def _set_p_rz(self, value):
+        if self._quiet or self._kind_of(self.selected) != "props":
+            return
+        self.selected["rz"] = CI.wrap(value)
+        self._sync_selected()
+
+    def _prop_look_changed(self, _i=None):
+        if self._quiet or self._kind_of(self.selected) != "props":
+            return
+        self.selected["dims"] = self._prop_dims(self.selected["part_id"],
+                                                self.p_size, self.p_look)
+        self._sync_selected()
 
     def _generate(self):
         if (self.spec["roads"] or self.spec["buildings"]) and \

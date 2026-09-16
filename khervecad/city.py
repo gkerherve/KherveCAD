@@ -373,7 +373,7 @@ def generate(layout: str = "town", blocks: int = 0, seed: int = 1) -> dict:
 
 # --------------------------------------------------------------- apply
 OBJECT_NAMES = ("City ground", "City roads", "City buildings",
-                "Street lights", "City trees")
+                "Street lights", "City trees", "City props")
 
 
 def _extent(spec):
@@ -450,9 +450,37 @@ def resolve(spec: dict) -> dict:
     if ground is not None:
         ground = dict(margin=_f(ground.get("margin"), 20000),
                       color=ground.get("color", GRASS))
+    props = []
+    from .library import PARTS
+    for prop in spec.get("props") or []:
+        pid = prop.get("part_id")
+        if pid not in PARTS:
+            raise CityError(f'Unknown library part "{pid}" — list_parts '
+                            "gives the ids")
+        dims = dict(prop.get("dims") or {})
+        if not dims:
+            sizes = PARTS[pid].get("sizes") or {}
+            if sizes:
+                keys = list(sizes)
+                key = keys[1] if len(keys) > 1 else keys[0]
+                dims = dict(sizes[key], _size=key)
+        if prop.get("color"):
+            dims["_color"] = prop["color"]
+        props.append(dict(part_id=pid, x=_f(prop.get("x")),
+                          y=_f(prop.get("y")), rz=_f(prop.get("rz")) % 360.0,
+                          dims=dims, name=prop.get("name") or
+                          PARTS[pid].get("label", pid)))
+    # names are how a piece moved in the main window is found again
+    taken = set()
+    for item in buildings + props:
+        base, name, k = item["name"], item["name"], 2
+        while name in taken:
+            name, k = f"{base} {k}", k + 1
+        item["name"] = name
+        taken.add(name)
     return dict(name=spec.get("name", "City"), roads=roads,
                 buildings=buildings, lights=lights, trees=trees,
-                ground=ground)
+                props=props, ground=ground)
 
 
 def _road_distance(x, y, ribbons):
@@ -534,7 +562,8 @@ def build(spec: dict) -> dict:
     """The spec compiled to nodes: {object name: node}, plus counts and
     the resolved spec."""
     spec = resolve(spec)
-    if not (spec["roads"] or spec["buildings"] or spec["trees"]):
+    if not (spec["roads"] or spec["buildings"] or spec["trees"]
+            or spec["props"]):
         raise CityError("Nothing to build: give roads, buildings or trees, "
                         'or a layout ("village", "town", "city").')
     nodes = {}
@@ -553,10 +582,74 @@ def build(spec: dict) -> dict:
             [(p["x"], p["y"], p["rz"]) for p in spec["lights"]], KERB)
     if spec["trees"]:
         nodes["City trees"] = build_trees(spec["trees"])
+    if spec["props"]:
+        nodes["City props"] = build_props(spec["props"])
     return dict(nodes=nodes, spec=spec, counts=dict(
         roads=len(spec["roads"]), buildings=len(spec["buildings"]),
-        lights=len(spec["lights"]), trees=len(spec["trees"])),
+        lights=len(spec["lights"]), trees=len(spec["trees"]),
+        props=len(spec["props"])),
         name=spec["name"])
+
+
+def build_props(props) -> CadNode:
+    """Every library piece placed in the city, each at its x/y and turned
+    by rz — one placed Move per piece, named after it, so it can be
+    picked and dragged in the main window too."""
+    from .library import build_part
+    group = _group("Props")
+    for prop in props:
+        node = build_part(prop["part_id"], dict(prop["dims"]))
+        turn = CadNode("rotate", "Turn", dict(x=0.0, y=0.0, z=prop["rz"]))
+        turn.add(node)
+        placed = CadNode("translate", prop["name"], dict(x=prop["x"],
+                                                        y=prop["y"], z=0.0))
+        placed.add(turn)
+        group.add(placed)
+    return group
+
+
+def _placement(node):
+    """(x, y, rz) of a placed piece: its Move and the Turn under it."""
+    x, y = _f(node.params.get("x")), _f(node.params.get("y"))
+    rz = 0.0
+    if node.children and node.children[0].type == "rotate":
+        rz = _f(node.children[0].params.get("z"))
+    return x, y, rz
+
+
+def sync_from_document(model) -> int:
+    """Read back buildings and props moved or turned in the main window
+    (their Move's x/y and Turn's z) into ``model.city``, matched by
+    name, so the City Builder shows them where they now stand and the
+    next Build keeps them there. Returns how many changed."""
+    spec = model.city
+    if not spec:
+        return 0
+    changed = 0
+    for object_name, key, inner in (("City buildings", "buildings",
+                                     "Buildings"),
+                                    ("City props", "props", "Props")):
+        comp = next((c for c in model.root.children
+                     if c.type == "component" and c.name == object_name),
+                    None)
+        if comp is None:
+            continue
+        # enclose_as_part turns the group itself into the Object; an
+        # older build may hold it one level down
+        placed = {n.name: n for n in comp.walk()
+                  if n.type == "translate" and n.parent is not None
+                  and (n.parent is comp or n.parent.parent is comp)}
+        for item in spec.get(key) or []:
+            node = placed.get(item.get("name"))
+            if node is None:
+                continue
+            x, y, rz = _placement(node)
+            if (abs(x - _f(item.get("x"))) > 0.5
+                    or abs(y - _f(item.get("y"))) > 0.5
+                    or abs((rz - _f(item.get("rz"))) % 360.0) > 0.01):
+                item.update(x=x, y=y, rz=rz % 360.0)
+                changed += 1
+    return changed
 
 
 def remove_built(model) -> int:

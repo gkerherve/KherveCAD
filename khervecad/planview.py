@@ -169,6 +169,10 @@ def part_view(part_id, dims):
     return _part_view(part_id, key)
 
 
+#: past this many visible faces a part's outline is its bounding box
+OUTLINE_FACES = 6000
+
+
 @lru_cache(maxsize=256)
 def _part_view(part_id, dims_key):
     from . import library, mesh
@@ -195,4 +199,11 @@ def _part_view(part_id, dims_key):
     painter.translate(-rect.left(), -rect.top())
     paint_faces(painter, faces)
     painter.end()
-    return PartView(rect, image, faces_outline(faces))
+    if len(faces) > OUTLINE_FACES:
+        # merging tens of thousands of faces into one path took minutes
+        # (a whole park); its rectangle is outline enough at that size
+        outline = QPainterPath()
+        outline.addRect(rect)
+    else:
+        outline = faces_outline(faces)
+    return PartView(rect, image, outline)

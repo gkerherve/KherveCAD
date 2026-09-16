@@ -1852,10 +1852,16 @@ TOOLS = [
             "roof: gable|hip|flat|cone, roof_material: tiles|slate, "
             "roof_color, name}] — the front is -Y, rz turns it to its "
             "road. lights: [{x, y, rz}, ...] or {spacing}; trees: [{x, y, "
-            "kind: broadleaf|conifer|round|birch|poplar, height}]; "
+            "kind: oak|maple|lime|birch|cherry|apple|willow|poplar|pine|"
+            "spruce|cypress|palm|shrub, height}]; "
             "street_trees: {spacing, kind}; ground: {margin, color} or "
-            "null. Inserts the Objects City ground / City roads / City "
-            "buildings / Street lights / City trees, replacing the last "
+            "null. props: [{part_id, x, y, rz, color, dims}] places any "
+            "Part Library piece — a park_complete, park_football, "
+            "signal_traffic, light_victorian, land_hills... (list_parts "
+            "categories Park & sport, Lighting & signals, Landscape, "
+            "Trees). Inserts the Objects City ground / City roads / City "
+            "buildings / Street lights / City trees / City props, "
+            "replacing the last "
             "build's, and stores the design (Library ▸ City ▸ City "
             "Builder edits it piece by piece; it is saved in the .kcad)."
         ),
@@ -1869,6 +1875,9 @@ TOOLS = [
             "buildings": {"type": "array", "items": {"type": "object"}},
             "lights": {"description": "[{x, y, rz}, ...] or {spacing}."},
             "trees": {"type": "array", "items": {"type": "object"}},
+            "props": {"type": "array", "items": {"type": "object"},
+                      "description": "Library pieces: {part_id, x, y, rz, "
+                                     "color, dims}."},
             "street_trees": {"type": "object"},
             "ground": {"description": "{margin, color}, or null."},
             "replace": {"type": "boolean"},

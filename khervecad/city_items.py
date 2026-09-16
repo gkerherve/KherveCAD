@@ -35,6 +35,57 @@ def snap(v, grid=GRID):
     return round(v / grid) * grid
 
 
+def wrap(rz) -> float:
+    """An angle in [0, 360): a turn all the way round is allowed."""
+    rz = float(rz) % 360.0
+    return 0.0 if abs(rz - 360.0) < 1e-9 else rz
+
+
+class RotateHandle(QGraphicsItem):
+    """A round grip in front of a selected piece: drag it round the
+    piece to turn it (5° steps, Shift for 15°), any angle 0-360°."""
+
+    SIZE = 8.0          # px
+
+    def __init__(self, owner):
+        super().__init__(owner)
+        self.owner = owner
+        self.setFlags(QGraphicsItem.ItemIgnoresTransformations)
+        self.setCursor(Qt.PointingHandCursor)
+        self.setZValue(60)
+        self.setToolTip("Drag round to turn (Shift: 15° steps)")
+        self.place()
+
+    def place(self):
+        self.setPos(0.0, -self.owner.handle_reach())
+
+    def boundingRect(self):
+        s = self.SIZE + 2
+        return QRectF(-s, -s, 2 * s, 2 * s)
+
+    def paint(self, painter, option, widget=None):
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(QPen(SELECT, 2.0))
+        painter.setBrush(QColor("white"))
+        painter.drawEllipse(QPointF(0, 0), self.SIZE, self.SIZE)
+        painter.drawLine(QPointF(-4, 0), QPointF(4, 0))
+
+    def mousePressEvent(self, event):
+        event.accept()
+
+    def mouseMoveEvent(self, event):
+        centre = self.owner.scenePos()
+        p = event.scenePos()
+        angle = math.degrees(math.atan2(p.y() - centre.y(),
+                                        p.x() - centre.x())) + 90.0
+        step = 15.0 if event.modifiers() & Qt.ShiftModifier else 5.0
+        self.owner.turn_to(wrap(round(angle / step) * step))
+
+    def mouseReleaseEvent(self, event):
+        if self.owner.on_release:
+            self.owner.on_release(self.owner)
+
+
 def _pen(colour, width=0.0, cosmetic=True, style=Qt.SolidLine):
     pen = QPen(QColor(colour), width, style)
     pen.setCosmetic(cosmetic)
@@ -69,10 +120,35 @@ class _Movable(QGraphicsItem):
             self.spec["x"], self.spec["y"] = self.pos().x(), self.pos().y()
             if self.on_change:
                 self.on_change(self)
-        if change == QGraphicsItem.ItemSelectedHasChanged and value \
-                and self.on_pick:
-            self.on_pick(self)
+        if change == QGraphicsItem.ItemSelectedHasChanged:
+            self._show_handle(bool(value))
+            if value and self.on_pick:
+                self.on_pick(self)
         return super().itemChange(change, value)
+
+    #: pieces that turn show a rotate handle while selected
+    ROTATES = True
+    on_turn = None
+
+    def _show_handle(self, on):
+        handle = getattr(self, "_handle", None)
+        if handle is not None:
+            handle.setParentItem(None)
+            if handle.scene():
+                handle.scene().removeItem(handle)
+            self._handle = None
+        if on and self.ROTATES:
+            self._handle = RotateHandle(self)
+
+    def handle_reach(self):
+        r = self.boundingRect()
+        return max(abs(r.top()), abs(r.bottom())) * 0.8 + 800.0
+
+    def turn_to(self, rz):
+        self.spec["rz"] = rz
+        self.setRotation(rz)
+        if self.on_turn:
+            self.on_turn(self)
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
@@ -87,6 +163,9 @@ class _Movable(QGraphicsItem):
                     float(self.spec.get("y", 0.0)))
         self.setRotation(float(self.spec.get("rz", 0.0)))
         self._syncing = False
+        handle = getattr(self, "_handle", None)
+        if handle is not None:
+            handle.place()
         self.update()
 
 
@@ -193,6 +272,7 @@ class BuildingItem(_Movable):
 class TreeItem(_Movable):
     def __init__(self, spec, **kw):
         super().__init__(spec, **kw)
+        self.setRotation(float(spec.get("rz", 0.0)))
         self.setZValue(20)
 
     def radius(self):
@@ -274,6 +354,69 @@ class LightItem(_Movable):
 
     def label(self):
         return "Street light"
+
+
+class PropItem(_Movable):
+    """A Part Library piece (a pitch, a lamp, a hill...) drawn as its
+    real top view (`planview.part_view`), turned by its rz."""
+
+    def __init__(self, spec, **kw):
+        super().__init__(spec, **kw)
+        self.setRotation(float(spec.get("rz", 0.0)))
+        self.setZValue(5)
+        self._view_key = None
+        self.view = None
+        self._load()
+
+    def _load(self):
+        from . import planview
+        key = (self.spec.get("part_id"), repr(sorted(
+            (self.spec.get("dims") or {}).items())))
+        if key != self._view_key:
+            self._view_key = key
+            try:
+                self.view = planview.part_view(self.spec.get("part_id"),
+                                               self.spec.get("dims") or {})
+            except Exception:
+                self.view = None
+            self.prepareGeometryChange()
+
+    def sync(self):
+        self._load()
+        super().sync()
+
+    def boundingRect(self):
+        if self.view is not None:
+            return self.view.rect.adjusted(-200, -200, 200, 200)
+        return QRectF(-1000, -1000, 2000, 2000)
+
+    def shape(self):
+        path = QPainterPath()
+        path.addRect(self.boundingRect())
+        return path
+
+    def paint(self, painter, option, widget=None):
+        painter.setRenderHint(QPainter.Antialiasing)
+        if self.view is not None:
+            painter.drawImage(self.view.rect, self.view.image)
+            painter.setPen(_pen("#3b3f45", 1.0))
+            painter.setBrush(Qt.NoBrush)
+            painter.drawPath(self.view.outline)
+        else:
+            painter.setPen(_pen("#3b3f45", 1.0))
+            painter.setBrush(QColor(200, 200, 200, 120))
+            painter.drawRect(QRectF(-1000, -1000, 2000, 2000))
+        if self.isSelected():
+            painter.setPen(_pen(SELECT, 2.5))
+            painter.setBrush(Qt.NoBrush)
+            painter.drawRect(self.boundingRect().adjusted(150, 150, -150,
+                                                          -150))
+
+    def label(self):
+        from .library import PARTS
+        spec = PARTS.get(self.spec.get("part_id")) or {}
+        size = (self.spec.get("dims") or {}).get("_size", "")
+        return f"{spec.get('label', self.spec.get('part_id'))} {size}".strip()
 
 
 class Handle(QGraphicsItem):

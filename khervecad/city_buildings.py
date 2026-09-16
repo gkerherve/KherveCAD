@@ -593,9 +593,8 @@ def build_building(spec: dict, index: int = 0) -> CadNode:
 
 
 def _placed(body, b):
-    inner = body
-    if b["rz"]:
-        inner = turn(body, z=b["rz"])
+    # always a Turn, even at 0°: the main window turns a building by it
+    inner = turn(body, z=b["rz"])
     return move(inner, b["x"], b["y"], 0.0, b["name"])
 
 
