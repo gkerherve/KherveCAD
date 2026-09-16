@@ -838,6 +838,27 @@ into a new module and import.
                        document` reads back buildings/props moved or turned
                        in the main window (matched by their unique names;
                        every placed piece has a Turn, even at 0°).
+  - `landmark_kit.py` — `Kit`: bars, cable paths, boxes, turned boxes,
+                       frustums, cones/pyramids, convex prisms and hulls
+                       (`solid`, via `geom3d.convex_hull`), trusses and
+                       braced faces, all appended into ONE closed
+                       polyhedron per (colour, material) — a 2.7 km bridge
+                       with thousands of members is a few nodes.
+  - `library_bridges.py` / `library_landmarks.py` /
+    `library_skyscrapers.py` — famous structures from their PUBLISHED
+                       dimensions (the user's choice, 2026-09-16: no
+                       reference blueprints), at true size with model
+                       scales (`_scaled` wraps a scale node): Golden Gate,
+                       Tower, Brooklyn and Sydney Harbour bridges; Eiffel
+                       Tower, Statue of Liberty, Big Ben, Great Pyramid,
+                       Pisa, Arc de Triomphe, Colosseum, Taj Mahal (onion
+                       domes are revolved profiles, `_onion`); Empire State,
+                       Chrysler, One WTC (square-to-rotated-square hull),
+                       Burj Khalifa, Petronas, Taipei 101, Shanghai Tower
+                       (nine twisted, tapering linear_extrude zones kept
+                       continuous by rotating each zone's base) and the
+                       Shard. Library ▸ City sections, and City Builder
+                       props.
   - **Surface materials** (`glrender.SURFACES`, 2026-09-16): Brick,
                        Concrete, Render, Roof tiles, Slate, Stone, Bark,
                        Leaves are `model.MATERIALS` drawn by the fragment
