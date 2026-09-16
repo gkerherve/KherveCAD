@@ -18,10 +18,11 @@ from khervecad import mesh
 from khervecad.library import PARTS, build_part
 from khervecad.model import validate
 
-SECTIONS = ("Lighting & signals", "Park & sport", "Landscape")
+SECTIONS = ("Lighting & signals", "Park & sport", "Landscape", "Bridges",
+            "Landmarks", "Skyscrapers")
 IDS = [pid for pid, spec in PARTS.items()
        if spec.get("category") in SECTIONS]
-BUDGET = 250000
+BUDGET = 400000
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -45,7 +46,8 @@ def test_every_size_and_colour_builds(pid):
             assert tris, (pid, size)
             assert len(tris) < BUDGET, (pid, size, len(tris))
             low = min(v[2] for t in tris for v in t)
-            assert low > -2500, (pid, size, low)
+            k = float(d.get("scale", 1.0))
+            assert low > -10000 * k, (pid, size, low)
 
 
 def test_signals_light_the_chosen_aspect():

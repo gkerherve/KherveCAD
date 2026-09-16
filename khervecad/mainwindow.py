@@ -44,7 +44,7 @@ LEGO_CATEGORIES = {"Lego": "Bricks && plates", "Lego sets": "Lego sets"}
 HOME_CATEGORIES = ("Home furniture", "Room & furniture")
 #: library categories that live in Library ▸ City, in this order
 CITY_CATEGORIES = ("Trees", "Park & sport", "Lighting & signals",
-                   "Landscape", "Landmarks", "Bridges")
+                   "Landscape", "Landmarks", "Skyscrapers", "Bridges")
 
 
 def _menu_text(text) -> str:

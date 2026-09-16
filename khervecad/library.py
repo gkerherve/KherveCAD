@@ -1193,7 +1193,8 @@ PARTS = {
 # each entry carries its own `build` callable, dispatched by build_part.
 from . import (library_cards, library_chem, library_crystal,  # noqa: E402
                library_home, library_home_extra, library_home_more,
-               library_kcad, library_landscape, library_lighting,
+               library_bridges, library_kcad, library_landscape,
+               library_lighting,
                library_park, library_prusa,
                library_trees,
                library_lego, library_lego_sets, library_molecule,
@@ -1209,6 +1210,7 @@ PARTS.update(library_trees.PARTS)
 PARTS.update(library_lighting.PARTS)
 PARTS.update(library_park.PARTS)
 PARTS.update(library_landscape.PARTS)
+PARTS.update(library_bridges.PARTS)
 PARTS.update(library_pots.PARTS)
 PARTS.update(library_cards.PARTS)
 PARTS.update(library_lego.PARTS)

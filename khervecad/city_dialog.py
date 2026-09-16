@@ -60,7 +60,7 @@ TOOLS = (("select", "mdi.cursor-default-outline", "Select and move (S)"),
 
 #: library sections the piece tool offers
 PROP_CATEGORIES = ("Park & sport", "Lighting & signals", "Landscape",
-                   "Trees")
+                   "Trees", "Landmarks", "Skyscrapers", "Bridges")
 
 
 def _hint(text):
