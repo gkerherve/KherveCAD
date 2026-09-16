@@ -773,6 +773,18 @@ into a new module and import.
                        `ROOFS` tiles/slate, each a surface material + palette.
                        Window glass is opaque Plastic: the Glass material
                        caps alpha at 0.45 and a dark pane vanished into brick.
+  - `city_buildings_world.py` — world building styles merged into
+                       `city_buildings.STYLES` (imported from the bottom of
+                       city_buildings, whose `build_building` dispatches to
+                       `BUILDERS`): mosque (drum + onion domes, minarets,
+                       arched portal), Arabic (crenellated parapet,
+                       mashrabiya, wind tower), Chinese (platform, red
+                       columns, swept hip roof, ridge beasts), Japanese
+                       (raised, timber frame, shoji, engawa, irimoya),
+                       American (clapboard, shutters, porch), Indian
+                       (jharokha, chhatris) and Pakistani (boundary wall +
+                       gate, car porch, roof tank) houses; `PALETTES` give
+                       each its own wall/roof colours. Same no-boolean rule.
   - `city_trees.py`  — trees (broadleaf, conifer, round, birch, poplar:
                        tapered Bark trunk, branches, Leaves clumps in two
                        greens; one loop per kind) and street lights. A

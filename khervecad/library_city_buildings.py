@@ -27,7 +27,7 @@ LABELS = {"cottage": "Cottage", "house": "House (hipped roof)",
           "terrace": "Terraced house", "shop": "Shop with flat above",
           "block": "Apartment block", "tower": "Office tower",
           "round tower": "Round tower", "L-shape": "L-shaped house",
-          "church": "Church"}
+          "church": "Church", **B._WORLD.LABELS}
 LOOKS = ["Style default"] + [w.capitalize() for w in B.WALLS]
 #: size name -> footprint scale and floors as a fraction of the range
 SIZES = {"Small": (0.8, 0.0), "Standard": (1.0, 0.5), "Large": (1.3, 1.0)}

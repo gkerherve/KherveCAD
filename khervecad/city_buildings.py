@@ -83,6 +83,9 @@ DOOR = "#5b3a29"
 TRIM = "#e9e6df"
 AWNINGS = ["#b83b3b", "#2f6f8f", "#3f8f4f", "#c8902e"]
 
+#: the world styles (mosque, Arabic, Chinese, Japanese, American, Indian,
+#: Pakistani houses) live in city_buildings_world, merged in at the end
+
 
 class BuildingError(ValueError):
     """A building spec that cannot be built."""
@@ -436,6 +439,8 @@ def resolve(b: dict, index: int = 0) -> dict:
     if roof_mat not in ROOFS:
         roof_mat = "tiles"
     wall_pal, roof_pal = WALLS[wall][1], ROOFS[roof_mat][1]
+    if style in _WORLD.PALETTES:
+        wall_pal, roof_pal = _WORLD.PALETTES[style]
     out = dict(b)
     out.update(
         style=style, wall=wall, roof=roof, roof_material=roof_mat,
@@ -460,6 +465,8 @@ def build_building(spec: dict, index: int = 0) -> CadNode:
     wall_col, roof_col = b["color"], b["roof_color"]
     roof_mat = ROOFS[b["roof_material"]][0]
     glazing = STYLES[style][2]
+    if style in _WORLD.BUILDERS:
+        return _placed(_WORLD.BUILDERS[style](b), b)
     body = group(b["name"])
 
     if style == "round tower":
@@ -616,3 +623,9 @@ def footprint(b: dict, index: int = 0):
         wings = [(-r["w"] / 2, -r["d"] / 2, r["w"], wd),
                  (-r["w"] / 2, -r["d"] / 2 + wd, r["w"] * 0.45, r["d"] - wd)]
     return r, wings
+
+
+from . import city_buildings_world as _WORLD  # noqa: E402  (needs the above)
+
+STYLES.update(_WORLD.STYLES)
+DEFAULT_SIZE.update(_WORLD.DEFAULT_SIZE)
