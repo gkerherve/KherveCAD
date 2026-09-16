@@ -1194,7 +1194,7 @@ PARTS = {
 from . import (library_cards, library_chem, library_crystal,  # noqa: E402
                library_home, library_home_extra, library_home_more,
                library_bridges, library_city_buildings, library_kcad,
-               library_landmarks,
+               library_landmarks, library_landmarks_world,
                library_landscape, library_skyscrapers,
                library_lighting,
                library_park, library_prusa,
@@ -1215,6 +1215,7 @@ PARTS.update(library_park.PARTS)
 PARTS.update(library_landscape.PARTS)
 PARTS.update(library_bridges.PARTS)
 PARTS.update(library_landmarks.PARTS)
+PARTS.update(library_landmarks_world.PARTS)
 PARTS.update(library_skyscrapers.PARTS)
 PARTS.update(library_pots.PARTS)
 PARTS.update(library_cards.PARTS)

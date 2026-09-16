@@ -223,48 +223,6 @@ def build_one_wtc(dims):
 
 
 # ---------------------------------------------------------- Burj Khalifa
-def build_burj(dims):
-    kit = Kit()
-    silver = "#c9d6df"
-    fin = "#eef2f4"
-    wing_w = 26000.0
-    wing_len = 62000.0
-    core_r = 20000.0
-    steps = 27
-    top = 585000.0
-    heights = [lerp(0, top, k / steps) for k in range(steps + 1)]
-    lengths = [wing_len, wing_len, wing_len]
-    for k in range(steps):
-        z0, z1 = heights[k], heights[k + 1]
-        cut = k % 3
-        if k > 0:
-            lengths[cut] = max(0.0, lengths[cut] - wing_len / 9.5)
-        cr = core_r * (1 - 0.55 * k / steps)
-        kit.cone(0, 0, z0, z1, cr, cr, silver, "Plastic", sides=6)
-        for w in range(3):
-            L = lengths[w]
-            if L < 1000:
-                continue
-            a = math.radians(90 + w * 120)
-            cx, cy = math.cos(a) * L / 2, math.sin(a) * L / 2
-            width = wing_w * (1 - 0.35 * k / steps)
-            kit.obox(cx, cy, z0, L, width, z1 - z0, math.degrees(a), silver,
-                     "Plastic")
-            # the vertical fins down each wing's flanks and nose
-            ex, ey = math.cos(a) * L, math.sin(a) * L
-            kit.obox(ex, ey, z0, 1200, width * 0.5, z1 - z0 - 800,
-                     math.degrees(a), fin, "Metal")
-            kit.obox(cx, cy, z1 - 900, L + 800, width + 800, 900,
-                     math.degrees(a), fin, "Metal")
-    # the spire
-    kit.cone(0, 0, top, top + 60000, 9000, 6000, silver, "Plastic", sides=6)
-    kit.cone(0, 0, top + 60000, 828000, 5000, 300, fin, "Metal", sides=6)
-    for z in range(int(top + 70000), 800000, 20000):
-        kit.cone(0, 0, z, z + 1500, 4500 * (1 - (z - top) / 260000),
-                 4500 * (1 - (z - top) / 260000), fin, "Metal", sides=6)
-    return kit.node("Burj Khalifa")
-
-
 # ------------------------------------------------------------ Petronas
 def _petronas_tower(kit, cx, height=452000.0):
     steel = "#d7dbe0"
@@ -313,49 +271,6 @@ def build_petronas(dims):
 
 
 # ------------------------------------------------------------ Taipei 101
-def build_taipei(dims):
-    kit = Kit()
-    glass = "#6f9f9a"
-    frame = "#dfe7e4"
-
-    def octo(w, d):
-        c = w * 0.18
-        return [(-w / 2 + c, -d / 2), (w / 2 - c, -d / 2), (w / 2, -d / 2 + c),
-                (w / 2, d / 2 - c), (w / 2 - c, d / 2), (-w / 2 + c, d / 2),
-                (-w / 2, d / 2 - c), (-w / 2, -d / 2 + c)]
-
-    def flare(z0, z1, w0, w1):
-        pts = [(x, y, z0) for x, y in octo(w0, w0)] + \
-              [(x, y, z1) for x, y in octo(w1, w1)]
-        kit.solid(pts, glass, "Plastic")
-        kit.solid([(x, y, z1 - 900) for x, y in octo(w1 + 800, w1 + 800)] +
-                  [(x, y, z1) for x, y in octo(w1 + 800, w1 + 800)], frame,
-                  "Metal")
-    kit.box(-80000, -60000, 0, 80000, 60000, 25000, "#9aa8a6", "Plastic")
-    flare(0, 100000, 62000, 50000)
-    # the coins on each face at floor 26
-    for face in range(4):
-        a = math.radians(face * 90)
-        nx, ny = math.sin(a), -math.cos(a)
-        c = CadNode("cylinder", "Coin", dict(x=0.0, y=0.0, z=0.0,
-                                            height=800.0, radius_bottom=8000,
-                                            radius_top=8000, segments=32,
-                                            center=False))
-        col = CadNode("color", "Coin", dict(color="#d4af37", alpha=1.0,
-                                            material="Gold"))
-        col.add(c)
-        kit.add(moved(col, nx * 25200, ny * 25200, 92000, rx=90.0,
-                      rz=face * 90.0, name="Coin"))
-    z = 100000.0
-    for _k in range(8):
-        flare(z, z + 34000, 46000, 54000)
-        z += 34000
-    flare(z, z + 30000, 38000, 30000)
-    flare(z + 30000, z + 60000, 26000, 20000)
-    kit.cone(0, 0, z + 60000, 508000, 3000, 400, frame, "Metal", sides=8)
-    return kit.node("Taipei 101")
-
-
 # -------------------------------------------------------- Shanghai Tower
 def build_shanghai(dims):
     group = CadNode("union", "Shanghai Tower", {})
@@ -409,33 +324,275 @@ def build_shanghai(dims):
 
 
 # ---------------------------------------------------------------- Shard
-def build_shard(dims):
+def _ring_outline(n, r, phase=0.0):
+    return [(math.cos(phase + 2 * math.pi * k / n) * r,
+             math.sin(phase + 2 * math.pi * k / n) * r) for k in range(n)]
+
+
+def _wing_outline(angle, length, width, core):
+    """One Burj wing in plan: from inside the core out to a rounded nose,
+    convex, counter-clockwise."""
+    a = math.radians(angle)
+    ux, uy = math.cos(a), math.sin(a)
+    tx, ty = -uy, ux
+    half = width / 2
+    body = max(length - half * 0.8, core * 0.2)
+    pts = [(tx * -half * 0.55, ty * -half * 0.55)]
+    pts.append((ux * body - tx * half, uy * body - ty * half))
+    for k in range(1, 6):                        # the rounded nose
+        t = -math.pi / 2 + math.pi * k / 6
+        r = half * 0.8
+        nx = body + math.cos(t) * r * 1.0
+        ny = math.sin(t) * half
+        pts.append((ux * nx + tx * ny, uy * nx + ty * ny))
+    pts.append((ux * body + tx * half, uy * body + ty * half))
+    pts.append((tx * half * 0.55, ty * half * 0.55))
+    return pts
+
+
+def build_burj(dims):
+    """Burj Khalifa: a Y plan of three rounded wings round a hexagonal
+    core (the Hymenocallis flower), 26 setbacks spiralling up, one wing
+    at a time; reflective glass behind stainless vertical fins, lighter
+    spandrel bands at the mechanical floors, the tapering glass top from
+    585 m and the steel spire to 828 m."""
     kit = Kit()
-    glass = "#b9cdd8"
+    glass = "#8fa9bb"
+    fin = "#e8edf0"
+    band = "#c9d3da"
+    dark = "#3e5363"
+    core_r = 19000.0
+    tiers = 27
+    top = 585000.0
+    tier_h = top / tiers
+    lengths = [62000.0, 62000.0, 62000.0]
+    width0 = 25000.0
+    # podium: three low lobes and the entrance pavilions
+    for w in range(3):
+        ang = 90 + w * 120 + 60
+        kit.prism(_wing_outline(ang, 55000, 36000, core_r), 0, 9000,
+                  "#b9c2c8", "Concrete")
+    kit.prism(_ring_outline(6, 30000, math.pi / 6), 0, 12000, dark,
+              "Plastic")
+    order = [0, 1, 2]
+    for k in range(tiers):
+        z0, z1 = k * tier_h, (k + 1) * tier_h
+        if k >= 2:
+            w = order[(k - 2) % 3]
+            step = 2600 + 450 * k
+            lengths[w] = max(0.0, lengths[w] - step)
+        width = width0 * (1 - 0.38 * k / tiers)
+        cr = core_r * (1 - 0.45 * k / tiers)
+        kit.prism(_ring_outline(6, cr, math.pi / 6), z0, z1, glass,
+                  "Plastic")
+        for w in range(3):
+            L = lengths[w]
+            if L < cr + 2500:
+                continue
+            ang = 90 + w * 120
+            kit.prism(_wing_outline(ang, L, width, cr), z0, z1, glass,
+                      "Plastic")
+            a = math.radians(ang)
+            ux, uy = math.cos(a), math.sin(a)
+            tx, ty = -uy, ux
+            # stainless fins down both flanks, every ~3.6 m
+            body = L - width * 0.4
+            n = max(2, int((body - cr * 0.6) // 3600))
+            for side in (-1, 1):
+                for j in range(n):
+                    s = cr * 0.6 + (body - cr * 0.6) * (j + 0.5) / n
+                    x = ux * s + tx * side * (width / 2 + 250)
+                    y = uy * s + ty * side * (width / 2 + 250)
+                    kit.bar((x, y, z0 + 400), (x, y, z1 - 400), 260, fin,
+                            "Metal")
+            nose = L - width * 0.4 + width * 0.4
+            kit.bar((ux * (nose + 300), uy * (nose + 300), z0 + 300),
+                    (ux * (nose + 300), uy * (nose + 300), z1 - 300), 420,
+                    fin, "Metal")
+            # the terrace where this wing steps back, and a floor band
+            kit.prism(_wing_outline(ang, L + 400, width + 800, cr),
+                      z1 - 900, z1, band, "Metal")
+        if k % 4 == 3:
+            kit.prism(_ring_outline(6, cr + 800, math.pi / 6), z1 - 3500,
+                      z1 - 500, band, "Metal")
+    # the glass top: a tapering hexagon over three shallow ribs
+    z = top
+    r = core_r * 0.55
+    for k in range(8):
+        h = 7000.0 - k * 300
+        kit.prism(_ring_outline(6, r, math.pi / 6), z, z + h, glass,
+                  "Plastic")
+        kit.prism(_ring_outline(6, r + 500, math.pi / 6), z + h - 900,
+                  z + h, band, "Metal")
+        for w in range(3):
+            a = math.radians(90 + w * 120)
+            kit.bar((math.cos(a) * r, math.sin(a) * r, z),
+                    (math.cos(a) * r, math.sin(a) * r, z + h), 900, fin,
+                    "Metal")
+        z += h
+        r *= 0.9
+    # the spire: a steel tube in sections, pinnacle rings
+    spire = [(z, 5200), (z + 60000, 4200), (z + 120000, 3000),
+             (z + 180000, 1800), (828000.0, 150)]
+    for (za, ra), (zb, rb) in zip(spire, spire[1:]):
+        kit.cone(0, 0, za, zb, ra, rb, fin, "Metal", sides=12)
+        kit.cone(0, 0, zb - 1200, zb, ra * 1.25, ra * 1.25, band, "Metal",
+                 sides=12)
+    return kit.node("Burj Khalifa")
+
+
+def build_taipei(dims):
+    """Taipei 101: the tapering podium tower, eight flared segments of
+    eight floors — each a bamboo joint leaning out — with double-notched
+    corners, green glass behind mullions, floor bands, the ruyi symbols
+    and coins, the corner dragons, the top floors and pinnacle."""
+    kit = Kit()
+    glass = "#5f8f86"
+    frame = "#dfe7e4"
+    trim = "#b8c7c2"
+    gold = "#d4af37"
+
+    def octo(w, notch=0.16):
+        c = w * notch
+        h = w / 2
+        return [(-h + c, -h), (h - c, -h), (h, -h + c), (h, h - c),
+                (h - c, h), (-h + c, h), (-h, h - c), (-h, -h + c)]
+
+    def segment(z0, z1, w0, w1, floors):
+        kit.solid([(x, y, z0) for x, y in octo(w0)] +
+                  [(x, y, z1) for x, y in octo(w1)], glass, "Plastic")
+        # floor bands follow the flare
+        for f in range(1, floors + 1):
+            t = f / floors
+            z = lerp(z0, z1, t)
+            w = lerp(w0, w1, t) + 500
+            kit.solid([(x, y, z - 700) for x, y in octo(w)] +
+                      [(x, y, z) for x, y in octo(w)], trim, "Metal")
+        # vertical mullions on the four broad faces
+        for face in range(4):
+            a = math.radians(face * 90)
+            cs, sn = math.cos(a), math.sin(a)
+            for j in range(-4, 5):
+                t = j / 5.0
+                p0 = (t * w0 * 0.33, -w0 / 2 - 200)
+                p1 = (t * w1 * 0.33, -w1 / 2 - 200)
+                kit.bar((p0[0] * cs - p0[1] * sn, p0[0] * sn + p0[1] * cs,
+                         z0), (p1[0] * cs - p1[1] * sn,
+                               p1[0] * sn + p1[1] * cs, z1), 160, frame,
+                        "Metal")
+        # a dragon ornament on each corner at the top of the segment
+        for corner in range(4):
+            a = math.radians(45 + corner * 90)
+            r = w1 * 0.62
+            kit.solid([(math.cos(a) * r, math.sin(a) * r, z1 - 3500),
+                       (math.cos(a) * (r + 2500), math.sin(a) * (r + 2500),
+                        z1 - 500),
+                       (math.cos(a + 0.05) * r, math.sin(a + 0.05) * r,
+                        z1),
+                       (math.cos(a - 0.05) * r, math.sin(a - 0.05) * r,
+                        z1)], gold, "Gold")
+
+    kit.box(-80000, -60000, 0, 80000, 60000, 26000, "#9aa8a6", "Plastic")
+    kit.box(-80500, -60500, 24000, 80500, 60500, 26500, frame, "Metal")
+    segment(26000, 101000, 62000, 49000, 22)
+    # the ruyi symbols over the base and the coins
+    for face in range(4):
+        a = math.radians(face * 90)
+        nx, ny = math.sin(a), -math.cos(a)
+        tx, ty = math.cos(a), math.sin(a)
+        cx, cy = nx * 25500, ny * 25500
+        kit.solid([(cx + tx * 9000, cy + ty * 9000, 90000),
+                   (cx - tx * 9000, cy - ty * 9000, 90000),
+                   (cx, cy, 81000), (cx + nx * 2500, cy + ny * 2500, 88000)],
+                  gold, "Gold")
+        c = CadNode("cylinder", "Coin", dict(x=0.0, y=0.0, z=0.0,
+                                            height=900.0, radius_bottom=6500,
+                                            radius_top=6500, segments=32,
+                                            center=False))
+        col = CadNode("color", "Coin", dict(color=gold, alpha=1.0,
+                                            material="Gold"))
+        col.add(c)
+        kit.add(moved(col, nx * 25200, ny * 25200, 70000, rx=90.0,
+                      rz=face * 90.0, name="Coin"))
+    z = 101000.0
+    for _k in range(8):
+        segment(z, z + 34000, 45000, 55000, 8)
+        z += 34000
+    segment(z, z + 22000, 40000, 34000, 5)
+    segment(z + 22000, z + 44000, 30000, 22000, 4)
+    top = z + 44000
+    for k, (h, r) in enumerate(((9000, 9000), (7000, 6500), (6000, 4500))):
+        kit.cone(0, 0, top, top + h, r, r * 0.9, trim if k % 2 else frame,
+                 "Metal", sides=8, phase=math.pi / 8)
+        top += h
+    kit.cone(0, 0, top, 508000, 2600, 250, frame, "Metal", sides=12)
+    for zr in range(int(top + 10000), 500000, 12000):
+        kit.cone(0, 0, zr, zr + 900, 3200, 3200, trim, "Metal", sides=12)
+    return kit.node("Taipei 101")
+
+
+def build_shard(dims):
+    """The Shard (310 m): eight glass shards leaning in round a steel
+    core, each ending at its own height so they never meet — the top
+    60 m an open lattice between the splinters — the 'fractures' between
+    shards as dark vented gaps, floor lines across the glass, and the
+    podium."""
+    kit = Kit()
+    glass = "#c4d5de"
+    line = "#9fb4c0"
+    dark = "#3b4a55"
+    steel = "#d6dde2"
     height = 310000.0
-    # a solid core pyramid, then eight shards leaning in over it
-    kit.cone(0, 0, 0, 290000, 38000, 2500, "#8aa0ad", "Plastic", sides=8,
+    base = [(0, 29000), (45, 31000), (90, 30000), (135, 27000),
+            (180, 29500), (225, 30500), (270, 28000), (315, 31500)]
+    tops = [306000, 272000, 300000, 264000, 310000, 280000, 294000, 268000]
+
+    def rad_at(r0, z):
+        return r0 * (1 - 0.93 * z / height)
+
+    kit.prism(_ring_outline(8, 36000, math.pi / 8), 0, 12000, "#9aa3a8",
+              "Concrete")
+    kit.cone(0, 0, 0, 244000, 26000, 3500, dark, "Plastic", sides=8,
              phase=math.pi / 8)
-    shards = [(0, 44000, 26000), (45, 40000, 22000), (90, 46000, 28000),
-              (135, 38000, 20000), (180, 44000, 26000), (225, 41000, 22000),
-              (270, 46000, 28000), (315, 39000, 21000)]
-    for ang, dist, half in shards:
-        a = math.radians(ang)
-        nx, ny = math.cos(a), math.sin(a)
-        tx, ty = -ny, nx
-        top_h = height - (ang % 90) * 250 - (0 if ang % 90 else 0)
-        tip = 3000 + (ang % 45) * 60
-        b0 = (nx * dist, ny * dist)
+    for k, ((ang, r0), top) in enumerate(zip(base, tops)):
+        a0 = math.radians(ang - 21)
+        a1 = math.radians(ang + 21)
+        am = math.radians(ang)
         pts = []
-        for depth in (0.0, 1500.0):
-            ox, oy = nx * -depth, ny * -depth
-            pts += [(b0[0] + tx * half + ox, b0[1] + ty * half + oy, 0),
-                    (b0[0] - tx * half + ox, b0[1] - ty * half + oy, 0),
-                    (nx * tip + tx * 2500 + ox, ny * tip + ty * 2500 + oy,
-                     top_h),
-                    (nx * tip - tx * 2500 + ox, ny * tip - ty * 2500 + oy,
-                     top_h)]
+        for z in (0.0, top):
+            r = rad_at(r0, z) + (4000 if z else 0)
+            spread = 1.0 if z == 0 else 0.55
+            for a in (am + (a0 - am) * spread, am + (a1 - am) * spread):
+                pts.append((math.cos(a) * r, math.sin(a) * r, z))
+                pts.append((math.cos(a) * (r - 900), math.sin(a) * (r - 900),
+                            z))
         kit.solid(pts, glass, "Plastic")
+        # floor lines across the shard
+        for z in range(8000, int(top) - 4000, 12000):
+            r = rad_at(r0, z) + 4000 * z / top + 150
+            spread = 1 - 0.45 * z / top
+            aa = am + (a0 - am) * spread
+            ab = am + (a1 - am) * spread
+            kit.bar((math.cos(aa) * r, math.sin(aa) * r, z),
+                    (math.cos(ab) * r, math.sin(ab) * r, z), 180, line,
+                    "Metal")
+        # the vented fracture on its right edge
+        ae = math.radians(ang + 22.5)
+        kit.path([(math.cos(ae) * rad_at(r0, z) * 0.97,
+                   math.sin(ae) * rad_at(r0, z) * 0.97, z)
+                  for z in (0, top * 0.5, top * 0.9)], 900, dark, "Matte",
+                 sides=4)
+    # the open spire lattice between the splinters
+    for k in range(8):
+        a = math.radians(k * 45 + 22.5)
+        p0 = (math.cos(a) * 5000, math.sin(a) * 5000, 236000)
+        p1 = (math.cos(a) * 1500, math.sin(a) * 1500, 304000)
+        kit.bar(p0, p1, 350, steel, "Metal")
+    for z in range(240000, 300000, 8000):
+        r = 5000 - 3500 * (z - 236000) / 68000
+        kit.path([(math.cos(math.radians(k * 45)) * r,
+                   math.sin(math.radians(k * 45)) * r, z)
+                  for k in range(9)], 200, steel, "Metal", sides=4)
     return kit.node("The Shard")
 
 
