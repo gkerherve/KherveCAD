@@ -76,3 +76,14 @@ def test_house_and_home_has_the_builder_on_top_and_a_menu_per_room(window):
         if spec["category"] in ("Home furniture", "Room & furniture"):
             assert spec["label"] in labels, pid
     assert len(FURNITURE_CATALOG) >= 10
+
+
+def test_city_menu_holds_builder_layouts_and_trees(window):
+    library = _menu(window.menuBar(), "Library")
+    city = _menu(library, "City")
+    texts = _texts(city)
+    assert texts[0] == "City Builder..."
+    assert "New layout (random)" in texts
+    trees = _texts(_menu(city, "Trees"))
+    assert "Oak" in trees and "Weeping willow" in trees
+    assert "Trees" not in _texts(library)

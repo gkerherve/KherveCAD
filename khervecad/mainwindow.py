@@ -42,6 +42,9 @@ from .view3d import View3D
 LEGO_CATEGORIES = {"Lego": "Bricks && plates", "Lego sets": "Lego sets"}
 #: library categories fused into Library ▸ House & home, sorted by room
 HOME_CATEGORIES = ("Home furniture", "Room & furniture")
+#: library categories that live in Library ▸ City, in this order
+CITY_CATEGORIES = ("Trees", "Park & sport", "Lighting & signals",
+                   "Landscape", "Landmarks", "Bridges")
 
 
 def _menu_text(text) -> str:
@@ -521,7 +524,11 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         submenus = {}
         crystals_menu = molecules_menu = lego_menu = home_menu = None
-        self._build_city_menu(menu)
+        city_menu = self._build_city_menu(menu)
+        city_subs = {cat: city_menu.addMenu(_menu_text(cat))
+                     for cat in CITY_CATEGORIES
+                     if any(p.get("category") == cat
+                            for p in PARTS.values())}
         crystal_subs, molecule_subs, lego_subs = {}, {}, {}
         for part_id, spec in PARTS.items():
             cat = spec.get("category", "Other")
@@ -531,7 +538,9 @@ class MainWindow(QMainWindow):
                 if home_menu is None:
                     home_menu = self._build_home_menu(menu, PARTS)
                 continue
-            if cat in LEGO_CATEGORIES:
+            if cat in city_subs:
+                sub = city_subs[cat]
+            elif cat in LEGO_CATEGORIES:
                 if lego_menu is None:
                     lego_menu = self._build_lego_menu(menu)
                 sub = lego_subs.get(cat)
@@ -611,9 +620,11 @@ class MainWindow(QMainWindow):
             if panel is not None:
                 panel.load_from_document()
 
+        new = sub.addMenu("New layout (random)")
         for layout in ("village", "town", "city"):
-            sub.addAction(f"New {layout} (random)",
+            new.addAction(layout.capitalize(),
                           lambda _=False, l=layout: build(l))
+        sub.addSeparator()
         return sub
 
     def _build_home_menu(self, menu, parts):

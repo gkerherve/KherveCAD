@@ -60,6 +60,9 @@ from .city_buildings import STYLES, BuildingError, build_building  # noqa
 from .city_trees import TREE_KINDS, build_lights, build_trees  # noqa
 
 MAX_BUILDINGS = 2000
+#: what the generator plants in gardens and parks
+PARK_TREES = ["oak", "maple", "birch", "lime", "spruce", "pine", "apple",
+              "willow", "poplar", "cherry"]
 #: the ground and long road strips are laid in tiles no longer than
 #: this: the software painter sorts faces by centre, and one 400 m face
 #: painted over every house standing on it
@@ -311,7 +314,7 @@ def generate(layout: str = "town", blocks: int = 0, seed: int = 1) -> dict:
                                       floors=rng.randint(lo, hi)))
                 if rng.random() < 0.5:
                     trees.append(dict(x=x + w / 2, y=side * (off + 14000),
-                                      kind=rng.choice(list(TREE_KINDS)),
+                                      kind=rng.choice(PARK_TREES),
                                       height=rng.uniform(5000, 9000)))
                 x += w + rng.uniform(3000, 9000)
         buildings.append(dict(style="church", name="Church", x=-18000,
@@ -320,7 +323,7 @@ def generate(layout: str = "town", blocks: int = 0, seed: int = 1) -> dict:
         for _ in range(12 * n):
             x, y = rng.uniform(-span, span), rng.choice((-1, 1)) * \
                 rng.uniform(30000, 45000)
-            trees.append(dict(x=x, y=y, kind=rng.choice(list(TREE_KINDS)),
+            trees.append(dict(x=x, y=y, kind=rng.choice(PARK_TREES),
                               height=rng.uniform(5000, 12000)))
         return dict(name="Village", roads=roads, buildings=buildings,
                     trees=trees, lights={"spacing": 40000},
@@ -346,7 +349,7 @@ def generate(layout: str = "town", blocks: int = 0, seed: int = 1) -> dict:
                 for _ in range(int(pitch / 4000)):
                     trees.append(dict(x=rng.uniform(x0 + 3000, x1 - 3000),
                                       y=rng.uniform(y0 + 3000, y1 - 3000),
-                                      kind=rng.choice(list(TREE_KINDS)),
+                                      kind=rng.choice(PARK_TREES),
                                       height=rng.uniform(6000, 12000)))
                 continue
             ring = max(abs(i - (n - 1) / 2), abs(j - (n - 1) / 2))
@@ -427,7 +430,8 @@ def resolve(spec: dict) -> dict:
                   for p in lights or []]
     trees = []
     for t in spec.get("trees") or []:
-        kind = t.get("kind", "broadleaf")
+        from .city_trees import ALIASES
+        kind = ALIASES.get(t.get("kind", "oak"), t.get("kind", "oak"))
         if kind not in TREE_KINDS:
             raise CityError(f'Unknown tree kind "{kind}"; use one of '
                             + ", ".join(TREE_KINDS))
@@ -436,8 +440,8 @@ def resolve(spec: dict) -> dict:
                           height=_f(t.get("height"), TREE_KINDS[kind])))
     st = spec.get("street_trees")
     if isinstance(st, dict):
-        kind = st.get("kind", "round")
-        kind = kind if kind in TREE_KINDS else "round"
+        kind = st.get("kind", "lime")
+        kind = kind if kind in TREE_KINDS else "lime"
         for x, y, rz in along_roads(roads, _f(st.get("spacing"), 30000),
                                     phase=0.5):
             trees.append(dict(x=x, y=y, z=KERB, rz=rz, kind=kind,

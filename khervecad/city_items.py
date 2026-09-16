@@ -196,9 +196,12 @@ class TreeItem(_Movable):
         self.setZValue(20)
 
     def radius(self):
-        kind = self.spec.get("kind", "broadleaf")
+        from .city_trees import species
+        from .treegen import SPECIES
+        kind = species(self.spec.get("kind", "oak"))
         h = float(self.spec.get("height", TREE_KINDS.get(kind, 6000.0)))
-        k = {"conifer": 0.26, "poplar": 0.12, "birch": 0.17}.get(kind, 0.3)
+        k = {"cone": 0.22, "column": 0.1, "weeping": 0.4, "palm": 0.35,
+             "shrub": 0.6}.get(SPECIES[kind]["crown"], 0.3)
         return max(400.0, h * k)
 
     def boundingRect(self):
@@ -213,7 +216,8 @@ class TreeItem(_Movable):
 
     def paint(self, painter, option, widget=None):
         from .city_trees import DARK_LEAF, LIGHT_LEAF
-        kind = self.spec.get("kind", "broadleaf")
+        from .city_trees import species
+        kind = species(self.spec.get("kind", "oak"))
         r = self.radius()
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(_pen(SELECT if self.isSelected() else
@@ -222,7 +226,7 @@ class TreeItem(_Movable):
         col = QColor(LIGHT_LEAF.get(kind, "#62a043"))
         col.setAlpha(210)
         painter.setBrush(col)
-        if kind == "conifer":
+        if kind in ("spruce", "pine", "cypress"):
             star = QPolygonF([QPointF(math.cos(a) * (r if i % 2 == 0
                                                      else r * 0.55),
                                       math.sin(a) * (r if i % 2 == 0

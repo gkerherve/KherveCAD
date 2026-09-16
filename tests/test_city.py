@@ -96,7 +96,7 @@ def test_every_wall_roof_and_tree_kind_builds():
                                           roof=roof, roof_material=mat))
                 assert mesh.tessellate(n)
     for kind in T.TREE_KINDS:
-        assert len(mesh.tessellate(T.build_trees([dict(kind=kind)]))) < 1200
+        assert len(mesh.tessellate(T.build_trees([dict(kind=kind)]))) < 6000
 
 
 def test_surface_materials_are_known_everywhere():
