@@ -483,9 +483,18 @@ def resolve(spec: dict) -> dict:
         terrain_spec = resolve_terrain(spec.get("terrain"))
     except ValueError as exc:
         raise CityError(str(exc))
-    return dict(name=spec.get("name", "City"), roads=roads,
-                buildings=buildings, lights=lights, trees=trees,
-                props=props, ground=ground, terrain=terrain_spec)
+    from .city_footprint import auto_detail
+    detail = spec.get("detail", "auto")
+    level = auto_detail(detail, len(buildings))
+    for b in buildings:
+        b["detail"] = level
+    out = dict(name=spec.get("name", "City"), roads=roads,
+               buildings=buildings, lights=lights, trees=trees,
+               props=props, ground=ground, terrain=terrain_spec,
+               detail=detail)
+    if spec.get("geo"):
+        out["geo"] = spec["geo"]
+    return out
 
 
 def _road_distance(x, y, ribbons):
@@ -606,7 +615,10 @@ def build(spec: dict) -> dict:
         if land:
             trees = [dict(t, z=_f(t.get("z")) + land.z(t["x"], t["y"]))
                      for t in trees]
-        nodes["City trees"] = build_trees(trees)
+        from .city_footprint import auto_detail
+        nodes["City trees"] = build_trees(
+            trees, detail="low" if auto_detail(spec.get("detail"), len(
+                trees)) == "low" else "city")
     if spec["props"]:
         nodes["City props"] = build_props(spec["props"], land)
     return dict(nodes=nodes, spec=spec, counts=dict(

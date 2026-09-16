@@ -442,13 +442,16 @@ def resolve(b: dict, index: int = 0) -> dict:
     if style in _WORLD.PALETTES:
         wall_pal, roof_pal = _WORLD.PALETTES[style]
     out = dict(b)
+    floor_h = max(2200.0, _f(b.get("floor_height"), FLOOR_HEIGHT))
+    floors = max(1, int(_f(b.get("floors"), lo)))
+    if _f(b.get("height"), 0.0) > 2000.0 and not b.get("floors"):
+        floors = max(1, round(_f(b.get("height")) / floor_h))
     out.update(
         style=style, wall=wall, roof=roof, roof_material=roof_mat,
         x=_f(b.get("x")), y=_f(b.get("y")), rz=_f(b.get("rz")),
         w=max(2000.0, _f(b.get("w"), 9000.0)),
         d=max(2000.0, _f(b.get("d"), 8000.0)),
-        floors=max(1, int(_f(b.get("floors"), lo))),
-        floor_height=max(2200.0, _f(b.get("floor_height"), FLOOR_HEIGHT)),
+        floors=floors, floor_height=floor_h,
         color=b.get("color") or wall_pal[index % len(wall_pal)],
         roof_color=b.get("roof_color") or roof_pal[index % len(roof_pal)],
         name=b.get("name") or f"{style.capitalize()} {index + 1}")
@@ -465,6 +468,13 @@ def build_building(spec: dict, index: int = 0) -> CadNode:
     wall_col, roof_col = b["color"], b["roof_color"]
     roof_mat = ROOFS[b["roof_material"]][0]
     glazing = STYLES[style][2]
+    if b.get("detail") == "low":
+        from .city_footprint import build_low
+        return _placed(build_low(b), b)
+    if b.get("footprint") and style not in _WORLD.BUILDERS and \
+            style not in ("round tower", "church"):
+        from .city_footprint import build as build_outline
+        return _placed(build_outline(b), b)
     if style in _WORLD.BUILDERS:
         return _placed(_WORLD.BUILDERS[style](b), b)
     body = group(b["name"])

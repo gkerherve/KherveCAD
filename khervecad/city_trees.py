@@ -39,11 +39,40 @@ def species(kind):
     return kind if kind in TREE_KINDS else "oak"
 
 
+CONIFERS = {"pine", "spruce", "cypress", "poplar"}
+
+
 def tree_body(kind, seed=1, detail="city", season="Summer"):
     """One grown tree (`treegen`) at the origin, at its natural height —
-    branches and leaves, at the detail a whole city can afford."""
-    return [treegen.build(species(kind), season=season, detail=detail,
-                          seed=seed)]
+    branches and leaves, at the detail a whole city can afford. "low" is
+    a trunk and a crown (~60 triangles), for a map import's hundreds."""
+    kind = species(kind)
+    if detail == "low":
+        return low_tree(kind, seed)
+    return [treegen.build(kind, season=season, detail=detail, seed=seed)]
+
+
+def low_tree(kind, seed=1):
+    """Trunk + crown at natural height: a cone for conifers and poplars,
+    a squashed 8-sided ball for broadleaves."""
+    h = TREE_KINDS[kind]
+    trunk_h = h * (0.25 if kind in CONIFERS else 0.4)
+    r = h * (0.14 if kind in CONIFERS else 0.3) * (0.9 + 0.1 * (seed % 3))
+    parts = [color(cyl("Trunk", 0, 0, 0, trunk_h + r * 0.3, h * 0.025,
+                       h * 0.015, seg=5), "#6b4a32", "Bark")]
+    leaf = DARK_LEAF[kind] if seed % 2 else LIGHT_LEAF[kind]
+    if kind in CONIFERS:
+        parts.append(color(cyl("Crown", 0, 0, trunk_h * 0.6, h - trunk_h * 0.6,
+                               r, 0.0, seg=7), leaf, "Leaves"))
+    else:
+        ball = CadNode("sphere", "Crown", dict(x=0.0, y=0.0, z=0.0, radius=r,
+                                               segments=8))
+        sc = CadNode("scale", "Crown", dict(x=1.0, y=1.0,
+                                            z=(h - trunk_h) / (2 * r)))
+        sc.add(ball)
+        parts.append(color(move(sc, 0, 0, trunk_h + (h - trunk_h) / 2,
+                                "Crown"), leaf, "Leaves"))
+    return parts
 
 
 def _values(rows):

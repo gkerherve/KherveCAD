@@ -171,6 +171,8 @@ def height_field(kind, n, length, width, height, seed):
 def surface_of(kind, h, slope, height, water, noise):
     """The surface a cell wears from its mean height and slope (rise per
     run)."""
+    if kind == "heights":                   # measured ground: no guessing
+        return "scree" if slope > 0.7 else "grass"
     desert = kind in ("mesa", "canyon", "dunes")
     if water is not None and h < water + height * 0.03:
         return "riverbed" if kind in ("valley", "canyon") else "sand"

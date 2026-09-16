@@ -61,6 +61,18 @@ def resolve(spec):
     if not spec or spec.get("kind") in (None, "", "flat", "Flat"):
         return None
     kind = spec.get("kind")
+    if kind == "heights":
+        rows = spec.get("rows") or []
+        n = len(rows) - 1
+        if n < 2 or any(len(r) != n + 1 for r in rows):
+            raise ValueError("terrain heights: rows must be a square grid "
+                             "of (n+1) x (n+1) heights in mm, n >= 2")
+        return dict(kind="heights", rows=[[_f(v) for v in r] for r in rows],
+                    x0=_f(spec.get("x0")), y0=_f(spec.get("y0")),
+                    length=_f(spec.get("length")),
+                    width=_f(spec.get("width")),
+                    height=max(max(max(r) for r in rows), 1000.0),
+                    seed=1, cells=n, source=spec.get("source", ""))
     if kind not in KINDS:
         raise ValueError(f'Unknown terrain "{kind}"; use flat or one of '
                          + ", ".join(KINDS))
@@ -77,6 +89,9 @@ class Ground:
                  road_style=None):
         self.spec = tspec
         x0, y0, x1, y1 = extent
+        if tspec["kind"] == "heights":
+            self._init_measured(tspec, roads, buildings, road_style)
+            return
         self.x0, self.y0 = x0 - margin, y0 - margin
         self.length = (x1 - x0) + 2 * margin
         self.width = (y1 - y0) + 2 * margin
@@ -92,6 +107,22 @@ class Ground:
         self.profiles = []
         self.pads = []
         self.edited = set()           # grid vertices a road or pad moved
+        if roads and road_style:
+            self._level_roads(roads)
+        for b in buildings:
+            self.pads.append(self._level_pad(b))
+
+    def _init_measured(self, tspec, roads, buildings, road_style):
+        """A measured height field (LiDAR): the grid IS the ground, over
+        its own rectangle."""
+        self.x0, self.y0 = tspec["x0"], tspec["y0"]
+        self.length, self.width = tspec["length"], tspec["width"]
+        self.hs = [row[:] for row in tspec["rows"]]
+        self.n = len(self.hs) - 1
+        self.water = None
+        self.dx, self.dy = self.length / self.n, self.width / self.n
+        self.road_style = road_style
+        self.profiles, self.pads, self.edited = [], [], set()
         if roads and road_style:
             self._level_roads(roads)
         for b in buildings:
