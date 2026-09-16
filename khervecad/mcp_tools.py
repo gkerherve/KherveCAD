@@ -1311,6 +1311,13 @@ class McpToolExecutor:
         except crystal_build.BuildError as exc:
             raise ToolError(str(exc))
 
+    def _t_build_surface(self, params) -> dict:
+        from . import crystal_build, crystal_surface
+        try:
+            return crystal_surface.build_surface(self._w, params)
+        except crystal_build.BuildError as exc:
+            raise ToolError(str(exc))
+
     def _t_list_molecules(self, params) -> dict:
         from . import molecule_build
         try:

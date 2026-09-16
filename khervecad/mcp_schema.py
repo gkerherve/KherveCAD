@@ -1135,6 +1135,46 @@ TOOLS = [
         }),
     },
     {
+        "name": "build_surface",
+        "description": (
+            "Build a crystal SURFACE in nanometres: a slab of a library "
+            "(or custom) crystal cut along any (hkl) plane — Si(111), "
+            "SiO2 quartz (0001), rutile (110), Cu(100), GaN (10-10). The "
+            "primitive surface cell is found for any crystal system "
+            "(centring included), turned so the surface normal is +z with "
+            "the top at z = 0, repeated nx x ny with a for loop and "
+            "`layers` interplanar spacings deep. Bulk-terminated (no "
+            "relaxation or reconstruction). The cut falls in the widest "
+            "gap between planes unless `termination` says where. Returns "
+            "the surface cell, angle, spacing and atom count; dry_run "
+            "builds nothing."
+        ),
+        "input_schema": _obj({
+            "crystal": {"type": "string",
+                        "description": "Library key from list_crystals."},
+            "custom": {"type": "object",
+                       "description": "A crystal the library lacks, as in "
+                                      "build_crystal."},
+            "miller": {"type": "string",
+                       "description": "'111', '1 1 0', '1-10', or four "
+                                      "hexagonal indices '0001', '10-10'."},
+            "repeat": {"type": "array", "items": {"type": "integer"},
+                       "description": "Surface cells [nu, nv], default "
+                                      "[6, 6]."},
+            "layers": {"type": "integer",
+                       "description": "Interplanar spacings deep "
+                                      "(default 3)."},
+            "termination": {"type": "number",
+                            "description": "0..1 of a layer: where the cut "
+                                           "falls (omit for automatic)."},
+            "atom_scale": {"type": "number"},
+            "segments": {"type": "integer"},
+            "cell_box": {"type": "boolean",
+                         "description": "Thin base plate under the slab."},
+            "dry_run": {"type": "boolean"},
+        }),
+    },
+    {
         "name": "build_house",
         "description": (
             "The House Builder in one call: floors of rectangular rooms "

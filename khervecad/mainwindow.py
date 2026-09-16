@@ -555,6 +555,9 @@ class MainWindow(QMainWindow):
                     crystals_menu.addAction(
                         "Crystal Builder...",
                         lambda: crystal_dialog.open_builder(self))
+                    crystals_menu.addAction(
+                        "Surface Builder...",
+                        lambda: _open_surface_builder(self))
                     crystals_menu.addSeparator()
                 # "Crystals (unit cells)" -> "Unit cells"
                 name = cat[len("Crystals ("):-1].capitalize()
@@ -2357,3 +2360,8 @@ class MainWindow(QMainWindow):
             f"the <a href='https://www.gnu.org/licenses/gpl-3.0.html'>"
             f"GNU GPL v3.0</a>.</p>")
         box.exec_()
+
+
+def _open_surface_builder(window):
+    from . import crystal_surface_dialog
+    return crystal_surface_dialog.open_builder(window)

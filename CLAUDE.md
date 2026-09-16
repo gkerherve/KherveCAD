@@ -455,6 +455,27 @@ into a new module and import.
                        unit with a note; sphere segments lowered) and the
                        MCP `list_crystals` / `build_crystal` bodies live
                        here (mcp_tools.py is past its size).
+  - `crystal_surface.py` — **crystal surfaces** (Qt-free): a slab of any
+                       crystal cut along any (hkl) — Si(111), quartz
+                       (0001), rutile (110); four hexagonal indices read
+                       too (`parse_miller`). `centerings` finds the I/F/C
+                       translations hidden in the conventional cell (else
+                       Si(111) came out a 2x2 of its real cell);
+                       `in_plane_basis` takes the shortest in-plane lattice
+                       pair whose area is primitive-volume / spacing, and w
+                       the shortest step to the next plane. Atoms are
+                       wrapped per layer into the in-plane cell (a straight
+                       prism, not sheared), normal +z, top at z = 0; the
+                       cut falls in the widest gap between planes
+                       (`widest_gap`: Si(111) ends on a whole bilayer)
+                       unless `termination` is given. Bulk-terminated, no
+                       reconstruction. Program = one cell module + a for
+                       over nx × ny (no scalar*vector: the preview's expr
+                       cannot multiply a list). MCP `build_surface`;
+                       Library ▸ Crystals ▸ Surface Builder…
+                       (`crystal_surface_dialog.py`, presets). Tests pin
+                       the cells, spacings and that a layer holds the bulk
+                       density for any orientation.
   - `crystal_dialog.py` — Library ▸ Crystal Builder…: a non-modal panel
                        over crystal_build with a live count; a refused
                        build disables Build and says why.
@@ -2234,7 +2255,7 @@ into a new module and import.
                        out. The test also checks the pin 6 mm short of
                        home DOES press on the bore — or it would never
                        hold.
-  - `mcp_schema.py`  — the **MCP tool table**: 51 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 59 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -2394,7 +2415,7 @@ into a new module and import.
                        caps a pattern at `MAX_COPIES` (1000) and needs
                        every count ≥ 1. Examples ▸ Mechanical ▸ Bolt
                        circle & stair (pattern).
-- `docs/MCP.md` — how to connect an assistant, what the 51 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 59 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -2668,7 +2689,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **51 tools**: the object tree, OpenSCAD in
+client gets the whole app as **59 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.
