@@ -608,6 +608,40 @@ into a new module and import.
                        and hold nothing. MCP: furniture `on_top`, room
                        `surface`, `roof`. The plan draws raised pieces
                        over lower ones (z value from `Furniture.z`).
+  - House Builder, third pass (2026-09-16, from a picture of a house
+                       whose garage stood open): **side wings get their own
+                       roof** — `wing_roofs(house, i)` takes the parts of
+                       floor i that no floor above covers
+                       (`uncovered_rects`: coordinate-compressed cells
+                       merged back into rectangles, `_clusters` lumps the
+                       touching ones) and the side the taller part stands
+                       on, and `build_roof(..., bounds=, style=, attach=)`
+                       roofs each one; `Roof.wings` (WING_STYLES) picks the
+                       shape, a **lean-to** by default, which leans on that
+                       wall (`_roof_frame` turns the ridge along it and
+                       returns `high_v0`, and the overhang on that side is
+                       dropped so it does not poke through). **Outer vs
+                       inner walls**: `collect_walls` now returns
+                       (p1, p2, openings, INTERIOR) — a segment two rooms
+                       share — and `build_floor(walls=(outside, inside))`
+                       finishes them from `WALL_STYLES` /
+                       `INNER_WALL_STYLES` (`House.outer_wall/inner_wall`).
+                       **A room's own finish**: `Room.finish`
+                       (`ROOM_FINISHES`: tiles, marble, panelling) lines
+                       ITS side of every wall with `FINISH_THICKNESS`
+                       panels around the openings (`room_finish_nodes`,
+                       `_solid_runs`) and tiles its floor — bathrooms and
+                       kitchens. `ROOF_COLORS` now has 12 coverings. All in
+                       the spec (`walls`, room `finish`, roof `wings`), the
+                       MCP tool and the builder (Floor section, Roof row,
+                       room Finish).
+  - Cut Through levels (`cut_ui.py`, same day): quarters were too coarse
+                       for a two-storey house — View ▸ Cut Through ▸ Where
+                       lists every tenth, **Cut at a Storey** is filled from
+                       `model.house` and the mesh height
+                       (`storey_positions`, rebuilt on `aboutToShow`),
+                       Ctrl+Alt+Up/Down nudge 2 % (`step_cut`), and the
+                       CutBar gained − / + buttons and a % readout.
   - `library_home_more.py` / `library_home_extra.py` — ~60 more pieces
                        for every room (`FURNITURE_CATALOG` now has 15
                        sections incl. Kids' room, Hallway / corridor,

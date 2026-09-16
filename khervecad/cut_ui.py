@@ -58,27 +58,46 @@ class CutBar(QWidget):
                 lambda _=False, a=axis: self.view.set_cut(axis=a))
             grid.addWidget(button, 0, col)
             self.axis_buttons[axis] = button
+        down = QToolButton(self)
+        down.setText("−")
+        down.setToolTip("Move the cut back a little (Ctrl+Alt+Down)")
+        down.setAutoRepeat(True)
+        down.clicked.connect(lambda: self._step(-0.02))
+        grid.addWidget(down, 0, 4)
         self.slider = QSlider(Qt.Horizontal, self)
         self.slider.setRange(0, 1000)
         self.slider.setFixedWidth(170)
-        self.slider.setToolTip("Where the cut goes, across the whole model")
+        self.slider.setPageStep(50)
+        self.slider.setToolTip("Where the cut goes, across the whole model "
+                               "— the arrow keys nudge it a tenth of a "
+                               "percent")
         self.slider.valueChanged.connect(
             lambda value: self.view.set_cut(position=value / 1000.0))
-        grid.addWidget(self.slider, 0, 4)
+        grid.addWidget(self.slider, 0, 5)
+        up = QToolButton(self)
+        up.setText("+")
+        up.setToolTip("Move the cut on a little (Ctrl+Alt+Up)")
+        up.setAutoRepeat(True)
+        up.clicked.connect(lambda: self._step(0.02))
+        grid.addWidget(up, 0, 6)
         self.readout = QLabel("", self)
-        self.readout.setMinimumWidth(78)
-        grid.addWidget(self.readout, 0, 5)
+        self.readout.setMinimumWidth(120)
+        grid.addWidget(self.readout, 0, 7)
         flip = QToolButton(self)
         flip.setText("⇄")
         flip.setToolTip("Keep the other half")
         flip.clicked.connect(lambda: self.view.set_cut(
             flip=not (self.view.cut or {}).get("flip", False)))
-        grid.addWidget(flip, 0, 6)
+        grid.addWidget(flip, 0, 8)
         close = QToolButton(self)
         close.setText("✕")
         close.setToolTip("Stop cutting — show the whole model")
         close.clicked.connect(lambda: self.view.set_cut(enabled=False))
-        grid.addWidget(close, 0, 7)
+        grid.addWidget(close, 0, 9)
+
+    def _step(self, delta):
+        where = (self.view.cut or {}).get("position", 0.5)
+        self.view.set_cut(position=max(0.0, min(1.0, where + delta)))
 
     def sync(self):
         cut = self.view.cut
@@ -91,7 +110,8 @@ class CutBar(QWidget):
         self.slider.blockSignals(False)
         self.readout.setText(f"{cut['axis'].upper()} = "
                              f"{cut.get('offset', 0.0):.1f} "
-                             f"{_unit(self.view)}")
+                             f"{_unit(self.view)}  ·  "
+                             f"{cut['position'] * 100:.0f} %")
 
 
 def build_menu(win, view_menu):
@@ -118,16 +138,27 @@ def build_menu(win, view_menu):
         menu.addAction(act)
     menu.addSeparator()
     # where the cut goes — the bar's slider does it finely, but a menu
-    # (and the 3D view's own button) has no slider
+    # (and the 3D view's own button) has no slider. Quarters alone were
+    # too coarse for a house: every tenth, and a storey of its own.
     win._cut_positions = QActionGroup(win)
-    for value, label in ((0.25, "Cut at a &Quarter"),
-                         (0.5, "Cut Through the &Middle"),
-                         (0.75, "Cut at &Three Quarters")):
-        act = QAction(label, win, checkable=True)
+    where = menu.addMenu("&Where")
+    for step in range(1, 10):
+        value = step / 10.0
+        act = QAction(f"At &{step}0 %", win, checkable=True)
         act.setData(value)
         act.triggered.connect(
             lambda _=False, v=value: win.set_cut(True, position=v))
         win._cut_positions.addAction(act)
+        where.addAction(act)
+    storeys = win._cut_storeys = menu.addMenu("Cut at a &Storey")
+    storeys.aboutToShow.connect(lambda: _fill_storeys(win, storeys))
+    _fill_storeys(win, storeys)
+    for label, shortcut, delta in (("Move the Cut &Up", "Ctrl+Alt+Up", 0.02),
+                                   ("Move the Cut &Down", "Ctrl+Alt+Down",
+                                    -0.02)):
+        act = QAction(label, win)
+        act.setShortcut(shortcut)
+        act.triggered.connect(lambda _=False, d=delta: step_cut(win, d))
         menu.addAction(act)
     menu.addSeparator()
     other = QAction("Keep the &Other Half", win)
@@ -136,6 +167,58 @@ def build_menu(win, view_menu):
     menu.addAction(other)
     win.view3d.cut_changed.connect(win._sync_cut)
     sync(win)
+
+
+def storey_positions(win):
+    """[(label, position)] — where each storey of the document's house
+    is cut through, as a fraction of the model's height. A two-storey
+    house needs more than quarters, and these land in the right rooms."""
+    house = getattr(getattr(win, "model", None), "house", None) or {}
+    floors = house.get("floors") or []
+    mesh = getattr(win.view3d, "model_mesh", None)
+    if not floors or not mesh:
+        return []
+    try:
+        zs = [p[2] for tri in mesh for p in tri]
+    except (TypeError, IndexError):
+        return []
+    if not zs:
+        return []
+    z0, z1 = min(zs), max(zs)
+    if z1 - z0 < 1e-6:
+        return []
+    from .house import PLAN_CUT, SLAB_THICKNESS, WALL_HEIGHT
+    out, base = [], 0.0
+    for floor in floors:
+        level = base + PLAN_CUT
+        out.append((str(floor.get("name") or "Floor"),
+                    max(0.0, min(1.0, (level - z0) / (z1 - z0)))))
+        base += (float(floor.get("wall_height", WALL_HEIGHT))
+                 + float(floor.get("slab_thickness", SLAB_THICKNESS)))
+    return out
+
+
+def _fill_storeys(win, menu):
+    """The storey entries, rebuilt each time the menu opens (the house
+    and the model's height change under it)."""
+    menu.clear()
+    levels = storey_positions(win)
+    menu.setEnabled(bool(levels))
+    for name, value in levels:
+        act = QAction(f"{name} (waist height)", win)
+        act.triggered.connect(
+            lambda _=False, v=value: win.set_cut(True, axis="z", position=v))
+        menu.addAction(act)
+    if not levels:
+        menu.addAction(QAction("Build a house to cut it by storey", win))
+
+
+def step_cut(win, delta):
+    """Nudge the cut along its axis (the menu's Up/Down, the bar's
+    - and + buttons)."""
+    cut = win.view3d.cut_state()
+    where = (cut or {}).get("position", 0.5)
+    win.set_cut(True, position=max(0.0, min(1.0, where + delta)))
 
 
 def set_cut(win, on=True, axis=None, position=None, flip=None):

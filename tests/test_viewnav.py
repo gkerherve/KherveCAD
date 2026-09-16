@@ -115,11 +115,14 @@ def test_3d_bar_carries_exploded_view_and_cut_through(app):
         assert not explode.isChecked()
         cut.click()
         assert win.view3d.cut_state() is not None and win._cut_act.isChecked()
+        # positions are every tenth, in the menu's Where submenu
         quarter = next(a for a in win._cut_positions.actions()
-                       if a.data() == 0.25)
-        assert quarter in cut.menu().actions()
+                       if abs(a.data() - 0.3) < 1e-9)
+        where = next(a.menu() for a in cut.menu().actions()
+                     if a.menu() is not None and "Where" in a.text())
+        assert quarter in where.actions()
         quarter.trigger()
-        assert abs(win.view3d.cut_state()["position"] - 0.25) < 1e-6
+        assert abs(win.view3d.cut_state()["position"] - 0.3) < 1e-6
         assert quarter.isChecked()
         win.set_cut(False)
         assert not cut.isChecked() and not quarter.isChecked()

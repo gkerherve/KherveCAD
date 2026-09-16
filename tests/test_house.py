@@ -41,9 +41,11 @@ def test_two_adjacent_rooms_share_one_wall_not_two():
     # 4 outer edges of the combined footprint + 1 shared inner wall = 7,
     # not 8 (each room's own 4 sides counted separately)
     assert len(walls) == 7
-    shared = [(p1, p2) for p1, p2, _o in walls
-             if p1 == (4000.0, 0.0) and p2 == (4000.0, 3000.0)]
+    shared = [(p1, p2) for p1, p2, _o, interior in walls
+             if p1 == (4000.0, 0.0) and p2 == (4000.0, 3000.0) and interior]
     assert len(shared) == 1
+    # the other six are the outside of the house, finished differently
+    assert sum(1 for *_rest, interior in walls if not interior) == 6
 
 
 def test_an_opening_lands_on_the_shared_wall_from_either_room():
@@ -56,6 +58,7 @@ def test_an_opening_lands_on_the_shared_wall_from_either_room():
     shared = next(w for w in walls
                  if w[0] == (4000.0, 0.0) and w[1] == (4000.0, 3000.0))
     assert shared[2] == [(1000.0, 900.0, 2000.0, 0.0, "door")]
+    assert shared[3] is True                      # a wall between rooms
 
 
 def test_opening_offset_clamps_inside_a_short_wall():
@@ -661,6 +664,100 @@ def test_builder_sets_a_piece_on_what_is_under_it(window):
     panel.fu_z.setValue(1.0)
     assert tv.z == 1000.0
     panel.close()
+
+
+def test_a_side_wing_with_nothing_above_it_gets_its_own_roof():
+    # the shape that showed the hole: a two-storey house with a
+    # single-storey garage beside it, which had no roof at all
+    house = H.House(floors=[
+        H.Floor("Ground floor", rooms=[
+            H.Room("House", 0, 0, 8000, 6000),
+            H.Room("Garage", 8000, 0, 3500, 6000)]),
+        H.Floor("First floor", rooms=[H.Room("Landing", 0, 0, 8000, 6000)])],
+        roof=H.Roof("Gable"))
+    wings = H.wing_roofs(house, 0)
+    assert len(wings) == 1
+    bounds, attach = wings[0]
+    assert bounds == (8000.0, 0.0, 11500.0, 6000.0)
+    assert attach == "W"                      # the house is to its west
+    assert H.wing_roofs(house, 1) == []       # the top floor has the roof
+    ground = H.build_floor(house.floors[0], is_top=False, roof=house.roof,
+                           wings=wings)
+    assert not validate(ground)
+    wing = [n for n in ground.children if n.name.startswith("Wing roof")]
+    assert wing, [n.name for n in ground.children]
+    zs = [p[2] for n in wing for t in mesh.tessellate(n, fn=8) for p in t]
+    # it leans on the house: highest where they meet, lower at the far side
+    assert max(zs) > H.WALL_HEIGHT
+    high = [p for n in wing for t in mesh.tessellate(n, fn=8) for p in t
+            if p[2] > max(zs) - 1.0]
+    assert min(p[0] for p in high) < 8600.0
+
+
+def test_uncovered_rects_finds_what_has_nothing_on_top():
+    below = [(0.0, 0.0, 10.0, 10.0)]
+    assert H.uncovered_rects(below, [(0.0, 0.0, 10.0, 10.0)]) == []
+    assert H.uncovered_rects(below, []) == [(0.0, 0.0, 10.0, 10.0)]
+    # a floor above covering only the left half leaves the right one open
+    assert H.uncovered_rects(below, [(0.0, 0.0, 6.0, 10.0)]) == \
+        [(6.0, 0.0, 10.0, 10.0)]
+
+
+def test_outer_and_inner_walls_are_finished_differently():
+    floor = H.Floor("G", rooms=[H.Room("A", 0, 0, 4000, 3000),
+                                H.Room("B", 4000, 0, 4000, 3000)])
+    group = H.build_floor(floor, is_top=True, walls=("Red brick", "Sage"))
+    assert not validate(group)
+    colours = {n.params["color"] for n in group.children
+               if n.type == "color" and n.name.endswith("wall")
+               or n.name == "Wall"}
+    assert H.WALL_STYLES["Red brick"][0] in colours
+    assert H.INNER_WALL_STYLES["Sage"][0] in colours
+    # the gable a pitched roof closes is wall, so it is brick too — it
+    # stood out as a bare white triangle over a brick house
+    gabled = H.build_floor(floor, is_top=True, roof=H.Roof("Gable"),
+                           walls=("Red brick", "Sage"))
+    gable = next(n for n in gabled.children if n.name == "Gable")
+    assert gable.params["color"] == H.WALL_STYLES["Red brick"][0]
+
+
+def test_a_room_finish_tiles_its_own_walls_around_the_openings():
+    room = H.Room("Bathroom", 0, 0, 2500, 2000, finish="White tiles",
+                  openings=[H.Opening("door", "S", 800.0, 900.0, 2000.0)])
+    floor = H.Floor("G", rooms=[room])
+    nodes = H.room_finish_nodes(room, floor)
+    names = [n.name for n in nodes]
+    assert names.count("Wall finish") == 5     # 4 walls, the door splits one
+    assert names[0] == "Bathroom floor tiles"
+    tiles = H.ROOM_FINISHES["White tiles"]
+    assert nodes[0].params["color"] == tiles[1][0]
+    assert {n.params["color"] for n in nodes[1:]} == {tiles[0][0]}
+    assert not H.room_finish_nodes(
+        H.Room("Lawn", 0, 0, 1000, 1000, surface="garden",
+               finish="White tiles"), floor)
+    group = H.build_floor(floor, is_top=True)
+    assert not validate(group)
+    assert "Wall finish" in [n.name for n in group.children]
+
+
+def test_wall_styles_finishes_and_wing_roofs_round_trip():
+    spec = dict(SPEC, roof={"style": "Gable", "wings": "shed"},
+                walls={"outside": "red brick", "inside": "Sage"})
+    spec["floors"][0]["rooms"][1]["finish"] = "blue tiles"
+    house = H.house_from_spec(spec)
+    assert house.roof.wings == "Lean-to"
+    assert (house.outer_wall, house.inner_wall) == ("Red brick", "Sage")
+    assert house.floors[0].rooms[1].finish == "Blue tiles"
+    again = H.house_from_spec(H.house_to_spec(house))
+    assert H.house_to_spec(again) == H.house_to_spec(house)
+    assert H.house_from_spec(SPEC).outer_wall == "Painted plaster"
+    for bad, words in ((dict(SPEC, walls={"outside": "gold"}), "not one of"),
+                       (dict(SPEC, roof={"wings": "dome"}), "wings")):
+        with pytest.raises(H.HouseError, match=words):
+            H.house_from_spec(bad)
+    spec["floors"][0]["rooms"][1]["finish"] = "lino"
+    with pytest.raises(H.HouseError, match="finish"):
+        H.house_from_spec(spec)
 
 
 def test_builder_adds_rooms_by_kind_and_changes_the_roof(window):

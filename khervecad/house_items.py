@@ -58,6 +58,8 @@ FURNITURE_MARK = 400.0             # a part with no top view: a square
 ROOM_FILL = QColor("#fbf8f1")
 ROOM_FILL_SEL = QColor("#e1eefa")
 WALL_FILL = QColor("#3b4048")
+#: a wall between two rooms reads lighter than the outside walls
+INNER_WALL_FILL = QColor("#6b727c")
 DOOR_LINE = QColor("#8a5a2b")
 WINDOW_LINE = QColor("#2f86c4")
 WINDOW_FILL = QColor(191, 224, 232, 230)
@@ -368,7 +370,8 @@ class WallsItem(QGraphicsItem):
         painter.setPen(Qt.NoPen)
         painter.setBrush(WALL_FILL)
         t, h = self.floor.wall_thickness, self.floor.wall_height
-        for p1, p2, openings in H.collect_walls(self.floor):
+        for p1, p2, openings, interior in H.collect_walls(self.floor):
+            painter.setBrush(INNER_WALL_FILL if interior else WALL_FILL)
             for rect in wall_pieces(p1, p2, openings, t, h):
                 painter.drawRect(rect)
 

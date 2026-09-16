@@ -151,10 +151,18 @@ class FloorCanvas(QGraphicsView):
                 self.items_by_obj[id(f)] = fi
         self.place_garden(house)
         floors = house.floors if house is not None else []
+        roof = (house.roof if house is not None else None) or H.Roof()
         if floors and floor is floors[-1]:     # the roof is the top floor's
-            outline = H.roof_outline(house.roof or H.Roof(), floor)
+            outline = H.roof_outline(roof, floor)
             if outline is not None:
                 scene.addItem(HI.RoofItem(outline))
+        if floors and floor in floors:         # ...and one over each wing
+            style = None if roof.wings == "Same as main" else roof.wings
+            for bounds, attach in H.wing_roofs(house, floors.index(floor)):
+                outline = H.roof_outline(roof, floor, bounds=bounds,
+                                         style=style, attach=attach)
+                if outline is not None:
+                    scene.addItem(HI.RoofItem(outline))
         item = self.items_by_obj.get(id(selected)) if selected else None
         if item is not None:
             item.setSelected(True)
@@ -381,6 +389,7 @@ class HouseBuilder(QDialog):
         self.current_item = None
         self._sync_garden_fields()
         self._sync_roof_fields()
+        self._sync_wall_fields()
         self._sync_all()
         self.canvas.fit()
         self.status.setText("Editing the document's house — Build "
@@ -528,8 +537,40 @@ class HouseBuilder(QDialog):
         form.addRow("Ceiling height:", self.wall_height)
         form.addRow("Wall thickness:", self.wall_thickness)
         form.addRow("Floor slab:", self.slab_thickness)
+        self.outer_wall = QComboBox()
+        for name, (hexcol, _mat) in H.WALL_STYLES.items():
+            self.outer_wall.addItem(_swatch(hexcol), name, name)
+        self.outer_wall.setToolTip("How the outside of the house is "
+                                   "finished")
+        self.inner_wall = QComboBox()
+        for name, (hexcol, _mat) in H.INNER_WALL_STYLES.items():
+            self.inner_wall.addItem(_swatch(hexcol), name, name)
+        self.inner_wall.setToolTip("How the walls between rooms are "
+                                   "finished (a room can have its own "
+                                   "finish too)")
+        for combo, key in ((self.outer_wall, "outer_wall"),
+                           (self.inner_wall, "inner_wall")):
+            combo.currentIndexChanged.connect(
+                lambda _i, k=key, c=combo: self._wall_style_changed(
+                    k, c.currentData()))
+        form.addRow("Outside walls:", self.outer_wall)
+        form.addRow("Walls between rooms:", self.inner_wall)
         lay.addLayout(form)
         return box
+
+    def _wall_style_changed(self, key, value):
+        if self._syncing:
+            return
+        setattr(self.house, key, value)
+        self._rebuild_canvas()
+        self.status.setText(f"{value} — Build to see it in 3D.")
+
+    def _sync_wall_fields(self):
+        with self.quiet():
+            self.outer_wall.setCurrentIndex(
+                max(0, self.outer_wall.findData(self.house.outer_wall)))
+            self.inner_wall.setCurrentIndex(
+                max(0, self.inner_wall.findData(self.house.inner_wall)))
 
     def _rooms_group(self):
         box = _step_box(2, "Rooms")
@@ -583,6 +624,17 @@ class HouseBuilder(QDialog):
             lambda _i: self._room_field_changed(
                 "surface", self.room_kind.currentData()))
         form.addRow("Kind:", self.room_kind)
+        self.room_finish = QComboBox()
+        self.room_finish.addItem("Same as the house", "")
+        for name, ((hexcol, _m), _floor) in H.ROOM_FINISHES.items():
+            self.room_finish.addItem(_swatch(hexcol), name, name)
+        self.room_finish.setToolTip("This room's own finish: tiles or "
+                                    "panelling lining its walls and floor "
+                                    "— a bathroom, a kitchen")
+        self.room_finish.currentIndexChanged.connect(
+            lambda _i: self._room_field_changed(
+                "finish", self.room_finish.currentData()))
+        form.addRow("Finish:", self.room_finish)
         form.addRow("Size (w × d):", size)
         form.addRow("Position (x, y):", pos)
         lay.addLayout(form)
@@ -1175,6 +1227,14 @@ class HouseBuilder(QDialog):
         self.roof_color = QComboBox()
         for name, (hexcol, _mat) in H.ROOF_COLORS.items():
             self.roof_color.addItem(_swatch(hexcol), name, name)
+        self.roof_wings = QComboBox()
+        for name in H.WING_STYLES:
+            self.roof_wings.addItem(name, name)
+        self.roof_wings.setToolTip(
+            "The roof over a side wing — a part of a floor with nothing "
+            "above it, like a garage. A lean-to leans on the taller part.")
+        self.roof_wings.currentIndexChanged.connect(
+            lambda _i: self._roof_changed())
         self.roof_style.currentIndexChanged.connect(
             lambda _i: self._roof_changed(style_changed=True))
         self.roof_pitch.valueChanged.connect(lambda _v: self._roof_changed())
@@ -1186,7 +1246,8 @@ class HouseBuilder(QDialog):
                         ("Pitch:", self.roof_pitch),
                         ("Overhang:", self.roof_overhang),
                         ("Ridge:", self.roof_ridge),
-                        ("Covering:", self.roof_color)):
+                        ("Covering:", self.roof_color),
+                        ("Side wings:", self.roof_wings)):
             row.addWidget(QLabel(text))
             row.addWidget(w)
         row.addStretch(1)
@@ -1203,7 +1264,8 @@ class HouseBuilder(QDialog):
         self.house.roof = H.Roof(style, self.roof_pitch.value(),
                                  self.roof_overhang.mm(),
                                  self.roof_ridge.currentData(),
-                                 self.roof_color.currentData())
+                                 self.roof_color.currentData(),
+                                 self.roof_wings.currentData())
         self._enable_roof_fields()
         self._rebuild_canvas()
         pitch = "" if style == "Flat" else f", {self.roof_pitch.value():.0f}°"
@@ -1225,6 +1287,8 @@ class HouseBuilder(QDialog):
                 max(0, self.roof_ridge.findData(r.ridge)))
             self.roof_color.setCurrentIndex(
                 max(0, self.roof_color.findData(r.color)))
+            self.roof_wings.setCurrentIndex(
+                max(0, self.roof_wings.findData(r.wings)))
         self._enable_roof_fields()
 
     # --------------------------------------------------------- garden
@@ -1313,12 +1377,15 @@ class HouseBuilder(QDialog):
         room = self.current_room
         with self.quiet():
             for w in (self.room_name, self.room_x, self.room_y,
-                      self.room_w, self.room_d, self.room_kind):
+                      self.room_w, self.room_d, self.room_kind,
+                      self.room_finish):
                 w.setEnabled(room is not None)
             if room is not None:
                 self.room_name.setText(room.name)
                 self.room_kind.setCurrentIndex(
                     max(0, self.room_kind.findData(room.surface)))
+                self.room_finish.setCurrentIndex(
+                    max(0, self.room_finish.findData(room.finish)))
                 self.room_x.set_mm(room.x)
                 self.room_y.set_mm(room.y)
                 self.room_w.set_mm(room.w)
