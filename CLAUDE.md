@@ -1173,6 +1173,40 @@ into a new module and import.
                        ring turned 180/R — `test_library_motion` checks the
                        gears clear. MCP insert_part honours the hook
                        (`insert_note`).
+  - **Car Builder** (2026-09-17): `car_models.py` is the catalogue — 40
+                       classic and super cars from their PUBLISHED figures
+                       (length, width, height, wheelbase, factory tyre sizes
+                       front and rear) plus a body SHAPE preset (`SHAPES`:
+                       mid, wedge, front, longnose, rear-engine, sedan — the
+                       side profile as fractions of L and H) and the details
+                       that make a marque read (lights, grille, tail lights,
+                       wing, factory rim, paint). No blueprint is traced or
+                       shipped: proportions are hand-fitted to the published
+                       dimensions. `car_build.py` lofts the body through
+                       cross-sections every ~30 mm (`car_wheels.closed_grid`,
+                       which picks the winding by signed volume): the section
+                       rises to the wheel ARCH in the outer band, so a wheel
+                       shows under a fender instead of a slab, and the top
+                       bulges over it where the shape has fenders; a dark tub
+                       closes the wheel wells; the greenhouse is three stacked
+                       slabs (shoulder / window band / roof) so glass and body
+                       meet face to face instead of fighting for one surface.
+                       No booleans anywhere, so the preview is exact.
+                       `car_wheels.py` builds a wheel axis-up: a revolved
+                       tyre (a style changes only the sidewall ratio, so the
+                       rolling diameter — and the ride height — never moves),
+                       barrel, well, brake disc and caliper, hub, and spokes
+                       as convex hulls in nine `RIMS` (five-spoke, Fuchs,
+                       mesh, turbine, centre lock, steel with hubcap...).
+                       Library ▸ Toys & models ▸ Cars: the **Car Builder**
+                       (`car_dialog.py`, non-modal — make, model, paint,
+                       wheels, tyres, finish, calipers, size; a build lands
+                       right of the document and keeps its choices in
+                       `params["car"]`, so **Update selected** rebuilds that
+                       car in place) and every car as a one-click part
+                       (`car_build.PARTS`, sizes 1:18 / full-size / 1:43 /
+                       1:10, colour combo = paint). The hand-built .kcad cars
+                       in `parts/Cars` stay as they are.
   - `library_minecraft.py` — Minecraft characters & mobs in the
                        Minecraft section (2026-09-17): Steve, Alex, zombie,
                        skeleton, wither skeleton, creeper, enderman, spider,
