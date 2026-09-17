@@ -1203,10 +1203,13 @@ from . import (library_cards, library_chem, library_crystal,  # noqa: E402
                library_lego_sets,
                library_molecule,
                library_pots, library_print, library_room,
-               library_uhv, library_vacuum, library_vitamins, library_generative,
-               library_motion)
+               library_uhv, library_manip, library_xps,
+               library_vacuum, library_vitamins, library_generative,
+               library_motion, library_solar)
 PARTS.update(library_vacuum.PARTS)
 PARTS.update(library_uhv.PARTS)
+PARTS.update(library_manip.PARTS)
+PARTS.update(library_xps.PARTS)
 PARTS.update(library_chem.PARTS)
 PARTS.update(library_room.PARTS)
 PARTS.update(library_home.PARTS)
@@ -1227,6 +1230,9 @@ PARTS.update(library_landmarks_world.PARTS)
 PARTS.update(library_skyscrapers.PARTS)
 PARTS.update(library_pots.PARTS)
 PARTS.update(library_cards.PARTS)
+from . import car_build          # noqa: E402
+PARTS.update(car_build.PARTS)
+PARTS.update(car_build.PARTS)
 PARTS.update(library_lego.PARTS)
 PARTS.update(library_lego_sets.PARTS)
 PARTS.update(library_kcad.PARTS)
@@ -1236,6 +1242,7 @@ PARTS.update(library_print.PARTS)
 PARTS.update(library_vitamins.PARTS)
 PARTS.update(library_generative.PARTS)
 PARTS.update(library_motion.PARTS)
+PARTS.update(library_solar.PARTS)
 
 #: dialog fields holding a count (integer spin box, no "mm" suffix)
 _COUNT_FIELDS = ({"bolts"} | library_lego.COUNT_FIELDS

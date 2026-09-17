@@ -24,7 +24,7 @@ import pytest
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
 from khervecad import chamber_design as cd
-from khervecad import library, library_uhv, mesh
+from khervecad import library, library_manip, library_uhv, library_xps, mesh
 from khervecad.model import CadNode, DocumentModel, validate
 
 
@@ -39,7 +39,9 @@ def _holder(node):
     return root
 
 
-@pytest.mark.parametrize("pid", list(library_uhv.PARTS))
+@pytest.mark.parametrize("pid", list(library_uhv.PARTS)
+                         + list(library_manip.PARTS)
+                         + list(library_xps.PARTS))
 def test_every_uhv_part_builds_in_every_size(app, pid):
     for size, row in library.PARTS[pid]["sizes"].items():
         node = library.build_part(pid, dict(row, _size=size))
@@ -88,26 +90,86 @@ def test_prep_and_analysis_tools_carry_their_details(app):
 
 # ── chamber design ──────────────────────────────────────────────────
 
+def _components(node):
+    return [n for n in node.walk() if n.type == "component"]
+
+
 @pytest.mark.parametrize("name", list(cd.PRESETS))
 def test_every_preset_builds_without_clashes(app, name):
     spec = cd.preset(name)
     assert cd.clashes(spec) == [], name
     node = cd.build(spec)
     assert not validate(_holder(node))
-    objects = [n for n in node.children if n.type == "component"]
-    accessories = [p for p in spec["ports"]
-                   if cd.ACCESSORIES[p["accessory"]][1]]
-    assert len(objects) >= 1 + len(accessories)
+    names = {n.name for n in _components(node)}
+    for p in spec["ports"]:
+        if cd.ACCESSORIES[p["accessory"]][1]:
+            assert any(n.startswith(p["name"] + ":") for n in names), \
+                (name, p["name"])
+    assert "Chamber" in names
 
 
-def test_analysis_chamber_has_a_mu_metal_liner_with_port_openings(app):
-    spec = cd.preset("XPS analysis chamber (analyser, X-rays, mu-metal)")
+def test_the_bench_stands_on_the_floor_under_the_chamber(app):
+    spec = cd.preset("Preparation chamber (LEED, sputter, evaporator)")
+    spec["beam_height"] = 1200.0
+    for kind in cd.BENCHES:
+        spec["bench"] = kind
+        node = cd.build(spec)
+        tris = mesh.tessellate(_holder(node))
+        low = min(p[2] for t in tris for p in t)
+        assert low == pytest.approx(0.0, abs=1.0) if kind != "none" \
+            else low > 500.0, kind
+    # the chamber itself rides at the beam height
+    spec["bench"] = "none"
+    tris = mesh.tessellate(_holder(cd.build(spec)))
+    assert min(p[2] for t in tris for p in t) > 1200.0 - spec["radius"] - 450
+
+
+def test_turning_the_chamber_turns_its_ports_but_not_the_bench(app):
+    spec = cd.preset("Preparation chamber (LEED, sputter, evaporator)")
+    spec["bench"] = "frame"
+    upright = cd.build(spec)
+    spec["ry"] = 30.0
+    turned = cd.build(spec)
+    assert any(n.type == "rotate" and n.name == "Chamber orientation"
+               for n in turned.walk())
+    floor = [min(p[2] for t in mesh.tessellate(_holder(n)) for p in t)
+             for n in (upright, turned)]
+    assert floor[0] == pytest.approx(floor[1], abs=1.0)
+
+
+def test_a_port_aims_at_its_own_focal_point(app):
+    spec = cd.normalise(dict(cd.new_spec(body="cylinder", radius=150.0),
+                             height=600.0, bench="none", beam_height=0.0))
+    p = cd.port("Side", "CF63 (DN63)", 90.0, 0.0, 260.0, "viewport",
+                focus=200.0)
+    spec["ports"] = [p]
+    assert cd.wall_distance(spec, p) == pytest.approx(150.0)
     node = cd.build(spec)
-    liner = next(n for n in node.children if n.name == "Mu-metal liner")
-    openings = [n for n in liner.walk() if n.name == "Port opening"]
-    assert len(openings) == len(spec["ports"])
-    spec["liner"] = False
-    assert "Mu-metal liner" not in {n.name for n in cd.build(spec).children}
+    tris = mesh.tessellate(_holder(node))
+    far = [t for t in tris if max(q[0] for q in t) > 200.0]
+    assert far, "the port reaches out past the wall"
+    assert min(q[2] for t in far for q in t) > 120.0, \
+        "and it sits at its focal height, not at the centre"
+
+
+def test_a_variant_picks_the_size_row_of_the_accessory(app):
+    p = cd.port("M", "CF100 (DN100)", 0.0, 0.0, 400.0, "manipulator",
+                variant="Omniax style Z600, CF160 base, motorised, PTS head")
+    dims = cd.accessory_dims(p)
+    assert dims["z_travel"] == 600.0
+    assert dims["mount"] == "CF100 (DN100)"     # the port's flange wins
+    assert dims["reach"] == 400.0
+    assert cd.normalise(dict(cd.new_spec(), ports=[dict(p, variant="nope")])
+                        )["ports"][0]["variant"] == ""
+
+
+def test_spin_turns_the_accessory_about_its_port(app):
+    p = cd.port("Mono", "CF63 (DN63)", 90.0, 0.0, 250.0, "mono", spin=90.0)
+    spec = cd.normalise(dict(cd.new_spec(radius=170.0), bench="none",
+                             beam_height=0.0, ports=[p]))
+    node = cd.build(spec)
+    assert any(n.type == "rotate" and n.params.get("z") == 90.0
+               for n in node.walk())
 
 
 def test_clashes_find_overlapping_and_short_ports():
@@ -118,7 +180,7 @@ def test_clashes_find_overlapping_and_short_ports():
                      cd.port("D", "KF25 (DN25)", 180, 0, 200, "leed")]
     found = cd.problems(cd.normalise(spec))
     text = " ".join(m for m, _p in found)
-    assert "A and B flanges overlap" in text
+    assert "A and B flanges collide" in text
     assert "C: too short" in text
     assert "D: LEED optics needs a CF flange" in text
     assert {0, 1} in [ports for _m, ports in found]

@@ -809,10 +809,13 @@ def mu_metal_liner(radius, thickness=1.5, openings=(), name="Mu-metal "
         x=0.0, y=0.0, points=[[round(max(r, 0.0), 3), round(z, 3)]
                               for r, z in outer + inner])))
     part = _group("difference", name, shell)
-    for theta, phi, d in openings:
-        part.add(_turn(_cyl("Port opening", d / 2.0, radius * 0.6,
-                            z=radius * 0.6, segments=48),
-                       0.0, float(theta), float(phi), name="Opening"))
+    for opening in openings:
+        theta, phi, d = opening[:3]
+        focus = float(opening[3]) if len(opening) > 3 else 0.0
+        hole = _turn(_cyl("Port opening", d / 2.0, radius + abs(focus) + 2.0,
+                          segments=48),
+                     0.0, float(theta), float(phi), name="Opening")
+        part.add(_move(hole, z=focus, name="Focus") if focus else hole)
     return part
 
 
@@ -915,3 +918,13 @@ PARTS = {
     "fast_entry": _spec("Load-lock fast-entry door", build_fast_entry,
                         DOOR_SIZES),
 }
+
+
+def between(name, r, a, b, segments=32, r2=None):
+    """A cylinder of radius *r* from point *a* to point *b*."""
+    dx, dy, dz = (b[i] - a[i] for i in range(3))
+    length = math.sqrt(dx * dx + dy * dy + dz * dz) or 0.01
+    tilt = math.degrees(math.acos(max(min(dz / length, 1.0), -1.0)))
+    turn = math.degrees(math.atan2(dy, dx))
+    return _move(_turn(_cyl(name, r, length, segments=segments, r2=r2),
+                       0.0, tilt, turn), *a)

@@ -611,6 +611,57 @@ into a new module and import.
                        (`_object`), one per material, each rendered exact
                        on its own. Size tables are looked up by `_size`
                        (the dialog passes only field values).
+  - `library_uhv.py` / `library_manip.py` / `library_xps.py` —
+                       **surface science** (2026-09-17, the user's request):
+                       sample holders (flag plate 18 x 21, PTS puck,
+                       parking carousel), prep and analysis tools (sputter
+                       ion gun, 4-grid rear-view LEED, e-beam evaporator,
+                       hot-cathode gauge head, lens-mounted hemispherical
+                       analyser with its mu-metal dome, mu-metal liner,
+                       load-lock fast-entry door) — every port-mounted part
+                       to ONE convention: the CF sealing face at z = 0
+                       looking DOWN, air side +z, vacuum side -z, `reach`
+                       = face to sample, so the Chamber Designer can drop
+                       any of them on any port. library_manip: the
+                       commercial manipulator families (Omniax style —
+                       hinged flange, XY bellows, cross-roller stage, two
+                       columns, ball screw, DPRF; Transax style — two
+                       bellows and a side column; HPT style — three rods
+                       and micrometers; UHV Design XYZT — steppers, profile
+                       rail on an extrusion spine, MagiDrive), each ending
+                       in a flag / PTS / LN2 sample head (`_sample_head`),
+                       plus the detailed transfer arm (port aligner, mm
+                       scale, carriage with bearing housings and rotation
+                       ring, bake-out port, fork / bayonet / pincer) and
+                       the detailed RGA (quadrupole rods on ceramic
+                       spacers, open ion source, Faraday cup + multiplier,
+                       finned electronics head). library_xps: the twin-anode
+                       source (retraction, HV and water) and the Rowland-
+                       circle **monochromator** (XM1000 / uFOCUS 600 /
+                       MX650 class: quartz crystal drum, exit tube, anode
+                       housing with ion pump; `geometry()` places crystal
+                       and anode from the Bragg angle). Parts sorted by
+                       material into Objects by `_bag`/`_objects`.
+  - `chamber_design.py` / `chamber_bench.py` / `chamber_dialog.py` — the
+                       **Chamber Designer** (Library ▸ Vacuum & UHV ▸
+                       Chamber Designer…): a chamber as JSON — body
+                       (sphere/cylinder/cube), wall, mu-metal liner,
+                       orientation (rx, ry, rz), focal-point height above
+                       the floor, bench — and ports, each aimed at a FOCAL
+                       POINT on the chamber axis (`focus` mm from the
+                       centre: a tall chamber gets a preparation level and
+                       an analysis level), with a flange, length measured
+                       from that point, an accessory, the accessory's size
+                       row (`variant`) and its `spin` about the port axis.
+                       `problems()` checks collisions in 3D (each port's
+                       tube and flange sampled as cylinders), ports too
+                       short to clear the body and accessories on the wrong
+                       flange family. Everything on the chamber turns with
+                       it; the bench (`chamber_bench`: frame, castors,
+                       breadboard table, frame + 19" rack, tripod) stays
+                       level and stands on z = 0. The dialog draws an
+                       unfolded map of port directions (drag to aim,
+                       double-click to add) beside top and side views.
   - `library_cards.py` — **Playing cards**, one card at a time: a part
                        per suit (size = rank) + Joker + back. Paper body
                        = hull of four corner circles (rounded, convex);

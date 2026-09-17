@@ -143,6 +143,15 @@ def _city(window, sub):
     sub.addSeparator()
 
 
+def _cars(window, sub):
+    """The Car Builder (paint, wheels, tyres) on top; the cars
+    themselves follow as one-click parts."""
+    from . import car_dialog
+    sub.addAction(icons.icon("mdi.car-sports"), "Car Builder...",
+                  lambda: car_dialog.open_builder(window))
+    sub.addSeparator()
+
+
 def _crystals(window, sub):
     from . import crystal_dialog, crystal_surface_dialog
     sub.addAction(icons.icon("mdi.molecule"), "Crystal Builder...",
@@ -166,7 +175,7 @@ def _vacuum(window, sub):
     sub.addSeparator()
 
 
-_BUILDERS = {"vacuum": _vacuum, "lego": _lego, "city": _city, "crystals": _crystals,
+_BUILDERS = {"vacuum": _vacuum, "cars": _cars, "lego": _lego, "city": _city, "crystals": _crystals,
              "molecules": _molecules}
 
 

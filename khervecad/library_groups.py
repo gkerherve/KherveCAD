@@ -46,13 +46,15 @@ SECTIONS = [
         ("Crystals", "mdi.atom", ("crystals", ["Crystals (unit cells)",
                                                "Crystals (supercells)"])),
         ("Molecules", "mdi.molecule", ("molecules", "Molecules: ")),
+        ("Solar System", "mdi.orbit",
+         ["Solar System models", "Planets", "Moons"]),
     ]),
     ("Toys & models", [
         ("Lego", "mdi.toy-brick-outline", ("lego", ["Lego", "Lego sets"])),
         ("Lego Technic", "mdi.cog-outline", ["Lego Technic"]),
         ("Minecraft", "mdi.cube-outline", ["Minecraft"]),
         ("Generative", "mdi.chart-bubble", ["Generative"]),
-        ("Cars", "mdi.car-sports", ["Cars"]),
+        ("Cars", "mdi.car-sports", ("cars", ["Cars"])),
         ("Playing cards", "mdi.cards-playing-outline", ["Playing cards"]),
     ]),
 ]

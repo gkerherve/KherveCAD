@@ -2,17 +2,20 @@
 
 A non-modal window over `chamber_design`:
 
-- **Body** — sphere, cylinder or cube, its size and wall, a mu-metal
-  liner (gap, thickness) and a stand; or start from a preset
-  (preparation chamber, XPS analysis chamber, load lock, CF cube).
+- **Chamber** — sphere, cylinder or cube, its size and wall, a mu-metal
+  liner (gap, thickness), how it is TURNED (rx, ry, rz), the height of
+  its focal point above the floor and which bench it stands on; or start
+  from a preset (preparation, XPS analysis, two-level, load lock, cube).
 - **Port map** — every port drawn where it points: an unfolded map of
   the sphere of directions (azimuth φ across, polar angle θ down, the
   flange drawn as the patch it covers, clashes in red) beside a top and
   a side view of the chamber with its ports. Click a port to select it,
   drag it on the map to aim it, double-click empty map to add one there.
-- **Ports** — a table: name, CF or KF flange, θ, φ, length (centre to
-  sealing face) and the accessory on it (blank, viewport, ion gauge,
-  sputter gun, LEED, analyser, X-ray source, manipulator, transfer arm…).
+- **Ports** — a table: name, CF or KF flange, θ, φ, the focal point it
+  aims at (mm up the manipulator axis, so a tall chamber can have a
+  preparation level and an analysis level), length (focal point to
+  sealing face), the accessory, which size row of it (variant) and the
+  spin of that accessory about the port axis.
 
 Build adds the chamber to the document as one assembly; Update replaces
 the last one built. Specs save to and load from JSON.
@@ -45,11 +48,15 @@ COLOURS = {"open": "#9aa0a6", "blank": "#b9bfc7", "viewport": "#6fc3df",
            "sputter_gun": "#d96c3f", "leed": "#7fe07a",
            "analyser": "#8c6bd6", "xray": "#d6c24b", "evaporator": "#c47a4a",
            "manipulator": "#3f8fd9", "manipulator_cryo": "#3f8fd9",
+           "manipulator_transax": "#3f8fd9", "manipulator_hpt": "#3f8fd9",
+           "manipulator_uhvd": "#3f8fd9", "mono": "#d6c24b",
            "transfer_flag": "#2fb3a0", "transfer_pts": "#2fb3a0",
            "carousel": "#2fb3a0", "wobble": "#5fa35f", "rga": "#b35f9a",
            "door": "#9aa0a6", "kf_blank": "#b9bfc7", "pirani": "#e0a040"}
 
-COLUMNS = ("Name", "Flange", "θ (°)", "φ (°)", "Length", "Accessory")
+COLUMNS = ("Name", "Flange", "θ (°)", "φ (°)", "Focus", "Length",
+           "Accessory", "Variant", "Spin (°)")
+SPINS = {"theta": 2, "phi": 3, "focus": 4, "length": 5, "spin": 8}
 
 
 class PortMap(QWidget):
@@ -109,7 +116,7 @@ class PortMap(QWidget):
         top, side = self._view_rects()
         self._paint_view(qp, top, "Top view (looking down)", text,
                          lambda d: (d[0], -d[1]))
-        self._paint_view(qp, side, "Side view (from −Y)", text,
+        self._paint_view(qp, side, "Side view (chamber axis up)", text,
                          lambda d: (d[0], -d[2]))
         qp.end()
 
@@ -170,11 +177,16 @@ class PortMap(QWidget):
         scale = rect.width() / 2.0 / self._extent()
         cx, cy = rect.center().x(), rect.center().y() + 6
         s = self.spec
+
+        def at(point):
+            """A chamber-frame point on the view."""
+            u, v = project(point)
+            return QPointF(cx + u * scale, cy + v * scale)
         R = s["radius"] * scale
+        top_view = "Top" in title
         qp.setBrush(QBrush(QColor(185, 191, 199, 90)))
         qp.setPen(QPen(text, 1.5))
-        if s["body"] == "sphere" or (s["body"] == "cylinder"
-                                     and "Top" in title):
+        if s["body"] == "sphere" or (s["body"] == "cylinder" and top_view):
             qp.drawEllipse(QPointF(cx, cy), R, R)
         elif s["body"] == "cylinder":
             H = s["height"] / 2.0 * scale
@@ -186,20 +198,22 @@ class PortMap(QWidget):
             qp.setPen(QPen(QColor("#6f7a73"), 1, Qt.DashLine))
             L = (s["radius"] - s["wall"] - s["liner_gap"]) * scale
             qp.drawEllipse(QPointF(cx, cy), L, L)
-        order = sorted(range(len(s["ports"])), key=lambda i: i ==
-                       self.current)
+        order = sorted(range(len(s["ports"])),
+                       key=lambda i: i == self.current)
         for i in order:
             p = s["ports"][i]
             d = cd.direction(p["theta"], p["phi"])
-            u, v = project(d)
+            o = (0.0, 0.0, p["focus"])
             row = cd.flange_row(p["flange"])
-            L = p["length"] * scale
             colour = QColor(COLOURS.get(p["accessory"], "#b9bfc7"))
             width = 3 if i == self.current else 1.5
-            qp.setPen(QPen(colour.darker(130), max(row["tube_od"] * scale,
-                                                   2.0)))
-            end = QPointF(cx + u * L, cy + v * L)
-            qp.drawLine(QPointF(cx + u * R * 0.6, cy + v * R * 0.6), end)
+            start = cd.wall_distance(s, p) * 0.7
+            a0 = at(tuple(o[k] + d[k] * start for k in range(3)))
+            end = at(tuple(o[k] + d[k] * p["length"] for k in range(3)))
+            qp.setPen(QPen(colour.darker(130),
+                           max(row["tube_od"] * scale, 2.0)))
+            qp.drawLine(a0, end)
+            u, v = project(d)
             n = math.hypot(u, v)
             if n > 0.05:                       # the flange as a bar
                 fx, fy = -v / n, u / n
@@ -213,9 +227,18 @@ class PortMap(QWidget):
                 qp.setBrush(Qt.NoBrush)
                 fr = row["flange_od"] / 2.0 * scale
                 qp.drawEllipse(end, fr, fr)
-        qp.setPen(QPen(QColor("#d0342c"), 1))
-        qp.drawLine(QPointF(cx - 4, cy), QPointF(cx + 4, cy))
-        qp.drawLine(QPointF(cx, cy - 4), QPointF(cx, cy + 4))
+        qp.setPen(QPen(QColor("#d0342c"), 1.5))
+        for f in sorted({p["focus"] for p in s["ports"]} or {0.0}):
+            c = at((0.0, 0.0, f))
+            qp.drawLine(QPointF(c.x() - 5, c.y()), QPointF(c.x() + 5, c.y()))
+            qp.drawLine(QPointF(c.x(), c.y() - 5), QPointF(c.x(), c.y() + 5))
+            if f and not top_view:
+                qp.drawText(QPointF(c.x() + 8, c.y() + 4), f"{f:g}")
+        if not top_view and (s["rx"] or s["ry"] or s["rz"]):
+            qp.setPen(QPen(text, 1))
+            qp.drawText(QPointF(rect.left(), rect.bottom()),
+                        f"turned {s['rx']:g}°, {s['ry']:g}°, {s['rz']:g}° "
+                        "(chamber frame shown)")
 
     # ------------------------------------------------------------- mouse
     def _hit(self, pos):
@@ -338,23 +361,45 @@ class ChamberDesigner(QDialog):
         form.addRow("Liner gap:", self.liner_gap)
         self.liner_t = spin(0.2, 10.0, 0.1)
         form.addRow("Liner thickness:", self.liner_t)
-        self.stand = QCheckBox("Stand")
-        form.addRow(self.stand)
-        hint = QLabel("θ is measured from straight up (0° top, 90° "
-                      "equator, 180° bottom), φ from +X. Every port aims "
-                      "at the sample, at the chamber centre. Length is "
-                      "centre to sealing face; tools on a port reach the "
-                      "sample.")
+        self.bench = QComboBox()
+        for key, label in cd.BENCHES.items():
+            self.bench.addItem(label, key)
+        form.addRow("Bench:", self.bench)
+        self.beam = spin(0.0, 3000.0, 10.0)
+        form.addRow("Focal point height:", self.beam)
+        self.bench_w = spin(0.0, 4000.0, 50.0)
+        self.bench_w.setSpecialValueText("automatic")
+        form.addRow("Bench width:", self.bench_w)
+        self.bench_d = spin(0.0, 4000.0, 50.0)
+        self.bench_d.setSpecialValueText("automatic")
+        form.addRow("Bench depth:", self.bench_d)
+        turn = QHBoxLayout()
+        self.rx, self.ry, self.rz = (spin(-180.0, 180.0, 5.0, " °")
+                                     for _k in range(3))
+        for label, w in (("rx", self.rx), ("ry", self.ry), ("rz", self.rz)):
+            w.setMinimumWidth(76)
+            w.setDecimals(0)
+            turn.addWidget(QLabel(label))
+            turn.addWidget(w)
+        form.addRow("Turn the chamber:", turn)
+        hint = QLabel("θ is measured from the chamber's own axis (0° up "
+                      "it, 90° equator, 180° down), φ from +X. A port aims "
+                      "at its focal point — a height on the manipulator "
+                      "axis — and its length is measured from there to the "
+                      "sealing face; a tool on it reaches that point. The "
+                      "chamber and everything on it turn together; the "
+                      "bench stays level.")
         hint.setWordWrap(True)
         form.addRow(hint)
         for w in (self.radius, self.height, self.wall, self.liner_gap,
-                  self.liner_t):
+                  self.liner_t, self.beam, self.bench_w, self.bench_d,
+                  self.rx, self.ry, self.rz):
             w.valueChanged.connect(self._body_changed)
-        self.body.currentIndexChanged.connect(self._body_changed)
+        for w in (self.body, self.bench):
+            w.currentIndexChanged.connect(self._body_changed)
         self.name.textChanged.connect(self._body_changed)
-        for w in (self.liner, self.stand):
-            w.toggled.connect(self._body_changed)
-        box.setMaximumWidth(300)
+        self.liner.toggled.connect(self._body_changed)
+        box.setMaximumWidth(320)
         return box
 
     def _ports_box(self):
@@ -394,7 +439,12 @@ class ChamberDesigner(QDialog):
         self.liner.setChecked(bool(s["liner"]))
         self.liner_gap.setValue(s["liner_gap"])
         self.liner_t.setValue(s["liner_thickness"])
-        self.stand.setChecked(bool(s["stand"]))
+        self.bench.setCurrentIndex(max(self.bench.findData(s["bench"]), 0))
+        self.beam.setValue(s["beam_height"])
+        self.bench_w.setValue(s["bench_width"])
+        self.bench_d.setValue(s["bench_depth"])
+        for key, w in (("rx", self.rx), ("ry", self.ry), ("rz", self.rz)):
+            w.setValue(s[key])
         self._fill_table()
         self._loading = False
         self._refresh()
@@ -418,25 +468,53 @@ class ChamberDesigner(QDialog):
         flange.currentIndexChanged.connect(
             lambda _i, r=i, w=flange: self._set(r, "flange", w.currentData()))
         self.table.setCellWidget(i, 1, flange)
-        for col, key, lo, hi in ((2, "theta", 0.0, 180.0),
-                                 (3, "phi", 0.0, 359.9),
-                                 (4, "length", 10.0, 3000.0)):
-            s = QDoubleSpinBox()
-            s.setRange(lo, hi)
-            s.setDecimals(1)
-            s.setSingleStep(5.0)
-            s.setWrapping(key == "phi")
-            s.setValue(p[key])
-            s.valueChanged.connect(lambda val, r=i, k=key: self._set(r, k,
-                                                                     val))
-            self.table.setCellWidget(i, col, s)
+        for key, (lo, hi, step) in (("theta", (0.0, 180.0, 5.0)),
+                                    ("phi", (0.0, 359.9, 5.0)),
+                                    ("focus", (-2000.0, 2000.0, 10.0)),
+                                    ("length", (10.0, 4000.0, 5.0)),
+                                    ("spin", (0.0, 359.9, 15.0))):
+            box = QDoubleSpinBox()
+            box.setRange(lo, hi)
+            box.setDecimals(1)
+            box.setSingleStep(step)
+            box.setWrapping(key in ("phi", "spin"))
+            box.setValue(p[key])
+            box.valueChanged.connect(
+                lambda val, r=i, k=key: self._set(r, k, val))
+            self.table.setCellWidget(i, SPINS[key], box)
         acc = QComboBox()
         for key, (label, _pid, fam) in cd.ACCESSORIES.items():
             acc.addItem(label if fam == "any" else f"{label} ({fam})", key)
         acc.setCurrentIndex(acc.findData(p["accessory"]))
         acc.currentIndexChanged.connect(
-            lambda _i, r=i, w=acc: self._set(r, "accessory", w.currentData()))
-        self.table.setCellWidget(i, 5, acc)
+            lambda _i, r=i, w=acc: self._set_accessory(r, w.currentData()))
+        self.table.setCellWidget(i, 6, acc)
+        self.table.setCellWidget(i, 7, self._variant_box(i, p))
+
+    def _variant_box(self, i, p):
+        box = QComboBox()
+        rows = cd.variants(p["accessory"])
+        box.addItem("default", "")
+        for row in rows:
+            box.addItem(row, row)
+        box.setCurrentIndex(max(box.findData(p.get("variant") or ""), 0))
+        box.setEnabled(bool(rows))
+        box.currentIndexChanged.connect(
+            lambda _i, r=i, w=box: self._set(r, "variant", w.currentData()))
+        return box
+
+    def _set_accessory(self, row, key):
+        """An accessory change resets the variant to that part's rows."""
+        if self._loading or row >= len(self.spec["ports"]):
+            return
+        self.spec["ports"][row]["accessory"] = key
+        self.spec["ports"][row]["variant"] = ""
+        self._loading = True
+        self.table.setCellWidget(row, 7,
+                                 self._variant_box(row,
+                                                   self.spec["ports"][row]))
+        self._loading = False
+        self._refresh()
 
     def _set(self, row, key, value):
         if self._loading or row >= len(self.spec["ports"]):
@@ -454,13 +532,19 @@ class ChamberDesigner(QDialog):
                  liner=self.liner.isChecked(),
                  liner_gap=self.liner_gap.value(),
                  liner_thickness=self.liner_t.value(),
-                 stand=self.stand.isChecked())
+                 bench=self.bench.currentData(), beam_height=self.beam.value(),
+                 bench_width=self.bench_w.value(),
+                 bench_depth=self.bench_d.value(), rx=self.rx.value(),
+                 ry=self.ry.value(), rz=self.rz.value())
         self._refresh()
 
     def _refresh(self):
         self.height.setEnabled(self.spec["body"] == "cylinder")
         self.liner_gap.setEnabled(self.spec["liner"])
         self.liner_t.setEnabled(self.spec["liner"])
+        on_bench = self.spec["bench"] != "none"
+        for w in (self.bench_w, self.bench_d):
+            w.setEnabled(on_bench and self.spec["bench"] != "tripod")
         found = cd.problems(self.spec)
         problems = [msg for msg, _ports in found]
         bad = set().union(*[ports for _msg, ports in found])
@@ -491,14 +575,16 @@ class ChamberDesigner(QDialog):
         p = self.spec["ports"][i]
         p["theta"], p["phi"] = theta, phi
         self._loading = True
-        self.table.cellWidget(i, 2).setValue(theta)
-        self.table.cellWidget(i, 3).setValue(phi)
+        self.table.cellWidget(i, SPINS["theta"]).setValue(theta)
+        self.table.cellWidget(i, SPINS["phi"]).setValue(phi)
         self._loading = False
         self._refresh()
 
     def _add_port(self, theta, phi):
         n = len(self.spec["ports"]) + 1
-        p = cd.port(f"Port {n}", "CF40 (DN40)", theta, phi, 0.0)
+        focus = self.spec["ports"][-1]["focus"] if self.spec["ports"] else 0.0
+        p = cd.port(f"Port {n}", "CF40 (DN40)", theta, phi, 0.0,
+                    focus=focus)
         p["length"] = cd.min_length(self.spec, p) + 40.0
         self.spec["ports"].append(p)
         self._fill_table()

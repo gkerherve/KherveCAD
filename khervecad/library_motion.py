@@ -447,9 +447,18 @@ def insert(part_id: str, model, dims=None):
     """Add the mechanism to *model*: its variables as document globals
     (so its sliders appear in the Customizer), its parts as Objects to
     the right of what the document already holds. Returns the Objects."""
-    from . import anchors, mesh
     root, _label = parse(part_id, free_prefix(model,
                                                MECHANISMS[part_id][1]))
+    return place(model, root)
+
+
+def place(model, root):
+    """Move *root*'s children into *model*: assigns join the document's
+    globals (its Variables group when it has one), everything else
+    lands at the top level beside the document's bounding box, Objects
+    renamed unique. Returns the Objects added. Shared with the other
+    slider-driven libraries (the Solar System's orreries)."""
+    from . import anchors, mesh
     offset = 0.0
     if any(c.type not in ("variables", "assign") for c in
            model.root.children):
