@@ -1,0 +1,193 @@
+"""The Library and Examples menus (built from `library_groups`).
+
+Library = things you ADD to your design, in four themed sections
+(Engineering, Buildings & places, Science, Toys & models); each subject
+menu carries its builder (House, City, Lego, Crystal, Compound) on top.
+Examples = complete documents that REPLACE yours: the step-by-step
+lessons, technique demos, the course projects and showcase models.
+Models that are really parts (flowers, stylised trees, Lego sets) live
+in the Library only, so the two menus no longer overlap.
+
+Copyright (C) 2026 Gwilherm Kerherve
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+"""
+
+from . import icons
+from .library_groups import SECTIONS, entry_categories, short_name
+
+#: Examples-menu categories: (menu title, example categories)
+EXAMPLE_MENUS = [
+    ("Learn OpenSCAD, step by step", "mdi.school-outline", ["Learn"]),
+    ("Techniques", "mdi.cog-outline", ["Mechanical"]),
+    ("Course projects", "mdi.book-open-variant",
+     ["Projects"]),
+    ("Showcase", "mdi.star-outline", ["Showcase", "Vacuum", "Room"]),
+]
+
+
+def menu_text(text) -> str:
+    """*text* as a Qt menu title: a lone "&" marks the shortcut letter."""
+    return str(text).replace("&", "&&")
+
+
+def _header(menu, text):
+    """A section title: a greyed, unclickable line (menu sections lose
+    their text in the macOS menu bar)."""
+    menu.addSeparator()
+    act = menu.addAction(menu_text(text.upper()))
+    act.setEnabled(False)
+
+
+def build_library_menu(window, menubar):
+    from .library import PARTS
+    menu = menubar.addMenu("&Library")
+    menu.addAction(icons.icon("mdi.toy-brick-outline"),
+                   "Part Library (customise)...", window.open_library,
+                   "Ctrl+L")
+    menu.addAction(icons.icon("mdi.bookshelf"),
+                   "OpenSCAD Libraries (BOSL2, MCAD...)...",
+                   window._open_scad_libraries)
+    by_cat = {}
+    for pid, spec in PARTS.items():
+        by_cat.setdefault(spec.get("category", "Other"), []).append(pid)
+    placed = set()
+    for title, entries in SECTIONS:
+        _header(menu, title)
+        for name, icon, spec in entries:
+            special, cats = entry_categories(spec, list(by_cat))
+            cats = [c for c in cats if c in by_cat]
+            placed.update(cats)
+            if not cats:
+                continue
+            if special == "home":
+                _home_menu(window, menu, PARTS, cats)
+                continue
+            sub = menu.addMenu(icons.icon(icon), menu_text(name))
+            if special:
+                _BUILDERS[special](window, sub)
+            if len(cats) == 1 and not special:
+                _add_parts(window, sub, by_cat[cats[0]], PARTS)
+                continue
+            for cat in cats:
+                _add_parts(window, sub.addMenu(menu_text(short_name(cat))),
+                           by_cat[cat], PARTS)
+    rest = [c for c in by_cat if c not in placed]
+    if rest:
+        _header(menu, "Other")
+        for cat in rest:
+            _add_parts(window, menu.addMenu(menu_text(cat)), by_cat[cat],
+                       PARTS)
+    return menu
+
+
+def _add_parts(window, sub, ids, parts):
+    for pid in ids:
+        sub.addAction(menu_text(parts[pid]["label"]),
+                      lambda _=False, p=pid: window._insert_library_part(p))
+
+
+def _lego(window, sub):
+    from . import lego_builder, lego_convert
+    sub.addAction(icons.icon("mdi.toy-brick-outline"), "Lego Builder...",
+                  lambda: lego_builder.open_builder(window))
+    sub.addAction(icons.icon("mdi.toy-brick-plus-outline"),
+                  "Convert Selection to Lego...",
+                  lambda: lego_convert.convert_to_lego(window))
+    sub.addAction(icons.icon("mdi.cube-outline"), "Fuse Lego into One Solid",
+                  lambda: lego_convert.fuse_lego(window))
+    sub.addSeparator()
+
+
+def _city(window, sub):
+    """The City Builder and quick random layouts; a build replaces the
+    last one. Assistants use build_city."""
+    from . import city, city_dialog
+    sub.addAction(icons.icon("mdi.city-variant-outline"), "City Builder...",
+                  lambda: city_dialog.open_builder(window))
+
+    def build(layout):
+        seed = getattr(window, "_city_seed", 0) + 1
+        window._city_seed = seed
+        city.apply(window.model, {"layout": layout, "seed": seed})
+        window.view3d.fit()
+        panel = getattr(window, "_city_builder", None)
+        if panel is not None:
+            panel.load_from_document()
+
+    new = sub.addMenu("New layout (random)")
+    for layout in ("village", "town", "city"):
+        new.addAction(layout.capitalize(),
+                      lambda _=False, lay=layout: build(lay))
+    sub.addSeparator()
+
+
+def _crystals(window, sub):
+    from . import crystal_dialog, crystal_surface_dialog
+    sub.addAction("Crystal Builder...",
+                  lambda: crystal_dialog.open_builder(window))
+    sub.addAction("Surface Builder...",
+                  lambda: crystal_surface_dialog.open_builder(window))
+    sub.addSeparator()
+
+
+def _molecules(window, sub):
+    from . import molecule_dialog
+    sub.addAction("Compound Builder...",
+                  lambda: molecule_dialog.open_builder(window))
+    sub.addSeparator()
+
+
+_BUILDERS = {"lego": _lego, "city": _city, "crystals": _crystals,
+             "molecules": _molecules}
+
+
+def _home_menu(window, menu, parts, categories):
+    """House & home: the House Builder on top, then every home and room
+    piece in a submenu per room — the House Builder's own catalogue, so
+    the menu and the builder offer the same things — and whatever no
+    room lists under Fixtures & other."""
+    from . import house_dialog
+    from .house import FURNITURE_CATALOG
+    home = menu.addMenu(icons.icon("mdi.home-city-outline"), "House && home")
+    home.addAction(icons.icon("mdi.home-city-outline"), "House Builder...",
+                   lambda: house_dialog.open_builder(window))
+    home.addSeparator()
+    listed = set()
+    for room, ids in FURNITURE_CATALOG.items():
+        ids = [pid for pid in ids if pid in parts]
+        if not ids:
+            continue
+        sub = home.addMenu(menu_text(room if room != "Other"
+                                     else "Other pieces"))
+        _add_parts(window, sub, ids, parts)
+        listed.update(ids)
+    rest = [pid for pid, spec in parts.items()
+            if spec.get("category") in categories and pid not in listed]
+    if rest:
+        _add_parts(window, home.addMenu("Fixtures && other"), rest, parts)
+    return home
+
+
+def build_examples_menu(window, menubar):
+    """Complete demo documents; picking one REPLACES the document
+    (Ctrl+Z brings it back)."""
+    from .examples import EXAMPLES
+    menu = menubar.addMenu("&Examples")
+    note = menu.addAction("Opens in place of your document "
+                          "(parts to add are in Library)")
+    note.setEnabled(False)
+    menu.addSeparator()
+    for title, icon, cats in EXAMPLE_MENUS:
+        items = [(label, build) for label, cat, build in EXAMPLES
+                 if cat in cats]
+        if not items:
+            continue
+        sub = menu.addMenu(icons.icon(icon), menu_text(title))
+        for label, build in items:
+            sub.addAction(menu_text(label),
+                          lambda _=False, b=build: window._load_example(b))
+    return menu

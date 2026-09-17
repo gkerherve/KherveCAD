@@ -807,17 +807,28 @@ into a new module and import.
                        `tests/test_library_home_more.py`. The vertical
                        toolbar ends with a House Builder button
                        (`toolbars.build_tool_bar`, tip `house_builder`).
-  - Library menu (`MainWindow._build_library_menu`, 2026-09-15): the
-                       Lego categories ("Lego" -> Bricks & plates, "Lego
-                       sets" -> Lego sets, `LEGO_CATEGORIES`) live in ONE
-                       **Lego** menu with Lego Builder / Convert / Fuse on
-                       top (`_build_lego_menu`); "Home furniture" and "Room
-                       & furniture" (`HOME_CATEGORIES`) fuse into **House &
-                       home**: House Builder on top, then a submenu per
-                       room from `house.FURNITURE_CATALOG` (so menu and
-                       builder offer the same pieces), leftovers under
-                       Fixtures & other (`_build_home_menu`). Tested in
-                       `tests/test_library_menu.py`.
+  - Library & Examples menus (`library_menu.py`, reorganised 2026-09-17
+                       — the user found the Library "all over the place"
+                       and asked what Examples was for): **Library = parts
+                       you ADD**, in four headed sections from
+                       `library_groups.SECTIONS` (Engineering, Buildings &
+                       places, Science, Toys & models; every PARTS category
+                       placed exactly once — tested), each subject menu
+                       with its builder on top (House, City, Lego, Crystal
+                       + Surface, Compound); House & home is a submenu per
+                       room from `house.FURNITURE_CATALOG`. The Part
+                       Library dialog lists categories in the same order
+                       (`category_order`). **Examples = whole documents
+                       that REPLACE yours**: Learn, Techniques (the
+                       Mechanical category), Course projects, Showcase
+                       (+ vacuum starter, desk setup). Models that are
+                       really parts left the Examples menu:
+                       `library_examples.py` makes the flowers and the
+                       stylised trees Library parts (built by the
+                       example's own function, like `library_lego_sets`);
+                       `examples.EXAMPLES` itself is unchanged, so MCP
+                       load_example still offers them. `library_kcad.label`
+                       splits CamelCase stems ("Minecraft Cat").
   - `library_prusa.py` — the **Prusa** section (2026-09-15, the user's
                        request): "Little Prusa man", an original chibi
                        figure in the spirit of the Little Josef Prusa

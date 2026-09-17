@@ -78,14 +78,58 @@ def test_house_and_home_has_the_builder_on_top_and_a_menu_per_room(window):
     assert len(FURNITURE_CATALOG) >= 10
 
 
-def test_city_menu_holds_builder_layouts_and_trees(window):
+def test_city_menu_holds_builder_layouts_and_buildings(window):
     library = _menu(window.menuBar(), "Library")
     city = _menu(library, "City")
     texts = _texts(city)
     assert texts[0] == "City Builder..."
     assert "New layout (random)" in texts
-    trees = _texts(_menu(city, "Trees"))
-    assert "Oak" in trees and "Weeping willow" in trees
-    assert "Trees" not in _texts(library)
     buildings = _texts(_menu(city, "Buildings"))
     assert "Cottage" in buildings and "Office tower" in buildings
+    nature = _menu(library, "Nature & garden")
+    trees = _texts(_menu(nature, "Grown trees"))
+    assert "Oak" in trees and "Weeping willow" in trees
+    assert "Rose" in _texts(_menu(nature, "Flowers"))
+    assert "Trees" not in _texts(library)
+
+
+def test_library_is_sections_and_every_category_is_placed_once():
+    from khervecad import library
+    from khervecad.library_groups import SECTIONS, entry_categories
+    cats = {spec["category"] for spec in library.PARTS.values()}
+    placed = []
+    for _title, entries in SECTIONS:
+        for _name, _icon, spec in entries:
+            placed += [c for c in entry_categories(spec, sorted(cats))[1]
+                       if c in cats]
+    assert sorted(placed) == sorted(cats)       # all, and none twice
+
+
+def test_library_menu_reads_in_sections(window):
+    top = _texts(_menu(window.menuBar(), "Library"))
+    heads = [t for t in top if t.isupper()]
+    assert heads == ["ENGINEERING", "BUILDINGS & PLACES", "SCIENCE",
+                     "TOYS & MODELS"]
+    assert top.index("House & home") > top.index("BUILDINGS & PLACES")
+    assert top.index("Lego") > top.index("TOYS & MODELS")
+
+
+def test_examples_are_documents_and_do_not_repeat_the_library(window):
+    examples = _menu(window.menuBar(), "Examples")
+    subs = [t for t in _texts(examples) if not t.startswith("Opens")]
+    assert subs == ["Learn OpenSCAD, step by step", "Techniques",
+                    "Course projects", "Showcase"]
+    everything = set()
+    for title in subs:
+        everything.update(_texts(_menu(examples, title)))
+    for gone in ("Rose", "Palm", "Dragon", "Minecraft tower"):
+        assert gone not in everything
+
+
+def test_flowers_and_stylised_trees_insert_as_parts():
+    from khervecad import library, mesh
+    from khervecad.model import validate
+    for pid in ("flower_rose", "stylised_palm"):
+        node = library.default_part(pid)
+        assert not validate(node)
+        assert mesh.tessellate(node, fn=12)

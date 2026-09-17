@@ -40,7 +40,11 @@ def part_id(stem: str) -> str:
 
 
 def label(stem: str) -> str:
-    return re.sub(r"[_\s]+", " ", stem).strip()
+    """A file stem as a menu label: words split at underscores and
+    CamelCase ("MinecraftCat" -> "Minecraft Cat"), first letter up."""
+    text = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", stem)
+    text = re.sub(r"[_\s]+", " ", text).strip()
+    return text[:1].upper() + text[1:]
 
 
 def files(folder=None) -> list:

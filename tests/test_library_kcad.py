@@ -55,7 +55,8 @@ def test_every_shipped_kcad_is_a_valid_part(app, path):
 def test_part_ids_normalise_names():
     assert library_kcad.part_id("Door Stopper") == "kcad_door_stopper"
     assert library_kcad.part_id("door_stopper.v2") == "kcad_door_stopper_v2"
-    assert library_kcad.label("pen_holder") == "pen holder"
+    assert library_kcad.label("pen_holder") == "Pen holder"
+    assert library_kcad.label("MinecraftCat") == "Minecraft Cat"
 
 
 def test_inserted_kcad_part_becomes_one_object(app, tmp_path):

@@ -37,22 +37,6 @@ from .toolbars import build_options_bar, build_tool_bar
 from .view2d import PLANES, SketchScene, SketchView
 from .view3d import View3D
 
-#: library categories gathered into the Library ▸ Lego menu, with the
-#: submenu each becomes ("&&" is a literal & in a Qt menu title)
-LEGO_CATEGORIES = {"Lego": "Bricks && plates", "Lego sets": "Lego sets"}
-#: library categories fused into Library ▸ House & home, sorted by room
-HOME_CATEGORIES = ("Home furniture", "Room & furniture")
-#: library categories that live in Library ▸ City, in this order
-CITY_CATEGORIES = ("Buildings", "Trees", "Park & sport", "Lighting & signals",
-                   "Landscape", "Landmarks", "Skyscrapers", "Bridges")
-
-
-def _menu_text(text) -> str:
-    """*text* as a Qt menu title: a lone "&" marks the shortcut letter,
-    so "Patio table & parasol" read "Patio table  parasol"."""
-    return str(text).replace("&", "&&")
-
-
 class MainWindow(QMainWindow):
     #: every open window, so a second instance isn't garbage-collected.
     _windows = []
@@ -519,98 +503,9 @@ class MainWindow(QMainWindow):
         help_menu.addAction("&About", self._about)
 
     def _build_library_menu(self, menubar):
-        """A Library menu that inserts a part at its default size in one
-        click — the same catalogue as the Part Library dialog, grouped by
-        category, without opening the dialog."""
-        from .library import PARTS
-        menu = menubar.addMenu("&Library")
-        menu.addAction(icons.icon("mdi.toy-brick-outline"),
-                       "Part Library (customise)...", self.open_library,
-                       "Ctrl+L")
-        menu.addAction(icons.icon("mdi.bookshelf"),
-                       "OpenSCAD Libraries (BOSL2, MCAD...)...",
-                       self._open_scad_libraries)
-        menu.addSeparator()
-        submenus = {}
-        crystals_menu = molecules_menu = lego_menu = home_menu = None
-        city_menu = self._build_city_menu(menu)
-        city_subs = {cat: city_menu.addMenu(_menu_text(cat))
-                     for cat in CITY_CATEGORIES
-                     if any(p.get("category") == cat
-                            for p in PARTS.values())}
-        crystal_subs, molecule_subs, lego_subs = {}, {}, {}
-        for part_id, spec in PARTS.items():
-            cat = spec.get("category", "Other")
-            if cat in HOME_CATEGORIES:
-                # House & home: its builder on top, the pieces by room
-                # (built once, from the House Builder's own catalogue)
-                if home_menu is None:
-                    home_menu = self._build_home_menu(menu, PARTS)
-                continue
-            if cat in city_subs:
-                sub = city_subs[cat]
-            elif cat in LEGO_CATEGORIES:
-                if lego_menu is None:
-                    lego_menu = self._build_lego_menu(menu)
-                sub = lego_subs.get(cat)
-                if sub is None:
-                    sub = lego_subs[cat] = lego_menu.addMenu(
-                        LEGO_CATEGORIES[cat])
-            elif cat.startswith("Crystals ("):
-                if crystals_menu is None:
-                    from . import crystal_dialog
-                    crystals_menu = menu.addMenu(icons.icon("mdi.atom"),
-                                                  "Crystals")
-                    crystals_menu.addAction(
-                        "Crystal Builder...",
-                        lambda: crystal_dialog.open_builder(self))
-                    crystals_menu.addAction(
-                        "Surface Builder...",
-                        lambda: _open_surface_builder(self))
-                    crystals_menu.addSeparator()
-                # "Crystals (unit cells)" -> "Unit cells"
-                name = cat[len("Crystals ("):-1].capitalize()
-                sub = crystal_subs.get(name)
-                if sub is None:
-                    sub = crystal_subs[name] = crystals_menu.addMenu(
-                        _menu_text(name))
-            elif cat.startswith("Molecules: "):
-                if molecules_menu is None:
-                    from . import molecule_dialog
-                    molecules_menu = menu.addMenu(icons.icon("mdi.molecule"),
-                                                   "Molecules")
-                    molecules_menu.addAction(
-                        "Compound Builder...",
-                        lambda: molecule_dialog.open_builder(self))
-                    molecules_menu.addSeparator()
-                name = cat[len("Molecules: "):]
-                sub = molecule_subs.get(name)
-                if sub is None:
-                    sub = molecule_subs[name] = molecules_menu.addMenu(
-                        _menu_text(name))
-            else:
-                sub = submenus.get(cat)
-                if sub is None:
-                    sub = submenus[cat] = menu.addMenu(_menu_text(cat))
-            sub.addAction(
-                _menu_text(spec["label"]),
-                lambda _=False, pid=part_id: self._insert_library_part(pid))
-
-    def _build_lego_menu(self, menu):
-        """Library ▸ Lego: the Lego tools on top, then the bricks and the
-        sets — everything Lego in one place."""
-        from . import lego_builder, lego_convert
-        lego = menu.addMenu(icons.icon("mdi.toy-brick-outline"), "Lego")
-        lego.addAction(icons.icon("mdi.toy-brick-outline"), "Lego Builder...",
-                       lambda: lego_builder.open_builder(self))
-        lego.addAction(icons.icon("mdi.toy-brick-plus-outline"),
-                       "Convert Selection to Lego...",
-                       lambda: lego_convert.convert_to_lego(self))
-        lego.addAction(icons.icon("mdi.cube-outline"),
-                       "Fuse Lego into One Solid",
-                       lambda: lego_convert.fuse_lego(self))
-        lego.addSeparator()
-        return lego
+        """Library: parts to ADD, in themed sections (library_menu.py)."""
+        from .library_menu import build_library_menu
+        return build_library_menu(self, menubar)
 
     def _open_scad_libraries(self):
         """Library ▸ OpenSCAD Libraries: install BOSL2, MCAD, NopSCADlib…
@@ -618,84 +513,10 @@ class MainWindow(QMainWindow):
         from . import scadlib_dialog
         scadlib_dialog.open_dialog(self)
 
-    def _build_city_menu(self, menu):
-        """Library ▸ City: the City Builder (a 2D plan to place every
-        road, building, tree and light) and quick random layouts; a
-        build replaces the last one. Assistants use build_city."""
-        from . import city, city_dialog
-        sub = menu.addMenu(icons.icon("mdi.city-variant-outline"), "City")
-        sub.addAction(icons.icon("mdi.city-variant-outline"),
-                      "City Builder...",
-                      lambda: city_dialog.open_builder(self))
-        sub.addSeparator()
-
-        def build(layout):
-            seed = getattr(self, "_city_seed", 0) + 1
-            self._city_seed = seed
-            city.apply(self.model, {"layout": layout, "seed": seed})
-            self.view3d.fit()
-            panel = getattr(self, "_city_builder", None)
-            if panel is not None:
-                panel.load_from_document()
-
-        new = sub.addMenu("New layout (random)")
-        for layout in ("village", "town", "city"):
-            new.addAction(layout.capitalize(),
-                          lambda _=False, l=layout: build(l))
-        sub.addSeparator()
-        return sub
-
-    def _build_home_menu(self, menu, parts):
-        """Library ▸ House & home: the House Builder on top, then every
-        home and room piece in a submenu per room — the House Builder's
-        own catalogue, so the menu and the builder offer the same things
-        (a piece may sit in several rooms) — and whatever no room lists
-        under Fixtures & other."""
-        from . import house_dialog
-        from .house import FURNITURE_CATALOG
-        home = menu.addMenu(icons.icon("mdi.home-city-outline"),
-                            "House && home")
-        home.addAction(icons.icon("mdi.home-city-outline"),
-                       "House Builder...",
-                       lambda: house_dialog.open_builder(self))
-        home.addSeparator()
-
-        def add(sub, pid):
-            sub.addAction(_menu_text(parts[pid]["label"]),
-                          lambda _=False, p=pid: self._insert_library_part(p))
-
-        listed = set()
-        for room, ids in FURNITURE_CATALOG.items():
-            ids = [pid for pid in ids if pid in parts]
-            if not ids:
-                continue
-            sub = home.addMenu(_menu_text(room if room != "Other"
-                                          else "Other pieces"))
-            for pid in ids:
-                add(sub, pid)
-            listed.update(ids)
-        rest = [pid for pid, spec in parts.items()
-                if spec.get("category") in HOME_CATEGORIES
-                and pid not in listed]
-        if rest:
-            sub = home.addMenu("Fixtures && other")
-            for pid in rest:
-                add(sub, pid)
-        return home
-
     def _build_examples_menu(self, menubar):
-        """An Examples menu of complete demo models; picking one replaces
-        the document (Ctrl+Z to get the old one back)."""
-        from .examples import EXAMPLES
-        menu = menubar.addMenu("&Examples")
-        submenus = {}
-        for label, cat, build in EXAMPLES:
-            sub = submenus.get(cat)
-            if sub is None:
-                sub = submenus[cat] = menu.addMenu(cat)
-            sub.addAction(
-                label,
-                lambda _=False, b=build: self._load_example(b))
+        """Examples: whole documents that REPLACE yours (library_menu)."""
+        from .library_menu import build_examples_menu
+        return build_examples_menu(self, menubar)
 
     def _insert_library_part(self, part_id):
         from .library import default_part, prepare_document
@@ -2379,8 +2200,3 @@ class MainWindow(QMainWindow):
             f"the <a href='https://www.gnu.org/licenses/gpl-3.0.html'>"
             f"GNU GPL v3.0</a>.</p>")
         box.exec_()
-
-
-def _open_surface_builder(window):
-    from . import crystal_surface_dialog
-    return crystal_surface_dialog.open_builder(window)
