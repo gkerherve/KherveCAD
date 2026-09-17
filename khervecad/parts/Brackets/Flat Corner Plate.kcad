@@ -22,6 +22,43 @@
     }
    },
    {
+    "type": "assign",
+    "name": "arm =",
+    "visible": true,
+    "params": {
+     "variable": "arm",
+     "value": 60.0,
+     "description": "Flat corner plate: an L of two rounded arms for a frame joint"
+    }
+   },
+   {
+    "type": "assign",
+    "name": "wide =",
+    "visible": true,
+    "params": {
+     "variable": "wide",
+     "value": 18.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "t =",
+    "visible": true,
+    "params": {
+     "variable": "t",
+     "value": 2.5
+    }
+   },
+   {
+    "type": "assign",
+    "name": "hole =",
+    "visible": true,
+    "params": {
+     "variable": "hole",
+     "value": 4.5
+    }
+   },
+   {
     "type": "component",
     "name": "Flat Corner Plate",
     "visible": true,
@@ -58,32 +95,212 @@
         },
         "children": [
          {
-          "type": "cube",
-          "name": "Cube [Horizontal arm]",
+          "type": "union",
+          "name": "kcad_round_plate [Horizontal arm]",
           "visible": true,
           "params": {
            "x": 0.0,
            "y": 0.0,
            "z": 0.0,
-           "width": 60.0,
-           "depth": 15.0,
-           "height": 2.5,
-           "center": false
-          }
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "assign",
+            "name": "w =",
+            "visible": true,
+            "params": {
+             "variable": "w",
+             "value": "arm"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "d =",
+            "visible": true,
+            "params": {
+             "variable": "d",
+             "value": "wide"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "t =",
+            "visible": true,
+            "params": {
+             "variable": "t",
+             "value": "t"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "r =",
+            "visible": true,
+            "params": {
+             "variable": "r",
+             "value": "wide / 2"
+            }
+           },
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For x",
+              "visible": true,
+              "params": {
+               "variable": "x",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "r, w - r"
+              },
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For y",
+                "visible": true,
+                "params": {
+                 "variable": "y",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "r, d - r"
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": "x",
+                   "y": "y",
+                   "z": 0.0,
+                   "height": "t",
+                   "radius_bottom": "r",
+                   "radius_top": "r",
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
          },
          {
-          "type": "cube",
-          "name": "Cube [Vertical arm]",
+          "type": "union",
+          "name": "kcad_round_plate [Vertical arm]",
           "visible": true,
           "params": {
            "x": 0.0,
            "y": 0.0,
            "z": 0.0,
-           "width": 15.0,
-           "depth": 60.0,
-           "height": 2.5,
-           "center": false
-          }
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "assign",
+            "name": "w =",
+            "visible": true,
+            "params": {
+             "variable": "w",
+             "value": "wide"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "d =",
+            "visible": true,
+            "params": {
+             "variable": "d",
+             "value": "arm"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "t =",
+            "visible": true,
+            "params": {
+             "variable": "t",
+             "value": "t"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "r =",
+            "visible": true,
+            "params": {
+             "variable": "r",
+             "value": "wide / 2"
+            }
+           },
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For x",
+              "visible": true,
+              "params": {
+               "variable": "x",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "r, w - r"
+              },
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For y",
+                "visible": true,
+                "params": {
+                 "variable": "y",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "r, d - r"
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": "x",
+                   "y": "y",
+                   "z": 0.0,
+                   "height": "t",
+                   "radius_bottom": "r",
+                   "radius_top": "r",
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
          }
         ]
        },
@@ -96,23 +313,94 @@
          "start": 0.0,
          "end": 4.0,
          "step": 1.0,
-         "values": "[7.5, 7.5], [30, 7.5], [52, 7.5], [7.5, 30], [7.5, 52]"
+         "values": "[wide / 2, wide / 2], [arm / 2 + 6, wide / 2], [arm - wide / 2, wide / 2], [wide / 2, arm / 2 + 6], [wide / 2, arm - wide / 2]"
         },
         "children": [
          {
-          "type": "cylinder",
-          "name": "Cylinder [Countersunk hole]",
+          "type": "translate",
+          "name": "Translate",
           "visible": true,
           "params": {
            "x": "p[0]",
            "y": "p[1]",
-           "z": -1.0,
-           "height": 5.0,
-           "radius_bottom": 2.2,
-           "radius_top": 4.2,
-           "segments": 48,
-           "center": false
-          }
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "union",
+            "name": "kcad_countersink [Screw hole]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "assign",
+              "name": "d =",
+              "visible": true,
+              "params": {
+               "variable": "d",
+               "value": "hole"
+              }
+             },
+             {
+              "type": "assign",
+              "name": "head =",
+              "visible": true,
+              "params": {
+               "variable": "head",
+               "value": "hole * 2"
+              }
+             },
+             {
+              "type": "assign",
+              "name": "t =",
+              "visible": true,
+              "params": {
+               "variable": "t",
+               "value": "t"
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": -1.0,
+               "height": "t + 2",
+               "radius_bottom": "(d) / 2",
+               "radius_top": "(d) / 2",
+               "segments": 48,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": "t - (head - d) / 2",
+               "height": "(head - d) / 2 + 0.01",
+               "radius_bottom": "(d) / 2",
+               "radius_top": "(head) / 2",
+               "segments": 48,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
          }
         ]
        }

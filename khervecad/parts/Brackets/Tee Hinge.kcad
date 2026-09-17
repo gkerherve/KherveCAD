@@ -22,6 +22,52 @@
     }
    },
    {
+    "type": "assign",
+    "name": "t =",
+    "visible": true,
+    "params": {
+     "variable": "t",
+     "value": 3.0,
+     "description": "Tee hinge: a tapered strap on a knuckled pin, for a gate or shed door"
+    }
+   },
+   {
+    "type": "assign",
+    "name": "leaf_w =",
+    "visible": true,
+    "params": {
+     "variable": "leaf_w",
+     "value": 50.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "leaf_h =",
+    "visible": true,
+    "params": {
+     "variable": "leaf_h",
+     "value": 90.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "strap =",
+    "visible": true,
+    "params": {
+     "variable": "strap",
+     "value": 200.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "pin =",
+    "visible": true,
+    "params": {
+     "variable": "pin",
+     "value": 8.0
+    }
+   },
+   {
     "type": "component",
     "name": "Tee Hinge",
     "visible": true,
@@ -58,18 +104,132 @@
         },
         "children": [
          {
-          "type": "cube",
-          "name": "Cube [Rectangular leaf]",
+          "type": "translate",
+          "name": "Translate",
           "visible": true,
           "params": {
-           "x": -50.0,
-           "y": 0.0,
-           "z": 0.0,
-           "width": 50.0,
-           "depth": 3.0,
-           "height": 90.0,
-           "center": false
-          }
+           "x": "-leaf_w",
+           "y": "t",
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "union",
+              "name": "kcad_round_plate [Leaf]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "assign",
+                "name": "w =",
+                "visible": true,
+                "params": {
+                 "variable": "w",
+                 "value": "leaf_w + 2"
+                }
+               },
+               {
+                "type": "assign",
+                "name": "d =",
+                "visible": true,
+                "params": {
+                 "variable": "d",
+                 "value": "leaf_h"
+                }
+               },
+               {
+                "type": "assign",
+                "name": "t =",
+                "visible": true,
+                "params": {
+                 "variable": "t",
+                 "value": "t"
+                }
+               },
+               {
+                "type": "assign",
+                "name": "r =",
+                "visible": true,
+                "params": {
+                 "variable": "r",
+                 "value": "8"
+                }
+               },
+               {
+                "type": "hull",
+                "name": "Hull",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "for_loop",
+                  "name": "For x",
+                  "visible": true,
+                  "params": {
+                   "variable": "x",
+                   "start": 0.0,
+                   "end": 4.0,
+                   "step": 1.0,
+                   "values": "r, w - r"
+                  },
+                  "children": [
+                   {
+                    "type": "for_loop",
+                    "name": "For y",
+                    "visible": true,
+                    "params": {
+                     "variable": "y",
+                     "start": 0.0,
+                     "end": 4.0,
+                     "step": 1.0,
+                     "values": "r, d - r"
+                    },
+                    "children": [
+                     {
+                      "type": "cylinder",
+                      "name": "Cylinder",
+                      "visible": true,
+                      "params": {
+                       "x": "x",
+                       "y": "y",
+                       "z": 0.0,
+                       "height": "t",
+                       "radius_bottom": "r",
+                       "radius_top": "r",
+                       "segments": 48,
+                       "center": false
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
          },
          {
           "type": "hull",
@@ -84,9 +244,9 @@
             "params": {
              "x": 0.0,
              "y": 0.0,
-             "z": 25.0,
+             "z": "leaf_h / 2 - 20",
              "width": 2.0,
-             "depth": 3.0,
+             "depth": "t",
              "height": 40.0,
              "center": false
             }
@@ -96,11 +256,11 @@
             "name": "Cube",
             "visible": true,
             "params": {
-             "x": 200.0,
+             "x": "strap - 14",
              "y": 0.0,
-             "z": 38.0,
+             "z": "leaf_h / 2 - 7",
              "width": 2.0,
-             "depth": 3.0,
+             "depth": "t",
              "height": 14.0,
              "center": false
             }
@@ -108,42 +268,13 @@
           ]
          },
          {
-          "type": "cylinder",
-          "name": "Cylinder [Knuckle]",
-          "visible": true,
-          "params": {
-           "x": 0.0,
-           "y": 1.5,
-           "z": 0.0,
-           "height": 90.0,
-           "radius_bottom": 4.0,
-           "radius_top": 4.0,
-           "segments": 48,
-           "center": false
-          }
-         }
-        ]
-       },
-       {
-        "type": "for_loop",
-        "name": "For z",
-        "visible": true,
-        "params": {
-         "variable": "z",
-         "start": 0.0,
-         "end": 4.0,
-         "step": 1.0,
-         "values": "15, 45, 75"
-        },
-        "children": [
-         {
           "type": "translate",
           "name": "Translate",
           "visible": true,
           "params": {
-           "x": -30.0,
-           "y": -1.0,
-           "z": "z"
+           "x": "strap - 16",
+           "y": 0.0,
+           "z": "leaf_h / 2 - 7"
           },
           "children": [
            {
@@ -158,18 +289,217 @@
             "children": [
              {
               "type": "cylinder",
-              "name": "Cylinder [Leaf screw hole]",
+              "name": "Cylinder [Strap end]",
               "visible": true,
               "params": {
                "x": 0.0,
                "y": 0.0,
                "z": 0.0,
-               "height": 5.0,
-               "radius_bottom": 2.5,
-               "radius_top": 2.5,
+               "height": "t",
+               "radius_bottom": 7.0,
+               "radius_top": 7.0,
                "segments": 48,
                "center": false
               }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For z [Knuckles]",
+          "visible": true,
+          "params": {
+           "variable": "z",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "0, 30, 60"
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "t / 2",
+             "z": "z + 1",
+             "height": 28.0,
+             "radius_bottom": "(pin) / 2",
+             "radius_top": "(pin) / 2",
+             "segments": 48,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For z",
+          "visible": true,
+          "params": {
+           "variable": "z",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "15, 45"
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "t / 2",
+             "z": "z + 1",
+             "height": 28.0,
+             "radius_bottom": "(pin) / 2",
+             "radius_top": "(pin) / 2",
+             "segments": 48,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Pin]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": "t / 2",
+         "z": -2.0,
+         "height": "leaf_h + 4",
+         "radius_bottom": 1.75,
+         "radius_top": 1.75,
+         "segments": 48,
+         "center": false
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For z",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "15, leaf_h / 2, leaf_h - 15"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-34, -14"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": -1.0,
+             "z": "z"
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "union",
+                "name": "kcad_countersink [Leaf hole]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "rx": 0.0,
+                 "ry": 0.0,
+                 "rz": 0.0,
+                 "color": "",
+                 "alpha": 1.0
+                },
+                "children": [
+                 {
+                  "type": "assign",
+                  "name": "d =",
+                  "visible": true,
+                  "params": {
+                   "variable": "d",
+                   "value": "5"
+                  }
+                 },
+                 {
+                  "type": "assign",
+                  "name": "head =",
+                  "visible": true,
+                  "params": {
+                   "variable": "head",
+                   "value": "10"
+                  }
+                 },
+                 {
+                  "type": "assign",
+                  "name": "t =",
+                  "visible": true,
+                  "params": {
+                   "variable": "t",
+                   "value": "t"
+                  }
+                 },
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": -1.0,
+                   "height": "t + 2",
+                   "radius_bottom": "(d) / 2",
+                   "radius_top": "(d) / 2",
+                   "segments": 48,
+                   "center": false
+                  }
+                 },
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": "t - (head - d) / 2",
+                   "height": "(head - d) / 2 + 0.01",
+                   "radius_bottom": "(d) / 2",
+                   "radius_top": "(head) / 2",
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
              }
             ]
            }
@@ -186,7 +516,7 @@
          "start": 0.0,
          "end": 4.0,
          "step": 1.0,
-         "values": "50, 120, 185"
+         "values": "40, 105, 170"
         },
         "children": [
          {
@@ -196,7 +526,7 @@
           "params": {
            "x": "x",
            "y": -1.0,
-           "z": 45.0
+           "z": "leaf_h / 2"
           },
           "children": [
            {
@@ -210,19 +540,78 @@
             },
             "children": [
              {
-              "type": "cylinder",
-              "name": "Cylinder [Strap screw hole]",
+              "type": "union",
+              "name": "kcad_countersink [Strap hole]",
               "visible": true,
               "params": {
                "x": 0.0,
                "y": 0.0,
                "z": 0.0,
-               "height": 5.0,
-               "radius_bottom": 2.5,
-               "radius_top": 2.5,
-               "segments": 48,
-               "center": false
-              }
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "assign",
+                "name": "d =",
+                "visible": true,
+                "params": {
+                 "variable": "d",
+                 "value": "5"
+                }
+               },
+               {
+                "type": "assign",
+                "name": "head =",
+                "visible": true,
+                "params": {
+                 "variable": "head",
+                 "value": "10"
+                }
+               },
+               {
+                "type": "assign",
+                "name": "t =",
+                "visible": true,
+                "params": {
+                 "variable": "t",
+                 "value": "t"
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -1.0,
+                 "height": "t + 2",
+                 "radius_bottom": "(d) / 2",
+                 "radius_top": "(d) / 2",
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": "t - (head - d) / 2",
+                 "height": "(head - d) / 2 + 0.01",
+                 "radius_bottom": "(d) / 2",
+                 "radius_top": "(head) / 2",
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
              }
             ]
            }

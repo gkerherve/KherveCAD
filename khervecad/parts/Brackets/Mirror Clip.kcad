@@ -22,6 +22,42 @@
     }
    },
    {
+    "type": "assign",
+    "name": "glass =",
+    "visible": true,
+    "params": {
+     "variable": "glass",
+     "value": 6.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "disc =",
+    "visible": true,
+    "params": {
+     "variable": "disc",
+     "value": 22.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "back =",
+    "visible": true,
+    "params": {
+     "variable": "back",
+     "value": 2.5
+    }
+   },
+   {
+    "type": "assign",
+    "name": "tongue =",
+    "visible": true,
+    "params": {
+     "variable": "tongue",
+     "value": 14.0
+    }
+   },
+   {
     "type": "component",
     "name": "Mirror Clip",
     "visible": true,
@@ -59,79 +95,145 @@
         "children": [
          {
           "type": "cylinder",
-          "name": "Cylinder [Base disc]",
+          "name": "Cylinder [Backplate]",
           "visible": true,
           "params": {
            "x": 0.0,
            "y": 0.0,
            "z": 0.0,
-           "height": 3.0,
-           "radius_bottom": 12.0,
-           "radius_top": 12.0,
-           "segments": 48,
-           "center": false
-          }
-         },
-         {
-          "type": "cylinder",
-          "name": "Cylinder [Spacer boss]",
-          "visible": true,
-          "params": {
-           "x": 0.0,
-           "y": 0.0,
-           "z": 3.0,
-           "height": 6.0,
-           "radius_bottom": 7.0,
-           "radius_top": 7.0,
+           "height": "back",
+           "radius_bottom": "(disc) / 2",
+           "radius_top": "(disc) / 2",
            "segments": 48,
            "center": false
           }
          },
          {
           "type": "cube",
-          "name": "Cube [Retaining lip]",
+          "name": "Cube [Step]",
           "visible": true,
           "params": {
-           "x": -6.0,
-           "y": 0.0,
-           "z": 6.0,
-           "width": 12.0,
-           "depth": 20.0,
-           "height": 3.0,
+           "x": -5.0,
+           "y": "disc / 2 - 5",
+           "z": 0.0,
+           "width": 10.0,
+           "depth": 5.0,
+           "height": "back + glass",
            "center": false
           }
+         },
+         {
+          "type": "hull",
+          "name": "Hull [Tongue]",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -6.0,
+             "y": "disc / 2 - 2",
+             "z": "back + glass",
+             "width": 12.0,
+             "depth": 2.0,
+             "height": 2.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "disc / 2 + tongue - 6",
+             "z": "back + glass",
+             "height": 2.0,
+             "radius_bottom": 6.0,
+             "radius_top": 6.0,
+             "segments": 48,
+             "center": false
+            }
+           }
+          ]
          }
         ]
        },
        {
-        "type": "cylinder",
-        "name": "Cylinder [Screw hole]",
+        "type": "union",
+        "name": "kcad_countersink [Screw hole]",
         "visible": true,
         "params": {
          "x": 0.0,
          "y": 0.0,
-         "z": -1.0,
-         "height": 12.0,
-         "radius_bottom": 2.2,
-         "radius_top": 2.2,
-         "segments": 48,
-         "center": false
-        }
-       },
-       {
-        "type": "cylinder",
-        "name": "Cylinder [Countersink]",
-        "visible": true,
-        "params": {
-         "x": 0.0,
-         "y": 0.0,
-         "z": 7.0,
-         "height": 3.0,
-         "radius_bottom": 2.2,
-         "radius_top": 4.5,
-         "segments": 48,
-         "center": false
-        }
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "assign",
+          "name": "d =",
+          "visible": true,
+          "params": {
+           "variable": "d",
+           "value": "4.5"
+          }
+         },
+         {
+          "type": "assign",
+          "name": "head =",
+          "visible": true,
+          "params": {
+           "variable": "head",
+           "value": "9"
+          }
+         },
+         {
+          "type": "assign",
+          "name": "t =",
+          "visible": true,
+          "params": {
+           "variable": "t",
+           "value": "back"
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": -1.0,
+           "height": "t + 2",
+           "radius_bottom": "(d) / 2",
+           "radius_top": "(d) / 2",
+           "segments": 48,
+           "center": false
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": "t - (head - d) / 2",
+           "height": "(head - d) / 2 + 0.01",
+           "radius_bottom": "(d) / 2",
+           "radius_top": "(head) / 2",
+           "segments": 48,
+           "center": false
+          }
+         }
+        ]
        }
       ]
      }

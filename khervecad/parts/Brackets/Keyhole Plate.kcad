@@ -22,6 +22,52 @@
     }
    },
    {
+    "type": "assign",
+    "name": "t =",
+    "visible": true,
+    "params": {
+     "variable": "t",
+     "value": 2.0,
+     "description": "Keyhole hanger plate: hangs a frame or cabinet on a screw head"
+    }
+   },
+   {
+    "type": "assign",
+    "name": "plate_w =",
+    "visible": true,
+    "params": {
+     "variable": "plate_w",
+     "value": 22.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "plate_h =",
+    "visible": true,
+    "params": {
+     "variable": "plate_h",
+     "value": 56.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "head =",
+    "visible": true,
+    "params": {
+     "variable": "head",
+     "value": 9.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "neck =",
+    "visible": true,
+    "params": {
+     "variable": "neck",
+     "value": 4.6
+    }
+   },
+   {
     "type": "component",
     "name": "Keyhole Plate",
     "visible": true,
@@ -43,91 +89,311 @@
       "params": {},
       "children": [
        {
-        "type": "hull",
-        "name": "Hull",
+        "type": "translate",
+        "name": "Translate",
         "visible": true,
-        "params": {},
+        "params": {
+         "x": "-plate_w / 2",
+         "y": "-plate_h",
+         "z": 0.0
+        },
         "children": [
          {
-          "type": "cylinder",
-          "name": "Cylinder [Top round]",
+          "type": "union",
+          "name": "kcad_round_plate",
           "visible": true,
           "params": {
            "x": 0.0,
            "y": 0.0,
            "z": 0.0,
-           "height": 2.0,
-           "radius_bottom": 10.0,
-           "radius_top": 10.0,
-           "segments": 48,
-           "center": false
-          }
-         },
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "assign",
+            "name": "w =",
+            "visible": true,
+            "params": {
+             "variable": "w",
+             "value": "plate_w"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "d =",
+            "visible": true,
+            "params": {
+             "variable": "d",
+             "value": "plate_h"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "t =",
+            "visible": true,
+            "params": {
+             "variable": "t",
+             "value": "t"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "r =",
+            "visible": true,
+            "params": {
+             "variable": "r",
+             "value": "plate_w / 2"
+            }
+           },
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For x",
+              "visible": true,
+              "params": {
+               "variable": "x",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "r, w - r"
+              },
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For y",
+                "visible": true,
+                "params": {
+                 "variable": "y",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "r, d - r"
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": "x",
+                   "y": "y",
+                   "z": 0.0,
+                   "height": "t",
+                   "radius_bottom": "r",
+                   "radius_top": "r",
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -6.0,
+         "z": 0.0
+        },
+        "children": [
          {
-          "type": "cylinder",
-          "name": "Cylinder [Bottom round]",
+          "type": "union",
+          "name": "kcad_countersink [Fixing hole]",
           "visible": true,
           "params": {
            "x": 0.0,
-           "y": -40.0,
+           "y": 0.0,
            "z": 0.0,
-           "height": 2.0,
-           "radius_bottom": 10.0,
-           "radius_top": 10.0,
-           "segments": 48,
-           "center": false
-          }
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "assign",
+            "name": "d =",
+            "visible": true,
+            "params": {
+             "variable": "d",
+             "value": "4"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "head =",
+            "visible": true,
+            "params": {
+             "variable": "head",
+             "value": "8"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "t =",
+            "visible": true,
+            "params": {
+             "variable": "t",
+             "value": "t"
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": -1.0,
+             "height": "t + 2",
+             "radius_bottom": "(d) / 2",
+             "radius_top": "(d) / 2",
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": "t - (head - d) / 2",
+             "height": "(head - d) / 2 + 0.01",
+             "radius_bottom": "(d) / 2",
+             "radius_top": "(head) / 2",
+             "segments": 48,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": "-plate_h + 6",
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "kcad_countersink",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "assign",
+            "name": "d =",
+            "visible": true,
+            "params": {
+             "variable": "d",
+             "value": "4"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "head =",
+            "visible": true,
+            "params": {
+             "variable": "head",
+             "value": "8"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "t =",
+            "visible": true,
+            "params": {
+             "variable": "t",
+             "value": "t"
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": -1.0,
+             "height": "t + 2",
+             "radius_bottom": "(d) / 2",
+             "radius_top": "(d) / 2",
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": "t - (head - d) / 2",
+             "height": "(head - d) / 2 + 0.01",
+             "radius_bottom": "(d) / 2",
+             "radius_top": "(head) / 2",
+             "segments": 48,
+             "center": false
+            }
+           }
+          ]
          }
         ]
        },
        {
         "type": "cylinder",
-        "name": "Cylinder [Fixing hole]",
+        "name": "Cylinder [Entry]",
         "visible": true,
         "params": {
          "x": 0.0,
-         "y": 2.0,
+         "y": -18.0,
          "z": -1.0,
-         "height": 4.0,
-         "radius_bottom": 2.0,
-         "radius_top": 2.0,
-         "segments": 48,
-         "center": false
-        }
-       },
-       {
-        "type": "cylinder",
-        "name": "Cylinder [Fixing hole]",
-        "visible": true,
-        "params": {
-         "x": 0.0,
-         "y": -42.0,
-         "z": -1.0,
-         "height": 4.0,
-         "radius_bottom": 2.0,
-         "radius_top": 2.0,
-         "segments": 48,
-         "center": false
-        }
-       },
-       {
-        "type": "cylinder",
-        "name": "Cylinder [Screw head entry]",
-        "visible": true,
-        "params": {
-         "x": 0.0,
-         "y": -12.0,
-         "z": -1.0,
-         "height": 4.0,
-         "radius_bottom": 4.5,
-         "radius_top": 4.5,
+         "height": "t + 2",
+         "radius_bottom": "(head) / 2",
+         "radius_top": "(head) / 2",
          "segments": 48,
          "center": false
         }
        },
        {
         "type": "hull",
-        "name": "Hull",
+        "name": "Hull [Keyhole slot]",
         "visible": true,
         "params": {},
         "children": [
@@ -137,11 +403,11 @@
           "visible": true,
           "params": {
            "x": 0.0,
-           "y": -12.0,
+           "y": -18.0,
            "z": -1.0,
-           "height": 4.0,
-           "radius_bottom": 2.2,
-           "radius_top": 2.2,
+           "height": "t + 2",
+           "radius_bottom": "(neck) / 2",
+           "radius_top": "(neck) / 2",
            "segments": 48,
            "center": false
           }
@@ -152,16 +418,31 @@
           "visible": true,
           "params": {
            "x": 0.0,
-           "y": -26.0,
+           "y": -32.0,
            "z": -1.0,
-           "height": 4.0,
-           "radius_bottom": 2.2,
-           "radius_top": 2.2,
+           "height": "t + 2",
+           "radius_bottom": "(neck) / 2",
+           "radius_top": "(neck) / 2",
            "segments": 48,
            "center": false
           }
          }
         ]
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Head relief]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -18.0,
+         "z": "t - 0.8",
+         "height": 1.0,
+         "radius_bottom": "(head + 3) / 2",
+         "radius_top": "(head + 3) / 2",
+         "segments": 48,
+         "center": false
+        }
        }
       ]
      }

@@ -22,6 +22,61 @@
     }
    },
    {
+    "type": "assign",
+    "name": "post =",
+    "visible": true,
+    "params": {
+     "variable": "post",
+     "value": 70.0,
+     "description": "Post base: a bolted plate carrying a socket for a 70 mm post"
+    }
+   },
+   {
+    "type": "assign",
+    "name": "wall =",
+    "visible": true,
+    "params": {
+     "variable": "wall",
+     "value": 6.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "base =",
+    "visible": true,
+    "params": {
+     "variable": "base",
+     "value": 130.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "plate =",
+    "visible": true,
+    "params": {
+     "variable": "plate",
+     "value": 6.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "rise =",
+    "visible": true,
+    "params": {
+     "variable": "rise",
+     "value": 90.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "anchor =",
+    "visible": true,
+    "params": {
+     "variable": "anchor",
+     "value": 12.0
+    }
+   },
+   {
     "type": "component",
     "name": "Post Base",
     "visible": true,
@@ -36,6 +91,15 @@
      "alpha": 1.0
     },
     "children": [
+     {
+      "type": "assign",
+      "name": "socket =",
+      "visible": true,
+      "params": {
+       "variable": "socket",
+       "value": "post + 2 * wall"
+      }
+     },
      {
       "type": "difference",
       "name": "Difference",
@@ -58,32 +122,221 @@
         },
         "children": [
          {
-          "type": "cube",
-          "name": "Cube [Base plate]",
+          "type": "translate",
+          "name": "Translate",
           "visible": true,
           "params": {
-           "x": -60.0,
-           "y": -60.0,
+           "x": "-base / 2",
+           "y": "-base / 2",
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "union",
+            "name": "kcad_round_plate [Base plate]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "assign",
+              "name": "w =",
+              "visible": true,
+              "params": {
+               "variable": "w",
+               "value": "base"
+              }
+             },
+             {
+              "type": "assign",
+              "name": "d =",
+              "visible": true,
+              "params": {
+               "variable": "d",
+               "value": "base"
+              }
+             },
+             {
+              "type": "assign",
+              "name": "t =",
+              "visible": true,
+              "params": {
+               "variable": "t",
+               "value": "plate"
+              }
+             },
+             {
+              "type": "assign",
+              "name": "r =",
+              "visible": true,
+              "params": {
+               "variable": "r",
+               "value": "10"
+              }
+             },
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For x",
+                "visible": true,
+                "params": {
+                 "variable": "x",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "r, w - r"
+                },
+                "children": [
+                 {
+                  "type": "for_loop",
+                  "name": "For y",
+                  "visible": true,
+                  "params": {
+                   "variable": "y",
+                   "start": 0.0,
+                   "end": 4.0,
+                   "step": 1.0,
+                   "values": "r, d - r"
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": "x",
+                     "y": "y",
+                     "z": 0.0,
+                     "height": "t",
+                     "radius_bottom": "r",
+                     "radius_top": "r",
+                     "segments": 48,
+                     "center": false
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Socket]",
+          "visible": true,
+          "params": {
+           "x": "-socket / 2",
+           "y": "-socket / 2",
            "z": 0.0,
-           "width": 120.0,
-           "depth": 120.0,
-           "height": 4.0,
+           "width": "socket",
+           "depth": "socket",
+           "height": "rise",
            "center": false
           }
          },
          {
-          "type": "cube",
-          "name": "Cube [Post socket]",
+          "type": "for_loop",
+          "name": "For a [Gusset]",
           "visible": true,
           "params": {
-           "x": -37.0,
-           "y": -37.0,
-           "z": 0.0,
-           "width": 74.0,
-           "depth": 74.0,
-           "height": 80.0,
-           "center": false
-          }
+           "variable": "a",
+           "start": 0.0,
+           "end": 359.0,
+           "step": 90.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": "a"
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -2.0,
+               "y": "socket / 2 - 1",
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": -90.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "linear_extrude",
+                  "name": "Linear extrude",
+                  "visible": true,
+                  "params": {
+                   "height": 4.0,
+                   "twist": 0.0,
+                   "scale": 1.0,
+                   "center": false,
+                   "segments": 0
+                  },
+                  "children": [
+                   {
+                    "type": "polygon",
+                    "name": "Polygon",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "points": [
+                      [
+                       0.0,
+                       0.0
+                      ],
+                      [
+                       0.0,
+                       26.0
+                      ],
+                      [
+                       26.0,
+                       0.0
+                      ]
+                     ]
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
          }
         ]
        },
@@ -92,12 +345,12 @@
         "name": "Cube [Post recess]",
         "visible": true,
         "params": {
-         "x": -35.0,
-         "y": -35.0,
-         "z": 4.0,
-         "width": 70.0,
-         "depth": 70.0,
-         "height": 80.0,
+         "x": "-post / 2",
+         "y": "-post / 2",
+         "z": "plate",
+         "width": "post",
+         "depth": "post",
+         "height": "rise",
          "center": false
         }
        },
@@ -110,7 +363,7 @@
          "start": 0.0,
          "end": 4.0,
          "step": 1.0,
-         "values": "-48, 48"
+         "values": "-1, 1"
         },
         "children": [
          {
@@ -122,7 +375,7 @@
            "start": 0.0,
            "end": 4.0,
            "step": 1.0,
-           "values": "-48, 48"
+           "values": "-1, 1"
           },
           "children": [
            {
@@ -130,12 +383,12 @@
             "name": "Cylinder [Anchor hole]",
             "visible": true,
             "params": {
-             "x": "x",
-             "y": "y",
+             "x": "x * (base / 2 - 14)",
+             "y": "y * (base / 2 - 14)",
              "z": -1.0,
-             "height": 6.0,
-             "radius_bottom": 5.0,
-             "radius_top": 5.0,
+             "height": "plate + 2",
+             "radius_bottom": "(anchor) / 2",
+             "radius_top": "(anchor) / 2",
              "segments": 48,
              "center": false
             }
@@ -153,17 +406,19 @@
          "start": 0.0,
          "end": 4.0,
          "step": 1.0,
-         "values": "30, 60"
+         "values": "plate + 25, plate + 55"
         },
         "children": [
          {
-          "type": "translate",
-          "name": "Translate",
+          "type": "for_loop",
+          "name": "For a",
           "visible": true,
           "params": {
-           "x": -40.0,
-           "y": 0.0,
-           "z": "z"
+           "variable": "a",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "0, 90"
           },
           "children": [
            {
@@ -172,24 +427,48 @@
             "visible": true,
             "params": {
              "x": 0.0,
-             "y": 90.0,
-             "z": 0.0
+             "y": 0.0,
+             "z": "a"
             },
             "children": [
              {
-              "type": "cylinder",
-              "name": "Cylinder [Post screw hole]",
+              "type": "translate",
+              "name": "Translate",
               "visible": true,
               "params": {
-               "x": 0.0,
+               "x": "-socket",
                "y": 0.0,
-               "z": 0.0,
-               "height": 80.0,
-               "radius_bottom": 3.0,
-               "radius_top": 3.0,
-               "segments": 48,
-               "center": false
-              }
+               "z": "z"
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Bolt hole]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": "2 * socket",
+                   "radius_bottom": 5.5,
+                   "radius_top": 5.5,
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
              }
             ]
            }

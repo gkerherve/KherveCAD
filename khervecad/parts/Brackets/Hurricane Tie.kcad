@@ -22,6 +22,52 @@
     }
    },
    {
+    "type": "assign",
+    "name": "t =",
+    "visible": true,
+    "params": {
+     "variable": "t",
+     "value": 1.6,
+     "description": "Hurricane tie: a bent strap tying a rafter down to the wall plate"
+    }
+   },
+   {
+    "type": "assign",
+    "name": "wide =",
+    "visible": true,
+    "params": {
+     "variable": "wide",
+     "value": 38.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "drop =",
+    "visible": true,
+    "params": {
+     "variable": "drop",
+     "value": 90.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "seat =",
+    "visible": true,
+    "params": {
+     "variable": "seat",
+     "value": 50.0
+    }
+   },
+   {
+    "type": "assign",
+    "name": "nail =",
+    "visible": true,
+    "params": {
+     "variable": "nail",
+     "value": 4.2
+    }
+   },
+   {
     "type": "component",
     "name": "Hurricane Tie",
     "visible": true,
@@ -65,9 +111,9 @@
            "x": 0.0,
            "y": 0.0,
            "z": 0.0,
-           "width": 38.0,
-           "depth": 1.5,
-           "height": 90.0,
+           "width": "wide",
+           "depth": "t",
+           "height": "drop",
            "center": false
           }
          },
@@ -78,10 +124,10 @@
           "params": {
            "x": 0.0,
            "y": 0.0,
-           "z": 88.5,
-           "width": 38.0,
-           "depth": 50.0,
-           "height": 1.5,
+           "z": "drop",
+           "width": "wide",
+           "depth": "seat",
+           "height": "t",
            "center": false
           }
          },
@@ -90,14 +136,75 @@
           "name": "Cube [Side flange]",
           "visible": true,
           "params": {
-           "x": 36.5,
+           "x": "wide - t",
            "y": 0.0,
-           "z": 50.0,
-           "width": 1.5,
-           "depth": 50.0,
-           "height": 40.0,
+           "z": "drop - 42",
+           "width": "t",
+           "depth": "seat",
+           "height": 42.0,
            "center": false
           }
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": "t",
+           "z": "drop - t"
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": "wide",
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Polygon [Bend]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   0.0,
+                   0.0
+                  ],
+                  [
+                   0.0,
+                   8.0
+                  ],
+                  [
+                   -8.0,
+                   0.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
          }
         ]
        },
@@ -107,46 +214,60 @@
         "visible": true,
         "params": {
          "variable": "z",
-         "start": 0.0,
-         "end": 4.0,
-         "step": 1.0,
-         "values": "15, 35, 55, 75"
+         "start": 12.0,
+         "end": "drop - 10",
+         "step": 20.0,
+         "values": ""
         },
         "children": [
          {
-          "type": "translate",
-          "name": "Translate",
+          "type": "for_loop",
+          "name": "For x",
           "visible": true,
           "params": {
-           "x": "12 + (z % 40) / 2",
-           "y": -1.0,
-           "z": "z"
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "11, 27"
           },
           "children": [
            {
-            "type": "rotate",
-            "name": "Rotate",
+            "type": "translate",
+            "name": "Translate",
             "visible": true,
             "params": {
-             "x": -90.0,
-             "y": 0.0,
-             "z": 0.0
+             "x": "x",
+             "y": -1.0,
+             "z": "z"
             },
             "children": [
              {
-              "type": "cylinder",
-              "name": "Cylinder [Nail hole]",
+              "type": "rotate",
+              "name": "Rotate",
               "visible": true,
               "params": {
-               "x": 0.0,
+               "x": -90.0,
                "y": 0.0,
-               "z": 0.0,
-               "height": 4.0,
-               "radius_bottom": 2.2,
-               "radius_top": 2.2,
-               "segments": 48,
-               "center": false
-              }
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Wall nail hole]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "t + 2",
+                 "radius_bottom": "(nail) / 2",
+                 "radius_top": "(nail) / 2",
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
              }
             ]
            }
@@ -171,15 +292,68 @@
           "name": "Cylinder [Rafter nail hole]",
           "visible": true,
           "params": {
-           "x": 19.0,
+           "x": "wide / 2 - 8",
            "y": "y",
-           "z": 87.0,
-           "height": 4.0,
-           "radius_bottom": 2.2,
-           "radius_top": 2.2,
+           "z": "drop - 1",
+           "height": "t + 2",
+           "radius_bottom": "(nail) / 2",
+           "radius_top": "(nail) / 2",
            "segments": 48,
            "center": false
           }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For z",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "drop - 34, drop - 14"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "wide - t - 1",
+           "y": 26.0,
+           "z": "z"
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Flange nail hole]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": "t + 2",
+               "radius_bottom": "(nail) / 2",
+               "radius_top": "(nail) / 2",
+               "segments": 48,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
          }
         ]
        }
