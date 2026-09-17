@@ -203,6 +203,14 @@ into a new module and import.
                        and seeded Voronoi panel (Bowyer–Watson `delaunay`,
                        cells by half-plane clipping, inset by the wall),
                        maze (backtracker spanning tree) and Hilbert plate.
+  - `split.py`       — Split for printing (tree right-click, `split_ui`
+                       dialog, MCP `split_part`): two Objects, each
+                       `difference() { intersection() { <clone of the
+                       part>; <side box> } <dowel holes> }`, the dowels
+                       where the section (`section.cut`) is solid and far
+                       from its edges (`dowel_points`), a pin Object, the
+                       second half moved `gap` along the axis, the
+                       original hidden. Editable nodes, exact in OpenSCAD.
   - `animate.py`     — View ▸ Animate ($t): `set_time` puts OpenSCAD's
                        animation time in `expr.SPECIAL_DEFAULTS["$t"]`
                        (every expression reads it), `engine.DEFINES`
@@ -2775,7 +2783,7 @@ into a new module and import.
                        out. The test also checks the pin 6 mm short of
                        home DOES press on the bore — or it would never
                        hold.
-  - `mcp_schema.py`  — the **MCP tool table**: 62 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 63 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -2935,7 +2943,7 @@ into a new module and import.
                        caps a pattern at `MAX_COPIES` (1000) and needs
                        every count ≥ 1. Examples ▸ Mechanical ▸ Bolt
                        circle & stair (pattern).
-- `docs/MCP.md` — how to connect an assistant, what the 62 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 63 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -3209,7 +3217,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **62 tools**: the object tree, OpenSCAD in
+client gets the whole app as **63 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

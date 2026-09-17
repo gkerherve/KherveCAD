@@ -386,6 +386,29 @@ TOOLS = [
         "input_schema": _obj({}),
     },
     {
+        "name": "split_part",
+        "description": (
+            "Split a part that is too big for the print bed: two new "
+            "Objects, each the part cut by the plane axis = position (in "
+            "the part's own frame; omit position for the middle), joined "
+            "by dowel holes placed where the section is solid, plus a "
+            "dowel pin Object. The original is hidden, not deleted."
+        ),
+        "input_schema": _obj({
+            "node_id": {"type": "integer"},
+            "axis": {"type": "string", "enum": ["x", "y", "z"]},
+            "position": {"type": "number"},
+            "dowels": {"type": "integer", "description": "0-4 (default 2)."},
+            "dowel_diameter": {"type": "number"},
+            "dowel_depth": {"type": "number",
+                            "description": "Total pin length, mm."},
+            "clearance": {"type": "number"},
+            "gap": {"type": "number",
+                    "description": "How far the second half is moved "
+                                   "along the axis to show both."},
+        }, ["node_id"]),
+    },
+    {
         "name": "list_scad_libraries",
         "description": (
             "The OpenSCAD community libraries (BOSL2, MCAD, NopSCADlib, "

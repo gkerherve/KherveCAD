@@ -989,6 +989,12 @@ class ObjectTree(QTreeWidget):
             lambda: [self.model.set_visible(n, bool(hidden))
                      for n in nodes])
         self._modifier_menu(menu, nodes)
+        if len(roots) == 1 and hasattr(self.window(), "statusBar"):
+            from . import split_ui
+            menu.addAction(icons.icon("mdi.box-cutter"),
+                           "Split for printing...",
+                           lambda: split_ui.open_dialog(self.window(),
+                                                        roots[0]))
         menu.addSeparator()
         from .meshimport import mesh_nodes
         meshes = mesh_nodes(roots)

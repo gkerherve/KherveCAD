@@ -623,6 +623,24 @@ class McpToolExecutor:
         return {"categories": [{"category": c, "parts": p}
                                for c, p in groups.items()]}
 
+    def _t_split_part(self, params) -> dict:
+        from . import split
+        node = self._node(params.get("node_id"))
+        try:
+            first, second, pin, points = split.split_part(
+                self._model, node, str(params.get("axis", "z")),
+                params.get("position"), int(params.get("dowels", 2)),
+                float(params.get("dowel_diameter", 5.0)),
+                float(params.get("dowel_depth", 10.0)),
+                float(params.get("clearance", 0.15)),
+                float(params.get("gap", 10.0)))
+        except ValueError as exc:
+            raise ToolError(str(exc))
+        return {"halves": [first.id, second.id],
+                "pin": pin.id if pin is not None else None,
+                "dowels": [[round(u, 3), round(v, 3)] for u, v in points],
+                "hidden": node.id}
+
     def _t_list_scad_libraries(self, _params) -> dict:
         from . import scadlib_dialog
         return scadlib_dialog.describe()
