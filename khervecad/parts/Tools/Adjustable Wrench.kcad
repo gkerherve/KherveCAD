@@ -1,8 +1,9 @@
 {
  "format": "kcad",
- "version": 7,
+ "version": 11,
  "global_fn": 45,
  "global_fn_on": false,
+ "unit": "mm",
  "dimensions": [],
  "references": [],
  "tree": {
@@ -22,7 +23,7 @@
    },
    {
     "type": "component",
-    "name": "Adjustable_Wrench",
+    "name": "Body and fixed jaw",
     "visible": true,
     "params": {
      "x": 0.0,
@@ -141,72 +142,364 @@
             }
            },
            {
-            "type": "rect",
-            "name": "Rectangle [Jaw opening]",
+            "type": "polygon",
+            "name": "Polygon",
             "visible": true,
             "params": {
-             "x": 170.0,
-             "y": -3.0,
-             "width": 40.0,
-             "height": 17.0
+             "x": 0.0,
+             "y": 0.0,
+             "points": [
+              [
+               170.0,
+               -3.0
+              ],
+              [
+               196.2,
+               -3.0
+              ],
+              [
+               196.3,
+               0.0
+              ],
+              [
+               195.9,
+               5.0
+              ],
+              [
+               194.2,
+               10.0
+              ],
+              [
+               191.9,
+               14.0
+              ],
+              [
+               170.0,
+               14.0
+              ]
+             ]
+            }
+           },
+           {
+            "type": "rect",
+            "name": "Rectangle [Slide way]",
+            "visible": true,
+            "params": {
+             "x": 169.0,
+             "y": -22.0,
+             "width": 13.0,
+             "height": 19.5
+            }
+           },
+           {
+            "type": "circle",
+            "name": "Circle [Worm pocket]",
+            "visible": true,
+            "params": {
+             "x": 165.5,
+             "y": -14.0,
+             "radius": 8.2,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
             }
            }
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Sliding jaw",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "cube",
-        "name": "Cube [Movable jaw]",
+        "name": "Cube [Jaw]",
         "visible": true,
         "params": {
-         "x": 170.0,
-         "y": -12.0,
+         "x": 169.5,
+         "y": -12.4,
          "z": 0.0,
-         "width": 20.0,
-         "depth": 9.0,
+         "width": 21.0,
+         "depth": 9.4,
          "height": 10.0,
          "center": false
         }
        },
        {
-        "type": "translate",
-        "name": "Translate",
+        "type": "cube",
+        "name": "Cube [Rack shank]",
         "visible": true,
         "params": {
-         "x": 158.0,
-         "y": -14.0,
-         "z": 5.0
+         "x": 169.5,
+         "y": -21.5,
+         "z": 0.0,
+         "width": 12.5,
+         "depth": 10.5,
+         "height": 10.0,
+         "center": false
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For y",
+        "visible": true,
+        "params": {
+         "variable": "y",
+         "start": -20.0,
+         "end": -13.0,
+         "step": 2.2,
+         "values": ""
         },
         "children": [
          {
-          "type": "rotate",
-          "name": "Rotate",
+          "type": "translate",
+          "name": "Translate",
           "visible": true,
           "params": {
-           "x": 0.0,
-           "y": 90.0,
-           "z": 0.0
+           "x": 168.7,
+           "y": "y",
+           "z": 5.0
           },
           "children": [
            {
-            "type": "cylinder",
-            "name": "Cylinder [Worm screw]",
+            "type": "rotate",
+            "name": "Rotate",
             "visible": true,
             "params": {
              "x": 0.0,
-             "y": 0.0,
-             "z": 0.0,
-             "height": 13.0,
-             "radius_bottom": 4.5,
-             "radius_top": 4.5,
-             "segments": 64,
-             "center": false
-            }
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 30.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Rack tooth]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 1.6,
+                 "radius_bottom": 1.1,
+                 "radius_top": 1.1,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
            }
           ]
          }
         ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Worm screw",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8c8c94",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 165.5,
+         "y": -14.0,
+         "z": 0.6
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Worm body]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 8.8,
+           "radius_bottom": 7.4,
+           "radius_top": 7.4,
+           "segments": 64,
+           "center": false
+          }
+         },
+         {
+          "type": "for_loop",
+          "name": "For a",
+          "visible": true,
+          "params": {
+           "variable": "a",
+           "start": 0.0,
+           "end": 345.0,
+           "step": 15.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": "a"
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Knurl]",
+              "visible": true,
+              "params": {
+               "x": 7.2,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 8.8,
+               "radius_bottom": 0.8,
+               "radius_top": 0.8,
+               "segments": 8,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Worm pin",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#b8bdc7",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Axle]",
+        "visible": true,
+        "params": {
+         "x": 165.5,
+         "y": -14.0,
+         "z": -1.0,
+         "height": 12.0,
+         "radius_bottom": 1.6,
+         "radius_top": 1.6,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Peened head]",
+        "visible": true,
+        "params": {
+         "x": 165.5,
+         "y": -14.0,
+         "z": -1.6,
+         "height": 0.8,
+         "radius_bottom": 2.6,
+         "radius_top": 2.6,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Peened head]",
+        "visible": true,
+        "params": {
+         "x": 165.5,
+         "y": -14.0,
+         "z": 10.8,
+         "height": 0.8,
+         "radius_bottom": 2.6,
+         "radius_top": 2.6,
+         "segments": 32,
+         "center": false
+        }
        }
       ]
      }

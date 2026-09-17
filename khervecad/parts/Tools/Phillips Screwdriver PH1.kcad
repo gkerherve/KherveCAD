@@ -1,8 +1,9 @@
 {
  "format": "kcad",
- "version": 7,
+ "version": 11,
  "global_fn": 45,
  "global_fn_on": false,
+ "unit": "mm",
  "dimensions": [],
  "references": [],
  "tree": {
@@ -22,7 +23,7 @@
    },
    {
     "type": "component",
-    "name": "Phillips_Screwdriver_PH1",
+    "name": "Handle",
     "visible": true,
     "params": {
      "x": 0.0,
@@ -198,7 +199,24 @@
         ]
        }
       ]
-     },
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Grip cap",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
      {
       "type": "color",
       "name": "Color",
@@ -231,7 +249,7 @@
           "children": [
            {
             "type": "cylinder",
-            "name": "Cylinder [Bolster]",
+            "name": "Cylinder [Soft cap]",
             "visible": true,
             "params": {
              "x": 0.0,
@@ -239,7 +257,7 @@
              "z": 0.0,
              "height": 10.0,
              "radius_bottom": 12.0,
-             "radius_top": 5.5,
+             "radius_top": 6.6,
              "segments": 64,
              "center": false
             }
@@ -249,7 +267,24 @@
         ]
        }
       ]
-     },
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Ferrule",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
      {
       "type": "color",
       "name": "Color",
@@ -289,8 +324,76 @@
              "y": 0.0,
              "z": 0.0,
              "height": 3.0,
-             "radius_bottom": 5.5,
-             "radius_top": 5.5,
+             "radius_bottom": 6.6,
+             "radius_top": 6.6,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Blade",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 82.0,
+         "y": 0.0,
+         "z": 12.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Tang]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 14.0,
+             "radius_bottom": 2.0,
+             "radius_top": 2.5,
              "segments": 64,
              "center": false
             }
@@ -337,19 +440,7 @@
           ]
          }
         ]
-       }
-      ]
-     },
-     {
-      "type": "color",
-      "name": "Color",
-      "visible": true,
-      "params": {
-       "color": "#d1d6de",
-       "alpha": 1.0,
-       "material": "Default"
-      },
-      "children": [
+       },
        {
         "type": "hull",
         "name": "Hull",

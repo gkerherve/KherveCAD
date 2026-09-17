@@ -1,8 +1,9 @@
 {
  "format": "kcad",
- "version": 7,
+ "version": 11,
  "global_fn": 45,
  "global_fn_on": false,
+ "unit": "mm",
  "dimensions": [],
  "references": [],
  "tree": {
@@ -22,7 +23,7 @@
    },
    {
     "type": "component",
-    "name": "Set_3_8_drive_rail",
+    "name": "Storage rail",
     "visible": true,
     "params": {
      "x": 0.0,
@@ -306,7 +307,7 @@
    },
    {
     "type": "component",
-    "name": "Set_3_8_drive_sockets",
+    "name": "Socket 8",
     "visible": true,
     "params": {
      "x": 0.0,
@@ -463,7 +464,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Socket 9",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -598,7 +628,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Socket 10",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -733,7 +792,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Socket 11",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -868,7 +956,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Socket 12",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -1003,7 +1120,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Socket 13",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -1138,7 +1284,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Socket 14",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -1273,7 +1448,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Socket 15",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -1408,7 +1612,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Socket 16",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -1543,7 +1776,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Socket 17",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -1678,7 +1940,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Socket 18",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -1813,7 +2104,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Socket 19",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -1948,7 +2268,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Socket 21",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -2083,7 +2432,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Socket 22",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -2218,7 +2596,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Extension bar",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -2327,7 +2734,7 @@
    },
    {
     "type": "component",
-    "name": "Set_3_8_drive_ratchet",
+    "name": "Ratchet body",
     "visible": true,
     "params": {
      "x": 22.43,
@@ -2426,6 +2833,50 @@
         ]
        },
        {
+        "type": "cylinder",
+        "name": "Cylinder [Reverse lever pivot]",
+        "visible": true,
+        "params": {
+         "x": -3.49,
+         "y": 0.0,
+         "z": 0.0,
+         "height": 3.5,
+         "radius_bottom": 3.0,
+         "radius_top": 3.0,
+         "segments": 64,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Drive anvil",
+    "visible": true,
+    "params": {
+     "x": 22.43,
+     "y": -55.77,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
         "type": "cube",
         "name": "Cube [Square drive]",
         "visible": true,
@@ -2450,22 +2901,36 @@
          "radius": 1.14,
          "segments": 48
         }
-       },
-       {
-        "type": "cylinder",
-        "name": "Cylinder [Reverse lever pivot]",
-        "visible": true,
-        "params": {
-         "x": -3.49,
-         "y": 0.0,
-         "z": 0.0,
-         "height": 3.5,
-         "radius_bottom": 3.0,
-         "radius_top": 3.0,
-         "segments": 64,
-         "center": false
-        }
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Reverse lever",
+    "visible": true,
+    "params": {
+     "x": 22.43,
+     "y": -55.77,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "cube",
         "name": "Cube [Reverse lever]",
@@ -2481,7 +2946,24 @@
         }
        }
       ]
-     },
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Ratchet grip",
+    "visible": true,
+    "params": {
+     "x": 22.43,
+     "y": -55.77,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
      {
       "type": "color",
       "name": "Color",

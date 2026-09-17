@@ -1,8 +1,9 @@
 {
  "format": "kcad",
- "version": 7,
+ "version": 11,
  "global_fn": 45,
  "global_fn_on": false,
+ "unit": "mm",
  "dimensions": [],
  "references": [],
  "tree": {
@@ -22,7 +23,7 @@
    },
    {
     "type": "component",
-    "name": "Hex_Key_Set",
+    "name": "Hex key 1.5 mm",
     "visible": true,
     "params": {
      "x": 0.0,
@@ -77,7 +78,7 @@
             "children": [
              {
               "type": "cylinder",
-              "name": "Cylinder [Long leg 1.5 mm]",
+              "name": "Cylinder [Long leg]",
               "visible": true,
               "params": {
                "x": 0.0,
@@ -138,7 +139,7 @@
               "children": [
                {
                 "type": "cylinder",
-                "name": "Cylinder [Short leg 1.5 mm]",
+                "name": "Cylinder [Short leg]",
                 "visible": true,
                 "params": {
                  "x": 0.0,
@@ -158,7 +159,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Hex key 2 mm",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#26262b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -191,7 +221,7 @@
             "children": [
              {
               "type": "cylinder",
-              "name": "Cylinder [Long leg 2 mm]",
+              "name": "Cylinder [Long leg]",
               "visible": true,
               "params": {
                "x": 0.0,
@@ -252,7 +282,7 @@
               "children": [
                {
                 "type": "cylinder",
-                "name": "Cylinder [Short leg 2 mm]",
+                "name": "Cylinder [Short leg]",
                 "visible": true,
                 "params": {
                  "x": 0.0,
@@ -272,7 +302,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Hex key 2.5 mm",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#26262b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -305,7 +364,7 @@
             "children": [
              {
               "type": "cylinder",
-              "name": "Cylinder [Long leg 2.5 mm]",
+              "name": "Cylinder [Long leg]",
               "visible": true,
               "params": {
                "x": 0.0,
@@ -366,7 +425,7 @@
               "children": [
                {
                 "type": "cylinder",
-                "name": "Cylinder [Short leg 2.5 mm]",
+                "name": "Cylinder [Short leg]",
                 "visible": true,
                 "params": {
                  "x": 0.0,
@@ -386,7 +445,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Hex key 3 mm",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#26262b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -419,7 +507,7 @@
             "children": [
              {
               "type": "cylinder",
-              "name": "Cylinder [Long leg 3 mm]",
+              "name": "Cylinder [Long leg]",
               "visible": true,
               "params": {
                "x": 0.0,
@@ -480,7 +568,7 @@
               "children": [
                {
                 "type": "cylinder",
-                "name": "Cylinder [Short leg 3 mm]",
+                "name": "Cylinder [Short leg]",
                 "visible": true,
                 "params": {
                  "x": 0.0,
@@ -500,7 +588,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Hex key 4 mm",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#26262b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -533,7 +650,7 @@
             "children": [
              {
               "type": "cylinder",
-              "name": "Cylinder [Long leg 4 mm]",
+              "name": "Cylinder [Long leg]",
               "visible": true,
               "params": {
                "x": 0.0,
@@ -594,7 +711,7 @@
               "children": [
                {
                 "type": "cylinder",
-                "name": "Cylinder [Short leg 4 mm]",
+                "name": "Cylinder [Short leg]",
                 "visible": true,
                 "params": {
                  "x": 0.0,
@@ -614,7 +731,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Hex key 5 mm",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#26262b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -647,7 +793,7 @@
             "children": [
              {
               "type": "cylinder",
-              "name": "Cylinder [Long leg 5 mm]",
+              "name": "Cylinder [Long leg]",
               "visible": true,
               "params": {
                "x": 0.0,
@@ -708,7 +854,7 @@
               "children": [
                {
                 "type": "cylinder",
-                "name": "Cylinder [Short leg 5 mm]",
+                "name": "Cylinder [Short leg]",
                 "visible": true,
                 "params": {
                  "x": 0.0,
@@ -728,7 +874,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Hex key 6 mm",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#26262b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -761,7 +936,7 @@
             "children": [
              {
               "type": "cylinder",
-              "name": "Cylinder [Long leg 6 mm]",
+              "name": "Cylinder [Long leg]",
               "visible": true,
               "params": {
                "x": 0.0,
@@ -822,7 +997,7 @@
               "children": [
                {
                 "type": "cylinder",
-                "name": "Cylinder [Short leg 6 mm]",
+                "name": "Cylinder [Short leg]",
                 "visible": true,
                 "params": {
                  "x": 0.0,
@@ -842,7 +1017,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Hex key 8 mm",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#26262b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -875,7 +1079,7 @@
             "children": [
              {
               "type": "cylinder",
-              "name": "Cylinder [Long leg 8 mm]",
+              "name": "Cylinder [Long leg]",
               "visible": true,
               "params": {
                "x": 0.0,
@@ -936,7 +1140,7 @@
               "children": [
                {
                 "type": "cylinder",
-                "name": "Cylinder [Short leg 8 mm]",
+                "name": "Cylinder [Short leg]",
                 "visible": true,
                 "params": {
                  "x": 0.0,
@@ -956,7 +1160,36 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Hex key 10 mm",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#26262b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",
@@ -989,7 +1222,7 @@
             "children": [
              {
               "type": "cylinder",
-              "name": "Cylinder [Long leg 10 mm]",
+              "name": "Cylinder [Long leg]",
               "visible": true,
               "params": {
                "x": 0.0,
@@ -1050,7 +1283,7 @@
               "children": [
                {
                 "type": "cylinder",
-                "name": "Cylinder [Short leg 10 mm]",
+                "name": "Cylinder [Short leg]",
                 "visible": true,
                 "params": {
                  "x": 0.0,

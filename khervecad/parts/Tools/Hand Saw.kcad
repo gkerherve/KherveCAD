@@ -1,8 +1,9 @@
 {
  "format": "kcad",
- "version": 7,
+ "version": 11,
  "global_fn": 45,
  "global_fn_on": false,
+ "unit": "mm",
  "dimensions": [],
  "references": [],
  "tree": {
@@ -22,7 +23,7 @@
    },
    {
     "type": "component",
-    "name": "Hand_Saw",
+    "name": "Blade",
     "visible": true,
     "params": {
      "x": 0.0,
@@ -991,7 +992,24 @@
         ]
        }
       ]
-     },
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Handle",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
      {
       "type": "color",
       "name": "Color",
@@ -1167,7 +1185,24 @@
         ]
        }
       ]
-     },
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Handle screw (top)",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
      {
       "type": "color",
       "name": "Color",
@@ -1179,33 +1214,197 @@
       },
       "children": [
        {
-        "type": "for_loop",
-        "name": "For x",
+        "type": "cylinder",
+        "name": "Cylinder [Screw]",
         "visible": true,
         "params": {
-         "variable": "x",
-         "start": 0.0,
-         "end": 4.0,
-         "step": 1.0,
-         "values": "-5, 15"
-        },
-        "children": [
-         {
-          "type": "cylinder",
-          "name": "Cylinder [Brass screw]",
-          "visible": true,
-          "params": {
-           "x": "x",
-           "y": 60.0,
-           "z": -11.5,
-           "height": 24.0,
-           "radius_bottom": 3.5,
-           "radius_top": 3.5,
-           "segments": 64,
-           "center": false
-          }
-         }
-        ]
+         "x": 21.0,
+         "y": 100.0,
+         "z": -11.5,
+         "height": 24.0,
+         "radius_bottom": 3.2,
+         "radius_top": 3.2,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Rosette]",
+        "visible": true,
+        "params": {
+         "x": 21.0,
+         "y": 100.0,
+         "z": -12.8,
+         "height": 1.4,
+         "radius_bottom": 6.0,
+         "radius_top": 6.0,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Rosette]",
+        "visible": true,
+        "params": {
+         "x": 21.0,
+         "y": 100.0,
+         "z": 11.4,
+         "height": 1.4,
+         "radius_bottom": 6.0,
+         "radius_top": 6.0,
+         "segments": 32,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Handle screw (middle)",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#cca633",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Screw]",
+        "visible": true,
+        "params": {
+         "x": 21.0,
+         "y": 60.0,
+         "z": -11.5,
+         "height": 24.0,
+         "radius_bottom": 3.2,
+         "radius_top": 3.2,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Rosette]",
+        "visible": true,
+        "params": {
+         "x": 21.0,
+         "y": 60.0,
+         "z": -12.8,
+         "height": 1.4,
+         "radius_bottom": 6.0,
+         "radius_top": 6.0,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Rosette]",
+        "visible": true,
+        "params": {
+         "x": 21.0,
+         "y": 60.0,
+         "z": 11.4,
+         "height": 1.4,
+         "radius_bottom": 6.0,
+         "radius_top": 6.0,
+         "segments": 32,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Handle screw (bottom)",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#cca633",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Screw]",
+        "visible": true,
+        "params": {
+         "x": 21.0,
+         "y": 24.0,
+         "z": -11.5,
+         "height": 24.0,
+         "radius_bottom": 3.2,
+         "radius_top": 3.2,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Rosette]",
+        "visible": true,
+        "params": {
+         "x": 21.0,
+         "y": 24.0,
+         "z": -12.8,
+         "height": 1.4,
+         "radius_bottom": 6.0,
+         "radius_top": 6.0,
+         "segments": 32,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Rosette]",
+        "visible": true,
+        "params": {
+         "x": 21.0,
+         "y": 24.0,
+         "z": 11.4,
+         "height": 1.4,
+         "radius_bottom": 6.0,
+         "radius_top": 6.0,
+         "segments": 32,
+         "center": false
+        }
        }
       ]
      }

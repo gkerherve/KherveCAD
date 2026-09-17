@@ -768,7 +768,8 @@ into a new module and import.
                        **Cars** (Ferrari 288 GTO / F8 / SF90, Mercedes
                        G-Class, Mini Cooper S — its baked body meshes
                        ride along in `Cars/Mini Cooper S parts/`) and
-                       **Tools** (57 hand tools). The loose top-level
+                       **Tools** (57 hand tools, built by
+                       `tools/hand_tools.py`). The loose top-level
                        "KCAD files" section was **retired** (Sep 2026,
                        the user's request; Vase Elwen dropped from Pots
                        too): `parts/` holds sections only, and a test
@@ -3002,6 +3003,40 @@ into a new module and import.
                        check orthographically. The MCP `_INSTRUCTIONS`
                        carry the same rule ("Modelling a real object")
                        to every connected client.
+  - `tools/hand_tools.py` — the **Hand tools as real assemblies**
+                       (2026-09-17, the user's request: a plier "should be
+                       made of at least 3 parts"). Every tool in
+                       `parts/Tools/` was one Object, so nothing could be
+                       coloured, mated or exploded apart. Each tool is now
+                       one `component` per MANUFACTURED piece: the pliers
+                       are two crossing levers (each jaw full thickness on
+                       its own side of y = 0, lapped to half thickness at
+                       the pivot so the levers cross, handle leg to the far
+                       side), a peened rivet and two grips; the adjustable
+                       wrench a body with the fixed jaw, a sliding jaw with
+                       its rack shank, a knurled worm and its pin; the
+                       hammer head / shaft / grip / eye wedge; a chisel
+                       blade / handle / ferrule / striking cap; a
+                       screwdriver handle / grip cap / ferrule / blade; the
+                       saw blade, handle and three brass screws; each hex
+                       key; the level's body, two end caps and two vials;
+                       and `split_socket_set` takes a socket set apart into
+                       the rail, EVERY socket (named from the rail's own
+                       size marks), the extension bar and the ratchet's
+                       body, drive anvil, reverse lever and grip. What is
+                       really one forging stays one Object — the 35
+                       combination spanners and the cold chisel. Tools are
+                       authored as OpenSCAD (one zero-argument `module` per
+                       part) and parsed back through `scadparse`, so the
+                       shipped `.kcad` is an ordinary editable tree;
+                       `test_hand_tools` pins the file to the generator,
+                       the part list of each tool, that the plier jaws meet
+                       on y = 0 from opposite sides, and that a one-piece
+                       tool is not split. A subtrahend that reaches past
+                       its solid draws a phantom wall in the built-in
+                       preview (it shows a difference as its uncut first
+                       operand), so the wrench's jaw opening is a polygon
+                       following the head's arc, not an overhanging square.
   - `tools/butt_hinge.py` — writes `parts/Brackets/Butt Hinge.kcad` and
                        `Butt Hinge 2.kcad` (`python -m
                        khervecad.tools.butt_hinge` for both, `--style

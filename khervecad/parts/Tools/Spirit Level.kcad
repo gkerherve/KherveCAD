@@ -1,8 +1,9 @@
 {
  "format": "kcad",
- "version": 7,
+ "version": 11,
  "global_fn": 45,
  "global_fn_on": false,
+ "unit": "mm",
  "dimensions": [],
  "references": [],
  "tree": {
@@ -22,7 +23,7 @@
    },
    {
     "type": "component",
-    "name": "Spirit_Level",
+    "name": "Body",
     "visible": true,
     "params": {
      "x": 0.0,
@@ -86,7 +87,24 @@
         }
        }
       ]
-     },
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "End cap (left)",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
      {
       "type": "color",
       "name": "Color",
@@ -110,7 +128,36 @@
          "height": 27.0,
          "center": false
         }
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "End cap (right)",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a1a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "cube",
         "name": "Cube [End cap]",
@@ -124,10 +171,39 @@
          "height": 27.0,
          "center": false
         }
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Level vial",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a1a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "cube",
-        "name": "Cube [Centre window]",
+        "name": "Cube [Vial frame]",
         "visible": true,
         "params": {
          "x": 172.0,
@@ -135,20 +211,6 @@
          "z": 24.0,
          "width": 56.0,
          "depth": 20.0,
-         "height": 3.0,
-         "center": false
-        }
-       },
-       {
-        "type": "cube",
-        "name": "Cube [End window]",
-        "visible": true,
-        "params": {
-         "x": 30.0,
-         "y": 5.0,
-         "z": 24.0,
-         "width": 20.0,
-         "depth": 50.0,
          "height": 3.0,
          "center": false
         }
@@ -187,52 +249,13 @@
           "children": [
            {
             "type": "cylinder",
-            "name": "Cylinder [Level vial]",
+            "name": "Cylinder [Vial]",
             "visible": true,
             "params": {
              "x": 0.0,
              "y": 0.0,
              "z": 0.0,
              "height": 40.0,
-             "radius_bottom": 5.0,
-             "radius_top": 5.0,
-             "segments": 64,
-             "center": false
-            }
-           }
-          ]
-         }
-        ]
-       },
-       {
-        "type": "translate",
-        "name": "Translate",
-        "visible": true,
-        "params": {
-         "x": 40.0,
-         "y": 8.0,
-         "z": 27.0
-        },
-        "children": [
-         {
-          "type": "rotate",
-          "name": "Rotate",
-          "visible": true,
-          "params": {
-           "x": -90.0,
-           "y": 0.0,
-           "z": 0.0
-          },
-          "children": [
-           {
-            "type": "cylinder",
-            "name": "Cylinder [Plumb vial]",
-            "visible": true,
-            "params": {
-             "x": 0.0,
-             "y": 0.0,
-             "z": 0.0,
-             "height": 44.0,
              "radius_bottom": 5.0,
              "radius_top": 5.0,
              "segments": 64,
@@ -290,7 +313,113 @@
           ]
          }
         ]
-       },
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Plumb vial",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a1a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Vial frame]",
+        "visible": true,
+        "params": {
+         "x": 30.0,
+         "y": 5.0,
+         "z": 24.0,
+         "width": 20.0,
+         "depth": 50.0,
+         "height": 3.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#66e64c",
+       "alpha": 0.6,
+       "material": "Glass"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 40.0,
+         "y": 8.0,
+         "z": 27.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": -90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Vial]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 44.0,
+             "radius_bottom": 5.0,
+             "radius_top": 5.0,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ffffff",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
        {
         "type": "translate",
         "name": "Translate",

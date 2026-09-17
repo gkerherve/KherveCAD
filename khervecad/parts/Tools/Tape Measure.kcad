@@ -1,8 +1,9 @@
 {
  "format": "kcad",
- "version": 7,
+ "version": 11,
  "global_fn": 45,
  "global_fn_on": false,
+ "unit": "mm",
  "dimensions": [],
  "references": [],
  "tree": {
@@ -22,7 +23,7 @@
    },
    {
     "type": "component",
-    "name": "Tape_Measure",
+    "name": "Case",
     "visible": true,
     "params": {
      "x": 0.0,
@@ -83,7 +84,24 @@
         ]
        }
       ]
-     },
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Rubber over-mould",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
      {
       "type": "color",
       "name": "Color",
@@ -123,37 +141,26 @@
          "segments": 64,
          "center": false
         }
-       },
-       {
-        "type": "cube",
-        "name": "Cube [End hook]",
-        "visible": true,
-        "params": {
-         "x": 55.5,
-         "y": -10.0,
-         "z": 0.0,
-         "width": 1.5,
-         "depth": 20.0,
-         "height": 6.0,
-         "center": false
-        }
-       },
-       {
-        "type": "cube",
-        "name": "Cube [Belt clip]",
-        "visible": true,
-        "params": {
-         "x": 10.0,
-         "y": -31.0,
-         "z": 10.0,
-         "width": 24.0,
-         "depth": 2.0,
-         "height": 12.0,
-         "center": false
-        }
        }
       ]
-     },
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Blade",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
      {
       "type": "color",
       "name": "Color",
@@ -179,7 +186,138 @@
         }
        }
       ]
-     },
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "End hook",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a1a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [End hook]",
+        "visible": true,
+        "params": {
+         "x": 55.5,
+         "y": -10.0,
+         "z": 0.0,
+         "width": 1.5,
+         "depth": 20.0,
+         "height": 6.0,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Rivet plate]",
+        "visible": true,
+        "params": {
+         "x": 53.0,
+         "y": -10.0,
+         "z": 0.6,
+         "width": 2.5,
+         "depth": 20.0,
+         "height": 1.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Belt clip",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a1a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Spring blade]",
+        "visible": true,
+        "params": {
+         "x": 22.0,
+         "y": -35.0,
+         "z": 3.0,
+         "width": 13.0,
+         "depth": 2.5,
+         "height": 25.0,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Top bridge]",
+        "visible": true,
+        "params": {
+         "x": 22.0,
+         "y": -35.0,
+         "z": 28.0,
+         "width": 13.0,
+         "depth": 7.5,
+         "height": 2.5,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Lock button",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
      {
       "type": "color",
       "name": "Color",

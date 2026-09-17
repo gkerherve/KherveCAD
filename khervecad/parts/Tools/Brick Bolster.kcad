@@ -1,8 +1,9 @@
 {
  "format": "kcad",
- "version": 7,
+ "version": 11,
  "global_fn": 45,
  "global_fn_on": false,
+ "unit": "mm",
  "dimensions": [],
  "references": [],
  "tree": {
@@ -22,7 +23,7 @@
    },
    {
     "type": "component",
-    "name": "Brick_Bolster",
+    "name": "Bolster",
     "visible": true,
     "params": {
      "x": 0.0,
@@ -223,7 +224,24 @@
         ]
        }
       ]
-     },
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Hand guard",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
      {
       "type": "color",
       "name": "Color",
@@ -256,7 +274,7 @@
           "children": [
            {
             "type": "cylinder",
-            "name": "Cylinder [Hand guard]",
+            "name": "Cylinder [Guard disc]",
             "visible": true,
             "params": {
              "x": 0.0,
@@ -295,7 +313,7 @@
           "children": [
            {
             "type": "cylinder",
-            "name": "Cylinder [Rubber grip]",
+            "name": "Cylinder [Rubber sleeve]",
             "visible": true,
             "params": {
              "x": 0.0,

@@ -1,8 +1,9 @@
 {
  "format": "kcad",
- "version": 7,
+ "version": 11,
  "global_fn": 45,
  "global_fn_on": false,
+ "unit": "mm",
  "dimensions": [],
  "references": [],
  "tree": {
@@ -22,7 +23,7 @@
    },
    {
     "type": "component",
-    "name": "Flat_Screwdriver_3_mm",
+    "name": "Handle",
     "visible": true,
     "params": {
      "x": 0.0,
@@ -198,7 +199,24 @@
         ]
        }
       ]
-     },
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Grip cap",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
      {
       "type": "color",
       "name": "Color",
@@ -231,7 +249,7 @@
           "children": [
            {
             "type": "cylinder",
-            "name": "Cylinder [Bolster]",
+            "name": "Cylinder [Soft cap]",
             "visible": true,
             "params": {
              "x": 0.0,
@@ -239,7 +257,7 @@
              "z": 0.0,
              "height": 10.0,
              "radius_bottom": 10.0,
-             "radius_top": 3.3000000000000003,
+             "radius_top": 5.5,
              "segments": 64,
              "center": false
             }
@@ -249,7 +267,24 @@
         ]
        }
       ]
-     },
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Ferrule",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
      {
       "type": "color",
       "name": "Color",
@@ -289,8 +324,76 @@
              "y": 0.0,
              "z": 0.0,
              "height": 3.0,
-             "radius_bottom": 3.3000000000000003,
-             "radius_top": 3.3000000000000003,
+             "radius_bottom": 5.5,
+             "radius_top": 5.5,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Blade",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 68.0,
+         "y": 0.0,
+         "z": 10.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Tang]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 14.0,
+             "radius_bottom": 1.2,
+             "radius_top": 1.5,
              "segments": 64,
              "center": false
             }
@@ -337,19 +440,7 @@
           ]
          }
         ]
-       }
-      ]
-     },
-     {
-      "type": "color",
-      "name": "Color",
-      "visible": true,
-      "params": {
-       "color": "#d1d6de",
-       "alpha": 1.0,
-       "material": "Default"
-      },
-      "children": [
+       },
        {
         "type": "hull",
         "name": "Hull",
@@ -400,12 +491,12 @@
           "name": "Cube [Blade edge]",
           "visible": true,
           "params": {
-           "x": 163.0,
+           "x": 166.0,
            "y": -1.5,
-           "z": 9.75,
+           "z": 9.76,
            "width": 0.4,
            "depth": 3.0,
-           "height": 0.5,
+           "height": 0.48,
            "center": false
           }
          }

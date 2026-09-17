@@ -1,8 +1,9 @@
 {
  "format": "kcad",
- "version": 7,
+ "version": 11,
  "global_fn": 45,
  "global_fn_on": false,
+ "unit": "mm",
  "dimensions": [],
  "references": [],
  "tree": {
@@ -22,7 +23,7 @@
    },
    {
     "type": "component",
-    "name": "Phillips_Screwdriver_PH2",
+    "name": "Handle",
     "visible": true,
     "params": {
      "x": 0.0,
@@ -198,7 +199,24 @@
         ]
        }
       ]
-     },
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Grip cap",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
      {
       "type": "color",
       "name": "Color",
@@ -231,7 +249,7 @@
           "children": [
            {
             "type": "cylinder",
-            "name": "Cylinder [Bolster]",
+            "name": "Cylinder [Soft cap]",
             "visible": true,
             "params": {
              "x": 0.0,
@@ -239,7 +257,7 @@
              "z": 0.0,
              "height": 10.0,
              "radius_bottom": 14.0,
-             "radius_top": 6.6000000000000005,
+             "radius_top": 7.7,
              "segments": 64,
              "center": false
             }
@@ -249,7 +267,24 @@
         ]
        }
       ]
-     },
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Ferrule",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
      {
       "type": "color",
       "name": "Color",
@@ -289,8 +324,76 @@
              "y": 0.0,
              "z": 0.0,
              "height": 3.0,
-             "radius_bottom": 6.6000000000000005,
-             "radius_top": 6.6000000000000005,
+             "radius_bottom": 7.7,
+             "radius_top": 7.7,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Blade",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d1d6de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 96.0,
+         "y": 0.0,
+         "z": 14.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Tang]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 14.0,
+             "radius_bottom": 2.4,
+             "radius_top": 3.0,
              "segments": 64,
              "center": false
             }
@@ -337,19 +440,7 @@
           ]
          }
         ]
-       }
-      ]
-     },
-     {
-      "type": "color",
-      "name": "Color",
-      "visible": true,
-      "params": {
-       "color": "#d1d6de",
-       "alpha": 1.0,
-       "material": "Default"
-      },
-      "children": [
+       },
        {
         "type": "hull",
         "name": "Hull",
@@ -400,7 +491,7 @@
           "name": "Sphere [Point]",
           "visible": true,
           "params": {
-           "x": 219.0,
+           "x": 217.5,
            "y": 0.0,
            "z": 14.0,
            "radius": 0.4,
@@ -453,10 +544,10 @@
                 "visible": true,
                 "params": {
                  "x": 210.0,
-                 "y": -3.1500000000000004,
+                 "y": -3.15,
                  "z": -0.35,
                  "width": 0.5,
-                 "depth": 6.300000000000001,
+                 "depth": 6.3,
                  "height": 0.7,
                  "center": false
                 }
@@ -466,7 +557,7 @@
                 "name": "Cube",
                 "visible": true,
                 "params": {
-                 "x": 217.5,
+                 "x": 216.0,
                  "y": -0.5,
                  "z": -0.35,
                  "width": 0.5,
