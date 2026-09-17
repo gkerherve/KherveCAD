@@ -424,6 +424,21 @@ def build_design(part_id, dims):
     return group
 
 
+def insert_design(part_id, model, dims):
+    """Library insert: the design built by the House Builder itself —
+    one Object per floor — beside any house already in the document,
+    and made the one the House Builder edits."""
+    from . import house
+    _label, make = DESIGNS[part_id]
+    brick = (dims or {}).get("_color") or "Red brick"
+    furnished = bool((dims or {}).get("furnished", 1))
+    home = house.house_from_spec(make(brick, furnished))
+    short = _label.replace(" — ", ", ")
+    for floor in home.floors:              # "Bungalow, 2 bedrooms · ..."
+        floor.name = f"{short} · {floor.name}"
+    return house.apply(model, home, replace=False)
+
+
 def _sizes(part_id):
     furnished, empty = {"furnished": 1}, {"furnished": 0}
     if part_id == "house_flats_10":           # the one-click default: shell
@@ -434,7 +449,9 @@ def _sizes(part_id):
 PARTS = {
     pid: dict(label=label, category=CATEGORY, sizes=_sizes(pid), fields=[],
               colors=list(BRICKS),
-              build=lambda dims, pid=pid: build_design(pid, dims))
+              build=lambda dims, pid=pid: build_design(pid, dims),
+              insert=lambda model, dims, pid=pid:
+              insert_design(pid, model, dims))
     for pid, (label, _make) in DESIGNS.items()
 }
 

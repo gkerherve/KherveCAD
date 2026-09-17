@@ -529,8 +529,20 @@ class MainWindow(QMainWindow):
         return build_examples_menu(self, menubar)
 
     def _insert_library_part(self, part_id):
-        from .library import default_part, prepare_document
+        from .library import (default_dims, default_part, insert_hook,
+                              prepare_document)
         note = prepare_document(self.model, part_id)
+        hook = insert_hook(part_id)
+        if hook is not None:               # builds itself (a house)
+            try:
+                nodes = hook(self.model, default_dims(part_id))
+            except Exception as exc:
+                QMessageBox.warning(self, APP_NAME,
+                                    f"Could not build the part:\n{exc}")
+                return
+            self.builder.tree.select_nodes(nodes)
+            self.view3d.fit()
+            return
         try:
             node = default_part(part_id)
         except Exception as exc:

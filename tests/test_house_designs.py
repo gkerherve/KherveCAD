@@ -92,3 +92,41 @@ def test_designs_are_library_parts_and_builder_templates():
     sizes = library.PARTS["house_flats_10"]["sizes"]
     assert list(sizes)[1] == "Empty (shell)"
     assert list(library.PARTS["house_bungalow_2"]["sizes"])[1] == "Furnished"
+
+
+def test_an_inserted_house_opens_in_the_house_builder_and_rebuilds_alone(
+        qapp_window):
+    from khervecad import house_dialog
+    w = qapp_window
+    for pid in ("house_bungalow_2", "house_bungalow_1"):   # shells: quick
+        nodes = library.insert_hook(pid)(w.model, {"furnished": 0})
+        assert nodes and all(n.type == "component" for n in nodes)
+    tops = [c.name for c in w.model.root.children]
+    assert len(tops) == len(set(tops))                 # names never clash
+    first = [c for c in w.model.root.children
+             if c.name.startswith("Bungalow, 2 bedrooms")]
+    other = [c.name for c in w.model.root.children if c not in first]
+    assert first and other
+    # pick the first house: the builder opens on IT, not the latest one
+    w.builder.tree.select_nodes(first)
+    panel = house_dialog.open_builder(w)
+    names = [r.name for f in panel.house.floors for r in f.rooms]
+    assert "Bedroom 2" in names and len(names) == 7
+    panel.house.floors[0].rooms[0].name = "Lounge"
+    panel._build()
+    after = [c.name for c in w.model.root.children]
+    for name in other:                                  # untouched
+        assert name in after
+    assert "Lounge" in [r["name"] for f in w.model.house["floors"]
+                        for r in f["rooms"]]
+    panel.close()
+
+
+@pytest.fixture
+def qapp_window():
+    from PyQt5.QtWidgets import QApplication
+    app = QApplication.instance() or QApplication([])
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    yield win
+    del app

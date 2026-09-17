@@ -1248,6 +1248,14 @@ _COUNT_FIELDS = ({"bolts"} | library_lego.COUNT_FIELDS
                  | library_generative.COUNT_FIELDS)
 
 
+def insert_hook(part_id: str):
+    """A part that is not ONE node but builds itself into the document
+    (a finished house: one Object per floor, editable in the House
+    Builder): ``insert(model, dims) -> [Objects]``, or None."""
+    hook = (PARTS.get(part_id) or {}).get("insert")
+    return hook if callable(hook) else None
+
+
 def prepare_document(model, part_id: str) -> str:
     """Let a part set the document up before it lands — a crystal
     switches an empty document to nanometres — and say what changed (or
@@ -1383,17 +1391,22 @@ def _build_part(part_id: str, dims: dict) -> CadNode:
     raise ValueError(f"unknown part: {part_id}")
 
 
+def default_dims(part_id: str) -> dict:
+    """The dims of a part's default size — what the dialog pre-selects
+    (the second size when there are several)."""
+    sizes = PARTS[part_id].get("sizes") or {}
+    if not sizes:
+        return {}
+    keys = list(sizes)
+    size_key = keys[1] if len(keys) > 1 else keys[0]
+    return dict(sizes[size_key], _size=size_key)
+
+
 def default_part(part_id: str) -> CadNode:
     """Build a part at its default size — the same choice the dialog
     pre-selects — for one-click insertion from the Library menu."""
-    spec = PARTS[part_id]
-    sizes = spec.get("sizes") or {}
-    dims, size_key = {}, ""
-    if sizes:
-        keys = list(sizes)
-        size_key = keys[1] if len(keys) > 1 else keys[0]
-        dims = dict(sizes[size_key])
-        dims["_size"] = size_key
+    dims = default_dims(part_id)
+    size_key = dims.get("_size", "")
     node = build_part(part_id, dims)
     label = size_key.split(" ")[0] if size_key else ""
     if label and not node.name.startswith(label):
@@ -1569,6 +1582,10 @@ class PartLibraryDialog(QDialog):
         if PARTS[part_id].get("colors"):
             dims["_color"] = self._color.currentText()
         note = prepare_document(self.model, part_id)
+        hook = insert_hook(part_id)
+        if hook is not None:
+            hook(self.model, dims)
+            return
         node = build_part(part_id, dims)
         size = self._size.currentText().split(" ")[0] \
             if self._size.isEnabled() else ""

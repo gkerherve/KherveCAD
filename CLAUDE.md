@@ -1044,7 +1044,19 @@ into a new module and import.
                        has no slab or covering — a stairwell open over a
                        `balustrade` towards a hall/landing/corridor
                        (`Segment.rail`), walled towards anything else (a
-                       lift shaft). Tested in `tests/test_house_designs.py`.
+                       lift shaft). Inserting one (menu, dialog, MCP
+                       insert_part) does NOT add a sealed part: the spec's
+                       `insert` hook (`library.insert_hook`, honoured by all
+                       three paths) runs `house.apply(replace=False)`, so it
+                       lands as one Object per floor named "<design> ·
+                       <floor>" and the House Builder edits it. Every build
+                       keeps its design on its first Object
+                       (`params["house"]`); `house.design_of` finds the one
+                       the selection belongs to, so with several houses in a
+                       document the builder opens on the selected one and
+                       Build replaces only it (apply dedupes top-level
+                       names — two "Ground floor"s made a rebuild take both).
+                       Tested in `tests/test_house_designs.py`.
   - Library & Examples menus (`library_menu.py`, reorganised 2026-09-17
                        — the user found the Library "all over the place"
                        and asked what Examples was for): **Library = parts

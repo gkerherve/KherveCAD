@@ -1614,6 +1614,24 @@ class McpToolExecutor:
                        else " — it has no colour choice."))
             dims["_color"] = match[0]
         note = library.prepare_document(self._model, part_id)
+        hook = library.insert_hook(part_id)
+        if hook is not None:
+            # builds itself as several Objects (a finished house, then
+            # editable with build_house / the House Builder)
+            nodes = hook(self._model, dims)
+            for comp in nodes:
+                for key in ("x", "y", "z", "rz"):
+                    if params.get(key) is not None:
+                        comp.params[key] = comp.params.get(key, 0.0) + \
+                            float(params[key]) if key == "z" \
+                            else float(params[key])
+                self._model.node_changed.emit(comp)
+            return {"inserted": [c.id for c in nodes],
+                    "names": [c.name for c in nodes], "part_id": part_id,
+                    "size": size_key or None,
+                    "note": "Built as a House Builder house: one Object "
+                            "per floor; build_house (or the House Builder "
+                            "with it selected) edits it."}
         node = library.build_part(part_id, dims)
         label = size_key.split(" ")[0] if size_key else ""
         if label and not node.name.startswith(label):

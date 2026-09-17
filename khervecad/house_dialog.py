@@ -373,7 +373,18 @@ class HouseBuilder(QDialog):
         built again. Skipped when that design is already the one shown,
         so reopening the window keeps edits not yet built — unless
         *force*. Returns whether it loaded."""
-        spec = self.window.model.house
+        model = self.window.model
+        # the house the selection belongs to wins: with several houses in
+        # the document (finished houses from the Library), the one picked
+        # is the one edited, and Build replaces only that one
+        try:
+            picked = H.design_of(
+                model, self.window.builder.tree.selected_nodes())
+        except Exception:
+            picked = None
+        if picked is not None and picked is not model.house:
+            model.house = picked
+        spec = model.house
         key = json.dumps(spec, sort_keys=True) if spec else None
         if not spec or (key == self._loaded and not force):
             return False

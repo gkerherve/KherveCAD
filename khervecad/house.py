@@ -796,6 +796,35 @@ def remove_built(model) -> int:
     return len(gone)
 
 
+def designs_in(model) -> list:
+    """The House Builder designs the document holds: one per house built
+    (each kept on its first Object, ``params["house"]``), the current
+    one (``model.house``) first."""
+    out = [model.house] if model.house else []
+    for node in model.root.walk():
+        spec = node.params.get("house") if node.type == "component" \
+            else None
+        if isinstance(spec, dict) and spec.get("objects") and \
+                all(spec != o for o in out):
+            out.append(spec)
+    return out
+
+
+def design_of(model, nodes) -> dict | None:
+    """The design of the house any of *nodes* belongs to (a floor, the
+    garden, anything inside them), or None."""
+    names = set()
+    for node in nodes:
+        while node is not None:
+            if node.type == "component":
+                names.add(node.name)
+            node = node.parent
+    for spec in designs_in(model):
+        if names & set(spec.get("objects") or []):
+            return spec
+    return None
+
+
 def apply(model, house: House, replace: bool = True) -> list:
     """Insert *house* into the document: one Object per floor (stacked
     in Z, so "Ground floor" sits at z=0 and "First floor" above it, the
@@ -815,18 +844,28 @@ def apply(model, house: House, replace: bool = True) -> list:
         remove_built(model)
     inserted = []
     taken = {n.name for n in model.root.walk()}
+    # Objects already at the top (another house's floors) keep their
+    # names; this build's are made unique against them, or rebuilding
+    # one house would take the other's "Ground floor" with it
+    tops = {c.name for c in model.root.children}
     for i, content in enumerate(build_house_floors(house, taken)):
         model.root.add(content)
-        comp = model.enclose_as_part(content, name=house.floors[i].name)
+        comp = model.enclose_as_part(
+            content, name=_unique(house.floors[i].name, tops))
         inserted.append(comp)
     if house.garden is not None:
         bounds = house.bounds()
         if bounds:
             g = build_garden(house.garden, bounds)
             model.root.add(g)
-            inserted.append(model.enclose_as_part(g, name="Garden"))
+            inserted.append(model.enclose_as_part(
+                g, name=_unique("Garden", tops)))
+    for comp in inserted:
+        comp.params.pop("house", None)
     model.house = dict(house_to_spec(house),
                        objects=[c.name for c in inserted])
+    if inserted:                          # so another house can be picked
+        inserted[0].params["house"] = model.house
     model.structure_changed.emit()
     return inserted
 
