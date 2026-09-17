@@ -1537,7 +1537,7 @@ TOOLS = [
                                          "hairpin), P PPII, L left-handed,"
                                          " C coil. Default helix."},
             "phi_psi": {"type": "array",
-                        "items": {"type": ["array", "null"]},
+                        "items": {"type": "array"},
                         "description": "Explicit [phi, psi] per residue "
                                        "(degrees), overriding secondary."},
             "pdb_id": {"type": "string",

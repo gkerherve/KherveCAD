@@ -53,7 +53,8 @@ _MAX_LINE = 8 * 1024 * 1024
 _READ_ONLY_TOOLS = frozenset({
     "get_document_info", "list_node_types", "list_tree", "get_node",
     "get_code", "render_view", "list_parts", "list_examples",
-    "list_crystals", "list_molecules", "get_city", "list_scad_libraries",
+    "list_crystals", "list_molecules", "list_proteins", "get_city",
+    "list_scad_libraries",
     "list_anchors", "select_nodes", "get_node_bounds", "measure",
     "probe_surface", "sample_surface", "face_landmarks", "section",
     "check_code",
@@ -79,7 +80,7 @@ _FILE_TOOLS = frozenset({
     "open_document", "save_document", "export_document",
     "export_drawing", "publish_to_printables", "set_reference_image",
     "mesh_from_photo", "build_city", "import_map", "send_to_planetcraft",
-    "install_scad_library",
+    "install_scad_library", "build_protein",
 })
 
 

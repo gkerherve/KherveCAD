@@ -614,12 +614,63 @@ into a new module and import.
                        arrows for ⇌). `apply` and the MCP bodies
                        (`list_molecules`, `build_molecule`,
                        `build_reaction`) live here.
-  - `molecule_dialog.py` — Library ▸ Compound Builder…: Molecule and
-                       Reaction tabs with a live formula / balance
-                       preview; a bad SMILES or reaction disables Build.
+  - `molecule_dialog.py` — Library ▸ Compound Builder…: Molecule,
+                       Reaction and Protein tabs with a live formula /
+                       balance / residue preview; a bad SMILES, reaction
+                       or sequence disables Build.
   - `library_molecule.py` — every compound as a Part Library part
                        `molecule_<key>` ("Molecules: <family>"), ball and
-                       stick, the crystals' `prepare` reused.
+                       stick, the crystals' `prepare` reused; every
+                       protein preset as `protein_<key>` ("Molecules:
+                       Proteins & peptides", cartoon + side chains).
+  - `protein.py`     — **proteins** (Qt-free, 2026-09-17). BUILT:
+                       `build_peptide(sequence, secondary)` places every
+                       heavy atom by NeRF from Engh & Huber internal
+                       coordinates, the backbone on the (phi, psi) of a
+                       letter per residue (H, G, E, P, L, C; a run of T
+                       steps through `TURN`, grid-searched so two E
+                       strands pair at 3.8-5.4 Å — the textbook type I'
+                       angles left them 10 Å apart), backbone first, then
+                       each side chain on the first of its `ROTAMERS`
+                       that clears everything placed (fixed rotamers put
+                       aromatics into O(i-4) in a helix). L chirality
+                       pinned by N-C-CA-CB = +122.7 (PeptideBuilder's).
+                       Local structure, NOT a fold: `clashes` says so.
+                       READ: `parse_pdb` / `parse_mmcif` (`cif_tables`, a
+                       small loop/quote/;-field tokenizer), first model,
+                       altloc A, hydrogens dropped; HELIX/SHEET or
+                       struct_conf/struct_sheet_range, else
+                       `assign_secondary` from CA distances (P-SEA-like);
+                       bonds by covalent radii through a grid (ligands,
+                       disulfides, metals, no dictionary). `fetch` = RCSB
+                       mmCIF by ID or the AlphaFold API by UniProt,
+                       cached in the temp folder, opener injectable (the
+                       tests are offline). `to_pdb` writes PDB with
+                       HELIX/SHEET, and round-trips exactly.
+  - `protein_build.py` — the program: styles cartoon (a Catmull-Rom
+                       ribbon through CA, width along C=O flipped to stay
+                       consistent — so a helix ribbon lies along the axis
+                       and a strand's in its sheet — flat for helices,
+                       arrows for strands, a tube for coil; seams at half
+                       residues step the cross-section; each colour
+                       stretch is ONE closed INDEXED polyhedron: unwelded
+                       triangles fail `_check_polyhedron`'s edge pairing),
+                       cartoon_sticks, trace, ball_and_stick, sticks,
+                       space_filling — atoms as one for-loop per (colour,
+                       radius) with `translate([p[0], p[1], p[2]])`:
+                       `translate(p)` with a vector variable put every
+                       atom at the origin in the coloured preview.
+                       Colours structure / chain / rainbow / residue /
+                       hydropathy / element; ligands ball and stick.
+                       `PRESETS` (helices, strand, Trpzip hairpin, PPII,
+                       collagen, melittin, magainin, GCN4, amyloid beta),
+                       `BUDGET` 800k, apply = `molecule_build.apply`. MCP
+                       `list_proteins` and `build_protein` (a file tool
+                       for `path`; pdb_id / uniprot download).
+  - `protein_dialog.py` — the Compound Builder's Protein tab: preset,
+                       sequence + structure, PDB ID / AlphaFold (Fetch on
+                       a thread polled by a QTimer), file; style, colour,
+                       chains, ligands, water; Save PDB….
   - `house.py`       — the **House Builder**'s geometry (Qt-free): a
                        `House` is `Floor`s stacked in Z, each a set of
                        rectangular `Room`s (footprint only — wall height

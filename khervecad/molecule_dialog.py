@@ -1,6 +1,6 @@
-"""Library ▸ Compound Builder… — molecules and chemical reactions.
+"""Library ▸ Compound Builder… — molecules, reactions and proteins.
 
-A non-modal panel over `molecule_build`, two tabs:
+A non-modal panel over `molecule_build`, three tabs:
 
 - **Molecule** — a compound from the library (grouped by family) or any
   SMILES, drawn ball and stick, space filling or as sticks; the formula,
@@ -9,9 +9,12 @@ A non-modal panel over `molecule_build`, two tabs:
   + O2 -> 2 H2O``; examples in the list), balanced on request; the
   panel shows the balanced equation, or what does not balance, before
   anything is built.
+- **Protein** — `protein_dialog.ProteinTab`: a preset peptide, a
+  sequence with its secondary structure, a PDB ID, an AlphaFold model
+  or a structure file, drawn as a cartoon, trace or atoms.
 
-Build adds one Object (the molecule, or the whole reaction) to Main as
-one undo step, in nanometres.
+Build adds one Object (the molecule, the whole reaction or the protein)
+to Main as one undo step, in nanometres.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -29,6 +32,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QFormLayout,
 
 from . import molecule as mol
 from . import molecule_build as mb
+from .protein_dialog import ProteinTab
 from .molecule_library import CATEGORIES, COMPOUNDS, get
 
 STYLE_CHOICES = (("Ball and stick", "ball_and_stick"),
@@ -72,6 +76,8 @@ class CompoundBuilder(QDialog):
         layout.addWidget(self.tabs)
         self.tabs.addTab(self._molecule_tab(), "Molecule")
         self.tabs.addTab(self._reaction_tab(), "Reaction")
+        self.protein_tab = ProteinTab(self._timer.start)
+        self.tabs.addTab(self.protein_tab, "Protein")
         buttons = QHBoxLayout()
         self.go = QPushButton("Build")
         self.go.setDefault(True)
@@ -187,6 +193,8 @@ class CompoundBuilder(QDialog):
                 m, self.mol_style.currentData(),
                 name=self.name.text().strip() if self.from_smiles.isChecked()
                 else "")
+        elif self.tabs.currentIndex() == 2:
+            code, stats = self.protein_tab.program()
         else:
             code, stats = mb.reaction_program(
                 self.equation.text(), self.balance.isChecked(),
@@ -197,8 +205,8 @@ class CompoundBuilder(QDialog):
         self.smiles.setEnabled(self.from_smiles.isChecked())
         self.name.setEnabled(self.from_smiles.isChecked())
         self.compound.setEnabled(self.from_library.isChecked())
-        info = self.mol_info if self.tabs.currentIndex() == 0 \
-            else self.rx_info
+        info = (self.mol_info, self.rx_info,
+                self.protein_tab.info)[self.tabs.currentIndex()]
         try:
             _code, stats = self.program()
         except (mb.BuildError, ValueError) as exc:
@@ -211,6 +219,8 @@ class CompoundBuilder(QDialog):
                          f" g/mol, {stats['atoms']} atoms, {stats['bonds']} "
                          f"bonds<br>SMILES {stats['smiles']}<br>≈ "
                          f"{stats['triangles']:,} triangles")
+        elif self.tabs.currentIndex() == 2:
+            info.setText(self.protein_tab.describe(stats))
         else:
             verdict = ("balanced" if stats["balanced"] else
                        "<span style='color:#c0392b'>does not balance: " +
@@ -224,7 +234,8 @@ class CompoundBuilder(QDialog):
     def build_now(self):
         try:
             code, stats = self.program()
-            out = mb.apply(self.window_, code, stats)
+            out = mb.apply(self.window_, code, stats,
+                           stats.get("segments", 16))
         except (mb.BuildError, ValueError) as exc:
             QMessageBox.warning(self, "Compound Builder", str(exc))
             return

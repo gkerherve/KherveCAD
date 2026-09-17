@@ -183,6 +183,27 @@ included: `NH4+`, `SO4^2-`) or `smiles:…`. Every compound is also a
 Part Library part, `molecule_<key>`. The same builder is **Library ▸
 Compound Builder…** in the app.
 
+## Proteins
+
+`build_protein` draws a protein in 3D (nm) as one Object, from one of
+two kinds of source. **Built**: a `sequence` (or a `list_proteins`
+preset) with a `secondary` structure — a word or a letter per residue,
+`CEEEETTEEEEC` for a hairpin — each residue placed with ideal bond
+geometry on its (phi, psi), side chains on clash-free rotamers. That
+is local structure, not folding: a helix or a hairpin is right, a long
+mixed chain has no tertiary packing, and the result counts the clashes.
+**Read**: a real fold — `pdb_id` (downloaded from RCSB), `uniprot` (the
+AlphaFold model), `path` (a .pdb/.cif, full access) or `pdb_text`.
+Secondary structure comes from the file, or from the CA geometry when
+it has none. Styles: cartoon (helix ribbons, strand arrows, coil
+tubes, each colour one closed polyhedron), cartoon with side chains,
+CA trace, ball and stick, sticks, space filling — atoms written as one
+for-loop per colour, so thousands stay light. Colours by secondary
+structure, chain, rainbow, residue type, hydropathy or element. The
+presets are also Part Library parts, `protein_<key>`, and the builder
+is the **Protein** tab of the Compound Builder, which can also save
+any structure as a PDB file.
+
 ## Cities, parks, landscapes and landmarks
 
 Say "build a village on hills", "add a park next to the church" or

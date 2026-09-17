@@ -308,6 +308,14 @@ balance — tell the user when they do not rather than hiding it. \
 Species outside the library go in as smiles:... .
 - Every library compound is also a Part Library part (insert_part \
 "molecule_<key>", categories "Molecules: ...").
+- Build proteins with build_protein. For a REAL protein (crambin, \
+ubiquitin, haemoglobin, GFP, spike…) use its fold: pdb_id for an RCSB \
+entry, uniprot for the AlphaFold model — never invent coordinates. A \
+sequence is built with ideal geometry on its secondary structure \
+(helix, strand, or letters like CEEEETTEEEEC for a hairpin): right for \
+helices, strands and hairpins, but NOT folded — say so, and mention the \
+clash count it returns. Cartoon style by default; list_proteins has \
+presets, styles and colours.
 
 Look at what you built:
 - render_view returns a PNG of the 3D preview as an image. LOOK AT IT \
