@@ -230,7 +230,7 @@ class Car:
         if not paint.startswith("#"):
             paint = car_models.PAINTS[self.spec["paint"]]
         kit = Kit()
-        body = kit.mesh(paint, "Metal")
+        body = kit.mesh(paint, "Plastic")
         closed_grid(body, [self.body_ring(s) for s in
                            self.stations(0.0, 1.0, STATIONS)])
         f_edge = (self.axles[0] - self.wheels[0][2] / 2 + self.L / 2) / self.L
@@ -354,7 +354,7 @@ class Car:
             za = self.top(1 - depth)
             kit.solid([(-w, ya, za - 5), (w, ya, za - 5),
                        (-w, y1 - 20, z - 5), (w, y1 - 20, z - 5),
-                       (-w, y1, z + rise), (w, y1, z + rise)], paint, "Metal")
+                       (-w, y1, z + rise), (w, y1, z + rise)], paint, "Plastic")
             if kind == "whale":
                 kit.box(-w, y1 - 12, z + rise - 8, w, y1 + 12, z + rise + 6,
                         TRIM, "Rubber")
@@ -370,12 +370,12 @@ class Car:
                        (-span, yc + 150, zw + 25), (span, yc + 150, zw + 25),
                        (-span, yc + 150, zw + 50), (span, yc + 150, zw + 50),
                        (-span, yc - 170, zw + 12), (span, yc - 170, zw + 12)],
-                      colour, "Metal")
+                      colour, "Plastic")
         elif kind == "lip":
             kit.solid([(-0.8 * a, y1 - 90, z - 4), (0.8 * a, y1 - 90, z - 4),
                        (-0.8 * a, y1, z - 4), (0.8 * a, y1, z - 4),
                        (-0.8 * a, y1, z + 45), (0.8 * a, y1, z + 45)],
-                      paint, "Metal")
+                      paint, "Plastic")
 
     def _mirrors(self, kit, paint):
         p = self.p
@@ -386,7 +386,7 @@ class Car:
             x = side * (a + 110)
             kit.bar((side * (a - 10), y + 20, z + 40), (x, y, z + 80), 12,
                     TRIM)
-            kit.obox(x, y, z + 45, 170, 70, 95, 0, paint, "Metal")
+            kit.obox(x, y, z + 45, 170, 70, 95, 0, paint, "Plastic")
 
     def _exhaust(self, kit):
         y1 = self.L / 2
