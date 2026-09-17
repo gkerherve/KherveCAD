@@ -55,19 +55,30 @@ def _sizes(body):
     return sizes
 
 
+COUNT_FIELDS = {"relief"}
+
+
 def _body_part(body):
     label = D.planet_label(body)
     if body["kind"] == "dwarf":
         label += " (dwarf planet)"
     elif body["kind"] == "star":
         label = "The Sun"
+    fields = [("d", "Diameter")]
+    sizes = _sizes(body)
+    if body["key"] == "earth":
+        from . import solar_earth
+        fields.append(("relief", "Relief exaggeration (x)"))
+        for dims in sizes.values():
+            dims["relief"] = solar_earth.RELIEF
     return dict(
         label=label,
         category=CATEGORY_MOONS if body["kind"] == "moon"
         else CATEGORY_PLANETS,
-        sizes=_sizes(body), fields=[("d", "Diameter")],
+        sizes=sizes, fields=fields,
         build=lambda dims, key=body["key"]: solar_bodies.build_body(
-            key, float(dims.get("d", 60.0)), fine=True),
+            key, float(dims.get("d", 60.0)), fine=True,
+            relief=dims.get("relief")),
         note=body["note"])
 
 

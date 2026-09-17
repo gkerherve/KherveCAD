@@ -113,13 +113,39 @@ def test_saturn_wears_its_rings_and_the_earth_its_land(app):
     assert abs((hi[0] - lo[0]) - 60.0 * 140_500 / 60_268) < 1.0
     earth = solar_bodies.build_body("earth", 60.0)
     land = next(n for n in earth.walk() if n.name == "Land")
-    classes = {c.name[-1] for c in land.children}
-    assert classes == {"g", "t", "d", "i"}
+    names = {c.name for c in land.children}
+    assert {"Land g", "Land t", "Land d", "Land r", "Land i", "Lakes",
+            "Ice fields"} <= names
     tris = mesh.tessellate(land, env={}, fn=45)
     assert analysis.mass_properties(tris)["volume"] > 0
     coarse = solar_bodies.build_body("earth", 60.0, fine=False)
     assert len(mesh.tessellate(coarse, env={}, fn=45)) < len(
         mesh.tessellate(earth, env={}, fn=45))
+
+
+def test_earth_coastlines_and_relief(app):
+    from khervecad import solar_earth as E
+    # real coastlines: Britain is an island of its own, Lake Victoria a lake
+    assert len(E.polygons("land", True)) > 400
+    assert E.elevation(27.99, 86.93) > 5000          # Everest (0.25° cell)
+    assert E.elevation(32, 88) > 4000                # Tibet
+    assert E.elevation(0, -30) == 0                  # the Atlantic
+    assert E.classify(32, 88, E.elevation(32, 88)) == "i"
+    assert E.classify(40, -98, 400) == "g"             # Kansas
+    assert E.classify(40, -105, 1700) == "d"           # the high plains
+    assert E.classify(45.9, 7.7, 2400) == "r"
+    r = 30.0
+    flat = solar_bodies.build_body("earth", 60.0, relief=0)
+    tall = solar_bodies.build_body("earth", 60.0, relief=40)
+
+    def top(node):
+        return max(math.sqrt(sum(v * v for v in p))
+                   for t in mesh.tessellate(node, env={}, fn=45) for p in t)
+    assert abs(top(flat) - r * 1.03) < 0.05           # the haze shell
+    assert top(tall) > r * 1.045                      # the Himalaya
+    spec = library.PARTS["body_earth"]
+    assert ("relief", "Relief exaggeration (x)") in spec["fields"]
+    assert "relief" in library._COUNT_FIELDS
 
 
 def test_features_sit_on_the_surface(app):

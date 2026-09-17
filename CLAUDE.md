@@ -3143,6 +3143,45 @@ into a new module and import.
                        1 mm orrery moon 1890 triangles). `solar_maps.py`
                        — the Earth at 5° (36 rows × 72 columns, ocean /
                        green / taiga / desert / ice, hand-drawn).
+                       `solar_earth.py` (same day — the user wanted "a lot
+                       more details" than 5° cells, then "the mountains
+                       and hills should show the landscape in 3D"): the
+                       Earth's land from REAL coastlines and a REAL height
+                       model. Data in `khervecad/solar/` (shipped via the
+                       spec's datas, provenance in its README): Natural
+                       Earth 1:50m land / lakes / glaciated areas (public
+                       domain) simplified to 0.1°, Antarctica's -90° edge
+                       clamped to -89° (a polar cap band closes it) and
+                       ear-clipped ONCE by `khervecad.tools.earth_coast`
+                       into `earth_coast.json.gz` (the clipper's unchecked
+                       last ear and Natural Earth's duplicate Lake Volta
+                       dropped there); ETOPO 2022 (NOAA, public domain)
+                       resampled to 0.25° by NOAA's DEM_global_mosaic image
+                       service — the DEM_all mosaic is NOT global — into
+                       `earth_elevation.bin.gz` (int16 metres, ocean 0,
+                       `khervecad.tools.earth_elevation`). At build, per
+                       ring in the (lon·cos lat, lat) plane: Delaunay edge
+                       flips (`_flip_delaunay`; the fold test must check
+                       the NEW triangles' orientation — reversed, it never
+                       flipped and bisecting the ear-clip slivers made 600k
+                       triangles), then midpoint refinement interleaved
+                       with flips (`_refine`, conforming: the edge decides)
+                       to 0.08 r everywhere and 0.03 r where the ground
+                       climbs (`RELIEF_STEP`: the ends differ by 200 m — a
+                       plateau stays coarse), then onto the sphere. Each
+                       triangle is classed by the 5° map plus snow above
+                       4500 m and bare rock above 2200 m, and every class
+                       is ONE closed polyhedron (`_shell`: outer, mirrored
+                       inner, walls along its boundary; pinch vertices
+                       split by `_split_pinches`, seam-folded triangles
+                       dropped, a wall vertex keyed by the ORIGINAL sphere
+                       point). Both surfaces are lifted by `relief` × the
+                       elevation (default 50×: Everest 7 % of the radius;
+                       the Earth part's "Relief exaggeration" field), so a
+                       lake on the Tibetan plateau rides up with it. Lakes
+                       and ice fields are thinner slabs on top. Fine ≈ 115k
+                       triangles in ~2.5 s; coarse (orreries, 0.6°) ≈ 19k.
+                       The 5° map stays as the climate classifier.
                        `solar_bodies.py` — `build_body(key, diameter,
                        fine)`: every body's recognisable features (Earth's
                        map + atmosphere, Mars' albedo regions, Tharsis

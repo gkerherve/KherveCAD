@@ -1256,7 +1256,8 @@ _COUNT_FIELDS = ({"bolts"} | library_lego.COUNT_FIELDS
                  | library_landscape.COUNT_FIELDS
                  | library_print.COUNT_FIELDS
                  | library_vitamins.COUNT_FIELDS
-                 | library_generative.COUNT_FIELDS)
+                 | library_generative.COUNT_FIELDS
+                 | library_solar.COUNT_FIELDS)
 
 
 def insert_hook(part_id: str):

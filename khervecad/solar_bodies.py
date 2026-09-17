@@ -42,8 +42,9 @@ COARSE_SEGMENTS = 18
 class _Globe:
     """The body's radius in mm plus conversions for its features."""
 
-    def __init__(self, body, diameter, fine):
+    def __init__(self, body, diameter, fine, relief=None):
         self.body = body
+        self.relief = relief
         self.r = float(diameter) / 2          # equatorial, mm
         self.k = self.r / body["radius"]      # mm per km
         self.fine = fine
@@ -211,9 +212,12 @@ def _venus(g):
 
 
 def _earth(g):
+    from . import solar_earth
     g.base(M.EARTH_OCEAN)
-    g.add(S.map_shells("Land", g.r, M.EARTH, M.EARTH_PALETTE,
-                       skip=1 if g.fine else 2))
+    land = CadNode("union", "Land")
+    for node in solar_earth.land_nodes(g.r, fine=g.fine, relief=g.relief):
+        land.add(node)
+    g.add(land)
     g.haze(1.03, "#9ec5ff", 0.16)
 
 
@@ -634,10 +638,14 @@ BUILDERS = {
 }
 
 
-def build_body(key: str, diameter: float, fine: bool = True) -> CadNode:
+def build_body(key: str, diameter: float, fine: bool = True,
+               relief: float = None) -> CadNode:
     """*key*'s globe, *diameter* mm across its equator (the longest
-    axis of an irregular moon), as one union named after the body."""
+    axis of an irregular moon), as one union named after the body.
+    *relief* is the Earth's height exaggeration (solar_earth.RELIEF)."""
+    from . import solar_earth
     body = D.BY_KEY[key]
-    g = _Globe(body, diameter, fine)
+    g = _Globe(body, diameter, fine,
+               solar_earth.RELIEF if relief is None else float(relief))
     BUILDERS[key](g)
     return g.build()

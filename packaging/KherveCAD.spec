@@ -65,6 +65,10 @@ if os.path.isdir(_parts_dir):
 _human_dir = os.path.join(_ROOT, "khervecad", "human")
 if os.path.isdir(_human_dir):
     datas.append((_human_dir, os.path.join("khervecad", "human")))
+# The Earth's coastlines (solar_earth.py): khervecad/solar/.
+_solar_dir = os.path.join(_ROOT, "khervecad", "solar")
+if os.path.isdir(_solar_dir):
+    datas.append((_solar_dir, os.path.join("khervecad", "solar")))
 # Finished models for Examples > Showcase (examples._showcase).
 _showcase_dir = os.path.join(_ROOT, "khervecad", "showcase")
 if os.path.isdir(_showcase_dir):
