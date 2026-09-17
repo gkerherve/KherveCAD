@@ -1754,7 +1754,7 @@ into a new module and import.
                        reference** chapter is generated from
                        `tooltips.TIPS` with each tool's real icon, so
                        manual and tooltips cannot drift.
-  - `userguide_content.py` — the 22 chapters, `(anchor, title, html)`.
+  - `userguide_content.py` — the 23 chapters, `(anchor, title, html)`.
                        After a UI change re-run
                        `packaging/make_help_screenshots.py`: it drives
                        the real window offscreen, stages each scene
