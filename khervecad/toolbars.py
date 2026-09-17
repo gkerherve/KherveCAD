@@ -51,7 +51,7 @@ MEASURE_TOOLS = [
 
 #: 3D primitives added with one click.
 PRIMITIVES = ["cube", "sphere", "cylinder", "capsule", "ellipsoid",
-              "rounded_box", "loft", "human"]
+              "rounded_box", "loft"]
 
 #: the operation families of the horizontal bar, in order (applied to
 #: the selection — Group and the control-flow tools insert an empty
@@ -174,6 +174,11 @@ def build_tool_bar(win):
             win, spec["icon"], spec["label"], prim,
             lambda _=False, t=prim: win._add_primitive(t)))
     bar.addSeparator()
+
+    human_spec = NODE_TYPES["human"]
+    bar.addAction(_action(
+        win, human_spec["icon"], human_spec["label"], "human",
+        lambda _=False, t="human": win._add_primitive(t)))
 
     def _house_builder():
         from . import house_dialog

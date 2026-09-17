@@ -86,7 +86,7 @@ def build_library_menu(window, menubar):
                                             menu_text(name))
             if special:
                 _BUILDERS[special](window, sub)
-            if len(cats) == 1 and not special:
+            if len(cats) == 1:            # straight into the menu
                 _add_parts(window, sub, by_cat[cats[0]], PARTS)
                 continue
             for cat in cats:
@@ -145,16 +145,16 @@ def _city(window, sub):
 
 def _crystals(window, sub):
     from . import crystal_dialog, crystal_surface_dialog
-    sub.addAction("Crystal Builder...",
+    sub.addAction(icons.icon("mdi.molecule"), "Crystal Builder...",
                   lambda: crystal_dialog.open_builder(window))
-    sub.addAction("Surface Builder...",
+    sub.addAction(icons.icon("mdi.layers-outline"), "Surface Builder...",
                   lambda: crystal_surface_dialog.open_builder(window))
     sub.addSeparator()
 
 
 def _molecules(window, sub):
     from . import molecule_dialog
-    sub.addAction("Compound Builder...",
+    sub.addAction(icons.icon("mdi.atom"), "Compound Builder...",
                   lambda: molecule_dialog.open_builder(window))
     sub.addSeparator()
 
