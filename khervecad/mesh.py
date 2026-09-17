@@ -355,6 +355,8 @@ def node_outlines(node: CadNode, env=None):
     if node.type == "import_2d":
         from . import scadfiles
         return scadfiles.drawing_outlines(node, env)
+    if node.type in organic.features.SHAPES_2D:
+        return organic.features.outlines(node, env)
     return []
 
 

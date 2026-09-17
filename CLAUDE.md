@@ -129,6 +129,26 @@ into a new module and import.
                        `_components` splits a vector variable
                        (`translate(pos)` -> pos[0..2]); centred squares of
                        expression sizes centre by expression.
+  - `features.py`    — registry of the parametric FEATURE nodes (the
+                       libraries' gears, threads, holes…): each module in
+                       `MODULES` has the organic contract (NODE_TYPES,
+                       LEAVES, preamble helper, statement, BUILDERS, check,
+                       tess, outlines for 2D) and organic.py hooks
+                       `features` once. Shared preview helpers: `extrude`
+                       (loops through a transient linear_extrude node, so
+                       twist/scale/caps are the tessellator's own),
+                       `stations_solid` (one closed wall through (z, turn,
+                       scale) stations — no cap-to-cap seams),
+                       `polygon_node` (loops as polygon paths).
+  - `gears.py`       — `gear` node: involute spur / helical / herringbone
+                       / internal / rack / bevel / worm by module, teeth,
+                       pressure angle, backlash, clearance, bore
+                       (`outline` = the helper's kcad_gear_outline: flanks
+                       off the base circle, a pointed tip trimmed by
+                       bisection). `kcad_gear(...)` helper is real
+                       OpenSCAD; `test_gears` checks the preview volume
+                       against OpenSCAD's render (within 1 %) when the
+                       binary is installed. Insert ▸ Mechanical features.
   - `animate.py`     — View ▸ Animate ($t): `set_time` puts OpenSCAD's
                        animation time in `expr.SPECIAL_DEFAULTS["$t"]`
                        (every expression reads it), `engine.DEFINES`

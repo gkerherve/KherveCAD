@@ -42,7 +42,7 @@ from __future__ import annotations
 import os
 
 from . import bake
-from . import pattern, scadfiles, scadlang, sheetmetal
+from . import features, pattern, scadfiles, scadlang, sheetmetal
 
 #: model.SHAPE_3D / model.OPERATION (not imported: see the docstring)
 SHAPE_3D = "3d"
@@ -141,11 +141,14 @@ NODE_TYPES.update(pattern.NODE_TYPES)
 NODE_TYPES.update(sheetmetal.NODE_TYPES)
 NODE_TYPES.update(scadlang.NODE_TYPES)
 NODE_TYPES.update(scadfiles.NODE_TYPES)
+NODE_TYPES.update(features.NODE_TYPES)
 TYPES = frozenset(NODE_TYPES)
 LEAVES = frozenset({"capsule", "ellipsoid", "rounded_box"}) | bake.LEAVES
 LEAVES = LEAVES | sheetmetal.LEAVES | scadlang.LEAVES | scadfiles.LEAVES
+LEAVES = LEAVES | features.LEAVES
 WRAPPERS = frozenset({"symmetry", "joint", "paint"}) | bake.WRAPPERS
 WRAPPERS = WRAPPERS | pattern.WRAPPERS | scadlang.WRAPPERS
+WRAPPERS = WRAPPERS | features.WRAPPERS
 
 #: helper module per type, emitted in this order above the program
 _ORDER = ("capsule", "ellipsoid", "rounded_box", "symmetry", "joint",
@@ -231,6 +234,7 @@ def preamble(root) -> list:
     lines.extend(bake.preamble(root))
     lines.extend(pattern.preamble(root))
     lines.extend(sheetmetal.preamble(root))
+    lines.extend(features.preamble(root))
     if not lines:
         return []
     return (["// KherveCAD helper modules (organic and mesh nodes)"]
@@ -252,6 +256,8 @@ def statement(node, fmt, fn) -> str:
         return scadlang.statement(node, fmt, fn)
     if node.type in scadfiles.TYPES:
         return scadfiles.statement(node, fmt, fn)
+    if node.type in features.TYPES:
+        return features.statement(node, fmt, fn)
     p = node.params
     t = node.type
 
@@ -415,6 +421,7 @@ BUILDERS.update(pattern.BUILDERS)
 BUILDERS.update(sheetmetal.BUILDERS)
 BUILDERS.update(scadlang.BUILDERS)
 BUILDERS.update(scadfiles.BUILDERS)
+BUILDERS.update(features.BUILDERS)
 
 
 def _b_material(parser, positional, named):
@@ -466,6 +473,8 @@ def check(node, env):
         return scadlang.check(node, env)
     if node.type in scadfiles.TYPES:
         return scadfiles.check(node, env)
+    if node.type in features.TYPES:
+        return features.check(node, env)
     p = node.params
     if node.type == "paint":
         from . import paint as paint_mod
@@ -533,6 +542,8 @@ def tess(node, env, color, sel, selected):
         return scadlang.tess(node, env, color, sel, selected)
     if node.type in scadfiles.TYPES:
         return scadfiles.tess(node, env, color, sel, selected)
+    if node.type in features.TYPES:
+        return features.tess(node, env, color, sel, selected)
     t = node.type
     p = mesh.rp(node, env)
     if t in WRAPPERS:

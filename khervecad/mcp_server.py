@@ -155,7 +155,11 @@ over variables stay expressions, so an imported or applied program is \
 parametric. Annotate adjustable variables the OpenSCAD Customizer way — \
 `/* [Size] */` tabs, a `// description` line above, `width = 40; // \
 [10:5:200]` or `lid = "snap"; // [snap, screw]` — and they become \
-sliders and drop-downs in the Variables sheet.
+sliders and drop-downs in the Variables sheet. Mechanical features are \
+nodes too: `kcad_gear(kind = "spur" | "helical" | "herringbone" | \
+"internal" | "rack" | "bevel" | "worm", m = 2, teeth = 20, \
+pressure_angle = 20, thickness = 6, helix = 20, bore = 5, backlash = \
+0.1)` — true involute teeth; two gears mesh at m (z1 + z2) / 2 apart.
 - Beyond OpenSCAD's own shapes, apply_code understands KherveCAD's \
 helpers, which parse into editable nodes: `kcad_sweep(path = [[x, y, \
 z], ...], smooth = 3, twist = 0, scale = 1, wall = 0, closed = false) \

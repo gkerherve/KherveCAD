@@ -646,6 +646,20 @@ TIPS = {
          "Write the Condition (wall >= 1.2) and a Message — an "
          "expression, so str(\"wall \", wall, \" is too thin\") works."],
         "Put asserts next to the Variables they guard."),
+    "gear": (
+        "Gear (involute)",
+        "A true involute gear by module, tooth count and pressure angle — "
+        "spur, helical, herringbone, internal (ring), rack, bevel or worm "
+        "— with bore, backlash and root clearance. Two gears of the same "
+        "module and pressure angle mesh at a centre distance of m (z1 + "
+        "z2) / 2.",
+        ["Insert ▸ Mechanical features ▸ Gear.",
+         "Choose the Kind, then the Module (tooth size) and Teeth.",
+         "Set Thickness, a Bore, and for a helical or herringbone gear "
+         "the Helix angle; a bevel gear needs its mate's tooth count.",
+         "Print-in-place pairs want 0.1–0.2 mm of Backlash."],
+        "Every field takes an expression, so teeth = ratio * 10 keeps a "
+        "pair in step; the code is kcad_gear(...), real OpenSCAD."),
     "pattern": (
         "Pattern (linear / polar / grid)",
         "Repeats its contents as copies — in a row, round an axis, or "
