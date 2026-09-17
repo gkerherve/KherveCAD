@@ -660,6 +660,32 @@ TIPS = {
          "Print-in-place pairs want 0.1–0.2 mm of Backlash."],
         "Every field takes an expression, so teeth = ratio * 10 keeps a "
         "pair in step; the code is kcad_gear(...), real OpenSCAD."),
+    "thread": (
+        "Thread (screw thread)",
+        "A real helical screw thread — ISO metric, trapezoidal, square, "
+        "buttress, tapered pipe or bottle neck — male, or as the slightly "
+        "larger tap you subtract to make a nut or a threaded hole. Any "
+        "number of starts, right or left hand.",
+        ["Insert ▸ Mechanical features ▸ Thread.",
+         "Set the Profile, Major diameter, Pitch and Length (M8: 8 mm, "
+         "1.25).",
+         "For a nut or a threaded hole tick Internal and put the thread "
+         "inside a Difference with the part; 0.2 mm Clearance prints "
+         "well."],
+        "A thread is a twisted cross-section, so it previews exactly and "
+        "renders fast — no boolean inside."),
+    "hole": (
+        "Hole (counterbore, countersink, nut trap…)",
+        "The solid to cut for a fastener: plain, counterbore, countersink, "
+        "nut trap, heat-set insert, slot, or a teardrop that prints "
+        "horizontally without support. Its top sits at z = 0 and it goes "
+        "down, so it drops onto a face.",
+        ["Insert ▸ Mechanical features ▸ Hole.",
+         "Pick the Kind and the sizes (M3: 3.2 mm hole, 6 mm head).",
+         "Move it onto the face, then select it with the part and click "
+         "Difference."],
+        "Extends above the face keeps the cut clean on a flush face; the "
+        "teardrop runs along X with its point up."),
     "pattern": (
         "Pattern (linear / polar / grid)",
         "Repeats its contents as copies — in a row, round an axis, or "

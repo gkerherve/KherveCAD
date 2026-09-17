@@ -159,7 +159,14 @@ sliders and drop-downs in the Variables sheet. Mechanical features are \
 nodes too: `kcad_gear(kind = "spur" | "helical" | "herringbone" | \
 "internal" | "rack" | "bevel" | "worm", m = 2, teeth = 20, \
 pressure_angle = 20, thickness = 6, helix = 20, bore = 5, backlash = \
-0.1)` — true involute teeth; two gears mesh at m (z1 + z2) / 2 apart.
+0.1)` — true involute teeth; two gears mesh at m (z1 + z2) / 2 apart; \
+`kcad_thread(kind = "metric" | "trapezoidal" | "square" | "buttress" | \
+"pipe" | "bottle", diameter = 8, pitch = 1.25, length = 16, starts = 1, \
+left_hand = false, internal = false, clearance = 0.2)` (internal = the \
+tap to subtract for a nut); `kcad_hole(kind = "plain" | "counterbore" | \
+"countersink" | "nut_trap" | "heat_insert" | "slot" | "teardrop", \
+diameter = 3.2, depth = 10, head_diameter = 6, head_depth = 3.2)` — the \
+solid to subtract, top at z = 0.
 - Beyond OpenSCAD's own shapes, apply_code understands KherveCAD's \
 helpers, which parse into editable nodes: `kcad_sweep(path = [[x, y, \
 z], ...], smooth = 3, twist = 0, scale = 1, wall = 0, closed = false) \

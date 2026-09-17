@@ -149,6 +149,20 @@ into a new module and import.
                        OpenSCAD; `test_gears` checks the preview volume
                        against OpenSCAD's render (within 1 %) when the
                        binary is installed. Insert ▸ Mechanical features.
+  - `threads.py`     — `thread` node: metric / trapezoidal / square /
+                       buttress / pipe (tapered) / bottle, starts, hand,
+                       internal (+ clearance, the tap to subtract), bore.
+                       The section at z = 0 follows the axial profile at u
+                       = θ · lead / 360 (`section`, `profile`) and is
+                       twisted 360° a lead — an exact helicoid, no boolean
+                       (`kcad_thread`). Preview through
+                       `features.stations_solid`, capped at
+                       `PREVIEW_SLICES`; within 1 % of OpenSCAD.
+  - `holes.py`       — `hole` node, the solid to subtract, top at z = 0
+                       going down: plain, counterbore, countersink,
+                       nut_trap, heat_insert, slot, teardrop (along X,
+                       point up); `extra` above the face. A union of
+                       cylinders / cones / prisms (`pieces`, `kcad_hole`).
   - `animate.py`     — View ▸ Animate ($t): `set_time` puts OpenSCAD's
                        animation time in `expr.SPECIAL_DEFAULTS["$t"]`
                        (every expression reads it), `engine.DEFINES`

@@ -24,9 +24,9 @@ the Free Software Foundation, either version 3 of the License, or
 
 from __future__ import annotations
 
-from . import gears
+from . import gears, holes, threads
 
-MODULES = [gears]
+MODULES = [gears, threads, holes]
 
 NODE_TYPES = {}
 LEAVES = frozenset()
