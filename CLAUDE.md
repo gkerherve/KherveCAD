@@ -252,7 +252,14 @@ into a new module and import.
                        train on screen. Object caches key only on the
                        variables a part READS (`mesh._component_key`), so a
                        moving slider re-tessellates / re-renders only the
-                       parts that use it.
+                       parts that use it. Speed (a crank mechanism: 650 ms
+                       -> 34 ms a tick): `features.tess` caches feature
+                       meshes by resolved params (a gear that only turns
+                       keeps its mesh), capsules hull once along +Z and are
+                       turned into place (`organic._capsule_along_z`), the
+                       panel coalesces a drag's values into one redraw
+                       (`_emit_pending`), and the Variables sheet updates
+                       only the changed row.
   - `scadinclude.py` — what reaches beyond one file: `use <>` / `include
                        <>` tokens become **scad_use** nodes (emit the same
                        line; an unresolvable one is red) and the library

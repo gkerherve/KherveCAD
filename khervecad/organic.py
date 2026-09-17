@@ -39,6 +39,8 @@ the Free Software Foundation, either version 3 of the License, or
 
 from __future__ import annotations
 
+import functools
+import math
 import os
 
 from . import bake
@@ -528,6 +530,26 @@ def _ball(radius, segments):
     return list({v for tri in tris for v in tri})
 
 
+@functools.lru_cache(maxsize=128)
+def _capsule_along_z(radius, length, segments):
+    from . import geom3d
+    ball = _ball(radius, segments)
+    pts = list(ball) + [(x, y, z + length) for x, y, z in ball]
+    return tuple(geom3d.convex_hull(pts))
+
+
+def _z_to(d, length):
+    """A rotation matrix taking +Z onto the direction *d*."""
+    from . import mesh
+    if length < 1e-12:
+        return mesh.mat_identity()
+    ux, uy, uz = (c / length for c in d)
+    tilt = math.degrees(math.acos(max(-1.0, min(1.0, uz))))
+    turn = math.degrees(math.atan2(uy, ux))
+    return mesh.mat_mul(mesh.mat_rotate(0.0, 0.0, turn),
+                        mesh.mat_rotate(0.0, tilt, 0.0))
+
+
 def tess(node, env, color, sel, selected):
     """The built-in tessellation of an organic node, as mesh._tess
     returns it: a list of (triangle, colour, selected)."""
@@ -598,10 +620,15 @@ def tess(node, env, color, sel, selected):
         r = p["radius"]
         if r <= 0:
             return []
-        ball = _ball(r, n)
-        pts = [(p["x1"] + x, p["y1"] + y, p["z1"] + z) for x, y, z in ball]
-        pts += [(p["x2"] + x, p["y2"] + y, p["z2"] + z) for x, y, z in ball]
-        return mesh._emit(geom3d.convex_hull(pts), color, selected)
+        a = (p["x1"], p["y1"], p["z1"])
+        d = tuple(p[f"{k}2"] - p[f"{k}1"] for k in "xyz")
+        length = math.sqrt(sum(c * c for c in d))
+        # the hull is built once per (radius, length, segments) along +Z and
+        # turned into place: a connecting rod moved by a slider re-hulled
+        # two spheres on every tick
+        local = _capsule_along_z(r, round(length, 9), n)
+        m = mesh.mat_mul(mesh.mat_translate(*a), _z_to(d, length))
+        return mesh._emit(mesh.transform_mesh(m, local), color, selected)
     if t == "rounded_box":
         w, d, h = abs(p["width"]), abs(p["depth"]), abs(p["height"])
         x0, y0, z0 = p["x"], p["y"], p["z"]

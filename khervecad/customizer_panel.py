@@ -60,6 +60,11 @@ class CustomizerPanel(QWidget):
         self._timer = QTimer(self)
         self._timer.setInterval(PLAY_INTERVAL_MS)
         self._timer.timeout.connect(self._tick)
+        self._pending = None
+        self._emit_timer = QTimer(self)
+        self._emit_timer.setSingleShot(True)
+        self._emit_timer.setInterval(0)
+        self._emit_timer.timeout.connect(self._emit_pending)
         outer = QVBoxLayout(self)
         outer.setContentsMargins(4, 4, 4, 4)
         self.empty = QLabel(
@@ -194,9 +199,19 @@ class CustomizerPanel(QWidget):
             except ValueError:
                 pass
         node.params["value"] = value
+        self._show_value(node)
+        # a drag sends values faster than a frame draws: redraw once for
+        # the latest (the model already holds it)
+        self._pending = node
+        if not self._emit_timer.isActive():
+            self._emit_timer.start()
+
+    def _emit_pending(self):
+        node, self._pending = self._pending, None
+        if node is None:
+            return
         self._updating = True
         try:
-            self._show_value(node)
             self.model.node_changed.emit(node)
         finally:
             self._updating = False

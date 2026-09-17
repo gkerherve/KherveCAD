@@ -68,7 +68,33 @@ def check(node, env):
     return _OWNER[node.type].check(node, env)
 
 
+#: meshes of feature nodes by their resolved parameters: a gear that only
+#: turns (its rotation lives on a parent) keeps its mesh — re-triangulating
+#: 240-point tooth outlines on every slider tick was most of a frame
+_MESH_CACHE = {}
+MESH_CACHE_SIZE = 256
+
+
 def tess(node, env, color, sel, selected):
+    from . import mesh
+    try:
+        resolved = mesh.rp(node, env)
+        key = (node.type, repr(sorted(resolved.items())),
+               repr(sorted((k, v) for k, v in node.params.items()
+                           if isinstance(v, str))),
+               mesh._FN_OVERRIDE, mesh._DETAIL)
+    except Exception:
+        key = None
+    if key is not None:
+        tris = _MESH_CACHE.get(key)
+        if tris is None:
+            tris = [t for t, _c, _s in
+                    _OWNER[node.type].tess(node, env, None, frozenset(),
+                                           False)]
+            if len(_MESH_CACHE) >= MESH_CACHE_SIZE:
+                _MESH_CACHE.pop(next(iter(_MESH_CACHE)))
+            _MESH_CACHE[key] = tris
+        return mesh._emit(tris, color, selected)
     return _OWNER[node.type].tess(node, env, color, sel, selected)
 
 

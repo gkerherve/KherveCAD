@@ -1599,8 +1599,23 @@ class VariablesSheet(QWidget):
             self._updating = False
 
     def _node_changed(self, node):
-        if not self._updating and getattr(node, "type", None) == "assign":
-            self.rebuild()
+        if self._updating or getattr(node, "type", None) != "assign":
+            return
+        if node in self._rows:
+            # a value moved (a Customizer slider): refresh that row only —
+            # rebuilding every cell widget cost a frame per tick
+            row = self._rows.index(node)
+            self._updating = True
+            try:
+                for col, key in ((0, "variable"), (1, "value")):
+                    item = self.table.item(row, col)
+                    if item is not None:
+                        item.setText(str(node.params.get(key, "")))
+                self.table.setCellWidget(row, 2, self._control(node, row))
+            finally:
+                self._updating = False
+            return
+        self.rebuild()
 
     def _cell_edited(self, item):
         if self._updating or item.row() >= len(self._rows):
