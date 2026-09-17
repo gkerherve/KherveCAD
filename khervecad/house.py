@@ -89,7 +89,7 @@ FINISH_THICKNESS = _F.TILE_THICKNESS
 SIDES = ("N", "S", "E", "W")
 OPENING_KINDS = ("door", "window", "garage door")
 #: what a room is: indoors (walls, slab, roof) or an outdoor area
-SURFACES = ("indoor", "garden", "paving")
+SURFACES = ("indoor", "garden", "paving", "void")
 SURFACE_COLORS = {"garden": GRASS_COLOR, "paving": PAVING_COLOR}
 
 FLOOR_NAMES = ("Ground floor", "First floor", "Second floor",
@@ -403,7 +403,7 @@ def collect_walls(floor: Floor):
     `house_walls.wall_segments` for the full story. Outdoor areas have
     no walls."""
     return [(sg.p1, sg.p2, sg.openings, sg.interior)
-            for sg in wall_segments(floor)]
+            for sg in wall_segments(floor) if not sg.rail]
 
 
 #: kept for the plan editor
@@ -497,6 +497,8 @@ def build_floor(floor: Floor, is_top: bool, taken=None,
     group = CadNode("union", floor.name, {})
     ft = _F.FLOOR_THICKNESS
     for room in floor.rooms:
+        if room.surface == "void":
+            continue                            # open to the floor below
         if room.indoor:
             group.add(_color(CadNode("cube", f"{room.name} slab", dict(
                 x=room.x, y=room.y, z=-floor.slab_thickness, width=room.w,

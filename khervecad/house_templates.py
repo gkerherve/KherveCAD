@@ -254,6 +254,11 @@ def company_office() -> dict:
 
 TEMPLATES = {"Chemistry lab": chemistry_lab, "Physics lab": physics_lab,
              "Company office": company_office}
+# the finished houses (house_designs): bungalows, two-storey houses and
+# a block of flats, opened in the builder to edit
+from .house_designs import templates as _designs  # noqa: E402
+
+TEMPLATES.update(_designs())
 
 
 def names():

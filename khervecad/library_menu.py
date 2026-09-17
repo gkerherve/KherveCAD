@@ -156,7 +156,13 @@ def _home_menu(window, menu, parts, categories):
     home.addAction(icons.icon("mdi.home-city-outline"), "House Builder...",
                    lambda: house_dialog.open_builder(window))
     home.addSeparator()
-    listed = set()
+    finished = [pid for pid, spec in parts.items()
+                if spec.get("category") == "Finished houses"]
+    if finished:
+        _add_parts(window, home.addMenu(icons.icon("mdi.home-outline"),
+                                        "Finished houses"), finished, parts)
+        home.addSeparator()
+    listed = set(finished)
     for room, ids in FURNITURE_CATALOG.items():
         ids = [pid for pid in ids if pid in parts]
         if not ids:

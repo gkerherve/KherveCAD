@@ -372,6 +372,8 @@ class WallsItem(QGraphicsItem):
         h = self.floor.wall_height
         # each wall at its own thickness: partitions are thinner
         for sg in H.wall_segments(self.floor):
+            if sg.rail:
+                continue                    # a balustrade: open on plan
             painter.setBrush(INNER_WALL_FILL if sg.interior else WALL_FILL)
             for rect in wall_pieces(sg.p1, sg.p2, sg.openings, sg.thickness,
                                     h):

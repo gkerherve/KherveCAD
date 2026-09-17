@@ -1199,7 +1199,8 @@ from . import (library_cards, library_chem, library_crystal,  # noqa: E402
                library_lighting,
                library_park, library_prusa,
                library_trees,
-               library_examples, library_lego, library_lego_sets,
+               house_designs, library_examples, library_lego,
+               library_lego_sets,
                library_molecule,
                library_pots, library_room, library_vacuum)
 PARTS.update(library_vacuum.PARTS)
@@ -1212,6 +1213,7 @@ PARTS.update(library_prusa.PARTS)
 PARTS.update(library_city_buildings.PARTS)
 PARTS.update(library_trees.PARTS)
 PARTS.update(library_examples.PARTS)
+PARTS.update(house_designs.PARTS)
 PARTS.update(library_lighting.PARTS)
 PARTS.update(library_park.PARTS)
 PARTS.update(library_landscape.PARTS)

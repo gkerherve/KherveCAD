@@ -671,7 +671,9 @@ class HouseBuilder(QDialog):
         self.room_kind = QComboBox()
         for label, surface in (("Indoor room (walls)", "indoor"),
                                ("Garden (lawn, no walls)", "garden"),
-                               ("Paving (porch, patio, drive)", "paving")):
+                               ("Paving (porch, patio, drive)", "paving"),
+                               ("Stairwell (open to the floor below)",
+                                "void")):
             self.room_kind.addItem(label, surface)
         self.room_kind.setToolTip("An indoor room gets walls and sits under "
                                   "the roof; a garden or paved area is "

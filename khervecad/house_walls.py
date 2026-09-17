@@ -99,6 +99,8 @@ class Segment:
     #: how far the facing leaf runs past a and b to wrap a corner
     ext_a: float = 0.0
     ext_b: float = 0.0
+    #: a balustrade, not a wall: the open edge of a stairwell
+    rail: bool = False
 
     @property
     def interior(self) -> bool:
@@ -132,36 +134,60 @@ def _room_lines(room):
             "W": (False, x, y, y + d, +1), "E": (False, x + w, y, y + d, -1)}
 
 
+def _is_void(room) -> bool:
+    return getattr(room, "surface", "indoor") == "void"
+
+
 def wall_segments(floor) -> list:
     """Every wall of *floor*'s indoor rooms as `Segment`s: edges split
     where another edge on the same line starts or stops, classified by
     what lies on each side, and merged back into the longest runs of the
-    same kind — plus each run's openings and its corner wraps."""
+    same kind — plus each run's openings and its corner wraps.
+
+    Two rooms with the SAME NAME are one open space (an L-shaped landing,
+    a kitchen-diner drawn as two rectangles): no wall between them. A
+    stairwell ("void" surface, no floor) is open towards a hall, landing
+    or corridor — a balustrade (`rail`) — and walled towards anything
+    else."""
+    from .house_finishes import room_kind
     lines = {}
     rooms = [r for r in floor.rooms if r.indoor]
     for room in rooms:
         for side, (hor, c, lo, hi, s) in _room_lines(room).items():
-            lines.setdefault((hor, _r(c)), []).append((_r(lo), _r(hi), s))
+            lines.setdefault((hor, _r(c)), []).append(
+                (_r(lo), _r(hi), s, room))
     t_out = float(floor.wall_thickness)
     t_in = float(getattr(floor, "inner_wall_thickness", t_out))
     segments = []
     for (hor, c), edges in sorted(lines.items()):
-        cuts = sorted({v for lo, hi, _s in edges for v in (lo, hi)})
+        cuts = sorted({v for lo, hi, _s, _r2 in edges for v in (lo, hi)})
         run = None
         for p, q in zip(cuts, cuts[1:]):
             mid = (p + q) / 2.0
-            high = any(lo < mid < hi and s > 0 for lo, hi, s in edges)
-            low = any(lo < mid < hi and s < 0 for lo, hi, s in edges)
+            high = [r for lo, hi, s, r in edges if lo < mid < hi and s > 0]
+            low = [r for lo, hi, s, r in edges if lo < mid < hi and s < 0]
             if not (high or low):
                 run = None
                 continue
+            rail = False
+            if high and low:
+                a, b = high[0], low[0]
+                if a.name == b.name and _is_void(a) == _is_void(b):
+                    run = None                  # one open space
+                    continue
+                if _is_void(a) != _is_void(b):
+                    void, other = (a, b) if _is_void(a) else (b, a)
+                    # a stairwell is open to the landing; a lift shaft
+                    # (or any other void) is walled
+                    rail = room_kind(void.name) == "hall" and \
+                        room_kind(other.name) == "hall"
             outside = 0 if (high and low) else (-1 if high else +1)
             if run is not None and run.outside == outside \
-                    and abs(run.b - p) < 1e-6:
+                    and run.rail == rail and abs(run.b - p) < 1e-6:
                 run.b = q
                 continue
             run = Segment(hor, c, p, q, outside,
-                          t_in if outside == 0 else t_out)
+                          t_in if outside == 0 else t_out, rail=rail)
             segments.append(run)
     for room in rooms:
         lines_of = _room_lines(room)
@@ -403,6 +429,9 @@ def build_walls(floor, look: Look, ground: bool = True) -> list:
         holes = [(sg.a + s0, sill, sg.a + s1, top)
                  for s0, s1, sill, top, _k in spans]
         tag = "Wall" if sg.outside else "Inner wall"
+        if sg.rail:
+            out += balustrade(fr, sg)
+            continue
         if sg.outside:
             s = sg.outside
             # the roof sits on the wall head (house_roof puts its planes
@@ -428,6 +457,25 @@ def build_walls(floor, look: Look, ground: bool = True) -> list:
             out += opening_nodes(fr, sg, sg.a + s0, sg.a + s1, sill, top,
                                  kind, look, H, ground)
     return [n for n in out if n.children and n.children[0] is not None]
+
+
+def balustrade(fr, sg) -> list:
+    """The open side of a stairwell: a handrail on square spindles over
+    a base rail, 900 high."""
+    wood, white = ("#8a6234", "Default"), F.SKIRTING
+    out = [_color(fr.box("Handrail", sg.a, sg.b, sg.c - 35.0, sg.c + 35.0,
+                         860.0, 920.0), *wood),
+           _color(fr.box("Base rail", sg.a, sg.b, sg.c - 30.0, sg.c + 30.0,
+                         -F.FLOOR_THICKNESS, 60.0), *white)]
+    count = max(1, int((sg.b - sg.a) // 120.0))
+    step = (sg.b - sg.a) / count
+    for i in range(count + 1):
+        u = sg.a + i * step
+        u = min(max(u, sg.a + 20.0), sg.b - 20.0)
+        out.append(_color(fr.box("Spindle", u - 16.0, u + 16.0,
+                                 sg.c - 16.0, sg.c + 16.0, 60.0, 860.0),
+                          *white))
+    return out
 
 
 # -------------------------------------------------------------- joinery
@@ -647,7 +695,7 @@ def _faces_of(room, side, segments):
     direction into the room, segment) — clipped to the room's inside
     between the walls on its other sides."""
     hor, c, lo, hi, into = _room_lines(room)[side]
-    own = [sg for sg in segments if sg.horizontal == hor
+    own = [sg for sg in segments if sg.horizontal == hor and not sg.rail
            and abs(sg.c - _r(c)) < 1e-6 and sg.b > lo + 1e-6
            and sg.a < hi - 1e-6]
 
@@ -718,7 +766,7 @@ def room_nodes(room, floor, segments=None) -> list:
     or panelling where they go (`house_finishes.finish_of` /
     `coverage_of`) — around every opening on its walls, whichever room
     the opening was drawn from."""
-    if not room.indoor:
+    if not room.indoor or _is_void(room):
         return []
     segments = segments if segments is not None else wall_segments(floor)
     H = float(floor.wall_height)

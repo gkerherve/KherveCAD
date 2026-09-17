@@ -922,6 +922,27 @@ into a new module and import.
                        `tests/test_library_home_more.py`. The vertical
                        toolbar ends with a House Builder button
                        (`toolbars.build_tool_bar`, tip `house_builder`).
+  - `house_designs.py` — **finished houses** (2026-09-17, the user's
+                       request): bungalows and two-storey houses with 1, 2
+                       and 3 bedrooms and a ten-storey block of flats (two
+                       2-bed flats a floor round a core with a lift shaft
+                       and switchback stairs — odd floors climb the other
+                       column), as build_house specs in six brick styles
+                       (`BRICKS` also picks the roof and joinery). Library
+                       parts in House & home ▸ Finished houses (category
+                       "Finished houses"; colour combo = brick; sizes
+                       Furnished / Empty (shell) — the block defaults to the
+                       shell, furnished it is ~750k triangles) and House
+                       Builder templates (`house_templates.TEMPLATES`, the
+                       build_house `template` enum). Built on two House
+                       Builder rules added for them (`house_walls.
+                       wall_segments`): rooms with the SAME NAME are one
+                       open space (no wall between them, so a landing can
+                       wrap a stairwell), and a room with surface "void"
+                       has no slab or covering — a stairwell open over a
+                       `balustrade` towards a hall/landing/corridor
+                       (`Segment.rail`), walled towards anything else (a
+                       lift shaft). Tested in `tests/test_house_designs.py`.
   - Library & Examples menus (`library_menu.py`, reorganised 2026-09-17
                        — the user found the Library "all over the place"
                        and asked what Examples was for): **Library = parts

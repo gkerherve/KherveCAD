@@ -1244,7 +1244,14 @@ TOOLS = [
         "input_schema": _obj({
             "template": {"type": "string",
                          "enum": ["Chemistry lab", "Physics lab",
-                                  "Company office"],
+                                  "Company office",
+                                  "Bungalow — 1 bedroom",
+                                  "Bungalow — 2 bedrooms",
+                                  "Bungalow — 3 bedrooms",
+                                  "Two-storey house — 1 bedroom",
+                                  "Two-storey house — 2 bedrooms",
+                                  "Two-storey house — 3 bedrooms",
+                                  "Block of flats — 10 storeys"],
                          "description": "Start from a whole furnished "
                                         "building (fume hoods, benches, "
                                         "optical tables, UHV chambers, "
@@ -1276,7 +1283,13 @@ TOOLS = [
                             "d": {"type": "number"},
                             "surface": {"type": "string",
                                         "enum": ["indoor", "garden",
-                                                 "paving"]},
+                                                 "paving", "void"],
+                                        "description": "void: a "
+                                        "stairwell with no floor, open "
+                                        "(a balustrade) towards a hall "
+                                        "or landing. Rooms with the same "
+                                        "name are one open space, no "
+                                        "wall between them."},
                             "finish": {
                                 "type": "string",
                                 "description": (
