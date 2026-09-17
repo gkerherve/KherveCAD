@@ -1,0 +1,239 @@
+{
+ "format": "kcad",
+ "version": 11,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Tee Hinge",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#3a3d42",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Rectangular leaf]",
+          "visible": true,
+          "params": {
+           "x": -50.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 50.0,
+           "depth": 3.0,
+           "height": 90.0,
+           "center": false
+          }
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 25.0,
+             "width": 2.0,
+             "depth": 3.0,
+             "height": 40.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 200.0,
+             "y": 0.0,
+             "z": 38.0,
+             "width": 2.0,
+             "depth": 3.0,
+             "height": 14.0,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Knuckle]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 1.5,
+           "z": 0.0,
+           "height": 90.0,
+           "radius_bottom": 4.0,
+           "radius_top": 4.0,
+           "segments": 48,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For z",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "15, 45, 75"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -30.0,
+           "y": -1.0,
+           "z": "z"
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Leaf screw hole]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 5.0,
+               "radius_bottom": 2.5,
+               "radius_top": 2.5,
+               "segments": 48,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "50, 120, 185"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -1.0,
+           "z": 45.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Strap screw hole]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 5.0,
+               "radius_bottom": 2.5,
+               "radius_top": 2.5,
+               "segments": 48,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

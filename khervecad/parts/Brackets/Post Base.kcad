@@ -1,0 +1,206 @@
+{
+ "format": "kcad",
+ "version": 11,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Post Base",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#6d7278",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Base plate]",
+          "visible": true,
+          "params": {
+           "x": -60.0,
+           "y": -60.0,
+           "z": 0.0,
+           "width": 120.0,
+           "depth": 120.0,
+           "height": 4.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Post socket]",
+          "visible": true,
+          "params": {
+           "x": -37.0,
+           "y": -37.0,
+           "z": 0.0,
+           "width": 74.0,
+           "depth": 74.0,
+           "height": 80.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Post recess]",
+        "visible": true,
+        "params": {
+         "x": -35.0,
+         "y": -35.0,
+         "z": 4.0,
+         "width": 70.0,
+         "depth": 70.0,
+         "height": 80.0,
+         "center": false
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-48, 48"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For y",
+          "visible": true,
+          "params": {
+           "variable": "y",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-48, 48"
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Anchor hole]",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": "y",
+             "z": -1.0,
+             "height": 6.0,
+             "radius_bottom": 5.0,
+             "radius_top": 5.0,
+             "segments": 48,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For z",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "30, 60"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -40.0,
+           "y": 0.0,
+           "z": "z"
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Post screw hole]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 80.0,
+               "radius_bottom": 3.0,
+               "radius_top": 3.0,
+               "segments": 48,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

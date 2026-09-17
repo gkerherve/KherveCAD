@@ -1,0 +1,295 @@
+{
+ "format": "kcad",
+ "version": 11,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Hasp",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#aeb3b8",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Fixed leaf]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 30.0,
+           "depth": 40.0,
+           "height": 2.0,
+           "center": false
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 15.0,
+           "y": 40.0,
+           "z": 1.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Knuckle]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 30.0,
+               "radius_bottom": 3.0,
+               "radius_top": 3.0,
+               "segments": 48,
+               "center": true
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Hasp arm]",
+          "visible": true,
+          "params": {
+           "x": 5.0,
+           "y": 42.0,
+           "z": 0.0,
+           "width": 20.0,
+           "depth": 80.0,
+           "height": 2.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For p",
+        "visible": true,
+        "params": {
+         "variable": "p",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "[8, 10], [22, 10], [8, 30], [22, 30]"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Screw hole]",
+          "visible": true,
+          "params": {
+           "x": "p[0]",
+           "y": "p[1]",
+           "z": -1.0,
+           "height": 4.0,
+           "radius_bottom": 2.0,
+           "radius_top": 2.0,
+           "segments": 48,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Staple slot]",
+        "visible": true,
+        "params": {
+         "x": 10.0,
+         "y": 95.0,
+         "z": -1.0,
+         "width": 10.0,
+         "depth": 18.0,
+         "height": 4.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Staple",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": -4.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#aeb3b8",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Staple plate]",
+        "visible": true,
+        "params": {
+         "x": -2.0,
+         "y": 90.0,
+         "z": 0.0,
+         "width": 34.0,
+         "depth": 26.0,
+         "height": 2.0,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Screw hole]",
+        "visible": true,
+        "params": {
+         "x": 4.0,
+         "y": 103.0,
+         "z": -1.0,
+         "height": 4.0,
+         "radius_bottom": 2.0,
+         "radius_top": 2.0,
+         "segments": 48,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Screw hole]",
+        "visible": true,
+        "params": {
+         "x": 26.0,
+         "y": 103.0,
+         "z": -1.0,
+         "height": 4.0,
+         "radius_bottom": 2.0,
+         "radius_top": 2.0,
+         "segments": 48,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 15.0,
+       "y": 104.0,
+       "z": -4.0
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Staple loop]",
+          "visible": true,
+          "params": {
+           "x": -3.0,
+           "y": -6.0,
+           "z": 0.0,
+           "width": 6.0,
+           "depth": 12.0,
+           "height": 16.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Loop opening]",
+          "visible": true,
+          "params": {
+           "x": -4.0,
+           "y": -3.0,
+           "z": 0.0,
+           "width": 8.0,
+           "depth": 6.0,
+           "height": 12.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
