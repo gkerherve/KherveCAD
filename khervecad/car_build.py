@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import math
 
-from . import car_details, car_models, car_wheels
+from . import car_details, car_models, car_profiles, car_wheels
 from .car_wheels import closed_grid
 from .landmark_kit import Kit
 from .model import CadNode
@@ -51,6 +51,13 @@ STATIONS = 150
 
 SCALES = {"1:18": 1 / 18, "Full-size": 1.0, "1:43": 1 / 43, "1:10": 0.1}
 
+#: follow the blueprint-measured profiles (`car_profiles`) instead of
+#: the shape presets. OFF: the curves are measured correctly, but the
+#: builder does not yet place a greenhouse or a track on them — the
+#: body comes out narrower than its own wheels and the glass strays.
+#: `car_profiles` + `tools.carblueprint` are the finished half.
+USE_MEASURED = False
+
 DEFAULTS = dict(paint="", rim="", tyre="As delivered", finish="Silver",
                 caliper="Red", scale=1.0)
 
@@ -58,6 +65,30 @@ DEFAULTS = dict(paint="", rim="", tyre="As delivered", finish="Silver",
 def _smooth(t):
     t = min(1.0, max(0.0, t))
     return t * t * (3 - 2 * t)
+
+
+def sample(curve, s):
+    """A measured curve (evenly spaced, nose to tail) at *s*."""
+    n = len(curve) - 1
+    x = min(1.0, max(0.0, s)) * n
+    i = min(n - 1, int(x))
+    return curve[i] + (curve[i + 1] - curve[i]) * (x - i)
+
+
+def cabin_range(curve):
+    """(front, back) of the greenhouse in a measured roof line: from
+    its highest point, walk out to the first place where it stops
+    falling — the cowl in front of the windscreen and the deck behind
+    the backlight."""
+    n = len(curve)
+    peak = max(range(n), key=lambda i: curve[i])
+    front = peak
+    while front > 1 and curve[front - 1] < curve[front]:
+        front -= 1
+    back = peak
+    while back < n - 2 and curve[back + 1] < curve[back]:
+        back += 1
+    return front / (n - 1), back / (n - 1)
 
 
 def _knots(pairs, s):
@@ -94,6 +125,37 @@ class Car:
         self.top_knots = [(0.0, p["nose"] * H), (p["ws"], p["cowl"] * H),
                           (p["cb"], p["deck"] * H), (1.0, p["tail"] * H)]
         self.tw_max = max(w[0] for w in self.wheels)
+        self.measured = (car_profiles.PROFILES.get(key)
+                         if USE_MEASURED else None)
+        if self.measured:
+            self._fit_measured()
+
+    def _fit_measured(self):
+        """Follow the blueprint for the LINE of the car — bonnet, deck,
+        floor and plan — while the shape preset still says where the
+        cabin starts and ends. A roof line alone cannot: on a smooth
+        car it climbs from the nose to the roof without a kink, so
+        hunting for the windscreen in it puts the glass over the
+        bonnet."""
+        m = self.measured
+        p = self.p
+        ws, cb = p["ws"], p["cb"]
+        roof = m["roof"]
+        n = len(roof) - 1
+        inside = [(i / n, v) for i, v in enumerate(roof)
+                  if ws <= i / n <= cb]
+        peak = max(v for _, v in inside)
+        band = [s for s, v in inside if v > peak - 0.02]
+        p["rf"], p["rr"] = (band[0], band[-1]) if len(band) > 1 \
+            else (ws + (cb - ws) * 0.35, ws + (cb - ws) * 0.6)
+        self.cowl_z = sample(roof, ws) * self.H
+        self.deck_z = sample(roof, cb) * self.H
+        if m["width"]:
+            # normalise on the body, not on a wing mirror sticking out
+            ordered = sorted(m["width"])
+            self.width_ref = ordered[int(0.9 * (len(ordered) - 1))] or 1.0
+        else:
+            self.width_ref = 1.0
 
     # ------------------------------------------------------- profiles
     def y(self, s):
@@ -101,6 +163,9 @@ class Car:
 
     def half_width(self, s):
         p = self.p
+        if self.measured and self.measured["width"]:
+            w = sample(self.measured["width"], s) / self.width_ref
+            return self.W / 2 * min(1.0, w)
         front = p["nose_w"] + (1 - p["nose_w"]) * math.sin(
             min(1.0, s / 0.26) * math.pi / 2) ** 0.85
         rear = p["tail_w"] + (1 - p["tail_w"]) * math.sin(
@@ -109,9 +174,21 @@ class Car:
         return self.W / 2 * min(front, rear) * waist
 
     def top(self, s):
-        return _knots(self.top_knots, s)
+        """The body's own top: the drawing's roof line, flattened
+        between the cowl and the deck where the greenhouse stands."""
+        if not self.measured:
+            return _knots(self.top_knots, s)
+        ws, cb = self.p["ws"], self.p["cb"]
+        if s <= ws or s >= cb:
+            return sample(self.measured["roof"], s) * self.H
+        t = (s - ws) / max(1e-6, cb - ws)
+        return self.cowl_z + (self.deck_z - self.cowl_z) * t
 
     def bottom(self, s):
+        if self.measured:
+            # the drawing's floor dips to the ground at each tyre: the
+            # BODY stops at the sill
+            return max(sample(self.measured["floor"], s) * self.H, self.gc)
         lip = 0.35 * (self.p["nose"] * self.H - self.gc)
         return (self.gc + lip * (1 - _smooth(s / 0.07))
                 + lip * (1 - _smooth((1 - s) / 0.06)))
@@ -130,6 +207,9 @@ class Car:
         return self.W / 2 - 25 - self.wheels[i][0] / 2
 
     def roof(self, s):
+        if self.measured:
+            return max(sample(self.measured["roof"], s) * self.H,
+                       self.top(s) + 8)
         p, H = self.p, self.H
         cowl = self.top(p["ws"])
         if s <= p["rf"]:
@@ -237,7 +317,11 @@ class Car:
         zr = self.roof(s)
         top, bottom = [], []
         for u in self.columns():
-            zbase = self.body_top_at(s, u * p["cabin"]) - 10
+            # the greenhouse stands on the SHOULDER, never on a fender
+            # bulge: over a wheel the body top rises, and a cabin that
+            # followed it would swallow its own glass
+            zbase = min(self.body_top_at(s, u * p["cabin"]),
+                        self.top(s) + 40) - 10
             au = abs(u)
             roll = 0.12 * (self.H - self.top(p["ws"])) * _smooth(
                 (au - 0.6) / 0.4) ** 2

@@ -83,3 +83,18 @@ def test_the_paint_choice_reaches_the_body():
     colours = {n.params.get("color") for n in node.walk()
                if n.type == "color"}
     assert car_models.PAINTS["Giallo"] in colours
+
+
+def test_measured_profiles_are_sane_curves():
+    """The blueprint-measured curves (car_profiles) are normalised and
+    the right way round, whether or not the builder follows them yet."""
+    from khervecad import car_profiles
+    assert car_profiles.PROFILES
+    for key, prof in car_profiles.PROFILES.items():
+        assert key in car_models.CARS
+        assert len(prof["roof"]) == len(prof["floor"]) == 60
+        assert 0.9 <= max(prof["roof"]) <= 1.0
+        assert min(prof["floor"]) >= 0.0
+        assert max(prof["roof"]) > max(prof["floor"])
+        if prof["width"]:
+            assert 0.9 <= max(prof["width"]) <= 1.0
