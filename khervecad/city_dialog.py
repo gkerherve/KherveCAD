@@ -387,10 +387,10 @@ class CityBuilder(QDialog):
         side = QWidget()
         col = QVBoxLayout(side)
         col.addWidget(self._generate_group())
+        col.addWidget(self._ground_group())
         col.addWidget(self._place_group())
         col.addWidget(self._editor_group())
         col.addWidget(self._along_group())
-        col.addWidget(self._ground_group())
         col.addStretch(1)
         scroll = QScrollArea()
         scroll.setWidget(side)
@@ -473,7 +473,7 @@ class CityBuilder(QDialog):
         return box
 
     def _place_group(self):
-        box = QGroupBox("2  What the tools place")
+        box = QGroupBox("3  What the tools place")
         form = QFormLayout(box)
         self.style_combo = QComboBox()
         self.style_combo.addItems(list(B.STYLES))
@@ -534,7 +534,7 @@ class CityBuilder(QDialog):
         return dims
 
     def _editor_group(self):
-        box = QGroupBox("3  Selected")
+        box = QGroupBox("4  Selected")
         lay = QVBoxLayout(box)
         self.sel_label = QLabel("Nothing selected")
         self.sel_label.setWordWrap(True)
@@ -669,10 +669,10 @@ class CityBuilder(QDialog):
         return w
 
     def _ground_group(self):
-        """5 Ground: flat grass, or a landscape the city is built on —
+        """2 Ground: flat grass, or a landscape the city is built on —
         roads follow its slopes, buildings stand on levelled pads."""
         from .city_ground import KINDS
-        box = QGroupBox("5  Ground")
+        box = QGroupBox("2  Ground (landscape)")
         form = QFormLayout(box)
         self.terrain_kind = QComboBox()
         self.terrain_kind.addItem("Flat", "flat")
@@ -735,7 +735,7 @@ class CityBuilder(QDialog):
         self.canvas.show_relief(self.spec)
 
     def _along_group(self):
-        box = QGroupBox("4  Along the roads")
+        box = QGroupBox("5  Along the roads")
         form = QFormLayout(box)
         self.spacing = MetreSpin(5.0, 200.0, 1.0, decimals=0)
         self.spacing.set_mm(30000)
