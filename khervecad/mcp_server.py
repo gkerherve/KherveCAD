@@ -166,7 +166,12 @@ left_hand = false, internal = false, clearance = 0.2)` (internal = the \
 tap to subtract for a nut); `kcad_hole(kind = "plain" | "counterbore" | \
 "countersink" | "nut_trap" | "heat_insert" | "slot" | "teardrop", \
 diameter = 3.2, depth = 10, head_diameter = 6, head_depth = 3.2)` — the \
-solid to subtract, top at z = 0.
+solid to subtract, top at z = 0. Also `kcad_knurl(diameter, length, \
+count, depth, angle)`, `kcad_polyhedron(kind = "icosahedron" | \
+"truncated_icosahedron" | …, radius)`, and 2D `kcad_star(points, radius, \
+inner_radius)`, `kcad_rounded_polygon(corners = [[x, y, r], …])`, \
+`kcad_bezier_shape(controls = [[x, y], …])` (point, control, control per \
+curve), `kcad_honeycomb(size = [w, h], cell, wall, margin)`.
 - Beyond OpenSCAD's own shapes, apply_code understands KherveCAD's \
 helpers, which parse into editable nodes: `kcad_sweep(path = [[x, y, \
 z], ...], smooth = 3, twist = 0, scale = 1, wall = 0, closed = false) \

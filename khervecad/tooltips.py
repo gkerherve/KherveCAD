@@ -686,6 +686,60 @@ TIPS = {
          "Difference."],
         "Extends above the face keeps the cut clean on a flush face; the "
         "teardrop runs along X with its point up."),
+    "knurl": (
+        "Knurled cylinder",
+        "A cylinder covered in diamond knurling — two sets of helical "
+        "grooves crossing — for a knob or a thumb screw you can grip.",
+        ["Insert ▸ Mechanical features ▸ Knurled cylinder.",
+         "Set the Outer diameter and Length, how many Diamonds round and "
+         "the Groove depth (0.6–1 mm prints well)."],
+        "Put it in a Group with the knob's other shapes; the helix angle "
+        "sets how tall the diamonds are."),
+    "polyhedron_solid": (
+        "Regular polyhedron",
+        "A Platonic or Archimedean solid — tetrahedron to icosahedron, "
+        "cuboctahedron, the football (truncated icosahedron) and more — "
+        "sized by the sphere through its corners.",
+        ["Insert ▸ Shapes & patterns ▸ Regular polyhedron.",
+         "Pick the Solid and its Circumradius."],
+        "Dice, lamp shades, a geodesic starting point."),
+    "star": (
+        "Regular polygon / star",
+        "A 2D regular polygon, or a star of that many tips between an "
+        "outer and an inner radius.",
+        ["Insert ▸ Shapes & patterns ▸ Regular polygon / star.",
+         "Set Sides / tips and the Outer radius; an Inner radius of 0 "
+         "gives the plain polygon.",
+         "Extrude it for a solid."],
+        "Turn° sets where the first tip points (90 = up)."),
+    "rounded_polygon": (
+        "Rounded polygon (radius per corner)",
+        "A 2D outline whose every corner has its own fillet radius — a "
+        "bracket profile with a big inside radius and small outside ones, "
+        "in one shape (Round-Anything's polyRound).",
+        ["Insert ▸ Shapes & patterns ▸ Rounded polygon.",
+         "Edit the Corners table: X, Y and the Radius of each corner (0 "
+         "keeps it sharp).",
+         "Extrude it."],
+        "A radius too big for a short edge is shrunk to fit."),
+    "bezier_shape": (
+        "Bézier shape (closed)",
+        "A smooth 2D outline of cubic Bézier curves — a logo, a cam, a "
+        "guitar body.",
+        ["Insert ▸ Shapes & patterns ▸ Bézier shape.",
+         "Rows come in threes: a point on the curve, then two control "
+         "points pulling the curve toward the next point.",
+         "Extrude it."],
+        "The last curve closes back to the first point."),
+    "honeycomb": (
+        "Honeycomb panel (2D)",
+        "A rectangle perforated with hexagonal cells — extrude it for a "
+        "light, stiff, printable panel or grille.",
+        ["Insert ▸ Shapes & patterns ▸ Honeycomb panel.",
+         "Set the Width, Height, Cell size, Wall between cells and the "
+         "solid Margin.",
+         "Extrude it."],
+        "Only whole cells are cut, so the edge stays solid."),
     "pattern": (
         "Pattern (linear / polar / grid)",
         "Repeats its contents as copies — in a row, round an axis, or "

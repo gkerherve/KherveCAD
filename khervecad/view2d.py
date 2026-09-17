@@ -435,6 +435,11 @@ class OutlineShapeItem(ShapeItem, QGraphicsPathItem):
 _ITEM_CLASSES = dict(line=LineShapeItem, rect=RectShapeItem,
                      circle=CircleShapeItem, polygon=PolygonShapeItem,
                      text=TextShapeItem, import_2d=OutlineShapeItem)
+# the feature library's 2D shapes (star, rounded polygon, Bézier,
+# honeycomb) move as a whole by their x / y
+from .organic import features as _features  # noqa: E402
+
+_ITEM_CLASSES.update({t: OutlineShapeItem for t in _features.SHAPES_2D})
 
 
 #: node types that carry their own move params, so a drag is baked

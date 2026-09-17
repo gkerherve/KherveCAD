@@ -315,7 +315,10 @@ def build_options_bar(win):
 INSERT_EXTRAS = [
     ("Code && files", ["assign", "echo", "assert", "stl_import",
                        "scad_raw", "sheet_metal"]),
-    ("&Mechanical features", ["gear", "thread", "hole"]),
+    ("&Mechanical features", ["gear", "thread", "hole", "knurl"]),
+    ("Shapes && &patterns", ["polyhedron_solid", "star",
+                             "rounded_polygon", "bezier_shape",
+                             "honeycomb"]),
 ]
 
 

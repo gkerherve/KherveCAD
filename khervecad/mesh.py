@@ -610,7 +610,8 @@ def _oriented(node, outlines):
     """A 2D shape's outlines as solids (counter-clockwise) — and, for
     text, the loops nested inside a glyph as holes (clockwise)."""
     loops = [o for o in (_distinct(o) for o in outlines) if len(o) >= 3]
-    if node.type not in ("text", "import_2d") and not (
+    if node.type not in ("text", "import_2d") and \
+            node.type not in organic.features.NESTED_2D and not (
             node.type == "polygon" and polygon_paths(node)):
         return [ensure_ccw(o) for o in loops]
     out = []

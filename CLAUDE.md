@@ -163,6 +163,19 @@ into a new module and import.
                        nut_trap, heat_insert, slot, teardrop (along X,
                        point up); `extra` above the face. A union of
                        cylinders / cones / prisms (`pieces`, `kcad_hole`).
+  - `solids.py`      — `polyhedron_solid` (12 Platonic / Archimedean
+                       solids by circumradius: vertex rules from signed
+                       cyclic permutations and φ, hull in both preview and
+                       helper — hull of 0.001 cubes) and `star` (2D regular
+                       polygon or star). `curves2d.py`: `rounded_polygon`
+                       (rows [x, y, r], tangent arcs shrunk to half an
+                       edge) and `bezier_shape` (closed cubic curves, rows
+                       in threes). `textures.py`: `knurl` (intersection of
+                       two opposite twisted toothed sections in OpenSCAD;
+                       the preview builds r = min(both) directly, closed)
+                       and `honeycomb` (2D, whole hexagonal cells as holes,
+                       `NESTED_2D`). view2d draws every feature 2D shape
+                       with OutlineShapeItem. All within 1 % of OpenSCAD.
   - `animate.py`     — View ▸ Animate ($t): `set_time` puts OpenSCAD's
                        animation time in `expr.SPECIAL_DEFAULTS["$t"]`
                        (every expression reads it), `engine.DEFINES`

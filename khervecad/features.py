@@ -24,9 +24,9 @@ the Free Software Foundation, either version 3 of the License, or
 
 from __future__ import annotations
 
-from . import gears, holes, threads
+from . import curves2d, gears, holes, solids, textures, threads
 
-MODULES = [gears, threads, holes]
+MODULES = [gears, threads, holes, solids, curves2d, textures]
 
 NODE_TYPES = {}
 LEAVES = frozenset()
@@ -44,6 +44,9 @@ TYPES = frozenset(NODE_TYPES)
 #: 2D feature types whose outlines mesh.node_outlines asks for
 SHAPES_2D = frozenset(t for t, d in NODE_TYPES.items()
                       if d["category"] == "2d")
+#: 2D feature types whose nested loops are holes (mesh._oriented)
+NESTED_2D = frozenset().union(*(getattr(m, "NESTED_2D", frozenset())
+                                for m in MODULES))
 #: params the preview keeps as text
 TEXT_PARAMS = frozenset().union(*(getattr(m, "TEXT_PARAMS", frozenset())
                                   for m in MODULES))
