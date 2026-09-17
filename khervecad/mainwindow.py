@@ -158,6 +158,8 @@ class MainWindow(QMainWindow):
         self.engine.busy_changed.connect(self._engine_busy)
 
         self._build_chat_dock()
+        from . import customizer_panel
+        customizer_panel.attach(self)
         self._build_tool_bar()
         self._build_options_bar()
         self._build_menus()
@@ -302,6 +304,10 @@ class MainWindow(QMainWindow):
         self._build_examples_menu(m)
 
         view_menu = m.addMenu("&View")
+        customizer_act = self._customizer_dock.toggleViewAction()
+        customizer_act.setIcon(icons.icon("mdi.tune-variant"))
+        customizer_act.setText("&Customizer (sliders)")
+        view_menu.addAction(customizer_act)
         from . import animate
         view_menu.addAction(icons.icon("mdi.play-circle-outline"),
                             "&Animate ($t)...",

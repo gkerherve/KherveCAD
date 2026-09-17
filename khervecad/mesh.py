@@ -17,6 +17,7 @@ the Free Software Foundation, either version 3 of the License, or
 """
 
 import math
+import re
 from pathlib import Path
 
 from . import expr
@@ -1125,8 +1126,14 @@ def _component_key(node, env):
     if any("$t" in p for p in parts):
         # an animated part is a different mesh at every moment
         parts.append(f"$t={expr.SPECIAL_DEFAULTS.get('$t', 0)!r}")
-    parts.append(repr(sorted(env.items(), key=lambda kv: kv[0]))
-                 if env else "")
+    if env:
+        # only the variables the part READS: a slider moving one variable
+        # (a motor angle) must not rebuild — or re-render in OpenSCAD —
+        # every part of the document
+        text = "\x00".join(parts)
+        used = set(re.findall(r"\$?[A-Za-z_]\w*", text))
+        parts.append(repr(sorted((k, v) for k, v in env.items()
+                                 if k in used)))
     parts.append(str(_FN_OVERRIDE))
     parts.append(str(_DETAIL))
     return "\x00".join(parts)

@@ -243,6 +243,16 @@ into a new module and import.
                        drop-down, checkbox or text box
                        (`VariablesSheet._control`; a moved control sets
                        the value without rebuilding under the drag).
+  - `customizer_panel.py` — View ▸ Customizer: the annotated global
+                       variables as a dock of grouped controls (one box
+                       per `/* [Group] */`, description, live value), opened
+                       by itself once per document that has any; each
+                       slider has a ▶ that sweeps it back and forth
+                       (`PLAY_INTERVAL_MS`) so a motor angle turns a gear
+                       train on screen. Object caches key only on the
+                       variables a part READS (`mesh._component_key`), so a
+                       moving slider re-tessellates / re-renders only the
+                       parts that use it.
   - `scadinclude.py` — what reaches beyond one file: `use <>` / `include
                        <>` tokens become **scad_use** nodes (emit the same
                        line; an unresolvable one is red) and the library
