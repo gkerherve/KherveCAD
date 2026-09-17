@@ -30,7 +30,7 @@ from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QCheckBox,
                              QToolBar, QTreeWidget, QTreeWidgetItem,
                              QVBoxLayout, QWidget)
 
-from . import icons
+from . import expr, icons
 from .document import node_from_dict, node_to_dict
 from .model import (CadNode, NODE_TYPES, OPERATION, DocumentModel,
                     validate)
@@ -1376,6 +1376,18 @@ class CodeView(QPlainTextEdit):
                 self.ensureCursorVisible()
 
 
+def _same(raw, value):
+    """True when a drop-down item's source means *value*."""
+    try:
+        return expr.evaluate(raw, {}) == value
+    except expr.ExprError:
+        return False
+
+
+def _quote(text):
+    return '"' + str(text).replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
 class VariablesSheet(QWidget):
     """A spreadsheet of the document's variables (assign nodes), so all
     the parameters live in one place instead of sprawling down the
@@ -1405,10 +1417,12 @@ class VariablesSheet(QWidget):
         self.scope_combo.currentIndexChanged.connect(self._scope_picked)
         scope_row.addWidget(self.scope_combo, 1)
         layout.addLayout(scope_row)
-        self.table = QTableWidget(0, 2)
-        self.table.setHorizontalHeaderLabels(["Name", "Value / expression"])
+        self.table = QTableWidget(0, 3)
+        self.table.setHorizontalHeaderLabels(["Name", "Value / expression",
+                                              "Adjust"])
         self.table.horizontalHeader().setStretchLastSection(True)
-        self.table.setColumnWidth(0, 170)
+        self.table.setColumnWidth(0, 150)
+        self.table.setColumnWidth(1, 120)
         self.table.verticalHeader().setDefaultSectionSize(22)
         self.table.itemChanged.connect(self._cell_edited)
         layout.addWidget(self.table)
@@ -1483,15 +1497,100 @@ class VariablesSheet(QWidget):
         return self.model.global_assigns()
 
     def rebuild(self):
+        from . import customizer
         self._updating = True
         self._rows = self._assigns()
         self.table.setRowCount(len(self._rows))
         for row, node in enumerate(self._rows):
-            self.table.setItem(row, 0, QTableWidgetItem(
-                str(node.params.get("variable", ""))))
-            self.table.setItem(row, 1, QTableWidgetItem(
-                str(node.params.get("value", ""))))
+            name = QTableWidgetItem(str(node.params.get("variable", "")))
+            tip = [str(node.params.get("description") or "")]
+            if customizer.group_of(node):
+                tip.append(f"Group: {customizer.group_of(node)}")
+            if node.params.get("options"):
+                tip.append(f"Customizer: [{node.params['options']}]")
+            name.setToolTip("\n".join(t for t in tip if t))
+            value = QTableWidgetItem(str(node.params.get("value", "")))
+            if customizer.hidden(node):
+                for item in (name, value):
+                    item.setForeground(QColor("#9aa0a6"))
+            self.table.setItem(row, 0, name)
+            self.table.setItem(row, 1, value)
+            self.table.setCellWidget(row, 2, self._control(node, row))
         self._updating = False
+
+    def _control(self, node, row):
+        """The Customizer control for a variable (customizer.widget): a
+        slider, a drop-down, a checkbox or a text box; None when it is a
+        plain expression."""
+        from PyQt5.QtWidgets import (QCheckBox, QComboBox, QLineEdit,
+                                     QSlider)
+        from . import customizer
+        from .model import fmt
+        spec = customizer.widget(node)
+        if spec is None or customizer.hidden(node):
+            return None
+        source = str(node.params.get("value", "")).strip()
+        try:
+            current = expr.evaluate(node.params.get("value"), {})
+        except expr.ExprError:
+            current = None
+        kind = spec["kind"]
+        if kind == "slider":
+            lo, hi = float(spec["min"]), float(spec["max"])
+            step = float(spec["step"]) or 1.0
+            steps = max(int(round((hi - lo) / step)), 1)
+            box = QSlider(Qt.Horizontal)
+            box.setRange(0, steps)
+            if isinstance(current, (int, float)):
+                box.setValue(int(round((float(current) - lo) / step)))
+            box.setToolTip(f"{spec['min']} to {spec['max']}, step "
+                           f"{spec['step']}")
+            box.valueChanged.connect(lambda k, n=node, r=row: self._set_value(
+                n, r, fmt(round(lo + k * step, 10))))
+            return box
+        if kind == "dropdown":
+            box = QComboBox()
+            for raw, label in spec["items"]:
+                box.addItem(label, raw)
+            match = [i for i, (raw, _l) in enumerate(spec["items"])
+                     if raw == source or _same(raw, current)]
+            if match:
+                box.setCurrentIndex(match[0])
+            box.currentIndexChanged.connect(
+                lambda i, n=node, r=row, b=box: self._set_value(
+                    n, r, b.itemData(i)))
+            return box
+        if kind == "checkbox":
+            box = QCheckBox()
+            box.setChecked(bool(current))
+            box.toggled.connect(lambda on, n=node, r=row: self._set_value(
+                n, r, "true" if on else "false"))
+            return box
+        box = QLineEdit(current if isinstance(current, str) else "")
+        if spec.get("max"):
+            box.setMaxLength(int(spec["max"]))
+        box.editingFinished.connect(lambda n=node, r=row, b=box:
+                                    self._set_value(n, r, _quote(b.text())))
+        return box
+
+    def _set_value(self, node, row, source):
+        """A control moved: write the value and refresh its cell, without
+        rebuilding the table under the control being dragged."""
+        if self._updating:
+            return
+        try:
+            value = float(source)
+        except (TypeError, ValueError):
+            value = source
+        node.params["value"] = value
+        self._updating = True
+        try:
+            item = self.table.item(row, 1)
+            if item is not None:
+                item.setText(str(value))
+            self.model.node_changed.emit(node)
+        finally:
+            self._updating = False
 
     def _node_changed(self, node):
         if not self._updating and getattr(node, "type", None) == "assign":

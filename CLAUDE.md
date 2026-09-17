@@ -119,6 +119,28 @@ into a new module and import.
                        where it sits (`mesh.show_only`). Distinct from the
                        selection highlight, which imitates # and never
                        writes it.
+  - **Parametric import** (same day): `Parser.bound` holds the names
+                       the TREE defines where the parser stands (variable
+                       nodes, module arguments, let bindings, loop
+                       variables — `Parser.scoped`); `_keeps_link` keeps
+                       an expression over them as written (`cube(w)`,
+                       `h = w * 2`) and still folds what only the parser
+                       knows (a user function, a library's variable).
+                       `_components` splits a vector variable
+                       (`translate(pos)` -> pos[0..2]); centred squares of
+                       expression sizes centre by expression.
+  - `customizer.py`  — OpenSCAD Customizer annotations on variables:
+                       `// [10:5:200]`, `// [a, b]`, `// [1:Thin, 2:Thick]`,
+                       `// 12` (text length), the description line above
+                       and `/* [Group] */` tabs (`[Hidden]` hides) become
+                       optional assign params options / description /
+                       group (Properties edits them), `annotate` reads them
+                       after the parse, `lines_before`/`trailing` write
+                       them in `CadNode.emit`, and `widget` gives the
+                       Variables sheet's Adjust column its slider,
+                       drop-down, checkbox or text box
+                       (`VariablesSheet._control`; a moved control sets
+                       the value without rebuilding under the drag).
   - `scadinclude.py` — what reaches beyond one file: `use <>` / `include
                        <>` tokens become **scad_use** nodes (emit the same
                        line; an unresolvable one is red) and the library

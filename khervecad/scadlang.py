@@ -375,22 +375,22 @@ def parse_statement(parser, word):
         params.pop("while", None)
         node = CadNode("intersection_for", f"Intersection for {var}",
                        params)
-        parser._children_into(node)
+        with parser.scoped([var]):
+            parser._children_into(node)
         return node
     args = raw_arguments(parser)
     if word == "let":
         binds = _split_bindings(args)
         node = CadNode("let", "Let", dict(
             bindings=", ".join(f"{n} = {v}" for n, v in binds)))
-        saved = parser.scope
-        parser.scope = dict(saved)
+        values = dict(parser.scope)
         for name, value in binds:
             try:
-                parser.scope[name] = expr.evaluate(value, parser.scope)
+                values[name] = expr.evaluate(value, values)
             except Exception:
-                pass
-        parser._children_into(node)
-        parser.scope = saved
+                values.pop(name, None)
+        with parser.scoped([n for n, _v in binds], values):
+            parser._children_into(node)
         return node
     if word == "echo":
         node = CadNode("echo", "Echo", dict(args=args))

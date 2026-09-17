@@ -285,8 +285,15 @@ NODE_TYPES = {
     "assign": dict(
         label="Variable", category=CONTROL, icon="mdi.variable",
         params=dict(variable="size", value="10"),
+        # + OpenSCAD Customizer annotations (options, description, group),
+        # optional: see customizer.py
         schema=[("variable", "Name", "str", None, None),
-                ("value", "Value / expression", "str", None, None)]),
+                ("value", "Value / expression", "str", None, None),
+                ("options", "Customizer: [range] or [choices]", "str",
+                 None, None),
+                ("description", "Customizer: description", "str", None,
+                 None),
+                ("group", "Customizer: tab / group", "str", None, None)]),
     "variables": dict(
         label="Variables", category=CONTROL, icon="mdi.table",
         params=dict(), schema=[]),
@@ -741,6 +748,10 @@ class CadNode:
             # a statement may span lines (a baked mesh's arrays): every
             # physical line is its own entry, or the line spans that map
             # code back to nodes would drift for everything after it
+            if self.type == "assign":
+                from . import customizer
+                lines.extend((pad + text, self)
+                             for text in customizer.lines_before(self))
             head, *more = (pad + star + self._statement()).split("\n")
             if more:
                 lines.append((head, self))
@@ -749,6 +760,8 @@ class CadNode:
             tag = "" if self.type in UNTAGGED_TYPES \
                 else name_tag(self.name)
             note = f"  // {tag}" if tag else ""
+            if self.type == "assign":
+                note = customizer.trailing(self)
             if not self.is_container():
                 lines.append((head + ";" + note, self))
             elif not self.children:

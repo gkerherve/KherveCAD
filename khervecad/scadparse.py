@@ -129,6 +129,11 @@ class Parser:
         #: expressions (polygon points, vector variables, list
         #: comprehensions) can be resolved to real numbers at import.
         self.scope = {}
+        #: the names the TREE will define where the parser stands (a
+        #: variable node, a module argument, a let binding, a loop
+        #: variable): an expression over them is kept as written, so
+        #: the imported model stays parametric (`_keeps_link`)
+        self.bound = set()
 
     # ------------------------------------------------------- helpers
     def peek(self, offset=0):
@@ -229,15 +234,59 @@ class Parser:
             return None, source
         return value, source
 
+    def _keeps_link(self, source):
+        """True when *source* reads a variable the tree defines (and
+        nothing only the parser knows — a user function, a library's
+        own variable), so it must stay an expression: `cube(w)` keeps
+        following `w` instead of freezing at its value."""
+        linked = False
+        for match in _NAME_RE.finditer(source):
+            name = match.group(1)
+            if name is None:                          # a "string"
+                continue
+            if match.group(2):                        # a call
+                if name in expr.FUNCTIONS or name in _WORDS:
+                    continue
+                return False
+            if name in _WORDS or name in expr.CONSTANTS:
+                continue
+            if name in self.bound:
+                linked = True
+            elif name in self.scope:
+                return False
+        return linked
+
     def _expr_param(self):
         """Expression as a param value: float when constant, else the
-        source string."""
+        source string — which it also stays when it reads a variable the
+        tree defines (`_keeps_link`)."""
         value, source = self._scan_expr()
-        if isinstance(value, bool):
+        if isinstance(value, bool) and not self._keeps_link(source):
             return value
-        if isinstance(value, (int, float)):
-            return float(value)
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            return source if self._keeps_link(source) else float(value)
         return source
+
+    def scoped(self, names=(), values=None):
+        """A context in which *names* are tree-defined (bound) and, when
+        *values* has them, known — or unknown (a loop variable, shadowing
+        any outer value). Restores both on exit."""
+        import contextlib
+
+        @contextlib.contextmanager
+        def ctx():
+            scope, bound = self.scope, self.bound
+            self.scope, self.bound = dict(scope), set(bound) | set(names)
+            for name in names:
+                if values is not None and name in values:
+                    self.scope[name] = values[name]
+                else:
+                    self.scope.pop(name, None)
+            try:
+                yield
+            finally:
+                self.scope, self.bound = scope, bound
+        return ctx()
 
     def _vector(self):
         """[a, b, ...] as a list of param values; assumes next is [."""
@@ -320,6 +369,8 @@ class Parser:
             if node is not None:
                 root.add(node)
         self._apply_comment_labels()
+        from . import customizer
+        customizer.annotate(self, root)
         return root
 
     def _apply_comment_labels(self):
@@ -495,9 +546,13 @@ class Parser:
         self.accept(";")
         # remember the concrete value so later expressions (points that
         # reference this, list comprehensions using it, ...) can resolve.
+        linked = self._keeps_link(source)
         if value is not None:
             self.scope[name] = value
-        if isinstance(value, bool):
+        self.bound.add(name)
+        if linked:
+            param = source                   # h = w * 2 follows w
+        elif isinstance(value, bool):
             param = value
         elif isinstance(value, (int, float)):
             param = float(value)
@@ -535,7 +590,8 @@ class Parser:
                 current.add(node)
             current = node
             outer = outer or node
-        self._children_into(current)
+        with self.scoped([var for var, _p in loops]):
+            self._children_into(current)
         return outer
 
     def _parse_loop_header(self):
@@ -760,6 +816,8 @@ class Parser:
         else:
             inst = CadNode("union", name)
         outer_scope = self.scope                      # bound params shadow
+        outer_bound = self.bound
+        self.bound = set(outer_bound) | {pname for pname, _d in params}
         self.scope = dict(outer_scope)                # the enclosing scope
         if module.scope is not None:
             # a library module sees its own file's variables and
@@ -796,6 +854,7 @@ class Parser:
             self._foreign -= foreign
             self.i, self.tokens, self.text = saved
             self.scope = outer_scope                  # restore
+            self.bound = outer_bound
         return inst
 
     def _skip_call_statement(self):
@@ -946,6 +1005,8 @@ def _b_square(parser, positional, named):
     size = _get(positional, named, 0, "size", default=10.0)
     if isinstance(size, list):
         width, height = (size + [10.0])[:2]
+    elif isinstance(size, str) and _components(parser, size, 2):
+        width, height = _components(parser, size, 2)
     else:
         width = height = size
     params = dict(x=0.0, y=0.0, width=_num(width, 10.0),
@@ -955,8 +1016,10 @@ def _b_square(parser, positional, named):
                 isinstance(height, (int, float)):
             params["x"], params["y"] = -width / 2.0, -height / 2.0
         else:
-            parser.warn("square(center=true) with expression size "
-                        "imported uncentred")
+            params["x"] = f"-({width}) / 2" if isinstance(width, str) \
+                else -float(width) / 2.0
+            params["y"] = f"-({height}) / 2" if isinstance(height, str) \
+                else -float(height) / 2.0
     return CadNode("rect", "Rectangle", params)
 
 
@@ -1020,9 +1083,20 @@ def _b_cube(parser, positional, named):
         w, d, h = (size + [10.0, 10.0])[:3]
         w, d, h = _num(w, 10.0), _num(d, 10.0), _num(h, 10.0)
     elif isinstance(size, str):
-        # a variable/expression — could be scalar or a vector; the
-        # graceful .x/.y/.z accessors read a scalar as [s, s, s]
-        w, d, h = f"({size}).x", f"({size}).y", f"({size}).z"
+        # a variable/expression — a vector reads by index, a scalar is
+        # all three; unknown here, the graceful .x/.y/.z accessors
+        parts = _components(parser, size, 3)
+        try:
+            scalar = isinstance(expr.evaluate(size, parser.scope),
+                                (int, float))
+        except Exception:
+            scalar = False
+        if parts is not None:
+            w, d, h = (p if p is not None else 10.0 for p in parts)
+        elif scalar:
+            w = d = h = size
+        else:
+            w, d, h = f"({size}).x", f"({size}).y", f"({size}).z"
     else:
         w = d = h = _num(size, 10.0)
     return CadNode("cube", "Cube", dict(
@@ -1069,8 +1143,26 @@ def _b_cylinder(parser, positional, named):
         center=bool(named.get("center", False))))
 
 
-def _vector3(positional, named, default=0.0):
+def _components(parser, source, count):
+    """An expression standing for a vector or a scalar, split into
+    *count* component expressions: `v[0]`, `v[1]`… when it evaluates to
+    a list, else the scalar repeated."""
+    try:
+        value = expr.evaluate(source, parser.scope)
+    except Exception:
+        value = None
+    if isinstance(value, (list, tuple)):
+        return [f"{source}[{i}]" if i < len(value) else None
+                for i in range(count)]
+    return None
+
+
+def _vector3(positional, named, default=0.0, parser=None):
     v = _get(positional, named, 0, "v", default=[default] * 3)
+    if isinstance(v, str) and parser is not None:
+        parts = _components(parser, v, 3)
+        if parts is not None:
+            return [p if p is not None else default for p in parts], False
     if not isinstance(v, list):
         return [v, v, v], True                  # scalar
     v = list(v) + [default] * (3 - len(v))
@@ -1078,13 +1170,15 @@ def _vector3(positional, named, default=0.0):
 
 
 def _b_translate(parser, positional, named):
-    v, _scalar = _vector3(positional, named)
+    v, _scalar = _vector3(positional, named, parser=parser)
     return CadNode("translate", "Translate",
                    dict(x=_num(v[0]), y=_num(v[1]), z=_num(v[2])))
 
 
 def _b_rotate(parser, positional, named):
     v = _get(positional, named, 0, "a", default=[0.0, 0.0, 0.0])
+    if isinstance(v, str) and _components(parser, v, 3):
+        v = [p if p is not None else 0.0 for p in _components(parser, v, 3)]
     if not isinstance(v, list):
         v = [0.0, 0.0, v]                       # rotate(45) is about Z
     v = list(v) + [0.0] * (3 - len(v))
@@ -1093,14 +1187,14 @@ def _b_rotate(parser, positional, named):
 
 
 def _b_scale(parser, positional, named):
-    v, _ = _vector3(positional, named, 1.0)
+    v, _ = _vector3(positional, named, 1.0, parser=parser)
     return CadNode("scale", "Scale",
                    dict(x=_num(v[0], 1.0), y=_num(v[1], 1.0),
                         z=_num(v[2], 1.0)))
 
 
 def _b_mirror(parser, positional, named):
-    v, _ = _vector3(positional, named)
+    v, _ = _vector3(positional, named, parser=parser)
     return CadNode("mirror", "Mirror",
                    dict(x=_num(v[0]), y=_num(v[1]), z=_num(v[2])))
 
@@ -1189,6 +1283,13 @@ from . import scadinclude as _scadinclude  # noqa: E402
 from . import scadfiles as _scadfiles  # noqa: E402
 
 _BUILDERS.update(_organic.BUILDERS)
+
+#: a name in an expression (group 1; a "string" matches with no group)
+#: and whether it is called (group 2)
+_NAME_RE = re.compile(r'"(?:\\.|[^"\\])*"|(?<![\w.$])(\$?[A-Za-z_]\w*)(\s*\()?')
+#: words of the expression language that are not variables
+_WORDS = {"for", "if", "else", "let", "each", "function", "assert", "echo",
+          "true", "false", "undef"}
 
 #: shape types whose x/y(/z) a wrapping translate can be folded into.
 _FOLDABLE = {"circle", "rect", "polygon", "text", "cube", "sphere",

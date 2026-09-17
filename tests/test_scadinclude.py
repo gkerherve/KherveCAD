@@ -43,8 +43,12 @@ def test_use_imports_modules_and_functions_not_variables(library):
     use = root.children[0]
     assert use.params == {"kind": "use", "path": "mylib/parts.scad"}
     cube = next(n for n in root.walk() if n.type == "cube")
-    # the library's own variable still sizes the plate (its file scope)
-    assert (cube.params["width"], cube.params["height"]) == (10.0, 3.0)
+    # the argument stays linked to its variable node; the library's own
+    # variable (not a node) is folded to its value from the file's scope
+    assert (cube.params["width"], cube.params["height"]) == ("w", 3.0)
+    arg = next(n for n in root.walk() if n.type == "assign")
+    # a library function is not in the tree: its result is folded in
+    assert arg.params["value"] in (10.0, "10")
     assert not warnings
 
 

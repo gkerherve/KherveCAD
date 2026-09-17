@@ -150,7 +150,12 @@ engine renders exactly), with a warning, never dropped. Libraries work: \
 start the program with `include <BOSL2/std.scad>` or `use \
 <MCAD/involute_gears.scad>` (list_scad_libraries says which are \
 installed; ask the user before install_scad_library) — library calls \
-that import cleanly become objects, the rest stay code.
+that import cleanly become objects, the rest stay code. Expressions \
+over variables stay expressions, so an imported or applied program is \
+parametric. Annotate adjustable variables the OpenSCAD Customizer way — \
+`/* [Size] */` tabs, a `// description` line above, `width = 40; // \
+[10:5:200]` or `lid = "snap"; // [snap, screw]` — and they become \
+sliders and drop-downs in the Variables sheet.
 - Beyond OpenSCAD's own shapes, apply_code understands KherveCAD's \
 helpers, which parse into editable nodes: `kcad_sweep(path = [[x, y, \
 z], ...], smooth = 3, twist = 0, scale = 1, wall = 0, closed = false) \
