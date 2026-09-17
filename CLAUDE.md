@@ -429,6 +429,31 @@ into a new module and import.
                        modules register parts by adding a `build`
                        callable to `PARTS`, which `build_part`
                        dispatches to.
+  - `library_fasteners.py` — the rest of the **fastener drawer**
+                       (2026-09-17, the user's request), 43 parts on
+                       library.py's `BOLT_SIZES`, so an M6 washer, nut and
+                       bolt belong together: part-threaded hex bolt,
+                       countersunk / button socket screws, slotted and
+                       cross-recessed pan heads, slotted countersunk, grub
+                       screw, shoulder screw, thumb screw, eye bolt,
+                       U-bolt, carriage bolt, coach screw, wood screw,
+                       self-tapper, studding, hanger bolt; nyloc / wing /
+                       dome / square / flanged / castle / thin / coupling
+                       nuts, T-slot nut, rivet nut, heat-set insert; flat,
+                       penny, split spring, star and Belleville washers;
+                       dowel, clevis, split and R-clip pins, internal and
+                       external circlips, solid and blind rivets; hex
+                       standoff and round spacer. Threads are the real
+                       helix (`thread_solid`), rings are REVOLVED profiles
+                       (`_rev`/`_ring`: an annulus with no boolean), a
+                       slot or cross recess is the union of the sectors it
+                       leaves standing (`_sector`, the `circle` node's
+                       angle) and a bent bar is `_torus` — so most preview
+                       exactly; only a real recess (hex socket, tapped
+                       hole) is a difference, finished by the per-part
+                       exact render. A dome's profile starts at the APEX
+                       (started at the base, every dome head rendered as a
+                       cup).
   - `library_chem.py`— **Chemistry** parts: beakers, flasks
                        (Erlenmeyer, round-bottom, volumetric), test
                        tube, graduated cylinder, funnel, burette,
