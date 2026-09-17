@@ -23,7 +23,9 @@ SECTIONS = [
          ["Fasteners", "Brackets"]),
         ("Hand tools", "mdi.hammer-wrench", ["Tools"]),
         ("Vacuum & UHV", "mdi.pipe", ["Vacuum"]),
-        ("3D printing", "mdi.printer-3d", ["Prusa"]),
+        ("3D printing", "mdi.printer-3d",
+         ["Printed joints & hinges", "Printed organisers", "Enclosures",
+          "Prusa"]),
     ]),
     ("Buildings & places", [
         ("House & home", "mdi.home-city-outline",

@@ -1202,7 +1202,8 @@ from . import (library_cards, library_chem, library_crystal,  # noqa: E402
                house_designs, library_examples, library_lego,
                library_lego_sets,
                library_molecule,
-               library_pots, library_room, library_vacuum)
+               library_pots, library_print, library_room,
+               library_vacuum)
 PARTS.update(library_vacuum.PARTS)
 PARTS.update(library_chem.PARTS)
 PARTS.update(library_room.PARTS)
@@ -1228,6 +1229,7 @@ PARTS.update(library_lego_sets.PARTS)
 PARTS.update(library_kcad.PARTS)
 PARTS.update(library_crystal.PARTS)
 PARTS.update(library_molecule.PARTS)
+PARTS.update(library_print.PARTS)
 
 #: dialog fields holding a count (integer spin box, no "mm" suffix)
 _COUNT_FIELDS = ({"bolts"} | library_lego.COUNT_FIELDS
@@ -1238,7 +1240,8 @@ _COUNT_FIELDS = ({"bolts"} | library_lego.COUNT_FIELDS
                  | library_city_buildings.COUNT_FIELDS
                  | library_lighting.COUNT_FIELDS
                  | library_park.COUNT_FIELDS
-                 | library_landscape.COUNT_FIELDS)
+                 | library_landscape.COUNT_FIELDS
+                 | library_print.COUNT_FIELDS)
 
 
 def prepare_document(model, part_id: str) -> str:

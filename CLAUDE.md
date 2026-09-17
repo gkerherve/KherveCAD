@@ -176,6 +176,19 @@ into a new module and import.
                        and `honeycomb` (2D, whole hexagonal cells as holes,
                        `NESTED_2D`). view2d draws every feature 2D shape
                        with OutlineShapeItem. All within 1 % of OpenSCAD.
+  - `library_print.py` — Parts for 3D printing (Library ▸ 3D printing):
+                       sliding dovetail, cantilever snap-fit, print-in-place
+                       hinge (each leaf cut round the other's knuckles by
+                       the clearance, knuckles bored round the pin), living
+                       hinge, heat-set insert boss, threaded bottle cap
+                       (knurl minus an internal bottle thread), cable clip,
+                       Gridfinity bin (42 mm pitch, 7 mm units, stepped
+                       feet as hulls of thin slabs) and baseplate, divided
+                       tray, electronics enclosure (standoffs with insert
+                       holes, port opening, honeycomb-vented lid). Built
+                       from the feature nodes; `_vbox` rounds only
+                       vertical edges (a rounded_box thinned the rims).
+                       Every part renders in OpenSCAD.
   - `animate.py`     — View ▸ Animate ($t): `set_time` puts OpenSCAD's
                        animation time in `expr.SPECIAL_DEFAULTS["$t"]`
                        (every expression reads it), `engine.DEFINES`
