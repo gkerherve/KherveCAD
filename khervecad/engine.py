@@ -391,7 +391,7 @@ def _parse_3mf(path: str):
 
 #: Mesh formats KherveCAD can preview in the built-in viewer (the
 #: OpenSCAD engine's import() renders them all for the exact mesh).
-MESH_EXTS = (".stl", ".obj", ".off", ".3mf", ".glb")
+MESH_EXTS = (".stl", ".obj", ".off", ".3mf", ".amf", ".glb")
 
 
 def parse_mesh(path: str):
@@ -403,12 +403,52 @@ def parse_mesh(path: str):
         return _parse_off(Path(path).read_text(errors="replace"))
     if ext == ".3mf":
         return _parse_3mf(path)
+    if ext == ".amf":
+        return _parse_amf(path)
     if ext == ".glb":
         # glTF is Y-up: turned Z-up here, so the preview, the STL the
         # import writes and the exact render all agree
         from .photo3d import parse_glb
         return [tuple((v[0], -v[2], v[1]) for v in t) for t in parse_glb(path)]
     return parse_stl(path)
+
+
+def _parse_amf(path: str):
+    """AMF (plain or zipped XML): every object's vertices and the
+    triangles of all its volumes, in millimetres (``unit`` honoured)."""
+    import xml.etree.ElementTree as ET
+    import zipfile
+    data = Path(path).read_bytes()
+    if data[:2] == b"PK":
+        with zipfile.ZipFile(path) as archive:
+            data = archive.read(archive.namelist()[0])
+    root = ET.fromstring(data)
+    scale = {"inch": 25.4, "millimeter": 1.0, "meter": 1000.0,
+             "feet": 304.8, "micron": 0.001}.get(
+        (root.get("unit") or "millimeter").lower(), 1.0)
+
+    def local(el):
+        return el.tag.rsplit("}", 1)[-1]
+    tris = []
+    for obj in root.iter():
+        if local(obj) != "object":
+            continue
+        verts = []
+        for el in obj.iter():
+            if local(el) == "coordinates":
+                xyz = {local(c): float(c.text or 0) for c in el}
+                verts.append((xyz.get("x", 0.0) * scale,
+                              xyz.get("y", 0.0) * scale,
+                              xyz.get("z", 0.0) * scale))
+        for el in obj.iter():
+            if local(el) == "triangle":
+                idx = {local(c): int(c.text or 0) for c in el}
+                try:
+                    tris.append((verts[idx["v1"]], verts[idx["v2"]],
+                                 verts[idx["v3"]]))
+                except (KeyError, IndexError):
+                    continue
+    return tris
 
 
 def write_stl(mesh, path: str, name: str = "khervecad"):

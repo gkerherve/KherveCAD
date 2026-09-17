@@ -1358,6 +1358,17 @@ class McpToolExecutor:
         except molecule_build.BuildError as exc:
             raise ToolError(str(exc))
 
+    def _t_list_proteins(self, params) -> dict:
+        from . import protein_build
+        return protein_build.list_proteins(params)
+
+    def _t_build_protein(self, params) -> dict:
+        from . import molecule_build, protein_build
+        try:
+            return protein_build.build_protein(self._w, params)
+        except molecule_build.BuildError as exc:
+            raise ToolError(str(exc))
+
     def _t_build_house(self, params) -> dict:
         from . import house
         try:
@@ -1782,7 +1793,7 @@ class McpToolExecutor:
         if suffix == ".kcad":
             document.load_kcad(self._model, str(path))
             self._fresh(path=str(path))
-        elif suffix == ".scad":
+        elif suffix in (".scad", ".csg"):
             warnings = scadparse.import_scad(self._model, str(path))
             self._model.enclose_import_as_part(path.stem)
             # An import has no .kcad of its own yet, so it is unsaved
@@ -1799,10 +1810,17 @@ class McpToolExecutor:
         elif suffix in MESH_EXTS:
             self._w._import_mesh_path(str(path))
             self._fresh(dirty=True)
+        elif suffix in (".svg", ".dxf"):
+            self._w._import_drawing_path(str(path))
+            self._fresh(dirty=True)
+        elif suffix == ".dat":
+            self._w._import_surface_path(str(path))
+            self._fresh(dirty=True)
         else:
             raise ToolError(
                 f"{suffix or 'That file'} is not something KherveCAD "
-                "opens — use .kcad, .scad or a mesh "
+                "opens — use .kcad, .scad, .csg, a 2D drawing (.svg, "
+                f".dxf), a height map (.dat) or a mesh "
                 f"({', '.join(MESH_EXTS)}).")
         self._w._add_recent(str(path))
         info = self._t_get_document_info({})
@@ -1900,9 +1918,16 @@ class McpToolExecutor:
                 raise ToolError(str(exc))
             result["render_complete"] = complete
             return result
-        if suffix not in (".stl", ".3mf"):
+        if suffix not in (".stl", ".3mf", ".off", ".amf", ".csg", ".svg",
+                          ".dxf"):
             raise ToolError(
-                "Export path must end in .scad, .stl, .3mf or .png.")
+                "Export path must end in .scad, .stl, .3mf, .off, .amf, "
+                ".csg, .png, or .svg / .dxf for a 2D document.")
+        if suffix != ".stl" and not self._w.engine.available:
+            raise ToolError(
+                f"{suffix[1:].upper()} is written by OpenSCAD and it was "
+                "not found. Export .stl, or point the app at OpenSCAD "
+                "(Edit > Locate OpenSCAD).")
         unit = self._unit()
         factor = units.to_mm(unit) if params.get("scale_to_mm") else 1.0
 

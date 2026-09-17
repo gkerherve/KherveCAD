@@ -208,6 +208,12 @@ class MainWindow(QMainWindow):
                             "Ctrl+I")
         file_menu.addAction("Import &Mesh (STL/OBJ/OFF/3MF)...",
                             self.import_stl, "Ctrl+Shift+I")
+        file_menu.addAction(icons.icon("mdi.svg"),
+                            "Import 2D &Drawing (SVG/DXF)...",
+                            self.import_drawing)
+        file_menu.addAction(icons.icon("mdi.image-filter-hdr"),
+                            "Import &Height Map (surface)...",
+                            self.import_surface)
         file_menu.addSeparator()
         file_menu.addAction("Export Open&SCAD...", self.export_scad,
                             "Ctrl+E")
@@ -1646,20 +1652,26 @@ class MainWindow(QMainWindow):
         ext = Path(path).suffix.lower()
         if ext == ".kcad":
             self._open_path(path)
-        elif ext == ".scad":
+        elif ext in (".scad", ".csg"):          # .csg: OpenSCAD's export
             if not self._confirm_discard():
                 return
             self._import_scad_path(path)
         elif ext in MESH_EXTS:
             self._import_mesh_path(path)
+        elif ext in (".svg", ".dxf"):
+            self._import_drawing_path(path)
+        elif ext == ".dat":
+            self._import_surface_path(path)
         else:
             QMessageBox.warning(
                 self, APP_NAME,
-                f"KherveCAD can open .kcad, .scad and mesh files "
-                f"(.stl/.obj/.off/.3mf/.glb) — not {ext or 'this type'}.")
+                f"KherveCAD can open .kcad, .scad, .csg, mesh files "
+                f"(.stl/.obj/.off/.3mf/.amf/.glb), 2D drawings (.svg/.dxf) "
+                f"and height maps (.dat) — not {ext or 'this type'}.")
 
     # ------------------------------------------------------ drag & drop
-    _DROP_EXTS = (".kcad", ".scad", ".stl", ".obj", ".off", ".3mf")
+    _DROP_EXTS = (".kcad", ".scad", ".csg", ".stl", ".obj", ".off", ".3mf",
+                  ".amf", ".svg", ".dxf", ".dat")
 
     def _dropped_file(self, event):
         """The first supported local file in a file drag, or None."""
@@ -1954,6 +1966,58 @@ class MainWindow(QMainWindow):
         self._update_title()
         if self.engine.available:
             self._render_now()
+
+    def import_drawing(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Import 2D drawing", "",
+            "2D drawing (*.svg *.dxf);;SVG (*.svg);;DXF (*.dxf)")
+        if path:
+            self._import_drawing_path(path)
+
+    def _import_drawing_path(self, path):
+        """An SVG / DXF as an import_2d shape in a new Object, extruded
+        (OpenSCAD's import() gives a 2D shape; a flat part is useless
+        in an assembly, so it arrives as a 3 mm plate to adjust)."""
+        stem = Path(path).stem
+        comp = self.model.new_component(stem)
+        extrude = self.model.add_node("linear_extrude", dict(
+            height=3.0, twist=0.0, scale=1.0, center=False, segments=0),
+            parent=comp, name=f"Extrude {stem}")
+        node = self.model.add_node("import_2d", dict(
+            path=path, x=0.0, y=0.0, center=False, dpi=72.0, layer="",
+            id="", segments=32), parent=extrude, name=f"{stem} drawing")
+        self.builder.tree.select_nodes([comp])
+        if not self.view3d.user_moved:
+            self.view3d.fit()
+        self.statusBar().showMessage(
+            f"Imported {Path(path).name} as a 3 mm extrusion — select the "
+            f"drawing to set its layer, DPI or centre, or the extrude to "
+            f"change the height.", 10000)
+        return node
+
+    def import_surface(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Import height map", "",
+            "Height map (*.dat *.png *.jpg *.jpeg);;Heights (*.dat);;"
+            "Picture (*.png *.jpg *.jpeg)")
+        if path:
+            self._import_surface_path(path)
+
+    def _import_surface_path(self, path):
+        """A .dat matrix or a picture as a surface() in a new Object."""
+        stem = Path(path).stem
+        comp = self.model.new_component(stem)
+        node = self.model.add_node("surface", dict(
+            file=path, center=True, invert=False, convexity=1),
+            parent=comp, name=f"{stem} surface")
+        self.builder.tree.select_nodes([comp])
+        if not self.view3d.user_moved:
+            self.view3d.fit()
+        self.statusBar().showMessage(
+            f"Imported {Path(path).name} as a surface — one cell per "
+            f"value or pixel, heights 0 to 100 for a picture: wrap it in "
+            f"a Scale or Resize to size it.", 10000)
+        return node
 
     def import_stl(self):
         path, _ = QFileDialog.getOpenFileName(

@@ -121,6 +121,29 @@ into a new module and import.
                        the document first so that render finds the
                        library; `enclose_import_as_part` leaves scad_use
                        at the top level.
+  - `scadfiles.py`   — geometry read from files, as nodes: **surface**
+                       (a .dat matrix or a picture's sRGB luminance ×100,
+                       `invert`; a closed solid down to min(0, lowest-1),
+                       preview sampled to `PREVIEW_CELLS` a side) and
+                       **import_2d** (SVG/DXF outlines via svgdxf.py, x/y
+                       folded from a translate, center/dpi/layer/id/$fn;
+                       nested loops are holes like a glyph's,
+                       `mesh._oriented`). OpenSCAD's own calls both ways;
+                       paths save relative (`meshimport.PATH_PARAMS`).
+                       File ▸ Import 2D Drawing (a 3 mm extrusion in a new
+                       Object) / Import Height Map, drag and drop, and MCP
+                       open_document; view2d draws import_2d with
+                       `OutlineShapeItem`. `.csg` opens through scadparse
+                       (`group()` = union, multmatrix), `.amf` is a mesh
+                       (`engine._parse_amf`), and export_document writes
+                       .off/.amf/.csg/.svg/.dxf through OpenSCAD.
+  - `svgdxf.py`      — Qt-free SVG (paths with every command incl. arcs,
+                       rect/circle/ellipse/polygon, nested transforms,
+                       viewBox + physical size or dpi, y flipped, hidden
+                       elements skipped, Inkscape layer or id) and DXF
+                       (LWPOLYLINE/POLYLINE bulges, LINE, ARC, CIRCLE,
+                       ELLIPSE, SPLINE by de Boor; loose pieces `chain`ed
+                       into loops) -> outlines in mm.
   - `scadlib.py`     — where libraries resolve, in OpenSCAD's order: the
                        including file's folder, the document's folder
                        (`DOCUMENT_DIR`, set in `_update_title`), imported

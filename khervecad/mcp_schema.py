@@ -1500,6 +1500,82 @@ TOOLS = [
         }, ["equation"]),
     },
     {
+        "name": "list_proteins",
+        "description": (
+            "What the Protein Builder takes: the preset peptides (alpha "
+            "and 3-10 helix, beta strand, a Trpzip beta hairpin, "
+            "polyproline, collagen, melittin, magainin, the GCN4 zipper, "
+            "amyloid beta) with sequence and secondary structure, the "
+            "secondary-structure letters, styles and colour schemes."
+        ),
+        "input_schema": _obj({}),
+    },
+    {
+        "name": "build_protein",
+        "description": (
+            "Build a protein or peptide in 3D, in nanometres, as one "
+            "Object. Either BUILT from a sequence — ideal bond geometry, "
+            "each residue's backbone on the (phi, psi) of its secondary-"
+            "structure letter, side chains on clash-free rotamers; local "
+            "structure only, NOT a fold (the result reports clashes) — "
+            "or READ as a real fold: pdb_id downloads from RCSB, uniprot "
+            "the AlphaFold model, path a .pdb/.cif file, pdb_text a PDB "
+            "you have. Drawn as a cartoon (helix ribbons, strand arrows), "
+            "cartoon with side chains, CA trace, or every atom; ligands "
+            "ball and stick. Never place a protein's atoms by hand."
+        ),
+        "input_schema": _obj({
+            "preset": {"type": "string",
+                       "description": "A list_proteins preset key."},
+            "sequence": {"type": "string",
+                         "description": "One-letter codes (FASTA ok)."},
+            "secondary": {"type": "string",
+                          "description": "helix, strand, polyproline, "
+                                         "coil — or a letter per residue: "
+                                         "H helix, G 3-10, E strand, T "
+                                         "turn (TT between strands = "
+                                         "hairpin), P PPII, L left-handed,"
+                                         " C coil. Default helix."},
+            "phi_psi": {"type": "array",
+                        "items": {"type": ["array", "null"]},
+                        "description": "Explicit [phi, psi] per residue "
+                                       "(degrees), overriding secondary."},
+            "pdb_id": {"type": "string",
+                       "description": "RCSB entry, e.g. 1CRN, 1UBQ, "
+                                      "4HHB."},
+            "uniprot": {"type": "string",
+                        "description": "UniProt accession for the "
+                                       "AlphaFold model, e.g. P69905."},
+            "path": {"type": "string",
+                     "description": "A .pdb or .cif file (full access)."},
+            "pdb_text": {"type": "string",
+                         "description": "PDB or mmCIF text."},
+            "name": {"type": "string"},
+            "style": {"type": "string",
+                      "enum": ["cartoon", "cartoon_sticks", "trace",
+                               "ball_and_stick", "sticks",
+                               "space_filling"]},
+            "colour": {"type": "string",
+                       "enum": ["structure", "chain", "rainbow", "residue",
+                                "hydropathy", "element"],
+                       "description": "Default: structure for cartoons, "
+                                      "element for atoms."},
+            "chains": {"type": "string",
+                       "description": "Only these chains, e.g. 'A, B'."},
+            "ligands": {"type": "boolean",
+                        "description": "Draw ligands (default true)."},
+            "water": {"type": "boolean",
+                      "description": "Draw waters (default false)."},
+            "detail": {"type": "integer",
+                       "description": "Cartoon rings a residue (default "
+                                      "6)."},
+            "segments": {"type": "integer",
+                         "description": "Round segments (default 10)."},
+            "dry_run": {"type": "boolean",
+                        "description": "Summary and triangles only."},
+        }),
+    },
+    {
         "name": "select_nodes",
         "description": (
             "Select nodes in the window, so the user sees what you mean "
@@ -1667,8 +1743,10 @@ TOOLS = [
     {
         "name": "open_document",
         "description": (
-            "Open a .kcad document, import a .scad program as objects, "
-            "or import a mesh (.stl/.obj/.off/.3mf) as one part. "
+            "Open a .kcad document, import a .scad (or OpenSCAD .csg) "
+            "program as objects, import a mesh (.stl/.obj/.off/.3mf/.amf/"
+            ".glb) as one part, a 2D drawing (.svg/.dxf) as an extruded "
+            "import_2d part, or a height map (.dat) as a surface part. "
             "Refuses to discard unsaved work unless "
             "discard_unsaved_changes is set."
         ),
@@ -1745,7 +1823,9 @@ TOOLS = [
         "name": "export_document",
         "description": (
             "Export by the path's extension: .scad writes the program, "
-            ".stl writes the mesh, .png writes a picture of the 3D "
+            ".stl writes the mesh (.3mf, .off, .amf and .csg through "
+            "OpenSCAD; .svg / .dxf when the document is 2D), .png "
+            "writes a picture of the 3D "
             "view. An STL goes through OpenSCAD when it is installed "
             "(exact, booleans really cut) and through the built-in "
             "tessellator otherwise — the result says which, and an "

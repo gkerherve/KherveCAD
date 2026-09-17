@@ -109,3 +109,19 @@ def test_library_tools(ex, monkeypatch, tmp_path):
 def test_library_install_needs_full_access():
     assert mcp_bridge._names_a_path("install_scad_library", {"key": "BOSL2"})
     assert mcp_bridge.tool_allowed("list_scad_libraries", "read")
+
+
+def test_open_document_takes_drawings_and_height_maps(ex, tmp_path):
+    svg = tmp_path / "logo.svg"
+    svg.write_text('<svg xmlns="http://www.w3.org/2000/svg" width="20mm" '
+                   'height="10mm" viewBox="0 0 20 10"><rect width="20" '
+                   'height="10"/></svg>')
+    call(ex, "open_document", path=str(svg), discard_unsaved_changes=True)
+    kinds = [n.type for n in ex._w.model.root.walk()]
+    assert "import_2d" in kinds and "linear_extrude" in kinds
+    dat = tmp_path / "hills.dat"
+    dat.write_text("0 1\n2 3\n")
+    call(ex, "open_document", path=str(dat), discard_unsaved_changes=True)
+    assert "surface" in [n.type for n in ex._w.model.root.walk()]
+    code = call(ex, "get_code")["code"]
+    assert "surface(file = " in code and "import(file = " in code

@@ -42,7 +42,7 @@ from __future__ import annotations
 import os
 
 from . import bake
-from . import pattern, scadlang, sheetmetal
+from . import pattern, scadfiles, scadlang, sheetmetal
 
 #: model.SHAPE_3D / model.OPERATION (not imported: see the docstring)
 SHAPE_3D = "3d"
@@ -140,9 +140,10 @@ NODE_TYPES.update(bake.NODE_TYPES)
 NODE_TYPES.update(pattern.NODE_TYPES)
 NODE_TYPES.update(sheetmetal.NODE_TYPES)
 NODE_TYPES.update(scadlang.NODE_TYPES)
+NODE_TYPES.update(scadfiles.NODE_TYPES)
 TYPES = frozenset(NODE_TYPES)
 LEAVES = frozenset({"capsule", "ellipsoid", "rounded_box"}) | bake.LEAVES
-LEAVES = LEAVES | sheetmetal.LEAVES | scadlang.LEAVES
+LEAVES = LEAVES | sheetmetal.LEAVES | scadlang.LEAVES | scadfiles.LEAVES
 WRAPPERS = frozenset({"symmetry", "joint", "paint"}) | bake.WRAPPERS
 WRAPPERS = WRAPPERS | pattern.WRAPPERS | scadlang.WRAPPERS
 
@@ -249,6 +250,8 @@ def statement(node, fmt, fn) -> str:
         return sheetmetal.statement(node, fmt, fn)
     if node.type in scadlang.TYPES:
         return scadlang.statement(node, fmt, fn)
+    if node.type in scadfiles.TYPES:
+        return scadfiles.statement(node, fmt, fn)
     p = node.params
     t = node.type
 
@@ -411,6 +414,7 @@ BUILDERS.update(bake.BUILDERS)
 BUILDERS.update(pattern.BUILDERS)
 BUILDERS.update(sheetmetal.BUILDERS)
 BUILDERS.update(scadlang.BUILDERS)
+BUILDERS.update(scadfiles.BUILDERS)
 
 
 def _b_material(parser, positional, named):
@@ -460,6 +464,8 @@ def check(node, env):
         return sheetmetal.check(node, env)
     if node.type in scadlang.TYPES:
         return scadlang.check(node, env)
+    if node.type in scadfiles.TYPES:
+        return scadfiles.check(node, env)
     p = node.params
     if node.type == "paint":
         from . import paint as paint_mod
@@ -525,6 +531,8 @@ def tess(node, env, color, sel, selected):
         return sheetmetal.tess(node, env, color, sel, selected)
     if node.type in scadlang.TYPES:
         return scadlang.tess(node, env, color, sel, selected)
+    if node.type in scadfiles.TYPES:
+        return scadfiles.tess(node, env, color, sel, selected)
     t = node.type
     p = mesh.rp(node, env)
     if t in WRAPPERS:

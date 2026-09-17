@@ -400,9 +400,40 @@ class TextShapeItem(ShapeItem, QGraphicsPathItem):
         self._scene.model.node_changed.emit(self.node)
 
 
+class OutlineShapeItem(ShapeItem, QGraphicsPathItem):
+    """A 2D shape drawn from its outlines (an imported SVG / DXF): moved
+    as a whole by its x / y, no handles — its points live in the file."""
+
+    def __init__(self, node, scene):
+        super().__init__()
+        self.init_node(node, scene)
+        self.setPen(_pen("#2e3440", 1.0))
+        self.setBrush(QBrush(QColor(33, 118, 199, 90)))
+        self.apply_node()
+
+    def apply_node(self):
+        from . import mesh
+        x, y = self.rv("x"), self.rv("y")
+        self.setPos(x, y)
+        path = QPainterPath()
+        path.setFillRule(Qt.OddEvenFill)
+        for outline in mesh.node_outlines(self.node,
+                                          self._scene.env_for(self.node)):
+            if len(outline) >= 3:
+                path.addPolygon(QPolygonF([QPointF(px - x, py - y)
+                                           for px, py in outline]))
+                path.closeSubpath()
+        self.setPath(path)
+
+    def push_pos(self):
+        p = self.node.params
+        p["x"], p["y"] = self.pos().x(), self.pos().y()
+        self._scene.model.node_changed.emit(self.node)
+
+
 _ITEM_CLASSES = dict(line=LineShapeItem, rect=RectShapeItem,
                      circle=CircleShapeItem, polygon=PolygonShapeItem,
-                     text=TextShapeItem)
+                     text=TextShapeItem, import_2d=OutlineShapeItem)
 
 
 #: node types that carry their own move params, so a drag is baked
@@ -889,6 +920,7 @@ class SketchScene(QGraphicsScene):
             # sketch mode: individual 2D shapes are editable
             for node in scope.walk():
                 if node.category == SHAPE_2D and \
+                        node.type in _ITEM_CLASSES and \
                         self._branch_visible(node, stop=iso):
                     item = _ITEM_CLASSES[node.type](node, self)
                     self.addItem(item)

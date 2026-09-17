@@ -95,7 +95,8 @@ def set_scale(model, node, factor: float):
 # ------------------------------------------------------------------ paths
 
 #: node type -> the parameter holding a file path the document refers to
-PATH_PARAMS = {"stl_import": ("path",), "paint": ("image", "image2")}
+PATH_PARAMS = {"stl_import": ("path",), "paint": ("image", "image2"),
+               "surface": ("file",), "import_2d": ("path",)}
 
 
 def relative_for_save(data: dict, doc_path: str):

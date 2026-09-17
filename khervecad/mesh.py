@@ -28,7 +28,8 @@ from . import organic
 #: params that stay strings (never resolved to numbers).
 _TEXT_PARAMS = {"text", "path", "variable", "condition", "update",
                 "values", "value", "caps", "axis", "toward",
-                "material", "bindings", "args", "message"}
+                "material", "bindings", "args", "message", "file",
+                "layer", "id"}
 
 #: ops the fallback can only approximate (engine renders exactly).
 APPROXIMATED = {"difference", "intersection", "minkowski", "hull",
@@ -345,6 +346,9 @@ def node_outlines(node: CadNode, env=None):
                          p["width"] / 2.0)]
     if node.type == "text":
         return _text_outlines(p)
+    if node.type == "import_2d":
+        from . import scadfiles
+        return scadfiles.drawing_outlines(node, env)
     return []
 
 
@@ -514,7 +518,7 @@ def _oriented(node, outlines):
     """A 2D shape's outlines as solids (counter-clockwise) — and, for
     text, the loops nested inside a glyph as holes (clockwise)."""
     loops = [o for o in (_distinct(o) for o in outlines) if len(o) >= 3]
-    if node.type != "text":
+    if node.type not in ("text", "import_2d"):
         return [ensure_ccw(o) for o in loops]
     out = []
     for i, loop in enumerate(loops):

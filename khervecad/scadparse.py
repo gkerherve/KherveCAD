@@ -17,10 +17,13 @@ self-contained literal so the tree never depends on a function that
 codegen can't emit.
 
 Parsing never crashes a whole file: a statement that can't be parsed is
-skipped with a warning and import resumes at the next boundary. Anything
-still outside the subset (`use`/`include`, unknown external calls) is
-skipped with a warning. Non-constant expressions are kept verbatim as
-expression strings, which KherveCAD params support.
+skipped with a warning and import resumes at the next boundary. `use` /
+`include`, `children()` and calls nothing defines are handled by
+scadinclude.py (a call that cannot become objects is kept as its own
+OpenSCAD code); resize / multmatrix / let / echo / assert / render /
+intersection_for by scadlang.py; surface and 2D import() by scadfiles.py.
+Non-constant expressions are kept verbatim as expression strings, which
+KherveCAD params support.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -1069,6 +1072,9 @@ def _b_projection(parser, positional, named):
 
 def _b_import(parser, positional, named):
     path = _get(positional, named, 0, "file", default="")
+    if str(path).lower().endswith(_scadfiles.DRAWING_EXTS):
+        return _scadfiles.build_import_2d(parser, positional, named,
+                                          str(path))
     return CadNode("stl_import", "Import STL",
                    dict(path=str(path), x=0.0, y=0.0, z=0.0))
 
@@ -1103,6 +1109,8 @@ _BUILDERS = {
     "offset": _b_offset, "projection": _b_projection,
     "import": _b_import, "color": _b_color,
     "union": _simple("union", "Group"),
+    # a .csg file (OpenSCAD's own flattened export) groups with group()
+    "group": _simple("union", "Group"),
     "difference": _simple("difference", "Difference"),
     "intersection": _simple("intersection", "Intersection"),
     "hull": _simple("hull", "Hull"),
@@ -1112,12 +1120,13 @@ _BUILDERS = {
 from . import organic as _organic  # noqa: E402
 from . import scadlang as _scadlang  # noqa: E402
 from . import scadinclude as _scadinclude  # noqa: E402
+from . import scadfiles as _scadfiles  # noqa: E402
 
 _BUILDERS.update(_organic.BUILDERS)
 
 #: shape types whose x/y(/z) a wrapping translate can be folded into.
 _FOLDABLE = {"circle", "rect", "polygon", "text", "cube", "sphere",
-             "cylinder", "stl_import"}
+             "cylinder", "stl_import", "import_2d"}
 
 
 def _fold_container(node: CadNode):
