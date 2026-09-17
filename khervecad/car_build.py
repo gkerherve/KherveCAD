@@ -56,6 +56,11 @@ BELT_WIDTH = 0.90
 ROOF_PANEL = 80.0
 #: a greenhouse never narrows past this much of its own beltline
 CABIN_WAIST = 0.62
+#: the tail starts falling here at the latest
+TAIL_START = 0.80
+#: the body (not the wing) has fallen to this much of the height by
+#: the very tail
+TAIL_DROP = 0.62
 #: the tail's roof line counts as a wing this far above the deck
 WING_GAP = 60.0
 
@@ -313,16 +318,22 @@ class Car:
         if got is not None:
             return got
         zb, zt = self.bottom(s), self.top(s)
-        cb = self.p["cb"]
+        # the taper to the tail starts where the cabin's glass ends,
+        # and never later than TAIL_START: a 911's preset cabin runs to
+        # 95 % of the car, which left no length to fall in
+        cb = min(self.p["cb"], TAIL_START)
         if s > cb:
             # past the cabin the drawing's roof line carries the WING
             # as well as the body. The body itself falls away to the
             # tail: take the lower of the two, or a whale tail turns
             # the whole rear into a brick.
             f = (s - cb) / max(1e-6, 1.0 - cb)
+            # the traced roof line ENDS on the wing's trailing edge, so
+            # interpolating to it kept the whole tail at wing height —
+            # a brick. The body itself falls to about boot height.
             line = (sample(self.measured["roof"], cb) * (1 - f)
-                    + sample(self.measured["roof"], 1.0) * f) * self.H
-            zt = min(zt, max(line, self.deck_min))
+                    + TAIL_DROP * f) * self.H
+            zt = min(zt, line)
         zt = max(zt, zb + 60)
         arch = self.arch(s)
         n = SECTION_LEVELS
@@ -732,10 +743,19 @@ def _part_builder(key):
 
 
 CATEGORY = "Cars"
+#: cars whose body is traced from a blueprint get their own menu: they
+#: are a different kind of thing from one shaped to published figures
+MEASURED_CATEGORY = "Cars (from blueprints)"
+
+
+def category_of(key: str) -> str:
+    return MEASURED_CATEGORY if (USE_MEASURED
+                                 and car_profiles.PROFILES.get(key)) \
+        else CATEGORY
 
 PARTS = {
     f"car_{key}": dict(
-        label=car_models.label(key), category=CATEGORY,
+        label=car_models.label(key), category=category_of(key),
         sizes={name: dict(scale=v) for name, v in SCALES.items()},
         fields=[("scale", "Scale")],
         colors=[car["paint"]] + [n for n in car_models.PAINTS

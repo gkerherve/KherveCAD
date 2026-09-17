@@ -73,7 +73,9 @@ def test_a_scale_model_is_the_car_divided():
 def test_every_car_is_a_part_library_part():
     for key in car_models.CARS:
         part = library.PARTS[f"car_{key}"]
-        assert part["category"] == car_build.CATEGORY
+        assert part["category"] in (car_build.CATEGORY,
+                                    car_build.MEASURED_CATEGORY)
+        assert part["category"] == car_build.category_of(key)
         assert part["colors"][0] in car_models.PAINTS
     assert "BMW" in library.PARTS["car_bmw_m1"]["label"]
 
@@ -95,7 +97,9 @@ def test_measured_profiles_are_sane_curves():
         assert len(prof["roof"]) == len(prof["floor"]) == 60
         assert 0.9 <= max(prof["roof"]) <= 1.0
         assert min(prof["floor"]) >= 0.0
-        assert max(prof["roof"]) > max(prof["floor"])
+        # the roof line runs above the floor over the car as a whole
+        # (at the very nose a column can have both on one pixel)
+        assert sum(prof["roof"]) > 2 * sum(prof["floor"])
         if prof["width"]:
             assert 0.9 <= max(prof["width"]) <= 1.0
 
