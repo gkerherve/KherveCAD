@@ -42,7 +42,7 @@ from __future__ import annotations
 import os
 
 from . import bake
-from . import pattern, sheetmetal
+from . import pattern, scadlang, sheetmetal
 
 #: model.SHAPE_3D / model.OPERATION (not imported: see the docstring)
 SHAPE_3D = "3d"
@@ -139,11 +139,12 @@ _OWN = frozenset(NODE_TYPES)
 NODE_TYPES.update(bake.NODE_TYPES)
 NODE_TYPES.update(pattern.NODE_TYPES)
 NODE_TYPES.update(sheetmetal.NODE_TYPES)
+NODE_TYPES.update(scadlang.NODE_TYPES)
 TYPES = frozenset(NODE_TYPES)
 LEAVES = frozenset({"capsule", "ellipsoid", "rounded_box"}) | bake.LEAVES
-LEAVES = LEAVES | sheetmetal.LEAVES
+LEAVES = LEAVES | sheetmetal.LEAVES | scadlang.LEAVES
 WRAPPERS = frozenset({"symmetry", "joint", "paint"}) | bake.WRAPPERS
-WRAPPERS = WRAPPERS | pattern.WRAPPERS
+WRAPPERS = WRAPPERS | pattern.WRAPPERS | scadlang.WRAPPERS
 
 #: helper module per type, emitted in this order above the program
 _ORDER = ("capsule", "ellipsoid", "rounded_box", "symmetry", "joint",
@@ -207,6 +208,14 @@ def register(node_types: dict, container_types: set):
     container_types.update(WRAPPERS)
 
 
+def child_scope(node, env):
+    """The variables *node*'s children see, for the node types that bind
+    some (a let, an intersection_for); None for every other type."""
+    if node.type in ("let", "intersection_for"):
+        return scadlang.scope(node, env)
+    return None
+
+
 def preamble(root) -> list:
     """Source lines defining the helper modules *root*'s tree uses."""
     used = {n.type for n in root.walk() if n.type in _OWN}
@@ -238,6 +247,8 @@ def statement(node, fmt, fn) -> str:
         return pattern.statement(node, fmt, fn)
     if node.type in sheetmetal.TYPES:
         return sheetmetal.statement(node, fmt, fn)
+    if node.type in scadlang.TYPES:
+        return scadlang.statement(node, fmt, fn)
     p = node.params
     t = node.type
 
@@ -399,6 +410,7 @@ BUILDERS = {
 BUILDERS.update(bake.BUILDERS)
 BUILDERS.update(pattern.BUILDERS)
 BUILDERS.update(sheetmetal.BUILDERS)
+BUILDERS.update(scadlang.BUILDERS)
 
 
 def _b_material(parser, positional, named):
@@ -446,6 +458,8 @@ def check(node, env):
         return pattern.check(node, env)
     if node.type in sheetmetal.TYPES:
         return sheetmetal.check(node, env)
+    if node.type in scadlang.TYPES:
+        return scadlang.check(node, env)
     p = node.params
     if node.type == "paint":
         from . import paint as paint_mod
@@ -509,6 +523,8 @@ def tess(node, env, color, sel, selected):
         return pattern.tess(node, env, color, sel, selected)
     if node.type in sheetmetal.TYPES:
         return sheetmetal.tess(node, env, color, sel, selected)
+    if node.type in scadlang.TYPES:
+        return scadlang.tess(node, env, color, sel, selected)
     t = node.type
     p = mesh.rp(node, env)
     if t in WRAPPERS:

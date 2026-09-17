@@ -77,6 +77,29 @@ into a new module and import.
                        (whitelisted AST, trig in degrees); numeric
                        params may hold expression strings like
                        `i * 10` so loop variables work everywhere.
+                       OpenSCAD semantics (2026-09-17): vector maths
+                       (element-wise +/-, scalar x vector, dot, matrix x
+                       vector/matrix), "strings" (masked before the
+                       syntax rewrites), `$fn`/`$t`… (`SPECIAL_DEFAULTS`),
+                       expression-level `let`/`assert`/`echo`, function
+                       literals, and lookup, rands (seeded from their
+                       arguments so the preview never flickers), str,
+                       chr, ord, cross, search, is_*, min/max of a list;
+                       round() rounds halves away from zero like
+                       OpenSCAD (Python's banker's rounding made
+                       round(2.5) 2). Parsed ASTs are cached (`_compile`).
+  - `scadlang.py`    — OpenSCAD statements that are not shapes, as tree
+                       nodes (registered from organic.py): `resize`,
+                       `multmatrix` (rows param; every .csg uses it),
+                       `render`, `intersection_for` (preview = first
+                       iteration, in `mesh.APPROXIMATED`), `let`
+                       (bindings text; `organic.child_scope` gives the
+                       children its variables in validation and preview),
+                       `echo` and `assert` (a false assert paints the node
+                       red with its message). They compile to OpenSCAD's
+                       own statements (no helper module) and scadparse
+                       reads them back (`parse_statement`, raw argument
+                       text so `b = a * 2` stays an expression).
   - `document.py`    — `.kcad` JSON (de)serialisation, `.scad` export.
   - `units.py`       — the **document unit** (Qt-free):
                        `DocumentModel.unit` ("nm", "um", "mm", "cm",

@@ -419,6 +419,9 @@ class Parser:
             raise ScadParseError(f"unexpected token {value!r}")
         if value == "for":
             return self._parse_for()
+        if value in _scadlang.STATEMENTS and self.peek(1) is not None \
+                and self.peek(1)[1] == "(":
+            return _scadlang.parse_statement(self, value)
         if value == "if":
             return self._parse_if()
         if value in ("use", "include"):
@@ -512,6 +515,15 @@ class Parser:
             outer = outer or node
         self._children_into(current)
         return outer
+
+    def _parse_loop_header(self):
+        """`(var = range)` of a single-variable loop -> (var, params)."""
+        self.expect("(")
+        var = self.next()[1]
+        self.expect("=")
+        params = self._parse_range()
+        self.expect(")")
+        return var, params
 
     def _parse_c_for(self):
         """`[for (x = s, _w = 0; (cond) && _w < N; x = upd, _w = _w + 1)
@@ -1064,6 +1076,7 @@ _BUILDERS = {
 }
 # kcad_* helper-module calls rebuild the organic nodes they came from
 from . import organic as _organic  # noqa: E402
+from . import scadlang as _scadlang  # noqa: E402
 
 _BUILDERS.update(_organic.BUILDERS)
 

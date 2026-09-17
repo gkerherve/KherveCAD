@@ -28,11 +28,12 @@ from . import organic
 #: params that stay strings (never resolved to numbers).
 _TEXT_PARAMS = {"text", "path", "variable", "condition", "update",
                 "values", "value", "caps", "axis", "toward",
-                "material"}
+                "material", "bindings", "args", "message"}
 
 #: ops the fallback can only approximate (engine renders exactly).
 APPROXIMATED = {"difference", "intersection", "minkowski", "hull",
-                "offset", "fillet"}     # a fillet cuts convex edges
+                "offset", "fillet",     # a fillet cuts convex edges
+                "intersection_for"}     # drawn as its first iteration
 
 _stl_cache = {}
 #: how many parsed mesh files stl_mesh keeps
@@ -437,11 +438,18 @@ def collect_outlines(node: CadNode, env=None):
     if node.type == "pattern":
         from . import pattern
         return pattern.outlines(node, env)
+    if node.type in _SCADLANG_OUTLINES:
+        from . import scadlang
+        return scadlang.outlines(node, env)
     if node.type in _TRANSFORMS_2D:
         return _transformed_outlines(node, env)
     outlines.extend(_children_outlines(node, env))
     return outlines
 
+
+#: OpenSCAD statements whose 2D outlines scadlang works out
+_SCADLANG_OUTLINES = {"resize", "multmatrix", "render", "intersection_for",
+                      "let", "echo", "assert"}
 
 #: transforms a 2D outline passes through on its way into an extrusion
 _TRANSFORMS_2D = ("translate", "rotate", "scale", "mirror")

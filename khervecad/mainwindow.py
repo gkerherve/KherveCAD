@@ -823,7 +823,7 @@ class MainWindow(QMainWindow):
         nodes = tree.selected_nodes()
         if not nodes:
             if op in ("for_loop", "while_loop", "if_else", "union",
-                      "pattern"):
+                      "pattern", "intersection_for", "let"):
                 self._add_primitive(op)       # empty, fill it after
                 return
             self.statusBar().showMessage(

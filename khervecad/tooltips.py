@@ -573,6 +573,79 @@ TIPS = {
          "Click again to bring the panels back and edit by hand."],
         "The buttons in the 3D view's corner zoom, pan, turn and focus "
         "without the mouse."),
+    "resize": (
+        "Resize (absolute size)",
+        "Scales what it holds to a size in millimetres rather than by a "
+        "factor — OpenSCAD's resize(). Make a part exactly 40 mm long "
+        "without working out the scale.",
+        ["Select the objects and click Resize.",
+         "Type the new size along X, Y and/or Z; 0 keeps that axis.",
+         "Tick Auto on an axis left at 0 to scale it with the others, "
+         "keeping the proportions."],
+        "OpenSCAD scales about the origin, like scale(): centre the part "
+        "first if it should grow evenly."),
+    "multmatrix": (
+        "Matrix transform (multmatrix)",
+        "Applies a 4 x 4 affine matrix — the general transform that "
+        "translate, rotate, scale, mirror and shear are all cases of. "
+        "Every .csg file OpenSCAD writes places its shapes this way.",
+        ["Select the objects and click Matrix transform.",
+         "Edit the rows: the first three columns turn, scale and shear; "
+         "the fourth column moves (X, Y, Z).",
+         "Leave the last row 0, 0, 0, 1."],
+        "Put a number off the diagonal (row 1, column 2) for a shear — "
+        "something no other transform can do."),
+    "render": (
+        "Render (cache as mesh)",
+        "OpenSCAD's render(): tells OpenSCAD to compute its contents as "
+        "one finished mesh in its own preview. The shape is unchanged; a "
+        "complex boolean inside a loop previews faster.",
+        ["Select the objects and click Render.",
+         "Raise Convexity if OpenSCAD's preview shows see-through "
+         "faces (the most walls a ray can cross, halved)."],
+        "KherveCAD's own preview ignores it; it is kept so the program "
+        "reads the same in OpenSCAD."),
+    "intersection_for": (
+        "Intersection for",
+        "A for loop whose copies are INTERSECTED instead of joined: only "
+        "the volume every iteration shares remains. Three boxes turned "
+        "60° apart intersect into a hexagonal prism.",
+        ["Select what to repeat and click Intersection for (or click "
+         "with nothing selected and drag objects in).",
+         "Set the Variable and its range (From, To, Step) or a list of "
+         "Values.",
+         "Use the variable in the contents, e.g. a Rotate Z of i."],
+        "The built-in preview draws the first iteration; the OpenSCAD "
+        "render shows the true intersection."),
+    "let": (
+        "Let (local variables)",
+        "Names values for what it holds only — OpenSCAD's let(). Work a "
+        "radius out once from a diameter and use it in every child.",
+        ["Select the objects and click Let (or insert an empty one and "
+         "drag objects in).",
+         "Write the bindings: r = d / 2, h = r * 3 — later ones may use "
+         "earlier ones.",
+         "Type the names into the children's fields (Radius: r)."],
+        "The names exist only inside the Let; a Variable at the top "
+        "level is seen everywhere."),
+    "echo": (
+        "Echo (print)",
+        "OpenSCAD's echo(): prints values to OpenSCAD's console when the "
+        "program runs — to check a computed size or a loop count.",
+        ["Insert ▸ Code & files ▸ Echo.",
+         "Write the arguments as in OpenSCAD: \"width = \", w, "
+         "area = w * h."],
+        "A named argument prints as name = value."),
+    "assert": (
+        "Assert (check)",
+        "OpenSCAD's assert(): stops the program with a message when a "
+        "condition is false. In KherveCAD the node turns red at once, "
+        "with the message, so a parameter out of range is caught while "
+        "editing.",
+        ["Insert ▸ Code & files ▸ Assert.",
+         "Write the Condition (wall >= 1.2) and a Message — an "
+         "expression, so str(\"wall \", wall, \" is too thin\") works."],
+        "Put asserts next to the Variables they guard."),
     "pattern": (
         "Pattern (linear / polar / grid)",
         "Repeats its contents as copies — in a row, round an axis, or "

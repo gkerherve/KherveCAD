@@ -1699,6 +1699,9 @@ def validate(root: CadNode) -> dict:
             values = node.loop_values(env)
             var = str(node.params.get("variable", "i")) or "i"
             scoped[var] = values[0] if values else 0.0
+        bound = _organic.child_scope(node, env)
+        if bound is not None:                 # let, intersection_for
+            scoped = bound
 
         def define(assign):
             var = str(assign.params.get("variable", "")).strip()

@@ -59,13 +59,15 @@ PRIMITIVES = ["cube", "sphere", "cylinder", "capsule", "ellipsoid",
 OPERATION_GROUPS = [
     ("extrude", ["linear_extrude", "rotate_extrude", "sweep",
                  "section_loft"]),
-    ("transform", ["translate", "rotate", "scale", "mirror"]),
-    ("combine", ["union", "difference", "intersection"]),
+    ("transform", ["translate", "rotate", "scale", "mirror", "resize",
+                   "multmatrix"]),
+    ("combine", ["union", "difference", "intersection", "render"]),
     ("finish", ["fillet", "hull", "minkowski"]),
     ("deform", ["blend", "bend", "twist", "taper", "lattice",
                 "subdivide", "shell", "sculpt"]),
     ("character", ["symmetry", "joint", "paint", "hair_cap"]),
-    ("logic", ["for_loop", "while_loop", "if_else", "pattern"]),
+    ("logic", ["for_loop", "while_loop", "if_else", "pattern",
+               "intersection_for", "let"]),
 ]
 OPERATIONS = [op for _key, ops in OPERATION_GROUPS for op in ops]
 
@@ -311,8 +313,8 @@ def build_options_bar(win):
 #: (submenu title, tool keys) of the Insert menu's groups that are not
 #: operation families; the families follow, in the toolbar's own order
 INSERT_EXTRAS = [
-    ("Code && files", ["assign", "stl_import", "scad_raw",
-                       "sheet_metal"]),
+    ("Code && files", ["assign", "echo", "assert", "stl_import",
+                       "scad_raw", "sheet_metal"]),
 ]
 
 
