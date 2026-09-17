@@ -1122,6 +1122,13 @@ into a new module and import.
                        ring turned 180/R — `test_library_motion` checks the
                        gears clear. MCP insert_part honours the hook
                        (`insert_note`).
+  - `library_minecraft.py` — Minecraft characters & mobs in the
+                       Minecraft section (2026-09-17): Steve, Alex, zombie,
+                       skeleton, wither skeleton, creeper, enderman, spider,
+                       iron/snow golem, slime, ghast, blaze, chicken, sheep —
+                       coloured boxes in game pixels (`_Mob`), pixel-art
+                       faces as thin tiles (`face`), scaled by the size's
+                       pixel length. No booleans; front -Y, on z = 0.
   - `library_prusa.py` — the **Prusa** section (2026-09-15, the user's
                        request): "Little Prusa man", an original chibi
                        figure in the spirit of the Little Josef Prusa

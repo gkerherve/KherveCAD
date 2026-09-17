@@ -1197,7 +1197,7 @@ from . import (library_cards, library_chem, library_crystal,  # noqa: E402
                library_landmarks, library_landmarks_world,
                library_landscape, library_skyscrapers,
                library_lighting,
-               library_park, library_prusa,
+               library_minecraft, library_park, library_prusa,
                library_trees,
                house_designs, library_examples, library_lego,
                library_lego_sets,
@@ -1213,6 +1213,7 @@ PARTS.update(library_home.PARTS)
 PARTS.update(library_home_more.PARTS)
 PARTS.update(library_home_extra.PARTS)
 PARTS.update(library_prusa.PARTS)
+PARTS.update(library_minecraft.PARTS)
 PARTS.update(library_city_buildings.PARTS)
 PARTS.update(library_trees.PARTS)
 PARTS.update(library_examples.PARTS)
