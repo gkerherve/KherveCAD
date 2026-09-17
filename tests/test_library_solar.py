@@ -96,8 +96,9 @@ def test_body_builds_closed_at_its_diameter(app, key):
     lo, hi = _bbox(tris)
     a, b, c = body["radii"]
     # the equator spans the diameter (rings and haze aside)
+    from khervecad import solar_raster
     if key not in ("saturn", "uranus", "neptune", "haumea", "titan",
-                   "earth", "sun"):
+                   "earth", "sun") and not solar_raster.has_map(key):
         assert abs((hi[0] - lo[0]) - 60.0) < 2.5, (key, lo, hi)
         assert abs((hi[2] - lo[2]) - 60.0 * c / a) < 2.5, (key, lo, hi)
     volume = analysis.mass_properties(tris)["volume"]
@@ -105,6 +106,9 @@ def test_body_builds_closed_at_its_diameter(app, key):
     colours = {row[1] for row in mesh.tessellate_colored(node, env={},
                                                          fn=45)}
     assert len(colours) >= 2, key
+    if solar_raster.has_map(key):
+        lo, hi = _bbox(mesh.tessellate(node, env={}, fn=45))
+        assert abs((hi[0] - lo[0]) - 60.0) < 60.0 * 0.12, (key, lo, hi)
 
 
 def test_saturn_wears_its_rings_and_the_earth_its_land(app):
@@ -304,3 +308,49 @@ def test_orrery_renders_in_openscad(app, tmp_path):
                          capture_output=True, text=True, timeout=600)
     assert run.returncode == 0, run.stderr
     assert out.stat().st_size > 1000
+
+
+# ------------------------------------------------------- mapped bodies
+
+def test_mapped_bodies_come_from_mission_data(app):
+    from khervecad import solar_raster as R
+    mapped = [b["key"] for b in D.BODIES if R.has_map(b["key"])]
+    assert {"moon", "mars", "mercury", "venus", "pluto", "charon", "io",
+            "europa", "ganymede", "callisto", "titan", "iapetus", "triton",
+            "phobos"} <= set(mapped)
+    moon = R.load("moon")
+    assert moon.elevation is not None and moon.width == 720
+    assert moon.elev(33, -16) < -1500                 # Mare Imbrium
+    assert moon.elev(-43.3, -11.4) < moon.elev(-40, 0)  # Tycho's floor
+    mars = R.load("mars")
+    assert mars.elev(18.65, -134) > 15000              # Olympus Mons
+    assert mars.elev(-42, 70) < -5000                  # Hellas
+    assert mars.elev(-12, -70) < mars.elev(-25, -70)   # Valles Marineris
+    assert R.load("io").elevation is None
+    assert all(c != "#000000" for c in R.load("io").palette)
+    assert len(set(R.load("pluto").palette)) >= 3
+    for key in ("moon", "phobos", "titan"):
+        spec = library.PARTS[f"body_{key}"]
+        assert ("relief" in dict(spec["fields"])) == (key == "moon")
+
+
+def test_mapped_globes_are_closed_and_in_relief(app):
+    for key in ("moon", "io", "phobos"):
+        node = solar_bodies.build_body(key, 60.0, fine=True)
+        root = CadNode("root")
+        root.add(node)
+        assert not validate(root), (key, validate(root))
+        names = {n.name for n in node.walk() if n.type == "polyhedron"}
+        assert any("terrain" in n for n in names)
+        # an orrery's globe stays the cheap hand-built one
+        coarse = solar_bodies.build_body(key, 20.0, fine=False)
+        assert not any("terrain" in n.name for n in coarse.walk())
+    moon = solar_bodies.build_body("moon", 60.0, relief=10)
+    tris = mesh.tessellate(moon, env={}, fn=45)
+    radii = [math.sqrt(sum(v * v for v in p)) for t in tris for p in t]
+    assert max(radii) > 30.5 and min(radii) < 29.2     # highlands, basins
+    phobos = solar_bodies.build_body("phobos", 60.0)
+    lo, hi = _bbox(mesh.tessellate(phobos, env={}, fn=45))
+    a, b, c = D.BY_KEY["phobos"]["radii"]
+    assert abs((hi[1] - lo[1]) - 60.0 * b / a) < 1.0
+    assert abs((hi[2] - lo[2]) - 60.0 * c / a) < 1.0

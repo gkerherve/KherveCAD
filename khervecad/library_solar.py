@@ -66,11 +66,14 @@ def _body_part(body):
         label = "The Sun"
     fields = [("d", "Diameter")]
     sizes = _sizes(body)
-    if body["key"] == "earth":
-        from . import solar_earth
+    from . import solar_earth, solar_raster
+    if body["key"] == "earth" or (solar_raster.has_map(body["key"]) and
+                                  solar_raster.load(body["key"]).elevation):
         fields.append(("relief", "Relief exaggeration (x)"))
+        default = (solar_earth.RELIEF if body["key"] == "earth"
+                   else solar_raster.RELIEF.get(body["key"], 10.0))
         for dims in sizes.values():
-            dims["relief"] = solar_earth.RELIEF
+            dims["relief"] = default
     return dict(
         label=label,
         category=CATEGORY_MOONS if body["kind"] == "moon"

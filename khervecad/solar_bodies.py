@@ -164,9 +164,16 @@ class _Globe:
         self.add(node)
 
     def build(self):
+        from . import solar_raster
         node = CadNode("union", self.body["label"])
         for part in self.parts:
             node.add(part)
+        if self.irregular and self.fine and solar_raster.has_map(
+                self.body["key"]):
+            a, b, c = self.body["radii"]
+            scale = CadNode("scale", "Shape", dict(x=1.0, y=b / a, z=c / a))
+            scale.add(node)
+            return scale
         baked = not self.fine and self.body["radius"] < COARSE_BAKED_BELOW
         if self.irregular or baked:
             return node                  # the base carries its own radii
@@ -643,9 +650,25 @@ def build_body(key: str, diameter: float, fine: bool = True,
     """*key*'s globe, *diameter* mm across its equator (the longest
     axis of an irregular moon), as one union named after the body.
     *relief* is the Earth's height exaggeration (solar_earth.RELIEF)."""
-    from . import solar_earth
+    from . import solar_earth, solar_raster
     body = D.BY_KEY[key]
     g = _Globe(body, diameter, fine,
                solar_earth.RELIEF if relief is None else float(relief))
+    if fine and solar_raster.has_map(key):
+        # a real map (solar_raster): the mission mosaic's albedo classes
+        # in relief from the mission's height model, over a base sphere
+        # that makes the globe a solid; the hand-placed features serve
+        # the bodies nobody has mapped, and every body in an orrery,
+        # whose moons are millimetres across
+        # the base is a plain sphere just under the shells (an irregular
+        # moon is squashed to its radii once, with the whole globe)
+        g.add(S.sphere(body["label"], g.r * solar_raster.BASE,
+                       body["colour"]))
+        for node in solar_raster.globe_nodes(
+                key, g.r, None if relief is None else float(relief), fine):
+            g.add(node)
+        if key == "titan":
+            g.haze(1.05, "#e8a94a", 0.28)
+        return g.build()
     BUILDERS[key](g)
     return g.build()

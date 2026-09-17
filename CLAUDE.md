@@ -3182,6 +3182,44 @@ into a new module and import.
                        and ice fields are thinner slabs on top. Fine ≈ 115k
                        triangles in ~2.5 s; coarse (orreries, 0.6°) ≈ 19k.
                        The 5° map stays as the climate classifier.
+                       `solar_raster.py` (same day — "the Moon and Mars
+                       and others with the same details"): REAL maps for
+                       20 bodies, one `khervecad/solar/<key>.kmap.gz`
+                       each (format in the docstring: palette, optional
+                       int16 elevation, uint8 albedo class per 0.5° cell),
+                       built by `khervecad.tools.planet_maps` from NASA /
+                       USGS public-domain data — the Moon's LOLA DEM and
+                       LROC colour (NASA SVS CGI Moon Kit; a plain float
+                       TIFF, read by the tool's own strip reader since
+                       geotiff.py wants a georeference), Mars' MOLA MEGDR
+                       (PDS; the grid STARTS AT 0° E, roll it half a turn
+                       or Olympus Mons is 530 m) and Viking colour, and the
+                       USGS Astrogeology map server (planetarymaps.usgs.gov
+                       WMS, map paths under the PARENT planet: /maps/earth/
+                       moon, /maps/jupiter/io, /maps/saturn/titan…) for
+                       Mercury, Venus, Pluto, Charon, the Galileans,
+                       Saturn's moons, Triton, Phobos, Deimos. The tool
+                       fills a mosaic's black no-data (Io's poles, Pluto's
+                       unseen half) from the nearest mapped cell, k-means
+                       the colours into 3–6 classes (greyscale ones tinted
+                       with the body's colour), and majority-filters the
+                       classes — speckle made every triangle an island
+                       needing walls (Iapetus was 80k triangles).
+                       `globe_nodes` builds the globe like the Earth's
+                       land: a (lon, lat) grid to ±86°, Delaunay flips and
+                       `_refine` where the ground climbs, one closed shell
+                       per class (`solar_earth._shell`) lifted by the
+                       body's `RELIEF` (Moon 10×, Mars 8×; the Part Library
+                       field appears for bodies with a height model), polar
+                       cap bands, an irregular moon squashed to its radii
+                       afterwards, over a base sphere (a shell alone had
+                       no volume). `build_body` dispatches to it for a FINE
+                       globe with a map; the hand-placed features stay for
+                       the unmapped (Uranus' moons, Ceres, Haumea…) and
+                       for every orrery globe — mapped coarse globes made
+                       a slider tick 1.4 s for moons millimetres across.
+                       Fine Moon ≈ 100k triangles, Mars ≈ 80k, a moon
+                       ≈ 25k. ~1.2 MB of maps shipped.
                        `solar_bodies.py` — `build_body(key, diameter,
                        fine)`: every body's recognisable features (Earth's
                        map + atmosphere, Mars' albedo regions, Tharsis
