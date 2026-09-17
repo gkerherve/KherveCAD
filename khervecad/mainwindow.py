@@ -1891,7 +1891,7 @@ class MainWindow(QMainWindow):
         self._library_dialog.activateWindow()
 
     def _part_inserted(self, node):
-        self.builder.tree.select_nodes([node])
+        self.builder.tree.select_nodes([])
         if not self.view3d.user_moved:        # don't jump a view you set
             self.view3d.fit()
 
