@@ -189,6 +189,20 @@ into a new module and import.
                        from the feature nodes; `_vbox` rounds only
                        vertical edges (a rounded_box thinned the rims).
                        Every part renders in OpenSCAD.
+  - `library_vitamins.py` — Motion & electronics (NopSCADlib's
+                       "vitamins", published dimensions, for designing
+                       around): NEMA 17/23 steppers (31 / 47.14 mm tapped
+                       pattern, boss, D-flat shaft), T-slot extrusions
+                       (2020/2040/3030, bored cells), MGN rails with
+                       counterbored holes + carriage, GT2 pulleys (OD =
+                       teeth·2/π − 0.508), 608/625/6001 and LM8UU bearings,
+                       40–120 mm fans (polar pattern of twisted blades),
+                       Raspberry Pi 4 and Arduino Uno boards with their
+                       connectors. `library_generative.py`: Lego Technic
+                       beam / axle / pin / module-1 gear with a cross hole,
+                       and seeded Voronoi panel (Bowyer–Watson `delaunay`,
+                       cells by half-plane clipping, inset by the wall),
+                       maze (backtracker spanning tree) and Hilbert plate.
   - `animate.py`     — View ▸ Animate ($t): `set_time` puts OpenSCAD's
                        animation time in `expr.SPECIAL_DEFAULTS["$t"]`
                        (every expression reads it), `engine.DEFINES`

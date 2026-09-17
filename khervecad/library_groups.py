@@ -23,6 +23,8 @@ SECTIONS = [
          ["Fasteners", "Brackets"]),
         ("Hand tools", "mdi.hammer-wrench", ["Tools"]),
         ("Vacuum & UHV", "mdi.pipe", ["Vacuum"]),
+        ("Motion & electronics", "mdi.cog-transfer-outline",
+         ["Motion & motors", "Electronics boards"]),
         ("3D printing", "mdi.printer-3d",
          ["Printed joints & hinges", "Printed organisers", "Enclosures",
           "Prusa"]),
@@ -45,7 +47,9 @@ SECTIONS = [
     ]),
     ("Toys & models", [
         ("Lego", "mdi.toy-brick-outline", ("lego", ["Lego", "Lego sets"])),
+        ("Lego Technic", "mdi.cog-outline", ["Lego Technic"]),
         ("Minecraft", "mdi.cube-outline", ["Minecraft"]),
+        ("Generative", "mdi.chart-bubble", ["Generative"]),
         ("Cars", "mdi.car-sports", ["Cars"]),
         ("Playing cards", "mdi.cards-playing-outline", ["Playing cards"]),
     ]),
