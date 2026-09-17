@@ -38,7 +38,7 @@ from .car_wheels import closed_grid
 from .landmark_kit import Kit
 from .model import CadNode
 
-GLASS = "#1b242e"
+GLASS = "#0b0e12"
 TRIM = "#1e1f22"
 CHROME = "#dfe2e6"
 LAMP = "#f3f6f8"
@@ -102,10 +102,11 @@ class Car:
     def half_width(self, s):
         p = self.p
         front = p["nose_w"] + (1 - p["nose_w"]) * math.sin(
-            min(1.0, s / 0.2) * math.pi / 2) ** 0.7
+            min(1.0, s / 0.26) * math.pi / 2) ** 0.85
         rear = p["tail_w"] + (1 - p["tail_w"]) * math.sin(
             min(1.0, (1 - s) / 0.16) * math.pi / 2) ** 0.7
-        return self.W / 2 * min(front, rear)
+        waist = 1.0 - 0.025 * math.sin(math.pi * min(1.0, max(0.0, s)))
+        return self.W / 2 * min(front, rear) * waist
 
     def top(self, s):
         return _knots(self.top_knots, s)
@@ -148,38 +149,64 @@ class Car:
         return [-math.cos(math.pi * i / (COLUMNS - 1))
                 for i in range(COLUMNS)]
 
-    def body_top_at(self, s, u):
-        """The lower body's top z at station *s*, column *u* (-1..1)."""
-        a = self.half_width(s)
+    def shoulder(self, s):
+        """(beltline z, top z) at the centre of this station: a car has
+        a CREASE where the flank turns into the bonnet or the deck, and
+        the flank below it is near vertical. Over a wheel both lift to
+        clear the arch — the fender bulge."""
         zb, zt = self.bottom(s), self.top(s)
         arch = self.arch(s)
-        au = abs(u)
         if arch is not None:
-            bump = max(0.0, arch + 55 - zt)
-            if self.p["fenders"]:
-                zt += bump * _smooth((au - 0.45) / 0.35)
-            else:
-                zt += bump
-        rt = min(0.4 * (zt - zb), 0.09 * self.W, 150.0)
-        c = min(0.5, rt / a)
-        roll = 0.0
-        if au > 1 - c:
-            q = (au - (1 - c)) / c
-            roll = rt * (1 - math.sqrt(max(0.0, 1 - q * q)))
-        return zt + 0.02 * a * (1 - u * u) - roll
+            need = max(0.0, arch + 55 - zt)
+            zt += need
+        belt = zt - self.p["belt"] * max(120.0, zt - zb)
+        return belt, zt
+
+    def body_top_at(self, s, u):
+        """The body's outer surface z at column *u* (-1..1): flat-ish
+        over the middle, then down to the beltline over the shoulder.
+        *crisp* 1 chamfers it in a straight line (a wedge), 0 rolls it
+        round (a fifties wing)."""
+        a = self.half_width(s)
+        belt, zt = self.shoulder(s)
+        arch = self.arch(s)
+        au, p = abs(u), self.p
+        if arch is not None and p["fenders"]:
+            # the bulge belongs over the wheel, not over the bonnet
+            flat = self.top(s)
+            zt = flat + (zt - flat) * _smooth((au - 0.45) / 0.4)
+            belt = min(belt, zt - p["belt"] * max(120.0, zt
+                                                  - self.bottom(s)))
+        k = 0.62 + 0.18 * p["crisp"]
+        crown = 0.035 * a * (1 - p["crisp"])
+        if au <= k:
+            return zt + crown * (1 - (au / k) ** 2)
+        q = (au - k) / (1 - k)
+        power = 1.0 + 2.2 * (1 - p["crisp"])
+        return zt - (zt - belt) * q ** power
 
     def body_ring(self, s):
+        """The section: a floor, a near-vertical flank up to the
+        beltline crease and the shoulder over it — plus the wheel arch
+        cut into the outer band."""
         y, a = self.y(s), self.half_width(s)
         zb = self.bottom(s)
         arch = self.arch(s)
         inner = self.W / 2 - 55 - self.tw_max
         cols = self.columns()
-        ring = [(a * u, y, self.body_top_at(s, u)) for u in reversed(cols)]
+        ring = []
+        for u in reversed(cols):
+            au = abs(u)
+            # the flank tucks in a little under the crease and again at
+            # the sill, so the car is widest at its beltline
+            x = a * u * (1.0 - 0.02 * _smooth((au - 0.8) / 0.2))
+            ring.append((x, y, self.body_top_at(s, u)))
         for u in cols:
-            x = a * u
+            au = abs(u)
+            x = a * u * (1.0 - 0.10 * _smooth((au - 0.75) / 0.25))
             top = self.body_top_at(s, u)
-            z = zb + 30 * max(0.0, abs(u) - 0.85) / 0.15
-            if arch is not None and abs(x) > inner:
+            z = zb + 25 * _smooth((au - 0.8) / 0.2)
+            if arch is not None and abs(a * u) > inner:
                 z = max(z, min(arch, top - 25))
             ring.append((x, y, z))
         return ring
@@ -196,18 +223,21 @@ class Car:
             pts.append((a * u, y, zb))
         return pts
 
-    def cabin_ring(self, s, f0=0.0, f1=1.0, lift=0.0):
-        """A slice of the greenhouse's section between the fractions
-        *f0* and *f1* of its height — the shoulder, the window band and
-        the roof are stacked slabs, so they meet face to face instead of
-        fighting for the same surface. Side glass leans in with the
-        tumblehome, so x narrows with the fraction too."""
+    def cabin_height(self, s):
+        """How far the greenhouse stands over the body at its centre."""
+        return self.roof(s) - self.body_top_at(s, 0.0)
+
+    def cabin_ring(self, s, f0=0.0, f1=1.0, out=0.0):
+        """The greenhouse's section between the fractions *f0* and *f1*
+        of its height. The glass is the same shell pushed *out* mm
+        proud, so it is strictly OUTSIDE the body-coloured cabin — two
+        surfaces that never share a plane and so never fight for it."""
         p = self.p
         y, a = self.y(s), self.half_width(s) * p["cabin"]
-        zr = self.roof(s) + lift
+        zr = self.roof(s)
         top, bottom = [], []
         for u in self.columns():
-            zbase = self.body_top_at(s, u * p["cabin"]) - 12
+            zbase = self.body_top_at(s, u * p["cabin"]) - 10
             au = abs(u)
             roll = 0.12 * (self.H - self.top(p["ws"])) * _smooth(
                 (au - 0.6) / 0.4) ** 2
@@ -215,6 +245,12 @@ class Car:
 
             def at(f):
                 x = a * u * (1 + (p["tumble"] - 1) * f)
+                if out and u:
+                    # proud only where the shell has climbed clear of
+                    # the body: lower down it is buried in the wing and
+                    # an offset would burst through the bonnet
+                    x += math.copysign(out * _smooth((f - 0.30) / 0.18),
+                                       u)
                 return (x, y, zbase + (zt - zbase) * f)
             top.append(at(f1))
             bottom.append(at(f0))
@@ -241,12 +277,7 @@ class Car:
         if p["open"]:
             self._open_cabin(kit, paint)
         else:
-            cabin = self.stations(p["ws"], p["cb"], 70)
-            glass = kit.mesh(GLASS, "Plastic")
-            for f0, f1, mesh_ in ((0.0, 0.26, body), (0.26, 0.82, glass),
-                                  (0.82, 1.0, body)):
-                closed_grid(mesh_, [self.cabin_ring(s, f0, f1)
-                                    for s in cabin])
+            self._greenhouse(kit, body)
         self._lights(kit)
         self._grille(kit)
         self._wing(kit, paint)
@@ -262,6 +293,23 @@ class Car:
             wrap.add(group)
             return wrap
         return group
+
+    def _greenhouse(self, kit, body):
+        """Windscreen, side windows, roof and backlight. Each is its own
+        closed loft, overlapping its neighbour a little so no two share
+        a plane: the windscreen and the backlight are glass over their
+        whole height, the roof is body-coloured over the side glass."""
+        p = self.p
+        glass = kit.mesh(GLASS, "Plastic")
+        rf, rr = p["rf"], p["rr"]
+        screen = self.stations(p["ws"], rf + 0.004, 26)
+        closed_grid(glass, [self.cabin_ring(s) for s in screen])
+        roof = self.stations(rf - 0.03, rr + 0.05, 30)
+        closed_grid(body, [self.cabin_ring(s, 0.62, 1.0) for s in roof])
+        sides = self.stations(rf - 0.004, rr + 0.004, 26)
+        closed_grid(glass, [self.cabin_ring(s, 0.0, 0.67) for s in sides])
+        back = self.stations(rr - 0.004, p["cb"], 26)
+        closed_grid(glass, [self.cabin_ring(s) for s in back])
 
     # ---------------------------------------------------------- details
     def _open_cabin(self, kit, paint):
