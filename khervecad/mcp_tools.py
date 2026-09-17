@@ -1629,7 +1629,8 @@ class McpToolExecutor:
             return {"inserted": [c.id for c in nodes],
                     "names": [c.name for c in nodes], "part_id": part_id,
                     "size": size_key or None,
-                    "note": "Built as a House Builder house: one Object "
+                    "note": spec.get("insert_note") or
+                            "Built as a House Builder house: one Object "
                             "per floor; build_house (or the House Builder "
                             "with it selected) edits it."}
         node = library.build_part(part_id, dims)

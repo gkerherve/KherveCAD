@@ -364,7 +364,7 @@ through every point. <b>Wall thickness</b> hollows it into a pipe,
 <b>Closed loop</b> joins the end to the start (an O-ring), and
 <b>Twist</b> / <b>Scale</b> act over the length. Seen with the path
 coming towards you and Z up, the profile's x is right and y is up, just
-like Linear extrude. Examples &rsaquo; Mechanical &rsaquo; <i>Pipe run
+like Linear extrude. Library &rsaquo; Mechanical examples &rsaquo; <i>Pipe run
 &amp; handrail</i> shows all three.</p>
 {figure("sweep", "A hollow pipe through smoothed bends, a mitred square "
         "rail and a closed O-ring — three sweeps.")}
@@ -551,7 +551,7 @@ a tray, a bracket, a channel or a U comes straight out of it.</li>
 {figure("pattern", "One pattern each: a polar bolt circle, a spiral "
         "stair (polar with a rise), a straight stair and a peg grid.")}
 <p>With objects selected, these wrap them; with nothing selected they
-add an empty node to drag objects into. The <b>Examples &rsaquo;
+add an empty node to drag objects into. The <b>Library &rsaquo;
 Learn</b> menu has a numbered tutorial for each.</p>
 """),
 
@@ -639,7 +639,7 @@ copy its position (or put one copy in a For loop).</li>
 </ol>
 {figure("tab_masters", "The Masters tab.", 430)}
 <p>Masters are for repeated <i>geometry</i> inside one model; Objects
-are for <i>parts</i> in an assembly. Examples &rsaquo; Learn &rsaquo;
+are for <i>parts</i> in an assembly. Library &rsaquo; Learn OpenSCAD &rsaquo;
 21&nbsp;&middot;&nbsp;Masters and Mechanical &rsaquo; Bolt circle show
 both.</p>
 """),
@@ -687,7 +687,7 @@ the shape follows smoothly.</li>
 thickness (Blender's Solidify): set the <b>Wall thickness</b>, and
 <b>Open side</b> top / bottom / &plusmn;x / &plusmn;y to leave one side
 open &mdash; a cylinder with <i>open = top</i> is a cup. A wall too thick
-for the part leaves no room and turns the shell red. Examples &rsaquo;
+for the part leaves no room and turns the shell red. Library &rsaquo;
 Mechanical &rsaquo; <i>Hollow cup</i>.</li>
 </ul>
 {figure("shell", "Shell: a cylinder hollowed to a 2 mm cup, open at "
@@ -696,8 +696,8 @@ Mechanical &rsaquo; <i>Hollow cup</i>.</li>
 <td>{figure("character_tulip", "Flowers &rsaquo; Tulip", 360)}</td>
 <td>{figure("character_oak", "Trees &rsaquo; Oak", 360)}</td>
 </tr></table>
-<p>The <b>Examples</b> menu has a garden of flowers and trees built this
-way &mdash; open one and look at its tree to see how.</p>
+<p><b>Library &#9656; Nature &amp; garden</b> has a garden of flowers and
+trees built this way &mdash; insert one and look at its tree to see how.</p>
 """),
 
         ("view3d", "The 3D view", f"""
@@ -780,15 +780,25 @@ tab.</p>
 <p>The <b>Library</b> menu inserts the same parts at their default size
 in one click.</p>
 <h3>Examples</h3>
-<p>The <b>Examples</b> menu replaces the document with a ready-made
-model: <b>Learn</b> (21 numbered tutorials, one technique each, from a
-single cube to masters), <b>Mechanical</b> (brackets, gears, bearings,
-pulleys, a bolted flange), <b>Projects</b>, <b>Showcase</b> (among
-them a fully assembled Ferrari 288 GTO),
-<b>Flowers</b>, <b>Trees</b>, <b>Vacuum</b> and <b>Room</b>. Open one
-and click through its tree to see how it is made. You are asked before
+<p>Ready-made example models are in the <b>Library</b> menu too, each in
+a submenu marked <i>Opens as a document, in place of yours</i>: the
+LEARN section at the bottom holds <b>Learn OpenSCAD, step by step</b>
+(21 numbered tutorials, from a single cube to masters), <b>Course
+projects</b> and <b>Showcase models</b> (among them a fully assembled
+Ferrari 288 GTO); Engineering has <b>Mechanical examples</b> (brackets,
+gears, bearings, pulleys, a bolted flange) and a vacuum starter under
+Vacuum &amp; UHV; House &amp; home ends with a desk setup. Open one and
+click through its tree to see how it is made. You are asked before
 unsaved work is replaced.</p>
-{figure("menu_examples", "The Examples menu.", 140)}
+<h3>Mechanisms &amp; motion</h3>
+<p><b>Library &#9656; Mechanisms &amp; motion</b> adds working mechanisms
+to your design &mdash; a motor and gear pair, crank and piston, rack and
+pinion, cam and follower, four-bar linkage, planetary gearset, an XY
+moving platform, a scissor lift and a robot arm. Each lands beside what
+is already there with its own sliders in the <b>Customizer</b> panel
+(View &#9656; Customizer): drag one, or press &#9654; beside it, and the
+mechanism moves. Insert several and each keeps its own variables
+(<code>crank_angle</code>, <code>crank2_angle</code>&hellip;).</p>
 """),
 
         ("crystals", "Crystals and nanoparticles", """

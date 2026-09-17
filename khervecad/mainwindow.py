@@ -301,7 +301,6 @@ class MainWindow(QMainWindow):
         build_insert_menu(self, insert_menu)
 
         self._build_library_menu(m)
-        self._build_examples_menu(m)
 
         view_menu = m.addMenu("&View")
         customizer_act = self._customizer_dock.toggleViewAction()
@@ -528,11 +527,6 @@ class MainWindow(QMainWindow):
         and insert the include line (scadlib_dialog.py)."""
         from . import scadlib_dialog
         scadlib_dialog.open_dialog(self)
-
-    def _build_examples_menu(self, menubar):
-        """Examples: whole documents that REPLACE yours (library_menu)."""
-        from .library_menu import build_examples_menu
-        return build_examples_menu(self, menubar)
 
     def _insert_library_part(self, part_id):
         from .library import (default_dims, default_part, insert_hook,

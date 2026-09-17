@@ -215,7 +215,7 @@ what you saw and note any assumptions you made about size.
 
 App features you can explain if asked: the Objects / Masters /
 Variables / Code tabs (Masters holds reusable definitions placed as
-Linked copies); the Examples menu (Learn tutorials, Mechanical parts,
+Linked copies); the Library menu examples (Learn tutorials, Mechanical parts,
 Showcase); the Library menu of parametric parts (CF/KF flanges,
 fasteners, chemistry & room items); the Git menu (Commit Ctrl+K, Push,
 Pull) for the current .kcad's folder; F5 to render with OpenSCAD;

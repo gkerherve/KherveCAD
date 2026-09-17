@@ -501,8 +501,8 @@ into a new module and import.
                        `insert_part` takes `color` (passed to the
                        builder as `dims["_color"]`); `COUNT_FIELDS`
                        get integer spin boxes.
-  - `examples.py`    — ready-made **example models** for the Examples
-                       menu: each `build()` returns a fresh `root` that
+  - `examples.py`    — ready-made **example models** (in the Library
+                       menu, see EXAMPLE_PLACES): each `build()` returns a fresh `root` that
                        replaces the document. A **Learn** category of 21
                        numbered tutorials, basic → advanced, one
                        technique each (primitives, 2D shapes, text,
@@ -1096,6 +1096,32 @@ into a new module and import.
                        `examples.EXAMPLES` itself is unchanged, so MCP
                        load_example still offers them. `library_kcad.label`
                        splits CamelCase stems ("Minecraft Cat").
+                       **Examples merged into Library** (2026-09-17, the
+                       user's request): no Examples menu any more;
+                       `library_menu.EXAMPLE_PLACES` puts each example
+                       category where it belongs (Mechanical → Engineering
+                       ▸ Mechanical examples, Vacuum → Vacuum & UHV, Room →
+                       House & home, Learn / Projects / Showcase → a closing
+                       LEARN section), every such submenu headed by
+                       `EXAMPLE_NOTE`; they still load as documents
+                       (`_load_example`).
+  - `library_motion.py` — **Mechanisms & motion** (Engineering): gear
+                       pair, crank & piston, rack & pinion, cam & follower,
+                       four-bar, planetary, XY platform, scissor lift,
+                       robot arm — OpenSCAD programs with Customizer-
+                       annotated drivers. The `insert` hook ADDS one:
+                       variables renamed `<prefix>_name` (`prefixed`:
+                       strings, comments and named arguments untouched —
+                       `kcad_gear(m = m)` once lost its module),
+                       `free_prefix` gives a second copy `crank2_`, groups
+                       named after the mechanism, Objects placed right of
+                       the document's bbox. Moving parts are gears /
+                       capsules / boxes (no booleans); the lead screw is
+                       static (a turning 52k-triangle thread cost 200 ms a
+                       tick). Planet phase: `180 - 180/P + (θ - sun)·S/P`,
+                       ring turned 180/R — `test_library_motion` checks the
+                       gears clear. MCP insert_part honours the hook
+                       (`insert_note`).
   - `library_prusa.py` — the **Prusa** section (2026-09-15, the user's
                        request): "Little Prusa man", an original chibi
                        figure in the spirit of the Little Josef Prusa

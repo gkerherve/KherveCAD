@@ -1,12 +1,14 @@
-"""The Library and Examples menus (built from `library_groups`).
+"""The Library menu (built from `library_groups`).
 
-Library = things you ADD to your design, in four themed sections
+Library = things you ADD to your design, in themed sections
 (Engineering, Buildings & places, Science, Toys & models); each subject
 menu carries its builder (House, City, Lego, Crystal, Compound) on top.
-Examples = complete documents that REPLACE yours: the step-by-step
-lessons, technique demos, the course projects and showcase models.
-Models that are really parts (flowers, stylised trees, Lego sets) live
-in the Library only, so the two menus no longer overlap.
+The example documents — which REPLACE yours — live in it too, where
+they belong (2026-09-17, the Examples menu merged in): the technique
+demos under Engineering, the vacuum starter in Vacuum & UHV, the desk
+setup in House & home, and the lessons, course projects and showcase
+models in a closing LEARN section. Each example submenu says it opens as
+a document.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -19,14 +21,23 @@ the Free Software Foundation, either version 3 of the License, or
 from . import icons
 from .library_groups import SECTIONS, entry_categories, short_name
 
-#: Examples-menu categories: (menu title, example categories)
-EXAMPLE_MENUS = [
-    ("Learn OpenSCAD, step by step", "mdi.school-outline", ["Learn"]),
-    ("Techniques", "mdi.cog-outline", ["Mechanical"]),
-    ("Course projects", "mdi.book-open-variant",
-     ["Projects"]),
-    ("Showcase", "mdi.star-outline", ["Showcase", "Vacuum", "Room"]),
+#: where the example documents go: (section, submenu title, icon,
+#: example categories) — a submenu title already in that section gets
+#: the examples at its end, else a new submenu is added
+EXAMPLE_PLACES = [
+    ("Engineering", "Mechanical examples", "mdi.cog-outline",
+     ["Mechanical"]),
+    ("Engineering", "Vacuum & UHV", "mdi.pipe", ["Vacuum"]),
+    ("Buildings & places", "House & home", "mdi.home-city-outline",
+     ["Room"]),
+    ("Learn", "Learn OpenSCAD, step by step", "mdi.school-outline",
+     ["Learn"]),
+    ("Learn", "Course projects", "mdi.book-open-variant", ["Projects"]),
+    ("Learn", "Showcase models", "mdi.star-outline", ["Showcase"]),
 ]
+
+#: the note on top of an example submenu
+EXAMPLE_NOTE = "Opens as a document, in place of yours"
 
 
 def menu_text(text) -> str:
@@ -55,18 +66,24 @@ def build_library_menu(window, menubar):
     for pid, spec in PARTS.items():
         by_cat.setdefault(spec.get("category", "Other"), []).append(pid)
     placed = set()
-    for title, entries in SECTIONS:
+    sections = [title for title, _entries in SECTIONS]
+    sections = list(dict.fromkeys(sections + [s for s, *_rest
+                                              in EXAMPLE_PLACES]))
+    entries_of = dict(SECTIONS)
+    for title in sections:
         _header(menu, title)
-        for name, icon, spec in entries:
+        subs = {}
+        for name, icon, spec in entries_of.get(title, []):
             special, cats = entry_categories(spec, list(by_cat))
             cats = [c for c in cats if c in by_cat]
             placed.update(cats)
             if not cats:
                 continue
             if special == "home":
-                _home_menu(window, menu, PARTS, cats)
+                subs[name] = _home_menu(window, menu, PARTS, cats)
                 continue
-            sub = menu.addMenu(icons.icon(icon), menu_text(name))
+            sub = subs[name] = menu.addMenu(icons.icon(icon),
+                                            menu_text(name))
             if special:
                 _BUILDERS[special](window, sub)
             if len(cats) == 1 and not special:
@@ -75,6 +92,7 @@ def build_library_menu(window, menubar):
             for cat in cats:
                 _add_parts(window, sub.addMenu(menu_text(short_name(cat))),
                            by_cat[cat], PARTS)
+        _add_examples(window, menu, title, subs)
     rest = [c for c in by_cat if c not in placed]
     if rest:
         _header(menu, "Other")
@@ -178,22 +196,24 @@ def _home_menu(window, menu, parts, categories):
     return home
 
 
-def build_examples_menu(window, menubar):
-    """Complete demo documents; picking one REPLACES the document
-    (Ctrl+Z brings it back)."""
+def _add_examples(window, menu, section, subs):
+    """The example documents placed in *section*: at the end of a submenu
+    it already has, or in a submenu of their own."""
     from .examples import EXAMPLES
-    menu = menubar.addMenu("&Examples")
-    note = menu.addAction("Opens in place of your document "
-                          "(parts to add are in Library)")
-    note.setEnabled(False)
-    menu.addSeparator()
-    for title, icon, cats in EXAMPLE_MENUS:
+    for where, title, icon, cats in EXAMPLE_PLACES:
+        if where != section:
+            continue
         items = [(label, build) for label, cat, build in EXAMPLES
                  if cat in cats]
         if not items:
             continue
-        sub = menu.addMenu(icons.icon(icon), menu_text(title))
+        sub = subs.get(title)
+        if sub is None:
+            sub = menu.addMenu(icons.icon(icon), menu_text(title))
+        else:
+            sub.addSeparator()
+        note = sub.addAction(EXAMPLE_NOTE)
+        note.setEnabled(False)
         for label, build in items:
             sub.addAction(menu_text(label),
                           lambda _=False, b=build: window._load_example(b))
-    return menu

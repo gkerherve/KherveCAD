@@ -1,4 +1,4 @@
-"""Ready-made example models for the Examples menu.
+"""Ready-made example models (Library menu, opened as documents).
 
 Each entry builds a complete document tree (a fresh ``root`` node) that
 replaces the current document, so a new user can load something real and

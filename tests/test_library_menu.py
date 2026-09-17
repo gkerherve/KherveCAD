@@ -109,21 +109,38 @@ def test_library_menu_reads_in_sections(window):
     top = _texts(_menu(window.menuBar(), "Library"))
     heads = [t for t in top if t.isupper()]
     assert heads == ["ENGINEERING", "BUILDINGS & PLACES", "SCIENCE",
-                     "TOYS & MODELS"]
+                     "TOYS & MODELS", "LEARN"]
     assert top.index("House & home") > top.index("BUILDINGS & PLACES")
     assert top.index("Lego") > top.index("TOYS & MODELS")
 
 
-def test_examples_are_documents_and_do_not_repeat_the_library(window):
-    examples = _menu(window.menuBar(), "Examples")
-    subs = [t for t in _texts(examples) if not t.startswith("Opens")]
-    assert subs == ["Learn OpenSCAD, step by step", "Techniques",
-                    "Course projects", "Showcase"]
-    everything = set()
-    for title in subs:
-        everything.update(_texts(_menu(examples, title)))
+def test_examples_live_in_the_library_and_open_as_documents(window):
+    from khervecad.examples import EXAMPLES
+    from khervecad.library_menu import EXAMPLE_NOTE
+    bar = _texts(window.menuBar())
+    assert "Examples" not in bar
+    library = _menu(window.menuBar(), "Library")
+    found = {}
+
+    def walk(menu):
+        texts = _texts(menu)
+        if EXAMPLE_NOTE in texts:
+            for t in texts[texts.index(EXAMPLE_NOTE) + 1:]:
+                found[t] = found.get(t, 0) + 1
+        for act in menu.actions():
+            if act.menu() is not None:
+                walk(act.menu())
+    walk(library)
+    for label, cat, _build in EXAMPLES:
+        if cat in ("Learn", "Mechanical", "Projects", "Showcase", "Vacuum",
+                   "Room"):
+            assert found.get(label) == 1, label
     for gone in ("Rose", "Palm", "Dragon", "Minecraft tower"):
-        assert gone not in everything
+        assert gone not in found
+    engineering = _menu(library, "Mechanical examples")
+    assert "Meshing gear pair" in _texts(engineering)
+    assert "Vacuum starter (CF tee + turbo)" in _texts(
+        _menu(library, "Vacuum & UHV"))
 
 
 def test_flowers_and_stylised_trees_insert_as_parts():

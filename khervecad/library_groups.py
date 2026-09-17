@@ -23,6 +23,7 @@ SECTIONS = [
          ["Fasteners", "Brackets"]),
         ("Hand tools", "mdi.hammer-wrench", ["Tools"]),
         ("Vacuum & UHV", "mdi.pipe", ["Vacuum"]),
+        ("Mechanisms & motion", "mdi.cogs", ["Mechanisms & motion"]),
         ("Motion & electronics", "mdi.cog-transfer-outline",
          ["Motion & motors", "Electronics boards"]),
         ("3D printing", "mdi.printer-3d",
