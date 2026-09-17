@@ -56,15 +56,19 @@ ICE = (1.006, 1.012)
 #: 0.03 r (1.7°) so a range stands as a range, not one bump
 MAX_CHORD = 0.08
 RELIEF_CHORD = 0.03
-COARSE_CHORD = 0.16
-COARSE_RELIEF_CHORD = 0.08
+COARSE_CHORD = 0.25
+COARSE_RELIEF_CHORD = 0.12
 SLAB_CHORD = 0.12                  # lakes and ice fields
 #: an edge counts as rising ground when its ends differ by this many
 #: metres, or its middle leaves the straight line by half of it — a
 #: plateau or an ice sheet stays coarse, a range is refined
 RELIEF_STEP = 200.0
-COARSE_TOLERANCE = 0.6
-COARSE_MIN_AREA = 1.5
+#: an orrery's Earth is millimetres across: simplify the coastline to
+#: 1.2°, drop anything under 6 square degrees and leave the relief off
+#: — at that size it is invisible, and it cost 19k of the orrery's 76k
+#: triangles, a quarter of every frame for one 10 mm globe
+COARSE_TOLERANCE = 1.2
+COARSE_MIN_AREA = 6.0
 
 CLASS_COLOURS = {k: v[0] for k, v in M.EARTH_PALETTE.items()}
 CLASS_COLOURS["r"] = "#8b7d6b"                # bare rock

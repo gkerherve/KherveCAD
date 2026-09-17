@@ -174,6 +174,12 @@ class View3D(QWidget):
     #: mesh snaps back the moment you stop — OpenSCAD's preview/render
     #: split, done on the CPU.
     DRAFT_ABOVE = 9000
+    #: how long the mesh must stand still before the exact paint order
+    #: is worth building (ms). While a slider drives a mechanism every
+    #: mesh is replaced within a frame or two, so each tree was thrown
+    #: away unused — and its worker competed with the GUI for the GIL,
+    #: which is what made a moving model crawl without OpenGL.
+    BSP_SETTLE_MS = 400
     DRAFT_TARGET = 6000
 
     #: the selection tint imitates OpenSCAD's `#` debug modifier. It is
@@ -220,6 +226,10 @@ class View3D(QWidget):
         self._bsp = None                # bsp.Tree of self.mesh, or None
         self._bsp_pending = None        # (serial, tree) left by the worker
         self._bsp_thread = None
+        self._bsp_timer = QTimer(self)
+        self._bsp_timer.setSingleShot(True)
+        self._bsp_timer.setInterval(self.BSP_SETTLE_MS)
+        self._bsp_timer.timeout.connect(self._start_bsp_build)
         self._bsp_lock = threading.Lock()
         self._mesh_serial = 0           # bumps per set_mesh: stale trees
         self._bsp_ready.connect(self._take_bsp)
@@ -651,8 +661,9 @@ class View3D(QWidget):
         self._bsp = bsp
         # OpenGL has a depth buffer and needs no order: the tree is only
         # built for the painter (and later, if the user switches to it)
+        self._bsp_timer.stop()
         if bsp is None and self.mesh and not self._gl_active():
-            self._start_bsp_build()
+            self._bsp_timer.start()       # once the model stands still
         self.source = source
         self.update()
 
@@ -697,6 +708,9 @@ class View3D(QWidget):
         """Block until the tree for the current mesh is built (or the
         build has given up) and adopt it — for snapshots and tests,
         which paint without an event loop to deliver the signal."""
+        if self._bsp_timer.isActive():    # waiting for the model to settle
+            self._bsp_timer.stop()
+            self._start_bsp_build()
         thread = self._bsp_thread
         if thread is not None and thread.is_alive():
             thread.join(bsp_mod.TIME_BUDGET + 1.0 if timeout is None
@@ -1057,7 +1071,11 @@ class View3D(QWidget):
                                   image)
                 self._gl_drew = True
             elif self._bsp is None:
-                self._start_bsp_build()      # GL gave up: painter from now
+                # GL gave up: the painter needs an order from now on —
+                # but this runs on EVERY frame, so ask the way set_mesh
+                # does and let the model settle first
+                if not self._bsp_timer.isActive():
+                    self._bsp_timer.start()
         if self._gl_drew:
             mesh, colors, tree = [], None, None
         elif self._fast and self._draft_mesh is not None:

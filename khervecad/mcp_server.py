@@ -249,6 +249,43 @@ the parent and the child follows.
 - A Master plus Linked copies is the other kind of reuse: edit the \
 master and every copy changes.
 
+Motion — mechanisms, orreries, anything that MOVES:
+- Drive it from ONE annotated document variable, the OpenSCAD \
+Customizer way: `angle = 0;  // [0:5:360]` with a `// description` line \
+above and a `/* [Motion] */` group. The user then gets a slider with a \
+play button that sweeps it, and you can step it yourself with \
+set_params on that assign node. Real time, not frames: give a wheel \
+its true turns per unit and a planet its true period, so the same \
+variable drives everything in step.
+- Make every moving piece its OWN Object, and let the moving variable \
+reach it ONLY through PLACEMENT — the Object's x/y/z/rx/ry/rz, or \
+translate / rotate / scale wrapped around it. Then its mesh is built \
+once and each frame only moves it, which is the difference between a \
+mechanism that runs at a touch and one that stutters.
+- NEVER let the moving variable reach GEOMETRY inside a part: a \
+cube's size, a cylinder's height, a gear's teeth, a polygon's points, \
+a loft's sections, anything a boolean or a kcad_* helper is built \
+from. That re-cuts the solid every single frame. Compute the moving \
+numbers in assign nodes and spend them on placement only.
+- Position parts with expressions, not by writing new numbers each \
+step: `translate([r * cos(angle), r * sin(angle), 0])`, a crank pin at \
+`sqrt(rod * rod - y * y)`, a driven gear at `-angle * n1 / n2`. The \
+model then holds the whole motion, and it exports as one OpenSCAD \
+program that anyone can run.
+- Keep moving parts light and boolean-free where you can: the \
+built-in preview draws them every frame, and a part with a boolean in \
+it has to go back through OpenSCAD. Capsules, cylinders, gears and \
+coloured primitives move freely; a part that must be cut is best cut \
+once and then only moved.
+- Library ▸ Mechanisms & motion already holds worked examples — gear \
+pair, crank and piston, rack and pinion, cam, four-bar, planetary, XY \
+table, scissor lift, robot arm — and Library ▸ Solar System holds \
+orreries on real orbits. insert_part one and read it with get_code to \
+see the shape of a fast mechanism before writing your own.
+- For an OpenSCAD-native animation ($t, 0 to 1 over a loop) use \
+set_render_options time; the same rule applies, $t belongs in \
+placement, never in the geometry of a part.
+
 Crystals, lattices and nanoparticles:
 - NEVER type a crystal's atoms by hand. list_crystals gives the \
 library — FCC/BCC/HCP metals, diamond and zinc-blende semiconductors, \

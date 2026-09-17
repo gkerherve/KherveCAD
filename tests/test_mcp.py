@@ -483,7 +483,20 @@ def _http(bridge, body, headers=""):
         f"Content-Type: application/json\r\n"
         f"Content-Length: {len(raw)}\r\n{headers}\r\n".encode() + raw)
     buf = b""
-    while b"\r\n\r\n" not in buf or not buf.split(b"\r\n\r\n", 1)[1]:
+
+    def complete():
+        """Headers in, and the whole body Content-Length promises: a
+        reply longer than a segment arrives in pieces, and stopping at
+        the first of them left the JSON half-parsed."""
+        head, mark, payload = buf.partition(b"\r\n\r\n")
+        if not mark:
+            return False
+        length = None
+        for line in head.split(b"\r\n"):
+            if line.lower().startswith(b"content-length:"):
+                length = int(line.split(b":", 1)[1])
+        return len(payload) >= length if length is not None else bool(payload)
+    while not complete():
         QApplication.processEvents()
         sock.settimeout(0.05)
         try:

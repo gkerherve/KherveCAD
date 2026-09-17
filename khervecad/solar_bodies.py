@@ -222,7 +222,8 @@ def _earth(g):
     from . import solar_earth
     g.base(M.EARTH_OCEAN)
     land = CadNode("union", "Land")
-    for node in solar_earth.land_nodes(g.r, fine=g.fine, relief=g.relief):
+    for node in solar_earth.land_nodes(g.r, fine=g.fine,
+                                       relief=g.relief if g.fine else 0.0):
         land.add(node)
     g.add(land)
     g.haze(1.03, "#9ec5ff", 0.16)

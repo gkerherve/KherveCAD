@@ -1748,7 +1748,7 @@ class BuilderPanel(QTabWidget):
             "Show / apply the whole program, or only the active "
             "Object's module")
         self.code_scope.currentIndexChanged.connect(
-            lambda _i: self.refresh_code())
+            lambda _i: self.refresh_code(force=True))
         crow.addWidget(self.code_scope)
         crow.addStretch()
         self.apply_btn = QPushButton(icons.icon("mdi.check"),
@@ -1776,6 +1776,8 @@ class BuilderPanel(QTabWidget):
                  "variables"),
                 (code_tab, "Code", "The OpenSCAD program, editable")):
             self.setTabToolTip(self.addTab(page, label), tip)
+        self._code_page = code_tab
+        self._code_dirty = False
         self.tree.open_component.connect(self.open_component)
         self.object_tab.tree.open_component.connect(self.open_component)
         self.object_tab.active_changed.connect(self._active_changed)
@@ -1816,6 +1818,8 @@ class BuilderPanel(QTabWidget):
         from Main it scopes to the whole program, coming from the
         Object tab it scopes to the active Object."""
         widget = self.widget(index)
+        if widget is self._code_page and self._code_dirty:
+            self.refresh_code()
         if widget is self._main_page:
             self._set_code_scope(0)
         elif widget is self.object_tab:
@@ -1827,7 +1831,7 @@ class BuilderPanel(QTabWidget):
             self.code_scope.blockSignals(True)
             self.code_scope.setCurrentIndex(index)
             self.code_scope.blockSignals(False)
-            self.refresh_code()
+            self.refresh_code(force=True)
 
     def _active_changed(self, node):
         """The Object tab's active Object changed: scope the Variables
@@ -1870,7 +1874,21 @@ class BuilderPanel(QTabWidget):
             return self.object_tab.active_component()
         return None
 
-    def refresh_code(self):
+    def refresh_code(self, force=False):
+        """Regenerate the program the Code tab shows. While that tab is
+        hidden only the error marks are refreshed — the Main tree paints
+        those — and the text is left stale until it is looked at: every
+        change used to emit the whole program and re-highlight it, which
+        on a moving slider cost a quarter of a second a frame that
+        nobody could see. *force* rebuilds it anyway, for the rare
+        things that change what the program IS rather than its numbers:
+        switching the scope between the whole document and one Object."""
+        if not force and self.widget(self.currentIndex()) \
+                is not self._code_page:
+            self._code_dirty = True
+            self._refresh_errors()
+            return
+        self._code_dirty = False
         comp = self._code_component()
         code, self._spans = self.model.to_scad_map(only=comp) \
             if comp is not None else self.model.to_scad_map()

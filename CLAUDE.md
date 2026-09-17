@@ -260,6 +260,61 @@ into a new module and import.
                        panel coalesces a drag's values into one redraw
                        (`_emit_pending`), and the Variables sheet updates
                        only the changed row.
+                       **Second pass** (2026-09-17, the user: "why is it
+                       so slow for the motion? we had it done for the gears
+                       with opengl"). OpenGL only DRAWS — the triangle list
+                       is rebuilt in Python every tick — and most of a tick
+                       was not geometry at all. What was wrong, worst
+                       first: (1) the **BSP tree** (`view3d.BSP_SETTLE_MS`)
+                       was rebuilt for every mesh the painter was handed
+                       and thrown away a frame later, its worker fighting
+                       the GUI for the GIL — now `set_mesh` (and the paint
+                       that finds no tree after OpenGL gives up, which runs
+                       every frame) only ARMS a single-shot timer, so the
+                       exact order is built once the model stands still;
+                       `wait_for_bsp` forces it for snapshots, and a style
+                       or hardware toggle still builds at once. Without
+                       OpenGL a crank tick went 56 ms -> 3 ms of app work,
+                       the same as with it. (2) The **Code
+                       tab** regenerated the whole program and re-syntax-
+                       highlighted it on every change even when hidden
+                       (`treepanel.refresh_code`: mark `_code_dirty`, still
+                       refresh the error marks the Main tree paints, and
+                       build the text when the tab is looked at). (3) The
+                       **Customizer panel** tore down and recreated every
+                       control whenever a variable changed from outside —
+                       an MCP call, the Variables sheet, undo — now
+                       `_sync_row` moves that one control with its signals
+                       blocked, rebuilding only if the annotation itself
+                       changed. (4) `mesh._component_key` matched the env
+                       against the WHOLE key text, so a part depended on
+                       any variable sharing a name with a param or a node
+                       type: a circle's `angle=` made every moon of an
+                       orrery re-tessellate on a tick. It now scans only
+                       the strings inside param VALUES (`_expr_strings`),
+                       which is also far less text — a polyhedron's points
+                       are numbers, and they are most of a key. Ints and
+                       floats in the env compare equal, so a slider first
+                       writing 10 where 10.0 stood does not invalidate
+                       everything. (5) A chain of single-child transform
+                       nodes is now ONE matrix (`_TRANSFORM_MATS` in
+                       `mesh._tess`): `translate · rotate · scale` over a
+                       part walked the whole mesh once per link. It stops
+                       at anything `_tess` must see itself (several
+                       children, hidden, a modifier) and carries the
+                       selection flag down. (6) `transform_mesh` and
+                       `_transform_colored` spell the arithmetic out over
+                       the list instead of calling per point and zipping
+                       three passes (2x and 1.3x). Orrery globes also got
+                       cheaper: an orrery's Earth is millimetres across, so
+                       its coastline simplifies to 1.2° with no relief
+                       (19k -> 4k triangles of a 76k-triangle orrery).
+                       End-to-end ticks: crank 56 -> 3 ms, Jupiter's moons
+                       120 -> 42 ms, the whole Solar System 454 -> 280 ms
+                       (31 moving bodies, 76k triangles — still the
+                       tessellator's own cost, which only a 1-pass
+                       compose-through-Objects would cut further).
+                       `tests/test_motion_speed.py` pins every one.
   - `scadinclude.py` — what reaches beyond one file: `use <>` / `include
                        <>` tokens become **scad_use** nodes (emit the same
                        line; an unresolvable one is red) and the library
@@ -3283,6 +3338,12 @@ into a new module and import.
                        Objects land beside the model). Full orrery: ~120k
                        triangles, ~0.5 s a tick in the pure-Python
                        preview; a planet system ~0.1 s.
+- The MCP instructions (`mcp_server._INSTRUCTIONS`) carry a **Motion**
+  section, so an assistant builds moving models the fast way: one
+  annotated variable for the slider, every moving piece its own Object,
+  the variable reaching it only through PLACEMENT, and NEVER into the
+  geometry of a part (a cube's size, a gear's teeth, a polygon's
+  points) — that re-cuts the solid every frame.
 - `docs/MCP.md` — how to connect an assistant, what the 63 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).

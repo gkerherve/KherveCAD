@@ -201,15 +201,36 @@ def transform_point(m, p):
             m[2][0] * x + m[2][1] * y + m[2][2] * z + m[2][3])
 
 
+def flips_winding(m) -> bool:
+    """True when *m* mirrors: its triangles come out wound the other
+    way and have to be turned back, or normals would point inward."""
+    return (m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
+            - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
+            + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0])) < 0
+
+
 def transform_mesh(m, mesh):
-    out = [tuple(transform_point(m, v) for v in tri) for tri in mesh]
-    # A mirroring transform flips winding; fix it so normals stay outward.
-    det = (m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
-           - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
-           + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]))
-    if det < 0:
-        out = [(a, c, b) for a, b, c in out]
-    return out
+    """*mesh* through *m*. The arithmetic is spelled out over the whole
+    list rather than called per point: this is the hot loop of every
+    redraw (a moving assembly transforms its entire mesh each frame),
+    and a call plus twelve index chains per vertex cost more than the
+    nine multiplications they carry."""
+    (a, b, c, d), (e, f, g, h), (i, j, k, n) = m[0], m[1], m[2]
+    if flips_winding(m):
+        return [((a * x2 + b * y2 + c * z2 + d, e * x2 + f * y2 + g * z2 + h,
+                  i * x2 + j * y2 + k * z2 + n),
+                 (a * x1 + b * y1 + c * z1 + d, e * x1 + f * y1 + g * z1 + h,
+                  i * x1 + j * y1 + k * z1 + n),
+                 (a * x0 + b * y0 + c * z0 + d, e * x0 + f * y0 + g * z0 + h,
+                  i * x0 + j * y0 + k * z0 + n))
+                for (x0, y0, z0), (x1, y1, z1), (x2, y2, z2) in mesh]
+    return [((a * x0 + b * y0 + c * z0 + d, e * x0 + f * y0 + g * z0 + h,
+              i * x0 + j * y0 + k * z0 + n),
+             (a * x1 + b * y1 + c * z1 + d, e * x1 + f * y1 + g * z1 + h,
+              i * x1 + j * y1 + k * z1 + n),
+             (a * x2 + b * y2 + c * z2 + d, e * x2 + f * y2 + g * z2 + h,
+              i * x2 + j * y2 + k * z2 + n))
+            for (x0, y0, z0), (x1, y1, z1), (x2, y2, z2) in mesh]
 
 
 # --------------------------------------------------------- 2D outlines
@@ -551,6 +572,9 @@ _SCADLANG_OUTLINES = {"resize", "multmatrix", "render", "intersection_for",
 
 #: transforms a 2D outline passes through on its way into an extrusion
 _TRANSFORMS_2D = ("translate", "rotate", "scale", "mirror")
+#: 3D transform node -> the matrix it applies (x, y, z)
+_TRANSFORM_MATS = dict(translate=mat_translate, rotate=mat_rotate,
+                       scale=mat_scale, mirror=mat_mirror)
 
 
 def _transformed_outlines(node, env):
@@ -1093,6 +1117,21 @@ def clear_exact_meshes():
     _COMP_CACHE.clear()
 
 
+def _expr_strings(value, out):
+    """Append every string inside *value* to *out*: only a string can
+    name a variable (a number, or a row of numbers, cannot). Iterative
+    and on exact types: a polyhedron's points are hundreds of thousands
+    of numbers to step over, and a call apiece cost more than the walk."""
+    stack = [value]
+    while stack:
+        item = stack.pop()
+        kind = type(item)
+        if kind is str:
+            out.append(item)
+        elif kind is list or kind is tuple:
+            stack.extend(item)
+
+
 def _component_key(node, env):
     """Content key of an Object's subtree: anything that could change
     the local mesh — child types/params/visibility, the environment,
@@ -1100,6 +1139,7 @@ def _component_key(node, env):
     when the subtree cannot be cached (it pulls in a Linked copy whose
     master lives outside the subtree)."""
     parts = []
+    exprs = []                  # only what can hold a variable's name
     walk = [node]
     while walk:
         n = walk.pop()
@@ -1114,6 +1154,7 @@ def _component_key(node, env):
             if n is node and key in _PLACEMENT_KEYS:
                 continue
             parts.append(f"{key}={n.params[key]!r}")
+            _expr_strings(n.params[key], exprs)
         if n.type == "stl_import":
             from pathlib import Path
             try:
@@ -1129,11 +1170,17 @@ def _component_key(node, env):
     if env:
         # only the variables the part READS: a slider moving one variable
         # (a motor angle) must not rebuild — or re-render in OpenSCAD —
-        # every part of the document
-        text = "\x00".join(parts)
-        used = set(re.findall(r"\$?[A-Za-z_]\w*", text))
-        parts.append(repr(sorted((k, v) for k, v in env.items()
-                                 if k in used)))
+        # every part of the document. Scan the EXPRESSIONS only, never
+        # the whole key: param names and node types are words too, and
+        # a circle's `angle=` made every part inside a loop over a
+        # variable called `angle` depend on it (an orrery's moons then
+        # re-tessellated on every tick). It is also far less text — a
+        # polyhedron's points are numbers, and they are most of the key.
+        used = set(re.findall(r"\$?[A-Za-z_]\w*", "\x00".join(exprs)))
+        parts.append(repr(sorted(
+            (k, float(v) if isinstance(v, (int, float))
+             and not isinstance(v, bool) else v)
+            for k, v in env.items() if k in used)))
     parts.append(str(_FN_OVERRIDE))
     parts.append(str(_DETAIL))
     return "\x00".join(parts)
@@ -1512,11 +1559,26 @@ def _tess(node, env, color, sel, selected):
         return _emit(linear_extrude_mesh(node, env), color, selected)
     if t == "rotate_extrude":
         return _emit(rotate_extrude_mesh(node, env), color, selected)
-    if t in ("translate", "rotate", "scale", "mirror"):
-        p = rp(node, env)
-        matrix = dict(translate=mat_translate, rotate=mat_rotate,
-                      scale=mat_scale,
-                      mirror=mat_mirror)[t](p["x"], p["y"], p["z"])
+    if t in _TRANSFORM_MATS:
+        # A chain of single-child transforms is ONE matrix. Applied one
+        # at a time, every triangle went through a separate Python loop
+        # per link — an orrery's planet is translate · rotate · scale
+        # over a spinning globe, so each frame transformed the whole
+        # model four times over. Stop at anything `_tess` has to see
+        # for itself: several children, a hidden node or a modifier.
+        matrix = None
+        while True:
+            p = rp(node, env)
+            step = _TRANSFORM_MATS[node.type](p["x"], p["y"], p["z"])
+            matrix = step if matrix is None else mat_mul(matrix, step)
+            kids = node.children
+            if (len(kids) == 1 and kids[0].type in _TRANSFORM_MATS
+                    and kids[0].visible
+                    and not kids[0].params.get("modifier")):
+                node = kids[0]
+                selected = selected or (node.id in sel)
+                continue
+            break
         return _transform_colored(
             matrix, _children_mesh(node, env, color, sel, selected))
     if t == "offset":
@@ -1569,9 +1631,35 @@ def _hull_mesh(node, env, color, sel, selected):
     return out
 
 
-def _transform_colored(matrix, marked):
-    plain = transform_mesh(matrix, [tri for tri, _c, _s in marked])
-    return [(p, c, s) for p, (_t, c, s) in zip(plain, marked)]
+def _transform_colored(m, marked):
+    """(triangle, colour, selected) rows through *m*, in ONE pass: the
+    obvious spelling — strip the triangles, transform them, zip the
+    rows back together — walks the list three times and builds two
+    throwaway lists of it, on the hot path of every redraw."""
+    (a, b, c, d), (e, f, g, h), (i, j, k, n) = m[0], m[1], m[2]
+    if flips_winding(m):
+        return [(((a * x2 + b * y2 + c * z2 + d,
+                   e * x2 + f * y2 + g * z2 + h,
+                   i * x2 + j * y2 + k * z2 + n),
+                  (a * x1 + b * y1 + c * z1 + d,
+                   e * x1 + f * y1 + g * z1 + h,
+                   i * x1 + j * y1 + k * z1 + n),
+                  (a * x0 + b * y0 + c * z0 + d,
+                   e * x0 + f * y0 + g * z0 + h,
+                   i * x0 + j * y0 + k * z0 + n)), col, sel)
+                for ((x0, y0, z0), (x1, y1, z1), (x2, y2, z2)), col, sel
+                in marked]
+    return [(((a * x0 + b * y0 + c * z0 + d,
+               e * x0 + f * y0 + g * z0 + h,
+               i * x0 + j * y0 + k * z0 + n),
+              (a * x1 + b * y1 + c * z1 + d,
+               e * x1 + f * y1 + g * z1 + h,
+               i * x1 + j * y1 + k * z1 + n),
+              (a * x2 + b * y2 + c * z2 + d,
+               e * x2 + f * y2 + g * z2 + h,
+               i * x2 + j * y2 + k * z2 + n)), col, sel)
+            for ((x0, y0, z0), (x1, y1, z1), (x2, y2, z2)), col, sel
+            in marked]
 
 
 def _children_mesh(node, env, color, sel, selected):
