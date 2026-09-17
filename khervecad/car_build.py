@@ -48,15 +48,23 @@ TAIL = "#c4121b"
 COLUMNS = 18
 #: stations along the body
 STATIONS = 150
+#: heights sampled across a measured section
+SECTION_LEVELS = 22
+#: the end view has narrowed to this much of its widest at the beltline
+BELT_WIDTH = 0.90
+#: how deep the body-coloured roof panel is, over the glass
+ROOF_PANEL = 80.0
+#: a greenhouse never narrows past this much of its own beltline
+CABIN_WAIST = 0.62
+#: the tail's roof line counts as a wing this far above the deck
+WING_GAP = 60.0
 
 SCALES = {"1:18": 1 / 18, "Full-size": 1.0, "1:43": 1 / 43, "1:10": 0.1}
 
-#: follow the blueprint-measured profiles (`car_profiles`) instead of
-#: the shape presets. OFF: the curves are measured correctly, but the
-#: builder does not yet place a greenhouse or a track on them — the
-#: body comes out narrower than its own wheels and the glass strays.
-#: `car_profiles` + `tools.carblueprint` are the finished half.
-USE_MEASURED = False
+#: follow the blueprint-measured profiles (`car_profiles`) where there
+#: are any: the drawing's own bonnet, roof, deck, floor and plan beat
+#: any preset, and the nose is where a preset is worst.
+USE_MEASURED = True
 
 DEFAULTS = dict(paint="", rim="", tyre="As delivered", finish="Silver",
                 caliper="Red", scale=1.0)
@@ -73,6 +81,21 @@ def sample(curve, s):
     x = min(1.0, max(0.0, s)) * n
     i = min(n - 1, int(x))
     return curve[i] + (curve[i + 1] - curve[i]) * (x - i)
+
+
+def smooth_curve(curve, passes=2, window=5):
+    """A traced curve carries the drawing's own noise — a pixel here, a
+    leader line there — and a body lofted straight onto it ripples from
+    station to station, which shades as vertical stripes. A couple of
+    moving averages take that out and leave the shape."""
+    out = list(curve)
+    half = window // 2
+    for _ in range(passes):
+        prev = list(out)
+        for i in range(len(out)):
+            lo, hi = max(0, i - half), min(len(prev), i + half + 1)
+            out[i] = sum(prev[lo:hi]) / (hi - lo)
+    return out
 
 
 def cabin_range(curve):
@@ -125,6 +148,11 @@ class Car:
         self.top_knots = [(0.0, p["nose"] * H), (p["ws"], p["cowl"] * H),
                           (p["cb"], p["deck"] * H), (1.0, p["tail"] * H)]
         self.tw_max = max(w[0] for w in self.wheels)
+        self._sections = {}
+        #: how far in the body pulls under a wheel arch: the wheel
+        #: stands outside this, under the wing
+        self.tub_half = max(0.22 * self.W,
+                            self.W / 2 - max(w[0] for w in self.wheels) - 40)
         self.measured = (car_profiles.PROFILES.get(key)
                          if USE_MEASURED else None)
         if self.measured:
@@ -137,7 +165,9 @@ class Car:
         car it climbs from the nose to the roof without a kink, so
         hunting for the windscreen in it puts the glass over the
         bonnet."""
-        m = self.measured
+        m = self.measured = {k: (smooth_curve(v) if isinstance(v, list)
+                                 else v)
+                             for k, v in self.measured.items()}
         p = self.p
         ws, cb = p["ws"], p["cb"]
         roof = m["roof"]
@@ -148,6 +178,8 @@ class Car:
         band = [s for s, v in inside if v > peak - 0.02]
         p["rf"], p["rr"] = (band[0], band[-1]) if len(band) > 1 \
             else (ws + (cb - ws) * 0.35, ws + (cb - ws) * 0.6)
+        after = [v for i, v in enumerate(roof) if i / n > cb]
+        self.deck_min = (min(after) if after else 0.0) * self.H
         self.cowl_z = sample(roof, ws) * self.H
         self.deck_z = sample(roof, cb) * self.H
         if m["width"]:
@@ -174,15 +206,13 @@ class Car:
         return self.W / 2 * min(front, rear) * waist
 
     def top(self, s):
-        """The body's own top: the drawing's roof line, flattened
-        between the cowl and the deck where the greenhouse stands."""
+        """The top of the car at this station. On a measured car it is
+        the drawing's own roof line, greenhouse included: the body and
+        the glass are cut out of ONE lofted shape at the beltline, so
+        nothing has to be stuck on afterwards."""
         if not self.measured:
             return _knots(self.top_knots, s)
-        ws, cb = self.p["ws"], self.p["cb"]
-        if s <= ws or s >= cb:
-            return sample(self.measured["roof"], s) * self.H
-        t = (s - ws) / max(1e-6, cb - ws)
-        return self.cowl_z + (self.deck_z - self.cowl_z) * t
+        return sample(self.measured["roof"], s) * self.H
 
     def bottom(self, s):
         if self.measured:
@@ -204,7 +234,13 @@ class Car:
         return None
 
     def wheel_x(self, i):
-        return self.W / 2 - 25 - self.wheels[i][0] / 2
+        """The wheel's centre across the car: inside the bodywork at
+        ITS OWN station, never beyond the published width. A measured
+        plan narrows towards the nose and the tail, and a track fixed
+        to W/2 hung the front wheels outside the wings."""
+        s = (self.axles[i] + self.L / 2) / self.L
+        a = min(self.W / 2, max(self.half_width(s), 0.34 * self.W))
+        return min(self.W / 2 - 25, a - 15) - self.wheels[i][0] / 2
 
     def roof(self, s):
         if self.measured:
@@ -236,14 +272,96 @@ class Car:
         clear the arch — the fender bulge."""
         zb, zt = self.bottom(s), self.top(s)
         arch = self.arch(s)
-        if arch is not None:
-            need = max(0.0, arch + 55 - zt)
-            zt += need
+        if arch is not None and not self.measured:
+            # a preset body has no wing over the wheel until one is
+            # raised here; a drawn one already does, so lifting it
+            # again would grow a second hump over the first
+            zt += max(0.0, arch + 55 - zt)
         belt = zt - self.p["belt"] * max(120.0, zt - zb)
         return belt, zt
 
+    def belt_v(self, s):
+        """Where the glass starts, as a fraction of the car's height:
+        the level above which the drawing's end view narrows sharply —
+        the shoulder. Below it is bodywork, above it is the greenhouse."""
+        m = self.measured
+        t = min(1.0, max(0.0, s))
+        curve = [(1 - t) * f + t * r for f, r in zip(m["nose"], m["tail"])]
+        n = len(curve) - 1
+        widest = max(curve) or 1.0
+        top = max((i for i, v in enumerate(curve) if v >= 0.98 * widest),
+                  default=n)
+        for i in range(top, n + 1):
+            if curve[i] < BELT_WIDTH * widest:
+                return i / n
+        return 1.0
+
+    def _section(self, s):
+        """(floor z, roof z, levels, half widths) of the measured
+        section at *s*, cached.
+
+        A car's shape is the INTERSECTION of what its drawings show: the
+        plan says how wide it is at this station, the end view how wide
+        it is at this height, and the body is as narrow as either — so a
+        nose rounds in both directions at once and a roof tapers.
+        (Reading the front view as a slice instead made every section a
+        box, since a projection is the whole car's envelope.)
+        The wheel wells are cut in the same breath: under the arch the
+        body pulls in to the tub, and the wheel stands in the gap."""
+        key = round(s, 4)
+        got = self._sections.get(key)
+        if got is not None:
+            return got
+        zb, zt = self.bottom(s), self.top(s)
+        cb = self.p["cb"]
+        if s > cb:
+            # past the cabin the drawing's roof line carries the WING
+            # as well as the body. The body itself falls away to the
+            # tail: take the lower of the two, or a whale tail turns
+            # the whole rear into a brick.
+            f = (s - cb) / max(1e-6, 1.0 - cb)
+            line = (sample(self.measured["roof"], cb) * (1 - f)
+                    + sample(self.measured["roof"], 1.0) * f) * self.H
+            zt = min(zt, max(line, self.deck_min))
+        zt = max(zt, zb + 60)
+        arch = self.arch(s)
+        n = SECTION_LEVELS
+        levels = [zb + (zt - zb) * k / (n - 1) for k in range(n)]
+        plan = self.half_width(s)
+        belt = self.belt_z(s)
+        belt_x = min(plan, self.W / 2 * self.section_shape(s, belt))
+        xs = []
+        for z in levels:
+            x = min(plan, self.W / 2 * self.section_shape(s, z))
+            if z > belt:
+                # an end view's silhouette closes to a point at the very
+                # crown of the roof, but a roof is not a point at THIS
+                # station: keep its shape, not its vanishing act
+                x = max(x, CABIN_WAIST * belt_x)
+            if arch is not None and z < arch:
+                x = min(x, self.tub_half)
+            xs.append(max(x, 20.0))
+        got = (zb, zt, levels, xs)
+        self._sections[key] = got
+        return got
+
     def body_top_at(self, s, u):
-        """The body's outer surface z at column *u* (-1..1): flat-ish
+        """The body's outer surface z at column *u* (-1..1). On a
+        measured car: the highest level of the drawing's own section
+        that still reaches that far out."""
+        if self.measured and self.measured.get("nose"):
+            zb, zt, levels, xs = self._section(s)
+            a = max(xs) or 1.0
+            want = abs(u) * a * 0.999
+            best = zb
+            for z, x in zip(levels, xs):
+                if x >= want:
+                    best = z
+            return best
+        return self._preset_top_at(s, u)
+
+    def _preset_top_at(self, s, u):
+        """The preset body's outer surface z at column *u* (-1..1): flat-ish
         over the middle, then down to the beltline over the shoulder.
         *crisp* 1 chamfers it in a straight line (a wedge), 0 rolls it
         round (a fifties wing)."""
@@ -265,10 +383,105 @@ class Car:
         power = 1.0 + 2.2 * (1 - p["crisp"])
         return zt - (zt - belt) * q ** power
 
+    def section_shape(self, s, z):
+        """The half width at height *z* as a fraction of the widest, the
+        drawing's own FRONT view morphing into its REAR view along the
+        car. This is what a preset cannot guess: a round nose, a
+        tumblehome, a flared wing."""
+        m = self.measured
+        v = min(1.0, max(0.0, z / self.H))
+        t = min(1.0, max(0.0, s))
+        return (1 - t) * sample(m["nose"], v) + t * sample(m["tail"], v)
+
+    def measured_ring(self, s, z0=None, z1=None):
+        """A section shaped by the drawing between the heights *z0* and
+        *z1*: the plan gives its width, the side view its top and floor,
+        the end views its shape."""
+        y = self.y(s)
+        zb, zt, _, _ = self._section(s)
+        lo = zb if z0 is None else max(zb, min(z0, zt - 6))
+        hi = zt if z1 is None else min(zt, max(z1, lo + 6))
+        n = SECTION_LEVELS
+        levels = [lo + (hi - lo) * k / (n - 1) for k in range(n)]
+        xs = [self.width_at(s, z) for z in levels]
+        right = [(xs[k], y, levels[k]) for k in range(n)]
+        left = [(-xs[k], y, levels[k]) for k in range(n - 1, -1, -1)]
+        return right + left
+
+    def width_at(self, s, z):
+        """Half the car's width at (station, height), from the drawing."""
+        _, _, levels, xs = self._section(s)
+        if z <= levels[0]:
+            return xs[0]
+        for k in range(1, len(levels)):
+            if z <= levels[k]:
+                span = levels[k] - levels[k - 1] or 1.0
+                f = (z - levels[k - 1]) / span
+                return xs[k - 1] + (xs[k] - xs[k - 1]) * f
+        return xs[-1]
+
+    def belt_z(self, s):
+        """The beltline height at this station. Worked out from the
+        floor and roof lines directly, never from `_section` — that
+        asks for the beltline itself."""
+        zb = self.bottom(s)
+        zt = max(self.top(s), zb + 60)
+        return min(max(self.belt_v(s) * self.H, zb + 40), zt)
+
+    def measured_wing(self, kit, body):
+        """Whatever the drawing's roof line carries above the deck at
+        the tail — a ducktail, a whale tail, a rear wing — as the thin
+        shelf it is."""
+        run = [s for s in self.stations(self.p["cb"], 1.0, 26)
+               if sample(self.measured["roof"], s) * self.H
+               > self.deck_min + WING_GAP]
+        if len(run) < 4:
+            return
+        rings = []
+        for s in run:
+            top = sample(self.measured["roof"], s) * self.H
+            a = self.half_width(s) * 0.99
+            y = self.y(s)
+            lo = max(self.deck_min - 10, top - 0.10 * self.H)
+            rings.append([(a, y, lo), (a, y, top), (-a, y, top),
+                          (-a, y, lo)])
+        closed_grid(body, rings)
+
+    def measured_glasshouse(self, kit, body):
+        """Everything above the beltline, from the same measured
+        sections as the body: side glass and screens in near-black, a
+        body-coloured roof panel over them. The greenhouse is not a
+        separate shape stuck on the car — it is the top of the car."""
+        runs, current = [], []
+        for s in self.stations(0.02, 0.98, 90):
+            zb, zt, _, _ = self._section(s)
+            if zt - self.belt_z(s) > 0.07 * self.H:
+                current.append(s)
+            elif current:
+                runs.append(current)
+                current = []
+        if current:
+            runs.append(current)
+        glass = kit.mesh(GLASS, "Plastic")
+        for run in runs:
+            if len(run) < 4:
+                continue
+            roof_lo = []
+            for s in run:
+                _, zt, _, _ = self._section(s)
+                roof_lo.append(zt - ROOF_PANEL)
+            closed_grid(glass, [self.measured_ring(s, self.belt_z(s), lo)
+                                for s, lo in zip(run, roof_lo)])
+            closed_grid(body, [self.measured_ring(s, lo - 4, None)
+                               for s, lo in zip(run, roof_lo)])
+
     def body_ring(self, s):
         """The section: a floor, a near-vertical flank up to the
         beltline crease and the shoulder over it — plus the wheel arch
-        cut into the outer band."""
+        cut into the outer band. A measured car uses its drawing's own
+        section instead (`measured_ring`)."""
+        if self.measured and self.measured.get("nose"):
+            return self.measured_ring(s, None, self.belt_z(s) + 8)
         y, a = self.y(s), self.half_width(s)
         zb = self.bottom(s)
         arch = self.arch(s)
@@ -353,18 +566,29 @@ class Car:
         body = kit.mesh(paint, "Plastic")
         closed_grid(body, [self.body_ring(s) for s in
                            self.stations(0.0, 1.0, STATIONS)])
-        f_edge = (self.axles[0] - self.wheels[0][2] / 2 + self.L / 2) / self.L
-        r_edge = (self.axles[1] + self.wheels[1][2] / 2 + self.L / 2) / self.L
-        closed_grid(kit.mesh(TRIM, "Matte"),
-                    [self.tub_ring(s) for s in
-                     self.stations(max(0.02, f_edge), min(0.98, r_edge), 40)])
-        if p["open"]:
+        if not self.measured:
+            # a measured body pulls in to the tub by itself at every
+            # wheel arch, and a second tub inside it only fights the
+            # same surface
+            f_edge = (self.axles[0] - self.wheels[0][2] / 2
+                      + self.L / 2) / self.L
+            r_edge = (self.axles[1] + self.wheels[1][2] / 2
+                      + self.L / 2) / self.L
+            closed_grid(kit.mesh(TRIM, "Matte"),
+                        [self.tub_ring(s) for s in
+                         self.stations(max(0.02, f_edge),
+                                       min(0.98, r_edge), 40)])
+        if self.measured and self.measured.get("nose"):
+            self.measured_glasshouse(kit, body)
+            self.measured_wing(kit, body)
+        elif p["open"]:
             self._open_cabin(kit, paint)
         else:
             self._greenhouse(kit, body)
         car_details.front(kit, self, paint)
         car_details.rear(kit, self, paint)
-        self._wing(kit, paint)
+        if not self.measured:
+            self._wing(kit, paint)      # a drawn roof line already has it
         self._mirrors(kit, paint)
         self._exhaust(kit)
         group = kit.node(label_of(self.key))

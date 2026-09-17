@@ -98,3 +98,22 @@ def test_measured_profiles_are_sane_curves():
         assert max(prof["roof"]) > max(prof["floor"])
         if prof["width"]:
             assert 0.9 <= max(prof["width"]) <= 1.0
+
+
+@pytest.mark.parametrize("key", sorted(car_build.car_profiles.PROFILES))
+def test_a_measured_car_follows_its_drawing(key):
+    """A car with a blueprint behind it is built from the drawing's own
+    roof line, floor, plan and end views — not from a shape preset."""
+    car = car_build.Car(key)
+    assert car.measured, "the profile should be in use"
+    # the roof line the drawing gave, at the top of the car
+    roof = max(car.top(s) for s in car.stations(0.0, 1.0, 40))
+    assert roof == pytest.approx(car_models.CARS[key]["H"], rel=0.06)
+    # the wheels stand inside their own wings
+    for i in (0, 1):
+        s = (car.axles[i] + car.L / 2) / car.L
+        assert car.wheel_x(i) + car.wheels[i][0] / 2 <= car.half_width(s) + 1
+    # and the greenhouse sits above the beltline, never under it
+    for s in car.stations(0.2, 0.7, 12):
+        assert car.belt_z(s) >= car.bottom(s)
+        assert car.belt_z(s) <= max(car.top(s), car.bottom(s) + 60) + 1

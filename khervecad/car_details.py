@@ -190,6 +190,11 @@ def front(kit, car, paint):
     a, zb, zt = face(car, 0.06)
     span = zt - zb
     z_lamp = zb + 0.66 * span
+    if getattr(car, "measured", None):
+        # a drawn nose has real wings: the lamps sit up on their crowns,
+        # not halfway down a guessed face
+        a2, zb2, zt2 = face(car, 0.11)
+        a, z_lamp = max(a, a2), zt2 - 0.14 * (zt2 - zb2)
     z_grille = zb + 0.44 * span
     z_low = zb + 0.17 * span
     kind = spec["lights"]

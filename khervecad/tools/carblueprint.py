@@ -144,13 +144,24 @@ def _median(values, window=7):
     return out
 
 
-def silhouette(rows, box):
-    """(upper, lower) inked row per column of the car in *box*."""
-    x0, _, x1, _ = box
-    blob = largest_blob(rows, box)
+def silhouette(rows, box, blob=True):
+    """(upper, lower) inked row per column of the car in *box*.
+
+    *blob* keeps only the biggest connected thing — right for a side
+    view, where a title or a dimension line would otherwise be the
+    outline. A top view's outline is often broken by a light line or a
+    shut line, and then the biggest blob is some inner detail and the
+    car loses half its width, so there it reads every inked pixel and
+    leans on the box being tight."""
+    x0, y0, x1, y1 = box
+    if blob:
+        ink = largest_blob(rows, box)
+    else:
+        ink = {(x, y) for y in range(y0, y1 + 1)
+               for x in range(x0, x1 + 1) if rows[y][x] < INK}
     upper, lower = [], []
     for x in range(x0, x1 + 1):
-        ys = [y for (bx, y) in blob if bx == x]
+        ys = [y for (bx, y) in ink if bx == x]
         upper.append(min(ys) if ys else None)
         lower.append(max(ys) if ys else None)
     return _median(upper), _median(lower)
@@ -178,6 +189,28 @@ def _resample(values, n=SAMPLES):
     return out
 
 
+def section(rows, box, levels=SAMPLES):
+    """The half width of a FRONT or REAR view at *levels* heights, from
+    the ground (0) to the roof (1), as fractions of the widest point.
+    This is the car's cross-section: a rounded nose, a tumblehome, a
+    slab side — the thing a preset guesses worst."""
+    x0, y0, x1, y1 = box
+    blob = largest_blob(rows, box)
+    if not blob:
+        return None
+    lo = max(y for _, y in blob)
+    hi = min(y for _, y in blob)
+    span = max(1, lo - hi)
+    out = []
+    for k in range(levels):
+        v = k / (levels - 1)
+        y = int(round(lo - v * span))
+        xs = [x for (x, by) in blob if abs(by - y) <= 1]
+        out.append((max(xs) - min(xs)) / 2.0 if xs else 0.0)
+    widest = max(out) or 1.0
+    return [v / widest for v in _median(out, 5)]
+
+
 def measure(rows, side, top):
     """The car's own curves: roof (fraction of height over the length),
     floor, and plan half width (fraction of half the width)."""
@@ -193,7 +226,7 @@ def measure(rows, side, top):
                        for v in low])
     width = None
     if top is not None:
-        tup, tlow = silhouette(rows, top)
+        tup, tlow = silhouette(rows, top, blob=False)
         half = [None if (a is None or b is None) else (b - a) / 2.0
                 for a, b in zip(tup, tlow)]
         widest = max(v for v in half if v is not None)
@@ -201,7 +234,8 @@ def measure(rows, side, top):
     return roof, floor, width
 
 
-def read(path, key, boxes=(None, None), flip=False):
+def read(path, key, boxes=(None, None), flip=False,
+         faces=(None, None)):
     from PyQt5.QtGui import QImage
     from PyQt5.QtWidgets import QApplication
     if QApplication.instance() is None:
@@ -217,11 +251,13 @@ def read(path, key, boxes=(None, None), flip=False):
     if side is None:
         raise SystemExit("no side view found on the sheet")
     roof, floor, width = measure(rows, side, top)
+    nose = section(rows, faces[0]) if faces[0] else None
+    tail = section(rows, faces[1]) if faces[1] else None
     if flip:
         roof, floor = roof[::-1], floor[::-1]
         width = width[::-1] if width else None
     return dict(key=key, roof=roof, floor=floor, width=width,
-                views=len(views))
+                nose=nose, tail=tail, views=len(views))
 
 
 def _fmt(name, values):
@@ -238,17 +274,23 @@ def main(argv=None):
     ap.add_argument("--side", help="x0,y0,x1,y1 of the side view, where "
                     "the sheet's own dimension lines defeat the split")
     ap.add_argument("--top", help="x0,y0,x1,y1 of the top view")
+    ap.add_argument("--face", help="x0,y0,x1,y1 of the FRONT view")
+    ap.add_argument("--back", help="x0,y0,x1,y1 of the REAR view")
     ap.add_argument("--flip", action="store_true",
                     help="the drawing faces right; the builder measures "
                          "from the nose")
     args = ap.parse_args(argv)
     boxes = tuple(tuple(int(v) for v in b.split(","))
                   if b else None for b in (args.side, args.top))
-    got = read(args.sheet, args.key, boxes, args.flip)
+    faces = tuple(tuple(int(v) for v in b.split(",")) if b else None
+                  for b in (args.face, args.back))
+    got = read(args.sheet, args.key, boxes, args.flip, faces)
     print(f'"{args.key}": dict(', file=sys.stdout)
     print(_fmt("roof", got["roof"]))
     print(_fmt("floor", got["floor"]))
     print(_fmt("width", got["width"]))
+    print(_fmt("nose", got["nose"]))
+    print(_fmt("tail", got["tail"]))
     print("),")
     print(f"# {got['views']} views found on the sheet", file=sys.stderr)
 
