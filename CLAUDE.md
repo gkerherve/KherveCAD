@@ -1209,11 +1209,25 @@ into a new module and import.
                        in `parts/Cars` stay as they are.
   - `library_minecraft.py` — Minecraft characters & mobs in the
                        Minecraft section (2026-09-17): Steve, Alex, zombie,
-                       skeleton, wither skeleton, creeper, enderman, spider,
-                       iron/snow golem, slime, ghast, blaze, chicken, sheep —
-                       coloured boxes in game pixels (`_Mob`), pixel-art
-                       faces as thin tiles (`face`), scaled by the size's
-                       pixel length. No booleans; front -Y, on z = 0.
+                       skeleton (drawing a bow), wither skeleton, creeper,
+                       enderman, witch, piglin, spider (knees), iron golem
+                       (holding a poppy), snow golem, slime, ghast, blaze,
+                       chicken, sheep, bee, axolotl. Boxes in GAME PIXELS
+                       (a block is 16), scaled by the size's pixel length.
+                       Every part wears a `Skin` like the game's textures:
+                       each pixel of each face is a letter of pixel art
+                       (face, hair, sleeve, shoe, stripes, cracks — rows or
+                       a callable) or a seeded shade of the base colour, and
+                       a pixel unlike the base is a thin tile `TILE` proud
+                       of the box; tiles merge along their row and go, with
+                       the box, into one polyhedron per colour
+                       (`landmark_kit.Kit`), so a figure is ~100 nodes and a
+                       few thousand triangles, not thousands of cubes. A
+                       part may be turned about a pivot (a zombie's arms, a
+                       ghast's tentacles): its corners rotate before the
+                       piece is written, so the skin turns with it. Eyes and
+                       particles are Emissive. No booleans; front -Y, on
+                       z = 0.
   - `library_prusa.py` — the **Prusa** section (2026-09-15, the user's
                        request): "Little Prusa man", an original chibi
                        figure in the spirit of the Little Josef Prusa
