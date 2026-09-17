@@ -34,7 +34,8 @@ def test_every_car_builds_at_its_published_size(key):
     car = car_models.CARS[key]
     w, length, h, floor = _extent(node)
     assert floor == pytest.approx(0.0, abs=1.0)          # on its wheels
-    assert length == pytest.approx(car["L"], rel=0.02)
+    # lamps, the plate and the splitter stand proud of the body
+    assert length == pytest.approx(car["L"], rel=0.03)
     assert car["W"] * 0.95 <= w <= car["W"] + 450    # mirrors stand out
     assert h <= car["H"] * 1.25                          # wings stand proud
     assert h >= car["H"] * 0.9

@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import math
 
-from . import car_models, car_wheels
+from . import car_details, car_models, car_wheels
 from .car_wheels import closed_grid
 from .landmark_kit import Kit
 from .model import CadNode
@@ -278,8 +278,8 @@ class Car:
             self._open_cabin(kit, paint)
         else:
             self._greenhouse(kit, body)
-        self._lights(kit)
-        self._grille(kit)
+        car_details.front(kit, self, paint)
+        car_details.rear(kit, self, paint)
         self._wing(kit, paint)
         self._mirrors(kit, paint)
         self._exhaust(kit)
@@ -325,71 +325,6 @@ class Car:
             x = side * a * 0.45
             kit.box(x - 200, self.y(s1) - 180, z, x + 200, self.y(s1) - 60,
                     z + 330, TRIM)
-
-    def _lights(self, kit):
-        kind = self.spec["lights"]
-        s = 0.035
-        a, y, zt = self.half_width(s), self.y(s), self.top(s)
-        for side in (-1, 1):
-            if kind in ("round", "twin"):
-                n = 2 if kind == "twin" else 1
-                for k in range(n):
-                    x = side * a * (0.62 - 0.2 * k)
-                    kit.path([(x, y - 40, zt - 70), (x, y + 30, zt - 70)],
-                             70 if n == 1 else 55, LAMP, "Emissive",
-                             sides=16)
-            elif kind == "slim":
-                x = side * a * 0.62
-                kit.obox(x, y + 10, zt - 55, 360, 90, 45, side * -14,
-                         LAMP, "Emissive")
-            elif kind == "popup":
-                s2 = 0.08
-                x = side * self.half_width(s2) * 0.6
-                kit.obox(x, self.y(s2), self.top(s2) - 5, 330, 180, 14, 0,
-                         TRIM, "Matte")
-        s = 0.99
-        a, y, zt = self.half_width(s), self.y(s), self.top(s)
-        tails = self.spec["tails"]
-        if tails == "bar":
-            kit.box(-0.85 * a, y - 20, zt - 110, 0.85 * a, y + 20, zt - 60,
-                    TAIL, "Emissive")
-        for side in (-1, 1):
-            if tails == "round":
-                for k in range(2):
-                    x = side * a * (0.72 - 0.22 * k)
-                    kit.path([(x, y - 30, zt - 95), (x, y + 25, zt - 95)],
-                             50, TAIL, "Emissive", sides=16)
-            elif tails == "slim":
-                kit.obox(side * a * 0.6, y, zt - 90, 380, 50, 45, 0,
-                         TAIL, "Emissive")
-
-    def _grille(self, kit):
-        kind = self.spec["grille"]
-        y0 = -self.L / 2
-        zb, zt = self.bottom(0.0), self.top(0.0)
-        zm = (zb + zt) / 2
-        a = self.half_width(0.0)
-        if kind == "kidney":
-            for side in (-1, 1):
-                x = side * 95
-                kit.obox(x, y0 + 8, zm - 40, 180, 40, 150, 0, CHROME, "Metal")
-                kit.obox(x, y0 + 5, zm - 25, 150, 40, 120, 0, TRIM)
-        elif kind == "star":
-            kit.obox(0, y0 + 8, zm - 80, 0.9 * a, 40, 170, 0, CHROME, "Metal")
-            kit.obox(0, y0 + 5, zm - 70, 0.85 * a, 40, 150, 0, TRIM)
-            yc, zc = y0 - 20, zm + 5
-            kit.path([(0, yc, zc), (0, yc + 30, zc)], 70, CHROME, "Metal",
-                     sides=24)
-            for k in range(3):
-                t = math.radians(90 + 120 * k)
-                kit.bar((0, yc - 6, zc), (62 * math.cos(t), yc - 6,
-                                          zc + 62 * math.sin(t)),
-                        7, TRIM)
-        elif kind == "horseshoe":
-            kit.obox(0, y0 + 8, zb + 40, 420, 40, 300, 0, CHROME, "Metal")
-            kit.obox(0, y0 + 5, zb + 55, 380, 40, 260, 0, TRIM)
-        if kind in ("intake", "star", "kidney", "horseshoe"):
-            kit.obox(0, y0 + 5, zb + 15, 1.2 * a, 40, 90, 0, TRIM)
 
     def _wing(self, kit, paint):
         kind = self.spec["wing"]
@@ -441,7 +376,7 @@ class Car:
         z = self.bottom(1.0) + 55
         for side in (-1, 1):
             x = side * 0.22 * self.W / 2
-            kit.path([(x, y1 - 200, z), (x, y1 + 25, z)], 42, CHROME,
+            kit.path([(x, y1 - 220, z), (x, y1 - 12, z)], 42, CHROME,
                      "Metal", sides=16)
 
     def _wheel_pair(self, i) -> CadNode:
