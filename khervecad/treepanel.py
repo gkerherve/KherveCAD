@@ -47,6 +47,7 @@ HIDDEN_COLOR_DARK = "#697079"
 
 # item data role beyond the primary node id (Qt.UserRole)
 ROLE_TAG = Qt.UserRole + 1         # True -> paint a "(hidden)" tag
+ROLE_MODIFIER = Qt.UserRole + 7    # "# highlight" etc. -> painted tag
 ROLE_PLACEMENT = Qt.UserRole + 2   # True -> synthetic Position/Rotation
 #                                    row under a part (selects the part)
 
@@ -83,7 +84,9 @@ class _RowDelegate(QStyledItemDelegate):
 
     def paint(self, painter, option, index):
         super().paint(painter, option, index)
-        if not index.data(ROLE_TAG):
+        tag = "(hidden)" if index.data(ROLE_TAG) \
+            else index.data(ROLE_MODIFIER)
+        if not tag:
             return
         fm = option.fontMetrics
         text = index.data(Qt.DisplayRole) or ""
@@ -94,8 +97,8 @@ class _RowDelegate(QStyledItemDelegate):
         f.setItalic(True)
         painter.setFont(f)
         painter.setPen(QColor("#9aa0a6"))
-        painter.drawText(x, option.rect.top(), 90, option.rect.height(),
-                         int(Qt.AlignVCenter), "(hidden)")
+        painter.drawText(x, option.rect.top(), 140, option.rect.height(),
+                         int(Qt.AlignVCenter), tag)
         painter.restore()
 
 
@@ -391,7 +394,11 @@ class ObjectTree(QTreeWidget):
         # "(hidden)" tag on the explicitly-hidden node is painted by the
         # delegate from ROLE_TAG
         item.setText(0, node.name)
+        from .model import MODIFIERS
+        mod = node.params.get("modifier")
         item.setData(0, ROLE_TAG, own_hidden)
+        item.setData(0, ROLE_MODIFIER, f"{mod} {MODIFIERS[mod]}"
+                     if mod in MODIFIERS else "")
         # dim + italic if hidden by itself OR by an ancestor
         font = item.font(0)
         font.setItalic(eff_hidden)
@@ -948,6 +955,21 @@ class ObjectTree(QTreeWidget):
         menu.addAction(icons.icon("mdi.delete-outline"), "Delete",
                        lambda: [self.model.remove_node(n) for n in roots])
 
+    def _modifier_menu(self, menu, nodes):
+        """OpenSCAD's debug modifiers: # highlight, % background (drawn
+        ghosted, left out of the render), ! show only this."""
+        from .model import MODIFIERS
+        sub = menu.addMenu(icons.icon("mdi.bug-outline"),
+                           "Debug modifier (OpenSCAD)")
+        current = {n.params.get("modifier", "") for n in nodes}
+        for mod, label in [("", "None")] + [
+                (m, f"{m}  {name.capitalize()}")
+                for m, name in MODIFIERS.items()]:
+            act = sub.addAction(label, lambda _=False, m=mod: [
+                self.model.set_modifier(n, m) for n in nodes])
+            act.setCheckable(True)
+            act.setChecked(current == {mod})
+
     def _objects_menu(self, menu, nodes, roots):
         from .mates import definition_of
         parts_sel = [n for n in roots
@@ -966,6 +988,7 @@ class ObjectTree(QTreeWidget):
             "Show" if hidden else "Hide",
             lambda: [self.model.set_visible(n, bool(hidden))
                      for n in nodes])
+        self._modifier_menu(menu, nodes)
         menu.addSeparator()
         from .meshimport import mesh_nodes
         meshes = mesh_nodes(roots)

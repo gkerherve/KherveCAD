@@ -29,7 +29,8 @@ from . import organic
 _TEXT_PARAMS = {"text", "path", "variable", "condition", "update",
                 "values", "value", "caps", "axis", "toward",
                 "material", "bindings", "args", "message", "file",
-                "layer", "id"}
+                "layer", "id", "font", "halign", "valign", "direction",
+                "modifier"}
 
 #: ops the fallback can only approximate (engine renders exactly).
 APPROXIMATED = {"difference", "intersection", "minkowski", "hull",
@@ -340,7 +341,12 @@ def node_outlines(node: CadNode, env=None):
             return [arc[:-1]]                # closed ring, drop repeat
         return [[(p["x"], p["y"])] + arc]    # pie slice with centre
     if node.type == "polygon":
-        return [[(p["x"] + x, p["y"] + y) for x, y in p["points"]]]
+        pts = [(p["x"] + x, p["y"] + y) for x, y in p["points"]]
+        paths = polygon_paths(node)
+        if paths:
+            return [[pts[i] for i in path if 0 <= i < len(pts)]
+                    for path in paths]
+        return [pts]
     if node.type == "line":
         return [_capsule(p["x1"], p["y1"], p["x2"], p["y2"],
                          p["width"] / 2.0)]
@@ -350,6 +356,24 @@ def node_outlines(node: CadNode, env=None):
         from . import scadfiles
         return scadfiles.drawing_outlines(node, env)
     return []
+
+
+def polygon_paths(node):
+    """A polygon's OpenSCAD paths as lists of whole point indices, or []
+    when it has none (all points, in order)."""
+    out = []
+    for row in node.params.get("paths") or []:
+        if not isinstance(row, (list, tuple)):
+            continue
+        indices = []
+        for value in row:
+            try:
+                indices.append(int(float(value)))
+            except (TypeError, ValueError):
+                pass
+        if len(indices) >= 3:
+            out.append(indices)
+    return out
 
 
 def _capsule(x1, y1, x2, y2, r):
@@ -389,23 +413,89 @@ def _text_outlines(p):
     the other's corner points) and extrudes/unions them accordingly.
     """
     try:
-        from PyQt5.QtGui import QFont, QPainterPath
+        path, scale = text_path(p)
     except ImportError:                      # pragma: no cover
         return []
-    size = max(float(p["size"]), 1e-6)
-    ref = 100.0
-    font = QFont("DejaVu Sans")
-    font.setPointSizeF(ref)
-    path = QPainterPath()
-    path.addText(0, 0, font, str(p["text"]))
-    scale = size / ref
     outlines = []
     for poly in path.toSubpathPolygons():
         pts = [(p["x"] + pt.x() * scale, p["y"] - pt.y() * scale)
-              for pt in poly]
+               for pt in poly]
         if len(pts) >= 3:
             outlines.append(pts)
     return outlines
+
+
+#: the font a text uses when it names none (Qt's metrics stand in for
+#: OpenSCAD's Liberation Sans)
+DEFAULT_FONT = "DejaVu Sans"
+#: glyphs are laid out at this point size and scaled (see _text_outlines)
+TEXT_REF_SIZE = 100.0
+
+
+def text_font(p):
+    """The QFont for a text node's params at TEXT_REF_SIZE: OpenSCAD's
+    ``"Family:style=Bold Italic"`` read into family, weight and slant,
+    and ``spacing`` as letter spacing."""
+    from PyQt5.QtGui import QFont
+    spec = str(p.get("font") or "").strip()
+    family, _, style = spec.partition(":")
+    style = style.lower()
+    font = QFont(family.strip() or DEFAULT_FONT)
+    font.setPointSizeF(TEXT_REF_SIZE)
+    if "bold" in style or "black" in style or "heavy" in style:
+        font.setBold(True)
+    if "italic" in style or "oblique" in style:
+        font.setItalic(True)
+    try:
+        spacing = float(p.get("spacing", 1.0) or 1.0)
+    except (TypeError, ValueError):
+        spacing = 1.0
+    if abs(spacing - 1.0) > 1e-9:
+        font.setLetterSpacing(QFont.PercentageSpacing, spacing * 100.0)
+    return font
+
+
+def text_path(p):
+    """(QPainterPath at TEXT_REF_SIZE in Qt's y-down frame, scale to the
+    node's size) with OpenSCAD's halign / valign / direction applied:
+    the path's origin is where the text node's x, y sits."""
+    from PyQt5.QtGui import QFontMetricsF, QPainterPath
+    size = max(float(p["size"]), 1e-6)
+    font = text_font(p)
+    metrics = QFontMetricsF(font)
+    text = str(p["text"])
+    direction = str(p.get("direction") or "ltr")
+    path = QPainterPath()
+    if direction in ("ttb", "btt"):
+        chars = list(text) if direction == "ttb" else list(reversed(text))
+        line = metrics.height()
+        widest = max((metrics.horizontalAdvance(c) for c in chars),
+                     default=0.0)
+        for k, ch in enumerate(chars):
+            path.addText(-metrics.horizontalAdvance(ch) / 2, k * line,
+                         font, ch)
+        left, advance = -widest / 2, widest
+    else:
+        if direction == "rtl":
+            text = text[::-1]
+        path.addText(0, 0, font, text)
+        left, advance = 0.0, metrics.horizontalAdvance(text)
+    halign = str(p.get("halign") or "left")
+    dx = {"center": -(left + advance / 2),
+          "right": -(left + advance)}.get(halign, -left if left else 0.0)
+    box = path.boundingRect()               # ink, y down
+    valign = str(p.get("valign") or "baseline")
+    if valign == "top":
+        dy = -box.top()
+    elif valign == "bottom":
+        dy = -box.bottom()
+    elif valign == "center":
+        dy = -box.center().y()
+    else:
+        dy = 0.0
+    if dx or dy:
+        path.translate(dx, dy)
+    return path, size / TEXT_REF_SIZE
 
 
 def collect_outlines(node: CadNode, env=None):
@@ -518,7 +608,8 @@ def _oriented(node, outlines):
     """A 2D shape's outlines as solids (counter-clockwise) — and, for
     text, the loops nested inside a glyph as holes (clockwise)."""
     loops = [o for o in (_distinct(o) for o in outlines) if len(o) >= 3]
-    if node.type not in ("text", "import_2d"):
+    if node.type not in ("text", "import_2d") and not (
+            node.type == "polygon" and polygon_paths(node)):
         return [ensure_ccw(o) for o in loops]
     out = []
     for i, loop in enumerate(loops):
@@ -1235,9 +1326,47 @@ def _emit(tris, color, selected):
     return [(tri, color, selected) for tri in tris]
 
 
+#: how the preview tints OpenSCAD's # (highlight) and % (background)
+MODIFIER_TINT = {"#": ("#ff5151", 0.5), "%": ("#b4b4b4", 0.3)}
+_MODIFIER_ACTIVE = set()
+
+
+def show_only(root):
+    """The first visible node carrying OpenSCAD's ``!`` modifier under
+    *root* (the whole program then renders that alone), or None."""
+    for n in root.walk():
+        if n is not root and n.params.get("modifier") == "!" and n.visible:
+            probe, shown = n.parent, True
+            while probe is not None and probe is not root:
+                shown = shown and probe.visible
+                probe = probe.parent
+            if shown:
+                return n
+    return None
+
+
 def _tess(node, env, color, sel, selected):
     if not node.visible:
         return []
+    mod = node.params.get("modifier")
+    if mod in MODIFIER_TINT and node.id not in _MODIFIER_ACTIVE:
+        _MODIFIER_ACTIVE.add(node.id)
+        try:
+            out = _tess(node, env, color, sel, selected)
+        finally:
+            _MODIFIER_ACTIVE.discard(node.id)
+        tint = MODIFIER_TINT[mod]
+        return [(tri, tint, s) for tri, _c, s in out]
+    if node.type == "root" and node.id not in _MODIFIER_ACTIVE:
+        only = show_only(node)
+        if only is not None:
+            _MODIFIER_ACTIVE.add(node.id)
+            try:
+                return _transform_colored(
+                    ancestor_matrix(only, env),
+                    _tess(only, env, color, sel, selected))
+            finally:
+                _MODIFIER_ACTIVE.discard(node.id)
     selected = selected or (node.id in sel)
     t = node.type
     if t == "color":

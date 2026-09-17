@@ -141,6 +141,11 @@ class McpToolExecutor:
         if not isinstance(params, dict):
             raise ToolError("'params' must be an object.")
         known = set(NODE_TYPES[type_name]["params"])
+        # optional params live in the schema only (text's halign, a
+        # polygon's paths, a variable's Customizer options)
+        known |= {row[0] for row in NODE_TYPES[type_name]["schema"]}
+        # OpenSCAD's debug modifier any node may carry: "#", "%", "!"
+        known.add("modifier")
         if type_name in ("component", "reference"):
             known |= {"mate", "anchors"}
         unknown = [k for k in params if k not in known]

@@ -51,6 +51,17 @@ MATERIALS = ["Default", "Plastic", "Metal", "Matte", "Clay", "Glass",
              "Shingles", "Thatch", "Standing seam", "Solar panels",
              "Panelling"]
 
+#: OpenSCAD's debug modifiers a node may carry as params["modifier"]
+#: (written before its statement, read back by scadparse). Unlike the
+#: selection highlight, which imitates `#` without emitting it, these
+#: are the author's own and belong to the program.
+MODIFIERS = {"#": "highlight", "%": "background", "!": "show only"}
+
+#: OpenSCAD text() options
+TEXT_HALIGN = ("left", "center", "right")
+TEXT_VALIGN = ("baseline", "bottom", "center", "top")
+TEXT_DIRECTIONS = ("ltr", "rtl", "ttb", "btt")
+
 #: param schema entry: (key, label, kind, minimum, maximum)
 #: kinds: "float", "int", "bool", "str", "points" (list of [x, y]).
 NODE_TYPES = {
@@ -86,14 +97,30 @@ NODE_TYPES = {
                     points=[[0.0, 0.0], [40.0, 0.0], [20.0, 30.0]]),
         schema=[("x", "X", "float", -1e6, 1e6),
                 ("y", "Y", "float", -1e6, 1e6),
-                ("points", "Points", "points", None, None)]),
+                ("points", "Points", "points", None, None),
+                # OpenSCAD's paths: one outline per row of point indices;
+                # an outline inside another is a hole
+                ("paths", "Paths (point indices; empty = all, in order)",
+                 "rows", None, None)]),
     "text": dict(
         label="Text", category=SHAPE_2D, icon="mdi.format-text",
+        # font, halign, valign, spacing and direction are optional
+        # (schema only): a node without them is OpenSCAD's defaults, and
+        # documents saved before them stay byte-identical
         params=dict(x=0.0, y=0.0, text="Kherve", size=10.0),
         schema=[("x", "X", "float", -1e6, 1e6),
                 ("y", "Y", "float", -1e6, 1e6),
                 ("text", "Text", "str", None, None),
-                ("size", "Size", "float", 0.1, 1e4)]),
+                ("size", "Size", "float", 0.1, 1e4),
+                ("font", "Font (e.g. Liberation Sans:style=Bold)", "str",
+                 None, None),
+                ("halign", "Horizontal align", "choice",
+                 list(TEXT_HALIGN), None),
+                ("valign", "Vertical align", "choice",
+                 list(TEXT_VALIGN), None),
+                ("spacing", "Letter spacing", "float", 0.1, 10.0),
+                ("direction", "Direction", "choice",
+                 list(TEXT_DIRECTIONS), None)]),
     # ----- 3D primitives --------------------------------------------
     "cube": dict(
         label="Cube", category=SHAPE_3D, icon="mdi.cube-outline",
@@ -668,6 +695,15 @@ class CadNode:
         self.emit(lines, indent)
         return "\n".join(text for text, _node in lines)
 
+    def modifier_prefix(self) -> str:
+        """What goes before this node's statement: ``*`` when hidden,
+        else its OpenSCAD debug modifier (``#`` highlight, ``%``
+        background, ``!`` show only) — see MODIFIERS."""
+        if not self.visible:
+            return "*"
+        mod = self.params.get("modifier")
+        return mod if mod in MODIFIERS else ""
+
     def emit(self, lines, indent: int = 0, spans: dict = None):
         """Append (text, node) pairs for this subtree to *lines*.
         When *spans* is given, record ``spans[node.id] = (first_line,
@@ -675,7 +711,7 @@ class CadNode:
         nodes (selection highlight, OpenSCAD error marking)."""
         start = len(lines)
         pad = "    " * indent
-        star = "" if self.visible else "*"
+        star = self.modifier_prefix()
 
         if self.type == "masters":
             # A definitions store: its masters render only through Linked
@@ -732,7 +768,7 @@ class CadNode:
         calls. A copy of anything else inlines its master's geometry
         (moved/rotated by its own transform) as before."""
         pad = "    " * indent
-        star = "" if self.visible else "*"
+        star = self.modifier_prefix()
         prefix = _group_prefix(self.params)             # move/rotate
         target = (_REF_INDEX or {}).get(
             str(self.params.get("ref", "")).strip())
@@ -757,7 +793,7 @@ class CadNode:
         placed call, so the generated program reads as an assembly of
         named parts and each part is reusable OpenSCAD."""
         pad = "    " * indent
-        star = "" if self.visible else "*"
+        star = self.modifier_prefix()
         name = (_MODULE_NAMES or {}).get(self.id) \
             or module_name(self.name)
         if self.id not in (_HOISTED or ()):
@@ -792,7 +828,7 @@ class CadNode:
         child union node named "Else"; everything else is the then
         branch."""
         pad = "    " * indent
-        star = "" if self.visible else "*"
+        star = self.modifier_prefix()
         else_node = next((c for c in self.children
                           if c.type == "union"
                           and c.name.lower().startswith("else")), None)
@@ -844,11 +880,31 @@ class CadNode:
         if t == "polygon":
             pts = ", ".join(f"[{fmt(x)}, {fmt(y)}]"
                             for x, y in p["points"])
+            paths = [r for r in (p.get("paths") or [])
+                     if isinstance(r, list) and r]
+            extra = ""
+            if paths:
+                extra = ", paths=[" + ", ".join(
+                    "[" + ", ".join(fmt(int(i)) if isinstance(i, (int, float))
+                                    else str(i) for i in r) + "]"
+                    for r in paths) + "]"
             return (f"translate([{fmt(p['x'])}, {fmt(p['y'])}]) "
-                    f"polygon(points=[{pts}])")
+                    f"polygon(points=[{pts}]{extra})")
         if t == "text":
+            extra = ""
+            if str(p.get("font") or "").strip():
+                extra += f", font={scad_str(str(p['font']).strip())}"
+            for key, default in (("halign", "left"), ("valign", "baseline"),
+                                 ("direction", "ltr")):
+                value = str(p.get(key) or default)
+                if value != default:
+                    extra += f", {key}={scad_str(value)}"
+            spacing = p.get("spacing", 1.0)
+            if spacing not in (1, 1.0, None, ""):
+                extra += f", spacing={fmt(spacing)}"
             return (f"translate([{fmt(p['x'])}, {fmt(p['y'])}]) "
-                    f"text({scad_str(p['text'])}, size={fmt(p['size'])})")
+                    f"text({scad_str(p['text'])}, size={fmt(p['size'])}"
+                    f"{extra})")
         if t == "cube":
             return (f"translate([{fmt(p['x'])}, {fmt(p['y'])}, "
                     f"{fmt(p['z'])}]) "
@@ -1312,6 +1368,15 @@ class DocumentModel(QObject):
                 node.params.pop("mate", None)
                 self.mate_released.emit(node)
         node.params[key] = value
+        self.node_changed.emit(node)
+
+    def set_modifier(self, node: CadNode, modifier: str):
+        """Give *node* an OpenSCAD debug modifier (``#``, ``%``, ``!``) or
+        none (``""``)."""
+        if modifier in MODIFIERS:
+            node.params["modifier"] = modifier
+        else:
+            node.params.pop("modifier", None)
         self.node_changed.emit(node)
 
     def set_visible(self, node: CadNode, visible: bool):

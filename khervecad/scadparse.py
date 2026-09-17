@@ -437,8 +437,8 @@ class Parser:
             node = self.parse_statement()
             if node is not None and value == "*":
                 node.visible = False
-            elif value == "!":
-                self.warn("'!' root modifier ignored")
+            elif node is not None:
+                node.params["modifier"] = value       # # highlight, % bg, !
             return node
         if token[0] != "ident":
             raise ScadParseError(f"unexpected token {value!r}")
@@ -902,12 +902,43 @@ def _radius(positional, named, default):
     return _num(r, default)
 
 
+def _segments(parser, named, radius, default):
+    """A round shape's segment count the way OpenSCAD picks it: its own
+    $fn, else a $fn set in scope, else — when $fa or $fs is given there
+    or on the call — the fragments for the radius
+    (``ceil(max(min(360 / $fa, 2 pi r / $fs), 5))``), else *default*.
+    A $fn written as an expression stays one."""
+    import math
+    scope = parser.scope
+
+    def pick(name):
+        return named[name] if name in named else scope.get(name)
+    fn = pick("$fn")
+    if isinstance(fn, str) and fn.strip():
+        return fn
+    if isinstance(fn, (int, float)) and not isinstance(fn, bool) and fn > 0:
+        return max(int(fn), 3)
+    fa, fs = pick("$fa"), pick("$fs")
+    if (fa is not None or fs is not None) and \
+            isinstance(radius, (int, float)):
+        try:
+            fa = float(fa) if fa is not None else 12.0
+            fs = float(fs) if fs is not None else 2.0
+        except (TypeError, ValueError):
+            return default
+        if radius < 1e-6 or fa <= 0 or fs <= 0:
+            return 3
+        return int(math.ceil(max(min(360.0 / fa,
+                                     radius * 2 * math.pi / fs), 5)))
+    return default
+
+
 # builder(parser, positional, named) -> CadNode | None
 
 def _b_circle(parser, positional, named):
-    params = dict(x=0.0, y=0.0,
-                  radius=_radius(positional, named, 10.0),
-                  segments=int(_num(named.get("$fn", 64), 64) or 64))
+    radius = _radius(positional, named, 10.0)
+    params = dict(x=0.0, y=0.0, radius=radius,
+                  segments=_segments(parser, named, radius, 64))
     return CadNode("circle", "Circle", params)
 
 
@@ -931,23 +962,56 @@ def _b_square(parser, positional, named):
 
 def _b_polygon(parser, positional, named):
     raw = _get(positional, named, 0, "points", default=None)
-    if "paths" in named:
-        parser.warn("polygon paths= ignored (single outline assumed)")
+    paths = _get(positional, named, 1, "paths", default=None)
+    if isinstance(paths, str):
+        try:
+            paths = expr.evaluate(paths, parser.scope)
+        except Exception:
+            parser.warn("polygon paths could not be resolved — all points "
+                        "used as one outline")
+            paths = None
+    rows = []
+    if isinstance(paths, list):
+        flat = paths and all(not isinstance(v, list) for v in paths)
+        for row in ([paths] if flat else paths):
+            if isinstance(row, list):
+                try:
+                    rows.append([int(float(v)) for v in row])
+                except (TypeError, ValueError):
+                    pass
     pts = parser.resolve_points(raw)
     if pts is None:
         parser.warn("polygon points could not be resolved — "
                     "placeholder triangle used")
         pts = [[0.0, 0.0], [10.0, 0.0], [0.0, 10.0]]
-    return CadNode("polygon", "Polygon",
-                   dict(x=0.0, y=0.0, points=pts))
+    params = dict(x=0.0, y=0.0, points=pts)
+    if rows:
+        params["paths"] = rows
+    return CadNode("polygon", "Polygon", params)
 
 
 def _b_text(parser, positional, named):
-    return CadNode("text", "Text", dict(
+    from .model import TEXT_DIRECTIONS, TEXT_HALIGN, TEXT_VALIGN
+    params = dict(
         x=0.0, y=0.0,
         text=str(_get(positional, named, 0, "text", default="text")),
         size=_num(_get(positional, named, 1, "size", default=10.0),
-                  10.0)))
+                  10.0))
+    font = _get(positional, named, 2, "font", default="")
+    if font:
+        params["font"] = str(font)
+    for key, allowed in (("halign", TEXT_HALIGN), ("valign", TEXT_VALIGN),
+                         ("direction", TEXT_DIRECTIONS)):
+        value = named.get(key)
+        if value is None:
+            continue
+        if str(value) in allowed:
+            params[key] = str(value)
+        else:
+            parser.warn(f"text {key} {value!r} not understood — ignored")
+    if "spacing" in named:
+        params["spacing"] = _num(named["spacing"], 1.0)
+    return CadNode("text", "Text", params)
 
 
 def _b_cube(parser, positional, named):
@@ -967,10 +1031,10 @@ def _b_cube(parser, positional, named):
 
 
 def _b_sphere(parser, positional, named):
+    radius = _radius(positional, named, 10.0)
     return CadNode("sphere", "Sphere", dict(
-        x=0.0, y=0.0, z=0.0,
-        radius=_radius(positional, named, 10.0),
-        segments=int(_num(named.get("$fn", 48), 48) or 48)))
+        x=0.0, y=0.0, z=0.0, radius=radius,
+        segments=_segments(parser, named, radius, 48)))
 
 
 def _b_cylinder(parser, positional, named):
@@ -999,7 +1063,9 @@ def _b_cylinder(parser, positional, named):
         x=0.0, y=0.0, z=0.0,
         height=_num(_get(positional, named, 0, "h", default=10.0), 10.0),
         radius_bottom=_num(bottom, 5.0), radius_top=_num(top, 5.0),
-        segments=int(_num(named.get("$fn", 64), 64) or 64),
+        segments=_segments(parser, named,
+                           max(bottom, top) if isinstance(bottom, (int, float))
+                           and isinstance(top, (int, float)) else bottom, 64),
         center=bool(named.get("center", False))))
 
 
@@ -1052,7 +1118,7 @@ def _b_linear_extrude(parser, positional, named):
 def _b_rotate_extrude(parser, positional, named):
     return CadNode("rotate_extrude", "Rotate extrude", dict(
         angle=_num(named.get("angle", 360.0), 360.0),
-        segments=int(_num(named.get("$fn", 96), 96) or 96)))
+        segments=_segments(parser, named, None, 96)))
 
 
 def _b_offset(parser, positional, named):

@@ -379,14 +379,15 @@ class TextShapeItem(ShapeItem, QGraphicsPathItem):
         self.apply_node()
 
     def apply_node(self):
-        p = self.node.params
+        from PyQt5.QtGui import QTransform
+        from . import mesh
+        p = dict(self.node.params)
         self.setPos(self.rv("x"), self.rv("y"))
-        font = QFont("DejaVu Sans")
-        font.setPointSizeF(max(self.rv("size", 10.0), 0.5))
-        path = QPainterPath()
-        path.addText(0, 0, font, str(p["text"]))
+        p["size"] = max(self.rv("size", 10.0), 0.5)
+        # the same font, alignment and direction as the preview's outlines
+        path, scale = mesh.text_path(p)
         # The view is Y-flipped; flip the glyphs back upright.
-        self.setPath(path * self._flip())
+        self.setPath(path * QTransform(scale, 0, 0, -scale, 0, 0))
         self.reposition_handles()
 
     @staticmethod

@@ -100,6 +100,25 @@ into a new module and import.
                        own statements (no helper module) and scadparse
                        reads them back (`parse_statement`, raw argument
                        text so `b = a * 2` stays an expression).
+  - OpenSCAD fidelity (2026-09-17): **text()** takes font ("Family:style=
+                       Bold Italic"), halign, valign, spacing, direction
+                       (`mesh.text_path` lays them out; view2d's
+                       TextShapeItem uses it too); **polygon** takes
+                       `paths` (rows of point indices, nested = holes);
+                       both are schema-only params, omitted when default,
+                       so older documents stay byte-identical (MCP accepts
+                       schema keys). The importer picks segments like
+                       OpenSCAD (`scadparse._segments`: $fn, else scope
+                       $fn, else $fa/$fs fragments; an expression $fn
+                       stays one). **Debug modifiers** `#` `%` `!` are
+                       `params["modifier"]` (`model.MODIFIERS`,
+                       `CadNode.modifier_prefix`, set from the tree's
+                       right-click ▸ Debug modifier, painted as a row tag
+                       via ROLE_MODIFIER): the preview tints # and %
+                       (`mesh.MODIFIER_TINT`) and `!` draws that node alone
+                       where it sits (`mesh.show_only`). Distinct from the
+                       selection highlight, which imitates # and never
+                       writes it.
   - `scadinclude.py` — what reaches beyond one file: `use <>` / `include
                        <>` tokens become **scad_use** nodes (emit the same
                        line; an unresolvable one is red) and the library

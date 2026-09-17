@@ -174,3 +174,117 @@ def test_singular_matrix_is_an_error():
     root, _ = parse_scad(
         "multmatrix([[0, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]]) cube(1);")
     assert any("det 0" in m for m in validate(root).values())
+
+
+# ------------------------------------------------- text, polygon, $fa/$fs
+
+@pytest.fixture
+def qapp():
+    from PyQt5.QtWidgets import QApplication
+    return QApplication.instance() or QApplication([])
+
+
+def _extent(root, axis):
+    pts = [v for tri in mesh.tessellate(root) for v in tri]
+    return min(p[axis] for p in pts), max(p[axis] for p in pts)
+
+
+def test_text_options_round_trip(qapp):
+    source = ('linear_extrude(2) text("Hi", size = 10, font = '
+              '"Liberation Sans:style=Bold", halign = "center", '
+              'valign = "center", spacing = 1.2, direction = "rtl");')
+    root, warnings = parse_scad(source)
+    assert not warnings
+    text = next(n for n in root.walk() if n.type == "text")
+    assert (text.params["halign"], text.params["valign"],
+            text.params["direction"], text.params["spacing"]) == \
+        ("center", "center", "rtl", 1.2)
+    model = DocumentModel()
+    model.root = root
+    code = model.to_scad()
+    assert 'halign="center"' in code and 'font="Liberation Sans' in code
+    again = DocumentModel()
+    again.root = parse_scad(code)[0]
+    assert again.to_scad() == code
+
+
+def test_text_alignment_moves_the_glyphs(qapp):
+    left, _ = parse_scad('linear_extrude(1) text("Hello", size = 10);')
+    centre, _ = parse_scad('linear_extrude(1) text("Hello", size = 10, '
+                           'halign = "center", valign = "center");')
+    lx0, lx1 = _extent(left, 0)
+    cx0, cx1 = _extent(centre, 0)
+    assert lx0 >= -0.5 and (cx0 + cx1) / 2 == pytest.approx(0, abs=1.0)
+    cy0, cy1 = _extent(centre, 1)
+    assert (cy0 + cy1) / 2 == pytest.approx(0, abs=0.1)
+
+
+def test_default_text_emits_as_before():
+    model = DocumentModel()
+    model.add_node("text", dict(x=0.0, y=0.0, text="A", size=5.0))
+    assert 'text("A", size=5);' in model.to_scad()
+
+
+def test_polygon_paths_make_holes():
+    root, warnings = parse_scad(
+        "linear_extrude(2) polygon(points = [[0, 0], [30, 0], [30, 30], "
+        "[0, 30], [10, 10], [20, 10], [20, 20], [10, 20]], "
+        "paths = [[0, 1, 2, 3], [4, 5, 6, 7]]);")
+    assert not warnings
+    poly = next(n for n in root.walk() if n.type == "polygon")
+    assert poly.params["paths"] == [[0, 1, 2, 3], [4, 5, 6, 7]]
+    from khervecad import analysis
+    assert analysis.mass_properties(mesh.tessellate(root))["volume"] == \
+        pytest.approx(1600)
+    model = DocumentModel()
+    model.root = root
+    assert "paths=[[0, 1, 2, 3], [4, 5, 6, 7]]" in model.to_scad()
+
+
+def test_fa_fs_choose_the_segments_like_openscad():
+    root, _ = parse_scad("$fa = 6; $fs = 0.5; circle(r = 10); "
+                         "sphere(1, $fs = 2); cylinder(h = 1, r = 1, $fn = n);")
+    circle, sphere, cyl = [n for n in root.walk()
+                           if n.type in ("circle", "sphere", "cylinder")]
+    assert circle.params["segments"] == 60          # min(360/6, 2 pi 10/.5)
+    assert sphere.params["segments"] == 5           # at least five
+    assert cyl.params["segments"] == "n"            # an expression stays
+
+
+# ------------------------------------------------------ debug modifiers
+
+def test_debug_modifiers_round_trip_and_preview():
+    root, warnings = parse_scad(
+        "#cube(5); %translate([10, 0, 0]) sphere(2);")
+    assert not warnings
+    cube, sphere = root.children
+    assert (cube.params["modifier"], sphere.params["modifier"]) == ("#", "%")
+    model = DocumentModel()
+    model.root = root
+    code = model.to_scad()
+    assert "#translate([0, 0, 0]) cube(" in code
+    assert "%translate([10, 0, 0]) sphere(" in code
+    again = DocumentModel()
+    again.root = parse_scad(code)[0]
+    assert again.to_scad() == code
+    colours = {c for _t, c in mesh.tessellate_colored(root)}
+    assert colours == {mesh.MODIFIER_TINT["#"], mesh.MODIFIER_TINT["%"]}
+
+
+def test_show_only_renders_that_part_where_it_sits():
+    root, _ = parse_scad("cube(10); translate([20, 0, 0]) "
+                         "{ !cylinder(h = 3, r = 1); sphere(9); }")
+    xs = [v[0] for tri in mesh.tessellate(root) for v in tri]
+    assert (min(xs), max(xs)) == pytest.approx((19, 21))
+
+
+def test_a_hidden_node_keeps_star_and_set_modifier_clears():
+    model = DocumentModel()
+    cube = model.add_node("cube")
+    model.set_modifier(cube, "%")
+    assert "%translate" in model.to_scad()
+    model.set_visible(cube, False)
+    assert "*translate" in model.to_scad()
+    model.set_visible(cube, True)
+    model.set_modifier(cube, "")
+    assert "modifier" not in cube.params
