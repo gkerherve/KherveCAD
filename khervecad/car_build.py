@@ -49,19 +49,24 @@ COLUMNS = 18
 #: stations along the body
 STATIONS = 150
 #: heights sampled across a measured section
-SECTION_LEVELS = 22
+SECTION_LEVELS = 30
 #: the end view has narrowed to this much of its widest at the beltline
 BELT_WIDTH = 0.90
 #: how deep the body-coloured roof panel is, over the glass
-ROOF_PANEL = 80.0
+ROOF_PANEL = 130.0
 #: a greenhouse never narrows past this much of its own beltline
 CABIN_WAIST = 0.62
+#: how square a section is: 2 is an ellipse, 8 nearly a rectangle
+SECTION_ROUND = 4.5
+#: a section never pulls in past this much of its width, so a flank
+#: stays a flank
+ROUND_FLOOR = 0.62
 #: the last of the car's length over which its ends round away
 END_ROUND = 0.05
 #: how much of its width is left at the very nose and tail
 END_WIDTH = 0.72
 #: the tail starts falling here at the latest
-TAIL_START = 0.80
+TAIL_START = 0.72
 #: the body (not the wing) has fallen to this much of the height by
 #: the very tail
 TAIL_DROP = 0.62
@@ -90,6 +95,19 @@ def sample(curve, s):
     x = min(1.0, max(0.0, s)) * n
     i = min(n - 1, int(x))
     return curve[i] + (curve[i + 1] - curve[i]) * (x - i)
+
+
+def _round_section(xs, passes=2):
+    """Round a section's corners: a weighted pass down its levels."""
+    out = list(xs)
+    for _ in range(passes):
+        prev = list(out)
+        for i in range(len(out)):
+            a = prev[max(0, i - 1)]
+            b = prev[i]
+            c = prev[min(len(prev) - 1, i + 1)]
+            out[i] = 0.25 * a + 0.5 * b + 0.25 * c
+    return out
 
 
 def smooth_curve(curve, passes=2, window=5):
@@ -352,8 +370,16 @@ class Car:
         belt = self.belt_z(s)
         belt_x = min(plan, self.W / 2 * self.section_shape(s, belt))
         xs = []
+        span = max(1.0, zt - zb)
         for z in levels:
-            x = min(plan, self.W / 2 * self.section_shape(s, z))
+            # a rounded-rectangle section (superellipse) under the
+            # drawing's own envelope: the intersection of two
+            # silhouettes alone is a box, and no car is a box
+            v = (z - zb) / span
+            round_ = max(0.0, 1.0 - abs(2 * v - 1) ** SECTION_ROUND) \
+                ** (1.0 / SECTION_ROUND)
+            x = min(plan * (ROUND_FLOOR + (1 - ROUND_FLOOR) * round_),
+                    self.W / 2 * self.section_shape(s, z))
             if z > belt:
                 # an end view's silhouette closes to a point at the very
                 # crown of the roof, but a roof is not a point at THIS
@@ -362,6 +388,11 @@ class Car:
             if arch is not None and z < arch:
                 x = min(x, self.tub_half)
             xs.append(max(x, 20.0))
+        # A body is not the hard intersection of two silhouettes: that
+        # leaves a crease where the flank meets the bonnet and reads as
+        # a box. Rounding the section down its own height puts the
+        # shoulder and the roof edge back.
+        xs = _round_section(xs)
         got = (zb, zt, levels, xs)
         self._sections[key] = got
         return got

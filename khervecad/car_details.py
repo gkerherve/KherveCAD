@@ -39,7 +39,7 @@ PLATE_INK = "#26282c"
 #: a European plate
 PLATE_W, PLATE_H = 520.0, 110.0
 #: how far a lens or a plate stands proud of the panel it sits on
-PROUD = 9.0
+PROUD = 16.0
 
 
 def surface_y(car, x, z, front=True, reach=0.36):
@@ -113,9 +113,12 @@ def _lens(kit, car, x, z, r, colour, front=True, depth=70.0):
     def at(d):
         return (x, y + ny * d, z + nz * d)
     kit.path([at(0.0), at(-depth)], r, DARK, "Matte", sides=20)
-    kit.path([at(PROUD * 0.3), at(PROUD * 0.75)], r + 10, CHROME, "Metal",
-             sides=20)
-    kit.path([at(PROUD * 0.35), at(PROUD)], r, colour, "Emissive", sides=20)
+    # a round lamp STANDS OUT of its wing — buried in the panel it
+    # reads as a slit, which is what the 911's did
+    kit.path([at(-6.0), at(PROUD * 1.1)], r + 14, CHROME, "Metal",
+             sides=24)
+    kit.path([at(PROUD * 0.5), at(PROUD * 1.9)], r, colour, "Emissive",
+             sides=24)
 
 
 def _panel(kit, car, x, z, w, h, colour, material="Plastic", front=True,
