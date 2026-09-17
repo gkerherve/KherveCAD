@@ -1203,9 +1203,10 @@ from . import (library_cards, library_chem, library_crystal,  # noqa: E402
                library_lego_sets,
                library_molecule,
                library_pots, library_print, library_room,
-               library_vacuum, library_vitamins, library_generative,
+               library_uhv, library_vacuum, library_vitamins, library_generative,
                library_motion)
 PARTS.update(library_vacuum.PARTS)
+PARTS.update(library_uhv.PARTS)
 PARTS.update(library_chem.PARTS)
 PARTS.update(library_room.PARTS)
 PARTS.update(library_home.PARTS)

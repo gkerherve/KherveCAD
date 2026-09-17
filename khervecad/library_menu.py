@@ -159,7 +159,14 @@ def _molecules(window, sub):
     sub.addSeparator()
 
 
-_BUILDERS = {"lego": _lego, "city": _city, "crystals": _crystals,
+def _vacuum(window, sub):
+    from . import chamber_dialog
+    sub.addAction(icons.icon("mdi.pipe"), "Chamber Designer...",
+                  lambda: chamber_dialog.open_designer(window))
+    sub.addSeparator()
+
+
+_BUILDERS = {"vacuum": _vacuum, "lego": _lego, "city": _city, "crystals": _crystals,
              "molecules": _molecules}
 
 

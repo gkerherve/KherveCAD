@@ -5,7 +5,8 @@ happened to register them.
 
 A section is (title, [(menu title, icon, categories or special)]): a
 menu with one category lists its parts directly, several get a submenu
-each; a special ("home", "city", "lego", "crystals", "molecules") also
+each; a special ("home", "city", "lego", "crystals", "molecules",
+"vacuum") also
 carries its builder on top. `test_library_menu` checks every category
 of `library.PARTS` is placed exactly once.
 
@@ -22,7 +23,7 @@ SECTIONS = [
         ("Fasteners & brackets", "mdi.screw-machine-flat-top",
          ["Fasteners", "Brackets"]),
         ("Hand tools", "mdi.hammer-wrench", ["Tools"]),
-        ("Vacuum & UHV", "mdi.pipe", ["Vacuum"]),
+        ("Vacuum & UHV", "mdi.pipe", ("vacuum", ["Vacuum"])),
         ("Mechanisms & motion", "mdi.cogs", ["Mechanisms & motion"]),
         ("Motion & electronics", "mdi.cog-transfer-outline",
          ["Motion & motors", "Electronics boards"]),
