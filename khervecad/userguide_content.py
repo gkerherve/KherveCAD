@@ -884,12 +884,74 @@ part open in the Object tab).</li>
 .scad file; <b>Import OpenSCAD</b> {K("Ctrl+I")} (or opening a .scad
 file) reads one back as objects. Export &rarr; import &rarr; export gives
 the same program.</li>
-<li>Files that use features KherveCAD cannot turn into objects can be
-loaded as a single <b>raw OpenSCAD block</b>: the engine renders it,
-and it is edited as text.</li>
+<li>A call KherveCAD cannot turn into objects is kept as an
+<b>OpenSCAD code</b> row with exactly what was written: the engine
+renders it, and nothing is lost when you export again. A whole file can
+also be loaded as a single raw block.</li>
 <li>A comment at the end of a line names that object in the tree:
 <code>cube(10);  // Lid</code> becomes <b>Cube [Lid]</b>.</li>
+<li><b>File &rsaquo; Import 2D Drawing</b> reads SVG and DXF outlines
+(<code>import()</code>), <b>Import Height Map</b> a .dat matrix or a
+picture (<code>surface()</code>); .csg and .amf files open too.</li>
 </ul>
+<h3>The OpenSCAD language, as objects</h3>
+<p>Every statement of OpenSCAD has a row in the tree and writes back the
+same code: <b>resize</b>, <b>multmatrix</b>, <b>render</b>,
+<b>intersection_for</b>, <b>let</b>, <b>echo</b> and <b>assert</b> (a
+false assert turns red with its message), modules with
+<code>children()</code>, vector maths, strings and function literals.
+Expressions over variables stay expressions, so an imported program is
+still parametric. Right-click &rsaquo; <b>Debug modifier</b> sets
+<code>#</code> (highlight), <code>%</code> (background) or <code>!</code>
+(show only).</p>
+<h3>Libraries</h3>
+<p><b>Library &rsaquo; OpenSCAD Libraries</b> installs BOSL2, MCAD,
+NopSCADlib, Round-Anything, dotSCAD, threads.scad, Catch'n'Hole and
+Gridfinity into your OpenSCAD library folder. A program that starts with
+<code>include &lt;BOSL2/std.scad&gt;</code> then opens here: library calls
+become objects where they can and stay OpenSCAD code where they
+cannot.</p>
+<h3>Customizer</h3>
+<p>Comments in OpenSCAD's Customizer style turn variables into controls
+in the <b>Variables</b> tab:</p>
+<pre>/* [Size] */
+// Box width in mm
+width = 40;   // [10:5:200]
+lid = "snap"; // [snap, screw, none]</pre>
+<p>gives a slider and a drop-down in the <i>Adjust</i> column, grouped
+and described; the comments are written back when you export.</p>
+<h3>Animation</h3>
+<p><b>View &rsaquo; Animate</b> plays a model that reads <code>$t</code>
+(0 to 1) &mdash; <code>rotate([0, 0, 360 * $t])</code> &mdash; and
+exports its frames as pictures.</p>
+"""),
+
+        ("features", "Gears, threads, holes and printing", f"""
+<p>The parts of OpenSCAD's best-known libraries are objects in
+KherveCAD, each with its settings in Properties and a real OpenSCAD
+module behind it:</p>
+<ul>
+<li><b>Insert &rsaquo; Mechanical features</b>: involute <b>gears</b>
+(spur, helical, herringbone, internal, rack, bevel, worm), <b>threads</b>
+(metric, trapezoidal, square, buttress, pipe, bottle &mdash; or the tap
+that cuts a nut), <b>holes</b> (counterbore, countersink, nut trap,
+heat-set insert, slot, teardrop), knurls and textured surfaces.</li>
+<li><b>Insert &rsaquo; Shapes &amp; patterns</b>: regular polyhedra,
+stars, polygons with a radius per corner, B&eacute;zier and SVG-path
+shapes, honeycomb panels.</li>
+<li><b>Library &rsaquo; 3D printing</b>: dovetails, snap-fits,
+print-in-place and living hinges, insert bosses, a threaded bottle cap,
+cable clips, Gridfinity bins and baseplates, divided trays, an
+electronics enclosure. <b>Motion &amp; electronics</b>: NEMA motors,
+T-slot extrusions, rails, GT2 pulleys, bearings, fans, Raspberry Pi and
+Arduino boards. Also Lego Technic and generative panels.</li>
+<li>Right-click a part &rsaquo; <b>Split for printing</b> cuts one too big
+for the bed into two, with dowel holes and a pin.</li>
+</ul>
+<p>Two gears mesh when they share the module and pressure angle and
+their centres are m &times; (z<sub>1</sub> + z<sub>2</sub>) / 2 apart.
+For a nut, put an <i>internal</i> thread inside a Difference with the
+nut's body.</p>
 """),
 
         ("ai", "Assistants: Claude and the ChatBox", f"""

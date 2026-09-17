@@ -5,6 +5,12 @@ two 2D shape nodes:
   each corner gets a tangent arc of its own radius (0 keeps it sharp),
   shrunk where two arcs would overlap on a short edge — a bracket's
   outline with a different fillet at every corner in one shape;
+- **svg_path** — a shape typed as an SVG path string (Pathbuilder's
+  idea): ``M 0 0 L 40 0 A 10 10 0 0 1 40 20 … Z``, every command,
+  relative or absolute, several subpaths (an inner one is a hole). y
+  runs UP as in OpenSCAD, not down as in an SVG file. OpenSCAD cannot
+  parse the string, so the call carries the flattened points as well —
+  the importer rebuilds from ``d`` and ignores them;
 - **bezier_shape** — a closed outline of cubic Bézier curves: rows are
   the on-curve point, then its two control points toward the next
   on-curve point, repeated (``3 n`` rows for ``n`` curves) — a logo, a
@@ -52,8 +58,19 @@ NODE_TYPES = {
                  "curve)", "rows", ["X", "Y"], None),
                 ("segments", "Points per curve", "int", 2, 256)]),
 }
+NODE_TYPES["svg_path"] = dict(
+    label="SVG path shape", category=SHAPE_2D, icon="mdi.draw",
+    params=dict(x=0.0, y=0.0, segments=32,
+                d="M 0 0 L 40 0 A 10 10 0 0 1 40 20 L 0 20 Z "
+                  "M 8 6 h 8 v 8 h -8 z"),
+    schema=[("x", "X", "float", -1e6, 1e6),
+            ("y", "Y", "float", -1e6, 1e6),
+            ("d", "Path (SVG syntax, y up)", "str", None, None),
+            ("segments", "Points per curve / turn", "int", 4, 512)])
 TYPES = frozenset(NODE_TYPES)
 LEAVES = frozenset(NODE_TYPES)
+#: 2D shapes whose inner loops are holes
+NESTED_2D = frozenset({"svg_path"})
 
 
 def rounded_outline(corners, segments=8):
@@ -143,6 +160,12 @@ function kcad_bezier_points(c, seg) =
      let (t = k / seg, s = 1 - t, p0 = c[3 * i], c1 = c[3 * i + 1],
           c2 = c[3 * i + 2], p3 = c[(3 * i + 3) % (3 * n)])
      pow(s, 3) * p0 + 3 * s * s * t * c1 + 3 * s * t * t * c2 + pow(t, 3) * p3];
+module kcad_svg_path(d = "", segments = 32, center = [0, 0], points = [],
+                     paths = []) {
+    // OpenSCAD cannot read the path string: KherveCAD writes the
+    // flattened outline beside it (the importer rebuilds from d)
+    translate(center) polygon(points = points, paths = paths);
+}
 module kcad_bezier_shape(controls = [], segments = 16, center = [0, 0]) {
     translate(center)
         polygon(kcad_bezier_points(controls, max(round(segments), 2)));
@@ -160,9 +183,32 @@ def _rows(rows, fmt):
                            for r in rows if isinstance(r, list)) + "]"
 
 
+def svg_loops(d, segments=32):
+    """The path's outlines, y up."""
+    from .svgdxf import parse_path
+    return [loop for loop in parse_path(str(d or ""), max(int(segments), 4))
+            if len(loop) >= 3]
+
+
 def statement(node, fmt, fn) -> str:
     p = node.params
     centre = f"center = [{fmt(p.get('x', 0.0))}, {fmt(p.get('y', 0.0))}]"
+    if node.type == "svg_path":
+        from .model import scad_str
+        from . import mesh
+        seg = mesh.rv(p.get("segments", 32), None, 32)
+        points, paths = [], []
+        for loop in svg_loops(p.get("d"), seg):
+            start = len(points)
+            points.extend(loop)
+            paths.append(list(range(start, len(points))))
+        pts = "[" + ", ".join(f"[{fmt(round(x, 4))}, {fmt(round(y, 4))}]"
+                              for x, y in points) + "]"
+        idx = "[" + ", ".join("[" + ", ".join(str(i) for i in path) + "]"
+                              for path in paths) + "]"
+        return (f"kcad_svg_path(d = {scad_str(str(p.get('d', '')))}, "
+                f"segments = {fmt(p.get('segments', 32))}, {centre},\n"
+                f"    points = {pts},\n    paths = {idx})")
     if node.type == "rounded_polygon":
         return (f"kcad_rounded_polygon(corners = "
                 f"{_rows(p.get('corners') or [], fmt)}, segments = "
@@ -206,7 +252,21 @@ def _build(type_, key, width, name):
     return build
 
 
+def _b_svg_path(parser, positional, named):
+    from .model import CadNode
+    from .scadparse import _num
+    centre = named.get("center")
+    cx, cy = (centre + [0.0, 0.0])[:2] if isinstance(centre, list) \
+        else (0.0, 0.0)
+    seg = _num(named.get("segments", 32), 32.0)
+    return CadNode("svg_path", "SVG path", dict(
+        x=_num(cx, 0.0), y=_num(cy, 0.0),
+        segments=seg if isinstance(seg, str) else max(int(seg), 4),
+        d=str(named.get("d", positional[0] if positional else ""))))
+
+
 BUILDERS = {
+    "kcad_svg_path": _b_svg_path,
     "kcad_rounded_polygon": _build("rounded_polygon", "corners", 3,
                                    "Rounded polygon"),
     "kcad_bezier_shape": _build("bezier_shape", "controls", 2,
@@ -225,6 +285,9 @@ def outlines(node, env):
     x = mesh.rv(node.params.get("x", 0.0), env)
     y = mesh.rv(node.params.get("y", 0.0), env)
     seg = mesh.rv(node.params.get("segments", 8), env, 8)
+    if node.type == "svg_path":
+        return [[(px + x, py + y) for px, py in loop]
+                for loop in svg_loops(node.params.get("d"), seg)]
     if node.type == "rounded_polygon":
         pts = rounded_outline(_resolved_rows(node, env, "corners"), seg)
     else:
@@ -233,6 +296,11 @@ def outlines(node, env):
 
 
 def check(node, env):
+    if node.type == "svg_path":
+        if not svg_loops(node.params.get("d")):
+            return ("SVG path: no closed shape — write it like "
+                    "M 0 0 L 20 0 L 10 15 Z")
+        return None
     if node.type == "rounded_polygon":
         rows = node.params.get("corners") or []
         if len(rows) < 3:
@@ -247,4 +315,12 @@ def check(node, env):
 
 def tess(node, env, color, sel, selected):
     from . import mesh
+    if node.type == "svg_path":
+        loops = mesh._oriented(node, mesh.node_outlines(node, env))
+        tris = []
+        for solid, holes in mesh.outline_regions(loops):
+            tris.extend(((a[0], a[1], 0.0), (b[0], b[1], 0.0),
+                         (c[0], c[1], 0.0))
+                        for a, b, c in mesh._caps(solid, holes))
+        return mesh._emit(tris, color, selected)
     return mesh._emit(mesh.flat_mesh(node, env), color, selected)

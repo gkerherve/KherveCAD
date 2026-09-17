@@ -740,6 +740,27 @@ TIPS = {
          "solid Margin.",
          "Extrude it."],
         "Only whole cells are cut, so the edge stays solid."),
+    "textured": (
+        "Textured cylinder / panel",
+        "A cylinder or a flat panel with a relief pattern on its surface — "
+        "ribs, waves, diamonds, bricks, hexagons, dimples or checkers — "
+        "for grips, lids, lithophane-like panels and decoration.",
+        ["Insert ▸ Mechanical features ▸ Textured cylinder / panel.",
+         "Choose the Shape and the Pattern, then its size (Pattern size) "
+         "and how deep it goes (Relief depth).",
+         "Raise Samples per pattern for a smoother relief."],
+        "Round a cylinder the pattern size is adjusted so it closes "
+        "without a seam."),
+    "svg_path": (
+        "SVG path shape",
+        "A 2D shape typed as an SVG path — M, L, H, V, C, S, Q, T, A and Z, "
+        "absolute or relative — so curves and arcs are one line of text. "
+        "A subpath inside another is a hole.",
+        ["Insert ▸ Shapes & patterns ▸ SVG path shape.",
+         "Type the path: M 0 0 L 40 0 A 10 10 0 0 1 40 20 L 0 20 Z.",
+         "Extrude it."],
+        "y runs up, as everywhere in KherveCAD (not down as in an SVG "
+        "file)."),
     "pattern": (
         "Pattern (linear / polar / grid)",
         "Repeats its contents as copies — in a row, round an axis, or "

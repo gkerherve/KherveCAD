@@ -127,6 +127,39 @@ Practical consequences:
   but undo and open rebuild the tree from a snapshot — re-read them
   afterwards.
 
+## OpenSCAD libraries, features and printing
+
+Programs sent with `apply_code` may use the whole OpenSCAD language and
+its libraries (see *Real OpenSCAD in* above). On top of that, the
+features of the best-known libraries are KherveCAD nodes, written and
+read as `kcad_*` calls with real OpenSCAD modules behind them, so every
+number can be an expression:
+
+- `kcad_gear(kind, m, teeth, pressure_angle, thickness, helix, bore,
+  backlash, clearance, rim, mate_teeth, length, worm_diameter)` —
+  involute spur, helical, herringbone, internal, rack, bevel, worm;
+- `kcad_thread(kind, diameter, pitch, length, starts, left_hand,
+  internal, clearance, bore)` — metric, trapezoidal, square, buttress,
+  pipe, bottle (internal = the tap to subtract);
+- `kcad_hole(kind, diameter, depth, head_diameter, head_depth,
+  countersink_angle, nut_width, nut_height, length, extra)` — the tool
+  to subtract, top at z = 0;
+- `kcad_knurl`, `kcad_textured` (ribs, waves, diamonds, bricks, hexes,
+  dimples, checkers on a cylinder or panel), `kcad_polyhedron`
+  (Platonic and Archimedean solids), and 2D `kcad_star`,
+  `kcad_rounded_polygon` (a radius per corner), `kcad_bezier_shape`,
+  `kcad_honeycomb`; an `svg_path` node takes an SVG path string.
+
+`insert_part` adds the printing parts (dovetail, snap-fit, hinges,
+insert boss, bottle cap, cable clip, Gridfinity bin and baseplate, tray,
+enclosure), motion and electronics hardware (NEMA motors, T-slot
+extrusions, MGN rails, GT2 pulleys, bearings, fans, Raspberry Pi and
+Arduino boards), Lego Technic and generative panels — `list_parts`
+names them. `split_part` cuts a part too big for the bed into two
+Objects with dowel holes. `set_render_options time` shows a `$t`
+animation at a moment; `list_scad_libraries` / `install_scad_library`
+manage BOSL2, MCAD and the rest.
+
 ## Crystals, lattices and nanoparticles
 
 `list_crystals` is a library of 32 standard crystal structures (FCC,

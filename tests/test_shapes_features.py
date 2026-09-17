@@ -119,3 +119,53 @@ def test_matches_openscad(type_, extrude, params, tmp_path):
     exact = analysis.mass_properties(engine.parse_stl(str(stl)))["volume"]
     preview = analysis.mass_properties(mesh.tessellate(node))["volume"]
     assert preview == pytest.approx(exact, rel=0.01)
+
+
+# ------------------------------------------------ textures and svg paths
+
+from khervecad import textured  # noqa: E402
+
+
+@pytest.mark.parametrize("shape", textured.SHAPES)
+@pytest.mark.parametrize("pattern", textured.PATTERNS)
+def test_textured_is_closed_and_round_trips(shape, pattern):
+    model, node = _doc("textured", shape=shape, pattern=pattern,
+                       height=6.0 if shape == "cylinder" else 3.0,
+                       diameter=16.0, width=20.0, depth=12.0)
+    assert validate(model.root) == {}
+    tris = mesh.tessellate(node)
+    checks = {c["name"]: c["status"]
+              for c in analysis.print_check(tris)["checks"]}
+    assert checks["Watertight"] == "pass"
+    assert analysis.mass_properties(tris)["volume"] > 0
+    assert _lossless(model)
+
+
+def test_cylinder_texture_closes_round_the_seam():
+    p = dict(textured.NODE_TYPES["textured"]["params"])
+    cols, _rows, period = textured.grid(p)
+    assert abs(math.pi * p["diameter"] / period
+               - round(math.pi * p["diameter"] / period)) < 1e-9
+
+
+def test_svg_path_shape_with_a_hole():
+    model, ext = _doc("svg_path", extrude=True,
+                      d="M 0 0 h 20 v 10 h -20 z M 5 3 h 4 v 4 h -4 z")
+    assert validate(model.root) == {}
+    volume = analysis.mass_properties(mesh.tessellate(ext))["volume"]
+    assert volume == pytest.approx(2 * (200 - 16))
+    assert _lossless(model)
+
+
+@pytest.mark.skipif(not OPENSCAD, reason="OpenSCAD not installed")
+@pytest.mark.parametrize("pattern", ["diamonds", "hexes"])
+def test_textured_matches_openscad(pattern, tmp_path):
+    model, node = _doc("textured", pattern=pattern, height=6.0,
+                       diameter=16.0)
+    scad, stl = tmp_path / "t.scad", tmp_path / "t.stl"
+    scad.write_text(model.to_scad())
+    subprocess.run([OPENSCAD, *engine.openscad_args(OPENSCAD, stl, scad)],
+                   check=True, capture_output=True, timeout=300)
+    exact = analysis.mass_properties(engine.parse_stl(str(stl)))["volume"]
+    preview = analysis.mass_properties(mesh.tessellate(node))["volume"]
+    assert preview == pytest.approx(exact, rel=0.005)

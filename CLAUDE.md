@@ -203,6 +203,16 @@ into a new module and import.
                        and seeded Voronoi panel (Bowyer–Watson `delaunay`,
                        cells by half-plane clipping, inset by the wall),
                        maze (backtracker spanning tree) and Hilbert plate.
+  - `textured.py`    — `textured` node: a cylinder or panel whose surface
+                       carries ribs / waves / diamonds / bricks / hexes /
+                       dimples / checkers (`height` 0..1 over u, v mm),
+                       relief deep; the cylinder's period rounds so the
+                       pattern closes. The helper builds the same
+                       polyhedron (points then faces) in OpenSCAD —
+                       volumes agree exactly. `curves2d` also has
+                       `svg_path` (a 2D shape typed as an SVG path, y up,
+                       inner subpaths holes; the call carries the flattened
+                       points for OpenSCAD, the importer rebuilds from d).
   - `split.py`       — Split for printing (tree right-click, `split_ui`
                        dialog, MCP `split_part`): two Objects, each
                        `difference() { intersection() { <clone of the

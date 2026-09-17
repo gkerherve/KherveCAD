@@ -171,7 +171,11 @@ count, depth, angle)`, `kcad_polyhedron(kind = "icosahedron" | \
 "truncated_icosahedron" | …, radius)`, and 2D `kcad_star(points, radius, \
 inner_radius)`, `kcad_rounded_polygon(corners = [[x, y, r], …])`, \
 `kcad_bezier_shape(controls = [[x, y], …])` (point, control, control per \
-curve), `kcad_honeycomb(size = [w, h], cell, wall, margin)`.
+curve), `kcad_honeycomb(size = [w, h], cell, wall, margin)`, \
+`kcad_textured(shape = "cylinder" | "panel", pattern = "diamonds" | \
+"ribs" | "waves" | "bricks" | "hexes" | "dimples" | "checkers", diameter, \
+height, period, relief)`; to add an svg_path shape use add_node with \
+d = "M 0 0 L 40 0 A 10 10 0 0 1 40 20 Z" (y up).
 - Beyond OpenSCAD's own shapes, apply_code understands KherveCAD's \
 helpers, which parse into editable nodes: `kcad_sweep(path = [[x, y, \
 z], ...], smooth = 3, twist = 0, scale = 1, wall = 0, closed = false) \
