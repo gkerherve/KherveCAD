@@ -56,6 +56,10 @@ BELT_WIDTH = 0.90
 ROOF_PANEL = 80.0
 #: a greenhouse never narrows past this much of its own beltline
 CABIN_WAIST = 0.62
+#: the last of the car's length over which its ends round away
+END_ROUND = 0.05
+#: how much of its width is left at the very nose and tail
+END_WIDTH = 0.72
 #: the tail starts falling here at the latest
 TAIL_START = 0.80
 #: the body (not the wing) has fallen to this much of the height by
@@ -339,6 +343,12 @@ class Car:
         n = SECTION_LEVELS
         levels = [zb + (zt - zb) * k / (n - 1) for k in range(n)]
         plan = self.half_width(s)
+        # close the very ends: a loft that runs at full width to its
+        # last station ends on a flat wall, and the tail read as a
+        # packing case however right the rest of the line was
+        for edge in (s, 1.0 - s):
+            if edge < END_ROUND:
+                plan *= 1.0 - (1.0 - END_WIDTH) * (1.0 - edge / END_ROUND)
         belt = self.belt_z(s)
         belt_x = min(plan, self.W / 2 * self.section_shape(s, belt))
         xs = []
