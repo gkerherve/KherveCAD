@@ -1646,6 +1646,11 @@ TOOLS = [
             "iterating."
         ),
         "input_schema": _obj({
+            "time": {"type": "number",
+                     "description": "OpenSCAD's animation time $t, 0-1: "
+                                    "a model whose expressions read $t "
+                                    "is shown at that moment (the "
+                                    "document is not changed)."},
             "segments": {"type": "integer",
                          "description": "Global $fn (3-512)."},
             "unit": {"type": "string",

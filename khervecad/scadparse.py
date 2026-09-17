@@ -250,7 +250,7 @@ class Parser:
                 return False
             if name in _WORDS or name in expr.CONSTANTS:
                 continue
-            if name in self.bound:
+            if name in self.bound or name in _LIVE:
                 linked = True
             elif name in self.scope:
                 return False
@@ -1287,6 +1287,9 @@ _BUILDERS.update(_organic.BUILDERS)
 #: a name in an expression (group 1; a "string" matches with no group)
 #: and whether it is called (group 2)
 _NAME_RE = re.compile(r'"(?:\\.|[^"\\])*"|(?<![\w.$])(\$?[A-Za-z_]\w*)(\s*\()?')
+#: special variables that change while the program runs ($t animates):
+#: an expression reading one is never frozen
+_LIVE = {"$t", "$preview", "$vpr", "$vpt", "$vpd", "$vpf", "$children"}
 #: words of the expression language that are not variables
 _WORDS = {"for", "if", "else", "let", "each", "function", "assert", "echo",
           "true", "false", "undef"}

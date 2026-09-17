@@ -1119,6 +1119,9 @@ def _component_key(node, env):
                 parts.append("?")
         parts.append(";")
         walk.extend(n.children)
+    if any("$t" in p for p in parts):
+        # an animated part is a different mesh at every moment
+        parts.append(f"$t={expr.SPECIAL_DEFAULTS.get('$t', 0)!r}")
     parts.append(repr(sorted(env.items(), key=lambda kv: kv[0]))
                  if env else "")
     parts.append(str(_FN_OVERRIDE))

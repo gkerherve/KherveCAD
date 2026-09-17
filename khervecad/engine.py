@@ -258,11 +258,18 @@ def _process(parent=None) -> QProcess:
     return process
 
 
+#: variables set on every OpenSCAD run (``-D name=value``) — the
+#: animation time $t while View ▸ Animate shows one (animate.py)
+DEFINES = {}
+
+
 def openscad_args(binary: str, out_path, scad_path, extra=()) -> list:
     """The arguments of one OpenSCAD run: output, backend, extras, input.
     Every render and export goes through here, so none of them falls
     back to the slow backend."""
-    return ["-o", str(out_path), *backend_args(binary), *extra,
+    defines = [arg for name, value in DEFINES.items()
+               for arg in ("-D", f"{name}={value}")]
+    return ["-o", str(out_path), *backend_args(binary), *defines, *extra,
             str(scad_path)]
 
 

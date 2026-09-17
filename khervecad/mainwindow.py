@@ -302,6 +302,10 @@ class MainWindow(QMainWindow):
         self._build_examples_menu(m)
 
         view_menu = m.addMenu("&View")
+        from . import animate
+        view_menu.addAction(icons.icon("mdi.play-circle-outline"),
+                            "&Animate ($t)...",
+                            lambda: animate.open_panel(self))
         view_menu.addAction(self._grid_act)
         view_menu.addAction(self._snap_act)
         view_menu.addAction(self._vibe_act)

@@ -129,6 +129,16 @@ into a new module and import.
                        `_components` splits a vector variable
                        (`translate(pos)` -> pos[0..2]); centred squares of
                        expression sizes centre by expression.
+  - `animate.py`     — View ▸ Animate ($t): `set_time` puts OpenSCAD's
+                       animation time in `expr.SPECIAL_DEFAULTS["$t"]`
+                       (every expression reads it), `engine.DEFINES`
+                       (`-D $t=…` on every OpenSCAD run) and the exact-mesh
+                       key of parts whose params mention $t
+                       (`mesh._component_key`); the document never changes.
+                       Panel: play/pause, scrub, FPS, steps, Export frames
+                       (PNG per step via pngexport). MCP
+                       `set_render_options time`. scadparse never folds an
+                       expression reading $t / $preview / $vp* (`_LIVE`).
   - `customizer.py`  — OpenSCAD Customizer annotations on variables:
                        `// [10:5:200]`, `// [a, b]`, `// [1:Thin, 2:Thick]`,
                        `// 12` (text length), the description line above

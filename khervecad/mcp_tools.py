@@ -1660,6 +1660,9 @@ class McpToolExecutor:
             win.view3d.set_cavity(bool(params["cavity"]))
         if params.get("edges") is not None:
             win.view3d.set_edges(bool(params["edges"]))
+        if params.get("time") is not None:
+            from . import animate
+            animate.set_time(win, float(params["time"]))
         if params.get("smooth") is not None:
             win.view3d.set_smooth(bool(params["smooth"]))
         if params.get("overlay") is not None:
