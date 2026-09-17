@@ -111,3 +111,36 @@ PARTS = {
                           path=str(p))
     for p in shipped()
 }
+
+
+#: Hand tools submenu order (2026-09-18, the user's request — the 57
+#: tools read as one unbroken flat menu). `tool_group` sorts every
+#: label into one of these; "Other" only ever appears for a tool added
+#: later with no rule below, so the menu never silently drops it.
+TOOL_GROUP_ORDER = ["Spanners (metric)", "Spanners (imperial)",
+                    "Wrenches & hex keys", "Sockets", "Screwdrivers",
+                    "Pliers", "Striking & chisels", "Cutting & sawing",
+                    "Measuring & marking", "Other"]
+
+
+def tool_group(label: str) -> str:
+    """Which Hand tools submenu *label* belongs in."""
+    if label.startswith("Combination Spanner"):
+        return "Spanners (metric)" if label.endswith("mm") \
+            else "Spanners (imperial)"
+    if label in ("Adjustable Wrench", "Hex Key Set"):
+        return "Wrenches & hex keys"
+    if label.startswith("Socket Set"):
+        return "Sockets"
+    if "Screwdriver" in label:
+        return "Screwdrivers"
+    if "Pliers" in label:
+        return "Pliers"
+    if label in ("Claw Hammer", "Cold Chisel", "Brick Bolster") or \
+            label.startswith("Wood Chisel"):
+        return "Striking & chisels"
+    if label in ("Utility Knife", "Hand Saw"):
+        return "Cutting & sawing"
+    if label in ("Tape Measure", "Spirit Level"):
+        return "Measuring & marking"
+    return "Other"

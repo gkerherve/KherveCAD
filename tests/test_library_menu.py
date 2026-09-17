@@ -143,6 +143,23 @@ def test_examples_live_in_the_library_and_open_as_documents(window):
         _menu(library, "Vacuum & UHV"))
 
 
+def test_hand_tools_are_split_into_submenus(window):
+    from khervecad import library
+    from khervecad.library_kcad import TOOL_GROUP_ORDER
+    tools = _menu(_menu(window.menuBar(), "Library"), "Hand tools")
+    top = _texts(tools)
+    # a flat list of 57 tools was unreadable — every action here is a
+    # submenu, never a tool inserted straight into "Hand tools"
+    assert all(act.menu() is not None for act in tools.actions())
+    labels = set()
+    for group in top:
+        assert group in TOOL_GROUP_ORDER, group
+        labels.update(_texts(_menu(tools, group)))
+    for pid, spec in library.PARTS.items():
+        if spec["category"] == "Tools":
+            assert spec["label"] in labels, pid
+
+
 def test_flowers_and_stylised_trees_insert_as_parts():
     from khervecad import library, mesh
     from khervecad.model import validate

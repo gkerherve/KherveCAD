@@ -18,8 +18,14 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-from . import icons
+from . import icons, library_kcad
 from .library_groups import SECTIONS, entry_categories, short_name
+
+#: category -> function(label) -> submenu name, for a category whose
+#: parts split into a further level (Hand tools' 57 items read as one
+#: unbroken flat list); GROUP_ORDER gives that submenu's own order.
+GROUPED_CATEGORIES = {"Tools": library_kcad.tool_group}
+GROUP_ORDER = {"Tools": library_kcad.TOOL_GROUP_ORDER}
 
 #: where the example documents go: (section, submenu title, icon,
 #: example categories) — a submenu title already in that section gets
@@ -87,11 +93,12 @@ def build_library_menu(window, menubar):
             if special:
                 _BUILDERS[special](window, sub)
             if len(cats) == 1:            # straight into the menu
-                _add_parts(window, sub, by_cat[cats[0]], PARTS)
+                _add_parts(window, sub, by_cat[cats[0]], PARTS,
+                          category=cats[0])
                 continue
             for cat in cats:
                 _add_parts(window, sub.addMenu(menu_text(short_name(cat))),
-                           by_cat[cat], PARTS)
+                           by_cat[cat], PARTS, category=cat)
         _add_examples(window, menu, title, subs)
     rest = [c for c in by_cat if c not in placed]
     if rest:
@@ -102,10 +109,26 @@ def build_library_menu(window, menubar):
     return menu
 
 
-def _add_parts(window, sub, ids, parts):
+def _add_parts(window, sub, ids, parts, category=None):
+    grouper = GROUPED_CATEGORIES.get(category)
+    if grouper is None:
+        for pid in ids:
+            sub.addAction(
+                menu_text(parts[pid]["label"]),
+                lambda _=False, p=pid: window._insert_library_part(p))
+        return
+    groups = {}
     for pid in ids:
-        sub.addAction(menu_text(parts[pid]["label"]),
-                      lambda _=False, p=pid: window._insert_library_part(p))
+        groups.setdefault(grouper(parts[pid]["label"]), []).append(pid)
+    order = GROUP_ORDER.get(category, [])
+    names = [n for n in order if n in groups] + \
+        sorted(n for n in groups if n not in order)
+    for name in names:
+        target = sub.addMenu(menu_text(name))
+        for pid in groups[name]:
+            target.addAction(
+                menu_text(parts[pid]["label"]),
+                lambda _=False, p=pid: window._insert_library_part(p))
 
 
 def _lego(window, sub):
