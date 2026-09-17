@@ -27,7 +27,12 @@ ORIENTATIONS = ["Isometric", "Top", "Bottom", "Front", "Back", "Right",
 MATERIALS = ["Default", "Plastic", "Metal", "Matte", "Clay", "Glass",
              "Rubber", "Skin", "Gold", "Copper", "Emissive",
              "Brick", "Concrete", "Render", "Roof tiles", "Slate", "Stone",
-             "Bark", "Leaves"]
+             "Bark", "Leaves",
+             "Wall tiles", "Metro tiles", "Mosaic", "Hex tiles", "Marble",
+             "Floor tiles", "Checker tiles", "Terrazzo", "Zellige",
+             "Floorboards", "Parquet", "Carpet", "Plaster", "Cladding",
+             "Shingles", "Thatch", "Standing seam", "Solar panels",
+             "Panelling"]
 
 #: 3D projections (view3d.PROJECTIONS — repeated here because this
 #: module must not import Qt).
@@ -1229,7 +1234,12 @@ TOOLS = [
                 "items": {"type": "object", "properties": {
                     "name": {"type": "string"},
                     "wall_height": {"type": "number"},
-                    "wall_thickness": {"type": "number"},
+                    "wall_thickness": {
+                        "type": "number",
+                        "description": "Outside walls, mm (200)."},
+                    "inner_wall_thickness": {
+                        "type": "number",
+                        "description": "Walls between rooms, mm (100)."},
                     "slab_thickness": {"type": "number"},
                     "rooms": {"type": "array", "items": {
                         "type": "object", "properties": {
@@ -1243,11 +1253,40 @@ TOOLS = [
                                                  "paving"]},
                             "finish": {
                                 "type": "string",
-                                "description": "This room's own tiles or "
-                                "panelling, lining its walls and floor "
-                                "(White tiles, Blue tiles, Green metro "
-                                "tiles, Marble, Terracotta tiles, Wood "
-                                "panelling); omit for the house's."},
+                                "description": (
+                                    "Tiles or panelling on this room's "
+                                    "walls: White tiles, White metro "
+                                    "tiles, Green metro tiles, Black "
+                                    "metro tiles, Blue tiles, Blue "
+                                    "mosaic, Green zellige, Pink "
+                                    "zellige, Hexagon tiles, Marble, "
+                                    "Grey porcelain, Terracotta tiles, "
+                                    "Wood panelling, or None. Omit and "
+                                    "a bathroom, shower room, toilet, "
+                                    "kitchen or utility is tiled "
+                                    "automatically (bathroom: half "
+                                    "height, full height behind the "
+                                    "bath and shower; kitchen: a "
+                                    "splashback behind worktops and "
+                                    "sinks) and other rooms stay "
+                                    "painted."),
+                            },
+                            "flooring": {
+                                "type": "string",
+                                "description": (
+                                    "Floor covering: Oak floorboards, "
+                                    "Walnut floorboards, Grey oak, Oak "
+                                    "parquet, Grey carpet, Beige "
+                                    "carpet, Blue carpet, Grey "
+                                    "porcelain, Stone tiles, Slate "
+                                    "tiles, Terracotta, Checkerboard, "
+                                    "Hexagon tiles, Terrazzo, Marble, "
+                                    "Polished concrete, Vinyl. Omit to "
+                                    "choose from the room's name "
+                                    "(carpet in bedrooms, boards in "
+                                    "living rooms, tiles in kitchens "
+                                    "and bathrooms)."),
+                            },
                             "openings": {"type": "array", "items": {
                                 "type": "object", "properties": {
                                     "kind": {"type": "string",
@@ -1295,10 +1334,13 @@ TOOLS = [
                                    "enum": ["auto", "x", "y"]},
                          "color": {
                              "type": "string",
-                             "description": "Covering: Brown tiles, Red "
-                             "clay, Terracotta pantiles, Grey tiles, "
-                             "Slate, Dark slate, Cedar shingles, Thatch, "
-                             "Green, Green roof, Zinc, Solar panels."},
+                             "description": (
+                                 "Covering: Brown tiles, Red clay, "
+                                 "Terracotta pantiles, Grey tiles, "
+                                 "Black pantiles, Slate, Dark slate, "
+                                 "Cedar shingles, Thatch, Green, Green "
+                                 "roof, Zinc, Copper (verdigris), Solar "
+                                 "panels.")},
                          "wings": {
                              "type": "string",
                              "enum": ["Lean-to", "Gable", "Hip", "Flat",
@@ -1307,21 +1349,43 @@ TOOLS = [
                              "a part of a floor with nothing above it, "
                              "like a garage, which would stand open "
                              "otherwise. Default a lean-to on the taller "
-                             "part."}}},
+                             "part."},
+                         "chimney": {
+                             "type": "string",
+                             "enum": ["auto", "ridge", "none"],
+                             "description": "auto (default): a chimney "
+                             "over every fireplace (part home_fireplace) — "
+                             "a stack outside an outside wall, a breast "
+                             "through the floors above an inside wall; "
+                             "ridge: one on the ridge even without a "
+                             "fireplace."}}},
             "walls": {
                 "type": "object",
                 "description": "How the walls are finished.",
                 "properties": {
                     "outside": {
                         "type": "string",
-                        "description": "Painted plaster, White render, "
-                        "Cream render, Red brick, Buff brick, Grey stone, "
-                        "Timber cladding, Concrete."},
+                        "description": (
+                            "Painted plaster, White render, Cream "
+                            "render, Grey render, Red brick, Buff "
+                            "brick, Yellow stock brick, Brown brick, "
+                            "Blue engineering brick, Painted brick, "
+                            "Grey stone, Cotswold stone, Timber "
+                            "cladding, Grey cladding, White "
+                            "weatherboard, Concrete.")},
                     "inside": {
                         "type": "string",
-                        "description": "Between rooms: Painted plaster, "
-                        "Warm white, Soft grey, Sage, Clay pink, Exposed "
-                        "brick."}}},
+                        "description": (
+                            "Between rooms: Painted plaster, Warm "
+                            "white, Soft grey, Sage, Duck egg, Clay "
+                            "pink, Mustard, Navy, Exposed brick.")},
+                    "joinery": {
+                        "type": "string",
+                        "description": (
+                            "Window and door frames, fascias: White, "
+                            "Anthracite grey, Black, Oak, Sage green, "
+                            "Cream; omit for what suits the outside "
+                            "walls.")}}},
             "garden": {"type": "object",
                        "description": "Lawn beside the house; omit for "
                                       "none.",

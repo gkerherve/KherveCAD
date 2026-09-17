@@ -563,20 +563,25 @@ class HouseBuilder(QDialog):
         lay.addLayout(row)
         form = QFormLayout()
         self.wall_height = MetreSpin(1.5, 6.0, 0.05)
-        self.wall_thickness = MetreSpin(0.05, 0.5, 0.01)
+        self.wall_thickness = MetreSpin(0.05, 0.6, 0.01)
+        self.inner_wall_thickness = MetreSpin(0.05, 0.5, 0.01)
         self.slab_thickness = MetreSpin(0.05, 0.5, 0.01)
         for w, key, tip in (
                 (self.wall_height, "wall_height",
                  "Floor-to-ceiling height of this storey"),
                 (self.wall_thickness, "wall_thickness",
-                 "Thickness of every wall on this floor"),
+                 "Thickness of the outside walls on this floor"),
+                (self.inner_wall_thickness, "inner_wall_thickness",
+                 "Thickness of the walls between rooms — a partition "
+                 "is usually thinner than an outside wall"),
                 (self.slab_thickness, "slab_thickness",
                  "Thickness of the floor slab under the rooms")):
             w.setToolTip(tip)
             w.valueChanged.connect(
                 lambda _v, k=key, s=w: self._floor_field_changed(k, s.mm()))
         form.addRow("Ceiling height:", self.wall_height)
-        form.addRow("Wall thickness:", self.wall_thickness)
+        form.addRow("Outside walls thick:", self.wall_thickness)
+        form.addRow("Inside walls thick:", self.inner_wall_thickness)
         form.addRow("Floor slab:", self.slab_thickness)
         self.outer_wall = QComboBox()
         for name, (hexcol, _mat) in H.WALL_STYLES.items():
@@ -589,13 +594,21 @@ class HouseBuilder(QDialog):
         self.inner_wall.setToolTip("How the walls between rooms are "
                                    "finished (a room can have its own "
                                    "finish too)")
+        self.joinery = QComboBox()
+        self.joinery.addItem("To suit the walls", "")
+        for name, (hexcol, _mat) in H.JOINERY.items():
+            self.joinery.addItem(_swatch(hexcol), name, name)
+        self.joinery.setToolTip("The colour of the window frames, door "
+                                "frames, fascias and soffits")
         for combo, key in ((self.outer_wall, "outer_wall"),
-                           (self.inner_wall, "inner_wall")):
+                           (self.inner_wall, "inner_wall"),
+                           (self.joinery, "joinery")):
             combo.currentIndexChanged.connect(
                 lambda _i, k=key, c=combo: self._wall_style_changed(
                     k, c.currentData()))
         form.addRow("Outside walls:", self.outer_wall)
         form.addRow("Walls between rooms:", self.inner_wall)
+        form.addRow("Windows & doors:", self.joinery)
         lay.addLayout(form)
         return box
 
@@ -612,6 +625,8 @@ class HouseBuilder(QDialog):
                 max(0, self.outer_wall.findData(self.house.outer_wall)))
             self.inner_wall.setCurrentIndex(
                 max(0, self.inner_wall.findData(self.house.inner_wall)))
+            self.joinery.setCurrentIndex(
+                max(0, self.joinery.findData(self.house.joinery)))
 
     def _rooms_group(self):
         box = _step_box(2, "Rooms")
@@ -666,16 +681,27 @@ class HouseBuilder(QDialog):
                 "surface", self.room_kind.currentData()))
         form.addRow("Kind:", self.room_kind)
         self.room_finish = QComboBox()
-        self.room_finish.addItem("Same as the house", "")
+        self.room_finish.addItem("Automatic (from its name)", "")
+        self.room_finish.addItem("None (painted walls)", H.NO_FINISH)
         for name, ((hexcol, _m), _floor) in H.ROOM_FINISHES.items():
             self.room_finish.addItem(_swatch(hexcol), name, name)
-        self.room_finish.setToolTip("This room's own finish: tiles or "
-                                    "panelling lining its walls and floor "
-                                    "— a bathroom, a kitchen")
+        self.room_finish.setToolTip(
+            "Tiles or panelling on this room's walls. Automatic tiles a "
+            "bathroom to half height and full height behind the bath and "
+            "shower, and a kitchen behind its worktops")
         self.room_finish.currentIndexChanged.connect(
             lambda _i: self._room_field_changed(
                 "finish", self.room_finish.currentData()))
-        form.addRow("Finish:", self.room_finish)
+        form.addRow("Wall tiles:", self.room_finish)
+        self.room_flooring = QComboBox()
+        self.room_flooring.addItem("Automatic (from its name)", "")
+        for name, (hexcol, _m) in H.FLOORINGS.items():
+            self.room_flooring.addItem(_swatch(hexcol), name, name)
+        self.room_flooring.setToolTip("This room's floor covering")
+        self.room_flooring.currentIndexChanged.connect(
+            lambda _i: self._room_field_changed(
+                "flooring", self.room_flooring.currentData()))
+        form.addRow("Floor:", self.room_flooring)
         form.addRow("Size (w × d):", size)
         form.addRow("Position (x, y):", pos)
         lay.addLayout(form)
@@ -861,6 +887,7 @@ class HouseBuilder(QDialog):
         if prev is not None:
             floor.wall_height = prev.wall_height
             floor.wall_thickness = prev.wall_thickness
+            floor.inner_wall_thickness = prev.inner_wall_thickness
             floor.slab_thickness = prev.slab_thickness
         if prev and prev.rooms:
             x0, y0, x1, y1 = prev.bounds()
@@ -1276,6 +1303,17 @@ class HouseBuilder(QDialog):
             "above it, like a garage. A lean-to leans on the taller part.")
         self.roof_wings.currentIndexChanged.connect(
             lambda _i: self._roof_changed())
+        self.roof_chimney = QComboBox()
+        for label, key in (("Over each fireplace", "auto"),
+                           ("On the ridge", "ridge"), ("None", "none")):
+            self.roof_chimney.addItem(label, key)
+        self.roof_chimney.setToolTip(
+            "Chimneys: a fireplace (Add furniture ▸ Fireplace) gets a stack "
+            "outside an outside wall, or a chimney breast through the "
+            "floors above an inside wall; 'On the ridge' adds one even "
+            "without a fireplace")
+        self.roof_chimney.currentIndexChanged.connect(
+            lambda _i: self._roof_changed())
         self.roof_style.currentIndexChanged.connect(
             lambda _i: self._roof_changed(style_changed=True))
         self.roof_pitch.valueChanged.connect(lambda _v: self._roof_changed())
@@ -1288,7 +1326,8 @@ class HouseBuilder(QDialog):
                         ("Overhang:", self.roof_overhang),
                         ("Ridge:", self.roof_ridge),
                         ("Covering:", self.roof_color),
-                        ("Side wings:", self.roof_wings)):
+                        ("Side wings:", self.roof_wings),
+                        ("Chimney:", self.roof_chimney)):
             row.addWidget(QLabel(text))
             row.addWidget(w)
         row.addStretch(1)
@@ -1306,7 +1345,8 @@ class HouseBuilder(QDialog):
                                  self.roof_overhang.mm(),
                                  self.roof_ridge.currentData(),
                                  self.roof_color.currentData(),
-                                 self.roof_wings.currentData())
+                                 self.roof_wings.currentData(),
+                                 self.roof_chimney.currentData())
         self._enable_roof_fields()
         self._rebuild_canvas()
         pitch = "" if style == "Flat" else f", {self.roof_pitch.value():.0f}°"
@@ -1330,6 +1370,8 @@ class HouseBuilder(QDialog):
                 max(0, self.roof_color.findData(r.color)))
             self.roof_wings.setCurrentIndex(
                 max(0, self.roof_wings.findData(r.wings)))
+            self.roof_chimney.setCurrentIndex(
+                max(0, self.roof_chimney.findData(r.chimney)))
         self._enable_roof_fields()
 
     # --------------------------------------------------------- garden
@@ -1385,6 +1427,7 @@ class HouseBuilder(QDialog):
             if floor is not None:
                 self.wall_height.set_mm(floor.wall_height)
                 self.wall_thickness.set_mm(floor.wall_thickness)
+                self.inner_wall_thickness.set_mm(floor.inner_wall_thickness)
                 self.slab_thickness.set_mm(floor.slab_thickness)
 
     def _room_caption(self, room) -> str:
@@ -1419,7 +1462,7 @@ class HouseBuilder(QDialog):
         with self.quiet():
             for w in (self.room_name, self.room_x, self.room_y,
                       self.room_w, self.room_d, self.room_kind,
-                      self.room_finish):
+                      self.room_finish, self.room_flooring):
                 w.setEnabled(room is not None)
             if room is not None:
                 self.room_name.setText(room.name)
@@ -1427,6 +1470,8 @@ class HouseBuilder(QDialog):
                     max(0, self.room_kind.findData(room.surface)))
                 self.room_finish.setCurrentIndex(
                     max(0, self.room_finish.findData(room.finish)))
+                self.room_flooring.setCurrentIndex(
+                    max(0, self.room_flooring.findData(room.flooring)))
                 self.room_x.set_mm(room.x)
                 self.room_y.set_mm(room.y)
                 self.room_w.set_mm(room.w)

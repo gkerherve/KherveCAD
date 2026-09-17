@@ -369,10 +369,12 @@ class WallsItem(QGraphicsItem):
     def paint(self, painter, option, widget=None):
         painter.setPen(Qt.NoPen)
         painter.setBrush(WALL_FILL)
-        t, h = self.floor.wall_thickness, self.floor.wall_height
-        for p1, p2, openings, interior in H.collect_walls(self.floor):
-            painter.setBrush(INNER_WALL_FILL if interior else WALL_FILL)
-            for rect in wall_pieces(p1, p2, openings, t, h):
+        h = self.floor.wall_height
+        # each wall at its own thickness: partitions are thinner
+        for sg in H.wall_segments(self.floor):
+            painter.setBrush(INNER_WALL_FILL if sg.interior else WALL_FILL)
+            for rect in wall_pieces(sg.p1, sg.p2, sg.openings, sg.thickness,
+                                    h):
                 painter.drawRect(rect)
 
 

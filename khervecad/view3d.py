@@ -47,13 +47,10 @@ MATERIAL_STYLES = {
     "Clay": "Clay", "Glass": "Glass", "Rubber": "Rubber", "Skin": "Skin",
     "Gold": "Gold", "Copper": "Copper", "Emissive": "Emissive",
     # surfaces: textured by the OpenGL shader (glrender.SURFACES)
-    "Brick": "Brick", "Concrete": "Concrete", "Render": "Render",
-    "Roof tiles": "Roof tiles", "Slate": "Slate", "Stone": "Stone",
-    "Bark": "Bark", "Leaves": "Leaves",
+    **{name: name for name in glrender.SURFACES},
 }
 
-SURFACE_STYLES = {"Brick", "Concrete", "Render", "Roof tiles", "Slate",
-                  "Stone", "Bark", "Leaves"}
+SURFACE_STYLES = set(glrender.SURFACES)
 
 #: 3D viewport backgrounds. "Theme" tracks the app theme; the rest are
 #: explicit (top, bottom) pairs painted as a vertical gradient.

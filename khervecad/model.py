@@ -43,7 +43,13 @@ MAX_WHILE_ITERATIONS = 1000
 MATERIALS = ["Default", "Plastic", "Metal", "Matte", "Clay", "Glass",
              "Rubber", "Skin", "Gold", "Copper", "Emissive",
              "Brick", "Concrete", "Render", "Roof tiles", "Slate", "Stone",
-             "Bark", "Leaves"]
+             "Bark", "Leaves",
+             # house finishes, also drawn by the shader (glrender.SURFACES)
+             "Wall tiles", "Metro tiles", "Mosaic", "Hex tiles", "Marble",
+             "Floor tiles", "Checker tiles", "Terrazzo", "Zellige",
+             "Floorboards", "Parquet", "Carpet", "Plaster", "Cladding",
+             "Shingles", "Thatch", "Standing seam", "Solar panels",
+             "Panelling"]
 
 #: param schema entry: (key, label, kind, minimum, maximum)
 #: kinds: "float", "int", "bool", "str", "points" (list of [x, y]).

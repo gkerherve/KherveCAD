@@ -38,14 +38,13 @@ def test_two_adjacent_rooms_share_one_wall_not_two():
         H.Room("B", 4000.0, 0.0, 4000.0, 3000.0),
     ])
     walls = H.collect_walls(floor)
-    # 4 outer edges of the combined footprint + 1 shared inner wall = 7,
-    # not 8 (each room's own 4 sides counted separately)
-    assert len(walls) == 7
+    # the 4 sides of the combined footprint (the two rooms' S and N edges
+    # run on as one wall each) + 1 shared inner wall
+    assert len(walls) == 5
     shared = [(p1, p2) for p1, p2, _o, interior in walls
              if p1 == (4000.0, 0.0) and p2 == (4000.0, 3000.0) and interior]
     assert len(shared) == 1
-    # the other six are the outside of the house, finished differently
-    assert sum(1 for *_rest, interior in walls if not interior) == 6
+    assert sum(1 for *_rest, interior in walls if not interior) == 4
 
 
 def test_an_opening_lands_on_the_shared_wall_from_either_room():
@@ -191,33 +190,77 @@ def _types(node):
     return {n.type for n in node.walk()}
 
 
-def test_a_wall_with_openings_is_solid_pieces_not_a_difference():
-    # the preview draws a difference as its uncut first operand, which
-    # hid every door and window until OpenSCAD finished
-    nodes = H._wall_node((0.0, 0.0), (5000.0, 0.0),
-                         [(1000.0, 900.0, 2000.0, 0.0, "door"),
-                          (3000.0, 1200.0, 1200.0, 900.0, "window")],
-                         200.0, 2400.0)
-    wall, door_glass, window_glass = nodes
-    assert "difference" not in _types(wall)
-    names = sorted(c.name for c in wall.children[0].children)
-    # 3 piers, a lintel over the door, a sill + lintel for the window
-    assert names == ["Lintel", "Lintel", "Pier", "Pier", "Pier", "Sill"]
-    # the wall's solid volume is the box minus both openings, exactly
-    tris = mesh.tessellate(wall, fn=8)
-    assert tris
-    vol = sum(c.params["width"] * c.params["depth"] * c.params["height"]
-              for c in wall.children[0].children)
-    assert vol == pytest.approx(200.0 * (5000.0 * 2400.0
-                                         - 900.0 * 2000.0
-                                         - 1200.0 * 1200.0))
-    for glass in (door_glass, window_glass):
-        assert glass.params["material"] == "Glass"
-        assert glass.params["alpha"] < 1.0      # see-through
-    assert door_glass.children[0].name == "Door glass"
-    # a door reads as an open doorway: clearer than a window's glazing
-    assert door_glass.params["alpha"] == H.DOOR_GLASS_ALPHA
-    assert H.DOOR_GLASS_ALPHA < window_glass.params["alpha"]
+def _walls(floor, **kw):
+    from khervecad import house_walls as W
+    return W.build_walls(floor, H.floor_look(H.House(**kw)))
+
+
+def test_a_wall_leaf_is_one_solid_with_its_openings_as_holes():
+    # one extruded outline per leaf: no seams across a facade, real
+    # reveals, and the preview shows the openings exactly
+    from khervecad import analysis
+    room = H.Room("A", 0.0, 0.0, 5000.0, 4000.0, openings=[
+        H.Opening("door", "S", 1000.0, 900.0, 2000.0),
+        H.Opening("window", "S", 3000.0, 1200.0, 1200.0, 900.0)])
+    floor = H.Floor("G", rooms=[room])
+    nodes = _walls(floor, outer_wall="Red brick")
+    south = [n for n in nodes if n.name == "Wall"
+             and all(p[1] <= 1e-6 for t in mesh.tessellate(n, fn=8)
+                     for p in t)]
+    assert len(south) == 1
+    assert south[0].params["material"] == "Brick"
+    tris = mesh.tessellate(south[0], fn=8)
+    vol = analysis.mass_properties(tris)["volume"]
+    # 100 thick, 5200 long (corner wraps), 2600 high, minus both openings
+    assert vol == pytest.approx(100.0 * (5200.0 * 2600.0 - 900.0 * 2000.0
+                                         - 1200.0 * 1200.0), rel=1e-6)
+    glass = [n for n in nodes if n.params.get("material") == "Glass"]
+    assert {n.name for n in glass} == {"Glazing", "Door glass"}
+    assert all(n.params["alpha"] < 1.0 for n in glass)
+    names = {n.name for n in nodes}
+    assert {"Window frame", "Sill", "Window board", "Door frame", "Door",
+            "Threshold", "Front step", "Plinth", "Wall lining"} <= names
+
+
+def test_outside_corners_are_closed_and_partitions_are_thinner():
+    floor = H.Floor("G", rooms=[H.Room("A", 0, 0, 4000, 3000),
+                                H.Room("B", 4000, 0, 4000, 3000)],
+                    wall_thickness=300.0, inner_wall_thickness=90.0)
+    segs = {(sg.horizontal, sg.c): sg for sg in H.wall_segments(floor)}
+    south, west = segs[(True, 0.0)], segs[(False, 0.0)]
+    # the facing wraps the corner by the other wall's half thickness
+    assert (south.ext_a, south.ext_b) == (150.0, 150.0)
+    assert south.outside == -1 and west.outside == -1
+    assert segs[(False, 4000.0)].thickness == 90.0
+    assert segs[(False, 4000.0)].interior
+    # the corner square is filled: the facing of both walls reaches it
+    tris = [t for n in _walls(floor) if n.name == "Wall"
+            for t in mesh.tessellate(n, fn=8)]
+    assert min(p[0] for t in tris for p in t) == pytest.approx(-150.0)
+    assert min(p[1] for t in tris for p in t) == pytest.approx(-150.0)
+
+
+def test_an_l_shaped_house_knows_inside_from_outside():
+    floor = H.Floor("G", rooms=[H.Room("A", 0, 0, 10000, 5000),
+                                H.Room("B", 0, 5000, 5000, 5000)])
+    line = sorted((sg.a, sg.b, sg.outside) for sg in H.wall_segments(floor)
+                  if sg.horizontal and sg.c == 5000.0)
+    # shared with B, then the outside of the L (outdoors above it)
+    assert line == [(0.0, 5000.0, 0), (5000.0, 10000.0, 1)]
+    reflex = next(sg for sg in H.wall_segments(floor)
+                  if sg.horizontal and sg.c == 5000.0 and sg.outside)
+    assert reflex.ext_a == 0.0                   # no wrap at a reflex corner
+
+
+def test_region_loops_cut_holes_and_notches():
+    from khervecad.house_walls import region_loops
+    loops = region_loops([(0, 0, 10, 10)], [(2, 2, 4, 4), (6, 0, 8, 5)])
+    assert len(loops) == 1
+    outline, holes = loops[0]
+    assert len(outline) == 8                     # the door notch
+    assert len(holes) == 1 and len(holes[0]) == 4
+    # a full-height opening splits the wall in two
+    assert len(region_loops([(0, 0, 10, 10)], [(4, -1, 6, 11)])) == 2
 
 
 def test_overlapping_openings_do_not_overlap_pieces():
@@ -270,9 +313,9 @@ def test_house_from_spec_puts_backs_flush_against_walls():
     assert sofa.rz == 0.0 and sofa.x == 2500.0
     assert sofa.y == pytest.approx(4400.0 - 475.0, abs=1.0)
     assert sofa.dims["_color"] == "Grey" and sofa.dims["w"] == 2200.0
-    # bookcase turned to face W, its back on the shared wall's face
+    # bookcase turned to face W, its back on the shared (thinner) wall
     assert bookcase.rz == -90.0 and bookcase.y == 1000.0
-    assert bookcase.x == pytest.approx(4900.0 - 150.0, abs=1.0)
+    assert bookcase.x == pytest.approx(4950.0 - 150.0, abs=1.0)
     units, table = kitchen.furniture
     assert units.x == pytest.approx(7900.0 - 300.0, abs=1.0)
     assert (table.x, table.y) == (6500.0, 2000.0)     # room-relative
@@ -528,7 +571,18 @@ def test_2d_view_frames_the_whole_house_and_draws_its_plan(window):
 
 
 # ---------------------------------------------------------------- roofs
-_ROOF_PARTS = ("Roof", "Roof slope", "Gable", "Wedge")
+_ROOF_PARTS = ("Roof", "Roof slope", "Roof covering", "Gable", "Wedge")
+
+
+def _roof_clears_the_walls(group, floor):
+    """Nothing of a wall stands above the roof over it — the facing's
+    top once showed as a brick strip along every eave."""
+    from khervecad.house_roof import RoofShape
+    sh = RoofShape(H.Roof("Gable"), floor)
+    walls = [n for n in group.children if n.name in ("Wall", "Wall lining")]
+    top = max(p[2] for n in walls for t in mesh.tessellate(n, fn=8)
+              for p in t)
+    assert top <= floor.wall_height + 1e-6
 
 
 @pytest.mark.parametrize("style", H.ROOF_STYLES)
@@ -546,6 +600,7 @@ def test_every_roof_style_builds_over_the_top_floor(style):
         assert top == pytest.approx(H.WALL_HEIGHT + H.ROOF_THICKNESS)
     else:
         assert top > H.WALL_HEIGHT + 800.0        # it really rises
+        _roof_clears_the_walls(group, floor)
     _root, warnings = parse_scad(group.to_scad())
     assert not warnings
 
@@ -589,12 +644,14 @@ def test_roofs_and_surfaces_round_trip_and_old_designs_stay_flat():
         H.house_from_spec(dict(SPEC, roof={"style": "gable", "pitch": 80}))
 
 
-def test_a_garage_door_is_a_solid_panel():
-    wall, panel = H._wall_node((0.0, 0.0), (5000.0, 0.0),
-                               [(1000.0, 2400.0, 2100.0, 0.0,
-                                 "garage door")], 200.0, 2400.0)
-    assert panel.params["material"] == "Metal"
-    assert panel.params["alpha"] == 1.0
+def test_a_garage_door_is_a_sectional_metal_panel():
+    room = H.Room("Garage", 0, 0, 3500, 6000, openings=[
+        H.Opening("garage door", "S", 550.0, 2400.0, 2100.0)])
+    nodes = _walls(H.Floor("G", rooms=[room]))
+    sections = [n for n in nodes if n.name == "Door section"]
+    assert len(sections) == 4
+    assert all(n.params["material"] == "Metal" and n.params["alpha"] == 1.0
+               for n in sections)
     house = H.house_from_spec({"floors": [{"rooms": [
         {"w": 3500, "d": 6000, "openings": [{"kind": "garage"}]}]}]})
     assert house.floors[0].rooms[0].openings[0].width == 2400.0
@@ -722,29 +779,106 @@ def test_outer_and_inner_walls_are_finished_differently():
 
 
 def test_a_room_finish_tiles_its_own_walls_around_the_openings():
-    room = H.Room("Bathroom", 0, 0, 2500, 2000, finish="White tiles",
+    from khervecad import analysis
+    room = H.Room("Studio", 0, 0, 2500, 2000, finish="White tiles",
                   openings=[H.Opening("door", "S", 800.0, 900.0, 2000.0)])
     floor = H.Floor("G", rooms=[room])
     nodes = H.room_finish_nodes(room, floor)
-    names = [n.name for n in nodes]
-    assert names.count("Wall finish") == 5     # 4 walls, the door splits one
-    assert names[0] == "Bathroom floor tiles"
     tiles = H.ROOM_FINISHES["White tiles"]
-    assert nodes[0].params["color"] == tiles[1][0]
-    assert {n.params["color"] for n in nodes[1:]} == {tiles[0][0]}
+    assert nodes[0].name == "Studio floor"
+    assert nodes[0].params["material"] == tiles[1][1]
+    linings = [n for n in nodes if n.name == "Wall tiles"]
+    assert len(linings) == 4                    # one solid per wall
+    south = next(n for n in linings
+                 if mesh.tessellate(n, fn=8)[0][0][1] < 200.0
+                 and all(p[1] < 200.0 for t in mesh.tessellate(n, fn=8)
+                         for p in t))
+    vol = analysis.mass_properties(mesh.tessellate(south, fn=8))["volume"]
+    # 10 mm of tiles, floor to ceiling, between the side walls, minus
+    # the door
+    assert vol == pytest.approx(10.0 * (2300.0 * 2400.0 - 900.0 * 2000.0),
+                                rel=1e-6)
     assert not H.room_finish_nodes(
         H.Room("Lawn", 0, 0, 1000, 1000, surface="garden",
                finish="White tiles"), floor)
     group = H.build_floor(floor, is_top=True)
     assert not validate(group)
-    assert "Wall finish" in [n.name for n in group.children]
+    assert "Wall tiles" in [n.name for n in group.children]
+
+
+def test_bathrooms_and_kitchens_are_tiled_where_the_fixtures_stand():
+    from khervecad import house_finishes as F
+    spec = {"floors": [{"rooms": [
+        {"name": "Bathroom", "w": 3000, "d": 2500, "furniture": [
+            {"part_id": "home_bath", "wall": "N"}]},
+        {"name": "Kitchen", "x": 3000, "w": 3500, "d": 2500, "furniture": [
+            {"part_id": "home_kitchen", "wall": "S"}]},
+        {"name": "Bedroom", "x": 6500, "w": 3000, "d": 2500}]}]}
+    floor = H.house_from_spec(spec).floors[0]
+    bath, kitchen, bed = floor.rooms
+    assert F.finish_of(bath) in H.ROOM_FINISHES
+    assert F.coverage_of(bath) == "wet" and F.coverage_of(kitchen) == "splash"
+    assert F.finish_of(bed) is None
+    assert F.flooring_of(bed)[1] in ("Carpet", "Floorboards")
+
+    def tile_top(room, side_y):
+        zs = [p[2] for n in H.room_finish_nodes(room, floor)
+              if n.name == "Wall tiles" for t in mesh.tessellate(n, fn=8)
+              for p in t if abs(p[1] - side_y) < 60.0]
+        return (min(zs), max(zs)) if zs else None
+    # the bath's wall is tiled to the ceiling, the others to half height
+    assert tile_top(bath, 2450.0) == (0.0, 2400.0)
+    assert tile_top(bath, 50.0) == (0.0, F.HALF_TILE)
+    # a splashback band behind the worktop, nothing elsewhere
+    assert tile_top(kitchen, 50.0) == F.SPLASH
+    assert tile_top(kitchen, 2450.0) is None
+    # none means none
+    bath.finish = F.NO_FINISH
+    assert not [n for n in H.room_finish_nodes(bath, floor)
+                if n.name == "Wall tiles"]
+
+
+def test_a_fireplace_gets_a_chimney_through_the_roof():
+    from khervecad.house_roof import CHIMNEY_CLEAR
+    spec = {"roof": {"style": "Gable"}, "floors": [
+        {"rooms": [{"name": "Living", "w": 5000, "d": 4000, "furniture": [
+            {"part_id": "home_fireplace", "wall": "W"}]},
+            {"name": "Snug", "x": 5000, "w": 3000, "d": 4000, "furniture": [
+                {"part_id": "home_fireplace", "wall": "W"}]}]},
+        {"rooms": [{"name": "Bedroom", "w": 8000, "d": 4000}]}]}
+    house = H.house_from_spec(spec)
+    groups = H.build_house_floors(house)
+    ground, first = groups
+
+    def boxes(group, name):
+        return [n for n in group.children if n.name == name]
+    # the outside wall's fireplace: a stack from the ground, outside
+    stacks = boxes(ground, "Chimney stack") + boxes(first, "Chimney stack")
+    assert any(n.children[0].params["x"] < 0.0 for n in stacks)
+    # the partition's fireplace: a breast upstairs too, a stack in the roof
+    assert boxes(first, "Chimney breast")
+    pots = boxes(first, "Chimney pot")
+    assert len(pots) >= 2
+    top = max(p.children[0].params["z"] for p in pots)
+    ridge = house.floors[1].wall_height + 2000.0 * 0.7
+    assert top > ridge
+    assert not validate(first)
+    house.roof.chimney = "none"
+    assert not boxes(H.build_house_floors(house)[1], "Chimney pot")
 
 
 def test_wall_styles_finishes_and_wing_roofs_round_trip():
     spec = dict(SPEC, roof={"style": "Gable", "wings": "shed"},
                 walls={"outside": "red brick", "inside": "Sage"})
     spec["floors"][0]["rooms"][1]["finish"] = "blue tiles"
+    spec["floors"][0]["rooms"][1]["flooring"] = "oak parquet"
+    spec["floors"][0]["inner_wall_thickness"] = 80
+    spec["roof"]["chimney"] = "ridge"
+    spec["walls"]["joinery"] = "oak"
     house = H.house_from_spec(spec)
+    assert house.floors[0].rooms[1].flooring == "Oak parquet"
+    assert house.floors[0].inner_wall_thickness == 80.0
+    assert (house.roof.chimney, house.joinery) == ("ridge", "Oak")
     assert house.roof.wings == "Lean-to"
     assert (house.outer_wall, house.inner_wall) == ("Red brick", "Sage")
     assert house.floors[0].rooms[1].finish == "Blue tiles"

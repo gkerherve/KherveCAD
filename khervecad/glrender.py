@@ -42,7 +42,28 @@ STYLES = {"Shaded", "Matte", "Clay", "Toon", "Brushed metal", "Gold",
 #: a negative number. Zero extra triangles, so a whole town can wear
 #: bricks; the painter fallback shows them as flat Matte.
 SURFACES = {"Brick": 1, "Concrete": 2, "Render": 3, "Roof tiles": 4,
-            "Slate": 5, "Stone": 6, "Bark": 7, "Leaves": 8}
+            "Slate": 5, "Stone": 6, "Bark": 7, "Leaves": 8,
+            # house interiors and finishes (house_finishes.py)
+            "Wall tiles": 9, "Metro tiles": 10, "Mosaic": 11,
+            "Hex tiles": 12, "Marble": 13, "Floor tiles": 14,
+            "Checker tiles": 15, "Terrazzo": 16, "Zellige": 17,
+            "Floorboards": 18, "Parquet": 19, "Carpet": 20, "Plaster": 21,
+            "Cladding": 22, "Shingles": 23, "Thatch": 24,
+            "Standing seam": 25, "Solar panels": 26, "Panelling": 27}
+#: (gloss strength, saturation scale) of a surface: glazed tiles and
+#: marble catch the light, carpet and thatch do not
+SURFACE_LOOK = {"Wall tiles": (0.45, 0.95), "Metro tiles": (0.5, 0.95),
+                "Mosaic": (0.4, 0.95), "Hex tiles": (0.3, 0.95),
+                "Marble": (0.45, 0.9), "Floor tiles": (0.25, 0.9),
+                "Checker tiles": (0.35, 0.9), "Terrazzo": (0.3, 0.9),
+                "Zellige": (0.55, 1.0), "Floorboards": (0.12, 0.9),
+                "Parquet": (0.15, 0.9), "Plaster": (0.0, 0.95),
+                "Carpet": (0.0, 0.9), "Cladding": (0.05, 0.85),
+                "Standing seam": (0.35, 0.6), "Solar panels": (0.6, 0.9),
+                "Panelling": (0.1, 0.9)}
+#: roof coverings: their courses run up the slope, not up the world Z
+ROOF_SURFACES = ("Roof tiles", "Slate", "Shingles", "Thatch",
+                 "Standing seam", "Solar panels")
 
 GL_FLOAT = 0x1406
 GL_TRIANGLES = 0x0004
@@ -138,15 +159,171 @@ float fbm(vec2 p) {
 float joint(float f, float w, float px) {
     return 1.0 - smoothstep(w - px, w + px, f);
 }
+
+// distance to the nearest edge of a w x h cell, and the cell index
+vec3 tcell(vec2 uv, vec2 size, float stagger) {
+    float row = floor(uv.y / size.y);
+    float x = uv.x / size.x + stagger * mod(row, 2.0);
+    vec2 f = vec2(fract(x) * size.x, fract(uv.y / size.y) * size.y);
+    float e = min(min(f.x, size.x - f.x), min(f.y, size.y - f.y));
+    return vec3(e, floor(x) + 0.37 * row, row);
+}
+const vec3 GROUT = vec3(0.86, 0.85, 0.82);
+vec3 tiles(float id, vec2 uv, vec3 rgb, float px) {
+    if (id == 9.0 || id == 17.0 || id == 11.0 || id == 14.0) {
+        // square tiles: wall 150, zellige 100, mosaic 25, floor 600
+        float s = (id == 9.0) ? 150.0 : (id == 17.0) ? 100.0
+                : (id == 11.0) ? 25.0 : 600.0;
+        float g = (id == 11.0) ? 1.2 : (id == 14.0) ? 1.8 : 1.4;
+        vec3 c3 = tcell(uv, vec2(s), 0.0);
+        float h = hash(vec2(c3.y, c3.z));
+        vec3 c = rgb;
+        if (id == 9.0) c *= 0.96 + 0.06 * h;
+        else if (id == 17.0)
+            c *= (0.72 + 0.42 * h) * (0.9 + 0.18 * noise(uv * 0.06 + h * 9.0));
+        else if (id == 11.0) c *= 0.7 + 0.45 * h;
+        else c *= (0.92 + 0.1 * h) * (0.94 + 0.1 * fbm(uv * 0.004));
+        float bevel = (id == 14.0) ? 3.0 : (id == 11.0) ? 1.5 : 6.0;
+        c *= 0.9 + 0.1 * smoothstep(0.0, bevel, c3.x);
+        return mix(c, GROUT * (id == 14.0 ? 0.72 : 1.0), joint(c3.x, g, px));
+    }
+    if (id == 10.0) {                      // metro: 150 x 75, bevelled
+        vec3 c3 = tcell(uv, vec2(150.0, 75.0), 0.5);
+        vec3 c = rgb * (0.95 + 0.08 * hash(vec2(c3.y, c3.z)));
+        c *= 0.72 + 0.28 * smoothstep(1.0, 9.0, c3.x);
+        c += vec3(0.08) * (1.0 - smoothstep(1.5, 4.0, abs(c3.x - 5.0)));
+        return mix(c, GROUT, joint(c3.x, 1.3, px));
+    }
+    if (id == 12.0) {                      // hexagons, 110 across
+        vec2 p = uv / 110.0;
+        vec2 r = vec2(1.0, 1.7320508);
+        vec2 a = mod(p, r) - r * 0.5;
+        vec2 b = mod(p - r * 0.5, r) - r * 0.5;
+        vec2 q = dot(a, a) < dot(b, b) ? a : b;
+        vec2 idx = floor(p - q + 0.5);
+        vec2 aq = abs(q);
+        float d = 0.5 - max(dot(aq, vec2(0.5, 0.8660254)), aq.x);
+        vec3 c = rgb * (0.94 + 0.08 * hash(idx));
+        return mix(c, GROUT, joint(d * 110.0, 1.6, px));
+    }
+    if (id == 13.0) {                      // marble slabs with veins
+        vec3 c3 = tcell(uv, vec2(1200.0, 600.0), 0.0);
+        vec2 o = vec2(hash(vec2(c3.y, c3.z)) * 900.0);
+        vec2 w = uv + o;
+        float t = w.x * 0.0025 + w.y * 0.0012 + 2.6 * fbm(w * 0.0021)
+                  + 0.9 * fbm(w * 0.011);
+        float vein = pow(1.0 - abs(sin(t * 3.14159)), 7.0);
+        float fine = pow(1.0 - abs(sin((t * 2.7 + fbm(w * 0.03)) * 3.14159)), 16.0);
+        vec3 c = rgb * (0.95 + 0.07 * fbm(w * 0.006));
+        c = mix(c, rgb * vec3(0.55, 0.55, 0.58), 0.4 * vein + 0.15 * fine);
+        return mix(c, rgb * 0.8, joint(c3.x, 0.8, px));
+    }
+    if (id == 15.0) {                      // checkerboard, 300 squares
+        vec3 c3 = tcell(uv, vec2(300.0), 0.0);
+        vec2 k = floor(uv / 300.0);
+        float dark = mod(k.x + k.y, 2.0);
+        vec3 c = mix(rgb, vec3(0.1, 0.1, 0.11), dark);
+        c *= 0.95 + 0.07 * hash(k);
+        return mix(c, GROUT * 0.75, joint(c3.x, 1.5, px));
+    }
+    // terrazzo: chips of three tones in a pale ground
+    vec2 k = floor(uv / 9.0);
+    float h = hash(k);
+    vec3 c = rgb * (0.95 + 0.05 * fbm(uv * 0.01));
+    if (h > 0.78) c = rgb * 0.55;
+    else if (h > 0.7) c = mix(rgb, vec3(0.62, 0.42, 0.33), 0.6);
+    else if (h > 0.64) c = rgb * 1.08;
+    return c;
+}
+vec3 finishes(float id, vec2 uv, vec3 rgb, float px) {
+    if (id == 18.0) {                      // floorboards along X
+        float row = floor(uv.y / 140.0);
+        float x = uv.x + hash(vec2(row, 3.0)) * 1800.0;
+        float plank = floor(x / 1800.0);
+        vec2 f = vec2(fract(x / 1800.0) * 1800.0, fract(uv.y / 140.0) * 140.0);
+        float j = max(joint(min(f.y, 140.0 - f.y), 1.0, px),
+                      joint(min(f.x, 1800.0 - f.x), 1.0, px));
+        float h = hash(vec2(plank, row));
+        float grain = noise(vec2(x * 0.003 + h * 50.0, uv.y * 0.12))
+                      * 0.6 + noise(vec2(x * 0.02, uv.y * 0.5)) * 0.4;
+        vec3 c = rgb * (0.8 + 0.3 * h) * (0.86 + 0.24 * grain);
+        return mix(c, rgb * 0.35, j);
+    }
+    if (id == 19.0) {                      // basket-weave parquet
+        vec2 k = floor(uv / 280.0);
+        vec2 f = fract(uv / 280.0) * 280.0;
+        bool alt = mod(k.x + k.y, 2.0) > 0.5;
+        float across = alt ? f.x : f.y;
+        float along = alt ? f.y : f.x;
+        float plank = floor(across / 70.0);
+        float fa = mod(across, 70.0);
+        float e = min(min(fa, 70.0 - fa), min(min(f.x, 280.0 - f.x),
+                                            min(f.y, 280.0 - f.y)));
+        float h = hash(k * 7.0 + plank);
+        float grain = noise(vec2(along * 0.02 + h * 30.0, across * 0.4));
+        vec3 c = rgb * (0.8 + 0.3 * h) * (0.88 + 0.2 * grain);
+        return mix(c, rgb * 0.4, joint(e, 0.8, px));
+    }
+    if (id == 20.0)                        // carpet
+        return rgb * (0.9 + 0.12 * hash(floor(uv / 2.5)) + 0.1 * (fbm(uv * 0.006) - 0.5));
+    if (id == 21.0)                        // painted plaster
+        return rgb * (0.975 + 0.04 * fbm(uv * 0.003) + 0.012 * (hash(floor(uv / 3.0)) - 0.5));
+    if (id == 22.0) {                      // weatherboard cladding
+        float row = floor(uv.y / 150.0);
+        float f = fract(uv.y / 150.0) * 150.0;
+        float x = uv.x + hash(vec2(row, 1.0)) * 3600.0;
+        float board = floor(x / 3600.0);
+        float fx = fract(x / 3600.0) * 3600.0;
+        float h = hash(vec2(board, row));
+        vec3 c = rgb * (0.86 + 0.2 * h) * (0.9 + 0.15 * noise(vec2(x * 0.004, uv.y * 0.2)));
+        c *= 0.62 + 0.38 * smoothstep(0.0, 28.0 + px, f);   // the lap's shadow
+        return mix(c, rgb * 0.45, joint(min(fx, 3600.0 - fx), 1.5, px));
+    }
+    if (id == 27.0) {                      // tongue-and-groove panelling
+        float f = fract(uv.x / 100.0) * 100.0;
+        float h = hash(vec2(floor(uv.x / 100.0), 5.0));
+        vec3 c = rgb * (0.85 + 0.22 * h) * (0.9 + 0.16 * noise(vec2(uv.x * 0.3, uv.y * 0.004)));
+        return mix(c, rgb * 0.45, joint(min(f, 100.0 - f), 2.0, px));
+    }
+    if (id == 23.0) {                      // cedar shingles
+        float row = floor(uv.y / 140.0);
+        float fy = fract(uv.y / 140.0);
+        float x = uv.x / 190.0 + hash(vec2(row, 2.0));
+        float fx = fract(x) * 190.0;
+        float h = hash(vec2(floor(x), row));
+        vec3 c = rgb * (0.7 + 0.5 * h) * (0.85 + 0.25 * noise(vec2(uv.x * 0.08, uv.y * 0.01)));
+        c *= 0.55 + 0.45 * smoothstep(0.0, 0.3 + px / 140.0, fy);
+        return mix(c, rgb * 0.3, joint(min(fx, 190.0 - fx), 3.0, px));
+    }
+    if (id == 24.0) {                      // thatch: straw along the slope
+        float f = noise(vec2(uv.x * 0.09, uv.y * 0.004)) * 0.55
+                  + noise(vec2(uv.x * 0.3, uv.y * 0.012)) * 0.45;
+        float course = fract(uv.y / 350.0);
+        return rgb * (0.6 + 0.6 * f) * (0.75 + 0.25 * smoothstep(0.0, 0.25, course));
+    }
+    if (id == 25.0) {                      // standing-seam metal
+        float f = fract(uv.x / 500.0) * 500.0;
+        vec3 c = rgb * (0.94 + 0.08 * fbm(uv * 0.002));
+        c *= 1.0 - 0.3 * joint(f, 6.0, px);
+        return c + vec3(0.12) * joint(abs(f - 10.0), 3.0, px);
+    }
+    // solar panels: cells in aluminium-framed modules
+    vec3 m = tcell(uv, vec2(1040.0, 1720.0), 0.0);
+    vec3 cl = tcell(uv, vec2(173.3, 172.0), 0.0);
+    vec3 c = rgb * (0.9 + 0.12 * hash(vec2(cl.y, cl.z)));
+    c = mix(c, vec3(0.75, 0.78, 0.8), joint(cl.x, 1.2, px) * 0.6);
+    return mix(c, vec3(0.7, 0.72, 0.74), joint(m.x, 18.0, px));
+}
 vec3 surface(float id, vec3 n, vec3 rgb, float px) {
     vec3 an = abs(n);
     vec2 uv;
-    if (an.z > 0.75 && id != 4.0 && id != 5.0) uv = v_pos.xy;
+    bool roof = id == 4.0 || id == 5.0 || (id >= 23.0 && id <= 26.0);
+    if (an.z > 0.75 && !roof) uv = v_pos.xy;
     else if (an.z > 0.97) uv = v_pos.xy;
     else {
         float along = (an.x > an.y) ? v_pos.y : v_pos.x;
         float up = v_pos.z;
-        if (id == 4.0 || id == 5.0)
+        if (roof)
             up = v_pos.z / max(length(n.xy), 0.25);
         uv = vec2(along, up);
     }
@@ -221,6 +398,8 @@ vec3 surface(float id, vec3 n, vec3 rgb, float px) {
         vec3 c = rgb * (0.55 + 0.75 * f);
         return c + vec3(0.05, 0.08, 0.0) * step(0.8, f);
     }
+    if (id >= 9.0 && id <= 17.0) return tiles(id, uv, rgb, px);
+    if (id >= 18.0) return finishes(id, uv, rgb, px);
     return rgb;
 }
 
@@ -230,7 +409,8 @@ void main() {
     if (u_toon > 0.5) shade = floor(shade * 3.0 + 0.5) / 3.0;
     vec3 h = normalize(u_light + v_to_eye);
     float spec = max(dot(n, h), 0.0);
-    float gloss = (v_mat.w > 0.0) ? v_mat.z * pow(spec, v_mat.w) : 0.0;
+    float gloss = (v_mat.w > 0.0) ? v_mat.z * pow(spec, v_mat.w)
+                  : v_mat.z * pow(spec, 40.0);
     float v = v_mat.x + v_mat.y * shade;
     v = (v - 0.5) * u_gain + 0.5 + u_offset;
     if (u_cavity > 0.5) v *= v_cav;
@@ -242,10 +422,18 @@ void main() {
         float feat = (id == 1.0) ? 75.0 : (id == 2.0) ? 300.0 :
                      (id == 3.0) ? 60.0 : (id == 4.0) ? 190.0 :
                      (id == 5.0) ? 150.0 : (id == 6.0) ? 260.0 :
-                     (id == 7.0) ? 150.0 : 45.0;
+                     (id == 7.0) ? 150.0 : (id == 8.0) ? 45.0 :
+                     (id == 11.0) ? 25.0 : (id == 10.0) ? 75.0 :
+                     (id == 14.0 || id == 13.0) ? 600.0 :
+                     (id == 15.0) ? 300.0 : (id == 16.0) ? 18.0 :
+                     (id == 20.0 || id == 21.0) ? 12.0 :
+                     (id == 18.0 || id == 22.0 || id == 23.0) ? 140.0 :
+                     (id == 25.0) ? 500.0 : 100.0;
         float px = length(fwidth(v_pos));
         float fade = smoothstep(feat * 0.5, feat * 1.2, px);
-        vec3 mean = v_rgb * ((id == 1.0) ? 0.93 : (id == 4.0) ? 0.82 : 0.95);
+        vec3 mean = v_rgb * ((id == 1.0) ? 0.93 : (id == 4.0) ? 0.82 :
+                             (id == 15.0) ? 0.55 : (id == 22.0) ? 0.85 :
+                             (id == 23.0) ? 0.75 : 0.95);
         base = mix(surface(id, n, v_rgb, px), mean, fade);
     }
     vec3 rgb = clamp(base * v + vec3(gloss), 0.0, 1.0);
@@ -300,7 +488,8 @@ def material(style):
         "Rubber": (0.12, 0.38, 0.0, 1.0, 0.85, 1.0),
         "Skin": (0.58, 0.32, 0.08, 4.0, 0.9, 1.0),
         "Emissive": (1.0, 0.0, 0.0, 1.0, 1.0, 1.0),
-        **{name: (0.52, 0.48, 0.0, -float(pid), 0.8, 1.0)
+        **{name: (0.52, 0.48, SURFACE_LOOK.get(name, (0.0, 0.8))[0],
+                  -float(pid), SURFACE_LOOK.get(name, (0.0, 0.8))[1], 1.0)
            for name, pid in SURFACES.items()},
     }.get(style, (0.30, 0.70, 0.45, 10.0, 1.1, 1.0))          # Shaded
 

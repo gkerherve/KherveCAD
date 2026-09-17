@@ -679,6 +679,72 @@ into a new module and import.
                        the spec (`walls`, room `finish`, roof `wings`), the
                        MCP tool and the builder (Floor section, Roof row,
                        room Finish).
+  - House Builder, realism pass (2026-09-17, the user's request: "the
+                       red bricks where the outside wall is simply just a
+                       bit", open corners, flat roofs and tiles). Split out
+                       of house.py into three modules:
+                       `house_walls.py` — walls from the PLAN:
+                       `wall_segments` splits every room edge where another
+                       starts or stops and classifies each piece by what
+                       lies either side (partition, `Floor.
+                       inner_wall_thickness` default 100, or outside wall
+                       with an `outside` sign), merged into runs; an
+                       outside wall is two leaves, the facing and a plaster
+                       lining, each ONE extruded elevation outline
+                       (`region_loops`: rectilinear union minus openings ->
+                       outlines + holes, doors as notches) — no seams on a
+                       facade, real reveals, no boolean. The facing wraps a
+                       CONVEX corner by the other wall's half thickness
+                       (`_corner_wraps`; never a reflex one — its end face
+                       would z-fight the plaster inside) and runs down past
+                       the slab (storeys meet like masonry); a ground floor
+                       gets a proud plinth. Joinery per opening: window
+                       frame + mullions/transom + glass + sill + board +
+                       lintel (brick/stone/timber per `OUTSIDE_DETAIL`),
+                       front door (panelled leaf, glazing, letter plate,
+                       step, canopy), inside doors (lining, architraves,
+                       4-panel leaf), sectional garage doors. `room_nodes`:
+                       floor covering, skirting, and tile linings where
+                       they belong — `coverage_of`: bathroom "wet" (half
+                       height + full behind bath/shower, found from the
+                       furniture footprints `_fixture_ranges`), kitchen
+                       "splash" band behind worktops/sinks, shower room
+                       full — around every opening on the line, whichever
+                       room drew it. `house_finishes.py` — tables
+                       (16 outside finishes, 9 inside, JOINERY, 13 wall
+                       finishes, 17 FLOORINGS) and the automatic choices by
+                       room name (`room_kind`, `finish_of`, `flooring_of`,
+                       crc32-picked so a street varies but a house is
+                       stable; Room.finish "" = automatic, "None" = none;
+                       Room.flooring). `house_roof.py` — a pitched roof is
+                       its slopes as vertical-depth `polyhedron`s whose
+                       plans tile the roof (gable 2, hip 4, pyramid 4,
+                       lean-to 1), measured from a DATUM over the centre
+                       line (`RoofShape.H` = wall head + hw·tan + 20) so the
+                       planes sit on the wall's outer edge — from the wall
+                       head the facing's top showed through every eave;
+                       a pyramid on a rectangle lifts its eave until the
+                       shallower faces clear it too. Hollow attic over a
+                       12 mm ceiling, gable triangles in the facing, fascia,
+                       soffit, half-round gutters (a polygon profile
+                       extruded) with downpipes to the ground, bargeboards,
+                       half-round ridge and hip tiles. `chimneys` (Roof.
+                       chimney auto / ridge / none): every `home_fireplace`
+                       gets a stack outside an outside wall from the ground,
+                       or a breast through the floors above an inside wall,
+                       ending CHIMNEY_CLEAR over the roof covering it (main
+                       or wing) with corbel, cap and pots.
+                       `build_house_floors` builds every floor at
+                       `floor_levels` with its chimneys. House.joinery.
+                       **Shader surfaces** added for it (glrender.SURFACES
+                       9-27, `SURFACE_LOOK` gloss/saturation, the gloss
+                       slot's strength now used by surfaces): Wall tiles,
+                       Metro tiles, Mosaic, Hex tiles, Marble, Floor tiles,
+                       Checker tiles, Terrazzo, Zellige, Floorboards,
+                       Parquet, Carpet, Plaster, Cladding, Shingles, Thatch,
+                       Standing seam, Solar panels, Panelling — also in
+                       model/mcp_schema MATERIALS; roof ones course up the
+                       slope (`ROOF_SURFACES`).
   - Cut Through levels (`cut_ui.py`, same day): quarters were too coarse
                        for a two-storey house — View ▸ Cut Through ▸ Where
                        lists every tenth, **Cut at a Storey** is filled from
