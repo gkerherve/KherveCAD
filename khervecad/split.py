@@ -139,9 +139,12 @@ def split_part(model, part, axis="z", position=None, dowels=2,
     if part.type == "reference":
         from .mates import definition_of
         source = definition_of(model, part) or part
-    tris = anchors.local_tris(source, fn=model.effective_fn()) \
+    # the document's variables: a part sized by expressions (m, teeth)
+    # tessellated without them came out at zero size
+    env = anchors.doc_env(model)
+    tris = anchors.local_tris(source, env=env, fn=model.effective_fn()) \
         if source.type == "component" else mesh.tessellate(
-            source, fn=model.effective_fn())
+            source, env=env, fn=model.effective_fn())
     box = anchors.bbox(tris)
     if box is None:
         raise ValueError("the part has no geometry to split")

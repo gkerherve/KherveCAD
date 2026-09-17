@@ -21,9 +21,10 @@ def _extent(model, part):
     if part.type == "reference":
         from .mates import definition_of
         source = definition_of(model, part) or part
-    tris = anchors.local_tris(source, fn=model.effective_fn()) \
+    env = anchors.doc_env(model)
+    tris = anchors.local_tris(source, env=env, fn=model.effective_fn()) \
         if source.type == "component" else mesh.tessellate(
-            source, fn=model.effective_fn())
+            source, env=env, fn=model.effective_fn())
     return anchors.bbox(tris)
 
 

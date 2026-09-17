@@ -84,3 +84,24 @@ def test_dialog_and_mcp(app):
     finally:
         win._dirty = False
         win.close()
+
+
+def test_a_part_sized_by_document_variables_splits():
+    root, _ = parse_scad(
+        "m = 1.25; teeth = 48;\n"
+        "module Ring() { kcad_gear(kind = \"internal\", m = m, "
+        "teeth = teeth, thickness = 10, rim = 5); }\nRing();")
+    model = DocumentModel()
+    model.root = root
+    ring = next(n for n in root.walk() if n.type == "component")
+    first, second, _pin, points = split.split_part(model, ring, "z", 5.0,
+                                                   dowels=2,
+                                                   dowel_diameter=1.75)
+    assert points and validate(model.root) == {}
+
+
+def test_a_gear_of_unresolved_size_draws_nothing():
+    from khervecad import gears
+    model = DocumentModel()
+    node = model.add_node("gear", dict(kind="internal", m="nope"))
+    assert gears.solid(node, {}) == []

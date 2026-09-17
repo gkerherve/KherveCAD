@@ -349,6 +349,8 @@ def solid(node, env=None):
     p = _params(node, env)
     kind, m, z, pa = p["kind"], p["m"], p["z"], p["pressure_angle"]
     r = m * z / 2.0
+    if m <= 0 or (kind not in ("rack", "worm") and r <= 0):
+        return []                     # unresolved sizes: nothing to draw
     c, bl, h = p["clearance"], p["backlash"], p["thickness"]
     bore = [_circle(p["bore"] / 2, 48)] if p["bore"] > 0 else []
     if kind == "rack":
