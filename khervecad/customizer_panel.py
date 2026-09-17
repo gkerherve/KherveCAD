@@ -55,6 +55,7 @@ class CustomizerPanel(QWidget):
         super().__init__(parent)
         self.model = model
         self._rows = {}               # node id -> (node, value label, control)
+        self._annots = {}             # node id -> its Customizer annotation
         self._updating = False
         self._playing = None          # (slider, direction)
         self._timer = QTimer(self)
@@ -92,6 +93,7 @@ class CustomizerPanel(QWidget):
             if item.widget() is not None:
                 item.widget().deleteLater()
         self._rows = {}
+        self._annots = {}
         nodes = annotated(self.model)
         self.empty.setVisible(not nodes)
         groups = {}
@@ -136,6 +138,7 @@ class CustomizerPanel(QWidget):
             line.addWidget(play)
         lay.addLayout(line)
         self._rows[node.id] = (node, value, control)
+        self._annots[node.id] = self._annotation(node)
         self._show_value(node)
         return row
 
@@ -217,10 +220,54 @@ class CustomizerPanel(QWidget):
             self._updating = False
 
     def _node_changed(self, node):
+        """Someone else moved one of our variables — the Variables
+        sheet, an MCP tool, an undo. Follow it in that row alone:
+        rebuilding the panel tears down and recreates every control,
+        which is what a whole document's worth of sliders costs on a
+        tool call that moved one number."""
         if self._updating or getattr(node, "type", None) != "assign":
             return
-        if node.id in self._rows:
-            self.rebuild()
+        if node.id not in self._rows:
+            return
+        if self._annotation(node) != self._annots.get(node.id):
+            self.rebuild()                  # the control itself changed
+            return
+        self._sync_row(node)
+
+    @staticmethod
+    def _annotation(node):
+        return tuple(str(node.params.get(k) or "") for k in
+                     ("options", "description", "group"))
+
+    def _sync_row(self, node):
+        """Show *node*'s value and move its control to match, without
+        reporting the move back as an edit."""
+        entry = self._rows.get(node.id)
+        if entry is None:
+            return
+        self._show_value(node)
+        control = entry[2]
+        spec = customizer.widget(node) or {}
+        current = self._current(node)
+        control.blockSignals(True)
+        try:
+            kind = spec.get("kind")
+            if kind == "slider" and isinstance(current, (int, float)):
+                lo = float(spec["min"])
+                step = float(spec["step"]) or 1.0
+                control.setValue(int(round((float(current) - lo) / step)))
+            elif kind == "dropdown":
+                source = str(node.params.get("value", "")).strip()
+                for i, (raw, _label) in enumerate(spec.get("items") or []):
+                    if raw == source or _same(raw, current):
+                        control.setCurrentIndex(i)
+                        break
+            elif kind == "checkbox":
+                control.setChecked(bool(current))
+            elif kind == "text" and isinstance(current, str):
+                control.setText(current)
+        finally:
+            control.blockSignals(False)
 
     # ---------------------------------------------------------- playing
     def _play(self, slider, button, on):
@@ -274,6 +321,7 @@ def attach(window):
     dock = QDockWidget("Customizer", window)
     dock.setObjectName("customizer_dock")
     dock.setWidget(panel)
+    dock.setMinimumWidth(320)
     window.addDockWidget(Qt.RightDockWidgetArea, dock)
     dock.hide()
     window._customizer_dock = dock
