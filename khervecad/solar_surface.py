@@ -61,6 +61,39 @@ def sphere(name, r, colour, material="Plastic", alpha=1.0,
         material, alpha)
 
 
+def poly_sphere(name, radii, colour, material="Plastic", seg=16) -> CadNode:
+    """A sphere (or ellipsoid, *radii* (a, b, c)) baked as a polyhedron
+    of *seg* meridians: its facet count is its own, where a sphere node
+    takes the document's $fn — a 1 mm moon in an orrery needs no 1890
+    triangles."""
+    a, b, c = radii
+    n, m = max(int(seg), 6), max(int(seg) // 2, 3)
+    points = [[0.0, 0.0, float(c)]]
+    for i in range(1, m):
+        lat = math.pi / 2 - math.pi * i / m
+        for j in range(n):
+            lon = 2 * math.pi * j / n
+            points.append([round(a * math.cos(lat) * math.cos(lon), 5),
+                           round(b * math.cos(lat) * math.sin(lon), 5),
+                           round(c * math.sin(lat), 5)])
+    points.append([0.0, 0.0, -float(c)])
+    south = len(points) - 1
+    faces = []
+
+    def at(i, j):
+        return 1 + (i - 1) * n + (j % n)
+    for j in range(n):
+        faces.append([0, at(1, j + 1), at(1, j)])
+    for i in range(1, m - 1):
+        for j in range(n):
+            faces.append([at(i, j), at(i, j + 1), at(i + 1, j + 1)])
+            faces.append([at(i, j), at(i + 1, j + 1), at(i + 1, j)])
+    for j in range(n):
+        faces.append([at(m - 1, j), at(m - 1, j + 1), south])
+    return col(name, colour, CadNode("polyhedron", name, dict(
+        points=points, faces=faces)), material)
+
+
 def ellipsoid(name, radii, colour, material="Plastic", seg=SEG) -> CadNode:
     a, b, c = radii
     return col(name, colour, CadNode("ellipsoid", name, dict(
@@ -126,12 +159,13 @@ def _arc(r, lat0, lat1, step=4.0):
 
 
 def band(name, r, lat0, lat1, colour, material="Plastic", lift=1.0,
-         seg=SEG) -> CadNode:
+         seg=SEG, step=4.0) -> CadNode:
     """The slice of the globe between two latitudes, as one solid
-    wedge to the axis. *lift* > 1 raises it over a base sphere."""
+    wedge to the axis. *lift* > 1 raises it over a base sphere; *step*
+    is the profile's resolution in degrees."""
     lo, hi = sorted((float(lat0), float(lat1)))
     rr = r * lift
-    pts = _arc(rr, lo, hi)
+    pts = _arc(rr, lo, hi, step)
     if hi < 90.0:
         pts.append((0.0, rr * math.sin(math.radians(hi))))
     if lo > -90.0:
@@ -139,13 +173,14 @@ def band(name, r, lat0, lat1, colour, material="Plastic", lift=1.0,
     return col(name, colour, _revolve(name, pts, seg=seg), material)
 
 
-def bands(name, r, table, material="Plastic", lift=1.0) -> CadNode:
+def bands(name, r, table, material="Plastic", lift=1.0,
+          step=4.0) -> CadNode:
     """A whole globe of latitude bands: *table* rows (lat_from,
     lat_to, colour) from the north pole down."""
     node = CadNode("union", name)
     for i, (a, b, colour) in enumerate(table):
         node.add(band(f"{name} band {i + 1} ({a:g} to {b:g})", r, a, b,
-                      colour, material, lift))
+                      colour, material, lift, step=step))
     return node
 
 
@@ -177,10 +212,18 @@ def rings(name, spans, thickness, material="Matte", seg=128) -> CadNode:
 
 # ------------------------------------------------------------ features
 
-def patch(name, r, lat, lon, ns_deg, ew_deg, colour, bulge=0.006,
+#: the least a feature may stand proud of the sphere, as a fraction of
+#: its radius: the base sphere's facets dip r (1 - cos(180 / $fn)) below
+#: the true surface — 0.0024 r at the document's 45 segments — and a
+#: patch lower than that fought them and read as torn
+MIN_BULGE = 0.006
+
+
+def patch(name, r, lat, lon, ns_deg, ew_deg, colour, bulge=MIN_BULGE,
           material="Plastic", seg=32) -> CadNode:
     """An ellipsoid sunk to its rim: a smooth raised blob *bulge* × r
     proud of the surface, *ns_deg* by *ew_deg* across."""
+    bulge = max(bulge, MIN_BULGE)
     wn = r * math.radians(ns_deg) / 2
     we = r * math.radians(ew_deg) / 2
     s = sag(r, max(wn, we))
@@ -315,8 +358,12 @@ def map_shells(name, r, rows, palette, relief=0.008, cell=5.0,
     east; *palette* maps a character to (colour, relief factor) — a
     character it lacks (".") is left to the base sphere. *skip* 2
     samples every other row and column (a coarser, lighter globe).
-    Returns a union with one coloured polyhedron per class."""
+    Returns a union with one coloured polyhedron per class. A slab's
+    underside sits just ABOVE the base sphere (over its facets' sag),
+    never through it: a shell crossing the sphere's facets made the
+    painter's BSP split it to shreds and give up."""
     step = cell * skip
+    r_in = r * (1 + relief * 0.4)
     grid = [row[::skip] for row in rows[::skip]]
     n_rows, n_cols = len(grid), len(grid[0])
     node = CadNode("union", name)
@@ -328,8 +375,7 @@ def map_shells(name, r, rows, palette, relief=0.008, cell=5.0,
             lat_n = min(lat_n, 90.0 - gap)
             lat_s = max(lat_s, -90.0 + gap)
             if all(ch == char for ch in row):
-                _run_shell(points, faces, r * (1 - relief * 1.5),
-                           r * (1 + relief * factor), lat_s, lat_n,
+                _run_shell(points, faces, r_in, r * (1 + relief * factor), lat_s, lat_n,
                            -180.0, step, n_cols, True)
                 continue
             k = 0
@@ -340,8 +386,7 @@ def map_shells(name, r, rows, palette, relief=0.008, cell=5.0,
                 start = k
                 while k < n_cols and row[k] == char:
                     k += 1
-                _run_shell(points, faces, r * (1 - relief * 1.5),
-                           r * (1 + relief * factor), lat_s, lat_n,
+                _run_shell(points, faces, r_in, r * (1 + relief * factor), lat_s, lat_n,
                            -180.0 + start * step, step, k - start, False)
         if faces:
             node.add(col(f"{name} {char}", colour, CadNode(

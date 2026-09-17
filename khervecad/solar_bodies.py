@@ -34,6 +34,11 @@ from . import solar_surface as S
 from .model import CadNode
 
 
+#: in a coarse globe, bodies under this radius (km) are baked spheres
+COARSE_BAKED_BELOW = 3000.0
+COARSE_SEGMENTS = 18
+
+
 class _Globe:
     """The body's radius in mm plus conversions for its features."""
 
@@ -42,6 +47,9 @@ class _Globe:
         self.r = float(diameter) / 2          # equatorial, mm
         self.k = self.r / body["radius"]      # mm per km
         self.fine = fine
+        # a coarse globe's blobs and rims are octagonal: 8 sides is the
+        # polygon count the document's $fn leaves alone (keeps_segments)
+        self.seg = 32 if fine else 8
         a, b, c = body["radii"]
         self.flat = c / a
         self.irregular = abs(b - a) > 1e-9
@@ -50,6 +58,16 @@ class _Globe:
     def deg(self, km):
         return S.deg_of(km, self.body["radius"])
 
+    def radius_at(self, lat, lon):
+        """The surface radius (mm) towards (lat, lon): self.r on a
+        sphere, the ellipsoid's own on an irregular moon."""
+        if not self.irregular:
+            return self.r
+        a, b, c = (v * self.k for v in self.body["radii"])
+        d = S.point(1.0, lat, lon)
+        return 1 / math.sqrt((d[0] / a) ** 2 + (d[1] / b) ** 2
+                             + (d[2] / c) ** 2)
+
     def add(self, node):
         if node is not None:
             self.parts.append(node)
@@ -57,8 +75,13 @@ class _Globe:
     # ---- features on the sphere (radius self.r) --------------------
     def base(self, colour=None, material="Plastic"):
         b = self.body
-        if self.irregular:
-            radii = [v * self.k for v in b["radii"]]
+        radii = [v * self.k for v in b["radii"]]
+        if not self.fine and b["radius"] < COARSE_BAKED_BELOW:
+            # a small body of an orrery: a baked low-poly sphere, its
+            # facets its own instead of the document's 45
+            self.add(S.poly_sphere(b["label"], radii, colour or b["colour"],
+                                   material, seg=COARSE_SEGMENTS))
+        elif self.irregular:
             self.add(S.ellipsoid(b["label"], radii, colour or b["colour"],
                                  material))
         else:
@@ -67,24 +90,27 @@ class _Globe:
 
     def bands(self, table, material="Plastic", lift=1.0):
         self.add(S.bands(self.body["label"] + " bands", self.r, table,
-                         material, lift))
+                         material, lift, step=4.0 if self.fine else 9.0))
 
-    def cap(self, lat, colour, lift=1.003):
+    def cap(self, lat, colour, lift=1.006):
         north = lat > 0
         name = ("North" if north else "South") + " polar cap"
         self.add(S.band(name, self.r, lat, 90.0 if north else -90.0,
-                        colour, lift=lift))
+                        colour, lift=lift, step=4.0 if self.fine else 9.0))
 
-    def patch(self, name, lat, lon, ns, ew, colour, bulge=0.005):
-        self.add(S.patch(name, self.r, lat, lon, ns, ew, colour, bulge))
+    def patch(self, name, lat, lon, ns, ew, colour, bulge=0.006):
+        self.add(S.patch(name, self.radius_at(lat, lon), lat, lon, ns, ew,
+                         colour, bulge, seg=self.seg))
 
     def crater(self, name, lat, lon, km, colour, rim=None):
-        self.add(S.crater(name, self.r, lat, lon, self.deg(km), colour,
-                          rim=rim))
+        self.add(S.crater(name, self.radius_at(lat, lon), lat, lon,
+                          self.deg(km), colour, rim=rim,
+                          seg=self.seg if self.fine else 8))
 
     def mountain(self, name, lat, lon, base_km, height, colour):
-        self.add(S.mountain(name, self.r, lat, lon, self.deg(base_km),
-                            height * self.r, colour))
+        self.add(S.mountain(name, self.radius_at(lat, lon), lat, lon,
+                            self.deg(base_km), height * self.r, colour,
+                            seg=self.seg))
 
     def line(self, name, start, end, width, colour, step=8.0):
         if self.fine:
@@ -103,8 +129,8 @@ class _Globe:
             lat = max(-lat_max, min(lat_max, lat))
             lon = rng.uniform(-180, 180)
             km = rng.uniform(km_min, km_max)
-            node.add(S.crater(f"Crater {i + 1}", self.r, lat, lon,
-                              self.deg(km), colour))
+            node.add(S.crater(f"Crater {i + 1}", self.radius_at(lat, lon),
+                              lat, lon, self.deg(km), colour))
         self.add(node)
 
     def haze(self, factor, colour, alpha):
@@ -140,7 +166,10 @@ class _Globe:
         node = CadNode("union", self.body["label"])
         for part in self.parts:
             node.add(part)
-        return S.flatten(node, self.flat) if not self.irregular else node
+        baked = not self.fine and self.body["radius"] < COARSE_BAKED_BELOW
+        if self.irregular or baked:
+            return node                  # the base carries its own radii
+        return S.flatten(node, self.flat)
 
 
 # ---------------------------------------------------------- the bodies
@@ -150,7 +179,7 @@ def _sun(g):
     for i, (lat, lon) in enumerate([(-18, 40), (12, -70), (-8, 150),
                                     (22, -150)]):
         g.patch(f"Sunspot group {i + 1}", lat, lon, 4, 7, "#b8621a",
-                bulge=0.002)
+                bulge=0.006)
     if g.fine:
         g.haze(1.06, "#ffe6a0", 0.15)
 
@@ -158,14 +187,14 @@ def _sun(g):
 def _mercury(g):
     g.base()
     g.patch("Caloris basin floor", 30.5, -170.2, 34, 40, "#a19b93",
-            bulge=0.002)
+            bulge=0.006)
     g.crater("Caloris basin", 30.5, -170.2, 1550, "#78736c")
     g.crater("Rembrandt", -33, 88, 715, "#7a756e")
     g.crater("Beethoven", -20.8, -124, 630, "#7a756e")
     g.crater("Tolstoj", -16, -164, 390, "#7a756e")
     for i, (lat, lon) in enumerate([(-45, 60), (10, 20), (55, -60)]):
         g.patch(f"Dark plain {i + 1}", lat, lon, 20, 35, "#767069",
-                bulge=0.002)
+                bulge=0.006)
     g.scatter(22, 1, 120, 320, "#a09a92")
 
 
@@ -178,7 +207,7 @@ def _venus(g):
     g.parts.pop(0)                       # the bands are the globe
     for i, (lat, lon) in enumerate([(30, 0), (-30, 120), (10, -110)]):
         g.patch(f"Cloud vortex {i + 1}", lat, lon, 12, 40, "#f0dfb6",
-                bulge=0.002)
+                bulge=0.006)
 
 
 def _earth(g):
@@ -202,10 +231,10 @@ def _mars(g):
                                                    -30, 20, 35),
             ("Aurorae Sinus", -12, -50, 10, 20), ("Sabaeus Sinus", -8, 20,
                                                   8, 25)]:
-        g.patch(name, lat, lon, ns, ew, dark, bulge=0.002)
-    g.patch("Utopia Planitia", 45, 110, 15, 40, "#a5522a", bulge=0.002)
-    g.patch("Hellas Planitia", -42, 70, 22, 30, "#d99a68", bulge=0.002)
-    g.patch("Arabia Terra", 20, 20, 18, 30, "#d08a55", bulge=0.002)
+        g.patch(name, lat, lon, ns, ew, dark, bulge=0.006)
+    g.patch("Utopia Planitia", 45, 110, 15, 40, "#a5522a", bulge=0.006)
+    g.patch("Hellas Planitia", -42, 70, 22, 30, "#d99a68", bulge=0.006)
+    g.patch("Arabia Terra", 20, 20, 18, 30, "#d08a55", bulge=0.006)
     g.line("Valles Marineris", (-14, -95), (-8, -40), 0.006, "#5a2e15")
     g.mountain("Olympus Mons", 18.65, -134, 600, 0.03, "#cd7a45")
     g.mountain("Ascraeus Mons", 11.8, -104, 400, 0.02, "#cd7a45")
@@ -231,10 +260,10 @@ def _jupiter(g):
              (-21, -27, "#e0d1b6"), (-27, -33, "#ab8f72"),
              (-33, -42, "#d5c4a8"), (-42, -52, "#b3987b"),
              (-52, -90, "#a99680")])
-    g.patch("Great Red Spot", -22, -30, 12, 22, "#c65a3c", bulge=0.004)
+    g.patch("Great Red Spot", -22, -30, 12, 22, "#c65a3c", bulge=0.006)
     for i, lon in enumerate((60, 95, 130)):
         g.patch(f"White oval {i + 1}", -33, lon, 4, 7, "#f2ebdc",
-                bulge=0.002)
+                bulge=0.006)
 
 
 def _saturn(g):
@@ -251,8 +280,8 @@ def _saturn(g):
 
 def _uranus(g):
     g.base()
-    g.cap(60, "#b6e3e8", lift=1.002)
-    g.cap(-60, "#b6e3e8", lift=1.002)
+    g.cap(60, "#b6e3e8", lift=1.006)
+    g.cap(-60, "#b6e3e8", lift=1.006)
     g.rings([(a - 130, a + 130, "#5b5b5b", 0.75)
              for a in (41837, 42234, 42571, 44718, 45661, 47176, 47627,
                        48300)]
@@ -261,10 +290,10 @@ def _uranus(g):
 
 def _neptune(g):
     g.base()
-    g.cap(50, "#4867cf", lift=1.002)
-    g.add(S.band("South band", g.r, -30, -45, "#2f4bb3", lift=1.002))
-    g.patch("Great Dark Spot", -20, 30, 8, 16, "#223a8f", bulge=0.004)
-    g.patch("Scooter", -42, 40, 3, 6, "#e8ecf8", bulge=0.003)
+    g.cap(50, "#4867cf", lift=1.006)
+    g.add(S.band("South band", g.r, -30, -45, "#2f4bb3", lift=1.006))
+    g.patch("Great Dark Spot", -20, 30, 8, 16, "#223a8f", bulge=0.006)
+    g.patch("Scooter", -42, 40, 3, 6, "#e8ecf8", bulge=0.006)
     g.rings([(41900, 42900, "#6a6f80", 0.35), (53100, 53400, "#7a7f90", 0.5),
              (62800, 63100, "#8a8fa0", 0.6)], thickness=0.003)
 
@@ -272,12 +301,12 @@ def _neptune(g):
 def _pluto(g):
     g.base()
     g.patch("Tombaugh Regio, west lobe", 20, 170, 32, 26, "#efe6d6",
-            bulge=0.003)
+            bulge=0.006)
     g.patch("Tombaugh Regio, east lobe", 14, -165, 26, 22, "#efe6d6",
-            bulge=0.003)
-    g.patch("Cthulhu Macula", -5, 120, 28, 70, "#5a3a2c", bulge=0.002)
-    g.patch("Belton Regio", -5, 30, 22, 40, "#6b4534", bulge=0.002)
-    g.cap(62, "#d8c4a8", lift=1.002)
+            bulge=0.006)
+    g.patch("Cthulhu Macula", -5, 120, 28, 70, "#5a3a2c", bulge=0.006)
+    g.patch("Belton Regio", -5, 30, 22, 40, "#6b4534", bulge=0.006)
+    g.cap(62, "#d8c4a8", lift=1.006)
 
 
 def _ceres(g):
@@ -297,11 +326,14 @@ def _makemake(g):
     g.base()
     for i, (lat, lon) in enumerate([(20, 30), (-25, -100)]):
         g.patch(f"Dark region {i + 1}", lat, lon, 14, 24, "#8c5d48",
-                bulge=0.002)
+                bulge=0.006)
 
 
 def _eris(g):
     g.base()
+    g.patch("Methane frost", 40, 60, 30, 50, "#eef1f4", bulge=0.006)
+    g.patch("Darker plain", -20, -120, 20, 40, "#c9ced6", bulge=0.006)
+    g.scatter(8, 29, 40, 120, "#cfd4da")
 
 
 # ---------------------------------------------------------------- moons
@@ -327,7 +359,7 @@ def _moon(g):
                                               12, 12),
             ("Mare Humboldtianum", 57, 81, 9, 12),
             ("Mare Ingenii", -34, 163, 10, 10)]:
-        g.patch(name, lat, lon, ns, ew, mare, bulge=0.002)
+        g.patch(name, lat, lon, ns, ew, mare, bulge=0.006)
     rim = "#b5b1ab"
     for name, lat, lon, km in [
             ("Tycho", -43.3, -11.4, 86), ("Copernicus", 9.6, -20.1, 93),
@@ -359,33 +391,33 @@ def _moon(g):
 
 def _phobos(g):
     g.base()
-    a, b, c = (v * g.k for v in g.body["radii"])
-    # Stickney at 1° N 49° W: the ellipsoid's radius that way
-    lat, lon = 1.0, -49.0
-    d = S.point(1.0, lat, lon)
-    rr = 1 / math.sqrt((d[0] / a) ** 2 + (d[1] / b) ** 2 + (d[2] / c) ** 2)
-    g.add(S.crater("Stickney", rr, lat, lon, g.deg(9.0), "#5c534b"))
+    g.crater("Stickney", 1, -49, 9.0, "#5c534b")
+    g.crater("Hall", -80, -150, 5.4, "#5c534b")
+    g.scatter(10, 31, 1.5, 3.5, "#635a52")
 
 
 def _deimos(g):
     g.base()
+    g.crater("Swift", 12.5, -358 + 360, 2.5, "#6b6159")
+    g.crater("Voltaire", 22, -3.5, 1.9, "#6b6159")
+    g.scatter(6, 33, 0.6, 1.4, "#6b6159")
 
 
 def _io(g):
     g.base()
-    g.cap(62, "#b79a45", lift=1.002)
-    g.cap(-62, "#b79a45", lift=1.002)
+    g.cap(62, "#b79a45", lift=1.006)
+    g.cap(-62, "#b79a45", lift=1.006)
     for name, lat, lon, ns, ew in [("Loki Patera", 13, -51, 6, 8),
                                    ("Babbar Patera", -40, -88, 6, 8),
                                    ("Prometheus", -2, 153, 4, 4),
                                    ("Amaterasu Patera", 38, -52, 4, 5)]:
-        g.patch(name, lat, lon, ns, ew, "#3e2e1e", bulge=0.002)
+        g.patch(name, lat, lon, ns, ew, "#3e2e1e", bulge=0.006)
     g.crater("Pele plume ring", -18, -105, 1200, "#b5432c", rim=0.02 * g.r)
     for i, (lat, lon, ns, ew) in enumerate([(10, 40, 10, 15),
                                             (-30, -160, 12, 20),
                                             (20, 100, 8, 12)]):
         g.patch(f"Sulphur dioxide frost {i + 1}", lat, lon, ns, ew,
-                "#f2eee0", bulge=0.002)
+                "#f2eee0", bulge=0.006)
 
 
 def _europa(g):
@@ -397,8 +429,8 @@ def _europa(g):
                                 ((-30, 120), (35, -170)),
                                 ((-60, 0), (10, 60)), ((20, -60), (60, 20))]):
         g.line(f"Linea {i + 1}", a, b, 0.004, line)
-    g.patch("Conamara Chaos", 10, -87, 8, 10, "#b8946f", bulge=0.002)
-    g.patch("Thera Macula", -47, -180, 8, 10, "#b8946f", bulge=0.002)
+    g.patch("Conamara Chaos", 10, -87, 8, 10, "#b8946f", bulge=0.006)
+    g.patch("Thera Macula", -47, -180, 8, 10, "#b8946f", bulge=0.006)
     g.crater("Tyre", 34, -146, 140, "#a37a58")
     g.crater("Callanish", -16, -26, 100, "#a37a58")
 
@@ -411,9 +443,9 @@ def _ganymede(g):
                                    ("Perrine Regio", 37, -30, 15, 25),
                                    ("Nicholson Regio", -25, -25, 30, 40),
                                    ("Barnard Regio", -22, 10, 20, 25)]:
-        g.patch(name, lat, lon, ns, ew, dark, bulge=0.002)
-    g.cap(65, "#c9c2b6", lift=1.002)
-    g.cap(-65, "#c9c2b6", lift=1.002)
+        g.patch(name, lat, lon, ns, ew, dark, bulge=0.006)
+    g.cap(65, "#c9c2b6", lift=1.006)
+    g.cap(-65, "#c9c2b6", lift=1.006)
     g.crater("Osiris", -38, -166, 107, "#d6cfc4")
     g.crater("Tros", 11, -27, 94, "#d6cfc4")
     g.scatter(10, 7, 60, 110, "#c2b9ad")
@@ -424,15 +456,18 @@ def _callisto(g):
     bright = "#8f857a"
     for i, d in enumerate((5, 10, 15, 20)):
         g.add(S.crater(f"Valhalla ring {i + 1}", g.r, 14, -56, d, bright,
-                       rim=0.004 * g.r))
+                       rim=0.004 * g.r, seg=g.seg))
     for i, d in enumerate((4, 8, 12)):
         g.add(S.crater(f"Asgard ring {i + 1}", g.r, 30, -140, d, bright,
-                       rim=0.004 * g.r))
+                       rim=0.004 * g.r, seg=g.seg))
     g.scatter(28, 9, 60, 160, "#8a8078")
 
 
 def _amalthea(g):
     g.base()
+    g.crater("Pan", 55, -35, 90, "#7d3b25")
+    g.crater("Gaea", -80, 90, 75, "#7d3b25")
+    g.patch("Ida Facula", 20, -175, 20, 20, "#c67a5a", bulge=0.006)
 
 
 def _mimas(g):
@@ -480,23 +515,24 @@ def _rhea(g):
 def _titan(g):
     g.base()
     dune = "#7c4f22"
-    g.patch("Shangri-La", -10, -165, 25, 60, dune, bulge=0.002)
-    g.patch("Belet", -5, 105, 20, 50, dune, bulge=0.002)
-    g.patch("Fensal-Aztlan", 5, -20, 15, 50, dune, bulge=0.002)
-    g.patch("Xanadu", -15, -100, 25, 40, "#e2b26a", bulge=0.002)
-    g.patch("Kraken Mare", 68, 50, 12, 30, "#3b4a5b", bulge=0.002)
-    g.patch("Ligeia Mare", 78, 112, 6, 12, "#3b4a5b", bulge=0.002)
+    g.patch("Shangri-La", -10, -165, 25, 60, dune, bulge=0.006)
+    g.patch("Belet", -5, 105, 20, 50, dune, bulge=0.006)
+    g.patch("Fensal-Aztlan", 5, -20, 15, 50, dune, bulge=0.006)
+    g.patch("Xanadu", -15, -100, 25, 40, "#e2b26a", bulge=0.006)
+    g.patch("Kraken Mare", 68, 50, 12, 30, "#3b4a5b", bulge=0.006)
+    g.patch("Ligeia Mare", 78, 112, 6, 12, "#3b4a5b", bulge=0.006)
     g.haze(1.05, "#e8a94a", 0.28)
 
 
 def _hyperion(g):
     g.base()
+    g.scatter(30, 35, 8, 30, "#8d8071")
 
 
 def _iapetus(g):
     g.base()
     dark = "#3d2a1c"
-    zone = S._revolve("Cassini Regio", S._arc(g.r * 1.002, -52.0, 52.0),
+    zone = S._revolve("Cassini Regio", S._arc(g.r * 1.006, -52.0, 52.0),
                       angle=170.0)
     rot = CadNode("rotate", "Cassini Regio", dict(x=0.0, y=0.0, z=-175.0))
     rot.add(S.col("Cassini Regio", dark, zone))
@@ -516,7 +552,7 @@ def _miranda(g):
     for name, lat, lon, ns, ew in [("Arden Corona", -15, -40, 30, 30),
                                    ("Inverness Corona", -70, -20, 25, 25),
                                    ("Elsinore Corona", -20, 100, 30, 30)]:
-        g.patch(name, lat, lon, ns, ew, "#8f8c88", bulge=0.002)
+        g.patch(name, lat, lon, ns, ew, "#8f8c88", bulge=0.006)
     g.line("Verona Rupes", (-45, -25), (-35, -5), 0.005, "#e5e3e0")
 
 
@@ -546,18 +582,18 @@ def _titania(g):
 def _oberon(g):
     g.base()
     g.crater("Hamlet", -46, -44.4, 206, "#aba09a")
-    g.patch("Hamlet floor", -46, -44.4, 8, 10, "#6d6560", bulge=0.001)
+    g.patch("Hamlet floor", -46, -44.4, 8, 10, "#6d6560", bulge=0.006)
     g.line("Mommur Chasma", (-10, -80), (30, -30), 0.004, "#7d746d")
     g.scatter(15, 27, 50, 150, "#aba09a")
 
 
 def _triton(g):
     g.base()
-    g.add(S.band("South polar cap", g.r, -90, -15, "#e9c9c0", lift=1.002))
+    g.add(S.band("South polar cap", g.r, -90, -15, "#e9c9c0", lift=1.006))
     for i, (lat, lon) in enumerate([(20, 20), (35, -40), (10, 80),
                                     (30, 140)]):
         g.patch(f"Cantaloupe terrain {i + 1}", lat, lon, 14, 20, "#c7b6a8",
-                bulge=0.002)
+                bulge=0.006)
     for i, lon in enumerate((-30, 10, 50, 100)):
         g.line(f"Geyser streak {i + 1}", (-52, lon), (-40, lon + 12),
                0.003, "#7d6b62")
@@ -565,16 +601,20 @@ def _triton(g):
 
 def _proteus(g):
     g.base()
+    g.crater("Pharos", -20, 30, 230, "#5b5654", rim=0.012 * g.r)
+    g.scatter(8, 37, 20, 60, "#5b5654")
 
 
 def _charon(g):
     g.base()
     g.cap(70, "#6c3b2c")
-    g.patch("Vulcan Planum", -25, 0, 40, 70, "#aca19a", bulge=0.001)
+    g.patch("Vulcan Planum", -25, 0, 40, 70, "#aca19a", bulge=0.006)
 
 
 def _dysnomia(g):
     g.base()
+    g.scatter(8, 39, 20, 60, "#7a7570")
+    g.patch("Bright plain", 10, 40, 20, 30, "#9a958f", bulge=0.006)
 
 
 BUILDERS = {

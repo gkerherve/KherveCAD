@@ -3114,6 +3114,73 @@ into a new module and import.
                        caps a pattern at `MAX_COPIES` (1000) and needs
                        every count ≥ 1. Examples ▸ Mechanical ▸ Bolt
                        circle & stair (pattern).
+  - **Solar System** (2026-09-17, Library ▸ Science ▸ Solar System;
+                       the user asked for the known planets, their moons
+                       and motion round the Sun, "good enough" rather than
+                       precise): `solar_data.py` (Qt-free) is the table —
+                       the Sun, 8 planets, 5 dwarf planets and 25 moons
+                       with real equatorial/polar radii (irregular moons
+                       as three radii), obliquity and where the pole leans
+                       (`pole_lon`, ecliptic longitude), sidereal rotation
+                       (negative = retrograde), JPL J2000 orbital elements
+                       (a, period, e, i, node, longitude of perihelion,
+                       mean longitude) and colour; `orbit_expressions` /
+                       `position` are the SAME Kepler formula (equation of
+                       the centre to e³, inclined at the node) as OpenSCAD
+                       text and as Python, so a test pins the program to
+                       the maths. `solar_surface.py` — features stood ON a
+                       sphere, no boolean: `band` (a revolved arc slice:
+                       belts, polar caps), `hemisphere`, `patch` (an
+                       ellipsoid sunk to its rim), `crater` (a revolved
+                       circle half sunk), `mountain`, `arc_line` (capsules
+                       along a great circle), `rings` (annuli), `haze`
+                       (a Glass shell), `map_shells` (a character map ->
+                       one polyhedron per class, each run of like cells a
+                       closed curved slab; the EAST end face once reused
+                       the west's normal and wound wrong past a few cells)
+                       and `poly_sphere` (a baked low-poly sphere whose
+                       facets are its own — the document's $fn made every
+                       1 mm orrery moon 1890 triangles). `solar_maps.py`
+                       — the Earth at 5° (36 rows × 72 columns, ocean /
+                       green / taiga / desert / ice, hand-drawn).
+                       `solar_bodies.py` — `build_body(key, diameter,
+                       fine)`: every body's recognisable features (Earth's
+                       map + atmosphere, Mars' albedo regions, Tharsis
+                       volcanoes, Valles Marineris and caps, Jupiter's 14
+                       belts and the Great Red Spot, Saturn's C/B/A/F
+                       rings, Uranus' and Neptune's rings, the Moon's 18
+                       maria, 26 named craters and Tycho's rays, Io's
+                       Pele ring, Europa's lineae, Callisto's Valhalla,
+                       Iapetus' Cassini Regio and ridge, Enceladus' tiger
+                       stripes, Titan's haze, Triton's pink cap…) at IAU
+                       lat / east lon, so a synchronous moon's 0° faces its
+                       planet; `fine=False` (orreries) drops the seeded
+                       crater scatters and lines, uses 8-sided blobs and
+                       rims (what `keeps_segments` leaves alone) and bakes
+                       bodies under 3000 km. `library_solar.py` — Part
+                       Library categories Planets / Moons (Ø 30 / 60 / 120
+                       mm and 1:250 000 000 to scale) and **Solar System
+                       models**: orreries driven by a Customizer `days`
+                       slider like `library_motion` (whole system, inner
+                       planets, dwarf planets, each planet & its moons).
+                       Every body is an Object whose OWN variables solve
+                       its orbit (`translate([px, py, pz]) rotate([0,
+                       tilt, pole]) scale(size / 20) rotate([0, 0, spin])
+                       Earth_globe();`), moons circle in the planet's
+                       equatorial frame facing it; sliders for Earth's
+                       diameter, the Sun's, Earth's orbit radius, orbit
+                       `compression` (1 = true spacing, 0.5 = square
+                       root), `size_compression`, moon spread and the
+                       smallest moon. A globe Object reads NO variable —
+                       nested modules are HOISTED to the top of the
+                       program, so a moon or globe cannot read its
+                       planet's locals; the scale stands outside it and
+                       each moon recomputes its planet's size from the
+                       globals. `library_motion.place(model, root)` is the
+                       shared insert (assigns become prefixed globals,
+                       Objects land beside the model). Full orrery: ~120k
+                       triangles, ~0.5 s a tick in the pure-Python
+                       preview; a planet system ~0.1 s.
 - `docs/MCP.md` — how to connect an assistant, what the 63 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
