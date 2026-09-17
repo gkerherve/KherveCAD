@@ -540,7 +540,7 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, APP_NAME,
                                     f"Could not build the part:\n{exc}")
                 return
-            self.builder.tree.select_nodes(nodes)
+            self.builder.tree.select_nodes([])
             self.view3d.fit()
             return
         try:
@@ -551,7 +551,7 @@ class MainWindow(QMainWindow):
             return
         self.model.root.add(node)
         self.model.structure_changed.emit()
-        self.builder.tree.select_nodes([node])
+        self.builder.tree.select_nodes([])
         self.view3d.fit()
         if note:
             self.statusBar().showMessage(note, 10000)
