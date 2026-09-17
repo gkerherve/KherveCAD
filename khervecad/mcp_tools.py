@@ -618,6 +618,25 @@ class McpToolExecutor:
         return {"categories": [{"category": c, "parts": p}
                                for c, p in groups.items()]}
 
+    def _t_list_scad_libraries(self, _params) -> dict:
+        from . import scadlib_dialog
+        return scadlib_dialog.describe()
+
+    def _t_install_scad_library(self, params) -> dict:
+        from . import scadlib, scadlib_dialog
+        key = str(params.get("key", "")).strip()
+        lib = next((lib for lib in scadlib.KNOWN
+                    if lib.key.lower() == key.lower()), None)
+        if lib is None:
+            raise ToolError(f"No library {key!r}; list_scad_libraries "
+                            f"names them.")
+        try:
+            folder = scadlib_dialog.run_install(lib)
+        except Exception as exc:
+            raise ToolError(f"Could not install {lib.title}: {exc}")
+        return {"installed": lib.key, "folder": folder,
+                "include": lib.include}
+
     def _t_list_examples(self, _params) -> dict:
         from . import examples
         return {"examples": [{"name": name, "category": category}

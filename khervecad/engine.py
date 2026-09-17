@@ -245,6 +245,19 @@ def backend_name(binary: str) -> str:
     return "Manifold" if backend_args(binary) else "CGAL"
 
 
+def _process(parent=None) -> QProcess:
+    """A QProcess for one OpenSCAD run. Renders run from a temporary
+    folder, so OPENSCADPATH carries the document's folder and the
+    library folders `use <...>` / `include <...>` resolve against."""
+    process = QProcess(parent) if parent is not None else QProcess()
+    try:
+        from . import scadlib
+        process.setProcessEnvironment(scadlib.process_environment())
+    except Exception:                         # never block a render
+        pass
+    return process
+
+
 def openscad_args(binary: str, out_path, scad_path, extra=()) -> list:
     """The arguments of one OpenSCAD run: output, backend, extras, input.
     Every render and export goes through here, so none of them falls
@@ -568,7 +581,7 @@ class ScadEngine(QObject):
         scad_path = self._dir / "model.scad"
         stl_path = self._dir / "model.stl"
         scad_path.write_text(code, encoding="utf-8")
-        self._process = QProcess(self)
+        self._process = _process(self)
         path = str(stl_path)
         self._watch(self._process, lambda eng: eng._finished(path))
         self._process.start(self.binary,
@@ -586,7 +599,7 @@ class ScadEngine(QObject):
         scad_path = self._dir / "part.scad"
         stl_path = self._dir / "part.stl"
         scad_path.write_text(code, encoding="utf-8")
-        self._process = QProcess(self)
+        self._process = _process(self)
         self._watch(self._process,
                     lambda eng, k=key, p=str(stl_path):
                     eng._part_finished(k, p))
@@ -645,7 +658,7 @@ class ScadEngine(QObject):
         """Run the binary once with ``-o out_path``. '' on success."""
         scad_path = self._dir / "export.scad"
         scad_path.write_text(scad_code, encoding="utf-8")
-        process = QProcess()
+        process = _process()
         process.start(self.binary,
                       openscad_args(self.binary, out_path, scad_path, extra))
         process.waitForFinished(timeout_ms)

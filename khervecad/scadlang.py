@@ -92,13 +92,20 @@ NODE_TYPES = {
         params=dict(condition="true", message=""),
         schema=[("condition", "Condition", "str", None, None),
                 ("message", "Message (expression)", "str", None, None)]),
+    "scad_use": dict(
+        label="Library (use / include)", category=CONTROL,
+        icon="mdi.bookshelf",
+        params=dict(kind="include", path="BOSL2/std.scad"),
+        schema=[("kind", "Kind", "choice", ["include", "use"], None),
+                ("path", "Library file (as in <...>)", "str", None,
+                 None)]),
 }
 TYPES = frozenset(NODE_TYPES)
 WRAPPERS = frozenset({"resize", "multmatrix", "render", "intersection_for",
                       "let"})
-LEAVES = frozenset({"echo", "assert"})
+LEAVES = frozenset({"echo", "assert", "scad_use"})
 #: params kept as text by mesh.rp
-TEXT_PARAMS = frozenset({"bindings", "args", "message"})
+TEXT_PARAMS = frozenset({"bindings", "args", "message", "kind"})
 #: nodes the preview draws approximately (the first iteration)
 APPROXIMATED = frozenset({"intersection_for"})
 
@@ -271,6 +278,9 @@ def statement(node, fmt, fn) -> str:
         return f"let ({binds})"
     if t == "echo":
         return f"echo({str(p.get('args', '')).strip()})"
+    if t == "scad_use":
+        kind = "use" if str(p.get("kind")) == "use" else "include"
+        return f"{kind} <{str(p.get('path', '')).strip()}>"
     if t == "assert":
         message = str(p.get("message", "")).strip()
         cond = str(p.get("condition", "true")).strip() or "true"
@@ -455,6 +465,16 @@ def check(node, env):
                     pass
             return "assertion failed" + (f": {message}" if message else
                                          f": {p.get('condition')}")
+        return None
+    if t == "scad_use":
+        from . import scadlib
+        name = str(p.get("path", "")).strip()
+        if not name:
+            return "library: write the file, e.g. BOSL2/std.scad"
+        if scadlib.resolve(name) is None:
+            return (f"library not found: {name} — install it from "
+                    "Library ▸ OpenSCAD Libraries, or put it beside "
+                    "the document")
         return None
     if t == "resize":
         from . import mesh

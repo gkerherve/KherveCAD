@@ -100,6 +100,43 @@ into a new module and import.
                        own statements (no helper module) and scadparse
                        reads them back (`parse_statement`, raw argument
                        text so `b = a * 2` stays an expression).
+  - `scadinclude.py` — what reaches beyond one file: `use <>` / `include
+                       <>` tokens become **scad_use** nodes (emit the same
+                       line; an unresolvable one is red) and the library
+                       file is read for its modules and functions (an
+                       include also its variables), cached per file +
+                       mtime; a library module keeps its FILE's scope
+                       (`Module.scope`). A library call that does not
+                       inline cleanly (new warnings, or no geometry) is
+                       kept verbatim as **scad_raw**, as is any call
+                       nothing defines — they used to be dropped
+                       (`raw_statement` dedents continuation lines so a
+                       nested block does not re-indent every round trip).
+                       `children()` / `children(i)` / `children([..])`
+                       in an inlined body stand for the call's own
+                       children (`call_children`, originals first then
+                       clones). scad_raw is in `mesh.APPROXIMATED`, so a
+                       part holding code gets an exact per-part render,
+                       and `to_scad_map(only=)` writes every scad_use of
+                       the document first so that render finds the
+                       library; `enclose_import_as_part` leaves scad_use
+                       at the top level.
+  - `scadlib.py`     — where libraries resolve, in OpenSCAD's order: the
+                       including file's folder, the document's folder
+                       (`DOCUMENT_DIR`, set in `_update_title`), imported
+                       files' folders, OPENSCADPATH, the user library
+                       folder, the installation's (MCAD in OpenSCAD.app).
+                       `engine._process` gives every OpenSCAD run that
+                       OPENSCADPATH (renders run in a temp folder).
+                       `KNOWN` = BOSL2, MCAD, NopSCADlib, Round-Anything,
+                       dotSCAD, threads.scad, Catch'n'Hole, Gridfinity
+                       Rebuilt; `install` unpacks a GitHub archive into the
+                       user library folder (injectable opener).
+                       `scadlib_dialog.py` is Library ▸ OpenSCAD Libraries
+                       (install on click, open folder, insert the include
+                       line) and the MCP `list_scad_libraries` /
+                       `install_scad_library` bodies (install counts as a
+                       file tool: full access).
   - `document.py`    — `.kcad` JSON (de)serialisation, `.scad` export.
   - `units.py`       — the **document unit** (Qt-free):
                        `DocumentModel.unit` ("nm", "um", "mm", "cm",
@@ -2507,7 +2544,7 @@ into a new module and import.
                        out. The test also checks the pin 6 mm short of
                        home DOES press on the bore — or it would never
                        hold.
-  - `mcp_schema.py`  — the **MCP tool table**: 60 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 62 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -2667,7 +2704,7 @@ into a new module and import.
                        caps a pattern at `MAX_COPIES` (1000) and needs
                        every count ≥ 1. Examples ▸ Mechanical ▸ Bolt
                        circle & stair (pattern).
-- `docs/MCP.md` — how to connect an assistant, what the 60 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 62 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -2941,7 +2978,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **60 tools**: the object tree, OpenSCAD in
+client gets the whole app as **62 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

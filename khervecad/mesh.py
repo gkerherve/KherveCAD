@@ -33,7 +33,8 @@ _TEXT_PARAMS = {"text", "path", "variable", "condition", "update",
 #: ops the fallback can only approximate (engine renders exactly).
 APPROXIMATED = {"difference", "intersection", "minkowski", "hull",
                 "offset", "fillet",     # a fillet cuts convex edges
-                "intersection_for"}     # drawn as its first iteration
+                "intersection_for",     # drawn as its first iteration
+                "scad_raw"}             # only OpenSCAD can draw it
 
 _stl_cache = {}
 #: how many parsed mesh files stl_mesh keeps
@@ -449,7 +450,7 @@ def collect_outlines(node: CadNode, env=None):
 
 #: OpenSCAD statements whose 2D outlines scadlang works out
 _SCADLANG_OUTLINES = {"resize", "multmatrix", "render", "intersection_for",
-                      "let", "echo", "assert"}
+                      "let", "echo", "assert", "scad_use"}
 
 #: transforms a 2D outline passes through on its way into an extrusion
 _TRANSFORMS_2D = ("translate", "rotate", "scale", "mirror")

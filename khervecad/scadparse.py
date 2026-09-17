@@ -39,6 +39,7 @@ from .model import CadNode
 _TOKEN_RE = re.compile(r"""
     (?P<space>\s+)
   | (?P<comment>//[^\n]*|/\*.*?\*/)
+  | (?P<directive>\b(?:use|include)\s*<[^>\n]*>)
   | (?P<number>\d+\.?\d*(?:[eE][-+]?\d+)?|\.\d+(?:[eE][-+]?\d+)?)
   | (?P<string>"(?:\\.|[^"\\])*")
   | (?P<ident>\$?[A-Za-z_]\w*)
@@ -95,8 +96,18 @@ def _comment_label(text):
 
 
 class Parser:
-    def __init__(self, text: str):
+    def __init__(self, text: str, base_dir=None):
         self.text = text
+        #: folder `use <...>` / `include <...>` resolve against first
+        self.base_dir = base_dir
+        #: > 0 while re-parsing a module body that lives in another file
+        #: (its token offsets are not this text's, so no comment labels)
+        self._foreign = 0
+        #: the children of each module call being inlined, innermost last
+        #: — what a children() in its body stands for
+        self._children_stack = []
+        #: library files being read (a cycle guard)
+        self._loading = set()
         #: [(offset, "// text")] — read back as node labels
         self.comments = []
         self.tokens = _tokenize(text, self.comments)
@@ -104,8 +115,9 @@ class Parser:
         self._heads = []
         self.i = 0
         self.warnings = []
-        #: name -> (params, body_start_i, body_end_i) for user modules,
-        #: expanded (inlined) at each call site.
+        #: name -> scadinclude.Module for user modules (their tokens,
+        #: and for a library module its file's scope), inlined at each
+        #: call site.
         self.modules = {}
         #: zero-param module names already materialised as a component —
         #: any further call becomes an *instance* (reference) of it.
@@ -265,14 +277,22 @@ class Parser:
         if token is not None and token[1] == "[":
             # vector of vectors (polygon points) or plain vector
             if self.peek(1) is not None and self.peek(1)[1] == "[":
-                self.expect("[")
-                points = []
-                while True:
-                    points.append(self._vector())
-                    if self.accept("]"):
-                        break
-                    self.expect(",")
-                return points
+                start = self.i
+                try:
+                    self.expect("[")
+                    points = []
+                    while True:
+                        points.append(self._vector())
+                        if self.accept("]"):
+                            break
+                        self.expect(",")
+                    return points
+                except ScadParseError:
+                    # vectors mixed with variables or a comprehension
+                    # (`[[0, 0], p1, p2]`): keep the expression, which
+                    # resolve_points evaluates in scope
+                    self.i = start
+                    return self._expr_param()
             return self._vector()
         if token is not None and token[0] == "string":
             self.next()
@@ -392,7 +412,7 @@ class Parser:
     def parse_statement(self):
         token = self.peek()
         node = self._parse_statement()
-        if node is not None and token is not None:
+        if node is not None and token is not None and not self._foreign:
             end = self.tokens[self.i - 1][3] if self.i else token[3]
             self._heads.append((token[2], end, node))
         return node
@@ -402,6 +422,8 @@ class Parser:
         if token is None:
             return None
         value = token[1]
+        if token[0] == "directive":
+            return _scadinclude.parse_directive(self)
         if value == ";":
             self.next()
             return None
@@ -424,9 +446,6 @@ class Parser:
             return _scadlang.parse_statement(self, value)
         if value == "if":
             return self._parse_if()
-        if value in ("use", "include"):
-            self._skip_directive()
-            return None
         if value == "module":
             self._capture_module()
             return None
@@ -621,14 +640,6 @@ class Parser:
             node.add(else_branch)
         return node
 
-    def _skip_directive(self):
-        # use <file> / include <file>
-        while self.peek() is not None and self.peek()[1] not in (";", ">"):
-            self.next()
-        if self.peek() is not None:
-            self.next()
-        self.warn("use/include directive skipped")
-
     def _skip_definition(self, kind):
         name = "?"
         self.next()
@@ -717,7 +728,9 @@ class Parser:
             elif tok[1] == "}":
                 depth -= 1
         body_end = self.i - 1                          # the closing '}'
-        self.modules[name] = (params, body_start, body_end)
+        self.modules[name] = _scadinclude.Module(
+            params, body_start, body_end, self.tokens, self.text,
+            getattr(self, "library_scope", None))
 
     def _inline_module(self, name):
         """Expand a call to a user module: a union holding one assign per
@@ -725,9 +738,14 @@ class Parser:
         A zero-parameter module is what KherveCAD emits for an Object
         (component), so those come back as component nodes — the
         export -> import round trip keeps the assembly structure."""
-        params, body_start, body_end = self.modules[name]
+        module = self.modules[name]
+        params, body_start, body_end = module.params, module.start, \
+            module.end
         positional, named = self._arguments()
-        if not params and not positional and not named:
+        # the call's own children, parsed in the caller's scope: what a
+        # children() in the body stands for
+        kids = _scadinclude.call_children(self)
+        if not params and not positional and not named and not kids:
             if name in self.instanced:
                 # the first call materialised the Object; every further
                 # call is one placed instance of it
@@ -740,6 +758,11 @@ class Parser:
             inst = CadNode("union", name)
         outer_scope = self.scope                      # bound params shadow
         self.scope = dict(outer_scope)                # the enclosing scope
+        if module.scope is not None:
+            # a library module sees its own file's variables and
+            # functions; the caller's stay visible under them
+            self.scope.update(module.scope)
+        self.scope["$children"] = len(kids)
         for idx, (pname, default) in enumerate(params):
             if idx < len(positional):
                 value = positional[idx]
@@ -751,18 +774,25 @@ class Parser:
             inst.add(CadNode("assign", f"{pname} =",
                              dict(variable=pname, value=source)))
             try:                                      # so the body can use
-                self.scope[pname] = expr.evaluate(source, self.scope)
+                self.scope[pname] = expr.evaluate(source, outer_scope)
             except Exception:
                 pass
-        saved = self.i                                # re-parse the body
-        self.i = body_start
-        while self.i < body_end:
-            child = self.parse_statement()
-            if child is not None:
-                inst.add(child)
-        self.i = saved
-        self.scope = outer_scope                      # restore
-        self.accept(";")                              # end of the call
+        saved = (self.i, self.tokens, self.text)      # re-parse the body
+        foreign = module.tokens is not self.tokens
+        self.tokens, self.text, self.i = module.tokens, module.text, \
+            body_start
+        self._foreign += foreign
+        self._children_stack.append(kids)
+        try:
+            while self.i < body_end:
+                child = self.parse_statement()
+                if child is not None:
+                    inst.add(child)
+        finally:
+            self._children_stack.pop()
+            self._foreign -= foreign
+            self.i, self.tokens, self.text = saved
+            self.scope = outer_scope                  # restore
         return inst
 
     def _skip_call_statement(self):
@@ -786,14 +816,18 @@ class Parser:
 
     # ----------------------------------------------------------- calls
     def _parse_call(self):
+        start = self.i
         name = self.next()[1]
+        if name == "children":
+            return _scadinclude.parse_children(self)
         if name in self.modules and name not in _BUILDERS:
-            return self._inline_module(name)
+            return _scadinclude.inline_or_raw(self, name, start)
         builder = _BUILDERS.get(name)
         if builder is None:
-            self.warn(f"unsupported call '{name}' skipped")
             self._skip_call_statement()
-            return None
+            return _scadinclude.raw_statement(
+                self, start, f"unsupported call '{name}' kept as "
+                             "OpenSCAD code")
         positional, named = self._arguments()
         node = builder(self, positional, named)
         if node is None:
@@ -1077,6 +1111,7 @@ _BUILDERS = {
 # kcad_* helper-module calls rebuild the organic nodes they came from
 from . import organic as _organic  # noqa: E402
 from . import scadlang as _scadlang  # noqa: E402
+from . import scadinclude as _scadinclude  # noqa: E402
 
 _BUILDERS.update(_organic.BUILDERS)
 
@@ -1221,9 +1256,10 @@ def _prune_dead(root) -> None:
                 changed = True
 
 
-def parse_scad(text: str):
-    """Parse *text* into (root CadNode, warnings list)."""
-    parser = Parser(text)
+def parse_scad(text: str, base_dir=None):
+    """Parse *text* into (root CadNode, warnings list). *base_dir* is
+    the folder `use <...>` / `include <...>` resolve against first."""
+    parser = Parser(text, base_dir)
     root = parser.parse_program()
     _prune_dead(root)
     return root, parser.warnings
@@ -1234,7 +1270,7 @@ def import_scad(model, path: str):
     Returns the list of warnings."""
     with open(path, encoding="utf-8") as fh:
         text = fh.read()
-    root, warnings = parse_scad(text)
+    root, warnings = parse_scad(text, os.path.dirname(os.path.abspath(path)))
     # OpenSCAD reads import("part.stl") beside the .scad, not beside
     # wherever the app was started
     from .meshimport import resolve_paths

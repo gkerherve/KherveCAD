@@ -44,6 +44,16 @@ and a **picture of the 3D preview**.
   picked. `make_master` / `add_linked_copy` are the other kind of
   reuse. `insert_part` reaches the parametric library: CF/KF vacuum
   components, ISO-threaded fasteners, chemistry glassware, furniture.
+- **Real OpenSCAD in** — `apply_code` reads resize, multmatrix,
+  render, let, echo, assert, intersection_for, `children()` in modules,
+  vector maths, strings and function literals as editable nodes. A call
+  it cannot turn into objects is kept as OpenSCAD code (a `scad_raw`
+  node the engine renders exactly) with a warning, never dropped.
+  Programs may start with `include <BOSL2/std.scad>` or `use
+  <MCAD/involute_gears.scad>`: `list_scad_libraries` says which
+  community libraries are installed and `install_scad_library` fetches
+  one from its GitHub project into the OpenSCAD library folder (a file
+  tool: full access — ask the user first).
 - **Documents** — `set_render_options`, `load_example`,
   `new_document`, `open_document` (.kcad, .scad, or a mesh),
   `save_document` and `export_document` (.scad, .stl, .3mf, or a

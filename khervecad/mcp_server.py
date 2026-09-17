@@ -142,10 +142,15 @@ move_node, duplicate_node, delete_nodes.
 NODES, not pasted as text. For anything with structure this is far \
 faster than a dozen add_node calls, and the result is still an ordinary \
 editable tree. Read get_code first to see the program as it stands. \
-Constructs outside the importable subset come back as warnings; if a \
-library (BOSL2…) is genuinely needed, add a scad_raw node instead, and \
-say that the built-in preview cannot show it (only the OpenSCAD engine \
-renders it).
+The importer reads real OpenSCAD: resize, multmatrix, render, let, \
+echo, assert, intersection_for, children() in modules, vector maths, \
+strings, function literals — each becomes an editable node. A call it \
+cannot turn into objects is KEPT as a scad_raw node (OpenSCAD code the \
+engine renders exactly), with a warning, never dropped. Libraries work: \
+start the program with `include <BOSL2/std.scad>` or `use \
+<MCAD/involute_gears.scad>` (list_scad_libraries says which are \
+installed; ask the user before install_scad_library) — library calls \
+that import cleanly become objects, the rest stay code.
 - Beyond OpenSCAD's own shapes, apply_code understands KherveCAD's \
 helpers, which parse into editable nodes: `kcad_sweep(path = [[x, y, \
 z], ...], smooth = 3, twist = 0, scale = 1, wall = 0, closed = false) \

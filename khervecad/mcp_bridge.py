@@ -53,7 +53,7 @@ _MAX_LINE = 8 * 1024 * 1024
 _READ_ONLY_TOOLS = frozenset({
     "get_document_info", "list_node_types", "list_tree", "get_node",
     "get_code", "render_view", "list_parts", "list_examples",
-    "list_crystals", "list_molecules", "get_city",
+    "list_crystals", "list_molecules", "get_city", "list_scad_libraries",
     "list_anchors", "select_nodes", "get_node_bounds", "measure",
     "probe_surface", "sample_surface", "face_landmarks", "section",
     "check_code",
@@ -68,7 +68,7 @@ _READ_ONLY_TOOLS = frozenset({
 #: leaves an edit behind).
 _NO_SNAPSHOT_TOOLS = _READ_ONLY_TOOLS | {
     "save_document", "export_document", "export_drawing",
-    "publish_to_printables",
+    "publish_to_printables", "install_scad_library",
 }
 
 #: Tools that can read or write a file the client names.  Everything
@@ -79,6 +79,7 @@ _FILE_TOOLS = frozenset({
     "open_document", "save_document", "export_document",
     "export_drawing", "publish_to_printables", "set_reference_image",
     "mesh_from_photo", "build_city", "import_map", "send_to_planetcraft",
+    "install_scad_library",
 })
 
 
@@ -95,6 +96,8 @@ def _names_a_path(name: str, tool_input: dict) -> bool:
     """
     if name in ("publish_to_printables", "send_to_planetcraft"):
         return not (tool_input or {}).get("dry_run")
+    if name == "install_scad_library":            # writes a library folder
+        return True
     tool_input = tool_input or {}
     return name in _FILE_TOOLS and bool(tool_input.get("path")
                                         or tool_input.get("save_to"))

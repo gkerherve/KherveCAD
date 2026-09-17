@@ -154,12 +154,15 @@ def test_import_scalar_rotate_and_scale(app):
     assert rot.children[0].params["x"] == 2.0
 
 
-def test_unknown_call_is_skipped_with_warning(app):
+def test_unknown_call_is_kept_as_openscad_code(app):
+    """A call nothing defines is kept verbatim (the engine renders it),
+    never dropped — what the author wrote survives the import."""
     root, warnings = _parse("""
         frobnicate(1, 2) { cube(3); }
         sphere(r=1);
     """)
-    assert [n.type for n in root.children] == ["sphere"]
+    assert [n.type for n in root.children] == ["scad_raw", "sphere"]
+    assert root.children[0].params["code"] == "frobnicate(1, 2) { cube(3); }"
     assert any("frobnicate" in w for w in warnings)
 
 

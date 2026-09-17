@@ -1226,6 +1226,13 @@ class DocumentModel(QObject):
             if only is None:
                 self.root.emit(lines, 0, spans)
             else:
+                # the libraries the document uses, wherever their
+                # directive sits, so a part's own program still finds
+                # the modules its OpenSCAD code calls
+                inside = {n.id for n in only.walk()}
+                for n in self.root.walk():
+                    if n.type == "scad_use" and n.id not in inside:
+                        n.emit(lines, 0, spans)
                 for child in self.root.children:
                     if child.type in ("variables", "assign"):
                         child.emit(lines, 0, spans)
@@ -1627,7 +1634,7 @@ class DocumentModel(QObject):
         they are. Returns the part, or None when nothing was loose."""
         loose = [c for c in self.root.children
                  if c.type not in ("component", "reference", "masters",
-                                   "variables", "assign")]
+                                   "variables", "assign", "scad_use")]
         if not loose:
             return None
         if len(loose) == 1:

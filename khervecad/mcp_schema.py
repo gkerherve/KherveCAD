@@ -386,6 +386,32 @@ TOOLS = [
         "input_schema": _obj({}),
     },
     {
+        "name": "list_scad_libraries",
+        "description": (
+            "The OpenSCAD community libraries (BOSL2, MCAD, NopSCADlib, "
+            "Round-Anything, dotSCAD, threads.scad, Catch'n'Hole, "
+            "Gridfinity): which are installed, the include line each "
+            "program starts with, and the folders use <...> / include "
+            "<...> search. A program using an installed library can be "
+            "sent to apply_code: its calls become objects where they "
+            "import cleanly and stay OpenSCAD code (rendered exactly by "
+            "the engine) where they do not."
+        ),
+        "input_schema": _obj({}),
+    },
+    {
+        "name": "install_scad_library",
+        "description": (
+            "Download one library from list_scad_libraries (its GitHub "
+            "project) into the user's OpenSCAD library folder, shared "
+            "with OpenSCAD. Ask the user before installing."
+        ),
+        "input_schema": _obj({
+            "key": {"type": "string",
+                    "description": "The library key, e.g. 'BOSL2'."},
+        }, ["key"]),
+    },
+    {
         "name": "list_anchors",
         "description": (
             "The parts that can be mated at a given scope, and the "

@@ -527,6 +527,9 @@ class MainWindow(QMainWindow):
         menu.addAction(icons.icon("mdi.toy-brick-outline"),
                        "Part Library (customise)...", self.open_library,
                        "Ctrl+L")
+        menu.addAction(icons.icon("mdi.bookshelf"),
+                       "OpenSCAD Libraries (BOSL2, MCAD...)...",
+                       self._open_scad_libraries)
         menu.addSeparator()
         submenus = {}
         crystals_menu = molecules_menu = lego_menu = home_menu = None
@@ -608,6 +611,12 @@ class MainWindow(QMainWindow):
                        lambda: lego_convert.fuse_lego(self))
         lego.addSeparator()
         return lego
+
+    def _open_scad_libraries(self):
+        """Library ▸ OpenSCAD Libraries: install BOSL2, MCAD, NopSCADlib…
+        and insert the include line (scadlib_dialog.py)."""
+        from . import scadlib_dialog
+        scadlib_dialog.open_dialog(self)
 
     def _build_city_menu(self, menu):
         """Library ▸ City: the City Builder (a 2D plan to place every
@@ -2277,6 +2286,10 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------- misc
     def _update_title(self):
         name = Path(self._path).name if self._path else "Untitled"
+        # `use <...>` resolves beside the open document, as in OpenSCAD
+        from . import scadlib
+        scadlib.DOCUMENT_DIR = str(Path(self._path).parent) \
+            if self._path else None
         star = "*" if self._dirty else ""
         self.setWindowTitle(f"{star}{name} — {APP_NAME} v{__version__}")
         label = getattr(self, "_file_label", None)
