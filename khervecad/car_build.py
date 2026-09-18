@@ -797,7 +797,12 @@ def label_of(key: str) -> str:
 
 
 def build_car(key: str, options: dict | None = None) -> CadNode:
-    """The car *key* with the builder's *options*, as one node."""
+    """The car *key* with the builder's *options*, as one node. A car
+    with a coloured four-view drawing behind it (`car_sheets`) is built
+    from that drawing, surface details and all."""
+    from . import car_sheet_build, car_sheets
+    if key in car_sheets.SHEETS:
+        return car_sheet_build.build(key, options)
     return Car(key, options).build()
 
 
@@ -819,9 +824,11 @@ MEASURED_CATEGORY = "Cars (from blueprints)"
 
 
 def category_of(key: str) -> str:
-    return MEASURED_CATEGORY if (USE_MEASURED
-                                 and car_profiles.PROFILES.get(key)) \
-        else CATEGORY
+    from . import car_sheets
+    if key in car_sheets.SHEETS or (USE_MEASURED
+                                    and car_profiles.PROFILES.get(key)):
+        return MEASURED_CATEGORY
+    return CATEGORY
 
 PARTS = {
     f"car_{key}": dict(

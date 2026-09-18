@@ -121,3 +121,24 @@ def test_a_measured_car_follows_its_drawing(key):
     for s in car.stations(0.2, 0.7, 12):
         assert car.belt_z(s) >= car.bottom(s)
         assert car.belt_z(s) <= max(car.top(s), car.bottom(s) + 60) + 1
+
+
+def test_a_car_from_a_coloured_drawing_is_built_from_it():
+    """The 930 Turbo comes from its coloured four-view sheet
+    (car_sheets): wheels where the drawing puts them, lamps and glass
+    on the body, every piece a closed polyhedron."""
+    from khervecad import car_sheet_build, car_sheets
+    assert "porsche_930_turbo" in car_sheets.SHEETS
+    node = car_build.build_car("porsche_930_turbo")
+    assert not validate(node)
+    colours = {n.params.get("color") for n in node.walk()
+               if n.type == "color"}
+    for cls in ("glass", "lamp"):
+        assert car_sheet_build.COLOURS[cls][0] in colours
+    w, length, h, floor = _extent(node)
+    car = car_models.CARS["porsche_930_turbo"]
+    assert length == pytest.approx(car["L"], rel=0.03)
+    assert h == pytest.approx(car["H"], rel=0.05)
+    assert floor == pytest.approx(0.0, abs=1.0)
+    front, rear = car_sheets.SHEETS["porsche_930_turbo"]["wheels"]
+    assert rear[0] - front[0] == pytest.approx(car["wb"], rel=0.03)
