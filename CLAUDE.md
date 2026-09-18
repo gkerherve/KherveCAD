@@ -1283,7 +1283,8 @@ into a new module and import.
                        own saved design, `house_saved/chemistry_lab.json`
                        via `saved()`, keeps its walls and roof) and Physics
                        lab (house_templates.physics_lab) — category
-                       "Finished labs", Library ▸ Science ▸ Laboratories;
+                       "Finished labs", Library ▸ House & home ▸ Finished labs
+                       (beside Finished houses, not in it);
                        no brick combo. The saved Chemistry lab also
                        replaces the built-in template.
   - Library & Examples menus (`library_menu.py`, reorganised 2026-09-17

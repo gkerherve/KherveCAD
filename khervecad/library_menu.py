@@ -238,7 +238,13 @@ def _home_menu(window, menu, parts, categories):
         _add_parts(window, home.addMenu(icons.icon("mdi.home-outline"),
                                         "Finished houses"), finished, parts)
         home.addSeparator()
-    listed = set(finished)
+    labs = [pid for pid, spec in parts.items()
+            if spec.get("category") == "Finished labs"]
+    if labs:
+        _add_parts(window, home.addMenu(icons.icon("mdi.microscope"),
+                                        "Finished labs"), labs, parts)
+        home.addSeparator()
+    listed = set(finished) | set(labs)
     for room, ids in FURNITURE_CATALOG.items():
         ids = [pid for pid in ids if pid in parts]
         if not ids:
