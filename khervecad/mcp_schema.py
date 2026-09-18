@@ -1315,7 +1315,7 @@ TOOLS = [
         "input_schema": _obj({
             "template": {"type": "string",
                          "enum": ["Chemistry lab", "Physics lab",
-                                  "Company office",
+                                  "Electronics lab", "Company office",
                                   "Bungalow — 1 bedroom",
                                   "Bungalow — 2 bedrooms",
                                   "Bungalow — 3 bedrooms",

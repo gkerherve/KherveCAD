@@ -415,7 +415,11 @@ LABS = {
     "building_chemistry_lab": ("Chemistry lab",
                                lambda b, f: saved("chemistry_lab", f)),
     "building_physics_lab": ("Physics lab",
-                             lambda b, f: _strip(_physics(), f)),
+                             lambda b, f: _strip(_template("physics_lab"),
+                                                 f)),
+    "building_electronics_lab": ("Electronics lab",
+                                 lambda b, f: _strip(
+                                     _template("electronics_lab"), f)),
 }
 
 #: designs that keep their own walls and roof (no brick choice)
@@ -424,9 +428,9 @@ SAVED = set(LABS)
 ALL = {**DESIGNS, **LABS}
 
 
-def _physics():
-    from .house_templates import physics_lab
-    return physics_lab()
+def _template(name):
+    from . import house_templates
+    return getattr(house_templates, name)()
 
 
 def _strip(spec, furnished):

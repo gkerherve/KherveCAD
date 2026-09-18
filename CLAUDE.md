@@ -1475,6 +1475,30 @@ into a new module and import.
                        hair and the edge lines drew the seam across flat
                        floors; the last ring now IS the first
                        (`test_a_full_revolve_closes_its_seam_exactly`).
+  - `library_electronics.py` — **Electronics** (2026-09-18, the user's
+                       request), its own Library ▸ Engineering ▸
+                       Electronics menu (`library_groups`; "Motion &
+                       electronics" became Motion & motors). Boards
+                       ("Electronics boards", beside library_vitamins' Uno
+                       / Pi 4, built by its `_board`) at the makers'
+                       published outlines: Arduino Nano and Mega 2560,
+                       ESP32-DevKitC V4, NodeMCU (LoLin V3), Pi Pico, Zero
+                       2 W, Pi 5, Teensy 4.0, Blue Pill, micro:bit V2 —
+                       `test_library_electronics` pins each PCB's outline.
+                       Components (resistor with its colour code from the
+                       value — `bands`, capacitors, LEDs, TO-92, TO-220,
+                       DIP-8..40, breadboards, pot, switch, headers, relay
+                       module, 7-segment, buzzer, cells, SG90, LCD 16x2,
+                       OLED, perfboard, terminal) true size, leads down
+                       from z = 0. Lab equipment ("Electronics lab"): ESD
+                       bench with shelf, soldering / hot-air stations, fume
+                       extractor, meters, spectrum analyser, load, logic
+                       analyser, microscope, helping hands, ESD mat,
+                       drawer cabinet — `library_lab` helpers, `on_top`.
+                       `house_templates.electronics_lab` (6 benches, store,
+                       entrance with coats, office) is a template and a
+                       Finished lab; FURNITURE_CATALOG / ROOM_TYPES have an
+                       "Electronics lab" room.
   - `library_lab.py` — **labs and companies** (2026-09-16): 35 pieces in
                        the home catalogue (registered from the bottom of
                        `library_home_extra`, so library.py is untouched):

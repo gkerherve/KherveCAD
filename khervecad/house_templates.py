@@ -252,7 +252,78 @@ def company_office() -> dict:
         ]}]}
 
 
+# ----------------------------------------------------------- electronics
+def electronics_lab() -> dict:
+    """Six ESD benches in two rows, each with a soldering station, a
+    meter, a scope and a supply on its shelf; instrument benches, a rack
+    and component drawers along the back wall; a component store, an
+    entrance with lockers and coats, and an office."""
+    lab = []
+    kit = [("elec_microscope", "elec_breadboard"),
+           ("elec_helping_hands", "elec_arduino_mega"),
+           ("elec_logic_analyser", "elec_breadboard")]
+    for row, y in enumerate((2600.0, 5800.0)):
+        for i, x in enumerate((2300.0, 6000.0, 9700.0)):
+            lab += [_at("elec_esd_bench", x, y),
+                    _at("lab_stool", x - 350, y - 700),
+                    _at("lab_stool", x + 350, y - 700),
+                    _top("elec_soldering_station", x - 550, y - 150),
+                    _top("elec_fume_extractor", x - 250, y - 20),
+                    _top("elec_multimeter", x + 60, y - 180),
+                    _top(kit[i][0], x + 450, y - 120),
+                    _top(kit[i][1], x + 150, y - 250),
+                    _top("lab_oscilloscope", x - 300, y + 230),
+                    _top("lab_power_supply", x + 300, y + 230)]
+    lab += [
+        _wall("elec_esd_bench", "N", 2500, size="2.0 m"),
+        _top("elec_spectrum_analyser", 1900, 8450),
+        _top("elec_electronic_load", 2500, 8450),
+        _top("elec_hot_air", 3050, 8350),
+        _wall("lab_instrument_rack", "N", 5400, size="42 U"),
+        _wall("lab_instrument_rack", "N", 6100, size="42 U"),
+        _wall("elec_esd_bench", "N", 9300, size="2.0 m"),
+        _top("elec_component_drawers", 8750, 8450),
+        _top("elec_component_drawers", 9850, 8450),
+        _wall("lab_whiteboard", "W", 7000),
+        _wall("lab_first_aid", "E", 7500),
+        _wall("lab_fire_extinguisher", "S", 11500),
+    ]
+    store = [_wall("home_garage_shelving", "W", 2000),
+             _wall("elec_esd_bench", "E", 2000, size="1.2 m"),
+             _top("elec_component_drawers", 2450, 1700, -90.0,
+                  size="6 × 10 drawers")]
+    return {
+        "name": "Electronics lab",
+        "floors": [{"name": "Ground floor", "wall_height": 3000.0,
+                    "rooms": [
+            {"name": "Entrance", "x": 0, "y": 0, "w": 3000, "d": 5000,
+             "openings": [_door("S", 1000), _door("E", 2000),
+                          _door("N", 1000)],
+             "furniture": [_wall("office_lockers", "W", 2500),
+                           _at("home_coat_stand", 2500, 4300),
+                           _at("home_coat_stand", 1800, 4300),
+                           _wall("lab_fire_extinguisher", "S", 2500)]},
+            {"name": "Component store", "x": 0, "y": 5000, "w": 3000,
+             "d": 4000, "openings": [_window("W", 1200, 1200)],
+             "furniture": store},
+            {"name": "Electronics lab", "x": 3000, "y": 0, "w": 12000,
+             "d": 9000,
+             "openings": [_door("E", 2000), _window("S", 2400, 2400),
+                          _window("S", 6000, 2400), _window("S", 9600, 2400)],
+             "furniture": lab},
+            {"name": "Lab office", "x": 15000, "y": 0, "w": 4000,
+             "d": 5000,
+             "openings": [_window("S", 2000), _window("E", 2500, 1500)],
+             "furniture": [_wall("home_desk", "N", 1000),
+                           _wall("home_desk", "N", 2800),
+                           _at("office_task_chair", 1000, 3900, 180.0),
+                           _at("office_task_chair", 2800, 3900, 180.0),
+                           _wall("home_bookcase", "E", 1200)]},
+        ]}]}
+
+
 TEMPLATES = {"Chemistry lab": chemistry_lab, "Physics lab": physics_lab,
+             "Electronics lab": electronics_lab,
              "Company office": company_office}
 # the finished houses (house_designs): bungalows, two-storey houses and
 # a block of flats, opened in the builder to edit

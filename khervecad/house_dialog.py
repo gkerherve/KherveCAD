@@ -1614,6 +1614,7 @@ def _fill_look_combos(f, size_combo, color_combo):
 CATEGORY_WORDS = (
     ("Chemistry lab", ("chem", "fume", "wet lab")),
     ("Physics lab", ("physic", "laser", "optic", "vacuum", "clean room")),
+    ("Electronics lab", ("electronic", "solder", "pcb", "component")),
     ("Server room", ("server", "data")),
     ("Meeting room", ("meeting", "conference", "board")),
     ("Break room", ("break", "canteen", "cafe", "staff room")),
