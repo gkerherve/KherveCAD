@@ -326,6 +326,42 @@ cells = 3000 SiO2") and which prefixed variables reshape it (radius, \
 block size, gap on the Variables tab). Look with render_view: \
 orthographic from Top shows the lattice down the c-axis.
 
+Surfaces, graphene, graphite, nanotubes and fullerenes:
+- A crystal SURFACE (a slab cut along a plane): build_surface with a \
+library crystal and any Miller index — Si(111), Cu(100), rutile (110), \
+quartz (0001), GaN (10-10) — `repeat` cells across and `layers` deep, \
+the top at z = 0. Every library crystal's usual faces are also ready \
+parts: list_parts category "Surfaces: Metals" (also Semiconductors, \
+Ionic salts, Oxides, Carbon & nitrides), part_id \
+"surface_<key>_<hkl>" ("surface_si_111", "surface_gan_10m10" — a minus \
+sign is written m), dims surf_repeat and surf_layers.
+- GRAPHENE and GRAPHITE: insert_part from category "Surfaces: \
+Graphene & graphite" — graphene_sheet, graphene_bilayer_ab / _aa, \
+graphene_trilayer_aba / _abc, graphene_twisted (dims twist in degrees; \
+21.79, 13.17, 9.43 and 5.09 are the commensurate moiré angles), \
+graphene_ribbon_armchair / _zigzag and graphene_quantum_dot (edges \
+capped with hydrogen), graphene_vacancy, graphene_n_doped, \
+graphite_surface and graphite_step (HOPG (0001), dims sheet_layers). \
+Sizes are in NANOMETRES: dims width, depth, length, diameter. Sheets, \
+stacks and graphite arrive as a parametric loop program (variables nx, \
+ny, layers, gap, twist inside the Object): to change the flake, \
+set_params on those variables rather than rebuilding it.
+- NANOTUBES: insert_part from "Crystals (nanotubes)" — \
+nanotube_armchair (dims tube_n: an (n, n) tube), nanotube_zigzag \
+(tube_n: (n, 0)), nanotube_chiral (tube_n, tube_m with m <= n), \
+nanotube_multiwall (inner armchair tube_n, tube_walls ~0.34 nm apart), \
+nanotube_capped (a (5, 5) tube closed by C60 halves); every one takes \
+length in nm. The diameter is 0.0783 x sqrt(n² + nm + m²) nm, so a \
+(10, 10) tube is 1.36 nm across.
+- FULLERENES: build_molecule compound "c60" (also "c20", "c70", \
+"c80"), or insert_part "fullerene_c60" etc. (category "Molecules: \
+Fullerenes"). C60's 6-6 bonds are drawn double.
+- Never place graphene, nanotube or fullerene atoms by hand or with \
+SMILES: these parts build them on their exact lattice (C-C 0.142 nm, \
+every carbon with 2-3 neighbours). Everything is in nm and an empty \
+document switches to nm by itself; very large sizes are refused by the \
+triangle budget, so choose a few nm.
+
 Villages, towns, cities, parks and landmarks:
 - ALWAYS call get_city first. It lists every valid building style, \
 wall, roof, road kind, tree species, terrain and library piece id, with \
@@ -364,9 +400,11 @@ its floor's Object. Look with render_view from Top, orthographic.
 
 Molecules and chemical reactions:
 - Build molecules with build_molecule — from the compound library \
-(list_molecules: gases, acids, bases and ions, VSEPR shapes, \
-hydrocarbons, alcohols, carbonyls, acids, solvents, biomolecules and \
-drugs) or from any SMILES you know (ethanol CCO, caffeine \
+(list_molecules: about 490 — gases, acids, bases and ions, VSEPR \
+shapes, hydrocarbons, alcohols, carbonyls, acids, solvents, \
+biomolecules, benzene derivatives, polycyclic aromatics, and the \
+common medicines by what they treat: pain, antibiotics, heart, brain, \
+stomach and allergy, hormones and vitamins) or from any SMILES you know (ethanol CCO, caffeine \
 Cn1cnc2c1c(=O)n(C)c(=O)n2C). NEVER place atoms by hand: the builder \
 gives every atom its VSEPR shape (lone pairs included) and closes the \
 rings. Nanometres, like the crystals.

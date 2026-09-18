@@ -211,13 +211,41 @@ a ready Part Library part — `crystal_<key>` (the unit cell) and
 `supercell_<key>` (2×2×2 to 6×6×6) — for `insert_part` and the
 Library menu.
 
+## Surfaces, graphene, nanotubes and fullerenes
+
+`build_surface` cuts any library (or custom) crystal along any Miller
+plane — Si(111), Cu(100), rutile (110), quartz (0001), GaN (10‑10) —
+as a slab `repeat` cells across and `layers` deep, top at z = 0. The
+usual faces of every library crystal are also ready parts in
+**Library ▸ Surfaces** (`surface_<key>_<hkl>`, a minus written `m`:
+`surface_si_111`, `surface_gan_10m10`; dims `surf_repeat`,
+`surf_layers`).
+
+Carbon has its own parts, all in nanometres, sized through `dims`
+(`list_parts part_id=…` names each part's fields and its `unit`):
+
+| Category | Parts | Dims |
+|---|---|---|
+| Surfaces: Graphene & graphite | `graphene_sheet`, `graphene_bilayer_ab` / `_aa`, `graphene_trilayer_aba` / `_abc`, `graphene_twisted`, `graphene_ribbon_armchair` / `_zigzag`, `graphene_quantum_dot`, `graphene_vacancy`, `graphene_n_doped`, `graphite_surface`, `graphite_step` | `width`, `depth`, `twist` (°), `length`, `diameter`, `sheet_layers` |
+| Crystals (nanotubes) | `nanotube_armchair`, `nanotube_zigzag`, `nanotube_chiral`, `nanotube_multiwall`, `nanotube_capped` | `tube_n`, `tube_m`, `tube_walls`, `length` |
+| Molecules: Fullerenes | `fullerene_c20`, `fullerene_c60`, `fullerene_c70`, `fullerene_c80` | — |
+
+Graphene sheets, stacks and graphite are written as a parametric loop
+program — atoms on two sublattices, bonds as 120° steps — whose
+variables (`nx`, `ny`, `layers`, `gap`, `twist`) reshape the flake
+after it is placed. The fullerenes also build through `build_molecule`
+with `compound: "c60"`. The server's instructions tell a client never
+to place these atoms by hand.
+
 ## Molecules and chemical reactions
 
-`list_molecules` is a compound library of about 80 molecules — gases,
+`list_molecules` is a compound library of about 490 molecules — gases,
 inorganic acids, bases and ions, VSEPR shapes (BF₃, SF₆, XeF₄…),
 hydrocarbons, alcohols, carbonyls, acids and esters, nitrogen
-compounds and solvents, biomolecules and drugs — each with its formula
-and SMILES. `build_molecule` builds one of them, or any SMILES, in 3D
+compounds and solvents, biomolecules, benzene derivatives, polycyclic
+aromatics and the common medicines (pain, antibiotics, heart, brain,
+stomach and allergy, hormones and vitamins) — each with its formula
+and SMILES, plus the fullerene cages. `build_molecule` builds one of them, or any SMILES, in 3D
 (nm) as one Object: every atom gets its VSEPR shape (lone pairs
 included), rings are placed whole and the result relaxed — ball and
 stick, space filling or sticks.

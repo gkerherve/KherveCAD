@@ -361,7 +361,14 @@ TOOLS = [
             "complete park), Lighting & signals (street lamps, traffic "
             "lights), Landscape (hills, mountain, cliff, canyon...), "
             "Landmarks (Eiffel Tower, Big Ben...), Skyscrapers and "
-            "Bridges (Golden Gate...), true size with model scales — "
+            "Bridges (Golden Gate...), true size with model scales; "
+            "and science in NANOMETRES: crystal unit cells and "
+            "supercells, crystal SURFACES (every library crystal's usual "
+            "faces, 'Surfaces: Metals' ...), graphene sheets / stacks / "
+            "twisted bilayers / nanoribbons and the graphite (0001) "
+            "surface ('Surfaces: Graphene & graphite'), carbon NANOTUBES "
+            "of any (n, m) ('Crystals (nanotubes)'), fullerenes and ~490 "
+            "molecules ('Molecules: ...') — "
             "with each part's standard sizes, "
             "the dimensions you may override and, where it has them, "
             "its colours. Use a library part rather than modelling a CF "
@@ -1099,7 +1106,12 @@ TOOLS = [
                      "description": "A size name from that part's "
                                     "table, e.g. 'CF40' or 'M6'."},
             "dims": {"type": "object",
-                     "description": "Dimension overrides in mm."},
+                     "description": "Dimension overrides, by the names "
+                                    "list_parts gives, in the part's "
+                                    "`unit` (mm; nm for crystals, "
+                                    "surfaces, graphene and nanotubes — "
+                                    "e.g. {\"tube_n\": 10, \"length\": "
+                                    "4})."},
             "color": {"type": "string",
                       "description": "For parts that come in colours "
                                      "(Lego bricks, tree seasons, wall "
@@ -1248,7 +1260,10 @@ TOOLS = [
             "relaxation or reconstruction). The cut falls in the widest "
             "gap between planes unless `termination` says where. Returns "
             "the surface cell, angle, spacing and atom count; dry_run "
-            "builds nothing."
+            "builds nothing. The usual faces of every library crystal "
+            "are also ready parts (insert_part 'surface_<key>_<hkl>'); "
+            "graphene and graphite, with their bonds, are the parts in "
+            "'Surfaces: Graphene & graphite', not this tool."
         ),
         "input_schema": _obj({
             "crystal": {"type": "string",

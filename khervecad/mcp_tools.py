@@ -613,6 +613,7 @@ class McpToolExecutor:
                 "dimensions": [{"name": k, "label": lbl}
                                for k, lbl in spec.get("fields", [])],
                 "colors": list(spec.get("colors") or []),
+                "unit": spec.get("unit", "mm"),
             }
         want = params.get("category")
         groups = {}
@@ -1636,7 +1637,10 @@ class McpToolExecutor:
                             "per floor; build_house (or the House Builder "
                             "with it selected) edits it."}
         node = library.build_part(part_id, dims)
-        label = size_key.split(" ")[0] if size_key else ""
+        # a science part (nm) names its own build — "Armchair nanotube
+        # (10, 10)" — and a size word in front would contradict overrides
+        label = size_key.split(" ")[0] if size_key and \
+            spec.get("unit") != "nm" else ""
         if label and not node.name.startswith(label):
             node.name = f"{label} {node.name}"
         self._model.root.add(node)

@@ -1626,7 +1626,8 @@ class PartLibraryDialog(QDialog):
             return
         node = build_part(part_id, dims)
         size = self._size.currentText().split(" ")[0] \
-            if self._size.isEnabled() else ""
+            if self._size.isEnabled() and \
+            PARTS[part_id].get("unit") != "nm" else ""
         if size:
             node.name = f"{size} {node.name}" \
                 if not node.name.startswith(size) else node.name

@@ -256,3 +256,43 @@ def test_every_crystal_face_is_a_surface_part():
     assert ls.crystal_of("Copper (111)") == "Copper"
     assert library.PARTS["graphene_sheet"]["category"].startswith(
         "Surfaces: ")
+
+
+def test_mcp_explains_surfaces_graphene_and_nanotubes():
+    from khervecad.mcp_schema import TOOLS
+    from khervecad.mcp_server import _INSTRUCTIONS
+    from khervecad import library
+    text = _INSTRUCTIONS.lower()
+    for word in ("build_surface", "graphene_twisted", "nanotube_chiral",
+                 "tube_n", "fullerene", "c60", "surfaces: metals"):
+        assert word in text, word
+    for pid in ("graphene_twisted", "nanotube_chiral", "graphite_step",
+                "surface_si_111", "surface_gan_10m10", "fullerene_c60"):
+        assert pid in library.PARTS, pid          # the ids named exist
+    listing = next(t for t in TOOLS if t["name"] == "list_parts")
+    assert "nanotube" in listing["description"].lower()
+    assert "graphene" in listing["description"].lower()
+
+
+@pytest.fixture(scope="session")
+def app():
+    from PyQt5.QtWidgets import QApplication
+    return QApplication.instance() or QApplication([])
+
+
+def test_mcp_builds_carbon_parts_from_their_dims(app):
+    from khervecad.mainwindow import MainWindow
+    from khervecad.mcp_tools import McpToolExecutor
+    window = MainWindow()
+    ex = McpToolExecutor(window)
+    assert ex.execute("list_parts", {"part_id": "nanotube_chiral"})[
+        "unit"] == "nm"
+    out = ex.execute("insert_part", {"part_id": "nanotube_armchair",
+                                     "dims": {"tube_n": 10, "length": 2}})
+    assert out["name"] == "Armchair nanotube (10, 10)"
+    assert window.model.unit == "nm"
+    out = ex.execute("insert_part", {"part_id": "graphene_twisted",
+                                     "dims": {"twist": 9.43}})
+    assert out["name"] == "Twisted bilayer graphene (9.43°)"
+    assert ex.execute("build_molecule", {"compound": "c60",
+                                         "dry_run": True})["formula"] == "C60"
