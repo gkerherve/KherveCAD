@@ -409,12 +409,49 @@ DESIGNS = {
                        lambda b, f: apartment_block(10, b, f)),
 }
 
+#: finished laboratories — not houses, so their own category
+LAB_CATEGORY = "Finished labs"
+LABS = {
+    "building_chemistry_lab": ("Chemistry lab",
+                               lambda b, f: saved("chemistry_lab", f)),
+    "building_physics_lab": ("Physics lab",
+                             lambda b, f: _strip(_physics(), f)),
+}
+
+#: designs that keep their own walls and roof (no brick choice)
+SAVED = set(LABS)
+
+ALL = {**DESIGNS, **LABS}
+
+
+def _physics():
+    from .house_templates import physics_lab
+    return physics_lab()
+
+
+def _strip(spec, furnished):
+    """*spec* without its furniture (stairs kept) when not furnished."""
+    if not furnished:
+        for floor in spec["floors"]:
+            for room in floor["rooms"]:
+                room["furniture"] = [f for f in room.get("furniture", [])
+                                     if "stairs" in f["part_id"]]
+    return spec
+
+
+def saved(name, furnished=True):
+    """A design kept as a House Builder spec in house_saved/<name>.json."""
+    import json
+    from pathlib import Path
+    path = Path(__file__).with_name("house_saved") / f"{name}.json"
+    return _strip(json.loads(path.read_text(encoding="utf-8")), furnished)
+
 
 def build_design(part_id, dims):
     """A design as ONE node: every floor stacked at its level."""
     from . import house
     from .model import CadNode
-    label, make = DESIGNS[part_id]
+    label, make = ALL[part_id]
     brick = (dims or {}).get("_color") or "Red brick"
     furnished = bool((dims or {}).get("furnished", 1))
     home = house.house_from_spec(make(brick, furnished))
@@ -429,7 +466,7 @@ def insert_design(part_id, model, dims):
     one Object per floor — beside any house already in the document,
     and made the one the House Builder edits."""
     from . import house
-    _label, make = DESIGNS[part_id]
+    _label, make = ALL[part_id]
     brick = (dims or {}).get("_color") or "Red brick"
     furnished = bool((dims or {}).get("furnished", 1))
     home = house.house_from_spec(make(brick, furnished))
@@ -447,16 +484,21 @@ def _sizes(part_id):
 
 
 PARTS = {
-    pid: dict(label=label, category=CATEGORY, sizes=_sizes(pid), fields=[],
-              colors=list(BRICKS),
+    pid: dict(label=label, sizes=_sizes(pid), fields=[],
+              category=LAB_CATEGORY if pid in LABS else CATEGORY,
+              colors=[] if pid in SAVED else list(BRICKS),
               build=lambda dims, pid=pid: build_design(pid, dims),
               insert=lambda model, dims, pid=pid:
               insert_design(pid, model, dims))
-    for pid, (label, _make) in DESIGNS.items()
+    for pid, (label, _make) in ALL.items()
 }
 
 
 def templates():
-    """The designs as House Builder templates (red brick, furnished)."""
-    return {label: (lambda make=make: make("Red brick", True))
-            for label, make in DESIGNS.values()}
+    """The designs as House Builder templates (red brick, furnished);
+    the saved Chemistry lab replaces the built-in one, the Physics lab
+    template is already house_templates' own."""
+    out = {label: (lambda make=make: make("Red brick", True))
+           for label, make in DESIGNS.values()}
+    out["Chemistry lab"] = lambda: saved("chemistry_lab")
+    return out

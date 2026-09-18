@@ -1,0 +1,1097 @@
+{
+ "floors": [
+  {
+   "name": "Ground floor",
+   "wall_height": 3000.0,
+   "wall_thickness": 200.0,
+   "inner_wall_thickness": 100.0,
+   "slab_thickness": 200.0,
+   "rooms": [
+    {
+     "name": "Entrance",
+     "x": 0.0,
+     "y": 0.0,
+     "w": 4000.0,
+     "d": 4000.0,
+     "surface": "indoor",
+     "finish": "",
+     "flooring": "",
+     "openings": [
+      {
+       "kind": "door",
+       "side": "S",
+       "offset": 1500.0,
+       "width": 900.0,
+       "height": 2000.0,
+       "sill": 0.0
+      },
+      {
+       "kind": "door",
+       "side": "E",
+       "offset": 1500.0,
+       "width": 900.0,
+       "height": 2000.0,
+       "sill": 0.0
+      },
+      {
+       "kind": "door",
+       "side": "N",
+       "offset": 1200.0,
+       "width": 900.0,
+       "height": 2000.0,
+       "sill": 0.0
+      }
+     ],
+     "furniture": [
+      {
+       "part_id": "office_lockers",
+       "x": 350.0,
+       "y": 2000.0,
+       "z": 0.0,
+       "rz": 90.0,
+       "dims": {
+        "units": 6,
+        "w": 380.0,
+        "d": 500.0,
+        "h": 1800.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_first_aid",
+       "x": 3880.0,
+       "y": 3000.0,
+       "z": 1400.0,
+       "rz": -90.0,
+       "dims": {},
+       "name": ""
+      },
+      {
+       "part_id": "lab_fire_extinguisher",
+       "x": 3200.0,
+       "y": 180.0,
+       "z": 400.0,
+       "rz": 180.0,
+       "dims": {},
+       "name": ""
+      },
+      {
+       "part_id": "home_coat_stand",
+       "x": 3240.0,
+       "y": 3630.0,
+       "z": 0.0,
+       "rz": 180.0,
+       "dims": {
+        "h": 1800.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "home_shoe_cabinet",
+       "x": 920.0,
+       "y": 280.0,
+       "z": 0.0,
+       "rz": 180.0,
+       "dims": {
+        "w": 800.0,
+        "d": 300.0,
+        "h": 1000.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "home_shoe_cabinet",
+       "x": 670.0,
+       "y": 3780.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 800.0,
+        "d": 300.0,
+        "h": 1000.0
+       },
+       "name": ""
+      }
+     ]
+    },
+    {
+     "name": "Chemistry lab",
+     "x": 4000.0,
+     "y": 0.0,
+     "w": 14000.0,
+     "d": 10000.0,
+     "surface": "indoor",
+     "finish": "White tiles",
+     "flooring": "",
+     "openings": [
+      {
+       "kind": "window",
+       "side": "S",
+       "offset": 3000.0,
+       "width": 1800.0,
+       "height": 1200.0,
+       "sill": 900.0
+      },
+      {
+       "kind": "window",
+       "side": "S",
+       "offset": 6500.0,
+       "width": 1800.0,
+       "height": 1200.0,
+       "sill": 900.0
+      },
+      {
+       "kind": "window",
+       "side": "S",
+       "offset": 10000.0,
+       "width": 1800.0,
+       "height": 1200.0,
+       "sill": 900.0
+      },
+      {
+       "kind": "window",
+       "side": "E",
+       "offset": 1500.0,
+       "width": 1500.0,
+       "height": 1200.0,
+       "sill": 900.0
+      },
+      {
+       "kind": "door",
+       "side": "W",
+       "offset": 8000.0,
+       "width": 900.0,
+       "height": 2000.0,
+       "sill": 0.0
+      }
+     ],
+     "furniture": [
+      {
+       "part_id": "lab_bench",
+       "x": 6550.0,
+       "y": 2910.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 3000.0,
+        "d": 1500.0,
+        "h": 900.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 9100.0,
+       "y": 1800.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 5350.0,
+       "y": 4000.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 10340.0,
+       "y": 1820.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 6530.0,
+       "y": 3980.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 11520.0,
+       "y": 1820.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 7740.0,
+       "y": 3990.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_bench",
+       "x": 6500.0,
+       "y": 6600.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 3000.0,
+        "d": 1500.0,
+        "h": 900.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 5500.0,
+       "y": 5550.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 5500.0,
+       "y": 7650.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 6500.0,
+       "y": 5550.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 6500.0,
+       "y": 7650.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 7500.0,
+       "y": 5550.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 7500.0,
+       "y": 7650.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_glassware",
+       "x": 5600.0,
+       "y": 3100.0,
+       "z": 900.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 520.0,
+        "d": 320.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_glassware",
+       "x": 7300.0,
+       "y": 6900.0,
+       "z": 900.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 520.0,
+        "d": 320.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_rotavap",
+       "x": 7400.0,
+       "y": 3050.0,
+       "z": 900.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 600.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "chem_balance",
+       "x": 5200.0,
+       "y": 6900.0,
+       "z": 900.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 230.0,
+        "d": 340.0,
+        "h": 340.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "chem_hotplate",
+       "x": 5900.0,
+       "y": 6250.0,
+       "z": 900.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 220.0,
+        "d": 260.0,
+        "h": 110.0,
+        "plate": 150.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_centrifuge",
+       "x": 7700.0,
+       "y": 6250.0,
+       "z": 900.0,
+       "rz": 180.0,
+       "dims": {
+        "w": 400.0,
+        "d": 550.0,
+        "h": 320.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "chem_stand",
+       "x": 6000.0,
+       "y": 3700.0,
+       "z": 900.0,
+       "rz": 180.0,
+       "dims": {
+        "base": 160.0,
+        "h": 450.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_fume_hood",
+       "x": 2500.0,
+       "y": 9450.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 1500.0,
+        "d": 900.0,
+        "h": 2500.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_fume_hood",
+       "x": 5000.0,
+       "y": 9450.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 1500.0,
+        "d": 900.0,
+        "h": 2500.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_fume_hood",
+       "x": 7500.0,
+       "y": 9450.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 1500.0,
+        "d": 900.0,
+        "h": 2500.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_fume_hood",
+       "x": 10000.0,
+       "y": 9450.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 1500.0,
+        "d": 900.0,
+        "h": 2500.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_sink_bench",
+       "x": 13525.0,
+       "y": 5000.0,
+       "z": 0.0,
+       "rz": -90.0,
+       "dims": {
+        "w": 1800.0,
+        "d": 750.0,
+        "h": 900.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_safety_shower",
+       "x": 340.0,
+       "y": 1200.0,
+       "z": 0.0,
+       "rz": 90.0,
+       "dims": {
+        "h": 2300.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_whiteboard",
+       "x": 30.0,
+       "y": 6320.0,
+       "z": 900.0,
+       "rz": 90.0,
+       "dims": {
+        "w": 2400.0,
+        "h": 1200.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_fire_extinguisher",
+       "x": 13000.0,
+       "y": 180.0,
+       "z": 400.0,
+       "rz": 180.0,
+       "dims": {},
+       "name": ""
+      },
+      {
+       "part_id": "lab_first_aid",
+       "x": 13830.0,
+       "y": 8500.0,
+       "z": 1400.0,
+       "rz": -90.0,
+       "dims": {},
+       "name": ""
+      },
+      {
+       "part_id": "lab_drying_oven",
+       "x": 13550.0,
+       "y": 4300.0,
+       "z": 870.0,
+       "rz": -90.0,
+       "dims": {
+        "w": 620.0,
+        "d": 520.0,
+        "h": 640.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_fridge",
+       "x": 12600.0,
+       "y": 400.0,
+       "z": 0.0,
+       "rz": 180.0,
+       "dims": {
+        "w": 600.0,
+        "d": 600.0,
+        "h": 820.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_bench",
+       "x": 2760.0,
+       "y": 2930.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 3000.0,
+        "d": 1500.0,
+        "h": 900.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_bench",
+       "x": 2760.0,
+       "y": 6570.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 3000.0,
+        "d": 1500.0,
+        "h": 900.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_bench",
+       "x": 10220.0,
+       "y": 6620.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 3000.0,
+        "d": 1500.0,
+        "h": 900.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_bench",
+       "x": 10310.0,
+       "y": 2880.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 3000.0,
+        "d": 1500.0,
+        "h": 900.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 7760.0,
+       "y": 1840.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 6590.0,
+       "y": 1850.0,
+       "z": 0.0,
+       "rz": 90.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 5340.0,
+       "y": 1830.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 3970.0,
+       "y": 1870.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 3960.0,
+       "y": 3990.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 1540.0,
+       "y": 4020.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 1560.0,
+       "y": 1850.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 2720.0,
+       "y": 4020.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 2750.0,
+       "y": 1850.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 9120.0,
+       "y": 3950.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 11510.0,
+       "y": 3960.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 10270.0,
+       "y": 3960.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 9020.0,
+       "y": 5530.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 11420.0,
+       "y": 5550.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 10250.0,
+       "y": 5550.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 9020.0,
+       "y": 7700.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 11430.0,
+       "y": 7690.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 10220.0,
+       "y": 7700.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 3970.0,
+       "y": 5490.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 1550.0,
+       "y": 5490.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 3970.0,
+       "y": 7630.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 1550.0,
+       "y": 7650.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 2760.0,
+       "y": 7640.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_stool",
+       "x": 2780.0,
+       "y": 5500.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "seat": 650.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_fume_hood",
+       "x": 12450.0,
+       "y": 9460.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 1500.0,
+        "d": 900.0,
+        "h": 2500.0
+       },
+       "name": ""
+      }
+     ]
+    },
+    {
+     "name": "Chemical store",
+     "x": 0.0,
+     "y": 4000.0,
+     "w": 4000.0,
+     "d": 3000.0,
+     "surface": "indoor",
+     "finish": "",
+     "flooring": "",
+     "openings": [],
+     "furniture": [
+      {
+       "part_id": "lab_safety_cabinet",
+       "x": 400.0,
+       "y": 1500.0,
+       "z": 0.0,
+       "rz": 90.0,
+       "dims": {
+        "w": 1100.0,
+        "d": 600.0,
+        "h": 1950.0,
+        "_color": "Flammables (yellow)"
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_safety_cabinet",
+       "x": 1000.0,
+       "y": 2650.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 1100.0,
+        "d": 600.0,
+        "h": 1950.0,
+        "_color": "Acids (blue)"
+       },
+       "name": ""
+      },
+      {
+       "part_id": "lab_fridge",
+       "x": 2700.0,
+       "y": 2625.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 600.0,
+        "d": 650.0,
+        "h": 1850.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "office_lockers",
+       "x": 3700.0,
+       "y": 1500.0,
+       "z": 0.0,
+       "rz": -90.0,
+       "dims": {
+        "units": 4,
+        "w": 380.0,
+        "d": 500.0,
+        "h": 1800.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "chem_gas_cylinder",
+       "x": 3300.0,
+       "y": 165.0,
+       "z": 0.0,
+       "rz": 180.0,
+       "dims": {
+        "d": 230.0,
+        "h": 1200.0,
+        "color": "#2b2e33"
+       },
+       "name": ""
+      }
+     ]
+    },
+    {
+     "name": "Lab office",
+     "x": 0.0,
+     "y": 7000.0,
+     "w": 4000.0,
+     "d": 3000.0,
+     "surface": "indoor",
+     "finish": "",
+     "flooring": "",
+     "openings": [
+      {
+       "kind": "window",
+       "side": "W",
+       "offset": 800.0,
+       "width": 1400.0,
+       "height": 1200.0,
+       "sill": 900.0
+      }
+     ],
+     "furniture": [
+      {
+       "part_id": "home_desk",
+       "x": 1500.0,
+       "y": 2600.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 1200.0,
+        "d": 600.0,
+        "h": 750.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "office_task_chair",
+       "x": 1500.0,
+       "y": 1900.0,
+       "z": 0.0,
+       "rz": 180.0,
+       "dims": {},
+       "name": ""
+      },
+      {
+       "part_id": "home_bookcase",
+       "x": 1200.0,
+       "y": 200.0,
+       "z": 0.0,
+       "rz": 180.0,
+       "dims": {
+        "w": 800.0,
+        "d": 300.0,
+        "h": 1800.0,
+        "shelves": 4
+       },
+       "name": ""
+      },
+      {
+       "part_id": "home_laptop",
+       "x": 1500.0,
+       "y": 2550.0,
+       "z": 750.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 320.0,
+        "d": 225.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "home_desk",
+       "x": 3130.0,
+       "y": 2610.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 1200.0,
+        "d": 600.0,
+        "h": 750.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "home_desk",
+       "x": 3060.0,
+       "y": 390.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 1200.0,
+        "d": 600.0,
+        "h": 750.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "home_office_chair",
+       "x": 3050.0,
+       "y": 980.0,
+       "z": 0.0,
+       "rz": 0.0,
+       "dims": {
+        "w": 620.0,
+        "seat": 480.0,
+        "h": 1050.0
+       },
+       "name": ""
+      },
+      {
+       "part_id": "home_office_chair",
+       "x": 3050.0,
+       "y": 2000.0,
+       "z": 0.0,
+       "rz": 180.0,
+       "dims": {
+        "w": 620.0,
+        "seat": 480.0,
+        "h": 1050.0
+       },
+       "name": ""
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "roof": {
+  "style": "Flat",
+  "pitch": 35.0,
+  "overhang": 300.0,
+  "ridge": "auto",
+  "color": "Brown tiles",
+  "wings": "Lean-to",
+  "chimney": "auto"
+ },
+ "walls": {
+  "outside": "Painted plaster",
+  "inside": "Painted plaster"
+ },
+ "name": "Chemistry lab"
+}

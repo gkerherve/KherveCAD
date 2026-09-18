@@ -1278,6 +1278,14 @@ into a new module and import.
                        Build replaces only it (apply dedupes top-level
                        names — two "Ground floor"s made a rebuild take both).
                        Tested in `tests/test_house_designs.py`.
+                       **Finished labs** (2026-09-18, the user: a lab is
+                       not a house): `LABS` — Chemistry lab (the user's
+                       own saved design, `house_saved/chemistry_lab.json`
+                       via `saved()`, keeps its walls and roof) and Physics
+                       lab (house_templates.physics_lab) — category
+                       "Finished labs", Library ▸ Science ▸ Laboratories;
+                       no brick combo. The saved Chemistry lab also
+                       replaces the built-in template.
   - Library & Examples menus (`library_menu.py`, reorganised 2026-09-17
                        — the user found the Library "all over the place"
                        and asked what Examples was for): **Library = parts

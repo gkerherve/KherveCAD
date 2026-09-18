@@ -42,6 +42,7 @@ SECTIONS = [
          ["Trees", "Stylised trees", "Flowers", "Landscape", "Pots"]),
     ]),
     ("Science", [
+        ("Laboratories", "mdi.microscope", ["Finished labs"]),
         ("Chemistry lab", "mdi.flask-outline", ["Chemistry"]),
         ("Crystals", "mdi.atom", ("crystals", [
             "Crystals (unit cells)", "Crystals (supercells)",

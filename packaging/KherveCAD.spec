@@ -69,6 +69,10 @@ if os.path.isdir(_human_dir):
 _solar_dir = os.path.join(_ROOT, "khervecad", "solar")
 if os.path.isdir(_solar_dir):
     datas.append((_solar_dir, os.path.join("khervecad", "solar")))
+# Finished labs saved from documents (house_designs.saved).
+_saved_dir = os.path.join(_ROOT, "khervecad", "house_saved")
+if os.path.isdir(_saved_dir):
+    datas.append((_saved_dir, os.path.join("khervecad", "house_saved")))
 # Finished models for Examples > Showcase (examples._showcase).
 _showcase_dir = os.path.join(_ROOT, "khervecad", "showcase")
 if os.path.isdir(_showcase_dir):

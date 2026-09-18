@@ -130,3 +130,22 @@ def qapp_window():
     win = MainWindow()
     yield win
     del app
+
+
+def test_saved_chemistry_lab_keeps_its_layout():
+    home = H.house_from_spec(D.saved("chemistry_lab"))
+    rooms = {r.name: len(r.furniture) for r in home.floors[0].rooms}
+    assert rooms["Chemistry lab"] > 40 and "Lab office" in rooms
+    empty = H.house_from_spec(D.saved("chemistry_lab", furnished=False))
+    assert not any(r.furniture for r in empty.floors[0].rooms)
+
+
+@pytest.mark.parametrize("pid", list(D.LABS))
+def test_labs_are_their_own_category_not_houses(pid):
+    spec = library.PARTS[pid]
+    assert spec["category"] == D.LAB_CATEGORY and spec["colors"] == []
+    for furnished in (0, 1):
+        node = D.build_design(pid, {"furnished": furnished})
+        assert not validate(node)
+    home = H.house_from_spec(D.LABS[pid][1]("Red brick", True))
+    assert sum(len(r.furniture) for f in home.floors for r in f.rooms) > 20
