@@ -1825,17 +1825,31 @@ into a new module and import.
                        Lego into One Solid; also on the tree's right
                        click. The result is a new Object beside the
                        source, which is never touched.
-  - `lego_builder.py`— Library ▸ **Lego Builder…**: a non-modal panel
-                       (piece, studs, colour, turn, Place/Erase) that
-                       keeps `view3d.start_pick` armed on the build's
-                       pieces. A piece is a Group at its grid corner
-                       with `params["lego"]` = {kind, nx, ny, h, colour,
-                       bare}; `target` drops a new piece onto the
-                       highest top under its footprint (a top click,
-                       stud sides included) or sets it beside a side
-                       face; `refresh_studs` rebuilds only pieces whose
-                       uncovered studs changed. Picks carry the raw
-                       `point` and face `normal` (`View3D._pick_at`).
+  - `lego_builder.py`— Library ▸ **Lego Builder…** (reworked
+                       2026-09-18, the user: placing by clicking in 3D
+                       was "not user friendly"): a window with a palette
+                       of EVERY piece (Brick / Plate / Tile of any size +
+                       every `library_lego_parts` item, quarter turns —
+                       `piece_node(part=, turn=)` rotates about the group
+                       origin and shifts by `_TURN_SHIFT` so the turned
+                       footprint still starts at (i, j)), colour, a LEVEL
+                       (one plate a level above `ground`: the top of a
+                       baseplate lying at z = 0) and the **plan**
+                       (`lego_plan.py`): the stud grid at that level —
+                       pieces starting there in colour, cells a lower
+                       piece still fills grey-hatched (`layer`), studs to
+                       build on as circles, air tinted by what is below
+                       (`beneath`); the piece follows the cursor green /
+                       red (`can_place`: no collision, and studs beneath,
+                       a piece above or the ground), a 3D highlight ghost
+                       too. Left click places, right click erases, wheel /
+                       ▲▼ level, R turns. "Click in 3D view" keeps the
+                       old pick mode (`target`). A piece is a Group at its
+                       grid corner with `params["lego"]` = {kind, nx, ny,
+                       h, colour, i, j (+ part, turn)}; `refresh_studs`
+                       drops covered studs of bricks/plates only (Library
+                       pieces stay as made). `library_lego_parts.shape`
+                       gives each piece's footprint and height.
   - `chat.py`        — **Assistant chat box** (family assistant, docked
                        right, **hidden by default**, opened from AI ▸ ChatBox or
                        Ctrl+/): Claude/Mistral/Ollama

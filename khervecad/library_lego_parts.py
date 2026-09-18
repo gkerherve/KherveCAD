@@ -25,6 +25,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
+import functools
 import math
 
 from .library_lego import (BASEPLATE_H, BRICK_H, CATEGORY, COLORS, GAP,
@@ -368,12 +369,40 @@ def _items():
 
 ITEMS = _items()
 _GROUPS = {label: group for label, group, _c, _b in ITEMS}
+_MAKERS = {label: make for label, _g, _c, make in ITEMS}
+#: label -> its usual colour
+DEFAULT_COLOUR = {label: col for label, _g, col, _m in ITEMS}
 
 
 def group_of(label: str) -> str:
     """Which Lego submenu *label* belongs in (the customisable parts of
     library_lego go last)."""
     return _GROUPS.get(label, "Any size (customise)")
+
+
+@functools.lru_cache(maxsize=None)
+def shape(label):
+    """(nx, ny, h) of a piece: its footprint in studs along X and Y as
+    built (unturned) and the height its top face stands at — what the
+    Lego Builder stacks by."""
+    from . import mesh
+    make = _MAKERS[label]
+    pts = [v for t in mesh.tessellate(make(n=label)) for v in t]
+    nx = max(1, round((max(p[0] for p in pts) + GAP) / PITCH))
+    ny = max(1, round((max(p[1] for p in pts) + GAP) / PITCH))
+    low = label.lower()
+    dims = [s for s in label.split(" × ")]
+    if "baseplate" in low:
+        h = BASEPLATE_H
+    elif "curved slope" in low:
+        h = 2 * PLATE_H
+    elif any(w in low for w in ("plate", "tile", "cheese")):
+        h = PLATE_H
+    elif len(dims) == 3:                  # "Arch 1 × 6 × 2": bricks high
+        h = int(dims[2].split()[0]) * BRICK_H
+    else:
+        h = BRICK_H
+    return nx, ny, h
 
 
 def _pid(label):

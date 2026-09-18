@@ -124,3 +124,69 @@ def test_the_panel_builds_by_clicking(app):
     finally:
         win._dirty = False
         win.close()
+
+
+def test_a_library_piece_turns_about_its_own_corner(app):
+    part = "Slope 45° 2 × 3"                     # 3 along X, 2 deep
+    assert lb.part_shape(part) == (3, 2, lb.BRICK_H)
+    for turn in range(4):
+        node = lb.piece_node("Part", 0, 0, "Red", 2, 5, 0.0, part=part,
+                             turn=turn)
+        nx, ny, _h = lb.part_shape(part, turn)
+        (x0, x1), (y0, y1), _z = _extent(node)
+        # the turned footprint starts at stud (2, 5), whatever the turn
+        assert (x0, y0) == pytest.approx((16.1, 40.1), abs=1e-3), turn
+        assert (x1, y1) == pytest.approx((16 + nx * 8 - 0.1,
+                                          40 + ny * 8 - 0.1), abs=0.05)
+
+
+def test_levels_stand_on_the_baseplate_and_the_layer_greys_cells(model):
+    build = lb.new_build(model)
+    assert lb.level_z(build, 0) == pytest.approx(lb.BASEPLATE_H)
+    z0 = lb.level_z(build, 0)
+    brick = lb.piece_node("Brick", 2, 2, "Blue", 3, 3, z0)
+    build.add(brick)
+    # one plate up, the brick still fills its cells: greyed
+    filled, support = lb.layer(build, lb.level_z(build, 1))
+    assert filled[(3, 3)] == (brick, False)
+    # three plates up, its top: studs to build on
+    filled, support = lb.layer(build, lb.level_z(build, 3))
+    assert (3, 3) not in filled and support[(4, 4)] is brick
+    ok, _ = lb.can_place(build, 3, 3, 1, 1, lb.level_z(build, 1),
+                         lb.PLATE_H)
+    assert not ok                                   # runs into it
+    ok, why = lb.can_place(build, 8, 8, 1, 1, lb.level_z(build, 3),
+                           lb.PLATE_H)
+    assert not ok and "hold" in why                 # in the air
+    assert lb.can_place(build, 4, 4, 2, 2, lb.level_z(build, 3),
+                        lb.BRICK_H)[0]              # half on the brick
+
+
+def test_the_plan_places_every_kind_of_piece_level_by_level(app):
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        win._confirm_discard = lambda: True
+        panel = lb.open_builder(win)
+        assert panel.select_piece("Brick")
+        first = panel.place_at(2, 2)                 # starts a build
+        assert first is not None and panel.build is not None
+        assert panel.place_at(2, 2) is None          # taken
+        panel.step_level(3)                          # a brick up
+        assert panel.select_piece("Slope 45° 2 × 2")
+        panel.turn()
+        slope = panel.place_at(2, 2)
+        assert lb.meta(slope)["turn"] == 1
+        assert float(slope.params["z"]) == pytest.approx(
+            lb.BASEPLATE_H + lb.BRICK_H)
+        assert validate(win.model.root) == {}
+        panel.plan.resize(500, 500)
+        img = panel.plan.grab()                      # paints, no error
+        assert not img.isNull()
+        assert panel.erase_at(3, 3)
+        assert slope not in lb.pieces(panel.build)
+        panel.to_top()
+        assert panel.level == 3
+    finally:
+        win._dirty = False
+        win.close()
