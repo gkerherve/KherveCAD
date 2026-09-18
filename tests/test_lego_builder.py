@@ -190,3 +190,58 @@ def test_the_plan_places_every_kind_of_piece_level_by_level(app):
     finally:
         win._dirty = False
         win.close()
+
+
+def test_the_toolbar_selects_moves_turns_copies_and_deletes(app):
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        win._confirm_discard = lambda: True
+        panel = lb.open_builder(win)
+        assert set(panel.tool_actions) == {"select", "move", "rotate",
+                                           "add", "erase"}
+        panel.select_piece("Brick")
+        panel.nx.setValue(2)
+        panel.ny.setValue(4)
+        brick = panel.place_at(4, 4)
+        panel.set_tool("select")
+        assert panel.select_at(5, 6) is brick
+        assert panel.move_selected(3, 0)
+        moved = panel.selected
+        assert lb.grid(moved) == (7, 4) and moved not in (brick,)
+        assert panel.rotate_selected()                  # 2x4 -> 4x2
+        assert (lb.meta(panel.selected)["nx"],
+                lb.meta(panel.selected)["ny"]) == (4, 2)
+        copy = panel.duplicate_selected()
+        assert copy is not None and len(lb.pieces(panel.build)) == 3
+        assert not panel.move_selected(0, 0, -1)        # into the plate
+        assert panel.delete_selected()
+        assert len(lb.pieces(panel.build)) == 2
+        # a click from the plan with the Move tool drags a piece
+        panel.set_tool("move")
+        assert panel.select_at(8, 5) is not None
+        # the baseplate: its own Object, resized, never moved
+        plate = lb.baseplate_of(panel.build)
+        assert plate.parent is not panel.build
+        panel.resize_baseplate(48)
+        assert lb.meta(lb.baseplate_of(panel.build))["nx"] == 48
+        panel.select(lb.baseplate_of(panel.build))
+        assert not panel.move_selected(1, 0)
+        assert validate(win.model.root) == {}
+        panel.plan.resize(500, 500)
+        panel.plan.zoom_by(2.0)
+        assert panel.plan.zoom == pytest.approx(2.0)
+        assert not panel.plan.grab().isNull()
+        panel.plan.fit_all()
+        assert panel.plan.zoom == 1.0
+    finally:
+        win._dirty = False
+        win.close()
+
+
+def test_a_selected_baseplate_object_opens_its_build(model):
+    build = lb.new_build(model, 24)
+    base = lb.base_object(build)
+    assert base is not None and lb.baseplate_of(build).parent is base
+    assert lb.find_build(model, [lb.baseplate_of(build)]) is build
+    assert validate(model.root) == {}

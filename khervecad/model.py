@@ -1923,7 +1923,10 @@ def _check_node(node, env, errors):
                     return ("profile crosses the Z axis — keep it on "
                             "one side of x = 0")
     elif node.is_container() and t not in ("if_else", "variables"):
-        if not any(c.type != "assign" for c in node.children):
+        # an Object may say it starts empty on purpose (a Lego build
+        # before its first piece): OpenSCAD takes an empty module
+        if not any(c.type != "assign" for c in node.children) \
+                and not (t == "component" and node.params.get("keep_empty")):
             return "empty — add child objects"
     elif t == "if_else":
         else_node = next((c for c in node.children

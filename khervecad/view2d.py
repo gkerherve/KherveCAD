@@ -98,6 +98,23 @@ def _point_seg_dist(p: QPointF, a: QPointF, b: QPointF) -> float:
     return (dx * dx + dy * dy) ** 0.5
 
 
+
+#: projected outline + painted faces of a part, by (plane, content):
+#: one edit rebuilds the scene several times (the change, then the tree
+#: re-selecting, then the highlight), and a Lego build's 2D faces took
+#: ~0.5 s each time
+_PART_SHAPES = {}
+PART_SHAPE_CACHE = 64
+
+
+def _fingerprint(colored):
+    """A cheap identity of a coloured triangle list: its length and an
+    even sample of its triangles and colours."""
+    n = len(colored)
+    step = max(1, n // 97)
+    return (n, hash(tuple((colored[k][0], str(colored[k][1]))
+                          for k in range(0, n, step))))
+
 class HandleItem(QGraphicsRectItem):
     """Square resize handle, constant size on screen."""
 
@@ -1260,9 +1277,16 @@ class SketchScene(QGraphicsScene):
                        if min(v[2] for v in t) < cut]
         if not colored:
             return None
-        tris = [t for t, _c in colored]
-        return PartItem(node, self, self._projected_path(tris), node.name,
-                        faces=planview.plan_faces(colored, self.plane))
+        key = (self.plane, _fingerprint(colored))
+        hit = _PART_SHAPES.get(key)
+        if hit is None:
+            tris = [t for t, _c in colored]
+            hit = (self._projected_path(tris),
+                   planview.plan_faces(colored, self.plane))
+            if len(_PART_SHAPES) >= PART_SHAPE_CACHE:
+                _PART_SHAPES.pop(next(iter(_PART_SHAPES)))
+            _PART_SHAPES[key] = hit
+        return PartItem(node, self, hit[0], node.name, faces=hit[1])
 
     def _plan_cut(self, node, colored):
         """The z a House Builder floor is cut at when seen from the Top

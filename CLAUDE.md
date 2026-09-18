@@ -1850,6 +1850,27 @@ into a new module and import.
                        drops covered studs of bricks/plates only (Library
                        pieces stay as made). `library_lego_parts.shape`
                        gives each piece's footprint and height.
+                       **Toolbar** (same day, the user: "icons like mouse
+                       icons"): Select / Move / Rotate / Add piece / Erase
+                       down the plan's left edge, Turn / Copy / Delete,
+                       level ▼▲, Zoom in / out / Fit across the top; wheel
+                       zooms about the cursor, middle drag pans, arrows
+                       move the selected piece, Shift+PgUp/PgDn lift it.
+                       Moves go through `replace_piece` (rebuilt at its
+                       index, `can_place(ignore=)`). Baseplates 16-96
+                       studs (`BASEPLATE_SIZES`) live in their OWN Object
+                       beside the build (`BASE_KEY`, `base_object`; the
+                       build carries `keep_empty`, which `validate`
+                       honours for an Object), studs one nested loop of
+                       8-sided cylinders, never culled — so the plate's
+                       mesh never changes: a click on 96 x 96 went 1.5 s
+                       -> 0.3 s. Two general fixes came with it: the mesh
+                       cache keeps one slot per (Object, $fn, detail) —
+                       the 2D view's detail pass and the 3D pass evicted
+                       each other every change — and view2d caches a
+                       part's projected outline + faces by content
+                       (`_PART_SHAPES`, `_fingerprint`): one edit rebuilds
+                       the 2D scene several times.
   - `chat.py`        — **Assistant chat box** (family assistant, docked
                        right, **hidden by default**, opened from AI ▸ ChatBox or
                        Ctrl+/): Claude/Mistral/Ollama

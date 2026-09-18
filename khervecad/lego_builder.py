@@ -11,6 +11,20 @@ follows the cursor green where it fits and red where it does not — it
 must not run into anything and must hold on to studs beneath, a piece
 above, or the ground (`can_place`). The 3D view shows the build grow.
 
+A toolbar goes with the plan: the click TOOLS down its left edge —
+Select (outline a piece; arrows move it, R turns, Delete removes), Move
+(drag it), Rotate (a quarter about its corner), Add piece, Erase — and
+Turn / Copy / Delete, level ▼▲ and Zoom in / out / Fit across the top;
+the wheel zooms, the middle button pans. Every move goes through
+`replace_piece` (the piece rebuilt where it stood in the tree, checked
+by `can_place` with itself ignored).
+
+The baseplate (16 to 96 studs a side, `BASEPLATE_SIZES`) lives in an
+Object of its own beside the build (`BASE_KEY`, `base_object`), its
+studs one nested loop of 8-sided cylinders and never culled: its mesh
+then never changes, so a click on a 96 x 96 plate costs ~0.3 s, not the
+1.5 s it took to re-tessellate and re-project 9216 studs each time.
+
 "Click in 3D view" keeps the older way too: clicking the top of a piece
 drops the new one there on the highest top beneath it, a side sets it
 beside that face, and in Erase mode a click takes a piece away.
@@ -33,14 +47,15 @@ the Free Software Foundation, either version 3 of the License, or
 
 import math
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QColor, QIcon, QPixmap
-from PyQt5.QtWidgets import (QComboBox, QDialog, QFormLayout, QHBoxLayout,
-                             QLabel, QPushButton, QRadioButton, QSpinBox,
-                             QTreeWidget, QTreeWidgetItem,
-                             QTreeWidgetItemIterator, QVBoxLayout)
+from PyQt5.QtWidgets import (QAction, QActionGroup, QComboBox, QDialog,
+                             QFormLayout, QHBoxLayout, QLabel, QPushButton,
+                             QSpinBox, QToolBar, QTreeWidget,
+                             QTreeWidgetItem, QTreeWidgetItemIterator,
+                             QVBoxLayout)
 
-from . import mesh
+from . import icons, mesh
 from .library_lego import (BASEPLATE_H, BRICK_H, COLORS, PITCH, PLATE_H,
                            brick, colour)
 from . import library_lego_parts as parts_lib
@@ -52,6 +67,12 @@ KINDS = {"Brick": BRICK_H, "Plate": PLATE_H, "Tile": PLATE_H,
          "Baseplate": BASEPLATE_H}
 #: stud facets in a build: round enough, light enough for many bricks
 SEG = 16
+#: a baseplate with more studs than this gets plain 8-sided studs,
+#: which the document's $fn leaves alone (`model.keeps_segments`): a
+#: 16-sided stud became 45-sided and a 32 x 32 plate ~280k triangles
+BIG_PLATE = 0
+#: the baseplate sizes the builder offers, in studs a side
+BASEPLATE_SIZES = (16, 24, 32, 48, 64, 96)
 
 
 # ---------------------------------------------------------------- pieces
@@ -62,8 +83,29 @@ def meta(node):
     return rec if isinstance(rec, dict) else None
 
 
+#: a build's param naming the Object that holds its baseplate
+BASE_KEY = "lego_base"
+
+
+def base_object(build):
+    """The Object beside *build* holding its baseplate, or None (a build
+    made before the baseplate moved out keeps it among its pieces)."""
+    name = build.params.get(BASE_KEY)
+    if not name or build.parent is None:
+        return None
+    for n in build.parent.children:
+        if n is not build and n.type == "component" and n.name == name:
+            return n
+    return None
+
+
 def pieces(build):
-    return [n for n in build.children if meta(n) is not None]
+    """Every placed piece of *build*: its own and its baseplate's."""
+    own = [n for n in build.children if meta(n) is not None]
+    base = base_object(build)
+    if base is None:
+        return own
+    return [n for n in base.children if meta(n) is not None] + own
 
 
 def grid(node):
@@ -82,12 +124,37 @@ def part_shape(part, turn=0):
     return (ny, nx, h) if turn % 2 else (nx, ny, h)
 
 
+def _baseplate(nx, ny, colour_name):
+    """A builder baseplate: the slab and ONE nested loop of plain
+    8-sided studs (a node per stud made the part's cache key walk
+    18k nodes on every change of a 96 x 96 plate)."""
+    from .library_lego import GAP, STUD_H, STUD_R
+    plate = CadNode("union", f"Baseplate {nx}x{ny}")
+    plate.add(CadNode("cube", "Body", dict(
+        x=GAP, y=GAP, z=0.0, width=nx * PITCH - 2 * GAP,
+        depth=ny * PITCH - 2 * GAP, height=BASEPLATE_H, center=False)))
+    rows = CadNode("for_loop", "Stud rows", dict(
+        variable="i", start=0.0, end=float(nx - 1), step=1.0, values=""))
+    cols = CadNode("for_loop", "Studs", dict(
+        variable="j", start=0.0, end=float(ny - 1), step=1.0, values=""))
+    cols.add(CadNode("cylinder", "Stud", dict(
+        x=f"(i + 0.5) * {PITCH:g}", y=f"(j + 0.5) * {PITCH:g}",
+        z=BASEPLATE_H, height=STUD_H, radius_bottom=STUD_R,
+        radius_top=STUD_R, segments=8, center=False)))
+    rows.add(cols)
+    plate.add(rows)
+    return colour(plate, colour_name)
+
+
 def _geometry(kind, nx, ny, colour_name, studs=True, part=None):
     if part is not None:
         return colour(parts_lib._MAKERS[part](n=part), colour_name)
+    if kind == "Baseplate":
+        return _baseplate(nx, ny, colour_name)
+    big = kind == "Baseplate" and nx * ny > BIG_PLATE
     geo = brick(nx, ny, KINDS[kind],
                 studs=False if kind == "Tile" else studs,
-                hollow=False, seg=SEG, round_=True,
+                hollow=False, seg=8 if big else SEG, round_=not big,
                 name=f"{kind} {nx}x{ny}")
     return colour(geo, colour_name)
 
@@ -139,8 +206,10 @@ def drop_z(build, i, j, nx, ny):
     return top
 
 
-def collides(build, i, j, nx, ny, z, h):
+def collides(build, i, j, nx, ny, z, h, ignore=None):
     for p in pieces(build):
+        if p is ignore:
+            continue
         pz = float(p.params.get("z", 0.0))
         if _overlaps(p, i, j, nx, ny) and pz < z + h - 1e-6 \
                 and z < pz + meta(p)["h"] - 1e-6:
@@ -201,20 +270,92 @@ def beneath(build, z):
     return {c: p for c, (_t, p) in best.items()}
 
 
-def can_place(build, i, j, nx, ny, z, h):
+def can_place(build, i, j, nx, ny, z, h, ignore=None):
     """(True, "") when a piece fits at (i, j, z), else (False, why): it
     must not run into another and must hold on to something — studs
-    beneath, a piece on top, or the ground."""
-    if collides(build, i, j, nx, ny, z, h):
+    beneath, a piece on top, or the ground. *ignore* is a piece being
+    moved, which is not in its own way."""
+    if collides(build, i, j, nx, ny, z, h, ignore):
         return False, "Something is already there."
     if z <= ground(build) + 1e-6:
         return True, ""
     for p in pieces(build):
+        if p is ignore:
+            continue
         pz = float(p.params.get("z", 0.0))
         if _overlaps(p, i, j, nx, ny) and (
                 abs(pz + meta(p)["h"] - z) < 1e-6 or abs(pz - z - h) < 1e-6):
             return True, ""
     return False, "Nothing to hold it: no studs beneath it at this level."
+
+
+def replace_piece(build, node, i, j, z, turn=0):
+    """Put *node* at (i, j, z), *turn* quarters further round (a brick,
+    plate or tile turns by swapping its sides). Returns (new node,
+    "") — the piece is rebuilt in the same place in the tree — or
+    (None, why) when it would not fit there."""
+    m = meta(node)
+    nx, ny, part = m["nx"], m["ny"], m.get("part")
+    new_turn = (int(m.get("turn", 0)) + turn) % 4
+    if part is not None:
+        nx, ny, _h = part_shape(part, new_turn)
+    elif turn % 2:
+        nx, ny = ny, nx
+    ok, why = can_place(build, i, j, nx, ny, z, m["h"], ignore=node)
+    if not ok:
+        return None, why
+    new = piece_node(m["kind"], nx, ny, m["colour"], i, j, z, part=part,
+                     turn=new_turn if part is not None else 0)
+    index = build.children.index(node)
+    build.remove(node)
+    build.add(new, index)
+    refresh_studs(build)
+    return new, ""
+
+
+def duplicate_piece(build, node):
+    """A copy of *node* beside it: the first free spot to its right,
+    behind, left or in front, at the same height. (new, "") or
+    (None, why)."""
+    m, (i, j) = meta(node), grid(node)
+    z = float(node.params.get("z", 0.0))
+    for di, dj in ((m["nx"], 0), (0, m["ny"]), (-m["nx"], 0),
+                   (0, -m["ny"])):
+        if can_place(build, i + di, j + dj, m["nx"], m["ny"], z, m["h"])[0]:
+            new = piece_node(m["kind"], m["nx"], m["ny"], m["colour"],
+                             i + di, j + dj, z, part=m.get("part"),
+                             turn=m.get("turn", 0))
+            build.add(new)
+            refresh_studs(build)
+            return new, ""
+    return None, "No room beside it for a copy."
+
+
+def baseplate_of(build):
+    for p in pieces(build):
+        if meta(p)["kind"] == "Baseplate" and \
+                abs(float(p.params.get("z", 0.0))) < 1e-6:
+            return p
+    return None
+
+
+def set_baseplate(build, size, colour_name=None):
+    """Give *build* a *size* x *size* baseplate at the origin (replacing
+    the one it has). Returns the plate."""
+    old = baseplate_of(build)
+    colour_name = colour_name or (meta(old)["colour"] if old is not None
+                                  else "Green")
+    plate = piece_node("Baseplate", size, size, colour_name, 0, 0, 0.0)
+    holder = old.parent if old is not None else (base_object(build)
+                                                  or build)
+    if old is not None:
+        index = holder.children.index(old)
+        holder.remove(old)
+        holder.add(plate, index)
+    else:
+        holder.add(plate, 0)
+    refresh_studs(build)
+    return plate
 
 
 def piece_at(build, i, j, z):
@@ -266,8 +407,11 @@ def refresh_studs(build):
     rebuilt = 0
     for p in pieces(build):
         m, (pi, pj) = meta(p), grid(p)
-        if m["kind"] not in ("Brick", "Plate", "Baseplate"):
-            continue                 # a tile, or a Library piece as made
+        if m["kind"] not in ("Brick", "Plate"):
+            # a tile, a Library piece as made — or the baseplate, whose
+            # hidden studs stay so its mesh never changes (and every
+            # cache keeps it: 9216 studs re-projected cost 1.5 s a click)
+            continue
         top = round(float(p.params.get("z", 0.0)) + m["h"], 3)
         bare = [[a, b] for a in range(m["nx"]) for b in range(m["ny"])
                 if (pi + a, pj + b, top) not in bottoms]
@@ -283,12 +427,21 @@ def refresh_studs(build):
 
 
 def find_build(model, selected=None):
-    """The build to add to: the selected Object if it holds pieces, else
-    the first Object called "Lego build", else None."""
+    """The build to add to: the selected Object if it holds pieces (a
+    selected baseplate Object means its build), else the first Object
+    called "Lego build", else None."""
     for node in (selected or []):
         while node is not None and node.type != "component":
             node = node.parent
-        if node is not None and pieces(node):
+        if node is None:
+            continue
+        if node.params.get("lego_role") == "baseplate":
+            for other in (node.parent.children if node.parent else []):
+                if other.type == "component" and \
+                        other.params.get(BASE_KEY) == node.name:
+                    return other
+            continue
+        if pieces(node):
             return node
     for node in model.root.walk():
         if node.type == "component" and node.name == BUILD_NAME:
@@ -296,23 +449,37 @@ def find_build(model, selected=None):
     return None
 
 
-def new_build(model):
-    """A fresh build in Main: an Object holding a green 16 x 16
-    baseplate to click on."""
-    plate = piece_node("Baseplate", 16, 16, "Green", 0, 0, 0.0)
-    # a holder of its own: enclosing the plate itself turned the plate's
-    # group into the Object, and the build lost its baseplate
-    holder = CadNode("union", BUILD_NAME)
-    holder.add(plate)
+def _new_object(model, name, content=None):
+    """A new visible Object in Main called *name* (made unique), holding
+    *content* if given."""
+    # a holder of its own: enclosing a piece itself turned the piece's
+    # group into the Object, and the build lost it
+    holder = CadNode("union", name)
+    if content is not None:
+        holder.add(content)
     model.root.add(holder)
     model.structure_changed.emit()
-    comp = model.enclose_as_part(holder, BUILD_NAME)
-    if plate.parent is not comp:          # whichever way it was wrapped
-        plate.parent.remove(plate)
-        comp.add(plate)
+    comp = model.enclose_as_part(holder, name)
+    if content is not None and content.parent is not comp:
+        content.parent.remove(content)      # whichever way it was wrapped
+        comp.add(content)
         for n in list(comp.children):
-            if n is not plate and n.type == "union" and not n.children:
+            if n is not content and n.type == "union" and not n.children:
                 comp.remove(n)
+    return comp
+
+
+def new_build(model, size=16):
+    """A fresh build in Main: an Object for the pieces beside an Object
+    holding a green *size* x *size* baseplate to click on. The plate is
+    kept apart so its mesh — the biggest by far — is never rebuilt when
+    a piece is placed."""
+    plate = piece_node("Baseplate", size, size, "Green", 0, 0, 0.0)
+    base = _new_object(model, BUILD_NAME + " baseplate", plate)
+    base.params["lego_role"] = "baseplate"
+    comp = _new_object(model, BUILD_NAME)
+    comp.params[BASE_KEY] = base.name
+    comp.params["keep_empty"] = True
     refresh_studs(comp)
     model.structure_changed.emit()
     return comp
@@ -346,6 +513,8 @@ class LegoBuilder(QDialog):
         self.building = False
         self.turns = 0
         self.level = 0
+        self.tool = "add"
+        self.selected = None
         self.setWindowTitle("Lego Builder")
         self.setModal(False)
         self.resize(980, 640)
@@ -405,15 +574,19 @@ class LegoBuilder(QDialog):
         top = QPushButton("Go to the top of the build")
         top.clicked.connect(self.to_top)
         side.addWidget(top)
-        # ---- mode
-        side.addWidget(QLabel("<b>3 · Click to</b>"))
-        mode = QHBoxLayout()
-        self.place_mode = QRadioButton("Place")
-        self.erase_mode = QRadioButton("Erase")
-        self.place_mode.setChecked(True)
-        mode.addWidget(self.place_mode)
-        mode.addWidget(self.erase_mode)
-        side.addLayout(mode)
+        # ---- build
+        side.addWidget(QLabel("<b>3 · Build</b>"))
+        base = QHBoxLayout()
+        base.addWidget(QLabel("Baseplate:"))
+        self.base_size = QComboBox()
+        for n in BASEPLATE_SIZES:
+            self.base_size.addItem(f"{n} × {n} studs", n)
+        self.base_size.setCurrentIndex(BASEPLATE_SIZES.index(32))
+        self.base_size.setToolTip("The baseplate of a new build; changing "
+                                  "it resizes the current build's plate")
+        self.base_size.activated.connect(lambda _i: self.resize_baseplate())
+        base.addWidget(self.base_size, 1)
+        side.addLayout(base)
         buttons = QHBoxLayout()
         self.go = QPushButton("Click in 3D view")
         self.go.setCheckable(True)
@@ -431,27 +604,235 @@ class LegoBuilder(QDialog):
         # ---- plan
         right = QVBoxLayout()
         outer.addLayout(right, 1)
-        self.hint = QLabel("Left click places · right click takes away · "
-                           "wheel or ▲/▼ changes level · R turns. Grey "
-                           "cells are filled at this level; circles are "
-                           "studs to build on.")
-        self.hint.setWordWrap(True)
-        right.addWidget(self.hint)
         self.plan = LegoPlan(self)
+        self.hint = QLabel("")
+        self.hint.setWordWrap(True)
+        tools, actions = self._toolbar()
+        right.addWidget(actions)
+        right.addWidget(self.hint)
+        row = QHBoxLayout()
+        row.addWidget(tools)
+        row.addWidget(self.plan, 1)
+        right.addLayout(row, 1)
         self.plan.clicked.connect(self.place_at)
         self.plan.erase.connect(self.erase_at)
         self.plan.level_step.connect(self.step_level)
         self.plan.turn.connect(self.turn)
         self.plan.hovered.connect(self._ghost)
-        right.addWidget(self.plan, 1)
         for w in (self.colour,):
             w.currentTextChanged.connect(lambda _t: self._changed())
         for w in (self.nx, self.ny):
             w.valueChanged.connect(lambda _v: self._changed())
-        self.place_mode.toggled.connect(lambda _on: self._changed())
         self.model.structure_changed.connect(self._model_changed)
         self._piece_changed()
         self._update_level_text()
+
+    # ------------------------------------------------------------ toolbar
+    TOOLS = [
+        ("select", "mdi.cursor-default-outline", "Select",
+         "Click a piece to select it (a piece lower down too: the level "
+         "follows it). Arrows move it a stud, Shift+PgUp/PgDn a plate, R "
+         "turns, Delete removes, Esc lets go."),
+        ("move", "mdi.cursor-move", "Move",
+         "Drag a piece to where it should go — green where it fits, red "
+         "where it does not."),
+        ("rotate", "mdi.rotate-right", "Rotate",
+         "Click a piece to turn it a quarter about its corner."),
+        ("add", "mdi.toy-brick-plus-outline", "Add piece",
+         "Click to put the chosen piece down on this level (R turns it)."),
+        ("erase", "mdi.eraser", "Erase",
+         "Click a piece on this level to take it away (right click does "
+         "that with any tool)."),
+    ]
+    HINTS = {
+        "select": "Select: click a piece · arrows move it · R turns · "
+                  "Delete removes · wheel zooms, middle drag pans",
+        "move": "Move: drag a piece · wheel zooms, middle drag pans",
+        "rotate": "Rotate: click a piece to turn it 90°",
+        "add": "Add: click to place · R turns · right click takes away · "
+               "Shift+wheel or PgUp/PgDn changes level · grey = filled "
+               "here, circles = studs to build on",
+        "erase": "Erase: click a piece on this level to take it away",
+    }
+
+    def _toolbar(self):
+        """(tools, actions): the five click tools stacked down the plan's
+        left edge, and the actions and view controls across its top."""
+        tools = QToolBar()
+        tools.setOrientation(Qt.Vertical)
+        tools.setIconSize(QSize(24, 24))
+        tools.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        bar = QToolBar()
+        bar.setIconSize(QSize(20, 20))
+        bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        group = QActionGroup(self)
+        group.setExclusive(True)
+        self.tool_actions = {}
+        for key, icon, text, tip in self.TOOLS:
+            act = QAction(icons.icon(icon), text, self)
+            act.setCheckable(True)
+            act.setToolTip(f"<b>{text}</b><br>{tip}")
+            act.toggled.connect(lambda on, k=key: on and self.set_tool(k))
+            group.addAction(act)
+            tools.addAction(act)
+            self.tool_actions[key] = act
+        self.place_mode = self.tool_actions["add"]
+        self.erase_mode = self.tool_actions["erase"]
+
+        def action(icon, text, tip, slot):
+            act = QAction(icons.icon(icon), text, self)
+            act.setToolTip(f"<b>{text}</b><br>{tip}")
+            act.triggered.connect(lambda _c=False: slot())
+            bar.addAction(act)
+            return act
+        action("mdi.rotate-left", "Turn", "Turn the selected piece 90° "
+               "(R) — or the piece to add", self._turn_any)
+        action("mdi.content-copy", "Copy", "Put a copy of the selected "
+               "piece beside it", self.duplicate_selected)
+        action("mdi.delete-outline", "Delete", "Take the selected piece "
+               "away (Delete)", self.delete_selected)
+        bar.addSeparator()
+        action("mdi.arrow-down-bold-outline", "Level −", "One plate down "
+               "(PgDn, Shift+wheel)", lambda: self.step_level(-1))
+        action("mdi.arrow-up-bold-outline", "Level +", "One plate up "
+               "(PgUp, Shift+wheel)", lambda: self.step_level(1))
+        bar.addSeparator()
+        action("mdi.magnify-plus-outline", "Zoom in", "Zoom in (wheel, +)",
+               lambda: self.plan.zoom_by(1.25))
+        action("mdi.magnify-minus-outline", "Zoom out", "Zoom out "
+               "(wheel, −)", lambda: self.plan.zoom_by(0.8))
+        action("mdi.fit-to-page-outline", "Fit", "Show the whole build",
+               self.plan.fit_all)
+        self.tool_actions["add"].setChecked(True)
+        return tools, bar
+
+    def set_tool(self, key):
+        self.tool = key
+        if self.tool_actions[key].isChecked() is False:
+            self.tool_actions[key].setChecked(True)
+        self.hint.setText(self.HINTS[key])
+        cursors = {"select": Qt.ArrowCursor, "move": Qt.SizeAllCursor,
+                   "rotate": Qt.PointingHandCursor, "add": Qt.CrossCursor,
+                   "erase": Qt.ForbiddenCursor}
+        self.plan.setCursor(cursors[key])
+        self._ghost(None)
+        self._changed()
+
+    def _turn_any(self):
+        if self.selected is not None and self.tool != "add":
+            self.rotate_selected()
+        else:
+            self.turn()
+
+    # ---------------------------------------------------------- selection
+    def select(self, piece):
+        """Select *piece* (None lets go); it is outlined on the plan and
+        tinted in the 3D view."""
+        self.selected = piece
+        if piece is not None:
+            m = meta(piece)
+            where = level_of(self.build, float(piece.params.get("z", 0.0)))
+            self.status.setText(f"Selected {m.get('part') or m['kind']} "
+                                f"{m['nx']}×{m['ny']}, {m['colour']}, at "
+                                f"{grid(piece)} level {where}.")
+        self._ghost(None)
+        self.plan.update()
+
+    def select_at(self, i, j):
+        """Select the piece at (i, j) on this level, else the highest one
+        below it (and go to its level). Returns it or None."""
+        build = self._live_build()
+        if build is None:
+            self.select(None)
+            return None
+        piece = piece_at(build, i, j, self.z())
+        if piece is None:
+            # the piece whose studs this level stands on, else the
+            # highest lower down
+            piece = layer(build, self.z())[1].get((i, j)) or \
+                beneath(build, self.z()).get((i, j))
+            if piece is not None:
+                self.set_level(level_of(build,
+                                        float(piece.params.get("z", 0.0))))
+        self.select(piece)
+        return piece
+
+    def _selected_live(self):
+        piece = self.selected
+        if piece is None or self.build is None \
+                or piece not in pieces(self.build):
+            self.selected = None
+        return self.selected
+
+    def move_selected(self, di, dj, dlevel=0, turn=0):
+        """Move the selected piece by (di, dj) studs and *dlevel* plates,
+        turning it *turn* quarters. Returns True when it moved."""
+        piece = self._selected_live()
+        if piece is None:
+            self.status.setText("Select a piece first.")
+            return False
+        if meta(piece)["kind"] == "Baseplate":
+            self.status.setText("The baseplate stays (resize it instead).")
+            return False
+        i, j = grid(piece)
+        z = float(piece.params.get("z", 0.0)) + dlevel * PLATE_H
+        if z < -1e-6:
+            return False
+        new, why = replace_piece(self.build, piece, i + di, j + dj, z, turn)
+        if new is None:
+            self.status.setText(why)
+            return False
+        if dlevel:
+            self.set_level(self.level + dlevel)
+        self.model.structure_changed.emit()
+        self.select(new)
+        return True
+
+    def rotate_selected(self):
+        return self.move_selected(0, 0, turn=1)
+
+    def delete_selected(self):
+        piece = self._selected_live()
+        if piece is None:
+            self.status.setText("Select a piece first.")
+            return False
+        if meta(piece)["kind"] == "Baseplate":
+            self.status.setText("The baseplate stays (resize it instead).")
+            return False
+        self.build.remove(piece)
+        refresh_studs(self.build)
+        self.select(None)
+        self.model.structure_changed.emit()
+        self.status.setText("Taken away.")
+        return True
+
+    def duplicate_selected(self):
+        piece = self._selected_live()
+        if piece is None:
+            self.status.setText("Select a piece first.")
+            return None
+        new, why = duplicate_piece(self.build, piece)
+        if new is None:
+            self.status.setText(why)
+            return None
+        self.model.structure_changed.emit()
+        self.select(new)
+        return new
+
+    def resize_baseplate(self, size=None):
+        """Give the current build (a new one if there is none) a baseplate
+        of the size chosen."""
+        size = int(size or self.base_size.currentData())
+        if size != self.base_size.currentData():
+            self.base_size.setCurrentIndex(BASEPLATE_SIZES.index(size))
+        build = self._live_build()
+        if build is None:
+            self.start_new()
+            return
+        set_baseplate(build, size)
+        self.model.structure_changed.emit()
+        self.plan.fit_all()
+        self.status.setText(f"Baseplate {size} × {size}.")
 
     # ------------------------------------------------------------ palette
     def _fill_palette(self):
@@ -514,7 +895,7 @@ class LegoBuilder(QDialog):
         return self.colour.currentText()
 
     def erasing(self):
-        return self.erase_mode.isChecked()
+        return self.tool == "erase"
 
     def front_side(self):
         _kind, part = self._current()
@@ -544,16 +925,20 @@ class LegoBuilder(QDialog):
         self.plan.update()
 
     def _ghost(self, corner):
-        """Show the piece the plan's cursor would place, tinted in the
-        3D view (the selection's own highlight comes back after)."""
+        """Tint in the 3D view the piece the plan's cursor would place,
+        else the selected piece, else the window's own selection."""
         view = self.window_.view3d
-        if corner is None or self.build is None or self.erasing():
+        if self.build is None:
+            return
+        node = self._selected_live()
+        if corner is not None and self.tool == "add":
+            kind, part = self._current()
+            nx, ny, _h = self.footprint()
+            node = piece_node(kind, nx, ny, self.colour_name(), *corner,
+                              self.z(), part=part, turn=self.turns)
+        if node is None:
             view.set_highlight_mesh(self.window_._highlight_tris())
             return
-        kind, part = self._current()
-        nx, ny, _h = self.footprint()
-        node = piece_node(kind, nx, ny, self.colour_name(), *corner,
-                          self.z(), part=part, turn=self.turns)
         ox, oy, oz = self._offset()
         view.set_highlight_mesh([
             tuple((v[0] + ox, v[1] + oy, v[2] + oz) for v in t)
@@ -600,6 +985,7 @@ class LegoBuilder(QDialog):
 
     def _model_changed(self):
         self._live_build()
+        self._selected_live()
         self._update_level_text()
         self.plan.update()
 
@@ -607,7 +993,7 @@ class LegoBuilder(QDialog):
         if self._live_build() is None:
             selected = self.window_.builder.active_tree().selected_nodes()
             self.build = find_build(self.model, selected) or \
-                new_build(self.model)
+                new_build(self.model, int(self.base_size.currentData()))
         return self.build
 
     def place_at(self, i, j):
@@ -650,7 +1036,9 @@ class LegoBuilder(QDialog):
         return True
 
     def start_new(self):
-        self.build = new_build(self.model)
+        self.build = new_build(self.model, int(self.base_size.currentData()))
+        self.selected = None
+        self.plan.fit_all()
         self.set_level(0)
         self.window_.builder.tree.select_nodes([self.build])
         self._rearm()
@@ -740,6 +1128,7 @@ class LegoBuilder(QDialog):
 
     def closeEvent(self, event):
         self.go.setChecked(False)
+        self.selected = None
         self._ghost(None)
         super().closeEvent(event)
 

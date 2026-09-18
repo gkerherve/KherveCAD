@@ -1248,7 +1248,12 @@ def _component_mesh(node, env, color, sel, selected):
 
     key = _component_key(node, env)
     placed_key = (key, (tx, ty, tz, rx, ry, rz), group_color)
-    cached = _COMP_CACHE.get(node.id) if key is not None else None
+    # one slot per Object AND per pass kind: the 2D view tessellates at
+    # a detail cap, the 3D view without, and with one slot a part's two
+    # meshes evicted each other on every change (a Lego build's 96 x 96
+    # baseplate was re-tessellated twice a click)
+    slot = (node.id, _FN_OVERRIDE, _DETAIL)
+    cached = _COMP_CACHE.get(slot) if key is not None else None
     if cached is not None and cached[0] == key:
         CACHE_STATS["hits"] += 1
         local = cached[1]
@@ -1278,7 +1283,7 @@ def _component_mesh(node, env, color, sel, selected):
     if key is not None:
         if len(_COMP_CACHE) >= _COMP_CACHE_MAX:
             _COMP_CACHE.clear()
-        _COMP_CACHE[node.id] = (key, local, placed_key, out)
+        _COMP_CACHE[slot] = (key, local, placed_key, out)
     return out
 
 
