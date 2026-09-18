@@ -1,9 +1,10 @@
 """Carbon nanostructures in the Part Library: graphene (sheets, stacks,
-twisted bilayers, nanoribbons, a quantum dot, defects), the graphite
-(0001) surface and nanotubes under the Crystals menu, and the
-fullerenes (C20, C60, C70, C80) under Molecules — all built by
-carbon_nano and drawn ball and stick by the Compound Builder's writer,
-in nanometres (the crystals' `prepare` sets an empty document up).
+twisted bilayers, nanoribbons, a quantum dot, defects) and the graphite
+(0001) surface under Surfaces, nanotubes under Crystals, and the
+fullerenes (C20, C60, C70, C80) under Molecules, in nanometres (the
+crystals' `prepare` sets an empty document up). Sheets, stacks and
+graphite are graphene_build's parametric loops; the rest are
+carbon_nano's atoms drawn by the Compound Builder's writer.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -16,7 +17,7 @@ the Free Software Foundation, either version 3 of the License, or
 from . import carbon_nano as cn
 from .library_crystal import prepare
 
-GRAPHENE = "Crystals (graphene & graphite)"
+GRAPHENE = "Surfaces: Graphene & graphite"
 NANOTUBES = "Crystals (nanotubes)"
 FULLERENES = "Molecules: Fullerenes"
 #: integer dialog fields (named apart from every other part's)
@@ -64,36 +65,45 @@ _AREA_FIELDS = [("width", "Width"), ("depth", "Depth")]
 _AREA_NM = {"width": _NM, "depth": _NM}
 
 
-def _sheet(layers, stacking):
-    return lambda d: cn.graphene(_f(d, "width", 3), _f(d, "depth", 3),
-                                 layers, stacking)
+def _loop_part(label, sizes, fields, suffixes, **fixed):
+    """A graphene / graphite part written as loops (graphene_build)."""
+    def build(dims):
+        from . import graphene_build as gb
+        from .library_molecule import _group as group
+        kw = dict(fixed)
+        for key in ("width", "depth", "twist"):
+            if key in dims:
+                kw[key] = _f(dims, key, 3.0)
+        if "sheet_layers" in dims:
+            kw["layers"] = _i(dims, "sheet_layers", kw.get("layers", 1))
+        code, stats = gb.program(**kw)
+        return group(code, stats["name"])
+    return dict(label=label, category=GRAPHENE, sizes=sizes,
+                fields=list(fields), unit="nm", prepare=prepare,
+                suffixes=suffixes, build=build)
+
+
+def _sheet(label, layers, stacking):
+    return _loop_part(label, _AREA, _AREA_FIELDS, _AREA_NM, layers=layers,
+                      stacking=stacking)
 
 
 PARTS = {
-    "graphene_sheet": _part("Graphene (single layer)", GRAPHENE,
-                            _sheet(1, "AB"), _AREA, _AREA_FIELDS, _AREA_NM),
-    "graphene_bilayer_ab": _part("Bilayer graphene (AB, Bernal)", GRAPHENE,
-                                 _sheet(2, "AB"), _AREA, _AREA_FIELDS,
-                                 _AREA_NM),
-    "graphene_bilayer_aa": _part("Bilayer graphene (AA, eclipsed)",
-                                 GRAPHENE, _sheet(2, "AA"), _AREA,
-                                 _AREA_FIELDS, _AREA_NM),
-    "graphene_trilayer_aba": _part("Trilayer graphene (ABA)", GRAPHENE,
-                                   _sheet(3, "ABA"), _AREA, _AREA_FIELDS,
-                                   _AREA_NM),
-    "graphene_trilayer_abc": _part("Trilayer graphene (ABC, rhombohedral)",
-                                   GRAPHENE, _sheet(3, "ABC"), _AREA,
-                                   _AREA_FIELDS, _AREA_NM),
-    "graphene_twisted": _part(
-        "Twisted bilayer graphene", GRAPHENE,
-        lambda d: cn.graphene(_f(d, "width", 3.5), _f(d, "depth", 3.5), 2,
-                              twist=_f(d, "twist", 13.17)),
+    "graphene_sheet": _sheet("Graphene (single layer)", 1, "AB"),
+    "graphene_bilayer_ab": _sheet("Bilayer graphene (AB, Bernal)", 2, "AB"),
+    "graphene_bilayer_aa": _sheet("Bilayer graphene (AA, eclipsed)", 2,
+                                  "AA"),
+    "graphene_trilayer_aba": _sheet("Trilayer graphene (ABA)", 3, "ABA"),
+    "graphene_trilayer_abc": _sheet("Trilayer graphene (ABC, "
+                                    "rhombohedral)", 3, "ABC"),
+    "graphene_twisted": _loop_part(
+        "Twisted bilayer graphene",
         {"21.8° (smallest moiré)": dict(width=3.0, depth=3.0, twist=21.79),
          "13.2°": dict(width=3.5, depth=3.5, twist=13.17),
          "9.4°": dict(width=4.0, depth=4.0, twist=9.43),
          "5.1°": dict(width=5.0, depth=5.0, twist=5.09)},
-        _AREA_FIELDS + [("twist", "Twist")],
-        dict(_AREA_NM, twist=" °")),
+        _AREA_FIELDS + [("twist", "Twist")], dict(_AREA_NM, twist=" °"),
+        layers=2),
     "graphene_ribbon_armchair": _part(
         "Armchair graphene nanoribbon", GRAPHENE,
         lambda d: cn.nanoribbon("armchair", _f(d, "width", 1.0),
@@ -128,21 +138,19 @@ PARTS = {
         lambda d: cn.defect_sheet("nitrogen", _f(d, "width", 3),
                                   _f(d, "depth", 3)),
         _AREA, _AREA_FIELDS, _AREA_NM),
-    "graphite_surface": _part(
-        "Graphite (0001) surface (HOPG)", GRAPHENE,
-        lambda d: cn.graphite_surface(_f(d, "width", 3), _f(d, "depth", 3),
-                                      _i(d, "sheet_layers", 4)),
+    "graphite_surface": _loop_part(
+        "Graphite (0001) surface (HOPG)",
         {"3 x 3 nm, 4 layers": dict(width=3.0, depth=3.0, sheet_layers=4),
          "2 x 2 nm, 3 layers": dict(width=2.0, depth=2.0, sheet_layers=3),
          "4 x 4 nm, 3 layers": dict(width=4.0, depth=4.0, sheet_layers=3)},
-        _AREA_FIELDS + [("sheet_layers", "Layers")], _AREA_NM),
-    "graphite_step": _part(
-        "Graphite (0001) surface with a step", GRAPHENE,
-        lambda d: cn.graphite_surface(_f(d, "width", 3), _f(d, "depth", 3),
-                                      _i(d, "sheet_layers", 4), step=True),
+        _AREA_FIELDS + [("sheet_layers", "Layers")], _AREA_NM,
+        kind="graphite", layers=4),
+    "graphite_step": _loop_part(
+        "Graphite (0001) surface with a step",
         {"3 x 3 nm, 4 layers": dict(width=3.0, depth=3.0, sheet_layers=4),
          "4 x 3 nm, 3 layers": dict(width=4.0, depth=3.0, sheet_layers=3)},
-        _AREA_FIELDS + [("sheet_layers", "Layers")], _AREA_NM),
+        _AREA_FIELDS + [("sheet_layers", "Layers")], _AREA_NM,
+        kind="graphite", layers=4, step=True),
     "nanotube_armchair": _part(
         "Armchair nanotube (n, n)", NANOTUBES,
         lambda d: cn.nanotube(_i(d, "tube_n", 5), _i(d, "tube_n", 5),

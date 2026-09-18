@@ -189,3 +189,70 @@ def test_library_parts_build_within_budget():
     for key in cn.STRUCTURES:                       # also by compound name
         m = mb.resolve(key.upper())
         assert m.formula == key.upper()
+
+
+# ------------------------------------------------ graphene as loops
+@pytest.mark.parametrize("nx, ny", [(2, 4), (3, 4), (8, 8), (12, 10),
+                                    (20, 14)])
+def test_graphene_loops_leave_no_dangling_atom_or_bond(nx, ny):
+    from khervecad import graphene_build as gb
+    atoms, bonds = gb.sites(nx, ny)
+
+    def key(p):
+        return (round(p[0], 5), round(p[1], 5))
+    sites = {key(p) for p in atoms}
+    assert len(sites) == len(atoms)
+    deg = Counter()
+    for p, q in bonds:
+        assert key(p) in sites and key(q) in sites      # both ends exist
+        assert math.dist(p, q) == pytest.approx(gb.CC_NM)
+        deg[key(p)] += 1
+        deg[key(q)] += 1
+    assert {deg[s] for s in sites} <= {2, 3}
+
+
+@pytest.mark.parametrize("kw", [dict(), dict(layers=3, stacking="ABC"),
+                                dict(layers=2, twist=13.17),
+                                dict(kind="graphite", layers=4, step=True)])
+def test_graphene_program_draws_what_it_counts(kw):
+    from khervecad import graphene_build as gb
+    from khervecad import mesh
+    from khervecad.scadparse import parse_scad
+    code, stats = gb.program(2.5, 2.5, **kw)
+    assert "for (t = [30 : 120 : 150])" in code          # angle steps
+    assert code.count("sphere(") == 2                    # not an atom list
+    root, warnings = parse_scad(code)
+    assert not warnings
+    assert len(mesh.tessellate(root)) == stats["triangles"]
+
+
+def test_graphene_variables_drive_the_sheet():
+    from khervecad import graphene_build as gb
+    from khervecad import mesh
+    from khervecad.scadparse import parse_scad
+    code, _stats = gb.program(2, 2)
+    before = len(mesh.tessellate(parse_scad(code)[0]))
+    nx = next(line for line in code.splitlines() if line.startswith("nx ="))
+    wider = code.replace(nx, "nx = 20;")
+    assert len(mesh.tessellate(parse_scad(wider)[0])) > before
+
+
+# ------------------------------------------------------ surfaces
+def test_every_crystal_face_is_a_surface_part():
+    from khervecad import library, library_surfaces as ls
+    from khervecad.crystal_library import LIBRARY
+    from khervecad.library_groups import short_name
+    for key, crystal in LIBRARY.items():
+        if key in ls.SKIP:
+            continue
+        ids = [p for p in ls.PARTS if p.startswith(f"surface_{key}_")]
+        assert len(ids) == len(ls.faces(crystal)) >= 3
+    for pid in ("surface_si_111", "surface_quartz_0001",
+                "surface_rutile_110", "surface_cu_100"):
+        group = library.build_part(pid, {"surf_repeat": 3,
+                                         "surf_layers": 2})
+        assert group.children and "(" in group.name
+    assert short_name("Surfaces: Metals") == "Metals"
+    assert ls.crystal_of("Copper (111)") == "Copper"
+    assert library.PARTS["graphene_sheet"]["category"].startswith(
+        "Surfaces: ")

@@ -2,7 +2,8 @@
 
 Library = things you ADD to your design, in themed sections
 (Engineering, Buildings & places, Science, Toys & models); each subject
-menu carries its builder (House, City, Lego, Crystal, Compound) on top.
+menu carries its builder (House, City, Lego, Crystal, Surface, Compound)
+on top.
 The example documents — which REPLACE yours — live in it too, where
 they belong (2026-09-17, the Examples menu merged in): the technique
 demos under Engineering, the vacuum starter in Vacuum & UHV, the desk
@@ -18,7 +19,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-from . import icons, library_kcad, library_lego_parts
+from . import icons, library_kcad, library_lego_parts, library_surfaces
 from .library_groups import SECTIONS, entry_categories, short_name
 
 #: category -> function(label) -> submenu name, for a category whose
@@ -28,6 +29,9 @@ GROUPED_CATEGORIES = {"Tools": library_kcad.tool_group,
                       "Lego": library_lego_parts.group_of}
 GROUP_ORDER = {"Tools": library_kcad.TOOL_GROUP_ORDER,
                "Lego": library_lego_parts.GROUP_ORDER}
+for _cat in library_surfaces.CATEGORIES:     # each crystal with its faces
+    GROUPED_CATEGORIES[_cat] = library_surfaces.crystal_of
+    GROUP_ORDER[_cat] = library_surfaces.CRYSTAL_ORDER
 
 #: where the example documents go: (section, submenu title, icon,
 #: example categories) — a submenu title already in that section gets
@@ -178,9 +182,16 @@ def _cars(window, sub):
 
 
 def _crystals(window, sub):
-    from . import crystal_dialog, crystal_surface_dialog
+    from . import crystal_dialog
     sub.addAction(icons.icon("mdi.molecule"), "Crystal Builder...",
                   lambda: crystal_dialog.open_builder(window))
+    sub.addSeparator()
+
+
+def _surfaces(window, sub):
+    """The Surface Builder (any crystal, any (hkl)) on top; graphene,
+    graphite and every crystal's usual faces follow as parts."""
+    from . import crystal_surface_dialog
     sub.addAction(icons.icon("mdi.layers-outline"), "Surface Builder...",
                   lambda: crystal_surface_dialog.open_builder(window))
     sub.addSeparator()
@@ -201,6 +212,7 @@ def _vacuum(window, sub):
 
 
 _BUILDERS = {"vacuum": _vacuum, "cars": _cars, "lego": _lego, "city": _city, "crystals": _crystals,
+             "surfaces": _surfaces,
              "molecules": _molecules}
 
 

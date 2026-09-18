@@ -864,7 +864,7 @@ into a new module and import.
                        reconstruction. Program = one cell module + a for
                        over nx × ny (no scalar*vector: the preview's expr
                        cannot multiply a list). MCP `build_surface`;
-                       Library ▸ Crystals ▸ Surface Builder…
+                       Library ▸ Surfaces ▸ Surface Builder…
                        (`crystal_surface_dialog.py`, presets). Tests pin
                        the cells, spacings and that a layer holds the bulk
                        density for any orientation.
@@ -936,12 +936,32 @@ into a new module and import.
                        the equator (the top half turned 36° for an odd
                        count) and `relax` settles bonds/ring angles.
                        `library_carbon.py` makes them Part Library parts —
-                       Crystals ▸ Graphene & graphite / Carbon nanotubes
-                       (width, depth, layers, (n, m), length fields; the
-                       dialog takes per-field `suffixes`, " nm" / " °") and
-                       Molecules ▸ Fullerenes — drawn in the new
-                       `lattice` style (0.17 × vdW balls: full balls hid
-                       the honeycomb), cages ball and stick.
+                       Surfaces ▸ Graphene & graphite, Crystals ▸ Carbon
+                       nanotubes (width, depth, layers, (n, m), length
+                       fields; the dialog takes per-field `suffixes`,
+                       " nm" / " °") and Molecules ▸ Fullerenes — drawn in
+                       the new `lattice` style (0.17 × vdW balls: full
+                       balls hid the honeycomb), cages ball and stick.
+  - `graphene_build.py` — graphene / stacks / twisted bilayer / graphite
+                       (0001) as a PARAMETRIC program (the user: "a for
+                       loop with angles and steps"), not an atom list:
+                       variables a, cc, nx, ny, layers, gap (+ twist,
+                       top_nx) and one loop nest — rows j of A/B atoms,
+                       A's bond at 90°, B's up-bonds `for (t = [30 : 120
+                       : 150])`, `if`s dropping the side bonds and the two
+                       sharp corners (ny even), so every C has 2-3
+                       neighbours; `sites` is the same rules in Python
+                       (counts, tests). Editing nx in the Object regrows it.
+  - `library_surfaces.py` — Library ▸ **Surfaces** (its own menu, Surface
+                       Builder on top): every library crystal but graphite
+                       cut along its usual faces (cubic 100/110/111, hex
+                       0001/10-10/11-20, tetragonal 001/100/110/101), one
+                       part per face in "Surfaces: <family>", submenu per
+                       crystal (`library_menu.GROUPED_CATEGORIES`,
+                       `crystal_of`), built with `SurfaceSpec(inline=True)`
+                       (counts in the loop: a part's module cannot see
+                       top-level variables); an over-budget size drops
+                       cells rather than failing.
   - `molecule_build.py` — the **Compound Builder**: `molecule_program`
                        (ball and stick with half-bonds in each atom's
                        colour, double/triple bonds as parallel sticks, an

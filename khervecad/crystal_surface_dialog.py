@@ -1,4 +1,4 @@
-"""Library ▸ Crystals ▸ Surface Builder… — a slab of any library crystal
+"""Library ▸ Surfaces ▸ Surface Builder… — a slab of any library crystal
 cut along any (hkl) plane: Si(111), SiO2 (0001), rutile (110)…
 
 A non-modal panel over `crystal_surface`: crystal, Miller indices (three,

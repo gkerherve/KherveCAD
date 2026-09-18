@@ -637,7 +637,7 @@ def list_molecules(params: dict) -> dict:
             "carbon_note": "Build a cage with compound: its key (c60). "
                            "Graphene, graphite and nanotubes of any size "
                            "and (n, m) are Part Library parts: list_parts "
-                           "category 'Crystals (graphene & graphite)' / "
+                           "category 'Surfaces: Graphene & graphite' / "
                            "'Crystals (nanotubes)'.",
             "styles": list(STYLES), "units": "nm"}
 

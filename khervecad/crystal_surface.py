@@ -64,6 +64,10 @@ class SurfaceSpec:
     cell_box: bool = True
     scale: float = 1.0                       # model units per nm
     prefix: str = ""
+    #: counts written into the loop instead of top-level variables — a
+    #: Library part lands inside an Object's module, which cannot see
+    #: variables beside it (as crystal_build.Spec.inline)
+    inline: bool = False
 
     def check(self):
         if len(self.miller) != 3 or not any(self.miller):
@@ -341,9 +345,14 @@ def program(spec: SurfaceSpec):
                          f"{cb._n(r)}, $fn = {spec.fn});  // {el}")
         lines.append("}")
     cell_mod = f"{name}_cell"
-    code = [f"{name}_nx = {nx};", f"{name}_ny = {ny};",
-            cb._module(cell_mod, lines)]
-    body = [f"for (i = [0 : {name}_nx - 1], j = [0 : {name}_ny - 1])",
+    if spec.inline:
+        code = [cb._module(cell_mod, lines)]
+        nx_v, ny_v = str(nx), str(ny)
+    else:
+        code = [f"{name}_nx = {nx};", f"{name}_ny = {ny};",
+                cb._module(cell_mod, lines)]
+        nx_v, ny_v = f"{name}_nx", f"{name}_ny"
+    body = [f"for (i = [0 : {nx_v} - 1], j = [0 : {ny_v} - 1])",
             f"  translate([{cb._lin([(U[0] * k, 'i'), (V[0] * k, 'j')])}, "
             f"{cb._lin([(U[1] * k, 'i'), (V[1] * k, 'j')])}, 0]) "
             f"{cell_mod}();"]

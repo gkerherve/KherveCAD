@@ -5,8 +5,8 @@ happened to register them.
 
 A section is (title, [(menu title, icon, categories or special)]): a
 menu with one category lists its parts directly, several get a submenu
-each; a special ("home", "city", "lego", "crystals", "molecules",
-"vacuum") also
+each; a special ("home", "city", "lego", "crystals", "surfaces",
+"molecules", "vacuum") also
 carries its builder on top. `test_library_menu` checks every category
 of `library.PARTS` is placed exactly once.
 
@@ -45,7 +45,8 @@ SECTIONS = [
         ("Chemistry lab", "mdi.flask-outline", ["Chemistry"]),
         ("Crystals", "mdi.atom", ("crystals", [
             "Crystals (unit cells)", "Crystals (supercells)",
-            "Crystals (graphene & graphite)", "Crystals (nanotubes)"])),
+            "Crystals (nanotubes)"])),
+        ("Surfaces", "mdi.layers-outline", ("surfaces", "Surfaces: ")),
         ("Molecules", "mdi.molecule", ("molecules", "Molecules: ")),
         ("Solar System", "mdi.orbit",
          ["Solar System models", "Planets", "Moons"]),
@@ -66,7 +67,6 @@ SECTIONS = [
 SHORT_NAMES = {"Lego": "Bricks & plates",
                "Crystals (unit cells)": "Unit cells",
                "Crystals (supercells)": "Supercells",
-               "Crystals (graphene & graphite)": "Graphene & graphite",
                "Crystals (nanotubes)": "Carbon nanotubes",
                "Stylised trees": "Stylised trees",
                "Trees": "Grown trees"}
@@ -94,6 +94,7 @@ def category_order(all_categories):
 
 
 def short_name(category: str) -> str:
-    if category.startswith("Molecules: "):
-        return category[len("Molecules: "):]
+    for prefix in ("Molecules: ", "Surfaces: "):
+        if category.startswith(prefix):
+            return category[len(prefix):]
     return SHORT_NAMES.get(category, category)

@@ -1202,7 +1202,7 @@ from . import (library_cards, library_chem, library_crystal,  # noqa: E402
                library_trees,
                house_designs, library_examples, library_lego, library_lego_parts,
                library_lego_sets,
-               library_molecule, library_carbon,
+               library_molecule, library_carbon, library_surfaces,
                library_pots, library_print, library_room,
                library_uhv, library_manip, library_xps,
                library_vacuum, library_vitamins, library_generative,
@@ -1242,6 +1242,7 @@ PARTS.update(library_kcad.PARTS)
 PARTS.update(library_crystal.PARTS)
 PARTS.update(library_molecule.PARTS)
 PARTS.update(library_carbon.PARTS)
+PARTS.update(library_surfaces.PARTS)
 PARTS.update(library_print.PARTS)
 PARTS.update(library_vitamins.PARTS)
 PARTS.update(library_generative.PARTS)
@@ -1262,7 +1263,8 @@ _COUNT_FIELDS = ({"bolts"} | library_lego.COUNT_FIELDS
                  | library_vitamins.COUNT_FIELDS
                  | library_generative.COUNT_FIELDS
                  | library_solar.COUNT_FIELDS
-                 | library_carbon.COUNT_FIELDS)
+                 | library_carbon.COUNT_FIELDS
+                 | library_surfaces.COUNT_FIELDS)
 
 
 def insert_hook(part_id: str):
