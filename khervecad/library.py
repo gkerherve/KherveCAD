@@ -1200,7 +1200,7 @@ from . import (library_cards, library_chem, library_crystal,  # noqa: E402
                library_fasteners, library_minecraft, library_park,
                library_prusa,
                library_trees,
-               house_designs, library_examples, library_lego,
+               house_designs, library_examples, library_lego, library_lego_parts,
                library_lego_sets,
                library_molecule,
                library_pots, library_print, library_room,
@@ -1236,6 +1236,7 @@ from . import car_build          # noqa: E402
 PARTS.update(car_build.PARTS)
 PARTS.update(car_build.PARTS)
 PARTS.update(library_lego.PARTS)
+PARTS.update(library_lego_parts.PARTS)
 PARTS.update(library_lego_sets.PARTS)
 PARTS.update(library_kcad.PARTS)
 PARTS.update(library_crystal.PARTS)

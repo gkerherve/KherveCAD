@@ -779,6 +779,23 @@ into a new module and import.
   - `examples.py` Showcase: `_showcase(stem)` loads a finished model from
                        `khervecad/showcase/` (the Ferrari 288 GTO, 1138
                        objects; the spec ships the folder).
+  - `library_lego_parts.py` — **every Lego piece its own Library item**
+                       (2026-09-18, the user's request): ~100 parts
+                       ("Brick 2 × 4", "Slope 33° 3 × 2", "Arch 1 × 6",
+                       "Technic brick 1 × 8"), no size field, each with its
+                       usual colour first. Beyond library_lego's shapes:
+                       33°/65°/inverted/curved/cheese slopes (`wedge` + a
+                       side profile), round bricks/plates/tiles/cones (one
+                       revolved outline: hollow open stud, open underside),
+                       arches (opening drawn into the side outline), windows
+                       (2D-holed frame + Trans-clear pane), Technic bricks
+                       (pin holes as 2D holes — exact in the preview),
+                       jumpers, corners, side-stud brick, baseplates to
+                       32 × 32. `library_menu.GROUPED_CATEGORIES["Lego"] =
+                       group_of` splits Lego ▸ Bricks & plates into
+                       Bricks / Plates / … / Any size (customise), the last
+                       being library_lego's five sized parts (kept: MCP,
+                       tests and the dialog use them).
   - `library_lego_sets.py` — the **Lego sets** category: every Lego
                        example as a library part (`sizes={}`), built by
                        the example's own function and lifted out of its
