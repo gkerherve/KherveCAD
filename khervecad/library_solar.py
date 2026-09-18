@@ -58,6 +58,38 @@ def _sizes(body):
 COUNT_FIELDS = {"relief"}
 
 
+def _is_empty(model) -> bool:
+    """Nothing but variables at the top level: a document the planet
+    may set up (crystals switch such a document to nanometres)."""
+    return not any(c.type not in ("variables", "assign")
+                   for c in model.root.children)
+
+
+def prepare_scale(model, key, dims) -> str:
+    """A globe is a scale model: in an empty document, say so, so the
+    3D scale bar measures the real body in kilometres (a 60 mm Earth is
+    1 : 212 600 000) and shows the ratio. A document that already holds
+    something keeps its scale — a planet dropped beside a house must
+    not relabel the house."""
+    from . import units
+    body = D.BY_KEY[key]
+    diameter = float((dims or {}).get("d") or 60.0)
+    if diameter <= 0:
+        return ""
+    real_mm = 2 * body["radius"] * 1e6
+    ratio = real_mm / (diameter * units.to_mm(model.unit))
+    if not _is_empty(model):
+        if abs(model.real_scale - ratio) / ratio < 1e-6:
+            return ""
+        return (f"The document's scale stays "
+                f"{units.ratio_text(model.real_scale)}: {body['label']} "
+                f"here is {units.ratio_text(ratio)}, so the scale bar does "
+                "not measure it (Edit ▸ Document Scale to change it).")
+    model.set_real_scale(ratio)
+    return (f"Scale {units.ratio_text(ratio)} — the scale bar measures "
+            f"the real {body['label']}.")
+
+
 def _body_part(body):
     label = D.planet_label(body)
     if body["kind"] == "dwarf":
@@ -82,6 +114,8 @@ def _body_part(body):
         build=lambda dims, key=body["key"]: solar_bodies.build_body(
             key, float(dims.get("d", 60.0)), fine=True,
             relief=dims.get("relief")),
+        prepare=lambda model, dims, key=body["key"]: prepare_scale(
+            model, key, dims),
         note=body["note"])
 
 
@@ -139,12 +173,18 @@ def _globe(body, size_expr, spin_expr):
     stands outside because a nested module is hoisted to the top of
     the program, where its planet's locals are out of reach."""
     globe = _component(f"{body['label']} globe",
-                       solar_bodies.build_body(body["key"], REF, fine=False),
-                       rz=spin_expr)
+                       solar_bodies.build_body(body["key"], REF, fine=False))
+    # the spin is a rotate ABOVE the globe, not the globe's own rz: the
+    # globe then has no placement at all, so its cached mesh comes back
+    # untouched, and scale · spin join the transforms above them into
+    # ONE matrix (mesh._tess) — as the globe's rz, the spin cost a whole
+    # pass over the globe's triangles of its own every frame
+    turn = CadNode("rotate", "Spin", dict(x=0.0, y=0.0, z=spin_expr))
+    turn.add(globe)
     scale = CadNode("scale", "Size", dict(x=f"{size_expr} / {REF:g}",
                                           y=f"{size_expr} / {REF:g}",
                                           z=f"{size_expr} / {REF:g}"))
-    scale.add(globe)
+    scale.add(turn)
     return scale
 
 
@@ -321,13 +361,24 @@ def system_root(system: str, prefix: str = None) -> CadNode:
     return root
 
 
+#: days-slider step per planet system, where the automatic one (a 400th
+#: of the slowest moon's period) is too coarse to watch the planet
+#: TURN: Earth's 0.07 day was 25° of spin a notch, 0.01 is 3.6°, so
+#: play shows the day go round (the user's choice, 2026-09-18)
+DAYS_STEP = {"earth": 0.01}
+
+
 def _planet_system(key):
     body = D.BY_KEY[key]
     moons = D.moons_of(key)
     longest = max(abs(m["period"]) for m in moons)
+    # never a zero step: Mars' moons are so quick that a 400th of
+    # Deimos' orbit rounded to 0.00, and the slider fell back to whole
+    # days — three notches for the whole range
+    step = DAYS_STEP.get(key, max(round(longest / 400, 2), 0.01))
     return dict(label=f"{body['label']} & its moons", prefix=key,
                 kind="planet", planet_key=key, planet="60",
-                size_compression="0.6", step=round(longest / 400, 2),
+                size_compression="0.6", step=step,
                 span=math.ceil(longest * 2))
 
 
@@ -388,8 +439,9 @@ PARTS.update({
                                                                 dims),
               insert_note="Added as Objects beside the model, driven by "
                           "annotated document variables (prefixed, see "
-                          "get_code): the days slider runs the orbits; "
-                          "change them with set_params on the assign "
-                          "nodes or the Customizer panel.")
+                          "get_code): the days slider runs the orbits — "
+                          "play_motion sets it running; change them with "
+                          "set_params on the assign nodes or the "
+                          "Customizer panel.")
     for sid, spec in SYSTEMS.items()
 })

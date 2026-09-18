@@ -146,6 +146,7 @@ class MainWindow(QMainWindow):
         self.model.references_changed.connect(self._model_edited)
         self.model.drawing_changed.connect(self._drawing_edited)
         self.model.unit_changed.connect(self._unit_changed)
+        self.model.scale_changed.connect(self._scale_changed)
         self.model.mate_released.connect(
             lambda n: self.statusBar().showMessage(
                 f"{n.name} detached — its position is now yours to "
@@ -285,6 +286,7 @@ class MainWindow(QMainWindow):
                             "Ctrl+Shift+G")
         edit_menu.addSeparator()
         edit_menu.addAction("Document &Units...", self.choose_unit)
+        edit_menu.addAction("Document &Scale (1 : N)...", self.choose_scale)
         edit_menu.addAction("&Locate OpenSCAD...", self._locate_openscad)
 
         insert_menu = m.addMenu("&Insert")
@@ -424,6 +426,7 @@ class MainWindow(QMainWindow):
         self._gl_act.triggered.connect(self.view3d.set_hardware)
         # a bar in the document's unit, true at the orbit centre
         self.view3d.unit = self.model.unit
+        self.view3d.real_scale = self.model.real_scale
         self._scale_bar_act = QAction("3D Scale &Bar", self, checkable=True)
         self._scale_bar_act.setChecked(self.view3d.scale_bar)
         self._scale_bar_act.setStatusTip(
@@ -531,7 +534,8 @@ class MainWindow(QMainWindow):
     def _insert_library_part(self, part_id):
         from .library import (default_dims, default_part, insert_hook,
                               prepare_document)
-        note = prepare_document(self.model, part_id)
+        note = prepare_document(self.model, part_id,
+                                default_dims(part_id))
         hook = insert_hook(part_id)
         if hook is not None:               # builds itself (a house)
             try:
@@ -599,6 +603,14 @@ class MainWindow(QMainWindow):
     def choose_unit(self):
         from . import units_ui
         units_ui.choose(self)
+
+    def choose_scale(self):
+        from . import units_ui
+        units_ui.choose_scale(self)
+
+    def _scale_changed(self, n):
+        from . import units_ui
+        units_ui.scale_changed(self, n)
 
     def _unit_changed(self, unit):
         from . import units_ui

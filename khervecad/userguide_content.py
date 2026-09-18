@@ -327,6 +327,15 @@ true size; print time and cost only for mm, cm and inches. An STL is
 read as millimetres by every slicer, so Export STL asks whether to keep
 it 1:1 or scale it to real millimetres. The unit is saved with the
 document.</p>
+<p>A model can also stand for something far bigger or smaller than
+itself. <b>Edit &rsaquo; Document Scale (1&nbsp;:&nbsp;N)&hellip;</b>
+says how it compares with the real thing &mdash; a 60&nbsp;mm Earth is
+1&nbsp;:&nbsp;212&nbsp;600&nbsp;000 &mdash; and the 3D scale bar then
+measures the real thing in kilometres and writes the ratio under
+itself, the way a map does. Inserting a planet or a moon into an empty
+document sets it for you. The scale bar also climbs to metres and
+kilometres by itself, so a street at true size reads 200&nbsp;m, not
+200000&nbsp;mm.</p>
 <h3>Measuring</h3>
 <p><b>Measure</b> {K("M")}: click two points &mdash; the distance shows in
 the status bar and nothing is added. <b>Add dimension</b> {K("D")}: the

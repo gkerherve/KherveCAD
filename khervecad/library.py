@@ -1271,12 +1271,24 @@ def insert_hook(part_id: str):
     return hook if callable(hook) else None
 
 
-def prepare_document(model, part_id: str) -> str:
+def prepare_document(model, part_id: str, dims=None) -> str:
     """Let a part set the document up before it lands — a crystal
-    switches an empty document to nanometres — and say what changed (or
-    why it may read wrong). Every insert path calls it."""
+    switches an empty document to nanometres, a planet sets the scale
+    bar to its real size — and say what changed (or why it may read
+    wrong). Every insert path calls it; a `prepare` taking two
+    arguments also gets the dims the part is built with (the default
+    size's when none are given)."""
+    import inspect
     prepare = (PARTS.get(part_id) or {}).get("prepare")
-    return prepare(model) if callable(prepare) else ""
+    if not callable(prepare):
+        return ""
+    try:
+        takes_dims = len(inspect.signature(prepare).parameters) >= 2
+    except (TypeError, ValueError):
+        takes_dims = False
+    if not takes_dims:
+        return prepare(model)
+    return prepare(model, dict(dims) if dims else default_dims(part_id))
 
 
 #: electropolished stainless steel — the colour of UHV hardware
@@ -1596,7 +1608,7 @@ class PartLibraryDialog(QDialog):
             dims["_size"] = self._size.currentText()
         if PARTS[part_id].get("colors"):
             dims["_color"] = self._color.currentText()
-        note = prepare_document(self.model, part_id)
+        note = prepare_document(self.model, part_id, dims)
         hook = insert_hook(part_id)
         if hook is not None:
             hook(self.model, dims)

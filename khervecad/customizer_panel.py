@@ -270,6 +270,33 @@ class CustomizerPanel(QWidget):
             control.blockSignals(False)
 
     # ---------------------------------------------------------- playing
+    def play(self, node) -> bool:
+        """Press *node*'s ▶: sweep its slider back and forth so whatever
+        it drives moves (the MCP play_motion tool). False when it has no
+        slider here."""
+        entry = self._rows.get(node.id)
+        button = getattr(entry[2], "play_button", None) if entry else None
+        if button is None:
+            return False
+        if button.isChecked():
+            return True
+        button.setChecked(True)             # -> _play
+        return True
+
+    def stop(self):
+        """Stop whatever is playing."""
+        self._stop()
+
+    def playing_node(self):
+        """The variable being played, or None."""
+        if not self._playing:
+            return None
+        slider = self._playing[0]
+        for node, _label, control in self._rows.values():
+            if control is slider:
+                return node
+        return None
+
     def _play(self, slider, button, on):
         if not on:
             if self._playing and self._playing[0] is slider:

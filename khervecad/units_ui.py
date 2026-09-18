@@ -31,6 +31,40 @@ def choose(win):
         win.model.set_unit(options[labels.index(label)][0])
 
 
+def choose_scale(win):
+    """Edit ▸ Document Scale… — how the model compares with the real
+    thing, as 1 : N. The scale bar then measures the real thing (a
+    60 mm Earth's bar says kilometres). A label: nothing is rescaled."""
+    from PyQt5.QtWidgets import QInputDialog
+    text, ok = QInputDialog.getText(
+        win, "Document scale",
+        "The model is to the real thing as…\n"
+        "1 : 1 is life size; 1 : 250000000 a planet on a desk; 25 : 1 "
+        "an insect enlarged.\nThe scale bar then measures the real "
+        "thing — the geometry is not rescaled.",
+        text=units.ratio_text(win.model.real_scale))
+    if not ok:
+        return
+    try:
+        win.model.set_real_scale(text)
+    except ValueError:
+        QMessageBox.warning(win, "Document scale",
+                            f"{text!r} is not a scale — write it as "
+                            "1 : 250000000, or 25 : 1.")
+
+
+def scale_changed(win, n):
+    """The scale bar measures the real thing at 1 : *n*."""
+    win.view3d.real_scale = n
+    win.view3d.update()
+    win._dirty = True
+    win._update_title()
+    what = "life size" if abs(n - 1.0) < 1e-9 else units.ratio_text(n)
+    win.statusBar().showMessage(
+        f"Scale: {what} — the scale bar now measures the real thing; "
+        "the geometry itself is unchanged.", 6000)
+
+
 def changed(win, unit):
     """Every readout follows the new unit; the model is unchanged."""
     u = units.symbol(unit)

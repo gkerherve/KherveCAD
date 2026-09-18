@@ -1,5 +1,8 @@
 """The 3D view's **scale bar**: a round length (1, 2 or 5 x 10^k) drawn
-bottom-left in the document's unit, the way the 2D view has one.
+bottom-left, the way the 2D view has one — in the largest metric unit
+that reads well (a true-size map says 200 m, not 200000 mm) and, for a
+scale model (`DocumentModel.real_scale`, a planet 1 : 212 600 000), as
+a length of the REAL thing, with the ratio written under it.
 
 A perspective picture has no single scale — nearer things are drawn
 bigger — so the bar is true at the depth of the orbit centre (the
@@ -51,25 +54,45 @@ def nice_length(ppu: float, lo: float = MIN_PX, hi: float = MAX_PX):
 
 
 def label(length: float, unit) -> str:
-    """"20 nm", "0.5 µm", "250 mm"."""
-    return f"{units.tidy(length, 9)} {units.symbol(unit)}"
+    """"20 nm", "0.5 µm", "250 mm", "200 m", "5000 km": in the largest
+    metric unit that keeps the number at least 1 (`units.readable`)."""
+    value, sym = units.readable(length, unit)
+    return f"{units.grouped(value, 9)} {sym}"
 
 
-def draw(painter, width, height, ppu, unit, color):
-    """Paint the bar bottom-left of a *width* x *height* view; returns
-    the length drawn (model units), or None when there is none."""
-    length = nice_length(ppu)
+def real_length(ppu: float, real_scale: float = 1.0):
+    """(real length, pixels) of the bar: a round length of the REAL
+    thing when the model is a scale model (1 : *real_scale*) — a 60 mm
+    Earth's bar says 5000 km, not 20 mm — and of the model itself at
+    life size. None when there is no bar to draw."""
+    scale = real_scale if real_scale and real_scale > 0 else 1.0
+    length = nice_length(ppu / scale)
     if not length:
         return None
-    px = length * ppu
+    return length, length * ppu / scale
+
+
+def draw(painter, width, height, ppu, unit, color, real_scale=1.0):
+    """Paint the bar bottom-left of a *width* x *height* view; returns
+    the length it stands for (real units: the model's own at life
+    size), or None when there is none. A scale model also shows its
+    ratio under the bar, the way a map does."""
+    found = real_length(ppu, real_scale)
+    if not found:
+        return None
+    length, px = found
     x0, y0 = float(MARGIN_X), float(height - MARGIN_BOTTOM)
     painter.save()
     painter.setPen(QPen(QColor(color), 1.6))
     painter.drawLine(QPointF(x0, y0), QPointF(x0 + px, y0))
     for x in (x0, x0 + px):
         painter.drawLine(QPointF(x, y0 - 5), QPointF(x, y0 + 5))
+    metrics = painter.fontMetrics()
     text = label(length, unit)
-    advance = painter.fontMetrics().horizontalAdvance(text)
-    painter.drawText(QPointF(x0 + px / 2 - advance / 2, y0 - 8), text)
+    painter.drawText(QPointF(x0 + px / 2 - metrics.horizontalAdvance(text)
+                             / 2, y0 - 8), text)
+    if real_scale and abs(real_scale - 1.0) > 1e-9:
+        ratio = units.ratio_text(real_scale)
+        painter.drawText(QPointF(x0, y0 + 8 + metrics.ascent()), ratio)
     painter.restore()
     return length

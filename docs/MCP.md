@@ -67,7 +67,12 @@ and a **picture of the 3D preview**.
   is in that unit, so a 100 nm particle is written `100` in a
   nanometre document. Keys ending `_mm`, `_mm2`, `_mm3` are always
   true millimetres. Mass is computed at true size; cost and print time
-  only for mm, cm and inch documents. An STL/3MF of another unit is
+  only for mm, cm and inch documents. A document also has a **scale**
+  against the real thing, 1 : N (`get_document_info` → `scale`;
+  `set_render_options real_scale` = N): a 60 mm Earth is
+  1 : 212 600 000, and the 3D scale bar then measures the real planet in
+  kilometres. Inserting a planet or moon into an empty document sets it
+  by itself. An STL/3MF of another unit is
   written 1:1 (a slicer reads 1 unit as 1 mm) unless
   `export_document` gets `scale_to_mm: true`.
 - **Sharing** — `publish_to_printables` assembles a Printables upload
@@ -159,6 +164,16 @@ names them. `split_part` cuts a part too big for the bed into two
 Objects with dowel holes. `set_render_options time` shows a `$t`
 animation at a moment; `list_scad_libraries` / `install_scad_library`
 manage BOSL2, MCAD and the rest.
+
+**Motion.** A model moves through an annotated variable (`angle = 0;
+// [0:5:360]`) that reaches its parts' placement — the Customizer panel
+shows it as a slider with a play button. `play_motion` presses that
+play so the user watches it run: with no arguments it finds the motion
+slider (a Mechanisms & motion part's angle, an orrery's days), `spin`
+with a part's id makes a still part turn about its own axis (it adds a
+`<part>_spin` slider to the part's rotation), and `play: false` stops
+it. Assistants are told to finish any "make it move / rotate / animate"
+request with it.
 
 ## Crystals, lattices and nanoparticles
 

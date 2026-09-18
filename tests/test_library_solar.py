@@ -264,7 +264,7 @@ def test_orrery_keeps_real_periods_and_a_synchronous_moon(app):
     assert math.dist(world_start, _centre(doc, globe)) > 10
     # the Moon's 0° meridian (its +x axis at spin 0) faces the Earth
     centre, v = where()
-    rz = mesh.rv(globe.params["rz"], v)
+    rz = mesh.rv(globe.parent.params["z"], v)     # the Spin above it
     facing = (math.cos(math.radians(rz)), math.sin(math.radians(rz)))
     dot = facing[0] * centre[0] + facing[1] * centre[1]
     assert dot < -0.99 * math.hypot(*centre)

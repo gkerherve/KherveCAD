@@ -802,6 +802,39 @@ TOOLS = [
         }, ["changes"]),
     },
     {
+        "name": "play_motion",
+        "description": (
+            "Set the model MOVING in front of the user: press the "
+            "Customizer's play on a slider variable, sweeping it back "
+            "and forth so every part it drives moves — gears turn, a "
+            "piston runs, a planet spins and its moons orbit. CALL THIS "
+            "whenever the user asks to make it move, rotate, spin, "
+            "turn, run, animate, play or 'show it in action' — once the "
+            "motion is built, as the last step, so they SEE it. With no "
+            "arguments it plays the model's motion slider (one in a "
+            "Motion or Time group, or named angle / days / time / spin "
+            "…). `spin` with a part's id makes a still part turn: it "
+            "adds a <part>_spin slider (0-360°) to that part's rz and "
+            "plays it — 'make the Earth rotate' on a plain globe. "
+            "play: false stops it. Playing goes on until stopped or a "
+            "structural edit; it changes nothing you have to undo."
+        ),
+        "input_schema": _obj({
+            "variable": {"type": "string",
+                         "description": "The slider to play, by name "
+                                        "(earth_days, or just days). "
+                                        "Omit for the motion slider."},
+            "id": dict(_ID, description="Or the slider variable's "
+                                        "assign node id."),
+            "spin": dict(_ID, description=(
+                "Make this part (an Object, instance or group) turn "
+                "about its own Z, then play it.")),
+            "play": {"type": "boolean",
+                     "description": "False stops whatever is playing. "
+                                    "Default true."},
+        }),
+    },
+    {
         "name": "set_pose",
         "description": (
             "Pose a character in one call: set the bend angles of any "
@@ -1687,6 +1720,19 @@ TOOLS = [
                                     "particle is written 100 in a nm "
                                     "document. Saved with the file; one "
                                     "undo step."},
+            "real_scale": {"type": "number", "exclusiveMinimum": 0,
+                           "description": "The N of 1 : N — how many "
+                                          "times smaller than life the "
+                                          "model is (a 60 mm Earth is "
+                                          "212600000; 1 = life size, "
+                                          "0.04 = enlarged 25 : 1). The "
+                                          "3D scale bar then measures "
+                                          "the REAL thing (kilometres "
+                                          "on a planet) and shows the "
+                                          "ratio. A label: nothing is "
+                                          "rescaled. Inserting a planet "
+                                          "or moon into an empty "
+                                          "document sets it by itself."},
             "segments_on": {"type": "boolean",
                             "description": "False lets each object keep "
                                            "its own $fn."},

@@ -277,6 +277,7 @@ class View3D(QWidget):
         #: (scalebar.py); the main window keeps `unit` in step
         self.scale_bar = settings.value("render_scale_bar", True, type=bool)
         self.unit = "mm"
+        self.real_scale = 1.0           # 1 : N, what the scale bar measures
         self._info = None               # shading.MeshInfo of self.mesh
         self._info_serial = -1
         #: draw the faces with OpenGL (glrender.py) — exact occlusion at
@@ -570,6 +571,7 @@ class View3D(QWidget):
         twin.cavity, twin.edges = self.cavity, self.edges
         twin.smooth = self.smooth
         twin.scale_bar, twin.unit = self.scale_bar, self.unit
+        twin.real_scale = self.real_scale
         twin.overlay = self.overlay if overlay is None else bool(overlay)
         twin.hardware = self.hardware
         twin.projection = projection if projection in PROJECTIONS \
@@ -1361,7 +1363,7 @@ class View3D(QWidget):
             from . import scalebar
             scalebar.draw(painter, self.width(), self.height(),
                           scalebar.px_per_unit(self), self.unit,
-                          painter.pen().color())
+                          painter.pen().color(), self.real_scale)
         painter.drawText(8, self.height() - 8,
                          f"{self.source} — {len(self.mesh)} triangles "
                          f"· {self.style}"

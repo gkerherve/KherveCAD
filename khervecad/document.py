@@ -20,7 +20,7 @@ from .meshimport import relative_for_save, resolve_paths
 from .model import NODE_TYPES, CadNode, DocumentModel
 from .units import coerce
 
-FORMAT_VERSION = 11         # 4: "component" (Object) node type
+FORMAT_VERSION = 12         # 4: "component" (Object) node type
                             # 5: instances (reference->component) may
                             #    carry a "mate" record
                             # 6: organic/mesh node types; color nodes
@@ -35,6 +35,8 @@ FORMAT_VERSION = 11         # 4: "component" (Object) node type
                             # 10: "house" — the House Builder design
                             #    (house.house_to_spec); absent = none
                             # 11: "city" — the City Builder design
+                            # 12: "real_scale" — the N of 1 : N, what the
+                            #    scale bar measures (absent = 1, life size)
                             #    (city.resolve); absent = none
 
 
@@ -66,6 +68,9 @@ def save_kcad(model: DocumentModel, path: str):
             "dimensions": model.dimensions,
             "references": model.reference_images,
             "tree": node_to_dict(model.root)}
+    if model.real_scale != 1.0:
+        # only a scale model says so: a life-size file stays as it was
+        data["real_scale"] = model.real_scale
     if model.drawing:
         data["drawing"] = model.drawing
     if model.house:
@@ -93,6 +98,13 @@ def load_kcad(model: DocumentModel, path: str):
     model.house = data.get("house") or None
     model.city = data.get("city") or None
     old_unit, model.unit = model.unit, coerce(data.get("unit", "mm"))
+    old_scale = model.real_scale
+    try:
+        model.real_scale = float(data.get("real_scale", 1.0) or 1.0)
+    except (TypeError, ValueError):
+        model.real_scale = 1.0
+    if not model.real_scale > 0:
+        model.real_scale = 1.0
     model.group_variables()               # gather loose top-level vars
     model.structure_changed.emit()
     model.dimensions_changed.emit()
@@ -100,6 +112,8 @@ def load_kcad(model: DocumentModel, path: str):
     model.drawing_changed.emit()
     if model.unit != old_unit:
         model.unit_changed.emit(model.unit)
+    if model.real_scale != old_scale:
+        model.scale_changed.emit(model.real_scale)
 
 
 def export_scad(model: DocumentModel, path: str):

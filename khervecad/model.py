@@ -1041,6 +1041,8 @@ class DocumentModel(QObject):
     mate_released = pyqtSignal(object)
     #: the document's display unit (units.py) was changed.
     unit_changed = pyqtSignal(str)
+    #: the document's scale against the real thing changed (the N of 1 : N)
+    scale_changed = pyqtSignal(float)
 
     #: the placement params a mate drives — typing into one of these
     #: releases the mate (see set_param).
@@ -1080,6 +1082,11 @@ class DocumentModel(QObject):
         #: "in") — a label for every readout, never a rescale of the
         #: geometry (see units.py)
         self.unit = "mm"
+        #: the N of 1 : N — how many times smaller than life the model
+        #: is (a 60 mm Earth is 1 : 212 600 000; 1 = life size, below 1
+        #: an enlargement). A label like the unit: the scale bar reads
+        #: lengths of the real thing, nothing is rescaled
+        self.real_scale = 1.0
         self.undo_stack = QUndoStack(self)
         self._restoring = False
         self._last_state = self._serialize()
@@ -1100,6 +1107,7 @@ class DocumentModel(QObject):
                            "dimensions": self.dimensions,
                            "references": self.reference_images,
                            "unit": self.unit,
+                           "real_scale": self.real_scale,
                            "house": self.house,
                            "city": self.city})
 
@@ -1133,10 +1141,15 @@ class DocumentModel(QObject):
             unit = data.get("unit", "mm")
             unit_moved = unit != self.unit
             self.unit = unit
+            scale = float(data.get("real_scale", 1.0) or 1.0)
+            scale_moved = scale != self.real_scale
+            self.real_scale = scale
             self._last_state = state
             self.structure_changed.emit()
             if unit_moved:
                 self.unit_changed.emit(unit)
+            if scale_moved:
+                self.scale_changed.emit(scale)
         finally:
             self._restoring = False
 
@@ -1150,6 +1163,20 @@ class DocumentModel(QObject):
             self.unit = code
             self.unit_changed.emit(code)
         return code
+
+    def set_real_scale(self, n) -> float:
+        """Say the model is 1 : *n* of the real thing (a number, or text
+        like "1:250000000" / "25:1"); the geometry is untouched. One undo
+        step. Returns n."""
+        from .units import parse_ratio
+        value = float(n) if isinstance(n, (int, float)) else parse_ratio(n)
+        if not value > 0:
+            raise ValueError(f"not a scale: {n!r}")
+        if value != self.real_scale:
+            self.real_scale = value
+            self.scale_changed.emit(value)
+            self._schedule_capture()
+        return value
 
     # ---------------------------------------------------- dimensions
     def add_dimension(self, a, b, plane: str):
@@ -1738,6 +1765,7 @@ class DocumentModel(QObject):
         self.structure_changed.emit()
         self.drawing_changed.emit()
         self.set_unit("mm")
+        self.set_real_scale(1.0)
 
 
 class _SnapshotCommand(QUndoCommand):

@@ -1254,6 +1254,24 @@ into a new module and import.
                        LEARN section), every such submenu headed by
                        `EXAMPLE_NOTE`; they still load as documents
                        (`_load_example`).
+  - `motion_play.py` — setting a model MOVING (2026-09-18, the user:
+                       "if we say make it move / rotate / action, start
+                       the play"): the body of MCP `play_motion`
+                       (mcp_tools.py is past its size). `pick` finds the
+                       motion slider — a slider in a Motion / Time group
+                       (every mechanism and orrery puts its driver there),
+                       else one named angle / days / time / spin…, else the
+                       only one; `add_spin` makes a still part (Object,
+                       instance or group) turn: a `<part>_spin` slider
+                       (0:2:360, Motion group) added to its rz, reused if
+                       it already spins. `play` shows the Customizer dock
+                       and presses the row's ▶ (`CustomizerPanel.play`,
+                       `stop`, `playing_node`), returning the range and the
+                       seconds a sweep takes (notches × `PLAY_INTERVAL_MS`).
+                       Any structural edit stops play (the panel rebuilds).
+                       The MCP instructions' Motion section tells clients
+                       to finish every "make it move / rotate / animate"
+                       with it.
   - `library_motion.py` — **Mechanisms & motion** (Engineering): gear
                        pair, crank & piston, rack & pinion, cam & follower,
                        four-bar, planetary, XY platform, scissor lift,
@@ -2220,6 +2238,31 @@ into a new module and import.
                        is box-blurred and scaled up smoothly. ~2-7 ms a
                        frame on a 36k-triangle model whose own paint is
                        ~115 ms.
+  - **Real scale** (2026-09-18, the user: "the scale bar has to be
+                       adjusted for planets or maps"): `DocumentModel.
+                       real_scale` is the N of 1 : N — how many times
+                       smaller than life the model is (a 60 mm Earth is
+                       1 : 212 600 000; 1 = life size, < 1 enlarged). A
+                       LABEL like the unit: saved (.kcad v12), in the undo
+                       snapshot, reset by New, `scale_changed` signal, Edit
+                       ▸ Document Scale (1 : N)… (`units_ui.choose_scale`,
+                       "1:250000000", "25:1"), MCP `set_render_options
+                       real_scale` and `get_document_info` `scale`. Every
+                       planet / moon part's `prepare(model, dims)` sets it
+                       from the chosen diameter in an EMPTY document
+                       (`library_solar.prepare_scale`) and leaves a
+                       document that holds something alone, with a note —
+                       like crystals switching an empty document to nm.
+                       `library.prepare_document` now hands a two-argument
+                       prepare the dims (default size's when none).
+                       `units.readable` says a length in the largest metric
+                       unit that keeps it >= 1, never smaller than the
+                       document's (a true-size map's 200000 mm reads 200 m,
+                       a planet's 5e9 mm 5000 km, 0.5 µm stays); `grouped`
+                       writes thin-space thousands; `ratio_text` /
+                       `parse_ratio` the ratio. (`tidy(x, 0)` strips an
+                       integer's own trailing zeros — 212600000 came out
+                       2126 — so `grouped` writes whole numbers itself.)
   - `scalebar.py`    — the 3D view's **scale bar** (View ▸ 3D Scale Bar,
                        QSettings `render_scale_bar`, default on, MCP
                        `set_render_options scale_bar`): the shortest 1-2-5
@@ -3086,7 +3129,7 @@ into a new module and import.
                        out. The test also checks the pin 6 mm short of
                        home DOES press on the bore — or it would never
                        hold.
-  - `mcp_schema.py`  — the **MCP tool table**: 63 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 68 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -3350,6 +3393,17 @@ into a new module and import.
                        the unmapped (Uranus' moons, Ceres, Haumea…) and
                        for every orrery globe — mapped coarse globes made
                        a slider tick 1.4 s for moons millimetres across.
+                       Orrery details (2026-09-18): the Earth system's days
+                       step 0.01 (`DAYS_STEP`; the automatic 0.07 was 25°
+                       of spin a notch, too coarse to watch it turn) and no
+                       system's step may round to 0 (Mars' did: its slider
+                       fell back to whole days). A globe's spin is a
+                       `rotate` ABOVE the globe Object, not its rz: the
+                       globe then has no placement, its cached mesh comes
+                       back untouched, and scale · spin join the transforms
+                       above into ONE matrix — as the globe's rz it cost a
+                       pass of its own every frame (whole system 289 -> 209
+                       ms a tick, Earth's 39 -> 24).
                        Fine Moon ≈ 100k triangles, Mars ≈ 80k, a moon
                        ≈ 25k. ~1.2 MB of maps shipped.
                        `solar_bodies.py` — `build_body(key, diameter,
@@ -3396,7 +3450,7 @@ into a new module and import.
   the variable reaching it only through PLACEMENT, and NEVER into the
   geometry of a part (a cube's size, a gear's teeth, a polygon's
   points) — that re-cuts the solid every frame.
-- `docs/MCP.md` — how to connect an assistant, what the 63 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 68 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -3590,7 +3644,7 @@ where each node dict has `"type"`, `"name"`, `"visible"`, `"params"`
 and nested `"children"`. When a node gains new persisted properties,
 bump `FORMAT_VERSION` in `document.py` and keep loading backward
 compatible. Version 9 adds the top-level `"unit"` (units.py); a file
-without it, or with a unit it does not know, opens as millimetres.
+without it, or with a unit it does not know, opens as millimetres. Version 12 adds `"real_scale"` — the N of 1 : N the scale bar measures (absent = 1, life size).
 
 ## UI conventions
 
@@ -3670,7 +3724,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **63 tools**: the object tree, OpenSCAD in
+client gets the whole app as **68 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

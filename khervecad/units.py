@@ -18,6 +18,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
+import math
 import re
 import zipfile
 
@@ -107,6 +108,78 @@ def tidy(value: float, digits: int = 2) -> str:
         return f"{value:.3g}"
     text = f"{value:.{digits}f}".rstrip("0").rstrip(".")
     return "0" if text in ("", "-0") else text
+
+
+#: metric lengths a readout may climb to, in millimetres (never down:
+#: a crystal in nanometres keeps saying nm)
+_READABLE = (("nm", "nm", 1e-6), ("um", "µm", 1e-3), ("mm", "mm", 1.0),
+             ("m", "m", 1e3), ("km", "km", 1e6))
+
+
+def readable(value: float, unit):
+    """(value, symbol) with *value* model units said in the largest
+    metric unit — never smaller than the document's own — that keeps
+    it at least 1: a true-size map's 200000 mm reads 200 m, a planet's
+    5e9 mm reads 5000 km, 250 mm and 0.5 µm stay as they are. Inches
+    are left alone. Powers of ten only, so a round 1-2-5 stays round."""
+    code = coerce(unit)
+    if code == "in":
+        return value, symbol(code)
+    base = to_mm(code)
+    mm = value * base
+    best = (value, symbol(code))
+    for _code, sym, size in _READABLE:
+        if size >= base and abs(mm) / size >= 1 - 1e-9:
+            best = (mm / size, sym)
+    return best
+
+
+def grouped(value: float, digits: int = 2) -> str:
+    """`tidy`, with thin spaces between thousands past 9999
+    (212 600 000), which is how a scale is written."""
+    # a whole number is written whole: `tidy` strips trailing zeros for
+    # the decimals, and with none it ate an integer's own (212600000
+    # came out 2126)
+    if float(value).is_integer() and abs(value) < 1e15:
+        text = str(int(round(value)))
+    else:
+        text = tidy(value, digits)
+    whole, _dot, frac = text.partition(".")
+    sign = "-" if whole.startswith("-") else ""
+    whole = whole.lstrip("-")
+    if len(whole) > 4 and whole.isdigit():
+        whole = f"{int(whole):,}".replace(",", "\u2009")
+    return sign + whole + (("." + frac) if frac else "")
+
+
+def ratio_text(n: float) -> str:
+    """"1 : 212 600 000" for a model *n* times smaller than life,
+    "25 : 1" for one enlarged, "1 : 1" at life size; four significant
+    figures, since a scale is a round number."""
+    if not n or n <= 0 or not math.isfinite(n):
+        return "1 : 1"
+    if n >= 1:
+        return f"1 : {grouped(float(f'{n:.4g}'), 0)}"
+    return f"{grouped(float(f'{1 / n:.4g}'), 0)} : 1"
+
+
+def parse_ratio(text) -> float:
+    """The N of "1 : N" from what someone types: "1:250000000",
+    "250 000 000", "1 : 2.5e8", "25:1" (an enlargement, N = 0.04). A
+    number alone is N. Raises ValueError for anything else."""
+    raw = str(text).replace("\u2009", "").replace(" ", "").replace(
+        ",", "").replace("_", "")
+    if not raw:
+        raise ValueError("empty scale")
+    if ":" in raw:
+        a, _colon, b = raw.partition(":")
+        num, den = float(a), float(b)
+    else:
+        num, den = 1.0, float(raw)
+    if num <= 0 or den <= 0 or not (math.isfinite(num)
+                                    and math.isfinite(den)):
+        raise ValueError(f"not a scale: {text!r}")
+    return den / num
 
 
 def length(value: float, unit, digits: int = 2) -> str:

@@ -509,6 +509,7 @@ PARTS = {
               insert_note="Added as Objects beside the model, driven by "
                           "annotated document variables (prefixed, see "
                           "get_code): change them with set_params on the "
-                          "assign nodes, or the Customizer panel's sliders.")
+                          "assign nodes, or the Customizer panel's sliders; "
+                          "play_motion sets it running.")
     for pid, (label, _prefix, _program) in MECHANISMS.items()
 }

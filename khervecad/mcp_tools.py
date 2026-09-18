@@ -209,6 +209,8 @@ class McpToolExecutor:
             "unit": unit,
             "unit_symbol": units.symbol(unit),
             "mm_per_unit": units.to_mm(unit),
+            "real_scale": model.real_scale,
+            "scale": units.ratio_text(model.real_scale),
             "units_note": (
                 "Every size and coordinate is in the document's unit — "
                 "a label only, the geometry is never rescaled. Keys "
@@ -1613,7 +1615,7 @@ class McpToolExecutor:
                     + (f". It offers: {', '.join(colors)}." if colors
                        else " — it has no colour choice."))
             dims["_color"] = match[0]
-        note = library.prepare_document(self._model, part_id)
+        note = library.prepare_document(self._model, part_id, dims)
         hook = library.insert_hook(part_id)
         if hook is not None:
             # builds itself as several Objects (a finished house, then
@@ -1666,6 +1668,15 @@ class McpToolExecutor:
 
     # ── Document ────────────────────────────────────────────────
 
+    def _t_play_motion(self, params) -> dict:
+        """The body lives in motion_play (this module is past its
+        size)."""
+        from . import motion_play
+        try:
+            return motion_play.play(self._w, params)
+        except (motion_play.MotionError, TypeError, ValueError) as exc:
+            raise ToolError(str(exc))
+
     def _t_set_render_options(self, params) -> dict:
         model, win = self._model, self._w
         if "segments" in params or "segments_on" in params:
@@ -1677,6 +1688,11 @@ class McpToolExecutor:
             try:
                 model.set_unit(params["unit"])
             except ValueError as exc:
+                raise ToolError(str(exc))
+        if params.get("real_scale") is not None:
+            try:
+                model.set_real_scale(params["real_scale"])
+            except (TypeError, ValueError) as exc:
                 raise ToolError(str(exc))
         if params.get("orientation"):
             name = params["orientation"]
@@ -1731,6 +1747,8 @@ class McpToolExecutor:
                                    flip=params.get("cut_flip"))
         return {"exploded": win.explode_state(),
                 "unit": self._unit(),
+                "real_scale": model.real_scale,
+                "scale": units.ratio_text(model.real_scale),
                 "global_segments": int(model.global_fn),
                 "global_segments_on": bool(model.global_fn_on),
                 "projection": win.view3d.projection,

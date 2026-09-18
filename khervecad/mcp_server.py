@@ -277,6 +277,13 @@ built-in preview draws them every frame, and a part with a boolean in \
 it has to go back through OpenSCAD. Capsules, cylinders, gears and \
 coloured primitives move freely; a part that must be cut is best cut \
 once and then only moved.
+- When the user asks you to make it MOVE, ROTATE, SPIN, RUN, ANIMATE \
+or show it "in action", finish with play_motion: it presses the \
+Customizer's play so the motion runs in front of them — building the \
+motion without playing it leaves them looking at a still model. With \
+no arguments it finds the motion slider; `spin` with a part's id \
+makes a still part (a planet, a wheel, a turntable) turn about its own \
+axis in one call. play: false stops it.
 - Library ▸ Mechanisms & motion already holds worked examples — gear \
 pair, crank and piston, rack and pinion, cam, four-bar, planetary, XY \
 table, scissor lift, robot arm — and Library ▸ Solar System holds \
