@@ -196,6 +196,16 @@ _ROWS = [
      dict(rr=0.64, cb=0.84)),
 ]
 
+#: tracks the blueprints give, front and rear (mm). Without them the
+#: wheels are set in from the body's own width, which is a guess.
+TRACKS = {
+    "porsche_930_turbo": (1431, 1492),
+    "ferrari_f40": (1594, 1606),
+    "bmw_m3_e30": (1418, 1430),
+    "mercedes_300sl": (1385, 1435),
+    "lamborghini_countach": (1500, 1520),
+}
+
 CARS = {}
 for (_key, _make, _model, _year, _L, _W, _H, _wb, _tf, _tr, _shape,
      _lights, _grille, _tails, _wing, _rim, _paint, _over) in _ROWS:
@@ -203,7 +213,7 @@ for (_key, _make, _model, _year, _L, _W, _H, _wb, _tf, _tr, _shape,
                       H=_H, wb=_wb, tyre_front=_tf, tyre_rear=_tr,
                       shape=_shape, lights=_lights, grille=_grille,
                       tails=_tails, wing=_wing, rim=_rim, paint=_paint,
-                      **_over)
+                      track=TRACKS.get(_key), **_over)
 
 
 def label(key: str) -> str:

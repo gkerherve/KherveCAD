@@ -38,7 +38,7 @@ from .car_wheels import closed_grid
 from .landmark_kit import Kit
 from .model import CadNode
 
-GLASS = "#0b0e12"
+GLASS = "#141c24"
 TRIM = "#1e1f22"
 CHROME = "#dfe2e6"
 LAMP = "#f3f6f8"
@@ -65,6 +65,8 @@ ROUND_FLOOR = 0.62
 END_ROUND = 0.05
 #: how much of its width is left at the very nose and tail
 END_WIDTH = 0.72
+#: and how much of its height the tail has lost by its last station
+END_DROP = 0.18
 #: the tail starts falling here at the latest
 TAIL_START = 0.72
 #: the body (not the wing) has fallen to this much of the height by
@@ -224,13 +226,33 @@ class Car:
         p = self.p
         if self.measured and self.measured["width"]:
             w = sample(self.measured["width"], s) / self.width_ref
-            return self.W / 2 * min(1.0, w)
+            half = self.W / 2 * min(1.0, w)
+            return max(half, self._arch_flare(s))
         front = p["nose_w"] + (1 - p["nose_w"]) * math.sin(
             min(1.0, s / 0.26) * math.pi / 2) ** 0.85
         rear = p["tail_w"] + (1 - p["tail_w"]) * math.sin(
             min(1.0, (1 - s) / 0.16) * math.pi / 2) ** 0.7
         waist = 1.0 - 0.025 * math.sin(math.pi * min(1.0, max(0.0, s)))
         return self.W / 2 * min(front, rear) * waist
+
+    def _arch_flare(self, s):
+        """How wide the body must be here to cover its own wheel: a
+        stated track is the truth, and the arch flares over it. Without
+        a stated track the wheels are set in from the body instead, and
+        nothing flares."""
+        if not self.spec.get("track"):
+            return 0.0
+        y = self.y(s)
+        out = 0.0
+        for i, (ya, (tw, _ratio, D)) in enumerate(zip(self.axles,
+                                                      self.wheels)):
+            reach = D * 0.55
+            over = 1.0 - min(1.0, abs(y - ya) / reach)
+            if over > 0:
+                need = self.spec["track"][i] / 2.0 + tw / 2 + 20.0
+                out = max(out, need * _smooth(over)
+                          + self.W / 2 * 0.5 * (1 - _smooth(over)))
+        return min(out, self.W / 2)
 
     def top(self, s):
         """The top of the car at this station. On a measured car it is
@@ -265,6 +287,10 @@ class Car:
         ITS OWN station, never beyond the published width. A measured
         plan narrows towards the nose and the tail, and a track fixed
         to W/2 hung the front wheels outside the wings."""
+        track = self.spec.get("track")
+        if track:
+            # the drawing states it; no need to infer a stance
+            return track[i] / 2.0
         s = (self.axles[i] + self.L / 2) / self.L
         a = min(self.W / 2, max(self.half_width(s), 0.34 * self.W))
         return min(self.W / 2 - 25, a - 15) - self.wheels[i][0] / 2
@@ -356,6 +382,9 @@ class Car:
             line = (sample(self.measured["roof"], cb) * (1 - f)
                     + TAIL_DROP * f) * self.H
             zt = min(zt, line)
+        if s > 1.0 - END_ROUND:
+            f = (s - (1.0 - END_ROUND)) / END_ROUND
+            zt -= (zt - zb) * END_DROP * f
         zt = max(zt, zb + 60)
         arch = self.arch(s)
         n = SECTION_LEVELS
