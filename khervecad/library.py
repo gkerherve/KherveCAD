@@ -1206,7 +1206,8 @@ from . import (library_cards, library_chem, library_crystal,  # noqa: E402
                library_pots, library_print, library_room,
                library_uhv, library_manip, library_xps,
                library_vacuum, library_vitamins, library_generative,
-               library_motion, library_solar)
+               library_motion, library_solar, library_music,
+               library_music_more, library_kitchen)
 PARTS.update(library_vacuum.PARTS)
 PARTS.update(library_uhv.PARTS)
 PARTS.update(library_manip.PARTS)
@@ -1248,6 +1249,9 @@ PARTS.update(library_vitamins.PARTS)
 PARTS.update(library_generative.PARTS)
 PARTS.update(library_motion.PARTS)
 PARTS.update(library_solar.PARTS)
+PARTS.update(library_music.PARTS)
+PARTS.update(library_music_more.PARTS)
+PARTS.update(library_kitchen.PARTS)
 
 #: dialog fields holding a count (integer spin box, no "mm" suffix)
 _COUNT_FIELDS = ({"bolts"} | library_lego.COUNT_FIELDS
@@ -1264,7 +1268,10 @@ _COUNT_FIELDS = ({"bolts"} | library_lego.COUNT_FIELDS
                  | library_generative.COUNT_FIELDS
                  | library_solar.COUNT_FIELDS
                  | library_carbon.COUNT_FIELDS
-                 | library_surfaces.COUNT_FIELDS)
+                 | library_surfaces.COUNT_FIELDS
+                 | library_music.COUNT_FIELDS
+                 | library_music_more.COUNT_FIELDS
+                 | library_kitchen.COUNT_FIELDS)
 
 
 def insert_hook(part_id: str):

@@ -60,6 +60,11 @@ SECTIONS = [
                                             "Cars"])),
         ("Playing cards", "mdi.cards-playing-outline", ["Playing cards"]),
     ]),
+    ("Everyday things", [
+        ("Kitchen & tableware", "mdi.silverware-fork-knife",
+         ["Kitchen & tableware"]),
+        ("Musical instruments", "mdi.music", ["Musical instruments"]),
+    ]),
 ]
 
 #: how a category reads inside its menu when the menu title already

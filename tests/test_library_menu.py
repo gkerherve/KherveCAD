@@ -109,7 +109,7 @@ def test_library_menu_reads_in_sections(window):
     top = _texts(_menu(window.menuBar(), "Library"))
     heads = [t for t in top if t.isupper()]
     assert heads == ["ENGINEERING", "BUILDINGS & PLACES", "SCIENCE",
-                     "TOYS & MODELS", "LEARN"]
+                     "TOYS & MODELS", "EVERYDAY THINGS", "LEARN"]
     assert top.index("House & home") > top.index("BUILDINGS & PLACES")
     assert top.index("Lego") > top.index("TOYS & MODELS")
 

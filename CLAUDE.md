@@ -1411,6 +1411,61 @@ into a new module and import.
                        printing a 40 mm Prusa man; 1:4 desk size too.
                        Nothing from the Printables files is used — modelled
                        from scratch. Tested in `tests/test_library_prusa.py`.
+  - `library_music.py` / `library_music_more.py` — **Musical
+                       instruments** (2026-09-18, the user's request),
+                       Library ▸ EVERYDAY THINGS, submenus by `group_of`
+                       (Keyboards, Strings, Winds & brass, Tuned percussion,
+                       Drums & cymbals, Hand percussion, Accessories).
+                       Tuned by their physics: a bar is a free-free beam,
+                       `bar_length` L ∝ f^-e (e 0.33-0.36, not ½: real bars
+                       are arched underneath), laid out by `keyboard_layout`
+                       (naturals in front, accidentals behind and raised) on
+                       rails at the 22.4 % nodes; resonators and pan pipes
+                       are closed pipes `closed_pipe` = c / 4f − 0.6 r; frets
+                       `fret_position` = S(1 − 2^(−n/12)), the neck joining
+                       the body at the cfg's `joint` fret, so the bridge
+                       lands where the scale says; chimes L ∝ 1/√f. Marimba,
+                       xylophone, vibraphone, glockenspiel, toy xylophone,
+                       keyboard (49-88 keys), grand piano (`grand_outline`:
+                       spine, smoothstep bentside, elliptical tail; lid on
+                       its prop stick; rim a 2D ring), drum kit (drummer at
+                       +Y, left = +X) and its pieces, cymbals (one thin
+                       bell-and-bow revolve); guitars / ukulele / violin
+                       family lying on their backs, neck +Y, bass strings
+                       −X (`body_outline`: two circular bouts, smoothstep
+                       waist, optional cutaway); a violin body is ONE closed
+                       polyhedron lofted through arched rings
+                       (`arched_body`) — stacked extrusions left the ribs'
+                       top face under the arch and the software painter drew
+                       it through the walls — and `arch_z` sits the f-holes
+                       and chinrest on it. Recorder, flute, trumpet (every
+                       bend a half torus, Bessel-horn bell), pan pipes,
+                       harmonica, triangle, tambourine, bongos, cajón,
+                       maracas, wind chimes, music stand, metronome. Repeated
+                       pieces (bars, tubes, keys, frets, lugs) are ONE
+                       for-loop over value rows each; the helpers (`paint`,
+                       `cyl`, `box`, `loop`…) take expression strings.
+  - `library_kitchen.py` — **Kitchen & tableware** (same day): every
+                       vessel is ONE revolved wall (`wall`: the outside from
+                       the axis to the rim, the inside `library_chem.
+                       _offset_in` a wall in, a round lip) so it is hollow
+                       without a boolean; `liquid` fills the inside to a
+                       height 0.4 mm clear of the glass (drinks are the
+                       glassware's colour combo, "Empty" for none).
+                       Handles are half tori stood on end (`loop_handle`),
+                       spouts hulls of spheres (`spout`), a jug's lip a hull
+                       from the rim to a tip. Plates, bowls, mug, teacup,
+                       teapot, jug, cake stand, egg cup, stemware, tumblers,
+                       carafe, wine bottle, mason jar, saucepan, stock pot /
+                       casserole, frying pan, wok, kettle, baking tray,
+                       cutlery, chef's knife, utensils, mills, a place
+                       setting (diner at −Y, fork −X) and a tea set.
+                       **Revolve seam** (found here): `mesh.
+                       rotate_extrude_mesh` built its last ring at 2π, where
+                       sin is −2.4e−16, so every full revolve was open by a
+                       hair and the edge lines drew the seam across flat
+                       floors; the last ring now IS the first
+                       (`test_a_full_revolve_closes_its_seam_exactly`).
   - `library_lab.py` — **labs and companies** (2026-09-16): 35 pieces in
                        the home catalogue (registered from the bottom of
                        `library_home_extra`, so library.py is untouched):

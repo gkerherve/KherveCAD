@@ -19,16 +19,21 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-from . import icons, library_kcad, library_lego_parts, library_surfaces
+from . import (icons, library_kcad, library_kitchen, library_lego_parts,
+               library_music, library_surfaces)
 from .library_groups import SECTIONS, entry_categories, short_name
 
 #: category -> function(label) -> submenu name, for a category whose
 #: parts split into a further level (Hand tools' 57 items read as one
 #: unbroken flat list); GROUP_ORDER gives that submenu's own order.
 GROUPED_CATEGORIES = {"Tools": library_kcad.tool_group,
-                      "Lego": library_lego_parts.group_of}
+                      "Lego": library_lego_parts.group_of,
+                      library_music.CATEGORY: library_music.group_of,
+                      library_kitchen.CATEGORY: library_kitchen.group_of}
 GROUP_ORDER = {"Tools": library_kcad.TOOL_GROUP_ORDER,
-               "Lego": library_lego_parts.GROUP_ORDER}
+               "Lego": library_lego_parts.GROUP_ORDER,
+               library_music.CATEGORY: library_music.GROUP_ORDER,
+               library_kitchen.CATEGORY: library_kitchen.GROUP_ORDER}
 for _cat in library_surfaces.CATEGORIES:     # each crystal with its faces
     GROUPED_CATEGORIES[_cat] = library_surfaces.crystal_of
     GROUP_ORDER[_cat] = library_surfaces.CRYSTAL_ORDER
