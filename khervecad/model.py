@@ -1055,10 +1055,10 @@ class DocumentModel(QObject):
     def __init__(self):
         super().__init__()
         self.root = CadNode("root")
-        # document-wide segment count for round objects — on by default
-        # at 45 so previews and exports are smooth out of the box
+        # document-wide segment count for round objects, applied
+        # at 45 when switched on (off by default: each object keeps its own)
         self.global_fn = 45
-        self.global_fn_on = True
+        self.global_fn_on = False
         #: engineering-drawing dimension annotations, each a dict
         #: {"a": [x, y], "b": [x, y], "plane": <2D view plane>}.
         self.dimensions = []

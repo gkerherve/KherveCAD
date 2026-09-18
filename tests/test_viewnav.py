@@ -144,11 +144,11 @@ def test_3d_bar_carries_the_display_options_menu(app):
                    win._scale_bar_act, win._smooth_act, win._overlay_act,
                    win._gl_act]
         assert display.menu().actions() == expected
-        assert not win._cavity_act.isChecked()
-        win._cavity_act.trigger()
-        assert win.view3d.cavity
-        win.view3d.set_cavity(False)            # the toolbar, say
-        assert not win._cavity_act.isChecked()
+        assert win._cavity_act.isChecked()
+        win._cavity_act.trigger()               # on by default: switch off
+        assert not win.view3d.cavity
+        win.view3d.set_cavity(True)             # the toolbar, say
+        assert win._cavity_act.isChecked()
     finally:
         win._dirty = False
         win.close()

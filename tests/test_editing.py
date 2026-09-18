@@ -415,11 +415,11 @@ def test_points_editor_move_clamped_at_ends(app):
 
 # ---------------------------------------------- defaults & editable code
 
-def test_common_segments_on_by_default():
+def test_common_segments_off_by_default():
     m = DocumentModel()
-    assert m.global_fn_on is True
+    assert m.global_fn_on is False
     assert m.global_fn == 45
-    assert m.effective_fn() == 45
+    assert m.effective_fn() is None
 
 
 def test_code_tab_editable_and_apply(window):

@@ -264,7 +264,7 @@ class View3D(QWidget):
         self.stage = settings.value("render_stage", True, type=bool)
         self._stage_cache = None        # stage.Stage, made on first use
         #: Blender-style cavity shading and edge lines (shading.py)
-        self.cavity = settings.value("render_cavity", False, type=bool)
+        self.cavity = settings.value("render_cavity", True, type=bool)
         self.edges = settings.value("render_edges", True, type=bool)
         #: smooth shading: OpenGL interpolates a normal per vertex
         #: (shading.vertex_normals), so curved surfaces lose their facets
