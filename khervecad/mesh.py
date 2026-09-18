@@ -1007,6 +1007,11 @@ def rotate_extrude_mesh(node: CadNode, env=None):
                 cos_a, sin_a = math.cos(a), math.sin(a)
                 return [(x * cos_a, x * sin_a, y) for x, y in profile]
             rings = [ring(s) for s in range(steps + 1)]
+            if full:
+                # sin(2π) is -2.4e-16, not 0: the last ring must BE the
+                # first, or the seam stays open by a hair and the edge
+                # lines draw it across every flat floor
+                rings[-1] = rings[0]
             m = len(profile)
             for s in range(steps):
                 r0, r1 = rings[s], rings[s + 1]
