@@ -69,6 +69,10 @@ if os.path.isdir(_human_dir):
 _solar_dir = os.path.join(_ROOT, "khervecad", "solar")
 if os.path.isdir(_solar_dir):
     datas.append((_solar_dir, os.path.join("khervecad", "solar")))
+# Characters' clothing colour maps (library_characters).
+_chars_dir = os.path.join(_ROOT, "khervecad", "characters")
+if os.path.isdir(_chars_dir):
+    datas.append((_chars_dir, os.path.join("khervecad", "characters")))
 # Finished labs saved from documents (house_designs.saved).
 _saved_dir = os.path.join(_ROOT, "khervecad", "house_saved")
 if os.path.isdir(_saved_dir):

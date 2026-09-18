@@ -2990,6 +2990,27 @@ into a new module and import.
                        `set_pose` with `node_id` + `bones` poses a
                        figure (`{}` lists the bones). Clothes built round
                        the figure do not follow: pose first, dress after.
+  - `library_characters.py` — **People & characters** (2026-09-18, the
+                       user's request; Library ▸ Toys & models ▸ People &
+                       characters): a plain Human figure (Man / Woman /
+                       Child / Senior), an everyday Man and Woman, a Caped
+                       superhero and a Dark knight — each `paint`(colour
+                       map) > `sculpt` > `human`, plus hair / cape / cowl /
+                       crest nodes, all editable. Clothes are front colour
+                       maps from `RULES` (x, z -> rgb) rasterised by
+                       `png_bytes` into shipped `khervecad/characters/
+                       *.png` (`python -m khervecad.library_characters`
+                       rewrites them; a test pins them). Lessons: arms
+                       must hang AWAY from the hips (upperarm01 ry 24, not
+                       40) or a front projection paints hands and hips
+                       alike; upperarm rz swings the arm FORWARD, ry
+                       lowers it; the base mesh has no muscle target
+                       ("weight" is fat), so heroes are sculpted — one
+                       broad flattened pec stroke, two round inflates read
+                       as a woman's chest; traps above the collar line
+                       show as skin. Heroes carry an original "K" crest:
+                       no studio's logo (a swept-wing crest read as a bat
+                       and was dropped).
   - `deform.py` `split_long_edges(region=)` refines only edges whose
                        midpoint lies in a box: the sculpt's `region`
                        rows (two corners) refine the head of a 1.6 m
