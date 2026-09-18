@@ -9,7 +9,9 @@ A **molecule** (molecule.py: SMILES -> 3D atoms) is drawn as one Object:
   the molecule's local plane; an aromatic bond keeps its stick and
   gains a thin one on the ring's side;
 - space filling — atoms at their full van der Waals radius, no sticks;
-- sticks — thin bonds only, small balls at the joints.
+- sticks — thin bonds only, small balls at the joints;
+- lattice — ball and stick with small balls, for graphene, graphite and
+  nanotubes (carbon_nano), where full-size balls hide the rings.
 
 A **reaction** is written the way chemists write it —
 ``2 H2 + O2 -> 2 H2O``, ``CH4 + 2 O2 -> CO2 + 2 H2O``, ``N2 + 3 H2 <=>
@@ -48,8 +50,11 @@ from .crystal import colour
 from .molecule_library import COMPOUNDS, get as get_compound
 
 NM = 0.1                                   # nm per Å
-STYLES = ("ball_and_stick", "space_filling", "sticks")
+STYLES = ("ball_and_stick", "space_filling", "sticks", "lattice")
 BALL = 0.35                                # ball and stick: x vdW radius
+#: lattice style: small balls, so a graphene honeycomb or a nanotube's
+#: wall reads as its rings instead of a heap of spheres
+LATTICE_BALL = 0.17
 STICK = 0.12                               # bond radius, Å
 #: (offset Å, radius Å) of the sticks of one bond, by order
 _STICKS = {1.0: [(0.0, STICK)],
@@ -142,6 +147,8 @@ def ball_radius(element: str, style: str) -> float:
         return mol.vdw(element)
     if style == "sticks":
         return STICK
+    if style == "lattice":
+        return LATTICE_BALL * mol.vdw(element)
     return BALL * mol.vdw(element)
 
 
@@ -293,7 +300,8 @@ def molecule_program(m: mol.Molecule, style="ball_and_stick", fn=16,
                          "lower the segments.")
     ident = _ident(m.key or title)
     code = _header(f"{title} ({m.formula})",
-                   [f"SMILES {m.smiles}; {len(m.atoms)} atoms, "
+                   [(f"SMILES {m.smiles}; " if m.smiles else
+                     "Built on its lattice; ") + f"{len(m.atoms)} atoms, "
                     f"{len(m.bonds)} bonds, {m.mass:.2f} g/mol."])
     code += "\n" + _module(ident, lines)
     code += f"\n{ident}();  // {_label(title)} ({m.formula})\n"
@@ -621,7 +629,16 @@ def list_molecules(params: dict) -> dict:
              "smiles": smiles, "category": c}
             for k, (name, smiles, c, formula) in COMPOUNDS.items()
             if not cat or c.lower() == str(cat).lower()]
+    from .carbon_nano import STRUCTURES
+    cages = [{"key": k, "name": name, "category": c}
+             for k, (name, c, _b) in STRUCTURES.items()]
     return {"categories": list(CATEGORIES), "compounds": rows,
+            "carbon_structures": cages,
+            "carbon_note": "Build a cage with compound: its key (c60). "
+                           "Graphene, graphite and nanotubes of any size "
+                           "and (n, m) are Part Library parts: list_parts "
+                           "category 'Crystals (graphene & graphite)' / "
+                           "'Crystals (nanotubes)'.",
             "styles": list(STYLES), "units": "nm"}
 
 

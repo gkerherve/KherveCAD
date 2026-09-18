@@ -907,6 +907,41 @@ into a new module and import.
                        alcohols/ethers/carbonyls, acids & esters, nitrogen
                        compounds & solvents, biomolecules & drugs — amino
                        acids, nucleobases and sugars included).
+                       `molecule_library_more.py` (2026-09-18, the user's
+                       request) merges in ~250 more: benzene derivatives,
+                       polycyclic & fused aromatics, and the common
+                       medicines in six "Medicines: …" families (pain,
+                       anti-infectives, heart, brain, stomach/allergy/
+                       breathing, diabetes/hormones/vitamins). Bridged and
+                       small-ring drugs needed two embedder fixes in
+                       molecule.py: a 3- or 4-ring's 1-3 terms use the
+                       ring's own 60° / 88° (the VSEPR angle stretched
+                       cyclopropane bonds to 1.7 Å), and `best_embedding`
+                       re-embeds from up to `RETRIES` other atoms when the
+                       first shape's `strain` exceeds `SOUND` (morphinans
+                       tangled from atom 0). An unknown compound key falls
+                       back to `carbon_nano.get` (c60 …).
+  - `carbon_nano.py` — carbon nanostructures (Qt-free) as Molecules on
+                       their LATTICE, not SMILES: graphene flakes (AB /
+                       ABA / ABC / AA stacks, twisted bilayer), H-capped
+                       armchair/zigzag nanoribbons and quantum dot,
+                       vacancy and N-doped sheets, the graphite (0001)
+                       surface (+ step); (n, m) nanotubes rolled from the
+                       strip 0 <= u < |C| (seam exact, axis kept on z —
+                       centring on the centroid tilted it), multi-walled;
+                       fullerenes C20, C60 (truncated icosahedron, 6-6
+                       bonds double), and C60 + 10k (C70, C80, capped
+                       (5, 5) tubes): C60 along its five-fold axis IS the
+                       (5, 5) ring pattern, so 10-atom belts are let in at
+                       the equator (the top half turned 36° for an odd
+                       count) and `relax` settles bonds/ring angles.
+                       `library_carbon.py` makes them Part Library parts —
+                       Crystals ▸ Graphene & graphite / Carbon nanotubes
+                       (width, depth, layers, (n, m), length fields; the
+                       dialog takes per-field `suffixes`, " nm" / " °") and
+                       Molecules ▸ Fullerenes — drawn in the new
+                       `lattice` style (0.17 × vdW balls: full balls hid
+                       the honeycomb), cages ball and stick.
   - `molecule_build.py` — the **Compound Builder**: `molecule_program`
                        (ball and stick with half-bonds in each atom's
                        colour, double/triple bonds as parallel sticks, an

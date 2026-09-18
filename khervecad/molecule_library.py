@@ -324,6 +324,12 @@ COMPOUNDS = {
                    BIO, "C9H13NO3"),
 }
 
+# benzene derivatives, fused aromatics and the common medicines
+from .molecule_library_more import (CATEGORIES as _MORE_CATEGORIES,  # noqa
+                                    MORE as _MORE)
+COMPOUNDS.update(_MORE)
+CATEGORIES = CATEGORIES + _MORE_CATEGORIES
+
 
 def get(key: str):
     """The library molecule *key* (3D, cached); KeyError names the
@@ -333,6 +339,11 @@ def get(key: str):
         by_name = {v[0].lower(): kk for kk, v in COMPOUNDS.items()}
         k = by_name.get(str(key).strip().lower(), k)
     if k not in COMPOUNDS:
+        from . import carbon_nano      # C60 and the other cages
+        try:
+            return carbon_nano.get(key)
+        except KeyError:
+            pass
         raise KeyError(f"No compound '{key}'. Choices: "
                        + ", ".join(COMPOUNDS))
     name, smiles, category, _formula = COMPOUNDS[k]

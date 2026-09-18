@@ -36,7 +36,8 @@ from .protein_dialog import ProteinTab
 from .molecule_library import CATEGORIES, COMPOUNDS, get
 
 STYLE_CHOICES = (("Ball and stick", "ball_and_stick"),
-                 ("Space filling", "space_filling"), ("Sticks", "sticks"))
+                 ("Space filling", "space_filling"), ("Sticks", "sticks"),
+                 ("Small balls (lattice)", "lattice"))
 EXAMPLES = (
     ("Water from hydrogen and oxygen", "H2 + O2 -> H2O"),
     ("Methane burning", "CH4 + O2 -> CO2 + H2O"),

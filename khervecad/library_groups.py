@@ -43,8 +43,9 @@ SECTIONS = [
     ]),
     ("Science", [
         ("Chemistry lab", "mdi.flask-outline", ["Chemistry"]),
-        ("Crystals", "mdi.atom", ("crystals", ["Crystals (unit cells)",
-                                               "Crystals (supercells)"])),
+        ("Crystals", "mdi.atom", ("crystals", [
+            "Crystals (unit cells)", "Crystals (supercells)",
+            "Crystals (graphene & graphite)", "Crystals (nanotubes)"])),
         ("Molecules", "mdi.molecule", ("molecules", "Molecules: ")),
         ("Solar System", "mdi.orbit",
          ["Solar System models", "Planets", "Moons"]),
@@ -65,6 +66,8 @@ SECTIONS = [
 SHORT_NAMES = {"Lego": "Bricks & plates",
                "Crystals (unit cells)": "Unit cells",
                "Crystals (supercells)": "Supercells",
+               "Crystals (graphene & graphite)": "Graphene & graphite",
+               "Crystals (nanotubes)": "Carbon nanotubes",
                "Stylised trees": "Stylised trees",
                "Trees": "Grown trees"}
 

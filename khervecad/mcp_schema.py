@@ -1495,13 +1495,16 @@ TOOLS = [
     {
         "name": "list_molecules",
         "description": (
-            "The compound library: about 80 common compounds — gases, "
+            "The compound library: about 490 compounds — gases, "
             "inorganic acids, bases and ions, VSEPR shapes (BF3, SF6, "
             "XeF4…), hydrocarbons, alcohols, carbonyls, acids, esters, "
-            "nitrogen compounds and solvents, biomolecules and drugs "
-            "(amino acids, glucose, caffeine, aspirin) — with formula and "
-            "SMILES. Pass `compound` for one in full (3D atoms in nm, "
-            "bonds). Anything else is built from its SMILES."
+            "nitrogen compounds and solvents, biomolecules, benzene "
+            "derivatives, polycyclic aromatics, and the common medicines "
+            "by what they treat (pain, antibiotics, heart, brain, "
+            "stomach & allergy, hormones & vitamins) — with formula and "
+            "SMILES, plus the fullerene cages (C20, C60, C70, C80). Pass "
+            "`compound` for one in full (3D atoms in nm, bonds). Anything "
+            "else is built from its SMILES."
         ),
         "input_schema": _obj({
             "category": {"type": "string",
@@ -1530,7 +1533,7 @@ TOOLS = [
             "name": {"type": "string"},
             "style": {"type": "string",
                       "enum": ["ball_and_stick", "space_filling",
-                               "sticks"]},
+                               "sticks", "lattice"]},
             "segments": {"type": "integer",
                          "description": "Round segments (default 16)."},
             "dry_run": {"type": "boolean",
@@ -1562,7 +1565,7 @@ TOOLS = [
                                       "(default true)."},
             "style": {"type": "string",
                       "enum": ["ball_and_stick", "space_filling",
-                               "sticks"]},
+                               "sticks", "lattice"]},
             "segments": {"type": "integer"},
             "dry_run": {"type": "boolean",
                         "description": "Balance and count only."},

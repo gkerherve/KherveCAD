@@ -386,8 +386,9 @@ def _centroid(points):
     return tuple(sum(p[c] for p in points) / k for c in range(3))
 
 
-def embed(atoms, bonds):
-    """3D positions (Å) for a parsed molecule with hydrogens."""
+def embed(atoms, bonds, start: int = 0):
+    """3D positions (Å) for a parsed molecule with hydrogens, placed
+    outward from atom *start*."""
     n = len(atoms)
     nbrs = [[] for _ in range(n)]
     for x, y, o in bonds:
@@ -507,7 +508,7 @@ def embed(atoms, bonds):
                 continue
 
     offset = 0.0
-    for root in range(n):
+    for root in [start] + [k for k in range(n) if k != start]:
         if pos[root] is not None:
             continue
         component_start = len(order)
@@ -579,6 +580,16 @@ def _relax(atoms, bonds, nbrs, dom, pos, rings, iters=800):
         p[1] += 1e-4 * math.cos(k * 2.3)
         p[2] += 1e-4 * math.sin(k * 0.9)
     in_small_ring = {x for r in rings if len(r) <= 5 for x in r}
+    # a 3- or 4-ring's own angle (60 / 90 degrees) — the atom's VSEPR
+    # angle stretched a cyclopropane's bonds to 1.7 A
+    tight = {}
+    for r in rings:
+        if len(r) <= 4:
+            for k, a in enumerate(r):
+                pair = (min(r[k - 1], r[(k + 1) % len(r)]),
+                        max(r[k - 1], r[(k + 1) % len(r)]))
+                tight[(a, pair)] = 60.0 if len(r) == 3 else 88.0
+    bonded = {(min(x, y), max(x, y)) for x, y, _o in bonds}
     terms = []                                   # (i, j, target, weight, floor)
     for x, y, o in bonds:
         terms.append((x, y, bond_length(atoms[x]["element"],
@@ -591,7 +602,12 @@ def _relax(atoms, bonds, nbrs, dom, pos, rings, iters=800):
         for ii in range(len(nb)):
             for jj in range(ii + 1, len(nb)):
                 b, c = nb[ii], nb[jj]
-                if count >= 5:                   # read off the template
+                ring_angle = tight.get((a, (min(b, c), max(b, c))))
+                if (min(b, c), max(b, c)) in bonded:
+                    continue                     # a 3-ring's own bond
+                if ring_angle is not None:
+                    theta = ring_angle
+                elif count >= 5:                   # read off the template
                     va, vb = _sub(pos[b], pos[a]), _sub(pos[c], pos[a])
                     cosv = _dot(va, vb) / math.sqrt(_dot(va, va)
                                                     * _dot(vb, vb))
@@ -604,10 +620,10 @@ def _relax(atoms, bonds, nbrs, dom, pos, rings, iters=800):
                                  orders[c])
                 t = math.sqrt(la * la + lc * lc - 2 * la * lc
                               * math.cos(math.radians(theta)))
-                weight = 0.3 if a in in_small_ring else 0.6
+                weight = (1.0 if ring_angle is not None else
+                          0.3 if a in in_small_ring else 0.6)
                 terms.append((b, c, t, weight, False))
                 pair13.add((min(b, c), max(b, c)))
-    bonded = {(min(x, y), max(x, y)) for x, y, _o in bonds}
     for i in range(n):
         for j in range(i + 1, n):
             if (i, j) in bonded or (i, j) in pair13:
@@ -647,6 +663,55 @@ def _relax(atoms, bonds, nbrs, dom, pos, rings, iters=800):
     return [(p[0] - cx[0], p[1] - cx[1], p[2] - cx[2]) for p in pos]
 
 
+def strain(atoms, bonds, coords) -> float:
+    """How far a shape is from sound: the worst relative bond-length
+    error plus a penalty per non-bonded pair closer than 0.85 x their
+    covalent radii (the library test's own limits)."""
+    worst = 0.0
+    for x, y, o in bonds:
+        want = bond_length(atoms[x]["element"], atoms[y]["element"], o)
+        worst = max(worst, abs(math.dist(coords[x], coords[y]) / want - 1))
+    bonded = {(min(x, y), max(x, y)) for x, y, _o in bonds}
+    clashes = 0
+    for i in range(len(coords)):
+        ri = ELEMENTS[atoms[i]["element"]][0]
+        for j in range(i + 1, len(coords)):
+            if (i, j) in bonded:
+                continue
+            if math.dist(coords[i], coords[j]) <= 0.85 * (
+                    ri + ELEMENTS[atoms[j]["element"]][0]):
+                clashes += 1
+    return worst + 0.1 * clashes
+
+
+#: a shape this close to sound is kept without trying other starts
+SOUND = 0.05
+#: other starting atoms tried when the first shape is strained
+RETRIES = 8
+
+
+def best_embedding(atoms, bonds):
+    """The least strained of a few embeddings: a bridged skeleton
+    (morphine, a steroid's crowded face) placed ring by ring from atom 0
+    can tangle so the relaxation settles with a bond 10 % long; started
+    from another ring atom it untangles. Most molecules stop at the
+    first try."""
+    coords = embed(atoms, bonds)
+    score = strain(atoms, bonds, coords)
+    if score <= SOUND:
+        return coords
+    heavy = [k for k, a in enumerate(atoms) if a["element"] != "H"]
+    step = max(1, len(heavy) // RETRIES)
+    for start in heavy[step::step][:RETRIES]:
+        trial = embed(atoms, bonds, start)
+        s = strain(atoms, bonds, trial)
+        if s < score:
+            coords, score = trial, s
+        if score <= SOUND:
+            break
+    return coords
+
+
 @lru_cache(maxsize=512)
 def _built(smiles: str):
     atoms, bonds = parse_smiles(smiles)
@@ -654,7 +719,7 @@ def _built(smiles: str):
     if len(atoms) > MAX_ATOMS:
         raise SmilesError(f"{len(atoms)} atoms: the builder takes up to "
                           f"{MAX_ATOMS}.")
-    coords = embed(atoms, bonds)
+    coords = best_embedding(atoms, bonds)
     return (tuple((a["element"], *xyz) for a, xyz in zip(atoms, coords)),
             tuple(bonds), tuple(a["charge"] for a in atoms))
 
