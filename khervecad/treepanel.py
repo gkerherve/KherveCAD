@@ -122,10 +122,6 @@ class ObjectTree(QTreeWidget):
     #: Objects in the 3D view).
     snap_objects = pyqtSignal()
 
-    #: True in the Masters variant — roots at the masters store and hides
-    #: the store from the ordinary Objects tab.
-    IS_MASTERS = False
-
     def __init__(self, model: DocumentModel, parent=None):
         super().__init__(parent)
         self.model = model
@@ -163,8 +159,7 @@ class ObjectTree(QTreeWidget):
         if item.data(0, ROLE_PLACEMENT):
             return          # placement rows are edited via Properties
         node = self.node_of(item)
-        if node is not None and node.type == "component" \
-                and not self.IS_MASTERS:
+        if node is not None and node.type == "component":
             self.open_component.emit(node)
         else:
             self.editItem(item, 0)
@@ -197,7 +192,7 @@ class ObjectTree(QTreeWidget):
 
     def _top_nodes(self):
         """The nodes shown at the top level of this tree — the document
-        root's children with the Masters store and the Object
+        root's children with an old Masters store and the Object
         *definitions* (hidden components — they live in the Object tab
         and appear here only through their instances) filtered out."""
         return [c for c in self.model.root.children
@@ -758,7 +753,7 @@ class ObjectTree(QTreeWidget):
                 self.model.move_node(node, fallback)
 
     #: the Main tree offers "Insert Object" (assembly instances);
-    #: the Object tab's tree and the Masters tree do not.
+    #: the Object tab's tree does not.
     SHOWS_INSERT_OBJECT = True
     #: the Object tab's tree lets the groups building a part be snapped
     #: together (secondary anchors); the Main tree does not.
@@ -769,18 +764,12 @@ class ObjectTree(QTreeWidget):
         nodes = self.selected_nodes()          # geometry (hide/colour)
         roots = self._top_level_selection()    # whole parts (structural)
         menu = QMenu(self)
-        if nodes and self.IS_MASTERS:
-            self._masters_menu(menu, nodes, roots)
-        elif nodes:
+        if nodes:
             self._objects_menu(menu, nodes, roots)
         else:
             self._insert_object_menu(menu)
             menu.addAction(icons.icon("mdi.content-paste"),
                            "Paste\tCtrl+V", self.paste_clipboard)
-            if self.IS_MASTERS:
-                menu.addAction(icons.icon("mdi.plus"), "New master",
-                               lambda: self.select_nodes(
-                                   [self.model.new_master()]))
         if menu.actions():
             menu.exec_(self.viewport().mapToGlobal(pos))
 
@@ -788,7 +777,7 @@ class ObjectTree(QTreeWidget):
         """"Insert Object" — place an instance of a defined Object into
         the Main assembly (the part/assembly model: definitions live in
         the Object tab, the assembly calls the ones it wants)."""
-        if self.IS_MASTERS or not self.SHOWS_INSERT_OBJECT:
+        if not self.SHOWS_INSERT_OBJECT:
             return
         comps = self.model.components()
         if not comps:
@@ -941,15 +930,6 @@ class ObjectTree(QTreeWidget):
                     [mi.set_scale(self.model, n, f) for n in meshes])
         menu.addSeparator()
 
-    def _masters_menu(self, menu, nodes, roots):
-        """Context menu inside the Masters tab."""
-        menu.addAction(
-            icons.icon("mdi.link-variant"), "Add to Scene (Linked copy)",
-            lambda: [self.model.instance_master(n) for n in roots])
-        menu.addAction(icons.icon("mdi.plus"), "New master",
-                       lambda: self.select_nodes(
-                           [self.model.new_master()]))
-        menu.addSeparator()
         sculpt = roots[0] if len(roots) == 1 and roots[0].type == "sculpt" \
             else (roots[0].parent if len(roots) == 1 and roots[0].parent
                   is not None and roots[0].parent.type == "sculpt"
@@ -962,6 +942,13 @@ class ObjectTree(QTreeWidget):
                 icons.icon("mdi.arrow-down-bold-box-outline"),
                 "Drop (gravity)",
                 lambda: self._drop(roots))
+        pp = roots[0] if len(roots) == 1 and roots[0].type == "push_pull" \
+            else None
+        if pp is not None and hasattr(win, "view3d"):
+            from . import faceedit_ui
+            menu.addAction(icons.icon("mdi.arrow-expand-up"),
+                           "Pick faces to push / pull...",
+                           lambda: faceedit_ui.start(win, pp))
         from . import ik_ui
         if len(roots) == 1 and hasattr(win, "view3d") and \
                 ik_ui.can_reach(nodes[0]):
@@ -1113,7 +1100,7 @@ class ObjectTree(QTreeWidget):
         if len(roots) == 1:
             menu.addAction(
                 icons.icon("mdi.link-variant"),
-                "Linked copy (updates with master)",
+                "Linked copy (updates with the original)",
                 lambda: self.model.add_linked_copy(roots[0]))
         promotable = [n for n in roots if n.type not in
                       ("assign", "variables", "masters", "reference")]
@@ -1124,33 +1111,11 @@ class ObjectTree(QTreeWidget):
                 "Make Object",
                 lambda: [self.model.make_component(n)
                          for n in objectable])
-        if promotable:
-            menu.addAction(
-                icons.icon("mdi.folder-star-outline"),
-                "Make Master (moves to Masters tab)",
-                lambda: [self.model.make_master(n)
-                         for n in promotable])
         self._insert_object_menu(menu)
         menu.addSeparator()
         menu.addAction(icons.icon("mdi.delete-outline"), "Delete",
                        lambda: [self.model.remove_node(n)
                                 for n in roots])
-
-
-class MastersTree(ObjectTree):
-    """The Masters store as its own tree: it roots at the masters group
-    (created on demand) and lists only the master definitions, so the
-    Objects tab stays uncluttered. Masters render in the scene only
-    through Linked copies."""
-
-    IS_MASTERS = True
-
-    def _top_nodes(self):
-        group = self.model.masters_group()
-        return list(group.children) if group else []
-
-    def _drop_container(self):
-        return self.model.masters_group(create=True)
 
 
 # ------------------------------------------------------------- code tab
@@ -1679,7 +1644,7 @@ class VariablesSheet(QWidget):
 
 
 class BuilderPanel(QTabWidget):
-    """Main (assembly) + Object + Masters + Variables + Code tabs, kept
+    """Main (assembly) + Object + Variables + Code tabs, kept
     in sync with the model.
 
     The **Main** tab is the whole document; the **Object** tab edits
@@ -1731,30 +1696,6 @@ class BuilderPanel(QTabWidget):
 
         self.variables = VariablesSheet(model)
 
-        # Masters tab: the reusable-definition store as its own tree, with
-        # buttons to create one and drop a Linked copy into the scene
-        self.masters_tree = MastersTree(model)
-        masters_tab = QWidget()
-        mbox = QVBoxLayout(masters_tab)
-        mbox.setContentsMargins(4, 4, 4, 0)
-        mbox.setSpacing(4)
-        mrow = QHBoxLayout()
-        new_master = QPushButton(icons.icon("mdi.plus"), " New")
-        new_master.setToolTip("Create a new empty master")
-        new_master.clicked.connect(
-            lambda: self.masters_tree.select_nodes(
-                [self.model.new_master()]))
-        add_scene = QPushButton(icons.icon("mdi.link-variant"),
-                                " Add to Scene")
-        add_scene.setToolTip(
-            "Add a Linked copy of the selected master to the scene")
-        add_scene.clicked.connect(self._instance_selected_masters)
-        mrow.addWidget(new_master)
-        mrow.addWidget(add_scene)
-        mrow.addStretch()
-        mbox.addLayout(mrow)
-        mbox.addWidget(self.masters_tree)
-
         # Code tab: a text-editor toolbar + the editable program + an
         # Apply button that parses it back into the object tree
         code_tab = QWidget()
@@ -1794,8 +1735,6 @@ class BuilderPanel(QTabWidget):
                  "document"),
                 (self.object_tab, "Object", "Define and edit one Object "
                  "(part) at its own origin"),
-                (masters_tab, "Masters", "Reusable masters and their "
-                 "Linked copies"),
                 (self.variables, "Variables", "Document and per-Object "
                  "variables"),
                 (code_tab, "Code", "The OpenSCAD program, editable")):
@@ -2027,11 +1966,6 @@ class BuilderPanel(QTabWidget):
         tb.addAction(icons.icon("mdi.format-indent-decrease"),
                      "Dedent (Shift+Tab)", c.dedent_selection)
         return tb
-
-    def _instance_selected_masters(self):
-        """Drop a Linked copy of each selected master into the scene."""
-        for node in self.masters_tree._top_level_selection():
-            self.model.instance_master(node)
 
     def refresh_theme(self):
         self.code.refresh_theme()

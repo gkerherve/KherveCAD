@@ -223,6 +223,12 @@ flag — is `kcad_cloth(lift = 20, detail = 5, thickness = 1, steps = \
 { <2D shape>; <what it falls on> }`: the 2D shape FIRST (the cloth, \
 laid flat lift mm above the rest), the colliders after (drawn too); \
 pins hold the cloth inside each box. Never model drapery by hand. \
+To change a FLAT face of an existing part — raise it, sink a pocket, \
+thin a plate — use push_pull_face (point = a probe_surface hit on the \
+face, distance > 0 out / < 0 in, inset leaves a rim) rather than \
+rebuilding the part; to cut a part by a plane, wrap it in \
+`kcad_bisect(px, py, pz, nx, ny, nz, keep = "above" | "below" | \
+"both", gap)`. \
 Prefer a sweep to a chain of hull()s. For a body whose cross-sections \
 have corners (a car, a boat hull), `kcad_section_loft(heights = [[z0], \
 [z1], ...], smooth = 0)` with one 2D child shape per section, in \

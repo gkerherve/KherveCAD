@@ -110,8 +110,6 @@ class MainWindow(QMainWindow):
         self.builder.tree.selection_changed.connect(self._tree_selected)
         self.builder.object_tab.tree.selection_changed.connect(
             self._tree_selected)
-        self.builder.masters_tree.selection_changed.connect(
-            self._masters_selected)
         # the Object tab isolates both viewers to the active Object
         self.scene.isolation_resolver = self.builder.isolated_component
         self.builder.active_component_changed.connect(
@@ -702,6 +700,9 @@ class MainWindow(QMainWindow):
                 self.start_fillet_pick(wrapper)
             elif op == "sculpt":              # now: where to push?
                 self.start_sculpt(wrapper)
+            elif op == "push_pull":           # now: which faces?
+                from . import faceedit_ui
+                faceedit_ui.start(self, wrapper)
 
     def start_sculpt(self, node):
         """Open the sculpt panel for *node* (a sculpt): each click in
@@ -751,21 +752,6 @@ class MainWindow(QMainWindow):
         self._syncing = True
         self.properties.set_node(nodes[0] if len(nodes) == 1 else None)
         self.scene.select_nodes(nodes)
-        self.builder.highlight_nodes(nodes)
-        self._sync_highlight(nodes)
-        self._syncing = False
-
-    def _masters_selected(self, nodes):
-        """A master picked in the Masters tab drives the Properties panel,
-        the code highlight, and both viewers — its projected outline in
-        2D and its glow in 3D. A master lives in the non-rendering store,
-        so `mesh.selected_world_tris` falls back to tessellating its own
-        subtree directly (see mesh.py)."""
-        if self._syncing:
-            return
-        self._syncing = True
-        self.builder.tree.clearSelection()   # one tree selected at a time
-        self.properties.set_node(nodes[0] if len(nodes) == 1 else None)
         self.builder.highlight_nodes(nodes)
         self._sync_highlight(nodes)
         self._syncing = False

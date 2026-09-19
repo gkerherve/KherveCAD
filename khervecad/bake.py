@@ -122,6 +122,26 @@ NODE_TYPES = {
         schema=[("voxel", "Voxel size (mm)", "float", 0.01, 1e4),
                 ("snap", "Snap onto the original surface", "bool",
                  None, None)]),
+    "push_pull": dict(
+        label="Push / pull faces", category=OPERATION,
+        icon="mdi.arrow-expand-up",
+        params=dict(pushes=[]),
+        schema=[("pushes", "Faces (a point on each, distance mm, inset "
+                           "mm)", "rows",
+                 ["X", "Y", "Z", "Distance", "Inset"], None)]),
+    "bisect": dict(
+        label="Bisect (knife)", category=OPERATION, icon="mdi.knife",
+        params=dict(px=0.0, py=0.0, pz=0.0, nx=0.0, ny=0.0, nz=1.0,
+                    keep="above", gap=0.0),
+        schema=[("px", "Plane point X", "float", -1e6, 1e6),
+                ("py", "Plane point Y", "float", -1e6, 1e6),
+                ("pz", "Plane point Z", "float", -1e6, 1e6),
+                ("nx", "Normal X", "float", -1.0, 1.0),
+                ("ny", "Normal Y", "float", -1.0, 1.0),
+                ("nz", "Normal Z", "float", -1.0, 1.0),
+                ("keep", "Keep", "choice", ["above", "below", "both"],
+                 None),
+                ("gap", "Gap between halves (both)", "float", 0.0, 1e5)]),
     "cloth": dict(
         label="Cloth (drape)", category=OPERATION,
         icon="mdi.tshirt-crew",
@@ -253,7 +273,8 @@ LEAVES = frozenset({"polyhedron", "loft", "human"})
 WRAPPERS = frozenset({"sweep", "section_loft", "blend", "bend", "twist",
                       "taper", "lattice", "subdivide", "fillet", "shell",
                       "sculpt", "hair_cap", "decimate", "shrinkwrap",
-                      "bevel", "remesh", "wireframe", "cloth"})
+                      "bevel", "remesh", "wireframe", "cloth",
+                      "push_pull", "bisect"})
 
 #: wrappers whose surface is computed here and baked into the program,
 #: with their helper module's parameters (besides points and faces)
@@ -269,6 +290,9 @@ _BAKED = {
     "subdivide": [("levels", 1)],
     "decimate": [("ratio", 0.5), ("tolerance", 0)],
     "remesh": [("voxel", 1), ("snap", True)],
+    "push_pull": [("pushes", [])],
+    "bisect": [("px", 0), ("py", 0), ("pz", 0), ("nx", 0), ("ny", 0),
+               ("nz", 1), ("keep", "above"), ("gap", 0)],
     "cloth": [("lift", 20), ("detail", 5), ("thickness", 1), ("steps", 120),
               ("substeps", 12), ("offset", 0.5), ("friction", 0.6),
               ("floor", True), ("pins", []), ("show_target", True)],
@@ -581,6 +605,20 @@ def _compute(node, env) -> list:
                                   int(num("sides", 6.0)), num("angle", 1.0),
                                   bool(p.get("joints", True)))
         return src if out is None else out
+    if t == "push_pull":
+        from . import faceedit
+        rows = [[mesh.rv(v, env) for v in row]
+                for row in p.get("pushes") or []
+                if isinstance(row, list) and len(row) in (4, 5)]
+        out, _missing = faceedit.push_pull(src, rows)
+        return src if out is None else out
+    if t == "bisect":
+        from . import faceedit
+        out = faceedit.bisect(
+            src, [num("px", 0.0), num("py", 0.0), num("pz", 0.0)],
+            [num("nx", 0.0), num("ny", 0.0), num("nz", 1.0)],
+            str(p.get("keep", "above")), num("gap", 0.0))
+        return src if out is None else out
     if t == "remesh":
         from . import remesh
         return remesh.remesh(src, num("voxel", 1.0),
@@ -778,6 +816,16 @@ def _b_baked(kind):
                 from .hair import CLEAR_CHOICES
                 params[key] = value if value in CLEAR_CHOICES \
                     else defaults[key]
+            elif key == "which":
+                from .bevel import EDGES
+                params[key] = value if value in EDGES else defaults[key]
+            elif kind == "bisect" and key == "keep":
+                from .faceedit import KEEPS
+                params[key] = value if value in KEEPS else defaults[key]
+            elif kind == "shrinkwrap" and key in ("mode", "axis", "keep"):
+                from .shrinkwrap import AXES, KEEPS, MODES
+                allowed = {"mode": MODES, "axis": AXES, "keep": KEEPS}[key]
+                params[key] = value if value in allowed else defaults[key]
             elif key in _CHOICES:
                 params[key] = value if value in ("x", "y", "z") \
                     else defaults[key]
@@ -789,7 +837,7 @@ def _b_baked(kind):
                                if isinstance(row, list) and len(row) == width] \
                     if isinstance(value, list) else []
             elif key in ("offsets", "path", "heights", "strokes", "warp",
-                         "within", "region", "pins"):
+                         "within", "region", "pins", "pushes"):
                 params[key] = ([[_num(v) for v in row] for row in value
                                 if isinstance(row, list)]
                                if isinstance(value, list)
@@ -797,13 +845,6 @@ def _b_baked(kind):
             elif key in ("closed", "show_target", "snap", "joints",
                          "floor"):
                 params[key] = value is True or value == "true"
-            elif key == "which":
-                from .bevel import EDGES
-                params[key] = value if value in EDGES else defaults[key]
-            elif kind == "shrinkwrap" and key in ("mode", "axis", "keep"):
-                from .shrinkwrap import AXES, KEEPS, MODES
-                allowed = {"mode": MODES, "axis": AXES, "keep": KEEPS}[key]
-                params[key] = value if value in allowed else defaults[key]
             elif (kind, key) in (("blend", "detail"),
                                  ("subdivide", "levels"),
                                  ("bevel", "segments"),
@@ -946,6 +987,35 @@ def _check_baked(node, env):
                     "fastest, then y, then z")
     if t == "sculpt":
         return _check_sculpt(p, env)
+    if t in ("push_pull", "bisect"):
+        from . import csg, mesh
+        if not csg.available():
+            return (f"{word} needs the manifold3d package (pip install "
+                    "manifold3d)")
+        if t == "bisect":
+            if str(p.get("keep", "above")) not in ("above", "below",
+                                                   "both"):
+                return "bisect: keep must be above, below or both"
+            if not any(mesh.rv(p.get(k, 0.0), env, 0.0)
+                       for k in ("nx", "ny", "nz")):
+                return "bisect: the plane's normal cannot be 0, 0, 0"
+        else:
+            from . import faceedit
+            src = [tri for tri, _c, _s in
+                   mesh._children_mesh(node, env, None, frozenset(), False)]
+            rows = []
+            for number, row in enumerate(p.get("pushes") or []):
+                if not isinstance(row, list) or len(row) not in (4, 5):
+                    return (f"face {number} needs x, y, z, distance "
+                            "(and inset)")
+                rows.append([mesh.rv(v, env) for v in row])
+            if src and rows:
+                _out, missing = faceedit.push_pull(src, rows)
+                if missing:
+                    pt = [round(v, 2) for v in rows[missing[0]][:3]]
+                    return (f"face {missing[0]}: no flat face at {pt} — "
+                            "the part changed, or the point is off its "
+                            "surface")
     if t == "cloth":
         from . import mesh
         ops = mesh._operands(node, env)

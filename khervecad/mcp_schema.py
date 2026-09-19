@@ -103,7 +103,7 @@ WRAP_TYPES = [
     "while_loop", "if_else", "component", "symmetry", "joint", "sweep",
     "section_loft", "blend", "bend", "twist", "taper", "lattice", "subdivide",
     "pattern", "shell", "sculpt", "decimate", "shrinkwrap", "bevel",
-    "remesh", "wireframe", "cloth",
+    "remesh", "wireframe", "cloth", "push_pull", "bisect",
 ]
 
 
@@ -879,6 +879,32 @@ TOOLS = [
                                "axes and carry everything below it.",
             },
         }),
+    },
+    {
+        "name": "push_pull_face",
+        "description": (
+            "Direct editing: push a FLAT face of a part straight out "
+            "(distance > 0: a boss, a taller wall) or cut it in "
+            "(distance < 0: a pocket, a recess, a thinner plate), with "
+            "an optional inset that leaves a rim. `point` is any point "
+            "on the face in world coordinates — take it from "
+            "probe_surface. The first call wraps the part in a "
+            "push_pull node; later calls on that node (or the part) add "
+            "faces, applied in order, so the top of a boss just raised "
+            "can be raised again. Exact (Manifold)."
+        ),
+        "input_schema": _obj({
+            "node_id": _ID,
+            "point": {"type": "array", "items": {"type": "number"},
+                      "minItems": 3, "maxItems": 3,
+                      "description": "A point on the flat face (world)."},
+            "distance": {"type": "number",
+                         "description": "mm out along the face's normal; "
+                                        "negative cuts in."},
+            "inset": {"type": "number",
+                      "description": "Shrink the face by this much first "
+                                     "(a rim). Default 0."},
+        }, ["node_id", "point", "distance"]),
     },
     {
         "name": "drop_parts",

@@ -199,7 +199,6 @@ class McpToolExecutor:
         objects = [{"id": c.id, "name": c.name, "visible": c.visible,
                     "instances": len(model.instances_of(c))}
                    for c in model.components()]
-        masters = model.masters_group()
         unit = self._unit()
         bounds = self._bbox()
         return {
@@ -218,8 +217,6 @@ class McpToolExecutor:
             "node_count": sum(1 for _ in model.root.walk()) - 1,
             "top_level": [n.name for n in model.root.children],
             "objects": objects,
-            "masters": [m.name for m in masters.children] if masters
-                       else [],
             "editing_object": ({"id": comp.id, "name": comp.name}
                                if comp is not None else None),
             "global_segments": int(model.global_fn),
@@ -1140,6 +1137,43 @@ class McpToolExecutor:
                               "and were clamped to them.")
         return result
 
+    def _t_push_pull_face(self, params) -> dict:
+        from . import faceedit, faceedit_ui
+        node = self._node(params.get("node_id"))
+        point = self._vec3(params, "point")
+        try:
+            distance = float(params.get("distance"))
+            inset = float(params.get("inset") or 0.0)
+        except (TypeError, ValueError):
+            raise ToolError("'distance' and 'inset' must be numbers.")
+        from . import csg
+        if not csg.available():
+            raise ToolError("push_pull_face needs manifold3d installed.")
+        wrapper = node if node.type == "push_pull" else (
+            node.parent if node.parent is not None
+            and node.parent.type == "push_pull" else None)
+        if wrapper is None:
+            wrapper = self._model.wrap_nodes([node], "push_pull")
+            if wrapper is None:
+                raise ToolError(f"{node.name} cannot be wrapped.")
+        env = self._env()
+        local = [round(v, 4) for v in
+                 faceedit_ui.local_point(wrapper, point, env)]
+        rows = [list(r) for r in (wrapper.params.get("pushes") or [])]
+        rows.append(local + [distance, inset])
+        from . import mesh
+        src = [t for t, _c, _s in mesh._children_mesh(
+            wrapper, env, None, frozenset(), False)]
+        _out, missing = faceedit.push_pull(src, rows)
+        if len(rows) - 1 in missing:
+            raise ToolError(
+                f"No flat face at {point} on {node.name} — use a "
+                "probe_surface hit point on a flat face.")
+        self._model.set_param(wrapper, "pushes", rows)
+        return {"node": wrapper.id, "pushes": rows,
+                "note": "Rows apply in order; edit or delete one with "
+                        "set_params on the push_pull node's `pushes`."}
+
     def _t_drop_parts(self, params) -> dict:
         from . import physics
         ids = params.get("node_ids")
@@ -1603,7 +1637,7 @@ class McpToolExecutor:
         if comp.type != "component":
             raise ToolError(
                 f"'{comp.name}' is not an Object. Use make_object "
-                "first, or add_linked_copy for a master.")
+                "first (or make_master), or add_linked_copy.")
         ref = self._model.add_instance(comp)
         for key, value in self._check_params(
                 "reference", params.get("params")).items():
@@ -1615,8 +1649,13 @@ class McpToolExecutor:
         ref = self._model.make_master(node)
         if ref is None:
             raise ToolError(f"'{node.name}' cannot become a master.")
-        return {"master": node.id, "name": node.name,
-                "linked_copy": ref.id}
+        comp = next(c for c in self._model.root.children
+                    if c.type == "component"
+                    and c.name == ref.params["ref"])
+        return {"master": comp.id, "name": comp.name, "object": comp.id,
+                "linked_copy": ref.id,
+                "note": "The piece is now a hidden Object (Object tab); "
+                        "the Linked copy places it."}
 
     def _t_add_linked_copy(self, params) -> dict:
         master = self._node(params.get("node_id"))

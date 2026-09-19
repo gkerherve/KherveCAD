@@ -2669,6 +2669,26 @@ into a new module and import.
                        per vertex: a sharp collider edge can show between
                        two cloth vertices (finer `detail` or larger
                        `offset`). Table drape ~3 s, baked + cached.
+  - `faceedit.py` / `faceedit_ui.py` — **direct face editing**
+                       (2026-09-19, the roadmap's push/pull; Finish
+                       family). `push_pull` (baked; `pushes` rows [x, y, z,
+                       distance, inset] — NOT `faces`, every baked helper
+                       already has a faces argument): the flat face at the
+                       point (nearest triangle grown over coplanar
+                       neighbours, found by geometry so it survives edits)
+                       -> Manifold CrossSection (holes kept), offset for the
+                       inset, extruded out (union) or in (cut). Rows apply
+                       IN ORDER on the running result, so a raised top can
+                       be raised again. `bisect` (the knife): split_by_plane,
+                       keep above / below / both pulled `gap` apart.
+                       Toolbar Push / pull wraps and starts a face pick
+                       (world click -> the node's frame); MCP
+                       `push_pull_face` (world point from probe_surface).
+                       `csg.to_triangles` now welds at 10 nm: Manifold
+                       leaves nanometre edges where a solid overlaps a face
+                       by a hair. The baked-node importer reads node-
+                       specific choices BEFORE the generic x/y/z one — it
+                       had reset bevel `which`, shrinkwrap `keep`/`mode`.
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.

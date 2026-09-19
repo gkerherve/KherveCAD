@@ -393,6 +393,28 @@ TIPS = {
          "Or within: a distance in mm the surface may move instead — "
          "0.05 is invisible on a print."],
         "A closed solid stays closed, so it still prints."),
+    "push_pull": (
+        "Push / pull faces",
+        "Moves a flat face straight out (a boss, a taller wall) or in (a "
+        "pocket, a recess), like SketchUp — with an optional inset that "
+        "leaves a rim around it.",
+        [_SELECTION + " Pick the part.",
+         "Click Push / pull, then click flat faces in the 3D view.",
+         "Each face comes out 5 mm: set its Distance in Properties "
+         "(negative cuts in) and its Inset (a rim).",
+         "Esc when done; right-click ▸ Pick faces to add more."],
+        "Faces apply in order: click the top you just raised to raise "
+        "it again."),
+    "bisect": (
+        "Bisect (knife)",
+        "Cuts a part with a flat plane: keep the top, the bottom, or both "
+        "halves pulled apart — to see inside, flatten a base, or split a "
+        "part for printing.",
+        [_SELECTION + " Pick the part.",
+         "Click Bisect.",
+         "Set the plane's point and normal (0, 0, 1 is a horizontal "
+         "cut), and what to keep."],
+        None),
     "cloth": (
         "Cloth (drape)",
         "Drops a sheet of cloth over things and lets it settle: a "

@@ -115,12 +115,21 @@ def to_rows(solid, palette):
     return rows
 
 
-def to_triangles(solid):
-    """A Manifold's plain triangles (no colours)."""
+def to_triangles(solid, digits: int = 5):
+    """A Manifold's plain triangles (no colours), vertices closer than
+    10^-digits mm made one and the triangles that collapse dropped: a
+    union or an extrusion overlapping a face by a hair leaves edges of
+    a nanometre, which the program's rounded points (and any watertight
+    check) would weld into doubled edges anyway."""
     out = solid.to_mesh64()
-    props = np.asarray(out.vert_properties)[:, :3].tolist()
-    return [(tuple(props[a]), tuple(props[b]), tuple(props[c]))
-            for a, b, c in np.asarray(out.tri_verts).tolist()]
+    props = np.round(np.asarray(out.vert_properties)[:, :3],
+                     digits).tolist()
+    tris = []
+    for a, b, c in np.asarray(out.tri_verts).tolist():
+        pa, pb, pc = tuple(props[a]), tuple(props[b]), tuple(props[c])
+        if pa != pb and pb != pc and pa != pc:
+            tris.append((pa, pb, pc))
+    return tris
 
 
 def _convex(solid):
