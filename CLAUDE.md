@@ -1318,7 +1318,18 @@ into a new module and import.
                        + Surface, Compound); House & home is a submenu per
                        room from `house.FURNITURE_CATALOG`. The Part
                        Library dialog lists categories in the same order
-                       (`category_order`). **Examples = whole documents
+                       (`category_order`). There is **no "Other" menu**
+                       (2026-09-19, the user's request): a category no
+                       section places would still fall into one, so
+                       every shipped `parts/<folder>` is placed — Gym &
+                       Swimming under Sport, Garden under Nature &
+                       garden, Games under Toys & models, and in House &
+                       home the **Finished commercial** folder (the
+                       supermarket, beside Finished houses / labs) plus
+                       a submenu each for Tables, Bookshelves, Doors,
+                       Appliances and Ceiling lights
+                       (`library_menu.HOME_CATEGORY_MENUS`).
+                       **Examples = whole documents
                        that REPLACE yours**: Learn, Techniques (the
                        Mechanical category), Course projects, Showcase
                        (+ vacuum starter, desk setup). Models that are

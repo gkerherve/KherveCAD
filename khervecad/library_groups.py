@@ -36,17 +36,20 @@ SECTIONS = [
     ]),
     ("Buildings & places", [
         ("House & home", "mdi.home-city-outline",
-         ("home", ["Finished houses", "Finished labs", "Houses", "Porches",
-                   "Home furniture",
-                   "Room & furniture"])),
+         ("home", ["Finished houses", "Finished labs",
+                   "Finished commercial", "Houses", "Porches",
+                   "Home furniture", "Room & furniture", "Tables",
+                   "Bookshelves", "Doors", "Appliances",
+                   "Ceiling lights"])),
         ("City", "mdi.city-variant-outline",
          ("city", ["Buildings", "Landmarks", "Skyscrapers", "Bridges",
                    "Park & sport", "Lighting & signals"])),
         ("Sport", "mdi.stadium-variant",
          ["Sport: stadiums", "Sport: pitches & courts", "Sport: equipment",
-          "Sport: seating", "Sport"]),
+          "Sport: seating", "Sport", "Gym", "Swimming"]),
         ("Nature & garden", "mdi.flower-outline",
-         ["Trees", "Leaves", "Flowers", "Landscape", "Pots"]),
+         ["Trees", "Leaves", "Flowers", "Landscape", "Garden",
+          "Pots"]),
     ]),
     ("Science", [
         ("Chemistry lab", "mdi.flask-outline", ["Chemistry"]),
@@ -66,6 +69,7 @@ SECTIONS = [
          ("people", ["Characters"])),
         ("Minecraft", "mdi.cube-outline", ["Minecraft"]),
         ("Generative", "mdi.chart-bubble", ["Generative"]),
+        ("Games", "mdi.gamepad-variant-outline", ["Games"]),
         ("Cars", "mdi.car-sports", ("cars", ["Cars (from blueprints)",
                                             "Cars"])),
         ("Playing cards", "mdi.cards-playing-outline", ["Playing cards"]),
@@ -88,7 +92,9 @@ SHORT_NAMES = {"Lego": "Bricks & plates",
                "Sport: pitches & courts": "Pitches & courts",
                "Sport: equipment": "Equipment",
                "Sport: seating": "Seating",
-               "Sport": "Saved stadiums"}
+               "Sport": "Saved stadiums",
+               "Gym": "Gym & fitness",
+               "Swimming": "Swimming & pools"}
 
 
 def entry_categories(spec, all_categories):

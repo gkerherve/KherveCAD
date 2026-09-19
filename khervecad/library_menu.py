@@ -53,6 +53,11 @@ EXAMPLE_PLACES = [
     ("Learn", "Showcase models", "mdi.star-outline", ["Showcase"]),
 ]
 
+#: library categories House & home lists as a submenu each, after the
+#: rooms (they are kinds of furniture, not pieces of one room)
+HOME_CATEGORY_MENUS = ["Tables", "Bookshelves", "Doors", "Appliances",
+                       "Ceiling lights"]
+
 #: the note on top of an example submenu
 EXAMPLE_NOTE = "Opens as a document, in place of yours"
 
@@ -255,7 +260,14 @@ def _home_menu(window, menu, parts, categories):
         _add_parts(window, home.addMenu(icons.icon("mdi.microscope"),
                                         "Finished labs"), labs, parts)
         home.addSeparator()
-    listed = set(finished) | set(labs)
+    commercial = [pid for pid, spec in parts.items()
+                  if spec.get("category") == "Finished commercial"]
+    if commercial:
+        _add_parts(window, home.addMenu(icons.icon("mdi.storefront-outline"),
+                                        "Finished commercial"),
+                   commercial, parts)
+        home.addSeparator()
+    listed = set(finished) | set(labs) | set(commercial)
     for room, ids in FURNITURE_CATALOG.items():
         ids = [pid for pid in ids if pid in parts]
         if not ids:
@@ -264,6 +276,12 @@ def _home_menu(window, menu, parts, categories):
                                      else "Other pieces"))
         _add_parts(window, sub, ids, parts)
         listed.update(ids)
+    for cat in HOME_CATEGORY_MENUS:            # the categories that are
+        ids = [pid for pid, spec in parts.items()      # a menu of their own
+               if spec.get("category") == cat and pid not in listed]
+        if ids:
+            _add_parts(window, home.addMenu(menu_text(cat)), ids, parts)
+            listed.update(ids)
     rest = [pid for pid, spec in parts.items()
             if spec.get("category") in categories and pid not in listed]
     if rest:

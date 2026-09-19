@@ -170,3 +170,22 @@ def test_flowers_insert_as_parts_and_stylised_trees_are_gone():
         node = library.default_part(pid)
         assert not validate(node)
         assert mesh.tessellate(node, fn=12)
+
+
+def test_no_part_falls_into_an_other_menu(window):
+    """Gym and Swimming are Sport, Supermarket is a Finished commercial
+    building in House & home, and the furniture kinds sit in House & home
+    — nothing is left under an "Other" header."""
+    library = _menu(window.menuBar(), "Library")
+    assert "OTHER" not in _texts(library)
+    sport = _menu(library, "Sport")
+    assert _texts(_menu(sport, "Gym & fitness"))
+    assert "Olympic pool 50 m" in _texts(_menu(sport, "Swimming & pools"))
+    home = _menu(library, "House & home")
+    assert "Supermarket complete" in _texts(
+        _menu(home, "Finished commercial"))
+    for kind in ("Tables", "Bookshelves", "Doors", "Appliances",
+                 "Ceiling lights"):
+        assert _texts(_menu(home, kind)), kind
+    assert _texts(_menu(_menu(library, "Nature & garden"), "Garden"))
+    assert "Maze" in _texts(_menu(library, "Games"))
