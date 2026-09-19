@@ -115,6 +115,19 @@ NODE_TYPES = {
                  0.001, 1.0),
                 ("tolerance", "Or within (mm, 0 = use Keep)", "float",
                  0.0, 1e4)]),
+    "bevel": dict(
+        label="Bevel edges", category=OPERATION,
+        icon="mdi.square-rounded-outline",
+        params=dict(width=1.0, segments=4, profile=0.5, angle=30.0,
+                    which="convex"),
+        schema=[("width", "Width (rolling-ball radius, mm)", "float",
+                 0.001, 1e4),
+                ("segments", "Segments (1 = chamfer)", "int", 1, 64),
+                ("profile", "Profile (0.5 round, 0.25 flat)", "float",
+                 0.05, 0.95),
+                ("angle", "Edges sharper than (°)", "float", 1.0, 179.0),
+                ("which", "Which edges", "choice",
+                 ["convex", "concave", "both"], None)]),
     "shrinkwrap": dict(
         label="Shrinkwrap (onto a surface)", category=OPERATION,
         icon="mdi.arrow-collapse-all",
@@ -203,7 +216,8 @@ TYPES = frozenset(NODE_TYPES)
 LEAVES = frozenset({"polyhedron", "loft", "human"})
 WRAPPERS = frozenset({"sweep", "section_loft", "blend", "bend", "twist",
                       "taper", "lattice", "subdivide", "fillet", "shell",
-                      "sculpt", "hair_cap", "decimate", "shrinkwrap"})
+                      "sculpt", "hair_cap", "decimate", "shrinkwrap",
+                      "bevel"})
 
 #: wrappers whose surface is computed here and baked into the program,
 #: with their helper module's parameters (besides points and faces)
@@ -218,6 +232,8 @@ _BAKED = {
     "lattice": [("offsets", []), ("detail", 2)],
     "subdivide": [("levels", 1)],
     "decimate": [("ratio", 0.5), ("tolerance", 0)],
+    "bevel": [("width", 1), ("segments", 4), ("profile", 0.5),
+              ("angle", 30), ("which", "convex")],
     "shrinkwrap": [("mode", "nearest"), ("axis", "normal"),
                    ("keep", "outside"), ("offset", 0.5), ("detail", 0),
                    ("show_target", True)],
@@ -232,7 +248,8 @@ _BAKED = {
               ("warp_radius", 45), ("pose", [])],
 }
 #: parameters written as quoted OpenSCAD strings
-_CHOICES = {"axis", "toward", "open", "mirror", "clear", "mode", "keep"}
+_CHOICES = {"axis", "toward", "open", "mirror", "clear", "mode", "keep",
+            "which"}
 #: what a deformer cannot take from the preview mesh: booleans and the
 #: rest are only approximated there, so baking them would bake a wrong
 #: shape into the program
@@ -497,6 +514,12 @@ def _compute(node, env) -> list:
            mesh._children_mesh(node, env, None, frozenset(), False)]
     if t == "subdivide":
         return deform.loop_subdivide(src, int(num("levels", 1.0)))
+    if t == "bevel":
+        from . import bevel
+        out = bevel.bevel(src, num("width", 1.0), int(num("segments", 4.0)),
+                          num("profile", 0.5), num("angle", 30.0),
+                          str(p.get("which", "convex")))
+        return src if out is None else out
     if t == "decimate":
         from . import decimate
         return decimate.decimate(src, num("ratio", 0.5),
@@ -702,12 +725,16 @@ def _b_baked(kind):
                                else [list(r) for r in defaults[key]])
             elif key in ("closed", "show_target"):
                 params[key] = value is True or value == "true"
+            elif key == "which":
+                from .bevel import EDGES
+                params[key] = value if value in EDGES else defaults[key]
             elif kind == "shrinkwrap" and key in ("mode", "axis", "keep"):
                 from .shrinkwrap import AXES, KEEPS, MODES
                 allowed = {"mode": MODES, "axis": AXES, "keep": KEEPS}[key]
                 params[key] = value if value in allowed else defaults[key]
             elif (kind, key) in (("blend", "detail"),
                                  ("subdivide", "levels"),
+                                 ("bevel", "segments"),
                                  ("sweep", "smooth"),
                                  ("section_loft", "smooth")):
                 try:
@@ -844,6 +871,13 @@ def _check_baked(node, env):
                     "fastest, then y, then z")
     if t == "sculpt":
         return _check_sculpt(p, env)
+    if t == "bevel":
+        from . import bevel, csg
+        if not csg.available():
+            return ("bevel needs the manifold3d package (pip install "
+                    "manifold3d) — its booleans cut the rounds")
+        if str(p.get("which", "convex")) not in bevel.EDGES:
+            return "bevel: which edges must be convex, concave or both"
     if t == "shrinkwrap":
         from . import mesh, shrinkwrap
         if len(mesh._operands(node, env)) < 2:

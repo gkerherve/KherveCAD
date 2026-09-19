@@ -393,6 +393,19 @@ TIPS = {
          "Or within: a distance in mm the surface may move instead — "
          "0.05 is invisible on a print."],
         "A closed solid stays closed, so it still prints."),
+    "bevel": (
+        "Bevel edges",
+        "Rounds or chamfers EVERY sharp edge of a part at once — outside "
+        "edges, inside corners or both — with true rounded corners where "
+        "three edges meet. The part keeps its size.",
+        [_SELECTION + " Pick the part.",
+         "Click Bevel edges.",
+         "Width: the radius of the round (mm).",
+         "Segments: steps across it (1 = a flat chamfer).",
+         "Profile: 0.5 round, 0.25 flat, towards 1 squarer, lower a cove.",
+         "Edges sharper than: leave gentle creases (a cylinder's facets) "
+         "alone."],
+        "To round only some edges, use Fillet edges and click them."),
     "shrinkwrap": (
         "Shrinkwrap (onto a surface)",
         "Presses one shape onto another: a garment, a cap, a strap or "

@@ -2540,6 +2540,36 @@ into a new module and import.
                        are Manifold's `ray_cast` (distance = FRACTION of
                        the segment) or numpy Moller-Trumbore. Vertices are
                        welded first, so a closed piece stays closed.
+  - `bevel.py`       — **Bevel** (Blender's Bevel modifier, 2026-09-19;
+                       Finish family beside Fillet, baked:
+                       `kcad_bevel(width=, segments=, profile=, angle=,
+                       which=, points=, faces=) { children }`): EVERY
+                       crease sharper than `angle` — convex, concave or
+                       both — no picking. Reuses fillet.py's creases,
+                       chains and strips (`strip(section=)`), with
+                       Blender's superellipse `profile` (e = 2^(1 + (p -
+                       0.5)/0.25): 0.5 the true rolling-ball arc, 0.25 a
+                       chamfer) in the affine frame of the two tangent
+                       points. **Corners** where three bevelled creases of
+                       one kind meet: the slab between the faces and their
+                       offset planes minus the ball tangent to all three
+                       (round: exactly the rolling-ball blend — 20 mm box,
+                       r 2: 7804.8 vs 7804.7 analytic) or the affine
+                       superellipsoid (chamfer: Blender's corner triangle
+                       x+y+z = 2w); the slab is grown about the BALL
+                       CENTRE (grown about its middle it cut slivers off
+                       what stays). A vertex where exactly two creases of
+                       one kind meet is chained THROUGH (`fillet.chain
+                       through=`, `HAIRPIN`), so a pocket's rim is one
+                       mitred loop; a concave filler is trimmed a setback
+                       short of an end where bevelled convex creases meet
+                       it (`_trim_ends`), and fills go on before cuts, so
+                       no post stands up through the rim. Manifold does
+                       the booleans; without it validation says so. A
+                       morphological opening (erode + dilate by a ball)
+                       was tried first: 64 s and 9M triangles for a plate
+                       with four holes — Manifold's minkowski of a
+                       non-convex solid scales with the face product.
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.

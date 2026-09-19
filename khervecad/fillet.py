@@ -48,6 +48,8 @@ MIN_ANGLE = 20.0
 #: edges stays under this (degrees): round a rim, stop at a corner
 MAX_TURN = 35.0
 
+#: a `through` vertex is followed at any turn below this (degrees)
+HAIRPIN = 150.0
 #: how far (mm, plus this fraction of the part's size) a remembered
 #: edge may drift from a crease and still be the same edge
 FIND_TOL = 0.5
@@ -191,12 +193,14 @@ def _turn(d0, d1) -> float:
     return math.degrees(math.acos(max(-1.0, min(1.0, _dot(d0, d1)))))
 
 
-def chain(edges, seed, max_turn: float = MAX_TURN) -> dict:
+def chain(edges, seed, max_turn: float = MAX_TURN, through=None) -> dict:
     """The tangent-continuous run of creases through *seed* (an Edge
     from *edges*): ``{"points": [...], "edges": [Edge...], "closed":
     bool, "convex": bool}`` with the edges oriented along the run.
     At a vertex the crease that turns least is followed, while the
-    turn stays under *max_turn* and the convexity matches."""
+    turn stays under *max_turn* and the convexity matches — or, at a
+    vertex where *through(vertex key)* is true, at any turn short of a
+    hairpin (bevel.py mitres a pocket's rim round its corners)."""
     by_vertex = {}
     for e in edges:
         by_vertex.setdefault(_vkey(e.a), []).append(e)
@@ -220,14 +224,15 @@ def chain(edges, seed, max_turn: float = MAX_TURN) -> dict:
                  start_edge.nl, start_edge.angle, start_edge.convex)
         while True:
             end_key = _vkey(cur.b)
-            best, best_turn = None, max_turn
+            limit = HAIRPIN if through and through(end_key) else max_turn
+            best, best_turn = None, limit
             for cand in by_vertex.get(end_key, ()):
                 if cand.convex != seed.convex:
                     continue
                 o, d = oriented(cand, end_key)
                 turn = _turn(cur.direction, d)
                 if cand is seed:
-                    if forward and turn < max_turn and run:
+                    if forward and turn < limit and run:
                         return run, True     # back at the seed: closed
                     continue
                 if id(cand) in used:
@@ -323,12 +328,15 @@ def _area2d(pts):
 
 
 # ------------------------------------------------------------- strip
-def strip(run: dict, radius: float, kind: str, detail: int) -> list:
+def strip(run: dict, radius: float, kind: str, detail: int,
+          section=None) -> list:
     """Counter-clockwise triangles of the cutter (or filler) along a
     chain: one ring per chain vertex, mitred between its two edges,
-    walls between rings, caps at open ends."""
+    walls between rings, caps at open ends. *section(edge)* replaces
+    `profile` (bevel.py's superellipse profiles)."""
     edges = run["edges"]
-    profiles = [profile(e, radius, kind, detail) for e in edges]
+    profiles = [section(e) if section else
+                profile(e, radius, kind, detail) for e in edges]
     m = len(profiles[0][2])
     if any(len(p[2]) != m for p in profiles):
         return []                          # pragma: no cover

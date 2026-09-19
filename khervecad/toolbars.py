@@ -62,7 +62,7 @@ OPERATION_GROUPS = [
     ("transform", ["translate", "rotate", "scale", "mirror", "resize",
                    "multmatrix"]),
     ("combine", ["union", "difference", "intersection", "render"]),
-    ("finish", ["fillet", "hull", "minkowski"]),
+    ("finish", ["fillet", "bevel", "hull", "minkowski"]),
     ("deform", ["blend", "bend", "twist", "taper", "lattice",
                 "subdivide", "decimate", "shell", "sculpt", "shrinkwrap"]),
     ("character", ["symmetry", "joint", "paint", "hair_cap"]),
