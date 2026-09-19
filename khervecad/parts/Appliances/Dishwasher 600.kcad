@@ -1,0 +1,207 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Dishwasher 600",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "9fbabaa51f814c93858b85dac28f26bf",
+      "title": "Dishwasher 600",
+      "area": "General",
+      "named": "Dishwasher 600"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d9d9de",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "width": 600.0,
+         "depth": 600.0,
+         "height": 850.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#262626",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -6.0,
+         "z": 760.0,
+         "width": 600.0,
+         "depth": 8.0,
+         "height": 90.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "silver",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 100.0,
+         "y": -40.0,
+         "z": 700.0,
+         "width": 400.0,
+         "depth": 20.0,
+         "height": 25.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "silver",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 100.0,
+         "y": -25.0,
+         "z": 700.0,
+         "width": 15.0,
+         "depth": 25.0,
+         "height": 25.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "silver",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 485.0,
+         "y": -25.0,
+         "z": 700.0,
+         "width": 15.0,
+         "depth": 25.0,
+         "height": 25.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#333333",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -4.0,
+         "z": 0.0,
+         "width": 600.0,
+         "depth": 6.0,
+         "height": 100.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Dishwasher 600x600x850",
+  "description": "Freestanding stainless-look dishwasher, 600 x 600 x 850. Its origin is the back-left-bottom corner and the front faces -Y. It has a black control strip on top, a bar handle and a black kick plate.",
+  "tags": [
+   "dishwasher",
+   "kitchen",
+   "appliance",
+   "lave-vaisselle"
+  ],
+  "source": "assistant",
+  "uid": "9fbabaa51f814c93858b85dac28f26bf",
+  "created": "2026-09-19T20:00:17"
+ }
+}

@@ -1,0 +1,106 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Gym lockers 10",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "for_loop",
+      "name": "For i",
+      "visible": true,
+      "params": {
+       "variable": "i",
+       "start": 0.0,
+       "end": 9.0,
+       "step": 1.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#336699",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "i*400",
+           "y": 0.0,
+           "z": 0.0,
+           "width": 390.0,
+           "depth": 500.0,
+           "height": 1900.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "silver",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "i*400+300",
+           "y": -10.0,
+           "z": 1000.0,
+           "width": 30.0,
+           "depth": 10.0,
+           "height": 120.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Gym lockers 10",
+  "description": "Gym lockers 10. Overall size 3990 x 510 x 1900 (document units). Built from 2 color, 2 cube, 1 for_loop. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "a204b83b44be4a9c99248938b98c28cd",
+  "created": "2026-09-19T20:47:50"
+ }
+}

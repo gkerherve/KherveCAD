@@ -1,0 +1,293 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Ladder bookshelf 700x1800",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "e121c21cb3944363a47338ee49fc59ca",
+      "title": "Ladder bookshelf 700x1800",
+      "area": "General",
+      "named": "Ladder bookshelf 700x1800"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#4c331f",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For s",
+        "visible": true,
+        "params": {
+         "variable": "s",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "0, 680"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "s",
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "width": 20.0,
+               "depth": 400.0,
+               "height": 20.0,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 1780.0,
+               "width": 20.0,
+               "depth": 40.0,
+               "height": 20.0,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For i",
+      "visible": true,
+      "params": {
+       "variable": "i",
+       "start": 0.0,
+       "end": 3.0,
+       "step": 1.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#4c331f",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 20.0,
+           "y": 0.0,
+           "z": "100+i*430",
+           "width": 660.0,
+           "depth": "400-360*(100+i*430)/1800",
+           "height": 18.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 40.0,
+         "y": -20.0,
+         "z": "118+i*430"
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "BookRow",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "assign",
+            "name": "w =",
+            "visible": true,
+            "params": {
+             "variable": "w",
+             "value": "i==3?300:600"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "h =",
+            "visible": true,
+            "params": {
+             "variable": "h",
+             "value": "240-i*20"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "seed =",
+            "visible": true,
+            "params": {
+             "variable": "seed",
+             "value": "i*2"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "C =",
+            "visible": true,
+            "params": {
+             "variable": "C",
+             "value": "[[0.7, 0.1, 0.1], [0.1, 0.3, 0.6], [0.1, 0.5, 0.2], [0.9, 0.7, 0.1], [0.4, 0.2, 0.5], [0.9, 0.9, 0.85], [0.2, 0.2, 0.2], [0.8, 0.4, 0.1], [0.3, 0.6, 0.7], [0.6, 0.3, 0.3]]"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "H =",
+            "visible": true,
+            "params": {
+             "variable": "H",
+             "value": "[0.85, 0.95, 0.75, 1, 0.8, 0.9, 0.7, 0.95, 0.85, 0.78]"
+            }
+           },
+           {
+            "type": "for_loop",
+            "name": "For j",
+            "visible": true,
+            "params": {
+             "variable": "j",
+             "start": 0.0,
+             "end": "w/300-1",
+             "step": 1.0,
+             "values": ""
+            },
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For k",
+              "visible": true,
+              "params": {
+               "variable": "k",
+               "start": 0.0,
+               "end": 9.0,
+               "step": 1.0,
+               "values": ""
+              },
+              "children": [
+               {
+                "type": "color",
+                "name": "Color",
+                "visible": true,
+                "params": {
+                 "color": "C[k<9-seed?k+seed:k+seed-10]",
+                 "alpha": 1.0,
+                 "material": "Default"
+                },
+                "children": [
+                 {
+                  "type": "cube",
+                  "name": "Cube",
+                  "visible": true,
+                  "params": {
+                   "x": "j*300+k*30+2",
+                   "y": 20.0,
+                   "z": 0.0,
+                   "width": 27.0,
+                   "depth": 200.0,
+                   "height": "h*H[k]",
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Ladder bookshelf 700x400x1800",
+  "description": "Leaning ladder-style bookshelf in dark wood, 700 wide and 1800 tall. The side rails taper from 400 deep at the floor to 40 at the top, and it has four shelves (430 pitch) that get shallower going up, each holding books. Its origin is the back-left-bottom corner.",
+  "tags": [
+   "ladder shelf",
+   "bookshelf",
+   "leaning shelf",
+   "books"
+  ],
+  "source": "assistant",
+  "uid": "e121c21cb3944363a47338ee49fc59ca",
+  "created": "2026-09-19T20:00:26"
+ }
+}

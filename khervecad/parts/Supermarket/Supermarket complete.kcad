@@ -1,0 +1,2865 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Supermarket shell 40x30 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "4e975b0ce5944563acab99f40e3c2c9c",
+      "title": "Supermarket shell 40x30 m",
+      "area": "General",
+      "named": "Supermarket shell 40x30 m"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ebebe6",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": -100.0,
+         "width": 40000.0,
+         "depth": 30000.0,
+         "height": 100.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#f2f2ed",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": -300.0,
+         "y": -300.0,
+         "z": -100.0,
+         "width": 300.0,
+         "depth": 30600.0,
+         "height": 5600.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#f2f2ed",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 40000.0,
+         "y": -300.0,
+         "z": -100.0,
+         "width": 300.0,
+         "depth": 30600.0,
+         "height": 5600.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#f2f2ed",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 30000.0,
+         "z": -100.0,
+         "width": 40000.0,
+         "depth": 300.0,
+         "height": 5600.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#b2d9f2",
+       "alpha": 0.35,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -300.0,
+         "z": 0.0,
+         "width": 17000.0,
+         "depth": 100.0,
+         "height": 3500.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#b2d9f2",
+       "alpha": 0.35,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 20000.0,
+         "y": -300.0,
+         "z": 0.0,
+         "width": 20000.0,
+         "depth": 100.0,
+         "height": 3500.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#333338",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": -300.0,
+         "y": -400.0,
+         "z": 3500.0,
+         "width": 40600.0,
+         "depth": 400.0,
+         "height": 2000.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#e61a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 15000.0,
+         "y": -420.0,
+         "z": 4000.0,
+         "width": 10000.0,
+         "depth": 20.0,
+         "height": 1000.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#b2d9f2",
+       "alpha": 0.5,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "17000, 18520"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -600.0,
+           "z": 0.0,
+           "width": 1480.0,
+           "depth": 40.0,
+           "height": 2600.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "for_loop",
+    "name": "For i",
+    "visible": true,
+    "params": {
+     "variable": "i",
+     "start": 0.0,
+     "end": 5.0,
+     "step": 1.0,
+     "values": ""
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": "6000+i*4500",
+       "y": 10000.0,
+       "z": 0.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 90.0
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -1200.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "union",
+            "name": "Gondola [Supermarket aisles]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "assign",
+              "name": "L =",
+              "visible": true,
+              "params": {
+               "variable": "L",
+               "value": "12000"
+              }
+             },
+             {
+              "type": "color",
+              "name": "Color",
+              "visible": true,
+              "params": {
+               "color": "#d9d9d9",
+               "alpha": 1.0,
+               "material": "Default"
+              },
+              "children": [
+               {
+                "type": "cube",
+                "name": "Cube",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 560.0,
+                 "z": 0.0,
+                 "width": "L",
+                 "depth": 80.0,
+                 "height": 1800.0,
+                 "center": false
+                }
+               }
+              ]
+             },
+             {
+              "type": "color",
+              "name": "Color",
+              "visible": true,
+              "params": {
+               "color": "#4c4c52",
+               "alpha": 1.0,
+               "material": "Default"
+              },
+              "children": [
+               {
+                "type": "cube",
+                "name": "Cube",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "width": "L",
+                 "depth": 1200.0,
+                 "height": 120.0,
+                 "center": false
+                }
+               }
+              ]
+             },
+             {
+              "type": "for_loop",
+              "name": "For z",
+              "visible": true,
+              "params": {
+               "variable": "z",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "120, 450, 780, 1110, 1440"
+              },
+              "children": [
+               {
+                "type": "color",
+                "name": "Color",
+                "visible": true,
+                "params": {
+                 "color": "#cccccc",
+                 "alpha": 1.0,
+                 "material": "Default"
+                },
+                "children": [
+                 {
+                  "type": "cube",
+                  "name": "Cube",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": "z",
+                   "width": "L",
+                   "depth": 1200.0,
+                   "height": 20.0,
+                   "center": false
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 60.0,
+                 "z": "z+20"
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Products",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "assign",
+                    "name": "L =",
+                    "visible": true,
+                    "params": {
+                     "variable": "L",
+                     "value": "L"
+                    }
+                   },
+                   {
+                    "type": "assign",
+                    "name": "d =",
+                    "visible": true,
+                    "params": {
+                     "variable": "d",
+                     "value": "450"
+                    }
+                   },
+                   {
+                    "type": "for_loop",
+                    "name": "For j",
+                    "visible": true,
+                    "params": {
+                     "variable": "j",
+                     "start": 0.0,
+                     "end": "L/1000-1",
+                     "step": 1.0,
+                     "values": ""
+                    },
+                    "children": [
+                     {
+                      "type": "translate",
+                      "name": "Translate",
+                      "visible": true,
+                      "params": {
+                       "x": "j*1000",
+                       "y": 0.0,
+                       "z": 0.0
+                      },
+                      "children": [
+                       {
+                        "type": "color",
+                        "name": "Color",
+                        "visible": true,
+                        "params": {
+                         "color": "#d9261a",
+                         "alpha": 1.0,
+                         "material": "Default"
+                        },
+                        "children": [
+                         {
+                          "type": "cube",
+                          "name": "Cube",
+                          "visible": true,
+                          "params": {
+                           "x": 20.0,
+                           "y": 0.0,
+                           "z": 0.0,
+                           "width": 230.0,
+                           "depth": "d",
+                           "height": 260.0,
+                           "center": false
+                          }
+                         }
+                        ]
+                       },
+                       {
+                        "type": "color",
+                        "name": "Color",
+                        "visible": true,
+                        "params": {
+                         "color": "#f2cc1a",
+                         "alpha": 1.0,
+                         "material": "Default"
+                        },
+                        "children": [
+                         {
+                          "type": "cube",
+                          "name": "Cube",
+                          "visible": true,
+                          "params": {
+                           "x": 270.0,
+                           "y": 0.0,
+                           "z": 0.0,
+                           "width": 230.0,
+                           "depth": "d",
+                           "height": 220.0,
+                           "center": false
+                          }
+                         }
+                        ]
+                       },
+                       {
+                        "type": "color",
+                        "name": "Color",
+                        "visible": true,
+                        "params": {
+                         "color": "#1a8c40",
+                         "alpha": 1.0,
+                         "material": "Default"
+                        },
+                        "children": [
+                         {
+                          "type": "cube",
+                          "name": "Cube",
+                          "visible": true,
+                          "params": {
+                           "x": 520.0,
+                           "y": 0.0,
+                           "z": 0.0,
+                           "width": 230.0,
+                           "depth": "d",
+                           "height": 280.0,
+                           "center": false
+                          }
+                         }
+                        ]
+                       },
+                       {
+                        "type": "color",
+                        "name": "Color",
+                        "visible": true,
+                        "params": {
+                         "color": "#1a4cbf",
+                         "alpha": 1.0,
+                         "material": "Default"
+                        },
+                        "children": [
+                         {
+                          "type": "cube",
+                          "name": "Cube",
+                          "visible": true,
+                          "params": {
+                           "x": 770.0,
+                           "y": 0.0,
+                           "z": 0.0,
+                           "width": 210.0,
+                           "depth": "d",
+                           "height": 240.0,
+                           "center": false
+                          }
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 690.0,
+                 "z": "z+20"
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Products",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "assign",
+                    "name": "L =",
+                    "visible": true,
+                    "params": {
+                     "variable": "L",
+                     "value": "L"
+                    }
+                   },
+                   {
+                    "type": "assign",
+                    "name": "d =",
+                    "visible": true,
+                    "params": {
+                     "variable": "d",
+                     "value": "450"
+                    }
+                   },
+                   {
+                    "type": "for_loop",
+                    "name": "For j",
+                    "visible": true,
+                    "params": {
+                     "variable": "j",
+                     "start": 0.0,
+                     "end": "L/1000-1",
+                     "step": 1.0,
+                     "values": ""
+                    },
+                    "children": [
+                     {
+                      "type": "translate",
+                      "name": "Translate",
+                      "visible": true,
+                      "params": {
+                       "x": "j*1000",
+                       "y": 0.0,
+                       "z": 0.0
+                      },
+                      "children": [
+                       {
+                        "type": "color",
+                        "name": "Color",
+                        "visible": true,
+                        "params": {
+                         "color": "#d9261a",
+                         "alpha": 1.0,
+                         "material": "Default"
+                        },
+                        "children": [
+                         {
+                          "type": "cube",
+                          "name": "Cube",
+                          "visible": true,
+                          "params": {
+                           "x": 20.0,
+                           "y": 0.0,
+                           "z": 0.0,
+                           "width": 230.0,
+                           "depth": "d",
+                           "height": 260.0,
+                           "center": false
+                          }
+                         }
+                        ]
+                       },
+                       {
+                        "type": "color",
+                        "name": "Color",
+                        "visible": true,
+                        "params": {
+                         "color": "#f2cc1a",
+                         "alpha": 1.0,
+                         "material": "Default"
+                        },
+                        "children": [
+                         {
+                          "type": "cube",
+                          "name": "Cube",
+                          "visible": true,
+                          "params": {
+                           "x": 270.0,
+                           "y": 0.0,
+                           "z": 0.0,
+                           "width": 230.0,
+                           "depth": "d",
+                           "height": 220.0,
+                           "center": false
+                          }
+                         }
+                        ]
+                       },
+                       {
+                        "type": "color",
+                        "name": "Color",
+                        "visible": true,
+                        "params": {
+                         "color": "#1a8c40",
+                         "alpha": 1.0,
+                         "material": "Default"
+                        },
+                        "children": [
+                         {
+                          "type": "cube",
+                          "name": "Cube",
+                          "visible": true,
+                          "params": {
+                           "x": 520.0,
+                           "y": 0.0,
+                           "z": 0.0,
+                           "width": 230.0,
+                           "depth": "d",
+                           "height": 280.0,
+                           "center": false
+                          }
+                         }
+                        ]
+                       },
+                       {
+                        "type": "color",
+                        "name": "Color",
+                        "visible": true,
+                        "params": {
+                         "color": "#1a4cbf",
+                         "alpha": 1.0,
+                         "material": "Default"
+                        },
+                        "children": [
+                         {
+                          "type": "cube",
+                          "name": "Cube",
+                          "visible": true,
+                          "params": {
+                           "x": 770.0,
+                           "y": 0.0,
+                           "z": 0.0,
+                           "width": 210.0,
+                           "depth": "d",
+                           "height": 240.0,
+                           "center": false
+                          }
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "color",
+              "name": "Color",
+              "visible": true,
+              "params": {
+               "color": "#e61a1a",
+               "alpha": 1.0,
+               "material": "Default"
+              },
+              "children": [
+               {
+                "type": "cube",
+                "name": "Cube",
+                "visible": true,
+                "params": {
+                 "x": -10.0,
+                 "y": -10.0,
+                 "z": 1850.0,
+                 "width": "L+20",
+                 "depth": 1220.0,
+                 "height": 250.0,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "translate",
+    "name": "Translate",
+    "visible": true,
+    "params": {
+     "x": 2000.0,
+     "y": 29000.0,
+     "z": 0.0
+    },
+    "children": [
+     {
+      "type": "rotate",
+      "name": "Rotate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0
+      },
+      "children": [
+       {
+        "type": "union",
+        "name": "FridgeWall [Chilled fridge wall 36 m]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "assign",
+          "name": "L =",
+          "visible": true,
+          "params": {
+           "variable": "L",
+           "value": "36000"
+          }
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#e6e6eb",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "width": "L",
+             "depth": 900.0,
+             "height": 2200.0,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For j",
+          "visible": true,
+          "params": {
+           "variable": "j",
+           "start": 0.0,
+           "end": "L/750-1",
+           "step": 1.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "color",
+            "name": "Color",
+            "visible": true,
+            "params": {
+             "color": "#b2d9f2",
+             "alpha": 0.4,
+             "material": "Default"
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": "j*750+20",
+               "y": -40.0,
+               "z": 100.0,
+               "width": 710.0,
+               "depth": 40.0,
+               "height": 1900.0,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "color",
+            "name": "Color",
+            "visible": true,
+            "params": {
+             "color": "silver",
+             "alpha": 1.0,
+             "material": "Default"
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": "j*750+680",
+               "y": -80.0,
+               "z": 700.0,
+               "width": 25.0,
+               "depth": 40.0,
+               "height": 800.0,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For z",
+          "visible": true,
+          "params": {
+           "variable": "z",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "300, 700, 1100, 1500"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -10.0,
+             "z": "z"
+            },
+            "children": [
+             {
+              "type": "union",
+              "name": "Products",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "assign",
+                "name": "L =",
+                "visible": true,
+                "params": {
+                 "variable": "L",
+                 "value": "L"
+                }
+               },
+               {
+                "type": "assign",
+                "name": "d =",
+                "visible": true,
+                "params": {
+                 "variable": "d",
+                 "value": "300"
+                }
+               },
+               {
+                "type": "for_loop",
+                "name": "For j",
+                "visible": true,
+                "params": {
+                 "variable": "j",
+                 "start": 0.0,
+                 "end": "L/1000-1",
+                 "step": 1.0,
+                 "values": ""
+                },
+                "children": [
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": "j*1000",
+                   "y": 0.0,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "color",
+                    "name": "Color",
+                    "visible": true,
+                    "params": {
+                     "color": "#d9261a",
+                     "alpha": 1.0,
+                     "material": "Default"
+                    },
+                    "children": [
+                     {
+                      "type": "cube",
+                      "name": "Cube",
+                      "visible": true,
+                      "params": {
+                       "x": 20.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "width": 230.0,
+                       "depth": "d",
+                       "height": 260.0,
+                       "center": false
+                      }
+                     }
+                    ]
+                   },
+                   {
+                    "type": "color",
+                    "name": "Color",
+                    "visible": true,
+                    "params": {
+                     "color": "#f2cc1a",
+                     "alpha": 1.0,
+                     "material": "Default"
+                    },
+                    "children": [
+                     {
+                      "type": "cube",
+                      "name": "Cube",
+                      "visible": true,
+                      "params": {
+                       "x": 270.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "width": 230.0,
+                       "depth": "d",
+                       "height": 220.0,
+                       "center": false
+                      }
+                     }
+                    ]
+                   },
+                   {
+                    "type": "color",
+                    "name": "Color",
+                    "visible": true,
+                    "params": {
+                     "color": "#1a8c40",
+                     "alpha": 1.0,
+                     "material": "Default"
+                    },
+                    "children": [
+                     {
+                      "type": "cube",
+                      "name": "Cube",
+                      "visible": true,
+                      "params": {
+                       "x": 520.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "width": 230.0,
+                       "depth": "d",
+                       "height": 280.0,
+                       "center": false
+                      }
+                     }
+                    ]
+                   },
+                   {
+                    "type": "color",
+                    "name": "Color",
+                    "visible": true,
+                    "params": {
+                     "color": "#1a4cbf",
+                     "alpha": 1.0,
+                     "material": "Default"
+                    },
+                    "children": [
+                     {
+                      "type": "cube",
+                      "name": "Cube",
+                      "visible": true,
+                      "params": {
+                       "x": 770.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "width": 210.0,
+                       "depth": "d",
+                       "height": 240.0,
+                       "center": false
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Chest freezer 4 m island",
+    "visible": true,
+    "params": {
+     "x": 4000.0,
+     "y": 24500.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "c2f693d49a734bb895fb435155dc4ec4",
+      "title": "Chest freezer 4 m island",
+      "area": "General",
+      "named": "Chest freezer 4 m island"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "white",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "width": 4000.0,
+         "depth": 1100.0,
+         "height": 850.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#b2d9f2",
+       "alpha": 0.5,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 850.0,
+         "width": 4000.0,
+         "depth": 1100.0,
+         "height": 20.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d9f2ff",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 50.0,
+         "y": 50.0,
+         "z": 700.0,
+         "width": 3900.0,
+         "depth": 1000.0,
+         "height": 140.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Produce table 1",
+    "visible": true,
+    "params": {
+     "x": 500.0,
+     "y": 8000.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "a95e5cda55ea432088d05cddf21c962a",
+      "title": "Produce table 1",
+      "area": "House & home",
+      "named": "Produce table 1"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#805933",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "width": 2400.0,
+         "depth": 1200.0,
+         "height": 700.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For i",
+      "visible": true,
+      "params": {
+       "variable": "i",
+       "start": 0.0,
+       "end": 3.0,
+       "step": 1.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For k",
+        "visible": true,
+        "params": {
+         "variable": "k",
+         "start": 0.0,
+         "end": 1.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#997340",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": "i*600+20",
+             "y": "k*600+20",
+             "z": 700.0,
+             "width": 560.0,
+             "depth": 560.0,
+             "height": 120.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#e6331a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 1.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "i*1200+300",
+           "y": 300.0,
+           "z": 830.0
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 1.0,
+             "z": 0.4
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 260.0,
+               "segments": 16
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#f2991a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 1.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "i*1200+900",
+           "y": 300.0,
+           "z": 830.0
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 1.0,
+             "z": 0.4
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 260.0,
+               "segments": 16
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#4cb233",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 1.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "i*1200+300",
+           "y": 900.0,
+           "z": 830.0
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 1.0,
+             "z": 0.4
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 260.0,
+               "segments": 16
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#f2d933",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 1.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "i*1200+900",
+           "y": 900.0,
+           "z": 830.0
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 1.0,
+             "z": 0.4
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 260.0,
+               "segments": 16
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "for_loop",
+    "name": "For i",
+    "visible": true,
+    "params": {
+     "variable": "i",
+     "start": 0.0,
+     "end": 4.0,
+     "step": 1.0,
+     "values": ""
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Checkouts 5",
+      "visible": true,
+      "params": {
+       "x": "22000+i*3200",
+       "y": 3500.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 90.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#333338",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 3500.0,
+           "depth": 900.0,
+           "height": 850.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#0d0d0d",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 100.0,
+           "z": 850.0,
+           "width": 2500.0,
+           "depth": 500.0,
+           "height": 20.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#4c4c4c",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 2600.0,
+           "y": 300.0,
+           "z": 850.0,
+           "width": 400.0,
+           "depth": 300.0,
+           "height": 300.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1a1a1a",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 2700.0,
+           "y": 600.0,
+           "z": 1150.0,
+           "width": 250.0,
+           "depth": 40.0,
+           "height": 250.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#e61a1a",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 3300.0,
+           "y": 450.0,
+           "z": 0.0,
+           "height": 2300.0,
+           "radius_bottom": 30.0,
+           "radius_top": 30.0,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#e61a1a",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 3150.0,
+           "y": 430.0,
+           "z": 2300.0,
+           "width": 300.0,
+           "depth": 40.0,
+           "height": 300.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "for_loop",
+    "name": "For i",
+    "visible": true,
+    "params": {
+     "variable": "i",
+     "start": 0.0,
+     "end": 5.0,
+     "step": 1.0,
+     "values": ""
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Shopping trolleys 6",
+      "visible": true,
+      "params": {
+       "x": 2000.0,
+       "y": "600+i*350",
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "silver",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 450.0,
+               "width": 700.0,
+               "depth": 550.0,
+               "height": 10.0,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": -100.0,
+               "y": -25.0,
+               "z": 950.0,
+               "width": 900.0,
+               "depth": 600.0,
+               "height": 10.0,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 30.0,
+             "y": 30.0,
+             "z": 480.0
+            },
+            "children": [
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cube",
+                "name": "Cube",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "width": 640.0,
+                 "depth": 490.0,
+                 "height": 10.0,
+                 "center": false
+                }
+               },
+               {
+                "type": "cube",
+                "name": "Cube",
+                "visible": true,
+                "params": {
+                 "x": -100.0,
+                 "y": -25.0,
+                 "z": 480.0,
+                 "width": 860.0,
+                 "depth": 540.0,
+                 "height": 10.0,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "silver",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "0, 650"
+          },
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For y",
+            "visible": true,
+            "params": {
+             "variable": "y",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "20, 510"
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": "x",
+               "y": "y",
+               "z": 100.0,
+               "height": 360.0,
+               "radius_bottom": 12.0,
+               "radius_top": 12.0,
+               "segments": 8,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1a1a1a",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "0, 650"
+          },
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For y",
+            "visible": true,
+            "params": {
+             "variable": "y",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "20, 510"
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "x",
+               "y": "y",
+               "z": 50.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 90.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 30.0,
+                   "radius_bottom": 50.0,
+                   "radius_top": 50.0,
+                   "segments": 16,
+                   "center": true
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "red",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 780.0,
+           "y": -40.0,
+           "z": 1000.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 630.0,
+               "radius_bottom": 18.0,
+               "radius_top": 18.0,
+               "segments": 12,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "translate",
+    "name": "Translate",
+    "visible": true,
+    "params": {
+     "x": 39000.0,
+     "y": 27000.0,
+     "z": 0.0
+    },
+    "children": [
+     {
+      "type": "rotate",
+      "name": "Rotate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": -90.0
+      },
+      "children": [
+       {
+        "type": "union",
+        "name": "DairyWall [Dairy fridge wall 21 m]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "assign",
+          "name": "L =",
+          "visible": true,
+          "params": {
+           "variable": "L",
+           "value": "21000"
+          }
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#e6e6eb",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "width": "L",
+             "depth": 900.0,
+             "height": 2200.0,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For j",
+          "visible": true,
+          "params": {
+           "variable": "j",
+           "start": 0.0,
+           "end": "L/750-1",
+           "step": 1.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "color",
+            "name": "Color",
+            "visible": true,
+            "params": {
+             "color": "#b2d9f2",
+             "alpha": 0.4,
+             "material": "Default"
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": "j*750+20",
+               "y": -40.0,
+               "z": 100.0,
+               "width": 710.0,
+               "depth": 40.0,
+               "height": 1900.0,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "color",
+            "name": "Color",
+            "visible": true,
+            "params": {
+             "color": "silver",
+             "alpha": 1.0,
+             "material": "Default"
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": "j*750+680",
+               "y": -80.0,
+               "z": 700.0,
+               "width": 25.0,
+               "depth": 40.0,
+               "height": 800.0,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For z",
+          "visible": true,
+          "params": {
+           "variable": "z",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "300, 700, 1100, 1500"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -10.0,
+             "z": "z"
+            },
+            "children": [
+             {
+              "type": "union",
+              "name": "Products",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "assign",
+                "name": "L =",
+                "visible": true,
+                "params": {
+                 "variable": "L",
+                 "value": "L"
+                }
+               },
+               {
+                "type": "assign",
+                "name": "d =",
+                "visible": true,
+                "params": {
+                 "variable": "d",
+                 "value": "300"
+                }
+               },
+               {
+                "type": "for_loop",
+                "name": "For j",
+                "visible": true,
+                "params": {
+                 "variable": "j",
+                 "start": 0.0,
+                 "end": "L/1000-1",
+                 "step": 1.0,
+                 "values": ""
+                },
+                "children": [
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": "j*1000",
+                   "y": 0.0,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "color",
+                    "name": "Color",
+                    "visible": true,
+                    "params": {
+                     "color": "#f2f2e6",
+                     "alpha": 1.0,
+                     "material": "Default"
+                    },
+                    "children": [
+                     {
+                      "type": "cube",
+                      "name": "Cube",
+                      "visible": true,
+                      "params": {
+                       "x": 20.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "width": 230.0,
+                       "depth": "d",
+                       "height": 260.0,
+                       "center": false
+                      }
+                     }
+                    ]
+                   },
+                   {
+                    "type": "color",
+                    "name": "Color",
+                    "visible": true,
+                    "params": {
+                     "color": "#f2cc1a",
+                     "alpha": 1.0,
+                     "material": "Default"
+                    },
+                    "children": [
+                     {
+                      "type": "cube",
+                      "name": "Cube",
+                      "visible": true,
+                      "params": {
+                       "x": 270.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "width": 230.0,
+                       "depth": "d",
+                       "height": 220.0,
+                       "center": false
+                      }
+                     }
+                    ]
+                   },
+                   {
+                    "type": "color",
+                    "name": "Color",
+                    "visible": true,
+                    "params": {
+                     "color": "#99ccff",
+                     "alpha": 1.0,
+                     "material": "Default"
+                    },
+                    "children": [
+                     {
+                      "type": "cube",
+                      "name": "Cube",
+                      "visible": true,
+                      "params": {
+                       "x": 520.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "width": 230.0,
+                       "depth": "d",
+                       "height": 280.0,
+                       "center": false
+                      }
+                     }
+                    ]
+                   },
+                   {
+                    "type": "color",
+                    "name": "Color",
+                    "visible": true,
+                    "params": {
+                     "color": "#e6801a",
+                     "alpha": 1.0,
+                     "material": "Default"
+                    },
+                    "children": [
+                     {
+                      "type": "cube",
+                      "name": "Cube",
+                      "visible": true,
+                      "params": {
+                       "x": 770.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "width": 210.0,
+                       "depth": "d",
+                       "height": 240.0,
+                       "center": false
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Chest freezers 2 more",
+    "visible": true,
+    "params": {
+     "x": 10000.0,
+     "y": 24500.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "36d8f47a687d4af7abd49ccc36f68484",
+      "title": "Chest freezers 2 more",
+      "area": "General",
+      "named": "Chest freezers 2 more"
+     }
+    },
+    "children": [
+     {
+      "type": "for_loop",
+      "name": "For x",
+      "visible": true,
+      "params": {
+       "variable": "x",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": "0, 6000"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": "x",
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "white",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "width": 4000.0,
+             "depth": 1100.0,
+             "height": 850.0,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#b2d9f2",
+           "alpha": 0.5,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 850.0,
+             "width": 4000.0,
+             "depth": 1100.0,
+             "height": 20.0,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#d9f2ff",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 50.0,
+             "y": 50.0,
+             "z": 700.0,
+             "width": 3900.0,
+             "depth": 1000.0,
+             "height": 140.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Produce tables 2 more",
+    "visible": true,
+    "params": {
+     "x": 500.0,
+     "y": 8000.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "b5577699344642ca911c920dec008889",
+      "title": "Produce tables 2 more",
+      "area": "House & home",
+      "named": "Produce tables 2 more"
+     }
+    },
+    "children": [
+     {
+      "type": "for_loop",
+      "name": "For y",
+      "visible": true,
+      "params": {
+       "variable": "y",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": "4000, 8000"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": "y",
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#805933",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "width": 2400.0,
+             "depth": 1200.0,
+             "height": 700.0,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#e6331a",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 600.0,
+             "y": 300.0,
+             "z": 780.0
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 1.0,
+               "y": 1.0,
+               "z": 0.4
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 260.0,
+                 "segments": 16
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#f2991a",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1800.0,
+             "y": 300.0,
+             "z": 780.0
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 1.0,
+               "y": 1.0,
+               "z": 0.4
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 260.0,
+                 "segments": 16
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#4cb233",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 600.0,
+             "y": 900.0,
+             "z": 780.0
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 1.0,
+               "y": 1.0,
+               "z": 0.4
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 260.0,
+                 "segments": 16
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#f2d933",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1800.0,
+             "y": 900.0,
+             "z": 780.0
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 1.0,
+               "y": 1.0,
+               "z": 0.4
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 260.0,
+                 "segments": 16
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Supermarket",
+  "description": "Supermarket: a whole design (every part of the document). Parts: Supermarket shell 40x30 m, Chest freezer 4 m island, Produce table 1, Chest freezers 2 more, Produce tables 2 more. Plus 5 loose pieces of geometry. Overall size 40600 x 30900 x 5600 mm. (Description generated automatically.)",
+  "tags": [],
+  "source": "design",
+  "uid": "doc-9d76a46d7fb1af07",
+  "document": "/Users/gkerherv/Documents/KCAD Projects/Supermarket.kcad",
+  "created": "2026-09-19T20:49:28"
+ }
+}

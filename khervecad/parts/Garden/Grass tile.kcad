@@ -1,0 +1,447 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Grass tile",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#3d6121",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Soil and thatch]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": -20.0,
+         "width": 1000.0,
+         "depth": 1000.0,
+         "height": 20.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#408c24",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 69.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "500 + 480 * sin(i * 137.508)",
+           "y": "500 + 480 * sin(i * 71.3 + 17)",
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "union",
+            "name": "tuft [Dark blades]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "assign",
+              "name": "seed =",
+              "visible": true,
+              "params": {
+               "variable": "seed",
+               "value": "i"
+              }
+             },
+             {
+              "type": "for_loop",
+              "name": "For k",
+              "visible": true,
+              "params": {
+               "variable": "k",
+               "start": 0.0,
+               "end": 5.0,
+               "step": 1.0,
+               "values": ""
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": "k * 60 + seed * 37"
+                },
+                "children": [
+                 {
+                  "type": "rotate",
+                  "name": "Rotate",
+                  "visible": true,
+                  "params": {
+                   "x": "10 + 18 * (0.5 + 0.5 * sin(seed * 11 + k * 71))",
+                   "y": 0.0,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "linear_extrude",
+                    "name": "Linear extrude",
+                    "visible": true,
+                    "params": {
+                     "height": "45 + 40 * (0.5 + 0.5 * sin(seed * 23 + k * 47))",
+                     "twist": 0.0,
+                     "scale": 0.05,
+                     "center": false,
+                     "segments": 0
+                    },
+                    "children": [
+                     {
+                      "type": "rect",
+                      "name": "Rectangle [Blade]",
+                      "visible": true,
+                      "params": {
+                       "x": -4.5,
+                       "y": -1.25,
+                       "width": 9.0,
+                       "height": 2.5
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#5ca833",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 69.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "500 + 480 * sin(i * 113.1 + 50)",
+           "y": "500 + 480 * sin(i * 89.7 + 5)",
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "union",
+            "name": "tuft [Mid blades]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "assign",
+              "name": "seed =",
+              "visible": true,
+              "params": {
+               "variable": "seed",
+               "value": "i + 100"
+              }
+             },
+             {
+              "type": "for_loop",
+              "name": "For k",
+              "visible": true,
+              "params": {
+               "variable": "k",
+               "start": 0.0,
+               "end": 5.0,
+               "step": 1.0,
+               "values": ""
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": "k * 60 + seed * 37"
+                },
+                "children": [
+                 {
+                  "type": "rotate",
+                  "name": "Rotate",
+                  "visible": true,
+                  "params": {
+                   "x": "10 + 18 * (0.5 + 0.5 * sin(seed * 11 + k * 71))",
+                   "y": 0.0,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "linear_extrude",
+                    "name": "Linear extrude",
+                    "visible": true,
+                    "params": {
+                     "height": "45 + 40 * (0.5 + 0.5 * sin(seed * 23 + k * 47))",
+                     "twist": 0.0,
+                     "scale": 0.05,
+                     "center": false,
+                     "segments": 0
+                    },
+                    "children": [
+                     {
+                      "type": "rect",
+                      "name": "Rectangle [Blade]",
+                      "visible": true,
+                      "params": {
+                       "x": -4.5,
+                       "y": -1.25,
+                       "width": 9.0,
+                       "height": 2.5
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#80c247",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 69.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "500 + 480 * sin(i * 151.9 + 23)",
+           "y": "500 + 480 * sin(i * 61.1 + 77)",
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "union",
+            "name": "tuft [Light blades]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "assign",
+              "name": "seed =",
+              "visible": true,
+              "params": {
+               "variable": "seed",
+               "value": "i + 200"
+              }
+             },
+             {
+              "type": "for_loop",
+              "name": "For k",
+              "visible": true,
+              "params": {
+               "variable": "k",
+               "start": 0.0,
+               "end": 5.0,
+               "step": 1.0,
+               "values": ""
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": "k * 60 + seed * 37"
+                },
+                "children": [
+                 {
+                  "type": "rotate",
+                  "name": "Rotate",
+                  "visible": true,
+                  "params": {
+                   "x": "10 + 18 * (0.5 + 0.5 * sin(seed * 11 + k * 71))",
+                   "y": 0.0,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "linear_extrude",
+                    "name": "Linear extrude",
+                    "visible": true,
+                    "params": {
+                     "height": "45 + 40 * (0.5 + 0.5 * sin(seed * 23 + k * 47))",
+                     "twist": 0.0,
+                     "scale": 0.05,
+                     "center": false,
+                     "segments": 0
+                    },
+                    "children": [
+                     {
+                      "type": "rect",
+                      "name": "Rectangle [Blade]",
+                      "visible": true,
+                      "params": {
+                       "x": -4.5,
+                       "y": -1.25,
+                       "width": 9.0,
+                       "height": 2.5
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Grass tile",
+  "description": "Grass tile. Built from 6 for_loop, 6 rotate, 4 color, 3 translate, 3 union, 3 assign. Parameters: seed, seed, seed. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "1f101a6ec91d4f3ca6111ccc5df06fc2",
+  "created": "2026-09-19T19:16:57"
+ }
+}

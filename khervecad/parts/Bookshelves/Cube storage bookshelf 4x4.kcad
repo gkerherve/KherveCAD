@@ -1,0 +1,338 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Cube storage bookshelf 4x4 1470",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "74ee05ac8e5b43f9b8857a72042a0126",
+      "title": "Cube storage bookshelf 4x4 1470",
+      "area": "General",
+      "named": "Cube storage bookshelf 4x4 1470"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "white",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "i*362",
+           "y": 0.0,
+           "z": 0.0,
+           "width": 20.0,
+           "depth": 390.0,
+           "height": 1470.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "white",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": "i*362",
+           "width": 1470.0,
+           "depth": 390.0,
+           "height": 20.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For r",
+      "visible": true,
+      "params": {
+       "variable": "r",
+       "start": 0.0,
+       "end": 3.0,
+       "step": 1.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For c",
+        "visible": true,
+        "params": {
+         "variable": "c",
+         "start": 0.0,
+         "end": 3.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "if_else",
+          "name": "If r==c || r+c==3",
+          "visible": true,
+          "params": {
+           "condition": "r==c || r+c==3"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "c*362+20",
+             "y": 0.0,
+             "z": "r*362+20"
+            },
+            "children": [
+             {
+              "type": "union",
+              "name": "BookRow",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "assign",
+                "name": "w =",
+                "visible": true,
+                "params": {
+                 "variable": "w",
+                 "value": "300"
+                }
+               },
+               {
+                "type": "assign",
+                "name": "h =",
+                "visible": true,
+                "params": {
+                 "variable": "h",
+                 "value": "300"
+                }
+               },
+               {
+                "type": "assign",
+                "name": "seed =",
+                "visible": true,
+                "params": {
+                 "variable": "seed",
+                 "value": "r+c"
+                }
+               },
+               {
+                "type": "assign",
+                "name": "C =",
+                "visible": true,
+                "params": {
+                 "variable": "C",
+                 "value": "[[0.7, 0.1, 0.1], [0.1, 0.3, 0.6], [0.1, 0.5, 0.2], [0.9, 0.7, 0.1], [0.4, 0.2, 0.5], [0.9, 0.9, 0.85], [0.2, 0.2, 0.2], [0.8, 0.4, 0.1], [0.3, 0.6, 0.7], [0.6, 0.3, 0.3]]"
+                }
+               },
+               {
+                "type": "assign",
+                "name": "H =",
+                "visible": true,
+                "params": {
+                 "variable": "H",
+                 "value": "[0.85, 0.95, 0.75, 1, 0.8, 0.9, 0.7, 0.95, 0.85, 0.78]"
+                }
+               },
+               {
+                "type": "for_loop",
+                "name": "For j",
+                "visible": true,
+                "params": {
+                 "variable": "j",
+                 "start": 0.0,
+                 "end": "w/300-1",
+                 "step": 1.0,
+                 "values": ""
+                },
+                "children": [
+                 {
+                  "type": "for_loop",
+                  "name": "For k",
+                  "visible": true,
+                  "params": {
+                   "variable": "k",
+                   "start": 0.0,
+                   "end": 9.0,
+                   "step": 1.0,
+                   "values": ""
+                  },
+                  "children": [
+                   {
+                    "type": "color",
+                    "name": "Color",
+                    "visible": true,
+                    "params": {
+                     "color": "C[k<9-seed?k+seed:k+seed-10]",
+                     "alpha": 1.0,
+                     "material": "Default"
+                    },
+                    "children": [
+                     {
+                      "type": "cube",
+                      "name": "Cube",
+                      "visible": true,
+                      "params": {
+                       "x": "j*300+k*30+2",
+                       "y": 20.0,
+                       "z": 0.0,
+                       "width": 27.0,
+                       "depth": 200.0,
+                       "height": "h*H[k]",
+                       "center": false
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#b29980",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For p",
+        "visible": true,
+        "params": {
+         "variable": "p",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "[1,0], [2,0], [0,1], [3,1]"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "p[0]*362+35",
+           "y": 30.0,
+           "z": "p[1]*362+20",
+           "width": 310.0,
+           "depth": 330.0,
+           "height": 300.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Cube storage bookshelf 4x4, 1470",
+  "description": "White 4x4 cube storage unit (Kallax style), 1470 x 390 x 1470, with 20 mm panels on a 362 pitch. The diagonal cubes hold books and four lower cubes hold fabric storage boxes. Its origin is the back-left-bottom corner.",
+  "tags": [
+   "cube shelf",
+   "kallax",
+   "bookshelf",
+   "storage",
+   "books"
+  ],
+  "source": "assistant",
+  "uid": "74ee05ac8e5b43f9b8857a72042a0126",
+  "created": "2026-09-19T20:00:25"
+ }
+}

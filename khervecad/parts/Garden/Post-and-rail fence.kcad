@@ -1,0 +1,114 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Post-and-rail fence",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "fee4b6b8f95540d8bb94ba8acaf60ef2",
+      "title": "Post-and-rail fence",
+      "area": "General",
+      "named": "Post-and-rail fence"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "BurlyWood",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "0, 2000"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Posts]",
+          "visible": true,
+          "params": {
+           "x": "i - 60",
+           "y": -60.0,
+           "z": 0.0,
+           "width": 120.0,
+           "depth": 120.0,
+           "height": 1200.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For z",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "300, 700, 1050"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Rails]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 60.0,
+           "z": "z",
+           "width": 2000.0,
+           "depth": 30.0,
+           "height": 100.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Post-and-rail fence",
+  "description": "Post-and-rail fence. Built from 2 for_loop, 2 cube, 1 color. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "fee4b6b8f95540d8bb94ba8acaf60ef2",
+  "created": "2026-09-19T19:23:55"
+ }
+}

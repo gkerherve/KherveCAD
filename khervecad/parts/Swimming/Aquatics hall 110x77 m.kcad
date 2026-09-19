@@ -1,0 +1,222 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Aquatics hall shell 110x77 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#bfbfb8",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -10000.0,
+           "y": -26000.0,
+           "z": -300.0,
+           "width": 110000.0,
+           "depth": 77000.0,
+           "height": 300.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -2000.0,
+           "y": -2000.0,
+           "z": -301.0,
+           "width": 54000.0,
+           "depth": 29000.0,
+           "height": 302.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 62000.0,
+           "y": 500.0,
+           "z": -301.0,
+           "width": 24000.0,
+           "depth": 24000.0,
+           "height": 302.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#99cce6",
+       "alpha": 0.25,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-10000, 99700"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -26000.0,
+           "z": 0.0,
+           "width": 300.0,
+           "depth": 77000.0,
+           "height": 18000.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#99cce6",
+       "alpha": 0.25,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For y",
+        "visible": true,
+        "params": {
+         "variable": "y",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-26000, 50700"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -10000.0,
+           "y": "y",
+           "z": 0.0,
+           "width": 110000.0,
+           "depth": 300.0,
+           "height": 18000.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#e6e6eb",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": -10000.0,
+         "end": 100000.0,
+         "step": 10000.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -26000.0,
+           "z": 18000.0,
+           "width": 600.0,
+           "depth": 77000.0,
+           "height": 1500.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Aquatics hall shell 110x77 m",
+  "description": "Aquatics hall shell 110x77 m. Overall size 110600 x 77000 x 19800 (document units). Built from 6 cube, 4 color, 3 for_loop, 1 difference. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "d86405471e0d4aae99c0e849aa99cbb3",
+  "created": "2026-09-19T20:47:06"
+ }
+}

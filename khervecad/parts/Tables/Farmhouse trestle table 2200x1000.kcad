@@ -1,0 +1,160 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Farmhouse trestle table 2200x1000",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8c6138",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 720.0,
+         "width": 2200.0,
+         "depth": 1000.0,
+         "height": 50.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#734c2b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "300, 1860"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 150.0,
+           "z": 0.0,
+           "width": 40.0,
+           "depth": 700.0,
+           "height": 60.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 450.0,
+           "z": 60.0,
+           "width": 40.0,
+           "depth": 100.0,
+           "height": 660.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 150.0,
+           "z": 660.0,
+           "width": 40.0,
+           "depth": 700.0,
+           "height": 60.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#734c2b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 300.0,
+         "y": 470.0,
+         "z": 300.0,
+         "width": 1600.0,
+         "depth": 60.0,
+         "height": 80.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Farmhouse trestle table 2200x1000",
+  "description": "Farmhouse trestle table 2200x1000. Overall size 2200 x 1000 x 770 (document units). Built from 5 cube, 3 color, 1 for_loop. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "5fdc1929910e492da1a9df4b1fa2d211",
+  "created": "2026-09-19T20:14:58"
+ }
+}

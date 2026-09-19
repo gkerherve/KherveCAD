@@ -1,0 +1,66 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Gym free-weight rubber mats 8x6 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a1a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "width": 8000.0,
+         "depth": 6000.0,
+         "height": 20.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Gym free-weight rubber mats 8x6 m",
+  "description": "Gym free-weight rubber mats 8x6 m. Overall size 8000 x 6000 x 20 (document units). Built from 1 color, 1 cube. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "4bd8f18baa2a40a395a3169712e255b3",
+  "created": "2026-09-19T20:47:50"
+ }
+}

@@ -1,0 +1,263 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Modern front door glass strip 1000x2200",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "union",
+      "name": "Frame",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "assign",
+        "name": "w =",
+        "visible": true,
+        "params": {
+         "variable": "w",
+         "value": "1000"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "h =",
+        "visible": true,
+        "params": {
+         "variable": "h",
+         "value": "2200"
+        }
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "white",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": "-w/2-70",
+             "y": 0.0,
+             "z": 0.0,
+             "width": "w+140",
+             "depth": 120.0,
+             "height": "h+70",
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": "-w/2",
+             "y": -1.0,
+             "z": -1.0,
+             "width": "w",
+             "depth": 122.0,
+             "height": "h+1",
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#33383d",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -500.0,
+           "y": 40.0,
+           "z": 0.0,
+           "width": 1000.0,
+           "depth": 60.0,
+           "height": 2200.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -350.0,
+           "y": 30.0,
+           "z": 200.0,
+           "width": 150.0,
+           "depth": 80.0,
+           "height": 1800.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#b2d9e6",
+       "alpha": 0.5,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": -350.0,
+         "y": 65.0,
+         "z": 200.0,
+         "width": 150.0,
+         "depth": 10.0,
+         "height": 1800.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "silver",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 330.0,
+         "y": -50.0,
+         "z": 700.0,
+         "width": 30.0,
+         "depth": 30.0,
+         "height": 1000.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "silver",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For z",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "750, 1650"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 330.0,
+           "y": -30.0,
+           "z": "z",
+           "width": 30.0,
+           "depth": 30.0,
+           "height": 20.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Modern front door glass strip 1000x2200",
+  "description": "Modern front door glass strip 1000x2200. Overall size 1140 x 170 x 2270 (document units). Built from 7 cube, 5 color, 2 assign, 2 difference, 1 union, 1 for_loop. Parameters: w, h. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "aebf8d6c73f54a4dbee0603997a432b0",
+  "created": "2026-09-19T20:14:12"
+ }
+}

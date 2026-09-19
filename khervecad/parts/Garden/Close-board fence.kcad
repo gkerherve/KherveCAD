@@ -1,0 +1,140 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Close-board fence",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "bec957ca5f2e4f2eb20bd802bfba7ef7",
+      "title": "Close-board fence",
+      "area": "General",
+      "named": "Close-board fence"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "SaddleBrown",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "0, 2000"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Posts]",
+          "visible": true,
+          "params": {
+           "x": "i - 50",
+           "y": -50.0,
+           "z": 0.0,
+           "width": 100.0,
+           "depth": 100.0,
+           "height": 1850.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "Peru",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 50.0,
+         "end": 1950.0,
+         "step": 100.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Boards]",
+          "visible": true,
+          "params": {
+           "x": "x - 55",
+           "y": 50.0,
+           "z": 150.0,
+           "width": 110.0,
+           "depth": 18.0,
+           "height": 1650.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Gravel board]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 50.0,
+         "z": 0.0,
+         "width": 2000.0,
+         "depth": 25.0,
+         "height": 150.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Close-board fence",
+  "description": "Close-board fence. Built from 3 cube, 2 color, 2 for_loop. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "bec957ca5f2e4f2eb20bd802bfba7ef7",
+  "created": "2026-09-19T19:23:55"
+ }
+}

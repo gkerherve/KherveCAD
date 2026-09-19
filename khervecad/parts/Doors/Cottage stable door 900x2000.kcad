@@ -1,0 +1,385 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Cottage stable door 900x2000",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "union",
+      "name": "Frame",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "assign",
+        "name": "w =",
+        "visible": true,
+        "params": {
+         "variable": "w",
+         "value": "900"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "h =",
+        "visible": true,
+        "params": {
+         "variable": "h",
+         "value": "2000"
+        }
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "white",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": "-w/2-70",
+             "y": 0.0,
+             "z": 0.0,
+             "width": "w+140",
+             "depth": 120.0,
+             "height": "h+70",
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": "-w/2",
+             "y": -1.0,
+             "z": -1.0,
+             "width": "w",
+             "depth": 122.0,
+             "height": "h+1",
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#33664c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": -450.0,
+         "y": 40.0,
+         "z": 0.0,
+         "width": 900.0,
+         "depth": 50.0,
+         "height": 990.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#33664c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -450.0,
+           "y": 40.0,
+           "z": 1010.0,
+           "width": 900.0,
+           "depth": 50.0,
+           "height": 990.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -300.0,
+           "y": 30.0,
+           "z": 1350.0,
+           "width": 600.0,
+           "depth": 70.0,
+           "height": 500.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#b2d9e6",
+       "alpha": 0.5,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": -300.0,
+         "y": 60.0,
+         "z": 1350.0,
+         "width": 600.0,
+         "depth": 8.0,
+         "height": 500.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#33664c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": -15.0,
+         "y": 55.0,
+         "z": 1350.0,
+         "width": 30.0,
+         "depth": 20.0,
+         "height": 500.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#33664c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": -300.0,
+         "y": 55.0,
+         "z": 1585.0,
+         "width": 600.0,
+         "depth": 20.0,
+         "height": 30.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "union",
+      "name": "Knob",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "assign",
+        "name": "x =",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "value": "330"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "z =",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "value": "950"
+        }
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "gold",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -30.0,
+           "z": "z"
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 30.0,
+               "radius_bottom": 12.0,
+               "radius_top": 12.0,
+               "segments": 40,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "gold",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "sphere",
+          "name": "Sphere",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -60.0,
+           "z": "z",
+           "radius": 25.0,
+           "segments": 40
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Cottage stable door 900x2000",
+  "description": "Cottage stable door 900x2000. Overall size 1040 x 205 x 2070 (document units). Built from 8 color, 8 cube, 4 assign, 2 union, 2 difference, 1 translate. Parameters: w, h, x, z. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "5a82ff73ca734a6fb5e449c4908aa745",
+  "created": "2026-09-19T20:14:12"
+ }
+}

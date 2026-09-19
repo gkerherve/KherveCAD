@@ -1,0 +1,176 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Picket fence",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "b05e612aa8cb46d09ba13a61ad4fcfb8",
+      "title": "Picket fence",
+      "area": "General",
+      "named": "Picket fence"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "White",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "0, 2000"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Posts]",
+          "visible": true,
+          "params": {
+           "x": "i - 45",
+           "y": -45.0,
+           "z": 0.0,
+           "width": 90.0,
+           "depth": 90.0,
+           "height": 1100.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For z",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "200, 800"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Rails]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 45.0,
+           "z": "z",
+           "width": 2000.0,
+           "depth": 22.0,
+           "height": 70.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 80.0,
+         "end": 1920.0,
+         "step": 130.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x - 40",
+           "y": 67.0,
+           "z": 50.0
+          },
+          "children": [
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "width": 80.0,
+               "depth": 18.0,
+               "height": 900.0,
+               "center": false
+              }
+             },
+             {
+              "type": "cube",
+              "name": "Cube",
+              "visible": true,
+              "params": {
+               "x": 39.0,
+               "y": 0.0,
+               "z": 950.0,
+               "width": 2.0,
+               "depth": 18.0,
+               "height": 1.0,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Picket fence",
+  "description": "Picket fence. Built from 4 cube, 3 for_loop, 1 color, 1 translate, 1 hull. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "b05e612aa8cb46d09ba13a61ad4fcfb8",
+  "created": "2026-09-19T19:23:55"
+ }
+}

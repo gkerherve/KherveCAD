@@ -1,0 +1,156 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Glass globe cluster pendant 5 lights",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "silver",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 2470.0,
+         "height": 30.0,
+         "radius_bottom": 180.0,
+         "radius_top": 180.0,
+         "segments": 40,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For i",
+      "visible": true,
+      "params": {
+       "variable": "i",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": "i*72"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 110.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "color",
+            "name": "Color",
+            "visible": true,
+            "params": {
+             "color": "#1a1a1a",
+             "alpha": 1.0,
+             "material": "Default"
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": "1650+i*120",
+               "height": "850-i*120",
+               "radius_bottom": 2.0,
+               "radius_top": 2.0,
+               "segments": 40,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "color",
+            "name": "Color",
+            "visible": true,
+            "params": {
+             "color": "#e6994c",
+             "alpha": 0.6,
+             "material": "Default"
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": "1560+i*120",
+               "radius": 90.0,
+               "segments": 40
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Glass globe cluster pendant 5 lights",
+  "description": "Glass globe cluster pendant 5 lights. Overall size 380 x 385 x 1030 (document units). Built from 3 color, 2 cylinder, 1 for_loop, 1 rotate, 1 translate, 1 sphere. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "52408bb5c45f4966acf9c15c9acb167f",
+  "created": "2026-09-19T20:13:52"
+ }
+}

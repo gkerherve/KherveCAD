@@ -1,0 +1,1568 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Olympic pool 50m 10 lanes with starting blocks",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "45bf8bb096284813963b90986b8d31e0",
+      "title": "Olympic pool 50m 10 lanes with starting blocks",
+      "area": "General",
+      "named": "Olympic pool 50m 10 lanes with starting blocks"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d9d9d1",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -2000.0,
+           "y": -2000.0,
+           "z": -2200.0,
+           "width": 54000.0,
+           "depth": 29000.0,
+           "height": 2200.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": -2000.0,
+           "width": 50000.0,
+           "depth": 25000.0,
+           "height": 2001.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#338ce6",
+       "alpha": 0.55,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": -2000.0,
+         "width": 50000.0,
+         "depth": 25000.0,
+         "height": 1850.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#0d1a66",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 9.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 2000.0,
+           "y": "(i+0.5)*2500-125",
+           "z": -1999.0,
+           "width": 46000.0,
+           "depth": 250.0,
+           "height": 2.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For i",
+      "visible": true,
+      "params": {
+       "variable": "i",
+       "start": 1.0,
+       "end": 9.0,
+       "step": 1.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": "i*2500",
+         "z": -150.0
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "red",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 5000.0,
+                 "radius_bottom": 60.0,
+                 "radius_top": 60.0,
+                 "segments": 8,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "red",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 45000.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 5000.0,
+                 "radius_bottom": 60.0,
+                 "radius_top": 60.0,
+                 "segments": 8,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "i==1 || i==9 ? \"green\" : \"blue\"",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 5000.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 40000.0,
+                 "radius_bottom": 60.0,
+                 "radius_top": 60.0,
+                 "segments": 8,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For i",
+      "visible": true,
+      "params": {
+       "variable": "i",
+       "start": 0.0,
+       "end": 9.0,
+       "step": 1.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -600.0,
+         "y": "(i+0.5)*2500-250",
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "white",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "width": 550.0,
+             "depth": 500.0,
+             "height": 750.0,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#333333",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 650.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": -10.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cube",
+                "name": "Cube",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "width": 550.0,
+                 "depth": 500.0,
+                 "height": 120.0,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "red",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 200.0,
+             "y": -10.0,
+             "z": 300.0,
+             "width": 150.0,
+             "depth": 520.0,
+             "height": 150.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Diving pool 20x20 with boards and 10 m tower",
+    "visible": true,
+    "params": {
+     "x": 62000.0,
+     "y": 2500.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "af1255250841447c81c0b7e7f34a6684",
+      "title": "Diving pool 20x20 with boards and 10 m tower",
+      "area": "Buildings",
+      "named": "Diving pool 20x20 with boards and 10 m tower"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d9d9d1",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -2000.0,
+           "y": -2000.0,
+           "z": -5200.0,
+           "width": 24000.0,
+           "depth": 24000.0,
+           "height": 5200.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": -5000.0,
+           "width": 20000.0,
+           "depth": 20000.0,
+           "height": 5001.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2680d9",
+       "alpha": 0.55,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": -5000.0,
+         "width": 20000.0,
+         "depth": 20000.0,
+         "height": 4850.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#cccccc",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 21000.0,
+         "y": 4000.0,
+         "z": 0.0,
+         "width": 3000.0,
+         "depth": 12000.0,
+         "height": 10000.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#e6e6e6",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For p",
+        "visible": true,
+        "params": {
+         "variable": "p",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "[5000,4000], [7500,8000], [10000,12000]"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 15000.0,
+           "y": "p[1]",
+           "z": "p[0]",
+           "width": 6000.0,
+           "depth": 3000.0,
+           "height": 200.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#e6e6d9",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For p",
+        "visible": true,
+        "params": {
+         "variable": "p",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "[1000,2000], [3000,16000]"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 15500.0,
+           "y": "p[1]",
+           "z": "p[0]",
+           "width": 4800.0,
+           "depth": 500.0,
+           "height": 60.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#4c4c59",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For p",
+        "visible": true,
+        "params": {
+         "variable": "p",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "[1000,2000], [3000,16000]"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 19000.0,
+           "y": "p[1]",
+           "z": 0.0,
+           "width": 1500.0,
+           "depth": 500.0,
+           "height": "p[0]",
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Grandstand south 20 rows",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": -3000.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "6876a235fd2e44479e40722a9ce32970",
+      "title": "Grandstand south 20 rows",
+      "area": "General",
+      "named": "Grandstand south 20 rows"
+     }
+    },
+    "children": [
+     {
+      "type": "for_loop",
+      "name": "For i",
+      "visible": true,
+      "params": {
+       "variable": "i",
+       "start": 0.0,
+       "end": 19.0,
+       "step": 1.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#595966",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": "-(i+1)*850",
+           "z": 0.0,
+           "width": 50000.0,
+           "depth": 850.0,
+           "height": "(i+1)*420",
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "i<6 ? [0,0.35,0.7] : [0.9,0.8,0.1]",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": "-(i+1)*850+150",
+           "z": "(i+1)*420",
+           "width": 50000.0,
+           "depth": 450.0,
+           "height": 380.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#999999",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 50000.0,
+         "step": 10000.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "x-600",
+           "y": -17000.0,
+           "z": 0.0,
+           "width": 1200.0,
+           "depth": 17000.0,
+           "height": 50.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Aquatics hall shell 110x77 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "d86405471e0d4aae99c0e849aa99cbb3",
+      "title": "Aquatics hall shell 110x77 m",
+      "area": "General",
+      "named": "Aquatics hall shell 110x77 m"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#bfbfb8",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -10000.0,
+           "y": -26000.0,
+           "z": -300.0,
+           "width": 110000.0,
+           "depth": 77000.0,
+           "height": 300.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -2000.0,
+           "y": -2000.0,
+           "z": -301.0,
+           "width": 54000.0,
+           "depth": 29000.0,
+           "height": 302.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 62000.0,
+           "y": 500.0,
+           "z": -301.0,
+           "width": 24000.0,
+           "depth": 24000.0,
+           "height": 302.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#99cce6",
+       "alpha": 0.25,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-10000, 99700"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -26000.0,
+           "z": 0.0,
+           "width": 300.0,
+           "depth": 77000.0,
+           "height": 18000.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#99cce6",
+       "alpha": 0.25,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For y",
+        "visible": true,
+        "params": {
+         "variable": "y",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-26000, 50700"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -10000.0,
+           "y": "y",
+           "z": 0.0,
+           "width": 110000.0,
+           "depth": 300.0,
+           "height": 18000.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#e6e6eb",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": -10000.0,
+         "end": 100000.0,
+         "step": 10000.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -26000.0,
+           "z": 18000.0,
+           "width": 600.0,
+           "depth": 77000.0,
+           "height": 1500.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Arena video scoreboard",
+    "visible": true,
+    "params": {
+     "x": -9500.0,
+     "y": 6500.0,
+     "z": 6000.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 90.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "efc2cc5c0eb6435f8eb12cc512d91ee3",
+      "title": "Arena video scoreboard",
+      "area": "Sport",
+      "named": "Arena video scoreboard"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a1a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "width": 12000.0,
+         "depth": 500.0,
+         "height": 6000.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a4c99",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 500.0,
+         "y": -10.0,
+         "z": 500.0,
+         "width": 11000.0,
+         "depth": 10.0,
+         "height": 5000.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Medal podium 1-2-3",
+    "visible": true,
+    "params": {
+     "x": 56000.0,
+     "y": 30000.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 180.0,
+     "color": "",
+     "alpha": 1.0,
+     "library_part": "sport_podium"
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Step 1",
+      "visible": true,
+      "params": {
+       "color": "#f2f2f2",
+       "alpha": 1.0,
+       "material": "Plastic"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Step 1",
+        "visible": true,
+        "params": {
+         "x": -600.0,
+         "y": -500,
+         "z": 0,
+         "width": 1200.0,
+         "depth": 1000,
+         "height": 900,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Band 1",
+      "visible": true,
+      "params": {
+       "color": "#d4af37",
+       "alpha": 1.0,
+       "material": "Metal"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Band 1",
+        "visible": true,
+        "params": {
+         "x": -600.0,
+         "y": -505,
+         "z": 780,
+         "width": 1200.0,
+         "depth": 10,
+         "height": 80,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Number 1",
+      "visible": true,
+      "params": {
+       "color": "#d4af37",
+       "alpha": 1.0,
+       "material": "Metal"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Number 1",
+        "visible": true,
+        "params": {
+         "x": -120.0,
+         "y": -506,
+         "z": 270.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Turn",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Number",
+            "visible": true,
+            "params": {
+             "height": 4.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "text",
+              "name": "Number",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "text": "1",
+               "size": 420.0
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Step 2",
+      "visible": true,
+      "params": {
+       "color": "#f2f2f2",
+       "alpha": 1.0,
+       "material": "Plastic"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Step 2",
+        "visible": true,
+        "params": {
+         "x": -1800.0,
+         "y": -500,
+         "z": 0,
+         "width": 1200.0,
+         "depth": 1000,
+         "height": 600,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Band 2",
+      "visible": true,
+      "params": {
+       "color": "#c0c0c0",
+       "alpha": 1.0,
+       "material": "Metal"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Band 2",
+        "visible": true,
+        "params": {
+         "x": -1800.0,
+         "y": -505,
+         "z": 480,
+         "width": 1200.0,
+         "depth": 10,
+         "height": 80,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Number 2",
+      "visible": true,
+      "params": {
+       "color": "#c0c0c0",
+       "alpha": 1.0,
+       "material": "Metal"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Number 2",
+        "visible": true,
+        "params": {
+         "x": -1320.0,
+         "y": -506,
+         "z": 180.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Turn",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Number",
+            "visible": true,
+            "params": {
+             "height": 4.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "text",
+              "name": "Number",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "text": "2",
+               "size": 420.0
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Step 3",
+      "visible": true,
+      "params": {
+       "color": "#f2f2f2",
+       "alpha": 1.0,
+       "material": "Plastic"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Step 3",
+        "visible": true,
+        "params": {
+         "x": 600.0,
+         "y": -500,
+         "z": 0,
+         "width": 1200.0,
+         "depth": 1000,
+         "height": 400,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Band 3",
+      "visible": true,
+      "params": {
+       "color": "#cd7f32",
+       "alpha": 1.0,
+       "material": "Metal"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Band 3",
+        "visible": true,
+        "params": {
+         "x": 600.0,
+         "y": -505,
+         "z": 280,
+         "width": 1200.0,
+         "depth": 10,
+         "height": 80,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Number 3",
+      "visible": true,
+      "params": {
+       "color": "#cd7f32",
+       "alpha": 1.0,
+       "material": "Metal"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Number 3",
+        "visible": true,
+        "params": {
+         "x": 1080.0,
+         "y": -506,
+         "z": 120.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Turn",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Number",
+            "visible": true,
+            "params": {
+             "height": 4.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "text",
+              "name": "Number",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "text": "3",
+               "size": 420.0
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Grandstand north 20 rows",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 28000.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "e53526d55905443585d6678bb963598a",
+      "title": "Grandstand north 20 rows",
+      "area": "General",
+      "named": "Grandstand north 20 rows"
+     }
+    },
+    "children": [
+     {
+      "type": "for_loop",
+      "name": "For i",
+      "visible": true,
+      "params": {
+       "variable": "i",
+       "start": 0.0,
+       "end": 19.0,
+       "step": 1.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#595966",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": "i*850",
+           "z": 0.0,
+           "width": 50000.0,
+           "depth": 850.0,
+           "height": "(i+1)*420",
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "i<6 ? [0,0.35,0.7] : [0.9,0.8,0.1]",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": "i*850+250",
+           "z": "(i+1)*420",
+           "width": 50000.0,
+           "depth": 450.0,
+           "height": 380.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Aquatics arena",
+  "description": "Aquatics arena: a whole design (every part of the document). Parts: Olympic pool 50m 10 lanes with starting blocks, Diving pool 20x20 with boards and 10 m tower, Grandstand south 20 rows, Aquatics hall shell 110x77 m, Arena video scoreboard, Medal podium 1-2-3, Grandstand north 20 rows. Overall size 110600 x 77000 x 24700 mm. (Description generated automatically.)",
+  "tags": [],
+  "source": "design",
+  "uid": "doc-946cf15f41353dde",
+  "document": "/Users/gkerherv/Documents/KCAD Projects/Aquatics arena.kcad",
+  "created": "2026-09-19T20:47:30"
+ }
+}

@@ -1,0 +1,106 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Grandstand north 20 rows",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "for_loop",
+      "name": "For i",
+      "visible": true,
+      "params": {
+       "variable": "i",
+       "start": 0.0,
+       "end": 19.0,
+       "step": 1.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#595966",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": "i*850",
+           "z": 0.0,
+           "width": 50000.0,
+           "depth": 850.0,
+           "height": "(i+1)*420",
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "i<6 ? [0,0.35,0.7] : [0.9,0.8,0.1]",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": "i*850+250",
+           "z": "(i+1)*420",
+           "width": 50000.0,
+           "depth": 450.0,
+           "height": 380.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Grandstand north 20 rows",
+  "description": "Grandstand north 20 rows. Overall size 50000 x 17000 x 8780 (document units). Built from 2 color, 2 cube, 1 for_loop. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "e53526d55905443585d6678bb963598a",
+  "created": "2026-09-19T20:47:27"
+ }
+}

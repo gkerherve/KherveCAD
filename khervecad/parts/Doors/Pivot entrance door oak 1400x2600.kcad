@@ -1,0 +1,255 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Pivot entrance door oak 1400x2600",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "union",
+      "name": "Frame",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "assign",
+        "name": "w =",
+        "visible": true,
+        "params": {
+         "variable": "w",
+         "value": "1400"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "h =",
+        "visible": true,
+        "params": {
+         "variable": "h",
+         "value": "2600"
+        }
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "white",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": "-w/2-70",
+             "y": 0.0,
+             "z": 0.0,
+             "width": "w+140",
+             "depth": 120.0,
+             "height": "h+70",
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": "-w/2",
+             "y": -1.0,
+             "z": -1.0,
+             "width": "w",
+             "depth": 122.0,
+             "height": "h+1",
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#402e1f",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": -700.0,
+         "y": 40.0,
+         "z": 0.0,
+         "width": 1400.0,
+         "depth": 70.0,
+         "height": 2600.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#33241a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 1.0,
+         "end": 13.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "-700+i*100",
+           "y": 32.0,
+           "z": 0.0,
+           "width": 4.0,
+           "depth": 8.0,
+           "height": 2600.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a1a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 450.0,
+         "y": -80.0,
+         "z": 500.0,
+         "width": 40.0,
+         "depth": 40.0,
+         "height": 1600.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a1a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For z",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "550, 2050"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 450.0,
+           "y": -40.0,
+           "z": "z",
+           "width": 40.0,
+           "depth": 40.0,
+           "height": 20.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Pivot entrance door oak 1400x2600",
+  "description": "Pivot entrance door oak 1400x2600. Overall size 1540 x 200 x 2670 (document units). Built from 6 cube, 5 color, 2 assign, 2 for_loop, 1 union, 1 difference. Parameters: w, h. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "c11e82544cf54a3683b3555c9501a5da",
+  "created": "2026-09-19T20:14:12"
+ }
+}

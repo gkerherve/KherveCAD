@@ -1,0 +1,255 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Chain-link fence",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "fb3ef7915bfe4a489381fdf9a7af15b8",
+      "title": "Chain-link fence",
+      "area": "General",
+      "named": "Chain-link fence"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "Silver",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "0, 2000"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Posts]",
+          "visible": true,
+          "params": {
+           "x": "i",
+           "y": 0.0,
+           "z": 0.0,
+           "height": 1850.0,
+           "radius_bottom": 30.0,
+           "radius_top": 30.0,
+           "segments": 16,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 1800.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Top rail]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 2000.0,
+             "radius_bottom": 20.0,
+             "radius_top": 20.0,
+             "segments": 12,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "intersection",
+        "name": "Intersection",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -10.0,
+           "z": 50.0,
+           "width": 2000.0,
+           "depth": 20.0,
+           "height": 1750.0,
+           "center": false
+          }
+         },
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For s",
+            "visible": true,
+            "params": {
+             "variable": "s",
+             "start": -1800.0,
+             "end": 2000.0,
+             "step": 120.0,
+             "values": ""
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "s",
+               "y": 0.0,
+               "z": 50.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 45.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cube",
+                  "name": "Cube",
+                  "visible": true,
+                  "params": {
+                   "x": -1.5,
+                   "y": -1.5,
+                   "z": 0.0,
+                   "width": 3.0,
+                   "depth": 3.0,
+                   "height": 2600.0,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "s + 1800",
+               "y": 0.0,
+               "z": 50.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": -45.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cube",
+                  "name": "Cube",
+                  "visible": true,
+                  "params": {
+                   "x": -1.5,
+                   "y": -1.5,
+                   "z": 0.0,
+                   "width": 3.0,
+                   "depth": 3.0,
+                   "height": 2600.0,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Chain-link fence",
+  "description": "Chain-link fence. Built from 3 translate, 3 rotate, 3 cube, 2 for_loop, 2 cylinder, 1 color. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "fb3ef7915bfe4a489381fdf9a7af15b8",
+  "created": "2026-09-19T19:23:55"
+ }
+}

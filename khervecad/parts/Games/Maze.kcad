@@ -1,0 +1,789 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Maze (seed 166027)",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Maze (seed 166027)",
+      "visible": true,
+      "params": {
+       "color": "#0055bf",
+       "alpha": 1.0,
+       "material": "Plastic"
+      },
+      "children": [
+       {
+        "type": "union",
+        "name": "Maze (seed 166027)",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Base",
+          "visible": true,
+          "params": {
+           "x": 0,
+           "y": 0,
+           "z": 0,
+           "width": 81.6,
+           "depth": 81.6,
+           "height": 2.0,
+           "center": false
+          }
+         },
+         {
+          "type": "union",
+          "name": "Border",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "South",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 0,
+             "z": 2.0,
+             "width": 73.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "North",
+            "visible": true,
+            "params": {
+             "x": 0,
+             "y": 80.0,
+             "z": 2.0,
+             "width": 73.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "West",
+            "visible": true,
+            "params": {
+             "x": 0,
+             "y": 0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 81.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "East",
+            "visible": true,
+            "params": {
+             "x": 80.0,
+             "y": 0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 81.6,
+             "height": 6.0,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "union",
+          "name": "Walls",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 8.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 17.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 40.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 9.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 56.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 9.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 16.0,
+             "y": 16.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 41.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 16.0,
+             "y": 64.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 9.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 24.0,
+             "y": 0.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 17.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 24.0,
+             "y": 24.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 9.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 24.0,
+             "y": 40.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 33.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 32.0,
+             "y": 0.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 17.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 32.0,
+             "y": 32.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 9.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 32.0,
+             "y": 48.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 17.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 40.0,
+             "y": 8.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 9.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 40.0,
+             "y": 32.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 25.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 40.0,
+             "y": 64.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 9.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 48.0,
+             "y": 0.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 9.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 48.0,
+             "y": 16.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 33.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 48.0,
+             "y": 56.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 9.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 56.0,
+             "y": 24.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 33.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 56.0,
+             "y": 64.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 9.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 64.0,
+             "y": 8.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 17.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 64.0,
+             "y": 32.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 33.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 64.0,
+             "y": 72.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 9.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 72.0,
+             "y": 16.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 41.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 72.0,
+             "y": 64.0,
+             "z": 2.0,
+             "width": 1.6,
+             "depth": 9.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 8.0,
+             "z": 2.0,
+             "width": 17.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 56.0,
+             "y": 8.0,
+             "z": 2.0,
+             "width": 9.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 72.0,
+             "y": 8.0,
+             "z": 2.0,
+             "width": 9.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 16.0,
+             "y": 16.0,
+             "z": 2.0,
+             "width": 9.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 40.0,
+             "y": 16.0,
+             "z": 2.0,
+             "width": 25.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 24.0,
+             "y": 24.0,
+             "z": 2.0,
+             "width": 25.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 64.0,
+             "y": 24.0,
+             "z": 2.0,
+             "width": 9.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 32.0,
+             "z": 2.0,
+             "width": 17.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 32.0,
+             "y": 32.0,
+             "z": 2.0,
+             "width": 9.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 56.0,
+             "y": 32.0,
+             "z": 2.0,
+             "width": 9.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 40.0,
+             "z": 2.0,
+             "width": 9.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 24.0,
+             "y": 40.0,
+             "z": 2.0,
+             "width": 9.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": 56.0,
+             "z": 2.0,
+             "width": 9.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 40.0,
+             "y": 56.0,
+             "z": 2.0,
+             "width": 17.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 16.0,
+             "y": 64.0,
+             "z": 2.0,
+             "width": 9.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 32.0,
+             "y": 64.0,
+             "z": 2.0,
+             "width": 9.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 64.0,
+             "y": 64.0,
+             "z": 2.0,
+             "width": 9.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 72.0,
+             "z": 2.0,
+             "width": 17.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 24.0,
+             "y": 72.0,
+             "z": 2.0,
+             "width": 9.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Wall",
+            "visible": true,
+            "params": {
+             "x": 40.0,
+             "y": 72.0,
+             "z": 2.0,
+             "width": 25.6,
+             "depth": 1.6,
+             "height": 6.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Maze (seed 166027)",
+  "description": "Maze (seed 166027). Overall size 82 x 82 x 8 (document units). Built from 49 cube, 3 union, 1 color. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "58db751cc12b4207926b68fc34943f76",
+  "created": "2026-09-19T18:40:08"
+ }
+}

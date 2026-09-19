@@ -1,0 +1,339 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Front door six-panel red 1000x2100",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "union",
+      "name": "Frame",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "assign",
+        "name": "w =",
+        "visible": true,
+        "params": {
+         "variable": "w",
+         "value": "1000"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "h =",
+        "visible": true,
+        "params": {
+         "variable": "h",
+         "value": "2100"
+        }
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "white",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": "-w/2-70",
+             "y": 0.0,
+             "z": 0.0,
+             "width": "w+140",
+             "depth": 120.0,
+             "height": "h+70",
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": "-w/2",
+             "y": -1.0,
+             "z": -1.0,
+             "width": "w",
+             "depth": 122.0,
+             "height": "h+1",
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#730d14",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": -500.0,
+         "y": 40.0,
+         "z": 0.0,
+         "width": 1000.0,
+         "depth": 50.0,
+         "height": 2100.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#59080f",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For c",
+        "visible": true,
+        "params": {
+         "variable": "c",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "0, 1"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For r",
+          "visible": true,
+          "params": {
+           "variable": "r",
+           "start": 0.0,
+           "end": 2.0,
+           "step": 1.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": "-420+c*450",
+             "y": 30.0,
+             "z": "150+r*650",
+             "width": 390.0,
+             "depth": 12.0,
+             "height": "[500,500,550][r]",
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "union",
+      "name": "Knob",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "assign",
+        "name": "x =",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "value": "380"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "z =",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "value": "1000"
+        }
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "gold",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -30.0,
+           "z": "z"
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 30.0,
+               "radius_bottom": 12.0,
+               "radius_top": 12.0,
+               "segments": 40,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "gold",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "sphere",
+          "name": "Sphere",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -60.0,
+           "z": "z",
+           "radius": 25.0,
+           "segments": 40
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "gold",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": -60.0,
+         "y": 25.0,
+         "z": 1450.0,
+         "width": 120.0,
+         "depth": 10.0,
+         "height": 40.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Front door six-panel red 1000x2100",
+  "description": "Front door six-panel red 1000x2100. Overall size 1140 x 205 x 2170 (document units). Built from 6 color, 5 cube, 4 assign, 2 union, 2 for_loop, 1 difference. Parameters: w, h, x, z. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "b3d08b330a854a688da5031a0a51e1e8",
+  "created": "2026-09-19T20:14:12"
+ }
+}
