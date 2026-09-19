@@ -102,7 +102,7 @@ WRAP_TYPES = [
     "mirror", "offset", "projection", "color", "for_loop",
     "while_loop", "if_else", "component", "symmetry", "joint", "sweep",
     "section_loft", "blend", "bend", "twist", "taper", "lattice", "subdivide",
-    "pattern", "shell", "sculpt", "decimate",
+    "pattern", "shell", "sculpt", "decimate", "shrinkwrap",
 ]
 
 

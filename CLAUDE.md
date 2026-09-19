@@ -2520,6 +2520,26 @@ into a new module and import.
                        the deformers now also accept the booleans
                        Manifold cuts (`bake._inexact`), so a threaded
                        part can be decimated.
+  - `shrinkwrap.py`  — **Shrinkwrap** (Blender's modifier, 2026-09-19):
+                       the `shrinkwrap` wrapper (Deform family, baked:
+                       `kcad_shrinkwrap(mode=, axis=, keep=, offset=,
+                       detail=, show_target=, points=, faces=) { piece;
+                       target... }`) moves its FIRST child's vertices onto
+                       the rest — `nearest` point or `project` (own normal
+                       or ±x/y/z, ray both ways unless signed) — then
+                       `offset` out along the target's normal; `keep`
+                       outside (default: only what sinks in or sits nearer
+                       than the offset moves — clothes, caps, decals),
+                       all, inside. The target is drawn too by default
+                       (the helper ends `children([1 : $children - 1])`),
+                       as Blender leaves it in the scene. Closest points:
+                       a grid of the target's triangles searched per cell
+                       ring by ring (outside ring r is >= r cells away, so
+                       a hit that near is final), Ericson's closest point
+                       on a triangle in numpy; inside = ray parity; rays
+                       are Manifold's `ray_cast` (distance = FRACTION of
+                       the segment) or numpy Moller-Trumbore. Vertices are
+                       welded first, so a closed piece stays closed.
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.

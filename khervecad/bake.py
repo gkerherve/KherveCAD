@@ -115,6 +115,24 @@ NODE_TYPES = {
                  0.001, 1.0),
                 ("tolerance", "Or within (mm, 0 = use Keep)", "float",
                  0.0, 1e4)]),
+    "shrinkwrap": dict(
+        label="Shrinkwrap (onto a surface)", category=OPERATION,
+        icon="mdi.arrow-collapse-all",
+        params=dict(mode="nearest", axis="normal", keep="outside",
+                    offset=0.5, detail=0.0, show_target=True),
+        schema=[("mode", "Move each vertex", "choice",
+                 ["nearest", "project"], None),
+                ("axis", "Project along", "choice",
+                 ["normal", "x", "y", "z", "+x", "-x", "+y", "-y",
+                  "+z", "-z"], None),
+                ("keep", "Which vertices move", "choice",
+                 ["all", "outside", "inside"], None),
+                ("offset", "Offset from the surface (mm)", "float",
+                 -1e4, 1e4),
+                ("detail", "Refine to max edge (mm, 0 = as is)", "float",
+                 0.0, 1e4),
+                ("show_target", "Draw the target too", "bool",
+                 None, None)]),
     "human": dict(
         label="Human figure", category=SHAPE_3D, icon="mdi.human",
         params=dict(gender=0.0, age=0.0, weight=0.0, height=0.0,
@@ -185,7 +203,7 @@ TYPES = frozenset(NODE_TYPES)
 LEAVES = frozenset({"polyhedron", "loft", "human"})
 WRAPPERS = frozenset({"sweep", "section_loft", "blend", "bend", "twist",
                       "taper", "lattice", "subdivide", "fillet", "shell",
-                      "sculpt", "hair_cap", "decimate"})
+                      "sculpt", "hair_cap", "decimate", "shrinkwrap"})
 
 #: wrappers whose surface is computed here and baked into the program,
 #: with their helper module's parameters (besides points and faces)
@@ -200,6 +218,9 @@ _BAKED = {
     "lattice": [("offsets", []), ("detail", 2)],
     "subdivide": [("levels", 1)],
     "decimate": [("ratio", 0.5), ("tolerance", 0)],
+    "shrinkwrap": [("mode", "nearest"), ("axis", "normal"),
+                   ("keep", "outside"), ("offset", 0.5), ("detail", 0),
+                   ("show_target", True)],
     "shell": [("thickness", 2), ("open", "none"), ("open_angle", 30),
               ("detail", 2)],
     "sculpt": [("strokes", []), ("detail", 0), ("mirror", "none"),
@@ -211,7 +232,7 @@ _BAKED = {
               ("warp_radius", 45), ("pose", [])],
 }
 #: parameters written as quoted OpenSCAD strings
-_CHOICES = {"axis", "toward", "open", "mirror", "clear"}
+_CHOICES = {"axis", "toward", "open", "mirror", "clear", "mode", "keep"}
 #: what a deformer cannot take from the preview mesh: booleans and the
 #: rest are only approximated there, so baking them would bake a wrong
 #: shape into the program
@@ -325,6 +346,15 @@ for _t, _args in _BAKED.items():
         + ", ".join(f"{k} = {_literal(v)}" for k, v in _args)
         + ", points = [], faces = []) {\n"
         "    polyhedron(points = points, faces = faces, convexity = 10);\n}")
+
+
+# a shrinkwrap draws its target (children 1..) as well as the baked
+# wrap, as Blender leaves the target object in the scene
+HELPERS["shrinkwrap"] = HELPERS["shrinkwrap"].replace(
+    "    polyhedron(points = points, faces = faces, convexity = 10);\n}",
+    "    polyhedron(points = points, faces = faces, convexity = 10);\n"
+    "    if (show_target && $children > 1) children([1 : $children - 1]);"
+    "\n}")
 
 
 def preamble(root) -> list:
@@ -452,6 +482,17 @@ def _compute(node, env) -> list:
                            pose=[[row[0]] + [mesh.rv(v, env) for v in row[1:4]]
                                  for row in p.get("pose") or []
                                  if isinstance(row, list) and len(row) == 4])
+    if t == "shrinkwrap":
+        from . import deform, shrinkwrap
+        parts = [[tri for tri, _c, _s in
+                  mesh._tess(child, scope, None, frozenset(), False)]
+                 for child, scope in mesh._operands(node, env)]
+        wrapped, target = shrinkwrap.split(parts)
+        wrapped = deform.split_long_edges(wrapped, num("detail", 0.0))
+        return shrinkwrap.shrinkwrap(
+            wrapped, target, str(p.get("mode", "nearest")),
+            num("offset", 0.5), str(p.get("keep", "outside")),
+            str(p.get("axis", "normal")))
     src = [tri for tri, _c, _s in
            mesh._children_mesh(node, env, None, frozenset(), False)]
     if t == "subdivide":
@@ -659,8 +700,12 @@ def _b_baked(kind):
                                 if isinstance(row, list)]
                                if isinstance(value, list)
                                else [list(r) for r in defaults[key]])
-            elif key == "closed":
+            elif key in ("closed", "show_target"):
                 params[key] = value is True or value == "true"
+            elif kind == "shrinkwrap" and key in ("mode", "axis", "keep"):
+                from .shrinkwrap import AXES, KEEPS, MODES
+                allowed = {"mode": MODES, "axis": AXES, "keep": KEEPS}[key]
+                params[key] = value if value in allowed else defaults[key]
             elif (kind, key) in (("blend", "detail"),
                                  ("subdivide", "levels"),
                                  ("sweep", "smooth"),
@@ -799,6 +844,17 @@ def _check_baked(node, env):
                     "fastest, then y, then z")
     if t == "sculpt":
         return _check_sculpt(p, env)
+    if t == "shrinkwrap":
+        from . import mesh, shrinkwrap
+        if len(mesh._operands(node, env)) < 2:
+            return ("a shrinkwrap moves its FIRST child onto the rest — "
+                    "put the piece to wrap first and the target after it")
+        for key, allowed in (("mode", shrinkwrap.MODES),
+                             ("axis", shrinkwrap.AXES),
+                             ("keep", shrinkwrap.KEEPS)):
+            if str(p.get(key)) not in allowed:
+                return f"shrinkwrap: {key} must be one of " + \
+                    ", ".join(allowed)
     if t == "hair_cap":
         from . import hair, mesh
         if str(p.get("clear", "-y")) not in hair.CLEAR_CHOICES:
@@ -960,6 +1016,11 @@ def tess(node, env, color, sel, selected):
         except Exception:                  # validation has flagged it
             tris = []
         out = mesh._emit(tris, color, selected)
+        if node.type == "shrinkwrap" and node.params.get("show_target",
+                                                         True):
+            for child, scope in mesh._operands(node, env)[1:]:
+                out.extend(mesh._tess(child, scope, color, sel, selected))
+            return out
         if sel and not selected:
             # a selected primitive inside still glows on its own
             out.extend(item for item in mesh._children_mesh(

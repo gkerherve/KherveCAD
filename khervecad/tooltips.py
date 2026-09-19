@@ -393,6 +393,20 @@ TIPS = {
          "Or within: a distance in mm the surface may move instead — "
          "0.05 is invisible on a print."],
         "A closed solid stays closed, so it still prints."),
+    "shrinkwrap": (
+        "Shrinkwrap (onto a surface)",
+        "Presses one shape onto another: a garment, a cap, a strap or "
+        "a decal hugs the body under it instead of floating a guessed "
+        "distance off it — and follows it after a pose or a sculpt.",
+        [_SELECTION + " Select the piece to wrap FIRST, then the "
+         "target (Ctrl+click).",
+         "Click Shrinkwrap.",
+         "Move each vertex: nearest (the closest point of the target) "
+         "or project (along its normal, or an axis).",
+         "Which vertices move: outside (only those inside the target — "
+         "clothes), all (onto the surface) or inside.",
+         "Offset: how far off the surface it sits (mm)."],
+        "Blocky piece? Set Refine to split it first, so it can bend."),
     "shell": (
         "Shell (hollow)",
         "Turns a solid into a hollow shell of even wall thickness — a "
