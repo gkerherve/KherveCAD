@@ -3056,6 +3056,33 @@ into a new module and import.
                        half round); builds on a worker QThread (newest
                        request wins, ~2 s a figure), Random, Insert, Update
                        selected.
+  - `library_animals.py` / `library_animals_real.py` — **Animals**
+                       (2026-09-19, the user's request), Library ▸ Toys &
+                       models ▸ Animals. **Cartoon animals** (30 chibi
+                       toys, ~12 cm): one style — head as big as the body,
+                       glossy eyes (white, pupil, two emissive highlights),
+                       blush, smile — from a species parameter set on a
+                       body plan (`quadruped`, `sitter`, `bird`, snake,
+                       frog, turtle, crocodile); body + legs + neck are ONE
+                       `blend`, details sit on top, placed with
+                       `on_ellipsoid` (point + normal). Small parts get few
+                       segments (`_segments`: 48 everywhere made a toy
+                       150k triangles). **Realistic animals** (23, LIFE
+                       SIZE, mm): a RIG from published withers height H,
+                       body length L, chest depth D, width W — ribcage,
+                       belly, haunch, chest and shoulder/thigh masses,
+                       tapered neck at its angle, head at its pitch, legs
+                       as joint chains bent like the animal's (hind hock
+                       BACKWARD; hoof / paw / pillar / knuckle), all ONE
+                       blend. Markings follow the real skin: `surface`
+                       casts a ray from the body axis through every mass
+                       and takes the outermost hit (stripes on one
+                       ellipsoid were buried under the others); zebra
+                       `rings` go per leg SEGMENT (a straight stifle-to-
+                       fetlock line floats off a bent leg). Nothing below
+                       z = 0: chains lift each joint by its radius and
+                       `_on_ground` lifts the finished animal (a blend
+                       bulges past its primitives).
   - `deform.py` `split_long_edges(region=)` refines only edges whose
                        midpoint lies in a box: the sculpt's `region`
                        rows (two corners) refine the head of a 1.6 m

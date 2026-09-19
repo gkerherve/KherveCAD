@@ -1208,7 +1208,7 @@ from . import (library_cards, library_chem, library_crystal,  # noqa: E402
                library_vacuum, library_vitamins, library_generative,
                library_motion, library_solar, library_music,
                library_music_more, library_kitchen, library_electronics,
-               library_characters)
+               library_characters, library_animals, library_animals_real)
 PARTS.update(library_vacuum.PARTS)
 PARTS.update(library_uhv.PARTS)
 PARTS.update(library_manip.PARTS)
@@ -1249,6 +1249,8 @@ PARTS.update(library_print.PARTS)
 PARTS.update(library_vitamins.PARTS)
 PARTS.update(library_electronics.PARTS)
 PARTS.update(library_characters.PARTS)
+PARTS.update(library_animals.PARTS)
+PARTS.update(library_animals_real.PARTS)
 PARTS.update(library_generative.PARTS)
 PARTS.update(library_motion.PARTS)
 PARTS.update(library_solar.PARTS)
