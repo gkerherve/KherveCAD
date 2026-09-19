@@ -225,6 +225,10 @@ class MainWindow(QMainWindow):
                             "Export PN&G...",
                             lambda: export_png_dialog(self),
                             "Ctrl+Alt+E")
+        from . import photoreal_ui
+        file_menu.addAction(icons.icon("mdi.camera-iris"),
+                            "Render P&hoto (Blender)...",
+                            lambda: photoreal_ui.open_dialog(self))
         file_menu.addAction(icons.icon("mdi.drawing-box"),
                             "&Blueprint (2D Drawing)...",
                             self.open_blueprint, "Ctrl+Shift+D")

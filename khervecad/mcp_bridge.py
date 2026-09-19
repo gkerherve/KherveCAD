@@ -61,7 +61,7 @@ _READ_ONLY_TOOLS = frozenset({
     "check_code",
     "list_edges",
     "mass_properties",
-    "check_printability", "check_interference",
+    "check_printability", "check_interference", "render_photo",
 })
 
 #: Tools that never change the document, so there is no snapshot to
@@ -81,7 +81,7 @@ _FILE_TOOLS = frozenset({
     "open_document", "save_document", "export_document",
     "export_drawing", "publish_to_printables", "set_reference_image",
     "mesh_from_photo", "build_city", "import_map", "send_to_planetcraft",
-    "install_scad_library", "build_protein",
+    "install_scad_library", "build_protein", "render_photo",
 })
 
 

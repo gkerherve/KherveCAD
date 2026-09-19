@@ -2700,6 +2700,24 @@ into a new module and import.
                        Manifold's smooth_out was tried first: it shrinks
                        even its own cube with every edge "sharp" (6667 of
                        8000 mm³).
+  - `photoreal.py` / `photoreal_ui.py` — **photoreal renders** through
+                       Blender Cycles when installed (2026-09-19; nothing
+                       bundled — found via KHERVECAD_BLENDER, PATH, the
+                       usual folders): the view's coloured rows -> one GLB
+                       (metres, Y up; a PBR material per colour from
+                       `MATERIALS`: Metal metallic, Glass
+                       KHR_materials_transmission, Emissive strength), a
+                       generated bpy script (the view's yaw / pitch /
+                       distance / target and its 45° FOV — view3d's focal
+                       is 1.2 x the short side — or a framed preset; sun +
+                       sky, a studio floor or shadow catcher, AgX, Cycles
+                       denoised or EEVEE), `blender -b --factory-startup`.
+                       File ▸ Render Photo (Blender)…; MCP `render_photo`
+                       (read-only; a file tool when given `path`);
+                       get_document_info reports `blender`. Tested with a
+                       stand-in blender that checks the GLB and writes a
+                       PNG — the bpy script itself is only compile-checked
+                       here (no Blender on the dev Mac).
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.

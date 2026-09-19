@@ -489,6 +489,11 @@ another part) and solves the angles itself — far better than guessing \
 set_pose rotations. Build an arm as joint { upper; joint { fore; \
 gripper } } with each pivot at its hinge, then reach.
 
+For a picture the USER keeps — a listing, a presentation, "show me \
+what it will look like" — render_photo (Blender Cycles: real light, \
+reflections, glass) when get_document_info's blender.available; \
+render_view remains the quick check while building.
+
 Look at what you built:
 - To SEE where a part will fail to print, set_render_options heatmap = \
 "thickness" (red = wall thinner than heat_min_wall) or "overhang" (red \

@@ -881,6 +881,49 @@ TOOLS = [
         }),
     },
     {
+        "name": "render_photo",
+        "description": (
+            "A PHOTOREAL picture of the model (Blender Cycles in the "
+            "background: real light and shadow, metal that reflects, "
+            "glass you see through, emissive parts that glow) — for a "
+            "listing, a presentation or the user's approval, not for "
+            "checking geometry (render_view is instant). Uses the "
+            "user's own camera, or a preset framed. Needs Blender "
+            "installed (free); get_document_info says whether it was "
+            "found. Takes 10-120 s. Returns the image; `path` also "
+            "saves it."
+        ),
+        "input_schema": _obj({
+            "view": {"type": "string",
+                     "description": "'current' (default: the user's "
+                                    "camera) or a preset: Isometric, "
+                                    "Three-quarter front, Bird's-eye, "
+                                    "Low angle, Front, Right, Top..."},
+            "width": {"type": "integer",
+                      "description": "Pixels (default 1200)."},
+            "height": {"type": "integer",
+                       "description": "Pixels (default 900)."},
+            "samples": {"type": "integer",
+                        "description": "Cycles samples (default 64; "
+                                       "more = less noise, slower)."},
+            "engine": {"type": "string", "enum": ["cycles", "eevee"],
+                       "description": "cycles (default, path traced) "
+                                      "or eevee (fast raster)."},
+            "ground": {"type": "boolean",
+                       "description": "A studio floor with the part's "
+                                      "shadow (default true)."},
+            "transparent": {"type": "boolean",
+                            "description": "Transparent background, "
+                                           "shadow kept."},
+            "path": {"type": "string",
+                     "description": "Also save the PNG here."},
+            "max_width": {"type": "integer",
+                          "description": "Scale the returned image to "
+                                         "at most this wide (default "
+                                         "900)."},
+        }),
+    },
+    {
         "name": "push_pull_face",
         "description": (
             "Direct editing: push a FLAT face of a part straight out "

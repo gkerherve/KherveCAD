@@ -238,6 +238,7 @@ class McpToolExecutor:
                          "holes look uncut. Edit > Locate OpenSCAD."),
             },
             "exact_preview_booleans": self._csg_info(),
+            "blender": self._blender_info(),
             "bounds": bounds,
             "bounds_mm": self._box_in_mm(bounds),
             "reference_images": self._references(),
@@ -706,6 +707,15 @@ class McpToolExecutor:
                            for i in range(3)]}
 
     @staticmethod
+    def _blender_info() -> dict:
+        from . import photoreal
+        path = photoreal.find_blender()
+        return {"available": path is not None, "path": path,
+                "note": ("render_photo makes photoreal pictures." if path
+                         else "Not installed: render_photo is off (free "
+                              "at blender.org).")}
+
+    @staticmethod
     def _csg_info() -> dict:
         from . import csg
         on = csg.available()
@@ -1135,6 +1145,42 @@ class McpToolExecutor:
             result["clamped"] = clamped
             result["note"] = ("Some angles were past a joint's limits "
                               "and were clamped to them.")
+        return result
+
+    def _t_render_photo(self, params) -> dict:
+        import os
+        import tempfile
+        from PyQt5.QtGui import QImage
+        from . import photoreal, photoreal_ui
+        if photoreal.find_blender() is None:
+            raise ToolError(
+                "Blender is not installed, so there is no photoreal "
+                "render. Tell the user it is free at blender.org (or "
+                "set KHERVECAD_BLENDER); render_view still works.")
+        path = params.get("path")
+        out = path or os.path.join(tempfile.mkdtemp(prefix="kcad_"),
+                                   "photo.png")
+        size = (int(params.get("width") or 1200),
+                int(params.get("height") or 900))
+        try:
+            photoreal_ui.render_window(
+                self._w, out, str(params.get("view") or "current"), size,
+                int(params.get("samples") or 64),
+                str(params.get("engine") or "cycles"),
+                params.get("ground", True) is not False,
+                bool(params.get("transparent", False)))
+        except (RuntimeError, ValueError) as exc:
+            raise ToolError(str(exc))
+        image = QImage(out)
+        if image.isNull():
+            raise ToolError("Blender wrote no readable picture.")
+        width = int(params.get("max_width") or 900)
+        if image.width() > width:
+            from PyQt5.QtCore import Qt
+            image = image.scaledToWidth(width, Qt.SmoothTransformation)
+        result = {IMAGE_KEY: self._png(image), "size": list(size)}
+        if path:
+            result["saved"] = path
         return result
 
     def _t_push_pull_face(self, params) -> dict:
