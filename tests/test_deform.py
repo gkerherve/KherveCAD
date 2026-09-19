@@ -181,6 +181,8 @@ def test_deformer_validation(app):
     cut = doc.wrap_nodes([doc.add_node("cube"), doc.add_node("sphere")],
                          "difference")
     bent = doc.wrap_nodes([cut], "bend")
+    raw = doc.add_node("scad_raw", dict(code="cube(3);"))
+    blind = doc.wrap_nodes([raw], "twist")
     same = doc.wrap_nodes([doc.add_node("cube")], "bend")
     same.params.update(toward="z")
     lat = doc.wrap_nodes([doc.add_node("cube")], "lattice")
@@ -189,7 +191,12 @@ def test_deformer_validation(app):
     inner = doc.add_node("twist", parent=loop)
     doc.add_node("cube", parent=inner)
     errors = validate(doc.root)
-    assert "difference" in errors[bent.id]
+    from khervecad import csg
+    if csg.available():             # Manifold cuts it exactly: bakeable
+        assert bent.id not in errors
+    else:
+        assert "difference" in errors[bent.id]
+    assert "scad_raw" in errors[blind.id]
     assert "must differ" in errors[same.id]
     assert "8 corner" in errors[lat.id]
     assert "for" in errors[inner.id]

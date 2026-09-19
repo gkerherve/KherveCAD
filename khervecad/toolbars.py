@@ -64,7 +64,7 @@ OPERATION_GROUPS = [
     ("combine", ["union", "difference", "intersection", "render"]),
     ("finish", ["fillet", "hull", "minkowski"]),
     ("deform", ["blend", "bend", "twist", "taper", "lattice",
-                "subdivide", "shell", "sculpt"]),
+                "subdivide", "decimate", "shell", "sculpt"]),
     ("character", ["symmetry", "joint", "paint", "hair_cap"]),
     ("logic", ["for_loop", "while_loop", "if_else", "pattern",
                "intersection_for", "let"]),

@@ -382,6 +382,17 @@ TIPS = {
         [_SELECTION, "Click Subdivide.",
          "Levels 1–4: each level makes it smoother (and 4× heavier)."],
         None),
+    "decimate": (
+        "Decimate (fewer triangles)",
+        "Makes a heavy part light: fewer triangles, the same shape — a "
+        "scan, a sculpt, a threaded part or a tree that slows the view "
+        "or the export. Flat areas lose triangles first, detail last.",
+        [_SELECTION + " Pick the heavy solid.",
+         "Click Decimate.",
+         "Keep: the fraction of triangles to keep (0.25 = a quarter).",
+         "Or within: a distance in mm the surface may move instead — "
+         "0.05 is invisible on a print."],
+        "A closed solid stays closed, so it still prints."),
     "shell": (
         "Shell (hollow)",
         "Turns a solid into a hollow shell of even wall thickness — a "

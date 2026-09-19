@@ -107,6 +107,14 @@ NODE_TYPES = {
         icon="mdi.circle-multiple-outline",
         params=dict(levels=2),
         schema=[("levels", "Levels", "int", 1, 4)]),
+    "decimate": dict(
+        label="Decimate (fewer triangles)", category=OPERATION,
+        icon="mdi.vector-triangle",
+        params=dict(ratio=0.5, tolerance=0.0),
+        schema=[("ratio", "Keep (fraction of triangles)", "float",
+                 0.001, 1.0),
+                ("tolerance", "Or within (mm, 0 = use Keep)", "float",
+                 0.0, 1e4)]),
     "human": dict(
         label="Human figure", category=SHAPE_3D, icon="mdi.human",
         params=dict(gender=0.0, age=0.0, weight=0.0, height=0.0,
@@ -177,7 +185,7 @@ TYPES = frozenset(NODE_TYPES)
 LEAVES = frozenset({"polyhedron", "loft", "human"})
 WRAPPERS = frozenset({"sweep", "section_loft", "blend", "bend", "twist",
                       "taper", "lattice", "subdivide", "fillet", "shell",
-                      "sculpt", "hair_cap"})
+                      "sculpt", "hair_cap", "decimate"})
 
 #: wrappers whose surface is computed here and baked into the program,
 #: with their helper module's parameters (besides points and faces)
@@ -191,6 +199,7 @@ _BAKED = {
     "taper": [("axis", "z"), ("factor", 1), ("detail", 5)],
     "lattice": [("offsets", []), ("detail", 2)],
     "subdivide": [("levels", 1)],
+    "decimate": [("ratio", 0.5), ("tolerance", 0)],
     "shell": [("thickness", 2), ("open", "none"), ("open_angle", 30),
               ("detail", 2)],
     "sculpt": [("strokes", []), ("detail", 0), ("mirror", "none"),
@@ -208,6 +217,16 @@ _CHOICES = {"axis", "toward", "open", "mirror", "clear"}
 #: shape into the program
 _INEXACT = {"difference", "intersection", "minkowski", "offset",
             "projection", "scad_raw"}
+
+def _inexact(node) -> bool:
+    """Whether the preview mesh of *node* is not its true shape — a
+    boolean Manifold cuts (csg.py) is exact, the rest of _INEXACT not."""
+    from . import csg
+    if node.type not in _INEXACT:
+        return False
+    return not (csg.available() and node.type in csg.HANDLED
+                and node.id not in csg.FAILED)
+
 
 #: set while generating code for reading rather than rendering
 #: (get_code): baked point/face arrays are summarised, not written out.
@@ -437,6 +456,10 @@ def _compute(node, env) -> list:
            mesh._children_mesh(node, env, None, frozenset(), False)]
     if t == "subdivide":
         return deform.loop_subdivide(src, int(num("levels", 1.0)))
+    if t == "decimate":
+        from . import decimate
+        return decimate.decimate(src, num("ratio", 0.5),
+                                 num("tolerance", 0.0))
     if t == "hair_cap":
         from . import hair
         within = [[mesh.rv(v, env) for v in row]
@@ -747,7 +770,7 @@ def _check_baked(node, env):
     if t == "section_loft":
         return _check_section_loft(node, env)
     bad = next((n for n in node.walk() if n is not node and n.visible
-                and n.type in _INEXACT), None)
+                and _inexact(n)), None)
     if bad is not None:
         return (f"a {word} reshapes the preview mesh, which cannot cut "
                 f"booleans — {bad.name} ({bad.type}) would be baked "

@@ -2501,6 +2501,25 @@ into a new module and import.
                        is no longer sent to OpenSCAD for an exact mesh.
                        Optional: absent, everything is as before. The
                        spec keeps numpy for it.
+  - `decimate.py`    — **Decimate** (Blender's Decimate ▸ Collapse,
+                       2026-09-19): the `decimate` wrapper (Deform
+                       family, baked in `_BAKED`: `kcad_decimate(ratio=,
+                       tolerance=, points=, faces=) { children }`) keeps
+                       `ratio` of the triangles, or collapses whatever
+                       moves the surface less than `tolerance` mm.
+                       Quadric edge collapse (Garland-Heckbert, the
+                       algorithm behind Blender's), unweighted quadrics
+                       so a cost is mm²; the **link condition** and a
+                       **fold** check keep a closed solid closed, open
+                       borders are locked. Past `PREPASS_ABOVE` triangles
+                       Manifold's `simplify` (C++) takes it to 3x the
+                       target first and the Python collapse finishes
+                       (135k -> 13.5k in 1.5 s, 99.95 % of the volume;
+                       Manifold alone kept less); a tolerance request is
+                       Manifold's alone when it is there. With csg.py
+                       the deformers now also accept the booleans
+                       Manifold cuts (`bake._inexact`), so a threaded
+                       part can be decimated.
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.

@@ -115,6 +115,14 @@ def to_rows(solid, palette):
     return rows
 
 
+def to_triangles(solid):
+    """A Manifold's plain triangles (no colours)."""
+    out = solid.to_mesh64()
+    props = np.asarray(out.vert_properties)[:, :3].tolist()
+    return [(tuple(props[a]), tuple(props[b]), tuple(props[c]))
+            for a, b, c in np.asarray(out.tri_verts).tolist()]
+
+
 def _convex(solid):
     hull = solid.hull()
     return abs(hull.volume() - solid.volume()) <= 1e-6 * max(
