@@ -103,6 +103,7 @@ WRAP_TYPES = [
     "while_loop", "if_else", "component", "symmetry", "joint", "sweep",
     "section_loft", "blend", "bend", "twist", "taper", "lattice", "subdivide",
     "pattern", "shell", "sculpt", "decimate", "shrinkwrap", "bevel",
+    "remesh",
 ]
 
 

@@ -393,6 +393,18 @@ TIPS = {
          "Or within: a distance in mm the surface may move instead — "
          "0.05 is invisible on a print."],
         "A closed solid stays closed, so it still prints."),
+    "remesh": (
+        "Remesh (clean solid)",
+        "Rebuilds a messy part as ONE clean closed solid of even "
+        "triangles: overlapping pieces merge, inner walls and small "
+        "holes in a scan disappear. Use it when a part will not print, "
+        "bevel, shrinkwrap or cut.",
+        [_SELECTION + " Pick the messy part.",
+         "Click Remesh.",
+         "Voxel size: the detail kept (mm) — smaller is finer and "
+         "heavier.",
+         "Snap keeps the original surface exactly where it was."],
+        "Follow it with Decimate if the result is heavier than needed."),
     "bevel": (
         "Bevel edges",
         "Rounds or chamfers EVERY sharp edge of a part at once — outside "

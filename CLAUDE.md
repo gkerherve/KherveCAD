@@ -2570,6 +2570,18 @@ into a new module and import.
                        was tried first: 64 s and 9M triangles for a plate
                        with four holes — Manifold's minkowski of a
                        non-convex solid scales with the face product.
+  - `remesh.py`      — **Voxel remesh** (Blender's Remesh, 2026-09-19;
+                       Deform family, baked `kcad_remesh(voxel=, snap=,
+                       points=, faces=) { children }`): any soup back to
+                       ONE closed solid. Inside = WINDING number up each
+                       grid column (overlaps union, inner walls cancel, a
+                       small hole in a scan does not flood), numpy
+                       (triangle, column) pairs; occupancy averaged over
+                       2x2x2 and meshed by `sdf.mesh_values` (split out of
+                       `polygonize`); `snap` moves each vertex to the
+                       nearest original point (shrinkwrap.Target) within
+                       1.5 cells. check_printability's watertight failure
+                       now names it as the fix.
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.

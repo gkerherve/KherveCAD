@@ -326,6 +326,15 @@ def polygonize(f, lo, hi, cell) -> list:
                 # a sample exactly on the surface would put a vertex on
                 # a grid corner and collapse faces: nudge it outside
                 vals[base + i] = v if v != 0.0 else 1e-12
+    return mesh_values(vals, xs, ys, zs)
+
+
+def mesh_values(vals, xs, ys, zs) -> list:
+    """Marching tetrahedra over sampled values: *vals* flat, x fastest
+    (index i + nx * (j + ny * k)), negative inside, none exactly 0.
+    Counter-clockwise (outward) triangles. remesh.py samples a grid of
+    its own and meshes it here."""
+    nx, ny, nz = len(xs), len(ys), len(zs)
     offsets = [dx + nx * (dy + ny * dz) for dx, dy, dz in _CORNERS]
     cache = {}
     tris = []

@@ -390,7 +390,9 @@ def print_check(tris, overhang_deg: float = DEFAULT_OVERHANG,
             message=f"{water['boundary_edges']} open edge(s) and "
                     f"{water['reversed_edges']} doubled edge(s) — a "
                     "slicer may fill or drop parts of it. First at "
-                    f"{[round(v, 2) for v in water['at']]}."))
+                    f"{[round(v, 2) for v in water['at']]}. Fix: wrap "
+                    "the part in Remesh (kcad_remesh), which rebuilds "
+                    "it as one closed solid."))
 
     sin_over = math.sin(math.radians(overhang_deg))
     total = 0.0

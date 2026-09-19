@@ -115,6 +115,13 @@ NODE_TYPES = {
                  0.001, 1.0),
                 ("tolerance", "Or within (mm, 0 = use Keep)", "float",
                  0.0, 1e4)]),
+    "remesh": dict(
+        label="Remesh (clean solid)", category=OPERATION,
+        icon="mdi.cube-scan",
+        params=dict(voxel=1.0, snap=True),
+        schema=[("voxel", "Voxel size (mm)", "float", 0.01, 1e4),
+                ("snap", "Snap onto the original surface", "bool",
+                 None, None)]),
     "bevel": dict(
         label="Bevel edges", category=OPERATION,
         icon="mdi.square-rounded-outline",
@@ -217,7 +224,7 @@ LEAVES = frozenset({"polyhedron", "loft", "human"})
 WRAPPERS = frozenset({"sweep", "section_loft", "blend", "bend", "twist",
                       "taper", "lattice", "subdivide", "fillet", "shell",
                       "sculpt", "hair_cap", "decimate", "shrinkwrap",
-                      "bevel"})
+                      "bevel", "remesh"})
 
 #: wrappers whose surface is computed here and baked into the program,
 #: with their helper module's parameters (besides points and faces)
@@ -232,6 +239,7 @@ _BAKED = {
     "lattice": [("offsets", []), ("detail", 2)],
     "subdivide": [("levels", 1)],
     "decimate": [("ratio", 0.5), ("tolerance", 0)],
+    "remesh": [("voxel", 1), ("snap", True)],
     "bevel": [("width", 1), ("segments", 4), ("profile", 0.5),
               ("angle", 30), ("which", "convex")],
     "shrinkwrap": [("mode", "nearest"), ("axis", "normal"),
@@ -514,6 +522,10 @@ def _compute(node, env) -> list:
            mesh._children_mesh(node, env, None, frozenset(), False)]
     if t == "subdivide":
         return deform.loop_subdivide(src, int(num("levels", 1.0)))
+    if t == "remesh":
+        from . import remesh
+        return remesh.remesh(src, num("voxel", 1.0),
+                             bool(p.get("snap", True)))
     if t == "bevel":
         from . import bevel
         out = bevel.bevel(src, num("width", 1.0), int(num("segments", 4.0)),
@@ -723,7 +735,7 @@ def _b_baked(kind):
                                 if isinstance(row, list)]
                                if isinstance(value, list)
                                else [list(r) for r in defaults[key]])
-            elif key in ("closed", "show_target"):
+            elif key in ("closed", "show_target", "snap"):
                 params[key] = value is True or value == "true"
             elif key == "which":
                 from .bevel import EDGES
@@ -871,6 +883,10 @@ def _check_baked(node, env):
                     "fastest, then y, then z")
     if t == "sculpt":
         return _check_sculpt(p, env)
+    if t == "remesh":
+        from . import mesh
+        if mesh.rv(p.get("voxel", 1.0), env, 1.0) <= 0:
+            return "remesh: the voxel size must be more than 0 mm"
     if t == "bevel":
         from . import bevel, csg
         if not csg.available():

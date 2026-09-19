@@ -209,7 +209,11 @@ BOTH in `kcad_shrinkwrap(mode = "nearest", offset = 0.5, keep = \
 rest (drawn too), offset mm off its surface; keep "outside" moves only \
 what sinks in, "all" lays it flat on the surface; mode "project" with \
 axis "-z" drops it straight down. Give a blocky piece `detail = 2` so \
-it has vertices to bend. \
+it has vertices to bend. A part check_printability calls not \
+watertight — a union of overlapping pieces, an imported scan, a folded \
+sculpt — or that bevel / shrinkwrap / a boolean refuses, goes in \
+`kcad_remesh(voxel = 0.5, snap = true) { … }`: one closed solid again \
+(voxel = the detail kept, mm). \
 Prefer a sweep to a chain of hull()s. For a body whose cross-sections \
 have corners (a car, a boat hull), `kcad_section_loft(heights = [[z0], \
 [z1], ...], smooth = 0)` with one 2D child shape per section, in \
