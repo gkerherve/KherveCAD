@@ -1693,6 +1693,33 @@ into a new module and import.
                        Nothing grows below z = 0. `library_trees.py`: every
                        species as a Trees part (Young/Mature/Old, Variation
                        seed, season as the colour combo).
+  - `leafgen.py` / `library_leaves.py` — **Leaves** (2026-09-19, the
+                       user: "start with the leaves of every kind of tree,
+                       then the trees, very very detailed"), Library ▸
+                       Nature & garden ▸ Leaves, 32 species in their
+                       summer / autumn / spring colour (evergreens have no
+                       autumn). A species is a recipe: STRIP blades are a
+                       grid over (s along the midrib, t across) whose half
+                       width is s^a (1 - s)^b × lobes / teeth (a second
+                       finer set for double-serrate) / spines / an
+                       asymmetric base; PALMATE blades a polar grid r(θ) of
+                       pointed or rounded lobes (ginkgo a fan with a
+                       notch); COMPOUND leaves strip leaflets on a rachis
+                       or digitate; needles (pine fascicle, spruce all
+                       round, fir / yew in two flat ranks, cedar / larch
+                       spurs), cypress scale sprays, a palm frond. The grid
+                       is folded, arched, curled and waved, then `sheet`
+                       closes it with a bottom sheet and walls; veins are
+                       tubes ON the shaped top (`surface_z`), curving to
+                       the tip. Two traps: welding (`_orient_piece`) must
+                       merge points that coincide where a blade narrows,
+                       or the solid is open along index twins; and a width
+                       below ~0.6 mm (a tooth's trough, a drawn-out tip)
+                       pinches at the 0.1 mm rounding — `half_width` keeps
+                       30 % of the profile and `strip_grid` drops
+                       hair-thin rows. Detail high / medium / low (low has
+                       no veins, for trees); compound leaflets go one step
+                       down (a rowan at high was 95k triangles).
   - `library_sport.py` / `stadium.py` — the **Sport** library
                        (2026-09-19, the user: "a library for every sport
                        ... different shapes of stadium ... so the AI makes

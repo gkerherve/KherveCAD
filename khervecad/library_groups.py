@@ -46,7 +46,8 @@ SECTIONS = [
          ["Sport: stadiums", "Sport: pitches & courts", "Sport: equipment",
           "Sport: seating", "Sport"]),
         ("Nature & garden", "mdi.flower-outline",
-         ["Trees", "Stylised trees", "Flowers", "Landscape", "Pots"]),
+         ["Trees", "Leaves", "Stylised trees", "Flowers", "Landscape",
+          "Pots"]),
     ]),
     ("Science", [
         ("Chemistry lab", "mdi.flask-outline", ["Chemistry"]),
