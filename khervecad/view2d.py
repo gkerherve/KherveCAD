@@ -887,6 +887,21 @@ class SketchScene(QGraphicsScene):
         self.fit_scene_rect()
 
     def _rebuild_items(self):
+        from . import part_collections
+        with part_collections.hiding(self.model):
+            self._rebuild_items_now()
+        locked = part_collections.locked_names(self.model)
+        if locked:                  # a locked collection: look, not touch
+            for item in list(self._items.values()) \
+                    + list(self._part_items.values()):
+                node = getattr(item, "node", None)
+                if node is not None and \
+                        part_collections.of(node) in locked:
+                    item.setFlag(QGraphicsItem.ItemIsSelectable, False)
+                    item.setFlag(QGraphicsItem.ItemIsMovable, False)
+                    item.setCursor(Qt.ArrowCursor)
+
+    def _rebuild_items_now(self):
         self.updating = True
         selected = {n.id for n in self.selected_nodes()}
         for item in list(self._items.values()) \

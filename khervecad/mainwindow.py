@@ -1183,6 +1183,11 @@ class MainWindow(QMainWindow):
         ids = getattr(self, "_selected_ids", set())
         if not ids:
             return []
+        from . import part_collections
+        with part_collections.hiding(self.model):
+            return self._highlight_tris_now(ids)
+
+    def _highlight_tris_now(self, ids):
         root = self._render_scope()[0]
         iso = root if root is not self.model.root else None
         plan = getattr(self, "_explode_plan", None)
@@ -1234,6 +1239,13 @@ class MainWindow(QMainWindow):
         self._refresh_preview()
 
     def _refresh_preview(self):
+        # a hidden collection's parts stay out of the views and the
+        # exact render, never out of the document (part_collections)
+        from . import part_collections
+        with part_collections.hiding(self.model):
+            self._refresh_preview_now()
+
+    def _refresh_preview_now(self):
         fn = self.model.effective_fn()
         root, scad = self._render_scope()
         iso = root if root is not self.model.root else None

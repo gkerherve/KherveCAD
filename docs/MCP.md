@@ -42,7 +42,9 @@ and a **picture of the 3D preview**.
   mates. `list_anchors` gives the names —
   every part has automatic bounding-box anchors plus any the user
   picked. `make_master` / `add_linked_copy` place one piece many
-  times (it becomes a hidden Object; the Masters tab was retired). `insert_part` reaches the parametric library: CF/KF vacuum
+  times (it becomes a hidden Object; the Masters tab was retired).
+  `collections` groups parts to show / hide / lock together (the
+  Collections tab); hiding is a view setting, exports keep everything. `insert_part` reaches the parametric library: CF/KF vacuum
   components, ISO-threaded fasteners, chemistry glassware, furniture.
 - **Real OpenSCAD in** — `apply_code` reads resize, multmatrix,
   render, let, echo, assert, intersection_for, `children()` in modules,

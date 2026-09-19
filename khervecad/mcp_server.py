@@ -283,6 +283,10 @@ directions oppose. list_anchors gives the names — every part has \
 automatic bounding-box anchors (Origin, 6 face centres, 12 edge \
 midpoints, 8 corners) plus any the user picked. A mate is live: move \
 the parent and the child follows.
+- collections groups parts to show / hide / lock together (the \
+Collections tab) — put a house's walls, roof and furniture each in one, \
+or a mechanism's moving parts, so the user can hide the roof to look in. \
+Hidden is a view setting: exports keep everything.
 - make_master / add_linked_copy place one piece many times (even in a \
 loop): the piece becomes a hidden Object and each copy calls it, so \
 editing it changes every copy.

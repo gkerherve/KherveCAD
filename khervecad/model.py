@@ -1144,6 +1144,10 @@ class DocumentModel(QObject):
         #: an enlargement). A label like the unit: the scale bar reads
         #: lengths of the real thing, nothing is rescaled
         self.real_scale = 1.0
+        #: Blender-style collections (part_collections.py): [{name, visible,
+        #: locked}], membership in each part's params["collection"] —
+        #: saved and in the undo snapshots
+        self.collections = []
         self.undo_stack = QUndoStack(self)
         self._restoring = False
         self._last_state = self._serialize()
@@ -1166,7 +1170,8 @@ class DocumentModel(QObject):
                            "unit": self.unit,
                            "real_scale": self.real_scale,
                            "house": self.house,
-                           "city": self.city})
+                           "city": self.city,
+                           "collections": self.collections})
 
     def _schedule_capture(self):
         """Capture one undo snapshot per event-loop cycle, so a
@@ -1196,6 +1201,8 @@ class DocumentModel(QObject):
                                      data.get("references", [])]
             self.house = data.get("house")
             self.city = data.get("city")
+            self.collections = [dict(c) for c in
+                                data.get("collections") or []]
             unit = data.get("unit", "mm")
             unit_moved = unit != self.unit
             self.unit = unit
@@ -1806,6 +1813,7 @@ class DocumentModel(QObject):
         self.drawing = None
         self.house = None
         self.city = None
+        self.collections = []
         self.root = CadNode("root")
         self.structure_changed.emit()
         self.drawing_changed.emit()

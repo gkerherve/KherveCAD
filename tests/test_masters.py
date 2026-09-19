@@ -117,7 +117,7 @@ def test_there_is_no_masters_tab(app):
     from khervecad.mainwindow import MainWindow
     w = MainWindow()
     tabs = [w.builder.tabText(i) for i in range(w.builder.count())]
-    assert tabs == ["Main", "Object", "Variables", "Code"]
+    assert tabs == ["Main", "Object", "Collections", "Variables", "Code"]
 
 
 # ------------------------------------------------------------ examples

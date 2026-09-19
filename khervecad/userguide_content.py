@@ -33,7 +33,7 @@ the <b>Code</b> tab is written from the tree, so the two always agree
 <table>
 <tr><td><b>1</b></td><td><b>Object tree &amp; tabs</b> &mdash; the
 model itself. Main (the assembly), Object (the part you are building),
-Variables and Code.</td></tr>
+Collections, Variables and Code.</td></tr>
 <tr><td><b>2</b></td><td><b>Properties</b> &mdash; every setting of the
 selected object: sizes, positions, angles, colour.</td></tr>
 <tr><td><b>3</b></td><td><b>2D sketch</b> &mdash; a millimetre grid
@@ -649,6 +649,27 @@ follows the original. Put one copy in a For loop to place many.</li>
 <p>Older documents with a <b>Masters</b> tab open with each master
 turned into an Object and its copies unchanged. Library &rsaquo; Learn
 OpenSCAD &rsaquo; 21 and Mechanical &rsaquo; Bolt circle show both.</p>
+"""),
+
+        ("collections", "Collections", """
+<p>A <b>collection</b> is a named set of parts you show, hide or lock
+together &mdash; <i>Walls</i>, <i>Roof</i>, <i>Furniture</i> in a house,
+<i>Moving parts</i> in a mechanism &mdash; whatever the tree looks like.
+It works like Blender's collections.</p>
+<ol>
+<li>In Main, select parts, right-click &rsaquo; <b>Move to Collection</b>
+&rsaquo; <b>New collection&hellip;</b> (or an existing one).</li>
+<li>Open the <b>Collections</b> tab. Click the <b>eye</b> to hide or show
+a collection; <b>Ctrl+click</b> it to show that collection alone (again
+to show everything). Click the <b>padlock</b> so its parts cannot be
+picked or dragged by accident in the 2D view.</li>
+<li>Drag parts from one collection to another, double-click a name to
+rename it, right-click for the rest. Deleting a collection keeps its
+parts.</li>
+</ol>
+<p>Hiding a collection only changes what the views show: the parts stay
+in the design, in the program and in every export. To leave a part out
+of the model itself, hide the part (Space in the tree).</p>
 """),
 
         ("colour", "Colour and materials", """

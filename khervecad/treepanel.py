@@ -385,6 +385,10 @@ class ObjectTree(QTreeWidget):
         item.setIcon(0, icons.icon(NODE_TYPES[node.type]["icon"]))
         own_hidden = not node.visible                 # explicitly hidden
         eff_hidden = not self._model_visible(node)    # or a parent is
+        from . import part_collections
+        if not eff_hidden and part_collections.is_hidden(self.model,
+                                                         node):
+            eff_hidden = True                         # or its collection
         # keep the row text clean (so renaming isn't polluted); the
         # "(hidden)" tag on the explicitly-hidden node is painted by the
         # delegate from ROLE_TAG
@@ -1111,6 +1115,11 @@ class ObjectTree(QTreeWidget):
                 "Make Object",
                 lambda: [self.model.make_component(n)
                          for n in objectable])
+        if promotable and self.SHOWS_INSERT_OBJECT:
+            from .collections_panel import fill_move_menu
+            fill_move_menu(menu.addMenu(
+                icons.icon("mdi.folder-arrow-right-outline"),
+                "Move to Collection"), self.model, lambda: promotable)
         self._insert_object_menu(menu)
         menu.addSeparator()
         menu.addAction(icons.icon("mdi.delete-outline"), "Delete",
@@ -1644,7 +1653,7 @@ class VariablesSheet(QWidget):
 
 
 class BuilderPanel(QTabWidget):
-    """Main (assembly) + Object + Variables + Code tabs, kept
+    """Main (assembly) + Object + Collections + Variables + Code tabs, kept
     in sync with the model.
 
     The **Main** tab is the whole document; the **Object** tab edits
@@ -1695,6 +1704,8 @@ class BuilderPanel(QTabWidget):
         box.addWidget(self.tree)
 
         self.variables = VariablesSheet(model)
+        from .collections_panel import CollectionsPanel
+        self.collections = CollectionsPanel(model, self.tree)
 
         # Code tab: a text-editor toolbar + the editable program + an
         # Apply button that parses it back into the object tree
@@ -1735,6 +1746,8 @@ class BuilderPanel(QTabWidget):
                  "document"),
                 (self.object_tab, "Object", "Define and edit one Object "
                  "(part) at its own origin"),
+                (self.collections, "Collections", "Sets of parts to "
+                 "show, hide or lock together (Blender's collections)"),
                 (self.variables, "Variables", "Document and per-Object "
                  "variables"),
                 (code_tab, "Code", "The OpenSCAD program, editable")):

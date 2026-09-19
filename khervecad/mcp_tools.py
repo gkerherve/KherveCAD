@@ -217,6 +217,11 @@ class McpToolExecutor:
             "node_count": sum(1 for _ in model.root.walk()) - 1,
             "top_level": [n.name for n in model.root.children],
             "objects": objects,
+            "collections": [
+                {"name": c["name"],
+                 "visible": bool(c.get("visible", True)),
+                 "locked": bool(c.get("locked", False))}
+                for c in model.collections],
             "editing_object": ({"id": comp.id, "name": comp.name}
                                if comp is not None else None),
             "global_segments": int(model.global_fn),
@@ -1656,6 +1661,33 @@ class McpToolExecutor:
                                       **args)
         except planetcraft.PlanetCraftError as exc:
             raise ToolError(str(exc))
+
+    def _t_collections(self, params) -> dict:
+        from . import part_collections as pc
+        model = self._model
+        action = params.get("action") or "list"
+        name = params.get("name")
+        try:
+            if action == "create":
+                name = pc.create(model, name or "",
+                                 self._nodes(params.get("ids") or []))
+            elif action == "assign":
+                pc.assign(model, self._nodes(params.get("ids")), name)
+            elif action in ("show", "hide"):
+                pc.set_visible(model, name, action == "show")
+            elif action in ("lock", "unlock"):
+                pc.set_locked(model, name, action == "lock")
+            elif action == "solo":
+                pc.solo(model, name)
+            elif action == "rename":
+                name = pc.rename(model, name, params.get("new_name"))
+            elif action == "delete":
+                pc.remove(model, name)
+            elif action != "list":
+                raise ToolError(f"Unknown action '{action}'.")
+        except pc.CollectionError as exc:
+            raise ToolError(str(exc))
+        return {"collections": pc.summary(model), "name": name}
 
     def _t_make_object(self, params) -> dict:
         nodes = self._nodes(params.get("ids"))

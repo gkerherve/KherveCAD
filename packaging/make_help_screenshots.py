@@ -274,7 +274,7 @@ def shot_tutorial(win):
     save(win.grab(), "tutorial_4_difference", WIDE)
     save(win.view3d.grab(), "view3d_plate")
     save(win.builder.grab(), "tab_object")
-    win.builder.setCurrentIndex(3)                   # Code tab
+    win.builder.setCurrentIndex(win.builder.indexOf(win.builder._code_page))
     settle(300)
     save(win.builder.grab(), "tab_code")
 
@@ -285,7 +285,7 @@ def shot_tabs(win):
     settle(200)
     save(win.builder.grab(), "tab_main")
     load(win, "Parametric box")
-    win.builder.setCurrentIndex(2)
+    win.builder.setCurrentWidget(win.builder.variables)
     settle(200)
     save(win.builder.grab(), "tab_variables")
     win.builder.setCurrentIndex(0)

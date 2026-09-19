@@ -20,7 +20,7 @@ from .meshimport import relative_for_save, resolve_paths
 from .model import NODE_TYPES, CadNode, DocumentModel, retire_masters
 from .units import coerce
 
-FORMAT_VERSION = 12         # 4: "component" (Object) node type
+FORMAT_VERSION = 13         # 4: "component" (Object) node type
                             # 5: instances (reference->component) may
                             #    carry a "mate" record
                             # 6: organic/mesh node types; color nodes
@@ -38,6 +38,9 @@ FORMAT_VERSION = 12         # 4: "component" (Object) node type
                             # 12: "real_scale" — the N of 1 : N, what the
                             #    scale bar measures (absent = 1, life size)
                             #    (city.resolve); absent = none
+                            # 13: "collections" — Blender-style sets of
+                            #    parts, [{name, visible, locked}]; members
+                            #    carry params["collection"]; absent = none
 
 
 def node_to_dict(node: CadNode) -> dict:
@@ -77,6 +80,8 @@ def save_kcad(model: DocumentModel, path: str):
         data["house"] = model.house
     if model.city:
         data["city"] = model.city
+    if model.collections:
+        data["collections"] = model.collections
     relative_for_save(data["tree"], path)   # the folder travels whole
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=1)
@@ -98,6 +103,7 @@ def load_kcad(model: DocumentModel, path: str):
     model.drawing = data.get("drawing") or None
     model.house = data.get("house") or None
     model.city = data.get("city") or None
+    model.collections = [dict(c) for c in data.get("collections") or []]
     old_unit, model.unit = model.unit, coerce(data.get("unit", "mm"))
     old_scale = model.real_scale
     try:

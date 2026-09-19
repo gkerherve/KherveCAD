@@ -2174,7 +2174,8 @@ into a new module and import.
                        Object: Edit in Object tab (also double-click),
                        Anchors (add-by-pick / set origin / remove) and
                        Attach/Detach; drag & drop reparent/reorder.
-                       Tab order: **Main | Object | Variables | Code**
+                       Tab order: **Main | Object | Collections |
+                       Variables | Code**
                        (the Masters tab was retired 2026-09-19 — see
                        `retire_masters`). The **Variables** sheet is scoped
                        (Global vs per-Object, following the active
@@ -2186,6 +2187,32 @@ into a new module and import.
                        / Active object**); edits apply back to the tree
                        via **Apply code** (object scope swaps just that
                        Object and writes edited globals back by name).
+  - `part_collections.py` / `collections_panel.py` — **Collections**
+                       (2026-09-19, the user asked which Blender tab to
+                       add and chose this): named sets of parts shown /
+                       hidden / locked together whatever the tree —
+                       `DocumentModel.collections` [{name, visible,
+                       locked}] (saved, FORMAT_VERSION 13, and in the
+                       undo snapshots), membership on the part as
+                       `params["collection"]` (one per part, its insides
+                       follow it; `mesh._TEXT_PARAMS` so it is never read
+                       as an expression). Hidden is a VIEW setting like
+                       Blender's eye: `hiding(model)` turns members'
+                       `visible` off only while `_refresh_preview`,
+                       `_highlight_tris` and view2d's `_rebuild_items`
+                       run — the exact render follows the view, the Code
+                       tab and exports never change. Locked = not
+                       selectable / movable in the 2D view (the 3D view
+                       has no click-select). The tab lists collections
+                       (eye, padlock — text marks when qtawesome is
+                       missing, Ctrl+eye = solo) with their parts, then
+                       "Not in a collection"; drag between them; Main's
+                       right-click ▸ Move to Collection; hidden members
+                       read italic in Main. MCP `collections` (list /
+                       create / assign / show / hide / solo / lock /
+                       unlock / rename / delete) and get_document_info
+                       `collections`. Named part_collections, not
+                       collections: that is the standard library's.
   - `properties.py`  — bottom-left panel; editors generated from each
                        node type's schema, polygon points table.
   - `toolbars.py`    — both toolbars and their tool tables (`TOOLS`,
@@ -4189,7 +4216,7 @@ where each node dict has `"type"`, `"name"`, `"visible"`, `"params"`
 and nested `"children"`. When a node gains new persisted properties,
 bump `FORMAT_VERSION` in `document.py` and keep loading backward
 compatible. Version 9 adds the top-level `"unit"` (units.py); a file
-without it, or with a unit it does not know, opens as millimetres. Version 12 adds `"real_scale"` — the N of 1 : N the scale bar measures (absent = 1, life size).
+without it, or with a unit it does not know, opens as millimetres. Version 12 adds `"real_scale"` — the N of 1 : N the scale bar measures (absent = 1, life size). Version 13 adds `"collections"` (part_collections.py; absent = none).
 
 ## UI conventions
 

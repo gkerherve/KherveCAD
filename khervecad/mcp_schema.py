@@ -1138,6 +1138,30 @@ TOOLS = [
 
     # ── Parts and assemblies ───────────────────────────────────────
     {
+        "name": "collections",
+        "description": (
+            "Blender-style COLLECTIONS: named sets of parts shown, "
+            "hidden or locked together (Walls, Roof, Furniture, Moving "
+            "parts), whatever the tree structure — the Collections tab. "
+            "Hiding is a VIEW setting: the 3D/2D views and render_view "
+            "leave the parts out, the program and every export keep "
+            "them. action: list (default), create (name, ids), assign "
+            "(ids into name; name '' takes them out), show / hide / "
+            "solo (show only this one; again = all) / lock / unlock "
+            "(name), rename (name, new_name), delete (name; its parts "
+            "stay). Every action returns the collections with members."
+        ),
+        "input_schema": _obj({
+            "action": {"type": "string",
+                       "enum": ["list", "create", "assign", "show",
+                                "hide", "solo", "lock", "unlock",
+                                "rename", "delete"]},
+            "name": {"type": "string"},
+            "new_name": {"type": "string"},
+            "ids": _IDS,
+        }),
+    },
+    {
         "name": "make_object",
         "description": (
             "Promote nodes into an Object — a part definition that "
