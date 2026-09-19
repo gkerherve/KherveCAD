@@ -2582,6 +2582,20 @@ into a new module and import.
                        nearest original point (shrinkwrap.Target) within
                        1.5 cells. check_printability's watertight failure
                        now names it as the fix.
+  - `heatmap.py` / `heatmap_ui.py` — **heat maps** (2026-09-19): the
+                       print check painted ON the part — `thickness` (a
+                       ray from each face centre straight in, Manifold
+                       ray_cast ~4 µs, else the print check's grid
+                       sampled; red < min wall, orange < 2x, yellow, green,
+                       teal, blue; grey = never came out) and `overhang`
+                       (red past the limit, yellow within 10°, blue on
+                       the plate). Analyse ▸ Heat Map; state on the window
+                       (`_heatmap`, `_heat_stats`), painted in
+                       `_refresh_preview` AND `_engine_mesh` (a whole-
+                       document render would wipe it). MCP
+                       `set_render_options heatmap / heat_min_wall /
+                       heat_overhang` returns the stats; render_view shows
+                       it.
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.

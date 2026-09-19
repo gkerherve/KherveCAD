@@ -461,6 +461,11 @@ clash count it returns. Cartoon style by default; list_proteins has \
 presets, styles and colours.
 
 Look at what you built:
+- To SEE where a part will fail to print, set_render_options heatmap = \
+"thickness" (red = wall thinner than heat_min_wall) or "overhang" (red \
+= needs support), then render_view — thin spots and overhangs are \
+painted on the model; the result gives the thinnest wall and the red \
+fraction. Fix, look again, then heatmap = "off".
 - render_view returns a PNG of the 3D preview as an image. LOOK AT IT \
 after anything non-trivial, and use `orientation` to check another side \
 — a part that is wrong is obvious in the picture and invisible in the \

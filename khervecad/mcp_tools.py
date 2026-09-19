@@ -1756,6 +1756,16 @@ class McpToolExecutor:
             win.set_projection(name)
         if params.get("stage") is not None:
             win.view3d.set_stage(bool(params["stage"]))
+        heat = None
+        if any(params.get(k) is not None for k in
+               ("heatmap", "heat_min_wall", "heat_overhang")):
+            from . import heatmap_ui
+            try:
+                heat = heatmap_ui.set_heatmap(
+                    win, params.get("heatmap"), params.get("heat_min_wall"),
+                    params.get("heat_overhang"))
+            except (TypeError, ValueError) as exc:
+                raise ToolError(str(exc))
         if params.get("cavity") is not None:
             win.view3d.set_cavity(bool(params["cavity"]))
         if params.get("edges") is not None:
@@ -1792,7 +1802,14 @@ class McpToolExecutor:
                         raise ToolError("cut_position runs from 0 to 1.")
                 win.view3d.set_cut(axis=axis, position=position,
                                    flip=params.get("cut_flip"))
+        from . import heatmap_ui
+        heat_state = dict(heatmap_ui.state(win))
+        stats = heat if heat is not None else getattr(win, "_heat_stats", {})
+        if stats:
+            heat_state.update({k: (round(v, 4) if isinstance(v, float)
+                                   else v) for k, v in stats.items()})
         return {"exploded": win.explode_state(),
+                "heatmap": heat_state,
                 "unit": self._unit(),
                 "real_scale": model.real_scale,
                 "scale": units.ratio_text(model.real_scale),

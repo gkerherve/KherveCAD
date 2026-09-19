@@ -1841,6 +1841,26 @@ TOOLS = [
                                      "a top-left light, instead of the "
                                      "ground grid (also what "
                                      "render_view shows)."},
+            "heatmap": {"type": "string",
+                        "enum": ["off", "thickness", "overhang"],
+                        "description": "Paint the print check ON the "
+                                       "part, in the view and in every "
+                                       "render_view: 'thickness' colours "
+                                       "each face by the wall behind it "
+                                       "(red = thinner than heat_min_wall), "
+                                       "'overhang' by how far it looks "
+                                       "down (red = needs support). The "
+                                       "result carries the legend and "
+                                       "stats (thinnest wall, fraction "
+                                       "red). Turn it 'off' after."},
+            "heat_min_wall": {"type": "number",
+                              "description": "Minimum printable wall for "
+                                             "the thickness map (document "
+                                             "units, default 0.8)."},
+            "heat_overhang": {"type": "number",
+                              "description": "Overhang limit in degrees "
+                                             "for the overhang map "
+                                             "(default 45)."},
             "cavity": {"type": "boolean",
                        "description": "Cavity shading: valleys darker, "
                                       "ridges lighter (Blender's Solid "

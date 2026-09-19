@@ -475,6 +475,8 @@ class MainWindow(QMainWindow):
         analyse_menu.addAction(
             icons.icon("mdi.set-center"), "Check &interference...",
             lambda: open_analysis(self, "interference"))
+        from . import heatmap_ui
+        heatmap_ui.add_menu(self, analyse_menu)
 
         ai_menu = m.addMenu("&AI")
         mcp_act = ai_menu.addAction("&Connect to Claude (Simple)\u2026",
@@ -1273,6 +1275,9 @@ class MainWindow(QMainWindow):
         if plan is not None:
             label += (" — exploded" if plan.group is not None
                       else " — nothing to pull apart")
+        from . import heatmap_ui
+        colors, label = heatmap_ui.apply(self, tris, colors, label)
+        has_colors = has_colors or bool(self._heat_stats)
         self.view3d.set_mesh(tris, label,
                              colors if has_colors else None)
         if getattr(self, "_selected_ids", set()):
@@ -1537,8 +1542,10 @@ class MainWindow(QMainWindow):
 
     def _engine_mesh(self, tris):
         color = getattr(self, "_engine_color", None)
-        self.view3d.set_mesh(tris, "OpenSCAD",
-                             [color] * len(tris) if color else None)
+        colors = [color] * len(tris) if color else None
+        from . import heatmap_ui
+        colors, label = heatmap_ui.apply(self, tris, colors, "OpenSCAD")
+        self.view3d.set_mesh(tris, label, colors)
         self.builder.set_engine_errors({})
 
     def _engine_failed(self, stderr):
