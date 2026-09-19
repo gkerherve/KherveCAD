@@ -665,7 +665,7 @@ def bird(p):
 def snake(p):
     t = Toy(p["name"])
     s = p.get("scale", 1.0)
-    main, belly = p["colour"], p.get("belly", "#f7e27e")
+    main = p["colour"]
     pts = []
     for k in range(40):
         a = k * 0.23

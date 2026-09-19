@@ -350,7 +350,6 @@ def _markings(b, p, j):
     if not mk:
         return
     kind, colour = mk[0], mk[1]
-    masses = [j["ribs"], j["belly"], j["haunch"]]
     pieces = []
     if kind == "stripes":                       # zebra, tiger, tabby
         count = mk[2] if len(mk) > 2 else 14
@@ -490,7 +489,7 @@ def horns(colour, kind):
 
 def trunk(colour):
     def draw(b, p, j, h):
-        hd, m, hw, hl = j["head_dir"], h["muzzle"], h["hw"], h["hl"]
+        m, hw, hl = h["muzzle"], h["hw"], h["hl"]
         pts = [m, _add(m, [0, -hl * 0.1, -hl * 0.35]),
                _add(m, [0, -hl * 0.12, -hl * 0.8]),
                _add(m, [0, -hl * 0.28, -hl * 1.15]),
