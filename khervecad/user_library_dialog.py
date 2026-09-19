@@ -223,14 +223,20 @@ class AutoSaver(QObject):
         return json.dumps(data, sort_keys=True, default=str)
 
     def _rebaseline(self):
-        """A new document or an opened one: what is there now is not new."""
+        """The model's tree was replaced. A document just OPENED from a
+        file is the baseline: its Objects are not new designs until they
+        change. Anything else — a new document, which an assistant may
+        fill in the same breath before this ever runs, or an undo — starts
+        from nothing, so every Object in it is saved."""
         self._root = self.model.root
-        self._seen = {id(n): self._print(n) for n in self._objects()}
+        opened = bool(getattr(self.window, "_path", None)) and not \
+            getattr(self.window, "_dirty", True)
+        self._seen = ({id(n): self._print(n) for n in self._objects()}
+                      if opened else {})
 
     def _changed(self, *_args):
         if self.model.root is not self._root:
             self._rebaseline()
-            return
         if autosave_enabled():
             self._timer.start(AUTOSAVE_DELAY_MS)
 

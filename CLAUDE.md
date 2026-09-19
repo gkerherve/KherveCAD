@@ -1740,9 +1740,12 @@ into a new module and import.
                        made by the Library menu) watches the model, and 4 s
                        after the last change saves every `eligible` Object
                        whose fingerprint (its dict minus params["library"])
-                       changed — a document's Objects when it was opened or
-                       created are the baseline (a new `model.root`
-                       re-baselines, undo too). Not eligible: generic names
+                       changed. Only a document just OPENED from a file
+                       (window `_path` set, not dirty) is a baseline; a new
+                       document or an undo starts from nothing — an
+                       assistant's new_document + apply_code filled the
+                       tree before the autosaver saw it, and five porches
+                       were taken as "already there" and never saved. Not eligible: generic names
                        ("Object 2"), builder output (params house / city /
                        car / character / lego, names in model.house /
                        model.city "objects") and a Library part wrapped as

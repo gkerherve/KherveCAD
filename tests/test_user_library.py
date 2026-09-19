@@ -184,6 +184,7 @@ def test_the_autosaver_saves_new_objects_but_not_the_opened_ones(lib):
     old = _hook_object()
     old.name = "Old shelf"
     win.model.root.add(old)
+    win._path, win._dirty = "/tmp/opened.kcad", False   # opened from a file
     saver = D.AutoSaver.__new__(D.AutoSaver)
     D.QObject.__init__(saver)
     saver.window, saver.model = win, win.model
@@ -232,3 +233,37 @@ def test_the_title_decides_the_area_before_the_description():
     assert user_library.choose_section(
         "", "School", "Built with the House Builder: tables, benches, "
                       "a house-shaped roof") == "Buildings"
+
+
+
+def test_a_new_document_filled_at_once_is_still_saved(lib):
+    """An assistant makes a new document and builds in it before the
+    autosaver has seen the new tree: nothing there is 'old'."""
+    from PyQt5.QtWidgets import QApplication
+    from khervecad.model import DocumentModel
+    from khervecad import user_library_dialog as D
+    QApplication.instance() or QApplication([])
+
+    class Win:
+        _path, _dirty = None, True
+
+        def __init__(self):
+            self.model = DocumentModel()
+
+        def statusBar(self):
+            raise RuntimeError
+    win = Win()
+    saver = D.AutoSaver.__new__(D.AutoSaver)
+    D.QObject.__init__(saver)
+    saver.window, saver.model = win, win.model
+    saver._timer = D.QTimer()
+    saver._rebaseline()
+    fresh = CadNode("root", "root")                # new_document ...
+    porch = _hook_object()
+    porch.name = "Classical porch"
+    fresh.add(porch)                               # ... filled at once
+    win.model.root = fresh
+    saver._changed()
+    saved = saver.flush()
+    assert [s["title"] for s in saved] == ["Classical porch"]
+    assert saved[0]["section"] == "Garden & outdoor"
