@@ -1762,6 +1762,19 @@ into a new module and import.
                        trash (QFile.moveToTrash). `remove` records the
                        deleted uids in `.ignored.json` so autosave never
                        brings them back (an explicit save un-ignores).
+                       **Whole designs** (the user: "I created the school
+                       and nothing was saved" — it was Library parts, a
+                       House Builder floor and loose shapes, no Object the
+                       autosave looks at): every document save (save_file,
+                       Save As, MCP save_document) also keeps the whole
+                       document in My Library (`save_design`, uid = hash of
+                       the file path, title = file name; a title /
+                       description / area edited in the library survives
+                       later saves; `describe_design` lists its parts).
+                       `choose_section` guesses from the TITLE first, then
+                       tags, then the description — a description listing
+                       tables and the House Builder filed the School under
+                       House & home.
   - `leafgen.py` / `library_leaves.py` — **Leaves** (2026-09-19, the
                        user: "start with the leaves of every kind of tree,
                        then the trees, very very detailed"), Library ▸

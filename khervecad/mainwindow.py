@@ -1777,6 +1777,11 @@ class MainWindow(QMainWindow):
         self._dirty = False
         self._add_recent(self._path)
         self._update_title()
+        from .user_library_dialog import design_saved
+        kept = design_saved(self, self._path)
+        if kept:
+            self.statusBar().showMessage(
+                f"Saved — and kept in My Library ▸ {kept['section']}", 6000)
 
     def save_file_as(self):
         recent = self._recent_files()

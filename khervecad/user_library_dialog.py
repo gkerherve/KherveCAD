@@ -470,3 +470,19 @@ class ManageDialog(QDialog):
 
 def sections_list():
     return sections()
+
+
+def design_saved(window, path):
+    """After the document was saved to *path*: keep the whole design in
+    My Library too (when autosave is on). Never lets a library problem
+    spoil the save itself."""
+    if not autosave_enabled():
+        return None
+    from . import library
+    try:
+        saved = user_library.save_design(window.model, path)
+    except Exception:
+        return None
+    if saved:
+        user_library.refresh(library.PARTS)
+    return saved

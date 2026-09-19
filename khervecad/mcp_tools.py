@@ -2176,7 +2176,12 @@ class McpToolExecutor:
         self._w._dirty = False
         self._w._add_recent(path)
         self._w._update_title()
-        return {"saved": path}
+        result = {"saved": path}
+        from .user_library_dialog import design_saved
+        kept = design_saved(self._w, path)
+        if kept:
+            result["my_library"] = kept
+        return result
 
     def _t_export_drawing(self, params) -> dict:
         from . import drawing, drawing_dialog, drawing_export

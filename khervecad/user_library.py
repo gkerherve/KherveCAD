@@ -152,9 +152,13 @@ def choose_section(section="", title="", description="", tags=()) -> str:
         if area and _norm(wanted) in [_norm(w) for w in AREAS[area]]:
             return area                    # "football" -> Sport
         return _safe_name(wanted[:1].upper() + wanted[1:])
-    guess = _keyword_area(" ".join([str(title), " ".join(tags),
-                                    str(description)]))
-    return guess or DEFAULT_SECTION
+    # the title says what it is; tags next; the description (which may
+    # list the parts it is made of — a school full of tables) last
+    for text in (title, " ".join(tags), description):
+        guess = _keyword_area(str(text))
+        if guess:
+            return guess
+    return DEFAULT_SECTION
 
 
 def category(section: str) -> str:
@@ -558,3 +562,82 @@ def remember(node, saved, description="", tags=(), source="assistant"):
     if tags:
         meta["tags"] = [str(t) for t in tags]
     target.params["library"] = meta
+
+
+# ------------------------------------------------ whole designs
+def _design_uid(path) -> str:
+    import hashlib
+    return "doc-" + hashlib.sha1(
+        str(Path(path).expanduser().resolve()).encode()).hexdigest()[:16]
+
+
+def _find_uid(uid):
+    for p in files():
+        info = read_info(p)
+        if info.get("uid") == uid:
+            return p, info
+    return None, {}
+
+
+def describe_design(model, title) -> str:
+    objects = [n.name for n in model.root.children if n.type == "component"]
+    loose = [n for n in model.root.children
+             if n.type not in ("component", "variables", "assign")]
+    text = f"{title}: a whole design (every part of the document)."
+    if getattr(model, "house", None):
+        text += " Built with the House Builder."
+    if objects:
+        text += " Parts: " + ", ".join(objects[:20]) + "."
+    if loose:
+        text += f" Plus {len(loose)} loose pieces of geometry."
+    try:
+        from . import mesh
+        tris = mesh.tessellate(model.root, fn=8)
+        if tris:
+            span = [max(p[i] for t in tris for p in t)
+                    - min(p[i] for t in tris for p in t) for i in range(3)]
+            text += (f" Overall size {span[0]:.0f} x {span[1]:.0f} x "
+                     f"{span[2]:.0f} {getattr(model, 'unit', 'mm')}.")
+    except Exception:
+        pass
+    return text + " (Description generated automatically.)"
+
+
+def save_design(model, doc_path) -> dict | None:
+    """Keep the whole document just saved at *doc_path* in My Library too,
+    titled by its file name, in the area its name and parts point to —
+    a design made of Library parts, builders and loose shapes has no
+    single Object for the autosave to find. Title, description, area
+    and tags edited in the library are kept on later saves; a design
+    the user deleted from the library stays deleted."""
+    from .document import save_kcad
+    if not any(n.type not in ("variables", "assign")
+               for n in model.root.children):
+        return None
+    uid = _design_uid(doc_path)
+    if uid in ignored():
+        return None
+    old, info = _find_uid(uid)
+    title = info.get("title") or Path(doc_path).stem
+    auto = "generated automatically" in info.get("description", "") \
+        or not info.get("description")
+    description = describe_design(model, title) if auto else \
+        info["description"]
+    area = info.get("section") or choose_section(
+        "", title, description, info.get("tags", []))
+    base = folder() if area == DEFAULT_SECTION else add_section(area)
+    path = base / f"{_safe_name(title)}.kcad"
+    save_kcad(model, str(path))
+    with open(path, encoding="utf-8") as fh:
+        data = json.load(fh)
+    data["library"] = {
+        "title": title, "description": description,
+        "tags": info.get("tags", []), "source": "design", "uid": uid,
+        "document": str(doc_path),
+        "created": datetime.datetime.now().isoformat(timespec="seconds")}
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(data, fh, indent=1)
+    if old is not None and Path(old) != path and Path(old).exists():
+        Path(old).unlink()
+    return {"title": title, "path": str(path), "section": area,
+            "part_id": part_id(read_info(path)), "uid": uid}

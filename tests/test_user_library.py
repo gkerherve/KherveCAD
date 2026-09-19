@@ -195,3 +195,40 @@ def test_the_autosaver_saves_new_objects_but_not_the_opened_ones(lib):
     saved = saver.flush()
     assert [s["title"] for s in saved] == ["New coat hook, 3 pegs"]
     assert saver.flush() == []                     # unchanged since
+
+
+def test_saving_a_document_keeps_the_whole_design(lib, tmp_path_factory):
+    from PyQt5.QtWidgets import QApplication
+    from khervecad.model import DocumentModel
+    QApplication.instance() or QApplication([])
+    model = DocumentModel()
+    bench = library.build_part("park_bench", library.default_dims(
+        "park_bench"))
+    model.root.add(bench)                         # a Library part ...
+    model.root.add(CadNode("cube", "Wall", dict(   # ... and loose geometry
+        x=0.0, y=0.0, z=0.0, width=5000.0, depth=200.0, height=3000.0,
+        center=False)))
+    doc = tmp_path_factory.mktemp("docs") / "School.kcad"
+    first = user_library.save_design(model, doc)
+    assert first["section"] == "Buildings"         # "school" -> Buildings
+    assert first["title"] == "School"
+    node = library.build_part(first["part_id"], {}) if first["part_id"] \
+        in user_library.refresh(library.PARTS) else None
+    assert node is not None and len(node.children) == 2
+    # the user files it elsewhere and describes it: a later save keeps that
+    edited = user_library.update_info(first["path"], "Village school",
+                                      "Two classrooms and a playground.")
+    user_library.move(edited, "Education")
+    again = user_library.save_design(model, doc)
+    assert again["title"] == "Village school"
+    assert again["section"] == "Education"
+    assert len([p for p in user_library.files()
+                if user_library.read_info(p).get("uid") == first["uid"]]) == 1
+    user_library.remove(again["path"])
+    assert user_library.save_design(model, doc) is None
+
+
+def test_the_title_decides_the_area_before_the_description():
+    assert user_library.choose_section(
+        "", "School", "Built with the House Builder: tables, benches, "
+                      "a house-shaped roof") == "Buildings"
