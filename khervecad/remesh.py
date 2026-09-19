@@ -128,20 +128,25 @@ def remesh(tris, voxel=1.0, snap=True):
 
 def _snap(out, tris, cell):
     """Every vertex onto the original surface, never farther than a
-    cell (a stray vertex over a gap stays where the voxels put it)."""
+    cell (a stray vertex over a gap stays where the voxels put it). A
+    triangle snapping squashes flat gets its corners back where the
+    voxels had them — dropping it would open the surface."""
     from .decimate import triangles, weld
     from .shrinkwrap import Target
     points, faces = weld(out)
-    p = np.asarray(points)
-    q, _t = Target(tris).nearest(p)
-    d = np.linalg.norm(q - p, axis=1)
+    grid = np.asarray(points)
+    q, _t = Target(tris).nearest(grid)
+    d = np.linalg.norm(q - grid, axis=1)
+    p = grid.copy()
     near = d <= 1.5 * cell
     p[near] = q[near]
-    moved = triangles([tuple(v) for v in p.tolist()], faces)
-    # snapping can squash a triangle flat; drop the degenerate ones
-    keep = []
-    for tri in moved:
-        a, b, c = (np.asarray(v) for v in tri)
-        if np.linalg.norm(np.cross(b - a, c - a)) > 1e-12:
-            keep.append(tri)
-    return keep
+    f = np.asarray(faces, dtype=np.int64)
+    for _ in range(8):
+        a, b, c = p[f[:, 0]], p[f[:, 1]], p[f[:, 2]]
+        area = np.linalg.norm(np.cross(b - a, c - a), axis=1)
+        flat = area <= 1e-9 * cell * cell
+        if not flat.any():
+            break
+        back = np.unique(f[flat].ravel())
+        p[back] = grid[back]
+    return triangles([tuple(v) for v in p.tolist()], faces)

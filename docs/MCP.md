@@ -41,8 +41,8 @@ and a **picture of the 3D preview**.
   mate) and `min_offset`/`max_offset` (a limit) cover the other common
   mates. `list_anchors` gives the names —
   every part has automatic bounding-box anchors plus any the user
-  picked. `make_master` / `add_linked_copy` are the other kind of
-  reuse. `insert_part` reaches the parametric library: CF/KF vacuum
+  picked. `make_master` / `add_linked_copy` place one piece many
+  times (it becomes a hidden Object; the Masters tab was retired). `insert_part` reaches the parametric library: CF/KF vacuum
   components, ISO-threaded fasteners, chemistry glassware, furniture.
 - **Real OpenSCAD in** — `apply_code` reads resize, multmatrix,
   render, let, echo, assert, intersection_for, `children()` in modules,
@@ -485,9 +485,14 @@ move the user's camera. The result's `camera` reproduces the shot.
 
 What the picture contains is worth knowing precisely:
 
-- The **built-in tessellator** draws immediately, and it only
-  *approximates* booleans — a `difference()` shows its first operand
-  with the holes uncut.
+- The **built-in tessellator** draws immediately. With the
+  `manifold3d` package installed (the default install), it cuts
+  `difference` / `intersection` / `minkowski` **exactly** itself, so
+  holes are in the picture, the bounds and the mass at once, with or
+  without OpenSCAD — `get_document_info`'s `exact_preview_booleans`
+  says so. Without it, or for a boolean on a flat 2D or open operand,
+  a `difference()` shows its first operand with the holes uncut
+  (`get_node_bounds` flags that `approximate`).
 - When OpenSCAD is installed, each part is then rendered **exactly**
   and swapped in as it lands, so holes really are cut. The 3D view's
   label (returned as `showing`) says which you are looking at, and
@@ -496,6 +501,37 @@ What the picture contains is worth knowing precisely:
   OpenSCAD when it is installed and through the built-in tessellator
   otherwise. The result says which, and an approximated export is
   flagged loudly — it is not one to send to a printer.
+
+## Blender-style tools
+
+Nine tools taken from Blender, all both a tree node and OpenSCAD code
+(the `kcad_*` form parses into editable nodes), so an assistant can
+write them in `apply_code` or wrap existing nodes with `wrap_nodes`:
+
+| Node / tool | What it is for |
+|---|---|
+| `kcad_bevel(width, segments, profile, angle, which)` | Round or chamfer EVERY sharp edge at once, rolling-ball corners; the part keeps its size. |
+| `kcad_decimate(ratio, tolerance)` | Fewer triangles, same shape (a scan, a tree, threads). |
+| `kcad_remesh(voxel, snap)` | Any messy soup back to one closed printable solid — the fix `check_printability` suggests. |
+| `kcad_shrinkwrap(mode, offset, keep, …) { piece; target; }` | Press a garment, cap or decal onto a body. |
+| `kcad_wireframe(thickness, sides, angle, joints)` | Every edge a strut: lattices, cages, domes. |
+| `kcad_cloth(lift, detail, thickness, steps, …) { 2D shape; colliders; }` | A tablecloth, cape or flag that drapes. |
+| `kcad_push_pull(pushes)` / tool **`push_pull_face`** | Raise or sink a flat face; inset leaves a rim. |
+| `kcad_bisect(px, py, pz, nx, ny, nz, keep, gap)` | Cut a part by a plane. |
+| `kcad_subdivide(levels, sharp)` | Smooth, keeping edges sharper than `sharp` crisp. |
+
+And four tools:
+
+- **`reach`** — inverse kinematics: put a figure's hand / foot / head,
+  or the tip of a part inside nested `joint` nodes, on a point, and the
+  angles are solved (`miss` = distance left; unreachable says why).
+- **`drop_parts`** — gravity: parts fall onto the floor or each other
+  and tip onto a stable face.
+- **`set_render_options heatmap`** — `thickness` or `overhang` painted
+  on the part in the view and in every `render_view`, with the thinnest
+  wall and the red fraction in the result.
+- **`render_photo`** — a photoreal picture through Blender Cycles when
+  it is installed (`get_document_info` → `blender`).
 
 ## Publishing to Printables
 

@@ -3666,7 +3666,7 @@ into a new module and import.
                        out. The test also checks the pin 6 mm short of
                        home DOES press on the bore — or it would never
                        hold.
-  - `mcp_schema.py`  — the **MCP tool table**: 70 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 74 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -3987,7 +3987,7 @@ into a new module and import.
   the variable reaching it only through PLACEMENT, and NEVER into the
   geometry of a part (a cube's size, a gear's teeth, a polygon's
   points) — that re-cuts the solid every frame.
-- `docs/MCP.md` — how to connect an assistant, what the 70 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 74 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -4269,7 +4269,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **70 tools**: the object tree, OpenSCAD in
+client gets the whole app as **74 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.
