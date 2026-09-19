@@ -1,0 +1,6355 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "color",
+    "name": "Color [Shell]",
+    "visible": true,
+    "params": {
+     "color": "#f2f2ed",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group [Outer skin]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2300.0,
+                   "y": 1850.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 262.0,
+             "y": 123.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2412.0,
+                   "y": 1831.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Skin segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 262.0,
+             "y": 123.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2412.0,
+                   "y": 1831.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 525.0,
+             "y": 231.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2518.0,
+                   "y": 1778.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Skin segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 525.0,
+             "y": 231.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2518.0,
+                   "y": 1778.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 788.0,
+             "y": 309.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2614.0,
+                   "y": 1694.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Skin segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 788.0,
+             "y": 309.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2614.0,
+                   "y": 1694.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1050.0,
+             "y": 347.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2695.0,
+                   "y": 1591.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Skin segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1050.0,
+             "y": 347.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2695.0,
+                   "y": 1591.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1312.0,
+             "y": 341.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2757.0,
+                   "y": 1477.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Skin segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1312.0,
+             "y": 341.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2757.0,
+                   "y": 1477.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1575.0,
+             "y": 291.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2797.0,
+                   "y": 1366.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Skin segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1575.0,
+             "y": 291.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2797.0,
+                   "y": 1366.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1838.0,
+             "y": 204.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2812.0,
+                   "y": 1269.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Skin segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1838.0,
+             "y": 204.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2812.0,
+                   "y": 1269.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2100.0,
+             "y": 91.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2800.0,
+                   "y": 1197.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Skin segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2100.0,
+             "y": 91.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2800.0,
+                   "y": 1197.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2362.0,
+             "y": -34.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2762.0,
+                   "y": 1157.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Skin segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2362.0,
+             "y": -34.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2762.0,
+                   "y": 1157.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2625.0,
+             "y": -155.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2697.0,
+                   "y": 1153.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Skin segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2625.0,
+             "y": -155.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2697.0,
+                   "y": 1153.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2888.0,
+             "y": -255.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2607.0,
+                   "y": 1186.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Skin segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2888.0,
+             "y": -255.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2607.0,
+                   "y": 1186.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3150.0,
+             "y": -323.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2495.0,
+                   "y": 1253.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Skin segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3150.0,
+             "y": -323.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2495.0,
+                   "y": 1253.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3412.0,
+             "y": -350.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2364.0,
+                   "y": 1345.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Skin segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3412.0,
+             "y": -350.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2364.0,
+                   "y": 1345.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3675.0,
+             "y": -331.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2218.0,
+                   "y": 1454.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Skin segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3675.0,
+             "y": -331.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2218.0,
+                   "y": 1454.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3938.0,
+             "y": -271.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2062.0,
+                   "y": 1568.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Skin segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3938.0,
+             "y": -271.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2062.0,
+                   "y": 1568.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 4200.0,
+             "y": -175.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 1900.0,
+                   "y": 1675.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Skin segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "union",
+        "name": "Group [Hollow]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2180.0,
+                   "y": 1730.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 262.0,
+             "y": 123.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2292.0,
+                   "y": 1711.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Hollow segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 262.0,
+             "y": 123.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2292.0,
+                   "y": 1711.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 525.0,
+             "y": 231.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2398.0,
+                   "y": 1658.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Hollow segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 525.0,
+             "y": 231.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2398.0,
+                   "y": 1658.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 788.0,
+             "y": 309.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2494.0,
+                   "y": 1574.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Hollow segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 788.0,
+             "y": 309.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2494.0,
+                   "y": 1574.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1050.0,
+             "y": 347.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2575.0,
+                   "y": 1471.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Hollow segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1050.0,
+             "y": 347.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2575.0,
+                   "y": 1471.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1312.0,
+             "y": 341.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2637.0,
+                   "y": 1357.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Hollow segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1312.0,
+             "y": 341.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2637.0,
+                   "y": 1357.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1575.0,
+             "y": 291.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2677.0,
+                   "y": 1246.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Hollow segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1575.0,
+             "y": 291.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2677.0,
+                   "y": 1246.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1838.0,
+             "y": 204.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2692.0,
+                   "y": 1149.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Hollow segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1838.0,
+             "y": 204.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2692.0,
+                   "y": 1149.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2100.0,
+             "y": 91.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2680.0,
+                   "y": 1077.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Hollow segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2100.0,
+             "y": 91.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2680.0,
+                   "y": 1077.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2362.0,
+             "y": -34.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2642.0,
+                   "y": 1037.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Hollow segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2362.0,
+             "y": -34.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2642.0,
+                   "y": 1037.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2625.0,
+             "y": -155.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2577.0,
+                   "y": 1033.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Hollow segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2625.0,
+             "y": -155.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2577.0,
+                   "y": 1033.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2888.0,
+             "y": -255.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2487.0,
+                   "y": 1066.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Hollow segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2888.0,
+             "y": -255.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2487.0,
+                   "y": 1066.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3150.0,
+             "y": -323.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2375.0,
+                   "y": 1133.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Hollow segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3150.0,
+             "y": -323.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2375.0,
+                   "y": 1133.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3412.0,
+             "y": -350.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2244.0,
+                   "y": 1225.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Hollow segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3412.0,
+             "y": -350.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2244.0,
+                   "y": 1225.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3675.0,
+             "y": -331.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2098.0,
+                   "y": 1334.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Hollow segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3675.0,
+             "y": -331.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 2098.0,
+                   "y": 1334.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3938.0,
+             "y": -271.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 1942.0,
+                   "y": 1448.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Hollow segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3938.0,
+             "y": -271.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 1942.0,
+                   "y": 1448.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 4200.0,
+             "y": -175.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 10.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 1780.0,
+                   "y": 1555.0,
+                   "z": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "circle",
+                    "name": "Circle [Hollow segment]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "radius": 1.0,
+                     "angle": 360.0,
+                     "start_angle": 0.0,
+                     "segments": 48
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Ground cut]",
+        "visible": true,
+        "params": {
+         "x": -5000.0,
+         "y": -5000.0,
+         "z": -5000.0,
+         "width": 15000.0,
+         "depth": 10000.0,
+         "height": 5000.0,
+         "center": false
+        }
+       },
+       {
+        "type": "union",
+        "name": "Group [Flowing window slot]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 504.0,
+             "y": -2277.0,
+             "z": 1500.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 60.0,
+                 "radius_top": 60.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 756.0,
+             "y": -2199.0,
+             "z": 1750.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Slot segment]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 83.0,
+                 "radius_top": 83.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 756.0,
+             "y": -2199.0,
+             "z": 1750.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 83.0,
+                 "radius_top": 83.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1008.0,
+             "y": -2156.0,
+             "z": 1933.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Slot segment]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 105.0,
+                 "radius_top": 105.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1008.0,
+             "y": -2156.0,
+             "z": 1933.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 105.0,
+                 "radius_top": 105.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1260.0,
+             "y": -2154.0,
+             "z": 2000.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Slot segment]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 124.0,
+                 "radius_top": 124.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1260.0,
+             "y": -2154.0,
+             "z": 2000.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 124.0,
+                 "radius_top": 124.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1512.0,
+             "y": -2193.0,
+             "z": 1933.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Slot segment]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 138.0,
+                 "radius_top": 138.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1512.0,
+             "y": -2193.0,
+             "z": 1933.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 138.0,
+                 "radius_top": 138.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1764.0,
+             "y": -2269.0,
+             "z": 1750.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Slot segment]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 147.0,
+                 "radius_top": 147.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 1764.0,
+             "y": -2269.0,
+             "z": 1750.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 147.0,
+                 "radius_top": 147.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2016.0,
+             "y": -2371.0,
+             "z": 1500.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Slot segment]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 150.0,
+                 "radius_top": 150.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2016.0,
+             "y": -2371.0,
+             "z": 1500.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 150.0,
+                 "radius_top": 150.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2268.0,
+             "y": -2489.0,
+             "z": 1250.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Slot segment]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 147.0,
+                 "radius_top": 147.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2268.0,
+             "y": -2489.0,
+             "z": 1250.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 147.0,
+                 "radius_top": 147.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2520.0,
+             "y": -2608.0,
+             "z": 1067.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Slot segment]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 138.0,
+                 "radius_top": 138.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2520.0,
+             "y": -2608.0,
+             "z": 1067.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 138.0,
+                 "radius_top": 138.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2772.0,
+             "y": -2715.0,
+             "z": 1000.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Slot segment]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 124.0,
+                 "radius_top": 124.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 2772.0,
+             "y": -2715.0,
+             "z": 1000.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 124.0,
+                 "radius_top": 124.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3024.0,
+             "y": -2796.0,
+             "z": 1067.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Slot segment]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 105.0,
+                 "radius_top": 105.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3024.0,
+             "y": -2796.0,
+             "z": 1067.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 105.0,
+                 "radius_top": 105.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3276.0,
+             "y": -2842.0,
+             "z": 1250.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Slot segment]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 83.0,
+                 "radius_top": 83.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3276.0,
+             "y": -2842.0,
+             "z": 1250.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 83.0,
+                 "radius_top": 83.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 3528.0,
+             "y": -2847.0,
+             "z": 1500.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Slot segment]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 2500.0,
+                 "radius_bottom": 60.0,
+                 "radius_top": 60.0,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "hull",
+        "name": "Hull",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 1600.0,
+           "y": -3000.0,
+           "z": -10.0,
+           "width": 900.0,
+           "depth": 3000.0,
+           "height": 10.0,
+           "center": false
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 2050.0,
+           "y": -3000.0,
+           "z": 1900.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Door opening]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 3000.0,
+               "radius_bottom": 380.0,
+               "radius_top": 380.0,
+               "segments": 32,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#334047",
+     "alpha": 0.6,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "intersection",
+      "name": "Intersection",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 5.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 10.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 2180.0,
+               "y": 1730.0,
+               "z": 1.0
+              },
+              "children": [
+               {
+                "type": "circle",
+                "name": "Circle",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "radius": 1.0,
+                 "angle": 360.0,
+                 "start_angle": 0.0,
+                 "segments": 48
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube [West glazing]",
+        "visible": true,
+        "params": {
+         "x": -1000.0,
+         "y": -3000.0,
+         "z": 0.0,
+         "width": 7000.0,
+         "depth": 6000.0,
+         "height": 4000.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#334047",
+     "alpha": 0.6,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "intersection",
+      "name": "Intersection",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 4185.0,
+         "y": -175.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 10.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 1780.0,
+               "y": 1555.0,
+               "z": 1.0
+              },
+              "children": [
+               {
+                "type": "circle",
+                "name": "Circle",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "radius": 1.0,
+                 "angle": 360.0,
+                 "start_angle": 0.0,
+                 "segments": 48
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube [East glazing]",
+        "visible": true,
+        "params": {
+         "x": -1000.0,
+         "y": -3000.0,
+         "z": 0.0,
+         "width": 7000.0,
+         "depth": 6000.0,
+         "height": 4000.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#f2f2ed",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "hull",
+      "name": "Hull",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 3900.0,
+         "y": -575.0,
+         "z": 1700.0,
+         "width": 10.0,
+         "depth": 800.0,
+         "height": 60.0,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Swept canopy fin]",
+        "visible": true,
+        "params": {
+         "x": 6000.0,
+         "y": -1275.0,
+         "z": 2400.0,
+         "width": 10.0,
+         "depth": 150.0,
+         "height": 30.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#4c4c52",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "cube",
+      "name": "Cube [Concrete pad]",
+      "visible": true,
+      "params": {
+       "x": -800.0,
+       "y": -2600.0,
+       "z": -20.0,
+       "width": 7200.0,
+       "depth": 5200.0,
+       "height": 20.0,
+       "center": false
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "house": {
+  "floors": [
+   {
+    "name": "Library",
+    "wall_height": 3600.0,
+    "wall_thickness": 300.0,
+    "inner_wall_thickness": 100.0,
+    "slab_thickness": 200.0,
+    "rooms": [
+     {
+      "name": "Loggia",
+      "x": 3500.0,
+      "y": -3000.0,
+      "w": 3000.0,
+      "d": 3000.0,
+      "surface": "paving",
+      "finish": "",
+      "flooring": "",
+      "openings": [],
+      "furniture": []
+     },
+     {
+      "name": "Terrace",
+      "x": -8000.0,
+      "y": -2500.0,
+      "w": 8000.0,
+      "d": 2500.0,
+      "surface": "garden",
+      "finish": "",
+      "flooring": "",
+      "openings": [],
+      "furniture": []
+     },
+     {
+      "name": "Terrace E",
+      "x": 10000.0,
+      "y": -2500.0,
+      "w": 8000.0,
+      "d": 2500.0,
+      "surface": "garden",
+      "finish": "",
+      "flooring": "",
+      "openings": [],
+      "furniture": []
+     },
+     {
+      "name": "Reading hall",
+      "x": 0.0,
+      "y": 0.0,
+      "w": 10000.0,
+      "d": 8000.0,
+      "surface": "indoor",
+      "finish": "",
+      "flooring": "Oak floorboards",
+      "openings": [
+       {
+        "kind": "door",
+        "side": "S",
+        "offset": 4400.0,
+        "width": 1200.0,
+        "height": 2400.0,
+        "sill": 0.0
+       },
+       {
+        "kind": "window",
+        "side": "S",
+        "offset": 600.0,
+        "width": 3400.0,
+        "height": 2000.0,
+        "sill": 900.0
+       },
+       {
+        "kind": "window",
+        "side": "S",
+        "offset": 6000.0,
+        "width": 3400.0,
+        "height": 2000.0,
+        "sill": 900.0
+       },
+       {
+        "kind": "window",
+        "side": "N",
+        "offset": 500.0,
+        "width": 3000.0,
+        "height": 900.0,
+        "sill": 2400.0
+       },
+       {
+        "kind": "window",
+        "side": "N",
+        "offset": 6500.0,
+        "width": 3000.0,
+        "height": 900.0,
+        "sill": 2400.0
+       },
+       {
+        "kind": "door",
+        "side": "W",
+        "offset": 3400.0,
+        "width": 1400.0,
+        "height": 2000.0,
+        "sill": 0.0
+       },
+       {
+        "kind": "door",
+        "side": "E",
+        "offset": 3400.0,
+        "width": 1400.0,
+        "height": 2000.0,
+        "sill": 0.0
+       }
+      ],
+      "furniture": [
+       {
+        "part_id": "home_sofa",
+        "x": 5000.0,
+        "y": 5300.0,
+        "z": 0.0,
+        "rz": 0.0,
+        "dims": {
+         "w": 2200.0,
+         "d": 950.0,
+         "h": 820.0,
+         "seat": 440.0,
+         "seats": 3
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_rug",
+        "x": 5000.0,
+        "y": 5800.0,
+        "z": 0.0,
+        "rz": 0.0,
+        "dims": {
+         "w": 2000.0,
+         "d": 1400.0
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_dining_table",
+        "x": 2600.0,
+        "y": 2600.0,
+        "z": 0.0,
+        "rz": 0.0,
+        "dims": {
+         "w": 1400.0,
+         "d": 800.0,
+         "h": 750.0
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_dining_table",
+        "x": 7400.0,
+        "y": 2600.0,
+        "z": 0.0,
+        "rz": 0.0,
+        "dims": {
+         "w": 1400.0,
+         "d": 800.0,
+         "h": 750.0
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_bookcase",
+        "x": 2000.0,
+        "y": 7700.0,
+        "z": 0.0,
+        "rz": 0.0,
+        "dims": {
+         "w": 800.0,
+         "d": 300.0,
+         "h": 1800.0,
+         "shelves": 4
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_bookcase",
+        "x": 8000.0,
+        "y": 7700.0,
+        "z": 0.0,
+        "rz": 0.0,
+        "dims": {
+         "w": 800.0,
+         "d": 300.0,
+         "h": 1800.0,
+         "shelves": 4
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_floor_lamp",
+        "x": 400.0,
+        "y": 7600.0,
+        "z": 0.0,
+        "rz": 0.0,
+        "dims": {
+         "h": 1600.0,
+         "shade": 460.0
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_floor_lamp",
+        "x": 9600.0,
+        "y": 7600.0,
+        "z": 0.0,
+        "rz": 0.0,
+        "dims": {
+         "h": 1600.0,
+         "shade": 460.0
+        },
+        "name": ""
+       }
+      ]
+     },
+     {
+      "name": "Stacks",
+      "x": -8000.0,
+      "y": 1000.0,
+      "w": 8000.0,
+      "d": 6000.0,
+      "surface": "indoor",
+      "finish": "",
+      "flooring": "Oak parquet",
+      "openings": [
+       {
+        "kind": "window",
+        "side": "S",
+        "offset": 500.0,
+        "width": 7000.0,
+        "height": 800.0,
+        "sill": 2500.0
+       },
+       {
+        "kind": "window",
+        "side": "N",
+        "offset": 500.0,
+        "width": 7000.0,
+        "height": 800.0,
+        "sill": 2500.0
+       },
+       {
+        "kind": "window",
+        "side": "W",
+        "offset": 1000.0,
+        "width": 4000.0,
+        "height": 2000.0,
+        "sill": 900.0
+       }
+      ],
+      "furniture": [
+       {
+        "part_id": "home_bookcase",
+        "x": 1200.0,
+        "y": 5700.0,
+        "z": 0.0,
+        "rz": 0.0,
+        "dims": {
+         "w": 800.0,
+         "d": 300.0,
+         "h": 1800.0,
+         "shelves": 4
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_bookcase",
+        "x": 2400.0,
+        "y": 5700.0,
+        "z": 0.0,
+        "rz": 0.0,
+        "dims": {
+         "w": 800.0,
+         "d": 300.0,
+         "h": 1800.0,
+         "shelves": 4
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_bookcase",
+        "x": 3600.0,
+        "y": 5700.0,
+        "z": 0.0,
+        "rz": 0.0,
+        "dims": {
+         "w": 800.0,
+         "d": 300.0,
+         "h": 1800.0,
+         "shelves": 4
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_bookcase",
+        "x": 4800.0,
+        "y": 5700.0,
+        "z": 0.0,
+        "rz": 0.0,
+        "dims": {
+         "w": 800.0,
+         "d": 300.0,
+         "h": 1800.0,
+         "shelves": 4
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_bookcase",
+        "x": 6000.0,
+        "y": 5700.0,
+        "z": 0.0,
+        "rz": 0.0,
+        "dims": {
+         "w": 800.0,
+         "d": 300.0,
+         "h": 1800.0,
+         "shelves": 4
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_bookcase",
+        "x": 1200.0,
+        "y": 300.0,
+        "z": 0.0,
+        "rz": 180.0,
+        "dims": {
+         "w": 800.0,
+         "d": 300.0,
+         "h": 1800.0,
+         "shelves": 4
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_bookcase",
+        "x": 2400.0,
+        "y": 300.0,
+        "z": 0.0,
+        "rz": 180.0,
+        "dims": {
+         "w": 800.0,
+         "d": 300.0,
+         "h": 1800.0,
+         "shelves": 4
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_bookcase",
+        "x": 3600.0,
+        "y": 300.0,
+        "z": 0.0,
+        "rz": 180.0,
+        "dims": {
+         "w": 800.0,
+         "d": 300.0,
+         "h": 1800.0,
+         "shelves": 4
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_bookcase",
+        "x": 4800.0,
+        "y": 300.0,
+        "z": 0.0,
+        "rz": 180.0,
+        "dims": {
+         "w": 800.0,
+         "d": 300.0,
+         "h": 1800.0,
+         "shelves": 4
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_bookcase",
+        "x": 6000.0,
+        "y": 300.0,
+        "z": 0.0,
+        "rz": 180.0,
+        "dims": {
+         "w": 800.0,
+         "d": 300.0,
+         "h": 1800.0,
+         "shelves": 4
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_bookcase",
+        "x": 3000.0,
+        "y": 3000.0,
+        "z": 0.0,
+        "rz": 90.0,
+        "dims": {
+         "w": 800.0,
+         "d": 300.0,
+         "h": 1800.0,
+         "shelves": 4
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_bookcase",
+        "x": 3000.0,
+        "y": 3000.0,
+        "z": 0.0,
+        "rz": -90.0,
+        "dims": {
+         "w": 800.0,
+         "d": 300.0,
+         "h": 1800.0,
+         "shelves": 4
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_bookcase",
+        "x": 5000.0,
+        "y": 3000.0,
+        "z": 0.0,
+        "rz": 90.0,
+        "dims": {
+         "w": 800.0,
+         "d": 300.0,
+         "h": 1800.0,
+         "shelves": 4
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_bookcase",
+        "x": 5000.0,
+        "y": 3000.0,
+        "z": 0.0,
+        "rz": -90.0,
+        "dims": {
+         "w": 800.0,
+         "d": 300.0,
+         "h": 1800.0,
+         "shelves": 4
+        },
+        "name": ""
+       }
+      ]
+     },
+     {
+      "name": "Study room",
+      "x": 10000.0,
+      "y": 1000.0,
+      "w": 8000.0,
+      "d": 6000.0,
+      "surface": "indoor",
+      "finish": "",
+      "flooring": "Walnut floorboards",
+      "openings": [
+       {
+        "kind": "window",
+        "side": "S",
+        "offset": 500.0,
+        "width": 7000.0,
+        "height": 800.0,
+        "sill": 2500.0
+       },
+       {
+        "kind": "window",
+        "side": "N",
+        "offset": 500.0,
+        "width": 7000.0,
+        "height": 800.0,
+        "sill": 2500.0
+       },
+       {
+        "kind": "window",
+        "side": "E",
+        "offset": 1000.0,
+        "width": 4000.0,
+        "height": 2000.0,
+        "sill": 900.0
+       }
+      ],
+      "furniture": [
+       {
+        "part_id": "home_desk",
+        "x": 1500.0,
+        "y": 450.0,
+        "z": 0.0,
+        "rz": 180.0,
+        "dims": {
+         "w": 1200.0,
+         "d": 600.0,
+         "h": 750.0
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_desk",
+        "x": 4000.0,
+        "y": 450.0,
+        "z": 0.0,
+        "rz": 180.0,
+        "dims": {
+         "w": 1200.0,
+         "d": 600.0,
+         "h": 750.0
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_desk",
+        "x": 6500.0,
+        "y": 450.0,
+        "z": 0.0,
+        "rz": 180.0,
+        "dims": {
+         "w": 1200.0,
+         "d": 600.0,
+         "h": 750.0
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_desk",
+        "x": 1500.0,
+        "y": 5550.0,
+        "z": 0.0,
+        "rz": 0.0,
+        "dims": {
+         "w": 1200.0,
+         "d": 600.0,
+         "h": 750.0
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_desk",
+        "x": 4000.0,
+        "y": 5550.0,
+        "z": 0.0,
+        "rz": 0.0,
+        "dims": {
+         "w": 1200.0,
+         "d": 600.0,
+         "h": 750.0
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_desk",
+        "x": 6500.0,
+        "y": 5550.0,
+        "z": 0.0,
+        "rz": 0.0,
+        "dims": {
+         "w": 1200.0,
+         "d": 600.0,
+         "h": 750.0
+        },
+        "name": ""
+       },
+       {
+        "part_id": "home_dining_table",
+        "x": 4000.0,
+        "y": 3000.0,
+        "z": 0.0,
+        "rz": 0.0,
+        "dims": {
+         "w": 1400.0,
+         "d": 800.0,
+         "h": 750.0
+        },
+        "name": ""
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "roof": {
+   "style": "Flat",
+   "pitch": 35.0,
+   "overhang": 0.0,
+   "ridge": "auto",
+   "color": "Brown tiles",
+   "wings": "Lean-to",
+   "chimney": "none"
+  },
+  "walls": {
+   "outside": "Brown brick",
+   "inside": "Mustard",
+   "joinery": "Oak"
+  },
+  "objects": [
+   "Library"
+  ]
+ }
+}
