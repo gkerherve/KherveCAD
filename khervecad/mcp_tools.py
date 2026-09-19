@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import base64
 import math
+import re
 from pathlib import Path
 
 from PyQt5.QtCore import QBuffer, QByteArray, Qt
@@ -618,21 +619,47 @@ class McpToolExecutor:
                                for k, lbl in spec.get("fields", [])],
                 "colors": list(spec.get("colors") or []),
                 "unit": spec.get("unit", "mm"),
+                **({"description": spec["description"],
+                    "tags": list(spec.get("tags") or [])}
+                   if spec.get("description") else {}),
             }
+        from . import user_library
+        user_library.refresh(library.PARTS)   # saved since start-up
         want = params.get("category")
         words = str(params.get("search") or "").lower().split()
         groups = {}
         for pid, spec in library.PARTS.items():
             if want and spec["category"] != want:
                 continue
-            text = " ".join((pid, spec["label"], spec["category"])).lower()
-            if words and not all(w in text for w in words):
+            if words and not user_library.matches(spec, pid, words):
                 continue
-            groups.setdefault(spec["category"], []).append(
-                {"part_id": pid, "label": spec["label"],
-                 "sizes": list(spec.get("sizes") or {})})
+            entry = {"part_id": pid, "label": spec["label"],
+                     "sizes": list(spec.get("sizes") or {})}
+            if spec.get("description"):
+                entry["description"] = spec["description"]
+            groups.setdefault(spec["category"], []).append(entry)
         return {"categories": [{"category": c, "parts": p}
                                for c, p in groups.items()]}
+
+    def _t_save_to_library(self, params) -> dict:
+        from . import library, user_library
+        node = self._node(params.get("node_id"))
+        tags = params.get("tags") or []
+        if isinstance(tags, str):
+            tags = [t for t in re.split(r"[,;]", tags)]
+        try:
+            saved = user_library.save(
+                node, params.get("title", ""), params.get("description", ""),
+                str(params.get("section") or ""), tags, root=self._model.root,
+                unit=self._model.unit, source="assistant",
+                global_fn=self._model.global_fn)
+        except (ValueError, OSError) as exc:
+            raise ToolError(str(exc))
+        user_library.refresh(library.PARTS)
+        if not str(params.get("description") or "").strip():
+            saved["note"] = ("Saved without a description: add one — it "
+                             "is what a later search reads.")
+        return saved
 
     def _t_split_part(self, params) -> dict:
         from . import split

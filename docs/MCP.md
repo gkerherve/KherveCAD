@@ -162,7 +162,10 @@ insert boss, bottle cap, cable clip, Gridfinity bin and baseplate, tray,
 enclosure), motion and electronics hardware (NEMA motors, T-slot
 extrusions, MGN rails, GT2 pulleys, bearings, fans, Raspberry Pi and
 Arduino boards), Lego Technic and generative panels — `list_parts`
-names them. `split_part` cuts a part too big for the bed into two
+names them. **My Library**: `save_to_library` writes an Object the
+assistant designed — with a descriptive title, a description and tags —
+to `~/Documents/KherveCAD Library`, where `list_parts` finds it next
+time (its search reads descriptions and tags too). `split_part` cuts a part too big for the bed into two
 Objects with dowel holes. `set_render_options time` shows a `$t`
 animation at a moment; `list_scad_libraries` / `install_scad_library`
 manage BOSL2, MCAD and the rest.

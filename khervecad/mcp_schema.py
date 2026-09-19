@@ -377,7 +377,10 @@ TOOLS = [
             "twisted bilayers / nanoribbons and the graphite (0001) "
             "surface ('Surfaces: Graphene & graphite'), carbon NANOTUBES "
             "of any (n, m) ('Crystals (nanotubes)'), fullerenes and ~490 "
-            "molecules ('Molecules: ...') — "
+            "molecules ('Molecules: ...'), and MY LIBRARY ('My "
+            "library: <section>' — Objects the user or an assistant "
+            "designed and saved with save_to_library, each with a "
+            "description; search finds words in it) — "
             "with each part's standard sizes, "
             "the dimensions you may override and, where it has them, "
             "its colours. ALWAYS check it before modelling anything: "
@@ -390,7 +393,9 @@ TOOLS = [
                          "description": "Filter to one category."},
             "search": {"type": "string",
                        "description": "Words to look for in part "
-                                      "labels, ids and categories "
+                                      "labels, ids, categories and — for "
+                                      "My library parts — descriptions "
+                                      "and tags "
                                       "(every word must match; "
                                       "case-insensitive). The cheap way "
                                       "to check the library first."},
@@ -398,6 +403,41 @@ TOOLS = [
                         "description": "Full detail for one part, "
                                        "including its size table."},
         }),
+    },
+    {
+        "name": "save_to_library",
+        "description": (
+            "Save an Object (or any node) you designed to the user's own "
+            "library on disk (~/Documents/KherveCAD Library), so it is "
+            "found by list_parts and reused next time instead of being "
+            "modelled again. Do this for every reusable Object you "
+            "design — a bracket, a piece of furniture, a character, a "
+            "building — once it looks right. The TITLE says what it is "
+            "and its key size ('Wall-mounted bike hook, 120 mm, two "
+            "screw holes'); the DESCRIPTION says what it is for, its "
+            "overall dimensions, its parameters / variables and what "
+            "they change, how it is built and anything to know before "
+            "reusing it — it is what a later search reads. Instances "
+            "save as the Object they place, with the Objects it uses. "
+            "Saving the same title in the same section again updates it."
+        ),
+        "input_schema": _obj({
+            "node_id": _ID,
+            "title": {"type": "string",
+                      "description": "What it is, specific and short, "
+                                     "with its key size."},
+            "description": {"type": "string",
+                            "description": "Several sentences: purpose, "
+                                           "dimensions, parameters, "
+                                           "construction, how to reuse."},
+            "section": {"type": "string",
+                        "description": "Subfolder / menu section, e.g. "
+                                       "'Furniture', 'Brackets', "
+                                       "'Characters' (default General)."},
+            "tags": {"type": "array", "items": {"type": "string"},
+                     "description": "Search words: synonyms, materials, "
+                                    "uses, other languages."},
+        }, required=("node_id", "title", "description")),
     },
     {
         "name": "list_examples",

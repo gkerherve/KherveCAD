@@ -1695,6 +1695,33 @@ into a new module and import.
                        Nothing grows below z = 0. `library_trees.py`: every
                        species as a Trees part (Young/Mature/Old, Variation
                        seed, season as the colour combo).
+  - `user_library.py` / `user_library_dialog.py` — **My Library**
+                       (2026-09-19, the user: what the AI designs should be
+                       saved to a user library on disk so the next request
+                       finds and reuses it; titles and a description are
+                       what it learns from). `~/Documents/KherveCAD
+                       Library` ($KHERVECAD_USER_LIBRARY; the tests' conftest
+                       points it at a temp folder), one subfolder per
+                       section; each part a standalone .kcad with a
+                       top-level "library" block {title, description,
+                       tags, source, created}. `save` writes the node — an
+                       instance as the Object it places, plus the Objects
+                       it instances (hidden definitions), or it renders
+                       nothing — at its own origin; the same title in the
+                       same section overwrites (updates). `parts()` /
+                       `refresh(PARTS)` list it as `user_<slug>` in
+                       "My library: <section>", built by
+                       `library_kcad.load_part`; `matches` searches label,
+                       category, description and tags. MCP
+                       `save_to_library` (no snapshot: the document is
+                       unchanged) and list_parts (re-reads the folder,
+                       returns descriptions); the MCP instructions tell
+                       clients to save every reusable Object with a
+                       descriptive title + description and to check My
+                       library first. UI: Library ▸ My Library (filled on
+                       aboutToShow, tooltips = descriptions; Save
+                       Selection…, Open folder) and the tree's right-click
+                       Save to My Library… (`SaveDialog`).
   - `leafgen.py` / `library_leaves.py` — **Leaves** (2026-09-19, the
                        user: "start with the leaves of every kind of tree,
                        then the trees, very very detailed"), Library ▸
@@ -3776,7 +3803,7 @@ into a new module and import.
                        out. The test also checks the pin 6 mm short of
                        home DOES press on the bore — or it would never
                        hold.
-  - `mcp_schema.py`  — the **MCP tool table**: 74 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 76 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -4097,7 +4124,7 @@ into a new module and import.
   the variable reaching it only through PLACEMENT, and NEVER into the
   geometry of a part (a cube's size, a gear's teeth, a polygon's
   points) — that re-cuts the solid every frame.
-- `docs/MCP.md` — how to connect an assistant, what the 74 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 76 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -4379,7 +4406,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **74 tools**: the object tree, OpenSCAD in
+client gets the whole app as **76 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

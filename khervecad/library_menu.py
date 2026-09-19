@@ -79,6 +79,8 @@ def build_library_menu(window, menubar):
     menu.addAction(icons.icon("mdi.bookshelf"),
                    "OpenSCAD Libraries (BOSL2, MCAD...)...",
                    window._open_scad_libraries)
+    from .user_library_dialog import add_menu
+    add_menu(window, menu)
     by_cat = {}
     for pid, spec in PARTS.items():
         by_cat.setdefault(spec.get("category", "Other"), []).append(pid)
@@ -111,7 +113,9 @@ def build_library_menu(window, menubar):
                 _add_parts(window, sub.addMenu(menu_text(short_name(cat))),
                            by_cat[cat], PARTS, category=cat)
         _add_examples(window, menu, title, subs)
-    rest = [c for c in by_cat if c not in placed]
+    # My Library has its own live submenu (user_library_dialog)
+    rest = [c for c in by_cat if c not in placed
+            and not c.startswith("My library")]
     if rest:
         _header(menu, "Other")
         for cat in rest:

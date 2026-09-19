@@ -124,6 +124,15 @@ part fits, insert_part it (and set its size / colour) instead of \
 building it from scratch, and say which part you used. Model it \
 yourself only when nothing in the library fits, or the user asks for \
 a custom build — and then tell them the library had no match.
+MY LIBRARY. The user keeps their own parts (their saves and yours) in \
+~/Documents/KherveCAD Library; list_parts searches them too, \
+descriptions included, under 'My library: <section>' — reuse one before \
+modelling again. Every time you design a reusable Object (a bracket, a \
+piece of furniture, a character, a building, a gadget), once it looks \
+right call save_to_library with a descriptive TITLE (what it is + key \
+size) and a DESCRIPTION (purpose, dimensions, parameters and what they \
+change, construction, how to reuse), plus tags — that text is how the \
+next request finds it. Name Objects descriptively in the tree as well.
 A stadium, arena or sports ground is ONE insert_part of a 'Sport: \
 stadiums' part (size = the sport, colour = the seats; rows, upper_rows, \
 roof 0/1/2 and changing as dims) — never hand-build the bowl.

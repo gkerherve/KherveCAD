@@ -448,18 +448,45 @@ def CadNode_text(text, size):
 
 
 # ------------------------------------------------------------ seating
+def _pad(name, corners, r, seg=10):
+    """A rounded slab: the hull of spheres of radius *r* at *corners*."""
+    return hull(name, [sphere("C", x, y, z, r, seg) for x, y, z in corners])
+
+
 def stadium_seat(colour, name="Stadium seat"):
-    """One tip-up plastic seat on its bracket, facing -y, 500 mm wide."""
-    return group(name, [
-        color(group("Shell", [
-            hull("Seat pan", [box("Front", -220, -380, 400, 440, 60, 40),
-                              box("Back", -220, -60, 420, 440, 60, 40)]),
-            hull("Back", [box("Low", -210, -40, 470, 420, 40, 60),
-                          box("High", -200, 0, 800, 400, 40, 40)])]),
-            colour, "Plastic"),
-        color(group("Bracket", [box("Riser", -20, -60, 0, 40, 80, 470),
-                                box("Foot", -80, -120, 0, 160, 200, 10)]),
-              STEEL, "Metal")])
+    """One moulded plastic stadium seat facing -y, 500 mm pitch: a
+    contoured pan with a rolled front edge, a backrest of three panels
+    angled like a shell to cradle the back, every edge rounded, a seat
+    number badge, on a rounded pedestal that bolts to the step."""
+    pan = [
+        _pad("Seat pan", [(-195, -395, 432), (195, -395, 432),
+                          (-205, -80, 445), (205, -80, 445),
+                          (-150, -230, 425), (150, -230, 425)], 16),
+        _pad("Front roll", [(-185, -410, 415), (185, -410, 415)], 24)]
+    # the backrest: one curved shell, narrow panels along an arc that
+    # wraps round the sitter (sides forward), rounded all over, the top
+    # edge arched and leaning back
+    back, n = [], 8
+    arc_r, span = 440.0, 34.0
+    for k in range(n):
+        pts = []
+        for f in (k / n, (k + 1) / n):
+            phi = math.radians(-span + 2 * span * f)
+            x = arc_r * math.sin(phi)
+            y = -480 + arc_r * math.cos(phi)
+            top = 880 - 50 * (2 * f - 1) ** 2
+            pts += [(x, y, 520), (x, y + 45, top)]
+        back.append(_pad("Back shell", pts, 16))
+    badge = color(_pad("Number badge", [(-40, 55, 800), (40, 55, 800),
+                                        (-40, 55, 830), (40, 55, 830)], 8),
+                  "#f2f2f2", "Plastic")
+    mount = color(group("Pedestal", [
+        cyl("Pedestal", 0, -120, 0, 400, 45, 38, seg=16),
+        _pad("Foot", [(-90, -170, 12), (90, -170, 12), (-90, -70, 12),
+                      (90, -70, 12)], 12),
+        _pad("Arm", [(0, -250, 400), (0, 10, 480)], 22)]), STEEL, "Metal")
+    return group(name, [color(group("Shell", pan + back), colour,
+                              "Plastic"), badge, mount])
 
 
 def build_seat_row(dims):
@@ -472,20 +499,39 @@ def build_seat_row(dims):
 
 
 def vip_seat(colour, name="VIP seat"):
-    """A padded hospitality seat with armrests, 600 mm wide."""
+    """A padded hospitality armchair facing -y, 600 mm pitch: plump
+    rounded seat and back cushions, a rolled headrest, padded armrests
+    (one with a cup holder), on a pedestal."""
+    cushions = [
+        _pad("Seat cushion", [(-200, -440, 460), (200, -440, 460),
+                              (-200, -90, 470), (200, -90, 470)], 55, 12),
+        _pad("Back cushion", [(-195, -40, 560), (195, -40, 560),
+                              (-185, 10, 960), (185, 10, 960)], 55, 12),
+        _pad("Head roll", [(-170, 0, 1040), (170, 0, 1040)], 60, 12),
+        _pad("Lumbar", [(-150, -75, 640), (150, -75, 640)], 45, 12)]
+    shell = [
+        _pad("Back shell", [(-250, 60, 420), (250, 60, 420),
+                            (-240, 80, 1060), (240, 80, 1060)], 35, 10),
+        _pad("Base", [(-250, -430, 380), (250, -430, 380),
+                      (-250, 60, 380), (250, 60, 380)], 35, 10)]
+    arms = []
+    for s_ in (-1, 1):
+        arms += [_pad("Arm side", [(s_ * 290, -420, 420), (s_ * 290, 40, 420),
+                                   (s_ * 290, -400, 600),
+                                   (s_ * 290, 40, 620)], 30, 10)]
+        arms.append(_pad("Armrest", [(s_ * 290, -440, 650),
+                                     (s_ * 290, 50, 660)], 45, 12))
+    holder = color(group("Cup holder", [
+        cyl("Cup holder", 290, -330, 660, 40, 45, seg=16)]), "#1b1b1d",
+        "Plastic")
     return group(name, [
-        color(group("Cushions", [
-            hull("Seat cushion", [box("F", -240, -430, 420, 480, 60, 90),
-                                  sphere("C", 0, -250, 470, 200, 12),
-                                  box("B", -240, -80, 430, 480, 60, 90)]),
-            hull("Back cushion", [box("L", -240, -40, 520, 480, 90, 60),
-                                  box("H", -230, 0, 1000, 460, 80, 60)])]),
-            colour, "Clay"),
-        color(group("Frame", [
-            box("Arm", -300, -420, 400, 60, 440, 250),
-            box("Arm", 240, -420, 400, 60, 440, 250),
-            box("Base", -300, -300, 0, 600, 300, 400)]), "#2a2a2e",
-            "Metal")])
+        color(group("Cushions", cushions), colour, "Matte"),
+        color(group("Frame", shell + arms), "#2a2a2e", "Matte"),
+        holder,
+        color(group("Pedestal", [cyl("Pedestal", 0, -180, 0, 380, 90, 70,
+                                     seg=20),
+                                 cyl("Plinth", 0, -180, 0, 25, 220,
+                                     seg=24)]), STEEL, "Metal")])
 
 
 def build_vip_row(dims):

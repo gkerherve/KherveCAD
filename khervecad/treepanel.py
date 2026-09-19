@@ -1115,6 +1115,11 @@ class ObjectTree(QTreeWidget):
                 "Make Object",
                 lambda: [self.model.make_component(n)
                          for n in objectable])
+        if len(roots) == 1 and roots[0].type not in ("assign", "variables"):
+            from .user_library_dialog import save_selection
+            menu.addAction(
+                icons.icon("mdi.bookshelf"), "Save to My Library...",
+                lambda: save_selection(self.window(), roots[0]))
         if promotable and self.SHOWS_INSERT_OBJECT:
             from .collections_panel import fill_move_menu
             fill_move_menu(menu.addMenu(

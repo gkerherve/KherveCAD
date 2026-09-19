@@ -1262,6 +1262,12 @@ PARTS.update(library_kitchen.PARTS)
 PARTS.update(library_sport.PARTS)
 PARTS.update(stadium.PARTS)
 PARTS.update(library_leaves.PARTS)
+# the user's own saved parts (My Library, on disk) — re-read after saves
+from . import user_library  # noqa: E402
+try:
+    user_library.refresh(PARTS)
+except OSError:
+    pass
 
 #: dialog fields holding a count (integer spin box, no "mm" suffix)
 _COUNT_FIELDS = ({"bolts"} | library_lego.COUNT_FIELDS

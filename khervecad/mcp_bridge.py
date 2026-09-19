@@ -71,6 +71,7 @@ _READ_ONLY_TOOLS = frozenset({
 _NO_SNAPSHOT_TOOLS = _READ_ONLY_TOOLS | {
     "save_document", "export_document", "export_drawing",
     "publish_to_printables", "install_scad_library",
+    "save_to_library",      # writes a file, the document is unchanged
 }
 
 #: Tools that can read or write a file the client names.  Everything
