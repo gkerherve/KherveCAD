@@ -140,6 +140,12 @@ def node_matrix(node, env=None):
     if t in ("union", "component", "reference"):
         return mat_mul(mat_translate(num("x"), num("y"), num("z")),
                        mat_rotate(num("rx"), num("ry"), num("rz")))
+    if t == "joint":
+        # kcad_joint: translate(pivot) rotate(a) translate(-pivot)
+        px, py, pz = num("px"), num("py"), num("pz")
+        return mat_mul(mat_translate(px, py, pz), mat_mul(
+            mat_rotate(num("rx"), num("ry"), num("rz")),
+            mat_translate(-px, -py, -pz)))
     return mat_identity()
 
 

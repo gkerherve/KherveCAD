@@ -2596,6 +2596,23 @@ into a new module and import.
                        `set_render_options heatmap / heat_min_wall /
                        heat_overhang` returns the stats; render_view shows
                        it.
+  - `ik.py` / `ik_ui.py` — **inverse kinematics** (2026-09-19): CCD
+                       (each joint, last to first, turns the effector
+                       toward the target, <= `MAX_STEP`°), the world
+                       rotation written back as the joint's own Euler
+                       angles R' = P^-1 Q P R and decomposed like
+                       rotate([x,y,z]) = Rz Ry Rx. `HumanRig` (bones of
+                       the `human` rig; effectors left_hand = wrist joint
+                       over upperarm01 + lowerarm01, feet, head, or a bone;
+                       world point = bone matrix · joint, then the rest
+                       frame's stand/scale, then the node's placement) and
+                       `JointRig` (the `joint` nodes above a part, within
+                       min/max). `reach` writes pose rows / rx ry rz. Tree
+                       right-click ▸ Reach (IK)… then click targets; MCP
+                       `reach` (target, target_node, offset, effector,
+                       chain, point; `miss` — never "error", which means a
+                       failed call). `mesh.node_matrix` now knows `joint`
+                       (ancestor_matrix ignored joints before).
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.

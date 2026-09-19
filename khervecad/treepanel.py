@@ -944,6 +944,12 @@ class ObjectTree(QTreeWidget):
         if sculpt is not None and hasattr(win, "start_sculpt"):
             menu.addAction(icons.icon("mdi.brush"), "Sculpt...",
                            lambda: win.start_sculpt(sculpt))
+        from . import ik_ui
+        if len(roots) == 1 and hasattr(win, "view3d") and \
+                ik_ui.can_reach(nodes[0]):
+            menu.addAction(icons.icon("mdi.human-handsup"),
+                           "Reach (IK)...",
+                           lambda: ik_ui.start(win, nodes[0]))
         menu.addAction(icons.icon("mdi.palette-outline"),
                        "Color...", lambda: self._pick_color(nodes))
         if len(nodes) == 1:

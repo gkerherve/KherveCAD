@@ -460,6 +460,13 @@ helices, strands and hairpins, but NOT folded — say so, and mention the \
 clash count it returns. Cartoon style by default; list_proteins has \
 presets, styles and colours.
 
+Posing — say WHERE, not the angles: `reach` puts a figure's hand / \
+foot / head, or the tip of a part inside nested joint nodes (robot \
+arm, lamp, crane), on a point (a probe_surface hit, or target_node = \
+another part) and solves the angles itself — far better than guessing \
+set_pose rotations. Build an arm as joint { upper; joint { fore; \
+gripper } } with each pivot at its hinge, then reach.
+
 Look at what you built:
 - To SEE where a part will fail to print, set_render_options heatmap = \
 "thickness" (red = wall thinner than heat_min_wall) or "overhang" (red \

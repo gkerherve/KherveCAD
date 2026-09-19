@@ -1140,6 +1140,35 @@ class McpToolExecutor:
                               "and were clamped to them.")
         return result
 
+    def _t_reach(self, params) -> dict:
+        from . import ik
+        node = self._node(params.get("node_id"))
+        if params.get("target_node") is not None:
+            lo, hi = self._node_box(self._node(params["target_node"]))
+            target = [(lo[i] + hi[i]) / 2 for i in range(3)]
+        elif params.get("target") is not None:
+            target = self._vec3(params, "target")
+        else:
+            raise ToolError("Give a target [x, y, z] or a target_node.")
+        if params.get("offset") is not None:
+            off = self._vec3(params, "offset")
+            target = [target[i] + off[i] for i in range(3)]
+        point = self._vec3(params, "point") if params.get("point") \
+            is not None else None
+        if ik.human_in(node) is None and not ik.in_joint(node):
+            raise ToolError(
+                f"{node.name} has nothing to bend: give a human figure, "
+                "or a part inside joint nodes (wrap_nodes operation "
+                "'joint' with its pivot at the shoulder / elbow).")
+        try:
+            out = ik.reach(self._model, node, target,
+                           params.get("effector"), params.get("chain"),
+                           point, self._env())
+        except ValueError as exc:
+            raise ToolError(str(exc))
+        out["target"] = [round(v, 3) for v in target]
+        return out
+
     def _pose_human(self, params) -> dict:
         """set_pose on a human figure: bones of MakeHuman's rig, angles
         in degrees about each bone's head in the body's axes, kept as

@@ -881,6 +881,51 @@ TOOLS = [
         }),
     },
     {
+        "name": "reach",
+        "description": (
+            "Inverse kinematics: move a hand, foot, head or tool TIP to a "
+            "point and let the joints work out the angles — 'left hand "
+            "on the table', 'gripper on the bolt', 'foot on the step'. "
+            "node_id is a human figure (effector left_hand / right_hand /"
+            " left_foot / right_foot / head, or a bone name) or a part "
+            "inside nested `joint` nodes (a robot arm, crane, lamp: the "
+            "part itself is the effector, the joints above it the "
+            "chain, within their min/max angles). Aim with `target` "
+            "(world xyz, e.g. a probe_surface hit point) or `target_node`"
+            " (the centre of another part's box). Writes ordinary pose "
+            "angles (human pose rows / joint rx ry rz), one undo step. "
+            "Returns `miss` (distance left) and, if unreachable, why."
+        ),
+        "input_schema": _obj({
+            "node_id": _ID,
+            "target": {"type": "array", "items": {"type": "number"},
+                       "minItems": 3, "maxItems": 3,
+                       "description": "World point [x, y, z] (document "
+                                      "units) to reach."},
+            "target_node": dict(_ID, description=(
+                "Reach the centre of this part's bounding box instead.")),
+            "offset": {"type": "array", "items": {"type": "number"},
+                       "minItems": 3, "maxItems": 3,
+                       "description": "Added to the target (e.g. [0, 0, "
+                                      "30] to hover above it)."},
+            "effector": {"type": "string",
+                         "description": "Human figure: left_hand, "
+                                        "right_hand, left_foot, "
+                                        "right_foot, head or a bone. "
+                                        "Default left_hand."},
+            "chain": {"type": "integer",
+                      "description": "Joint chains: how many joints up "
+                                     "from the part may move (default "
+                                     "all)."},
+            "point": {"type": "array", "items": {"type": "number"},
+                      "minItems": 3, "maxItems": 3,
+                      "description": "Joint chains: the effector point in "
+                                     "the part's own frame (default its "
+                                     "box centre) — e.g. a gripper's "
+                                     "tip."},
+        }, ["node_id"]),
+    },
+    {
         "name": "wrap_nodes",
         "description": (
             "Apply an operation to existing nodes by wrapping them in "
