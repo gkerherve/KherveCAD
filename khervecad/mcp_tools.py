@@ -240,6 +240,7 @@ class McpToolExecutor:
                          "difference() by showing its first operand, so "
                          "holes look uncut. Edit > Locate OpenSCAD."),
             },
+            "exact_preview_booleans": self._csg_info(),
             "bounds": bounds,
             "bounds_mm": self._box_in_mm(bounds),
             "reference_images": self._references(),
@@ -706,6 +707,20 @@ class McpToolExecutor:
                 "size": [round(hi[i] - lo[i], 3) for i in range(3)],
                 "center": [round((lo[i] + hi[i]) / 2, 3)
                            for i in range(3)]}
+
+    @staticmethod
+    def _csg_info() -> dict:
+        from . import csg
+        on = csg.available()
+        return {"available": on, "note": (
+            "Manifold is installed: the preview CUTS difference / "
+            "intersection / minkowski itself, so render_view, bounds, "
+            "mass_properties and probe_surface see the real holes at "
+            "once, with or without OpenSCAD. bevel, decimate and "
+            "shrinkwrap nodes work." if on else
+            "manifold3d is not installed: the preview approximates "
+            "booleans and the bevel node cannot run (pip install "
+            "manifold3d).")}
 
     def _t_get_node_bounds(self, params) -> dict:
         nodes = self._nodes(params.get("node_ids"))

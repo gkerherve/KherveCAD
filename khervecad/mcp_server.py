@@ -193,6 +193,23 @@ open = "top") { … }` hollows a solid into an even-walled shell (a cup: \
 open = "top"; "none" for a closed hollow), and `kcad_fillet(radius = 2, \
 kind = "round", edges = [[x1, y1, z1, x2, y2, z2], ...]) { … }` rounds \
 the edges listed (get them from list_edges, or use fillet_edges). \
+To round or chamfer EVERY sharp edge of a part at once — a machined \
+block, a printed case, an enclosure — wrap it in `kcad_bevel(width = \
+1, segments = 4, profile = 0.5, angle = 30, which = "convex") { … }` \
+(profile 0.5 round, 0.25 flat chamfer; which "convex" / "concave" / \
+"both"; rounded ball corners where three edges meet; the part keeps \
+its size) instead of fillet_edges edge by edge or a minkowski that \
+grows it. A part too heavy to draw or export (a scan, a sculpt, a \
+tree, threads) goes in `kcad_decimate(ratio = 0.25, tolerance = 0) { \
+… }` (keep a quarter of the triangles; or tolerance = 0.05 mm, \
+invisible on a print). To put one shape ON another — a garment, cap, \
+strap, sticker or armour plate on a body, a label on a bottle — wrap \
+BOTH in `kcad_shrinkwrap(mode = "nearest", offset = 0.5, keep = \
+"outside") { piece; target; }`: the FIRST child is pressed onto the \
+rest (drawn too), offset mm off its surface; keep "outside" moves only \
+what sinks in, "all" lays it flat on the surface; mode "project" with \
+axis "-z" drops it straight down. Give a blocky piece `detail = 2` so \
+it has vertices to bend. \
 Prefer a sweep to a chain of hull()s. For a body whose cross-sections \
 have corners (a car, a boat hull), `kcad_section_loft(heights = [[z0], \
 [z1], ...], smooth = 0)` with one 2D child shape per section, in \
@@ -445,9 +462,12 @@ after anything non-trivial, and use `orientation` to check another side \
 — a part that is wrong is obvious in the picture and invisible in the \
 tree. It shows what is on screen right now: the built-in preview \
 immediately, replaced by the exact OpenSCAD render as parts finish.
-- The built-in preview APPROXIMATES booleans (it shows the first \
-operand, holes uncut). get_document_info says whether OpenSCAD was \
-found; without it, do not trust a difference() in the picture.
+- The built-in preview CUTS booleans exactly (Manifold) when \
+get_document_info's `exact_preview_booleans.available` is true: holes, \
+threads and pockets are in the picture, the bounds, mass_properties and \
+probe_surface at once. Only then may you trust a difference() without \
+OpenSCAD; a boolean on a flat 2D or open operand still shows its first \
+operand (get_node_bounds flags it `approximate`).
 - Details go ON a surface, not near it: probe_surface casts a ray at \
 the model and returns the hit point, its outward normal and the part, \
 so an eye, a knob or a boss sits on a lofted body at point + normal × \
