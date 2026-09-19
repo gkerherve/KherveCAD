@@ -694,6 +694,214 @@ def crocodile(p):
     return b
 
 
+# ------------------------------------------------------------- canine
+#: A Labrador measured in side view from a photograph, scaled so the
+#: withers stand at the breed standard's 570 mm: (x across, y along
+#: — front -Y —, z up) in mm, x the offset of a left-hand part. Every
+#: dog-shaped animal is this template stretched (`canine`).
+LAB = dict(
+    ribs=((0, -120, 412), (114, 225, 150)),
+    chest=((0, -288, 420), (74, 74, 92)),
+    back=((0, 20, 478), (90, 335, 84)),
+    keel=((0, -60, 330), (80, 170, 70)),
+    loin=((0, 130, 448), (100, 165, 96)),
+    croup=((0, 275, 455), (110, 118, 106)),
+    shoulder=((68, -185, 440), (42, 92, 120)),
+    thigh=((70, 322, 384), (56, 80, 108)),
+    neck=[((0, -205, 482), 86), ((0, -255, 560), 74), ((0, -288, 616), 66)],
+    skull=((0, -332, 620), (72, 72, 52)),
+    flew=((26, -452, 566), (22, 46, 30)),
+    brow=((0, -392, 630), (58, 30, 40)),
+    cheek=((42, -374, 600), (32, 42, 38)),
+    muzzle=[((0, -407, 594), 40), ((0, -488, 590), 37)],
+    jaw=((0, -447, 562), (44, 58, 30)),
+    nose=((0, -524, 596), (24, 14, 18)),
+    eye=((37, -397, 634), 10),
+    ear=((78, -326, 596), (11, 42, 58)),
+    front=[((62, -232, 402), 42), ((62, -160, 262), 32), ((62, -158, 172), 25),
+           ((62, -162, 104), 21), ((62, -170, 36), 19)],
+    front_foot=((62, -184, 18), (24, 36, 18)),
+    hind=[((68, 300, 452), 52), ((68, 336, 214), 33), ((68, 400, 130), 25),
+          ((68, 421, 88), 21), ((68, 410, 36), 19)],
+    hind_foot=((68, 396, 18), (24, 36, 18)),
+    tail=[((0, 361, 531), 38), ((0, 460, 522), 34), ((0, 560, 512), 29),
+          ((0, 650, 509), 22), ((0, 713, 512), 14)],
+    belly=((0, 60, 300), (80, 170, 22)),
+)
+
+
+def canine(p):
+    """A dog-shaped carnivore from the Labrador template: *size* is the
+    withers height over the Lab's 570 mm, then *long* / *wide* stretch
+    the body, *leg* the legs below the elbow, *head* and *snout* the
+    skull and muzzle; ``ears`` pendant / pricked / round, ``tail``
+    otter / brush / whip, ``coat`` / ``pale`` colours."""
+    b = Body(1.0)
+    k = p["H"] / 570.0
+    long_, wide = p.get("long", 1.0), p.get("wide", 1.0)
+    leg = p.get("leg", 1.0)
+    head, snout = p.get("head", 1.0), p.get("snout", 1.0)
+    elbow_z = 262.0
+
+    def z_of(z):                                # legs stretch below the elbow
+        return z * leg if z < elbow_z else z + elbow_z * (leg - 1.0)
+
+    def P(q, side=1):
+        x, y, z = q
+        return [side * x * wide * k, y * long_ * k, z_of(z) * k]
+
+    def Hd(q, side=1):
+        """A head point: the head scales about the skull, the snout
+        lengthens forward of the stop."""
+        x, y, z = q
+        sk = LAB["skull"][0]
+        dy = y - sk[1]
+        if y < -392:                            # forward of the stop
+            dy = (-392 - sk[1]) + (y + 392) * snout
+        return P([x * head, sk[1] + dy * head, sk[2] + (z - sk[2]) * head],
+                 side)
+
+    def R(r):
+        return r * k
+
+    skin = []
+    for key in ("ribs", "chest", "loin", "croup", "back", "keel"):
+        c, r = LAB[key]
+        skin.append(b.ell(P(c), [r[0] * wide * k, r[1] * long_ * k, r[2] * k]))
+    for side in (1, -1):
+        for key in ("shoulder", "thigh"):
+            c, r = LAB[key]
+            skin.append(b.ell(P(c, side), [r[0] * wide * k, r[1] * long_ * k,
+                                           r[2] * k]))
+    pts = [P(q) for q, _r in LAB["neck"]]
+    skin += b.chain(pts, [R(r) * p.get("neck_r", 1.0) for _q, r in LAB["neck"]])
+    c, r = LAB["skull"]
+    skin.append(b.ell(Hd(c), [v * k * head for v in r]))
+    c, r = LAB["brow"]
+    skin.append(b.ell(Hd(c), [v * k * head for v in r]))
+    head_masses = []
+    for key in ("skull", "brow"):
+        c, r = LAB[key]
+        head_masses.append((Hd(c), [v * k * head for v in r]))
+    for side in (1, -1):
+        for key in ("cheek", "flew"):
+            c, r = LAB[key]
+            skin.append(b.ell(Hd(c, side), [v * k * head for v in r]))
+            head_masses.append((Hd(c, side), [v * k * head for v in r]))
+    mz = [Hd(q) for q, _r in LAB["muzzle"]]
+    mw = p.get("muzzle_w", 1.0)
+    mr = LAB["muzzle"][0][1] * k * head
+    # a broad, square muzzle: two capsules side by side
+    for side in (1, -1):
+        off = [side * mr * 0.38 * mw, 0, 0]
+        skin.append(b.cap(_add(mz[0], off), _add(mz[1], off), mr * 0.82))
+    c, r = LAB["jaw"]
+    skin.append(b.ell(Hd(c), [r[0] * k * head * mw, r[1] * k * head * snout,
+                              r[2] * k * head]))
+    for side in (1, -1):
+        for chain, foot in (("front", "front_foot"), ("hind", "hind_foot")):
+            q = [P(c, side) for c, _r in LAB[chain]]
+            skin += b.chain(q, [R(r) * p.get("bone", 1.0)
+                                for _c, r in LAB[chain]])
+            c, r = LAB[foot]
+            skin.append(b.ell(P(c, side), [v * k * p.get("bone", 1.0)
+                                           for v in r]))
+    tail = p.get("tail", "otter")
+    tq = [P(c) for c, _r in LAB["tail"]]
+    if tail == "brush":                         # wolf, fox: hangs, bushy
+        tq = [P(LAB["tail"][0][0])] + [
+            _add(P(LAB["tail"][0][0]), [0, 110 * k * i, -95 * k * i])
+            for i in (1, 2, 3, 4)]
+        tr = [R(40), R(52), R(56), R(50), R(30)]
+    elif tail == "whip":                        # cat, lion, tiger: long, low
+        tq = [P(LAB["tail"][0][0])] + [
+            _add(P(LAB["tail"][0][0]), [0, 130 * k * i, -110 * k * i + 12 * k * i * i])
+            for i in (1, 2, 3, 4, 5)]
+        tr = [R(22), R(18), R(16), R(15), R(14), R(13)]
+    else:
+        tr = [R(r) for _c, r in LAB["tail"]]
+        fine_q, fine_r = [], []
+        for i in range(len(tq) - 1):             # smooth: no beads
+            for t in (0.0, 0.34, 0.67):
+                fine_q.append(_mix(tq[i], tq[i + 1], t))
+                fine_r.append(tr[i] + (tr[i + 1] - tr[i]) * t)
+        tq, tr = fine_q + [tq[-1]], fine_r + [tr[-1]]
+    tail_skin = b.chain(tq, tr)
+    b.blend(p["coat"], "Body", R(18), skin + (tail_skin if tail != "brush"
+                                              else []),
+            detail=p.get("detail", 84))
+    if tail == "brush":
+        b.blend(p.get("tail_colour", p["coat"]), "Tail", R(20), tail_skin,
+                detail=40)
+        if p.get("tail_tip"):
+            b.put(p["tail_tip"], "Tail tip", [b.ell(tq[-1], [tr[-1] * 1.2] * 3)])
+    # pale underside, chest and muzzle
+    pale = p.get("pale")
+    if pale:
+        c, r = LAB["belly"]
+        b.put(pale, "Belly", [b.ell(P(c), [r[0] * wide * k, r[1] * long_ * k,
+                                           r[2] * k])])
+        cc, cr = LAB["chest"]
+        q, n = surface([(P(cc), [cr[0] * wide * k, cr[1] * long_ * k,
+                                 cr[2] * k])], P([0, -250, 420]), [0, -1, -0.3])
+        if q:
+            b.put(pale, "Chest", [b.patch(_add(q, n, R(1)), n, R(70), R(90),
+                                          R(10))])
+    if p.get("face_mask"):                      # pale jaw, lips and cheeks
+        c, r = LAB["jaw"]
+        pieces = [b.ell(_add(Hd(c), [0, 0, -R(3)]),
+                        [r[0] * k * head * mw * 1.08,
+                         r[1] * k * head * snout * 1.04, r[2] * k * head])]
+        for side in (1, -1):
+            c, r = LAB["cheek"]
+            pieces.append(b.ell(_add(Hd(c, side), [0, 0, -R(10)]),
+                                [r[0] * k * head * 1.05, r[1] * k * head,
+                                 r[2] * k * head * 0.8]))
+        b.put(p["face_mask"], "Face mask", pieces)
+    # face
+    c, r = LAB["nose"]
+    b.put(p.get("nose", "#1c1614"), "Nose", [b.ell(Hd(c), [v * k * head
+                                                            for v in r])],
+          material="Glass")
+    for side in (1, -1):
+        c, r = LAB["eye"]
+        er = r * k * head
+        centre = Hd([0, c[1] + 40, c[2]])
+        q, n = surface(head_masses, centre, [side * 0.62, -0.72, 0.18])
+        if q is None:
+            q, n = Hd(c, side), [side, 0, 0]
+        b.put(p.get("eye", "#3a2414"), "Eye", [b.ell(_add(q, n, -er * 0.35),
+                                                     [er, er, er])],
+              material="Glass")
+        b.put("#5a4030", "Eye rim", [b.patch(_add(q, n, -er * 0.3), n,
+                                             er * 1.35, er * 1.1, er * 0.35)])
+        lip0 = Hd([0, -502, 568])
+        lip1 = Hd([38, -414, 566], side)
+        b.put("#3a2a22", "Lip line", [b.cap(lip0, lip1, R(3.5))])
+        ears = p.get("ears", "pendant")
+        c, r = LAB["ear"]
+        colour = p.get("ear_colour", p["coat"])
+        if ears == "pendant":                   # a soft triangle, close
+            corners = [(Hd([62, -352, 642], side), 11), (Hd([66, -296, 634],
+                                                               side), 11),
+                       (Hd([80, -334, 548], side), 15)]
+            b.put(colour, "Ear", ["hull() { " + " ".join(
+                b.ell(q, [rr * k * head] * 3) for q, rr in corners) + " }"])
+        elif ears == "pricked":
+            base = Hd([44, -318, 668], side)
+            tip = _add(base, [side * 18 * k, 12 * k, 105 * k * p.get(
+                "ear_size", 1.0)])
+            b.put(colour, "Ear", [b.cone(base, tip, 34 * k * p.get(
+                "ear_size", 1.0) * head, 3 * k)])
+        else:                                   # round (big cats)
+            base = Hd([50, -318, 672], side)
+            b.put(colour, "Ear", [b.ell(base, [26 * k * head, 12 * k * head,
+                                               26 * k * head])])
+    for extra in p.get("extras", ()):
+        extra(b, p, k, P, Hd)
+    return b
+
+
 # ------------------------------------------------------------- species
 def _q(name, **kw):
     kw.update(name=name, plan=quadruped)
@@ -755,28 +963,18 @@ SPECIES = {
                tail=dict(length=200, droop=30, r=35),
                extras=[horns("#d9c6a0", "antlers"), pale("#f1e8da", "belly"),
                        pale("#f1e8da", "rump")]),
-    "Dog (Labrador)": _q("Dog (Labrador)", H=570, L=750, D=300, W=280,
-                         neck=250, neck_angle=50, neck_r=95, head_l=260,
-                         head_w=130, head_pitch=15, coat="#d8b27a",
-                         ears="floppy", ear_size=110, legs="paw",
-                         leg_r=[70, 45, 32, 30, 36], nose_pad=True,
-                         muzzle_w=0.3, eyes_side=0.2,
-                         tail=dict(length=380, droop=35, r=28)),
-    "Wolf": _q("Wolf", H=800, L=1200, D=380, W=320, neck=330, neck_angle=40,
-               neck_r=125, head_l=300, head_w=150, head_pitch=10,
-               coat="#8d8a86", ears="upright", ear_size=110,
-               inner_ear="#e8e2dc", legs="paw", leg_r=[75, 48, 32, 30, 36],
-               nose_pad=True, eyes_side=0.25,
-               tail=dict(length=450, droop=60, r=55),
-               extras=[pale("#e8e2dc", "belly"), pale("#e8e2dc", "chest")]),
-    "Fox": _q("Fox", H=400, L=700, D=200, W=180, neck=180, neck_angle=40,
-              neck_r=65, head_l=170, head_w=90, head_pitch=10,
-              coat="#c4622d", ears="upright", ear_size=90,
-              inner_ear="#f1e8da", legs="paw", leg_r=[42, 26, 16, 15, 18],
-              nose_pad=True, eyes_side=0.25, muzzle_w=0.26,
-              tail=dict(length=420, droop=50, r=55),
-              extras=[pale("#f4efe8", "chest"), pale("#f4efe8", "belly"),
-                      points("#2a2220", 0.22)]),
+    "Dog (Labrador)": dict(name="Dog (Labrador)", plan=canine, H=570,
+                           coat="#dcb680", ear_colour="#cf9f62"),
+    "Wolf": dict(name="Wolf", plan=canine, H=800, long=1.02, wide=0.92,
+                 leg=1.12, head=1.12, snout=1.35, muzzle_w=0.85,
+                 bone=1.05, coat="#8d8a86", ears="pricked", ear_size=0.9,
+                 ear_colour="#6f6c68", tail="brush", tail_colour="#7d7a76",
+                 tail_tip="#2a2826", face_mask="#d9d4ce", eye="#b8892a"),
+    "Fox": dict(name="Fox", plan=canine, H=400, long=1.15, wide=0.85,
+                leg=0.95, head=1.05, snout=1.45, muzzle_w=0.72, bone=0.85,
+                coat="#c4622d", ears="pricked", ear_size=1.25,
+                ear_colour="#8a3f1c", tail="brush", tail_colour="#c4622d",
+                tail_tip="#f4efe8", face_mask="#f4efe8", eye="#b8892a"),
     "Cat": _q("Cat", H=250, L=460, D=130, W=120, neck=90, neck_angle=40,
               neck_r=45, head_l=100, head_w=80, head_pitch=5, muzzle_w=0.3,
               coat="#a07850", ears="upright", ear_size=50,

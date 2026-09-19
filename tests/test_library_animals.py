@@ -48,7 +48,7 @@ def test_realistic_animals_build_at_life_size(name):
 
 
 def test_heads_face_minus_y():
-    for name in ("Horse", "Dog (Labrador)", "Giraffe"):
+    for name in ("Horse", "Cow", "Giraffe"):
         spec = R.SPECIES[name]
         j = R.rig(spec)
         assert j["neck"][1][1] < j["ribs"][0][1]
@@ -70,3 +70,22 @@ def test_animals_menu():
             if pid.startswith(("cartoon_", "animal_"))}
     assert cats == {"Cartoon animals", "Realistic animals"}
     assert len(C.SPECIES) >= 25 and len(R.SPECIES) >= 20
+
+
+def test_labrador_matches_the_photograph():
+    """The Labrador template was traced from a side photograph scaled to
+    the breed standard's 570 mm at the withers: keep its proportions."""
+    lab = R.LAB
+    top = lab["ribs"][0][2] + lab["ribs"][1][2]
+    assert 540 < top < 590                           # withers ~570 mm
+    brisket = lab["ribs"][0][2] - lab["ribs"][1][2]
+    assert 240 < brisket < 290                       # chest to the elbow
+    loin = lab["loin"][0][2] - lab["loin"][1][2]
+    assert loin > brisket + 60                       # the tuck-up
+    hip, stifle, hock = [q for q, _r in lab["hind"][:3]]
+    assert stifle[2] < hip[2] and hock[1] > stifle[1]  # hock behind
+    tris = mesh.tessellate(R.build("Dog (Labrador)"))
+    ys = [v[1] for t in tris for v in t]
+    zs = [v[2] for t in tris for v in t]
+    assert 1150 < max(ys) - min(ys) < 1400           # nose to tail tip
+    assert 600 < max(zs) < 720                       # the head's top

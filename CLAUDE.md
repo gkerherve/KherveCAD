@@ -3079,7 +3079,21 @@ into a new module and import.
                        and takes the outermost hit (stripes on one
                        ellipsoid were buried under the others); zebra
                        `rings` go per leg SEGMENT (a straight stifle-to-
-                       fetlock line floats off a bent leg). Nothing below
+                       fetlock line floats off a bent leg). **Canine plan**
+                       (the user: "real animals are very poor", with a
+                       Labrador photo): `LAB` is a Labrador TRACED from a
+                       side photograph scaled to the standard's 570 mm
+                       withers — ribs, chest, back and keel masses (one
+                       barrel: separate masses read as a caterpillar),
+                       loin raised for the tuck-up, croup, thighs, a
+                       two-capsule square muzzle with flews, eyes put on
+                       the real head surface (`surface`), hull-triangle
+                       pendant ears, a thick smooth otter tail (chains
+                       subdivided: beads showed). `canine` stretches it
+                       (size, long, wide, leg, head, snout, bone) for the
+                       wolf and fox. The loop that got it right: render
+                       side-on at the photo's mm/px, overlay at 55 %,
+                       fix where the outlines part. Nothing below
                        z = 0: chains lift each joint by its radius and
                        `_on_ground` lifts the finished animal (a blend
                        bulges past its primitives).
