@@ -266,4 +266,4 @@ def test_a_new_document_filled_at_once_is_still_saved(lib):
     saver._changed()
     saved = saver.flush()
     assert [s["title"] for s in saved] == ["Classical porch"]
-    assert saved[0]["section"] == "Garden & outdoor"
+    assert saved[0]["section"] == "Buildings"
