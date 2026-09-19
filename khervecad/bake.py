@@ -105,8 +105,10 @@ NODE_TYPES = {
     "subdivide": dict(
         label="Subdivide (smooth)", category=OPERATION,
         icon="mdi.circle-multiple-outline",
-        params=dict(levels=2),
-        schema=[("levels", "Levels", "int", 1, 4)]),
+        params=dict(levels=2, sharp=0.0),
+        schema=[("levels", "Levels", "int", 1, 4),
+                ("sharp", "Keep edges sharper than (°, 0 = none)",
+                 "float", 0.0, 180.0)]),
     "decimate": dict(
         label="Decimate (fewer triangles)", category=OPERATION,
         icon="mdi.vector-triangle",
@@ -287,7 +289,7 @@ _BAKED = {
     "twist": [("axis", "z"), ("angle", 0), ("detail", 2)],
     "taper": [("axis", "z"), ("factor", 1), ("detail", 5)],
     "lattice": [("offsets", []), ("detail", 2)],
-    "subdivide": [("levels", 1)],
+    "subdivide": [("levels", 1), ("sharp", 0)],
     "decimate": [("ratio", 0.5), ("tolerance", 0)],
     "remesh": [("voxel", 1), ("snap", True)],
     "push_pull": [("pushes", [])],
@@ -598,7 +600,8 @@ def _compute(node, env) -> list:
     src = [tri for tri, _c, _s in
            mesh._children_mesh(node, env, None, frozenset(), False)]
     if t == "subdivide":
-        return deform.loop_subdivide(src, int(num("levels", 1.0)))
+        return deform.loop_subdivide(src, int(num("levels", 1.0)),
+                                     num("sharp", 0.0))
     if t == "wireframe":
         from . import wireframe
         out = wireframe.wireframe(src, num("thickness", 1.0),

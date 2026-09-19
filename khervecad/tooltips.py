@@ -380,7 +380,10 @@ TIPS = {
         "Smooths a blocky shape by splitting and relaxing every "
         "triangle — boxes turn into pebbles.",
         [_SELECTION, "Click Subdivide.",
-         "Levels 1–4: each level makes it smoother (and 4× heavier)."],
+         "Levels 1–4: each level makes it smoother (and 4× heavier).",
+         "Keep edges sharper than: 30–60° keeps a part's real edges "
+         "crisp (a cylinder's rims, a box's corners) while its curved "
+         "sides round off — 0 rounds everything."],
         None),
     "decimate": (
         "Decimate (fewer triangles)",

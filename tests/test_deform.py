@@ -167,8 +167,8 @@ def test_deformer_codegen_and_lossless_round_trip(app, tmp_path):
     code1 = doc.to_scad()
     assert 'kcad_bend(axis = "z", toward = "x", angle = 45, detail = 2,' \
         in code1
-    assert "module kcad_subdivide(levels = 1, points = [], faces = [])" \
-        in code1
+    assert "module kcad_subdivide(levels = 1, sharp = 0, points = [], " \
+        "faces = [])" in code1
     path = tmp_path / "deform.scad"
     document.export_scad(doc, str(path))
     other = DocumentModel()
@@ -235,3 +235,16 @@ def test_openscad_renders_the_baked_deformation(app, tmp_path, kind):
     for got, want in zip(_bounds(exact), _bounds(preview)):
         assert got == pytest.approx(want, abs=0.01)
     assert _volume(exact) == pytest.approx(_volume(preview), rel=0.005)
+
+
+def test_subdivision_keeps_creases_sharper_than_the_limit(app):
+    cube = _box(0, 0, 0, 20, 20, 20)
+    assert _volume(deform.loop_subdivide(cube, 3, sharp=45)) == \
+        pytest.approx(8000)                        # all edges kept
+    assert _volume(deform.loop_subdivide(cube, 3)) < 4000   # a pebble
+    root, _w = scadparse.parse_scad("cylinder(r = 10, h = 20);")
+    cyl = mesh.tessellate(root, fn=12)
+    kept = deform.loop_subdivide(cyl, 3, sharp=45)
+    zs = [v[2] for t in kept for v in t]
+    assert (min(zs), max(zs)) == pytest.approx((0, 20))     # rims flat
+    assert _closed(kept)

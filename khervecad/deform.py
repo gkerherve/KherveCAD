@@ -232,12 +232,41 @@ def lattice(tris, offsets) -> list:
 
 # -------------------------------------------------------- subdivision
 
-def _loop_once(tris) -> list:
+def _key9(v):
+    return (round(v[0], 9), round(v[1], 9), round(v[2], 9))
+
+
+def crease_keys(tris, sharp: float) -> set:
+    """Edges (frozensets of two rounded points) whose faces meet at more
+    than *sharp* degrees — the creases subdivision keeps."""
+    if sharp <= 0:
+        return set()
+    cos_limit = math.cos(math.radians(sharp))
+    owners = {}
+    for tri in tris:
+        a, b, c = tri
+        u = [b[i] - a[i] for i in range(3)]
+        w = [c[i] - a[i] for i in range(3)]
+        n = [u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2],
+             u[0] * w[1] - u[1] * w[0]]
+        ln = math.sqrt(sum(x * x for x in n)) or 1.0
+        n = [x / ln for x in n]
+        for p, q in ((a, b), (b, c), (c, a)):
+            owners.setdefault(frozenset((_key9(p), _key9(q))), []).append(n)
+    return {k for k, ns in owners.items() if len(ns) == 2 and
+            sum(x * y for x, y in zip(ns[0], ns[1])) < cos_limit}
+
+
+def _loop_once(tris, creases=frozenset()):
+    """One Loop step; *creases* (see crease_keys) are kept sharp by the
+    rules for a border (Hoppe et al. 1994): a crease splits at its
+    midpoint, a vertex on two creases moves only along them, a corner
+    of three or more stays. Returns (triangles, creases of the result)."""
     index, verts, faces = {}, [], []
     for tri in tris:
         face = []
         for v in tri:
-            key = (round(v[0], 9), round(v[1], 9), round(v[2], 9))
+            key = _key9(v)
             i = index.get(key)
             if i is None:
                 i = index[key] = len(verts)
@@ -245,6 +274,7 @@ def _loop_once(tris) -> list:
             face.append(i)
         if len(set(face)) == 3:
             faces.append(face)
+    keys = [_key9(v) for v in verts]
     opposite = {}
     neighbours = [set() for _ in verts]
     for a, b, c in faces:
@@ -252,20 +282,24 @@ def _loop_once(tris) -> list:
             opposite.setdefault((u, w) if u < w else (w, u), []).append(o)
             neighbours[u].add(w)
             neighbours[w].add(u)
+
+    def sharp(u, w, others):
+        return len(others) == 1 or \
+            frozenset((keys[u], keys[w])) in creases
     rim = [[] for _ in verts]
     for (u, w), others in opposite.items():
-        if len(others) == 1:
+        if sharp(u, w, others):
             rim[u].append(w)
             rim[w].append(u)
     moved = []
     for i, v in enumerate(verts):
-        if rim[i]:                           # boundary: follow the rim
+        if rim[i]:                           # border / crease rules
             if len(rim[i]) == 2:
                 a, b = verts[rim[i][0]], verts[rim[i][1]]
                 moved.append(tuple(0.75 * v[k] + 0.125 * (a[k] + b[k])
                                    for k in range(3)))
             else:
-                moved.append(v)
+                moved.append(v)              # a corner stays
             continue
         n = len(neighbours[i])
         if n < 3:
@@ -276,15 +310,21 @@ def _loop_once(tris) -> list:
         moved.append(tuple((1 - n * beta) * v[k] + beta * total[k]
                            for k in range(3)))
     edge_point = {}
+    new_creases = set()
     for (u, w), others in opposite.items():
         a, b = verts[u], verts[w]
-        if len(others) == 2:
+        if len(others) == 2 and not sharp(u, w, others):
             c, d = verts[others[0]], verts[others[1]]
             edge_point[(u, w)] = tuple(0.375 * (a[k] + b[k])
                                        + 0.125 * (c[k] + d[k])
                                        for k in range(3))
         else:
-            edge_point[(u, w)] = tuple((a[k] + b[k]) / 2 for k in range(3))
+            mid = tuple((a[k] + b[k]) / 2 for k in range(3))
+            edge_point[(u, w)] = mid
+            if len(others) == 2:             # a crease: its halves are too
+                km = _key9(mid)
+                new_creases.add(frozenset((_key9(moved[u]), km)))
+                new_creases.add(frozenset((_key9(moved[w]), km)))
 
     def e(u, w):
         return edge_point[(u, w) if u < w else (w, u)]
@@ -293,13 +333,16 @@ def _loop_once(tris) -> list:
         ab, bc, ca = e(a, b), e(b, c), e(c, a)
         pa, pb, pc = moved[a], moved[b], moved[c]
         out += [(pa, ab, ca), (pb, bc, ab), (pc, ca, bc), (ab, bc, ca)]
-    return out
+    return out, new_creases
 
 
-def loop_subdivide(tris, levels: int) -> list:
+def loop_subdivide(tris, levels: int, sharp: float = 0.0) -> list:
     """Loop subdivision, *levels* times: each triangle becomes four and
     the surface relaxes toward a smooth limit — a coarse cage becomes
-    an organic form. Winding is preserved."""
+    an organic form. Edges whose faces meet at more than *sharp* degrees
+    (0 = none) stay crisp creases, corners stay put: a cylinder's sides
+    round off while its rims keep their edge. Winding is preserved."""
+    creases = crease_keys(tris, float(sharp))
     for _ in range(max(int(levels), 0)):
-        tris = _loop_once(tris)
+        tris, creases = _loop_once(tris, creases)
     return tris

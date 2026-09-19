@@ -228,7 +228,9 @@ thin a plate — use push_pull_face (point = a probe_surface hit on the \
 face, distance > 0 out / < 0 in, inset leaves a rim) rather than \
 rebuilding the part; to cut a part by a plane, wrap it in \
 `kcad_bisect(px, py, pz, nx, ny, nz, keep = "above" | "below" | \
-"both", gap)`. \
+"both", gap)`. To smooth a faceted part but keep its real edges — a \
+low-poly cage, a revolve with too few sides — `kcad_subdivide(levels = \
+2, sharp = 40) { … }`: edges sharper than 40° stay crisp. \
 Prefer a sweep to a chain of hull()s. For a body whose cross-sections \
 have corners (a car, a boat hull), `kcad_section_loft(heights = [[z0], \
 [z1], ...], smooth = 0)` with one 2D child shape per section, in \

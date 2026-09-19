@@ -2689,6 +2689,17 @@ into a new module and import.
                        by a hair. The baked-node importer reads node-
                        specific choices BEFORE the generic x/y/z one — it
                        had reset bevel `which`, shrinkwrap `keep`/`mode`.
+  - Subdivide with creases (2026-09-19): `subdivide` gained `sharp`
+                       (default 0 = as before): `deform.crease_keys` marks
+                       edges whose faces meet past it, `_loop_once` treats
+                       them like borders (Hoppe 1994: midpoint edge
+                       points, a two-crease vertex moves along them, a
+                       three-crease corner stays) and hands each crease's
+                       halves on — a cube stays exactly a cube, a
+                       cylinder's sides round while its rims stay flat.
+                       Manifold's smooth_out was tried first: it shrinks
+                       even its own cube with every edge "sharp" (6667 of
+                       8000 mm³).
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.
