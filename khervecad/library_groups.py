@@ -37,11 +37,14 @@ SECTIONS = [
     ("Buildings & places", [
         ("House & home", "mdi.home-city-outline",
          ("home", ["Finished houses", "Finished labs", "Houses",
-                   "Sport", "Home furniture",
+                   "Home furniture",
                    "Room & furniture"])),
         ("City", "mdi.city-variant-outline",
          ("city", ["Buildings", "Landmarks", "Skyscrapers", "Bridges",
                    "Park & sport", "Lighting & signals"])),
+        ("Sport", "mdi.stadium-variant",
+         ["Sport: stadiums", "Sport: pitches & courts", "Sport: equipment",
+          "Sport: seating", "Sport"]),
         ("Nature & garden", "mdi.flower-outline",
          ["Trees", "Stylised trees", "Flowers", "Landscape", "Pots"]),
     ]),
@@ -81,7 +84,12 @@ SHORT_NAMES = {"Lego": "Bricks & plates",
                "Crystals (supercells)": "Supercells",
                "Crystals (nanotubes)": "Carbon nanotubes",
                "Stylised trees": "Stylised trees",
-               "Trees": "Grown trees"}
+               "Trees": "Grown trees",
+               "Sport: stadiums": "Stadiums",
+               "Sport: pitches & courts": "Pitches & courts",
+               "Sport: equipment": "Equipment",
+               "Sport: seating": "Seating",
+               "Sport": "Saved stadiums"}
 
 
 def entry_categories(spec, all_categories):

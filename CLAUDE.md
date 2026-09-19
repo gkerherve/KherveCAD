@@ -1693,6 +1693,46 @@ into a new module and import.
                        Nothing grows below z = 0. `library_trees.py`: every
                        species as a Trees part (Young/Mature/Old, Variation
                        seed, season as the colour combo).
+  - `library_sport.py` / `stadium.py` — the **Sport** library
+                       (2026-09-19, the user: "a library for every sport
+                       ... different shapes of stadium ... so the AI makes
+                       something good every time"), its own Library ▸
+                       Buildings & places ▸ Sport menu (`library_groups`;
+                       the saved .kcad section `parts/Sport` shows there as
+                       "Saved stadiums"). library_sport: fields not in
+                       Park & sport (rugby with H posts, badminton,
+                       volleyball + referee stand, handball/futsal with the
+                       6 m area and dashed 9 m arcs, the 400 m track —
+                       `track_outline`, 84.39 m straights, 36.5 m bends,
+                       1.22 m lanes, a football pitch inside without its
+                       run-off — and a tennis show court = the Park court
+                       minus its fence), equipment (posts, goals, nets,
+                       umpire chair, floodlight mast, video scoreboard,
+                       1-2-3 podium) and seating: tip-up seats, VIP seats,
+                       the **players' bucket seat** (a racing shell of
+                       hulls BEHIND padded leather — the shell once
+                       swallowed the cushions — side bolsters, headrest,
+                       crest, stitching, swivel plinth; `BUCKET_LOOKS`),
+                       a glazed dugout of them and a grandstand block.
+                       stadium: `SHAPES` rounded / oval / circular /
+                       horseshoe / rectangular / arena × `SPORTS` (field
+                       builder + half size incl. run-off + first-row gap).
+                       A bowl row is ONE 2D polygon under a linear_extrude
+                       — the band between two offsets of a superellipse
+                       through the field's corners (`base_axes`: k =
+                       2^(1/p) puts the corner on it), a loop with a hole
+                       (`paths`) or a C shape where `gap_for` cuts the
+                       players' tunnel (south) or the horseshoe's open end
+                       — so no boolean. Lower tier, executive-box glass
+                       ring, upper tier, facade, roof 0 open (floodlight
+                       masts) / 1 over the stands / 2 closed (arena), roof
+                       lights, video boards (centre-hung indoors), dugouts,
+                       and changing rooms built by the House Builder
+                       (`changing_rooms_spec` -> `house_from_spec` ->
+                       `build_house_floors`) behind the south stand. The
+                       name carries the seat count (`capacity_text`,
+                       perimeter / 500 mm per row). The MCP instructions
+                       tell clients a stadium is ONE insert_part.
   - `library_lighting.py` — **Lighting & signals**: Victorian lamp (fluted
                        column, hexagonal lantern), LED single/double arm,
                        park globe lamp, bollard, wall lantern, floodlight

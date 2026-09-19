@@ -124,6 +124,9 @@ part fits, insert_part it (and set its size / colour) instead of \
 building it from scratch, and say which part you used. Model it \
 yourself only when nothing in the library fits, or the user asks for \
 a custom build — and then tell them the library had no match.
+A stadium, arena or sports ground is ONE insert_part of a 'Sport: \
+stadiums' part (size = the sport, colour = the seats; rows, upper_rows, \
+roof 0/1/2 and changing as dims) — never hand-build the bowl.
 
 The tree is the single source of truth:
 - Every node is one OpenSCAD statement. 2D shapes (rect, circle, \
