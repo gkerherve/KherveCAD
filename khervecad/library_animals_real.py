@@ -1,6 +1,17 @@
-"""Realistic animals for the parts library (2026-09-19, the user's
-request, after the cartoon set): Library ▸ Toys & models ▸ Animals ▸
-Realistic animals, at TRUE SIZE in millimetres.
+"""Realistic animals (2026-09-19) — HIDDEN from the Library (the user:
+"this is bad… hide this menu … but the work that was done needs to be
+known so that when we improve we should use that"). Not registered in
+`library.PARTS`; kept, and tested, as the starting point. At TRUE SIZE
+in millimetres.
+
+State and lessons for the next attempt: the generic `quadruped` rig
+reads as a cow on sticks; the photo-traced `canine` plan (`LAB`) is
+the method to extend — trace a side photograph at true scale, overlay
+the render at 55 % and fix where the outlines part — but even traced,
+smooth-blended primitives with one flat colour look like a plasticine
+model, not a real animal: the next step needs fur/colour variation
+(`paint`-like per-face colour), sharper anatomy (a sculpt pass on the
+blend) and more than one reference view.
 
 What the cartoons taught, applied to anatomy:
 

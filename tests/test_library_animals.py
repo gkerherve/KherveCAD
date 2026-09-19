@@ -65,10 +65,11 @@ def test_markings_lie_on_the_blended_skin():
 def test_animals_menu():
     sub = {name: cats for section in library_groups.SECTIONS
            for name, _icon, cats in section[1]}
-    assert sub["Animals"] == ["Cartoon animals", "Realistic animals"]
+    assert sub["Animals"] == ["Cartoon animals"]      # realistic: hidden
+    assert not any(pid.startswith("animal_") for pid in library.PARTS)
     cats = {library.PARTS[pid]["category"] for pid in library.PARTS
-            if pid.startswith(("cartoon_", "animal_"))}
-    assert cats == {"Cartoon animals", "Realistic animals"}
+            if pid.startswith("cartoon_")}
+    assert cats == {"Cartoon animals"}
     assert len(C.SPECIES) >= 25 and len(R.SPECIES) >= 20
 
 

@@ -3059,15 +3059,29 @@ into a new module and import.
   - `library_animals.py` / `library_animals_real.py` — **Animals**
                        (2026-09-19, the user's request), Library ▸ Toys &
                        models ▸ Animals. **Cartoon animals** (30 chibi
-                       toys, ~12 cm): one style — head as big as the body,
-                       glossy eyes (white, pupil, two emissive highlights),
-                       blush, smile — from a species parameter set on a
-                       body plan (`quadruped`, `sitter`, `bird`, snake,
-                       frog, turtle, crocodile); body + legs + neck are ONE
-                       `blend`, details sit on top, placed with
-                       `on_ellipsoid` (point + normal). Small parts get few
-                       segments (`_segments`: 48 everywhere made a toy
-                       150k triangles). **Realistic animals** (23, LIFE
+                       toys, ~10 cm, v2 after "most animals look like 2
+                       spheres, no details"): a `Toy` kit (ell, cap,
+                       cone, disc, ring, hull, chain, blend) and a `Face`
+                       kit (eyes = white + iris + pupil + 2 emissive
+                       sparkles + lashes/brows/lids, cheeks, muzzle,
+                       heart/button nose, open/smile/buck mouth,
+                       whiskers, 7 ear styles) on body plans (`sit`,
+                       `stand`, `ape`, `bird`, snake, frog, turtle,
+                       crocodile), plus per-species extras and props
+                       (bone, honey pot, bamboo, carrot, crown, bows,
+                       collars, stripes/spots, manes, socks). Four
+                       render-critique rounds; lessons: a detail must sit
+                       on the surface it covers — a flat patch on a round
+                       head pokes through the eyes (the ape mask is a
+                       smaller ellipsoid of its own and the eyes go ON
+                       it); a sock/patch must follow the limb's AXIS and
+                       be ≥ 0.8 mm fatter or it flickers. Toy.scale
+                       wraps a small plan in scale(). **Realistic
+                       animals** are HIDDEN (the user: "bad"):
+                       `library_animals_real` is not imported by
+                       `library`, but is kept and tested — start there
+                       next time (its docstring lists what to do next).
+                       What it holds (23, LIFE
                        SIZE, mm): a RIG from published withers height H,
                        body length L, chest depth D, width W — ribcage,
                        belly, haunch, chest and shoulder/thigh masses,
