@@ -1,0 +1,409 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Rustic porch",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "Peru",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For y",
+        "visible": true,
+        "params": {
+         "variable": "y",
+         "start": 0.0,
+         "end": 2300.0,
+         "step": 150.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Deck boards]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": "y",
+           "z": 210.0,
+           "width": 3600.0,
+           "depth": 140.0,
+           "height": 40.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "SaddleBrown",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "0, 3450"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Joists]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 150.0,
+           "depth": 2400.0,
+           "height": 210.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "Sienna",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Log step]",
+        "visible": true,
+        "params": {
+         "x": 1200.0,
+         "y": -350.0,
+         "z": 0.0,
+         "width": 1200.0,
+         "depth": 350.0,
+         "height": 125.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#664221",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "100, 1700, 3300"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Timber posts]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 100.0,
+           "z": 250.0,
+           "width": 200.0,
+           "depth": 200.0,
+           "height": 2350.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Beam]",
+        "visible": true,
+        "params": {
+         "x": -100.0,
+         "y": 80.0,
+         "z": 2600.0,
+         "width": 3800.0,
+         "depth": 240.0,
+         "height": 240.0,
+         "center": false
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "300, 1900"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 150.0,
+           "z": 2300.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 45.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Knee braces R]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "width": 100.0,
+               "depth": 100.0,
+               "height": 450.0,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "100, 1700, 3300"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 150.0,
+           "z": 2300.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -45.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Knee braces L]",
+              "visible": true,
+              "params": {
+               "x": -100.0,
+               "y": 0.0,
+               "z": 0.0,
+               "width": 100.0,
+               "depth": 100.0,
+               "height": 450.0,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "LightSlateGray",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "hull",
+        "name": "Hull",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -250.0,
+           "y": -450.0,
+           "z": 2840.0,
+           "width": 4100.0,
+           "depth": 10.0,
+           "height": 25.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -250.0,
+           "y": 2400.0,
+           "z": 3250.0,
+           "width": 4100.0,
+           "depth": 10.0,
+           "height": 25.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": -250.0,
+         "end": 3850.0,
+         "step": 150.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": -450.0,
+             "z": 2860.0,
+             "width": 30.0,
+             "depth": 10.0,
+             "height": 30.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": 2400.0,
+             "z": 3270.0,
+             "width": 30.0,
+             "depth": 10.0,
+             "height": 30.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Rustic porch",
+  "description": "Rustic porch: an entrance porch for the front door of a house \u2014 rough timber posts and beams on a log or stone base, plank floor. Overall about 4.1 x 2.9 x 3.3 m (width x depth x height). Stands on z = 0; place it against a facade with the door behind it. One of five porch styles (classical, craftsman, Victorian, rustic, modern) designed together.",
+  "tags": [
+   "porch",
+   "entrance",
+   "front door",
+   "veranda",
+   "house",
+   "portico"
+  ],
+  "source": "assistant",
+  "uid": "8c8e236701334bcb85311edd81150095",
+  "created": "2026-09-19T19:48:55"
+ }
+}

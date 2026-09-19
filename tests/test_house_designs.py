@@ -149,3 +149,14 @@ def test_labs_are_their_own_category_not_houses(pid):
         assert not validate(node)
     home = H.house_from_spec(D.LABS[pid][1]("Red brick", True))
     assert sum(len(r.furniture) for f in home.floors for r in f.rooms) > 20
+
+
+def test_the_porches_are_in_the_house_builder_catalogue():
+    from khervecad import house as H, library
+    from khervecad.model import validate
+    porches = [p for p in H.FURNITURE_CATALOG["Entrance / porch"]
+               if p.endswith("_porch")]
+    assert len(porches) == 5
+    for pid in porches:
+        assert library.PARTS[pid]["category"] == "Porches"
+        assert not validate(library.build_part(pid, {}))

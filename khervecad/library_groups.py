@@ -36,7 +36,7 @@ SECTIONS = [
     ]),
     ("Buildings & places", [
         ("House & home", "mdi.home-city-outline",
-         ("home", ["Finished houses", "Finished labs", "Houses",
+         ("home", ["Finished houses", "Finished labs", "Houses", "Porches",
                    "Home furniture",
                    "Room & furniture"])),
         ("City", "mdi.city-variant-outline",

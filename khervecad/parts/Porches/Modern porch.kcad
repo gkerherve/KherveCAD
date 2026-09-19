@@ -1,0 +1,243 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Modern porch",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "Silver",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Concrete plinth]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "width": 3600.0,
+         "depth": 2000.0,
+         "height": 200.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "Silver",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Floating step]",
+        "visible": true,
+        "params": {
+         "x": 400.0,
+         "y": -400.0,
+         "z": 0.0,
+         "width": 1600.0,
+         "depth": 400.0,
+         "height": 100.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1f1f1f",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "150, 3370"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Steel posts]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 150.0,
+           "z": 200.0,
+           "width": 80.0,
+           "depth": 80.0,
+           "height": 2600.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "WhiteSmoke",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Canopy]",
+        "visible": true,
+        "params": {
+         "x": -200.0,
+         "y": -500.0,
+         "z": 2800.0,
+         "width": 4000.0,
+         "depth": 2500.0,
+         "height": 220.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1f1f1f",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Canopy fascia]",
+        "visible": true,
+        "params": {
+         "x": -200.0,
+         "y": -530.0,
+         "z": 2800.0,
+         "width": 4000.0,
+         "depth": 30.0,
+         "height": 220.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#99cce6",
+       "alpha": 0.35,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Glass screen]",
+        "visible": true,
+        "params": {
+         "x": 3540.0,
+         "y": 250.0,
+         "z": 200.0,
+         "width": 20.0,
+         "depth": 1750.0,
+         "height": 2600.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1f1f1f",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Glass frame]",
+        "visible": true,
+        "params": {
+         "x": 3520.0,
+         "y": 230.0,
+         "z": 200.0,
+         "width": 60.0,
+         "depth": 40.0,
+         "height": 2600.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Modern porch",
+  "description": "Modern porch: an entrance porch for the front door of a house \u2014 a flat cantilevered canopy on slim supports, clean lines. Overall about 4.0 x 2.5 x 3.0 m (width x depth x height). Stands on z = 0; place it against a facade with the door behind it. One of five porch styles (classical, craftsman, Victorian, rustic, modern) designed together.",
+  "tags": [
+   "porch",
+   "entrance",
+   "front door",
+   "veranda",
+   "house",
+   "portico"
+  ],
+  "source": "assistant",
+  "uid": "14c14d2bac5f45d8a2d02877c6ca2220",
+  "created": "2026-09-19T19:48:55"
+ }
+}

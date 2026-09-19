@@ -782,6 +782,12 @@ into a new module and import.
                        **Cars** (Ferrari 288 GTO / F8 / SF90, Mercedes
                        G-Class, Mini Cooper S — its baked body meshes
                        ride along in `Cars/Mini Cooper S parts/`) and
+                       **Porches** (2026-09-19: classical, craftsman,
+                       Victorian, rustic, modern — designed by an
+                       assistant, kept in My Library, then shipped; in
+                       House & home and the House Builder's "Entrance /
+                       porch" catalogue: wall "N" of a paved porch room
+                       puts the back against the facade, steps out) and
                        **Tools** (57 hand tools, built by
                        `tools/hand_tools.py`). The loose top-level
                        "KCAD files" section was **retired** (Sep 2026,

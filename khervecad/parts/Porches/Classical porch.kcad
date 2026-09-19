@@ -1,0 +1,773 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Classical porch",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "Gainsboro",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Stone platform]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "width": 3600.0,
+         "depth": 2000.0,
+         "height": 450.0,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Step 1]",
+        "visible": true,
+        "params": {
+         "x": 900.0,
+         "y": -600.0,
+         "z": 0.0,
+         "width": 1800.0,
+         "depth": 300.0,
+         "height": 150.0,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Step 2]",
+        "visible": true,
+        "params": {
+         "x": 900.0,
+         "y": -300.0,
+         "z": 0.0,
+         "width": 1800.0,
+         "depth": 300.0,
+         "height": 300.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "White",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "300, 3300"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 300.0,
+           "z": 450.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Plinth]",
+            "visible": true,
+            "params": {
+             "x": -200.0,
+             "y": -200.0,
+             "z": 0.0,
+             "width": 400.0,
+             "depth": 400.0,
+             "height": 80.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Torus base]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 80.0,
+             "height": 120.0,
+             "radius_bottom": 180.0,
+             "radius_top": 180.0,
+             "segments": 40,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Tapered shaft]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 200.0,
+             "height": 2200.0,
+             "radius_bottom": 150.0,
+             "radius_top": 122.0,
+             "segments": 40,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Echinus]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 2400.0,
+             "height": 100.0,
+             "radius_bottom": 125.0,
+             "radius_top": 180.0,
+             "segments": 40,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Abacus]",
+            "visible": true,
+            "params": {
+             "x": -200.0,
+             "y": -200.0,
+             "z": 2500.0,
+             "width": 400.0,
+             "depth": 400.0,
+             "height": 80.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube [Entablature]",
+        "visible": true,
+        "params": {
+         "x": 50.0,
+         "y": 50.0,
+         "z": 3030.0,
+         "width": 3500.0,
+         "depth": 1950.0,
+         "height": 350.0,
+         "center": false
+        }
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 2000.0,
+         "z": 3380.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 2150.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Polygon [Pediment]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 -100.0,
+                 0.0
+                ],
+                [
+                 3700.0,
+                 0.0
+                ],
+                [
+                 1800.0,
+                 800.0
+                ]
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "DimGray",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 2050.0,
+         "z": 3380.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 2250.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Polygon [Roof deck]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 -250.0,
+                 -40.0
+                ],
+                [
+                 3850.0,
+                 -40.0
+                ],
+                [
+                 1800.0,
+                 890.0
+                ],
+                [
+                 1800.0,
+                 800.0
+                ],
+                [
+                 3700.0,
+                 0.0
+                ],
+                [
+                 -100.0,
+                 0.0
+                ],
+                [
+                 1800.0,
+                 800.0
+                ],
+                [
+                 1800.0,
+                 890.0
+                ]
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#545c66",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -250.0,
+         "y": 2050.0,
+         "z": 3340.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": -90.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 24.4,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "union",
+              "name": "tile_field [Slate tiles left]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "assign",
+                "name": "L =",
+                "visible": true,
+                "params": {
+                 "variable": "L",
+                 "value": "2250"
+                }
+               },
+               {
+                "type": "assign",
+                "name": "S =",
+                "visible": true,
+                "params": {
+                 "variable": "S",
+                 "value": "2250"
+                }
+               },
+               {
+                "type": "intersection",
+                "name": "Intersection",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "cube",
+                  "name": "Cube",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": -50.0,
+                   "width": "L",
+                   "depth": "S",
+                   "height": 150.0,
+                   "center": false
+                  }
+                 },
+                 {
+                  "type": "for_loop",
+                  "name": "For r",
+                  "visible": true,
+                  "params": {
+                   "variable": "r",
+                   "start": 0.0,
+                   "end": "floor(S / 210)",
+                   "step": 1.0,
+                   "values": ""
+                  },
+                  "children": [
+                   {
+                    "type": "for_loop",
+                    "name": "For c",
+                    "visible": true,
+                    "params": {
+                     "variable": "c",
+                     "start": -1.0,
+                     "end": "floor(L / 300)",
+                     "step": 1.0,
+                     "values": ""
+                    },
+                    "children": [
+                     {
+                      "type": "translate",
+                      "name": "Translate",
+                      "visible": true,
+                      "params": {
+                       "x": "c * 300 + (r % 2) * 150 + 5",
+                       "y": "r * 210",
+                       "z": 26.0
+                      },
+                      "children": [
+                       {
+                        "type": "rotate",
+                        "name": "Rotate",
+                        "visible": true,
+                        "params": {
+                         "x": -5.0,
+                         "y": 0.0,
+                         "z": 0.0
+                        },
+                        "children": [
+                         {
+                          "type": "cube",
+                          "name": "Cube [Tile]",
+                          "visible": true,
+                          "params": {
+                           "x": 0.0,
+                           "y": 0.0,
+                           "z": 0.0,
+                           "width": 290.0,
+                           "depth": 250.0,
+                           "height": 16.0,
+                           "center": false
+                          }
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 3600.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "mirror",
+          "name": "Mirror",
+          "visible": true,
+          "params": {
+           "x": 1.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": -250.0,
+             "y": 2050.0,
+             "z": 3340.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": -90.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 24.4,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "tile_field [Slate tiles right]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "assign",
+                    "name": "L =",
+                    "visible": true,
+                    "params": {
+                     "variable": "L",
+                     "value": "2250"
+                    }
+                   },
+                   {
+                    "type": "assign",
+                    "name": "S =",
+                    "visible": true,
+                    "params": {
+                     "variable": "S",
+                     "value": "2250"
+                    }
+                   },
+                   {
+                    "type": "intersection",
+                    "name": "Intersection",
+                    "visible": true,
+                    "params": {},
+                    "children": [
+                     {
+                      "type": "cube",
+                      "name": "Cube",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "z": -50.0,
+                       "width": "L",
+                       "depth": "S",
+                       "height": 150.0,
+                       "center": false
+                      }
+                     },
+                     {
+                      "type": "for_loop",
+                      "name": "For r",
+                      "visible": true,
+                      "params": {
+                       "variable": "r",
+                       "start": 0.0,
+                       "end": "floor(S / 210)",
+                       "step": 1.0,
+                       "values": ""
+                      },
+                      "children": [
+                       {
+                        "type": "for_loop",
+                        "name": "For c",
+                        "visible": true,
+                        "params": {
+                         "variable": "c",
+                         "start": -1.0,
+                         "end": "floor(L / 300)",
+                         "step": 1.0,
+                         "values": ""
+                        },
+                        "children": [
+                         {
+                          "type": "translate",
+                          "name": "Translate",
+                          "visible": true,
+                          "params": {
+                           "x": "c * 300 + (r % 2) * 150 + 5",
+                           "y": "r * 210",
+                           "z": 26.0
+                          },
+                          "children": [
+                           {
+                            "type": "rotate",
+                            "name": "Rotate",
+                            "visible": true,
+                            "params": {
+                             "x": -5.0,
+                             "y": 0.0,
+                             "z": 0.0
+                            },
+                            "children": [
+                             {
+                              "type": "cube",
+                              "name": "Cube [Tile]",
+                              "visible": true,
+                              "params": {
+                               "x": 0.0,
+                               "y": 0.0,
+                               "z": 0.0,
+                               "width": 290.0,
+                               "depth": 250.0,
+                               "height": 16.0,
+                               "center": false
+                              }
+                             }
+                            ]
+                           }
+                          ]
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 1800.0,
+         "y": 2050.0,
+         "z": 4290.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Ridge]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 2250.0,
+             "radius_bottom": 70.0,
+             "radius_top": 70.0,
+             "segments": 16,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Classical porch",
+  "description": "Classical porch: an entrance porch for the front door of a house \u2014 a portico with a stone platform and steps, white columns under an entablature and pediment. Overall about 4.1 x 2.6 x 4.4 m (width x depth x height). Stands on z = 0; place it against a facade with the door behind it. One of five porch styles (classical, craftsman, Victorian, rustic, modern) designed together.",
+  "tags": [
+   "porch",
+   "entrance",
+   "front door",
+   "veranda",
+   "house",
+   "portico"
+  ],
+  "source": "assistant",
+  "uid": "78b716aad4634c519b8de00db35227b1",
+  "created": "2026-09-19T19:48:55"
+ }
+}
