@@ -102,8 +102,17 @@ def main():
     from .style import apply_style
     apply_style(app)
 
+    # the start-up picture: the window's modules take seconds to load
+    from .splash import Splash
+    splash = Splash()
+    splash.show()
+    splash.step("Loading the modelling engine")
     from .mainwindow import MainWindow
+    splash.step("Building the window")
     win = MainWindow()
+    splash.step("Opening the workspace")
     win.show()
     win.start_mcp_if_enabled()
+    splash.step("Ready")
+    splash.finish(win)
     sys.exit(app.exec_())

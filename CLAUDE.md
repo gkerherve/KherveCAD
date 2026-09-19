@@ -48,6 +48,12 @@ into a new module and import.
                        The log now APPENDS per session (it was truncated
                        at every launch, so a crash was gone by the time
                        it was reported), rotating past `CRASH_LOG_LIMIT`.
+  - `splash.py`      — the **start-up picture** (a painted
+                       `QSplashScreen`: icon, name, version, a status
+                       line and progress bar). `app.main` shows it
+                       BEFORE importing mainwindow (the slow part) and
+                       calls `step()` per `STEPS` entry, then
+                       `finish(win)`. Painted, so no data file ships.
   - `style.py`       — token-driven QSS themes (same template family
                        as KhervePaint; theme persists via QSettings).
   - `icons.py`       — qtawesome MDI icon wrapper with fallback.
