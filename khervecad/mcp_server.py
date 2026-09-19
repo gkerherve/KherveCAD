@@ -463,6 +463,11 @@ helices, strands and hairpins, but NOT folded — say so, and mention the \
 clash count it returns. Cartoon style by default; list_proteins has \
 presets, styles and colours.
 
+Gravity — drop_parts lets parts fall onto the floor or each other and \
+tip over onto a stable face: put things ON a table, stack, lay out a \
+print bed, or find out whether a design falls over — instead of \
+computing z and tilts by hand.
+
 Posing — say WHERE, not the angles: `reach` puts a figure's hand / \
 foot / head, or the tip of a part inside nested joint nodes (robot \
 arm, lamp, crane), on a point (a probe_surface hit, or target_node = \

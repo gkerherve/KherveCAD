@@ -1140,6 +1140,26 @@ class McpToolExecutor:
                               "and were clamped to them.")
         return result
 
+    def _t_drop_parts(self, params) -> dict:
+        from . import physics
+        ids = params.get("node_ids")
+        if ids:
+            nodes = self._nodes(ids)
+        else:
+            from . import mates
+            scope = self._w.builder.isolated_component() \
+                if hasattr(self._w.builder, "isolated_component") else None
+            nodes = [n for n in mates.parts(self._model, scope)
+                     if n.visible]
+        if not nodes:
+            raise ToolError("Nothing to drop — give node_ids.")
+        report = physics.apply(
+            self._model, nodes,
+            floor=float(params.get("floor") or 0.0),
+            settle_parts=params.get("settle", True) is not False,
+            gap=float(params.get("gap") or 0.0), env=self._env())
+        return {"dropped": report, "unit": self._unit()}
+
     def _t_reach(self, params) -> dict:
         from . import ik
         node = self._node(params.get("node_id"))

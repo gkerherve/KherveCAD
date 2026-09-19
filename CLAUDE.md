@@ -2624,6 +2624,20 @@ into a new module and import.
                        each strut's radius varies by < 0.1 % and the result
                        is welded at 4 digits (`weld_tiny`, what codegen
                        writes anyway) — watertight. `MAX_STRUTS` 20000.
+  - `physics.py`     — **drop & settle** (2026-09-19; no pybullet
+                       wheel for Python 3.14): lowest part first, it TIPS
+                       quasi-statically (support = convex hull points at
+                       the floor; COM outside that footprint -> roll over
+                       the nearest support edge by the angle that brings
+                       the next hull vertex down; a COM balanced exactly
+                       over a point or line still tips — unstable), then
+                       falls until Manifold rays (down from it, up from
+                       the parts placed) meet something. The move becomes
+                       the part's placement L' = A^-1 M A L
+                       (`mates.ensure_part` makes it movable). Tree ▸
+                       Drop (gravity); MCP `drop_parts`. Tipping is on the
+                       floor only — a part resting on another does not
+                       slide or roll off it.
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.

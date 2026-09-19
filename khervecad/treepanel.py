@@ -678,6 +678,19 @@ class ObjectTree(QTreeWidget):
         painter.restore()
         super().drawBranches(painter, rect, index)   # expand arrow on top
 
+    def _drop(self, roots):
+        """Tree right-click ▸ Drop (gravity): physics.apply."""
+        from . import anchors, physics
+        win = self.window()
+        report = physics.apply(self.model, roots,
+                               env=anchors.doc_env(self.model))
+        if hasattr(win, "statusBar"):
+            win.statusBar().showMessage(
+                "Dropped: " + ", ".join(
+                    f"{r['name']} fell {r['fell']:g}"
+                    + (f", tipped {r['tipped_deg']:g}°"
+                       if r["tipped_deg"] else "") for r in report), 8000)
+
     def _pick_color(self, nodes):
         """Colour the selected objects with OpenSCAD's color()."""
         from PyQt5.QtWidgets import QColorDialog
@@ -944,6 +957,11 @@ class ObjectTree(QTreeWidget):
         if sculpt is not None and hasattr(win, "start_sculpt"):
             menu.addAction(icons.icon("mdi.brush"), "Sculpt...",
                            lambda: win.start_sculpt(sculpt))
+        if hasattr(win, "view3d"):
+            menu.addAction(
+                icons.icon("mdi.arrow-down-bold-box-outline"),
+                "Drop (gravity)",
+                lambda: self._drop(roots))
         from . import ik_ui
         if len(roots) == 1 and hasattr(win, "view3d") and \
                 ik_ui.can_reach(nodes[0]):

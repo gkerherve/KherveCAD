@@ -881,6 +881,34 @@ TOOLS = [
         }),
     },
     {
+        "name": "drop_parts",
+        "description": (
+            "Gravity: parts fall onto the floor (z = floor) or onto the "
+            "parts below them, and with settle (default) TIP OVER like "
+            "real objects until they rest stably — a cone rolls onto "
+            "its side, a leaning post falls, a box stays. Use it to put "
+            "things on a table, stack bricks, lay parts on a print bed "
+            "or check whether a design stands up. Lowest part first; "
+            "writes each part's placement (x y z rx ry rz), one undo "
+            "step. Returns per part how far it fell and how far it "
+            "tipped."
+        ),
+        "input_schema": _obj({
+            "node_ids": dict(_IDS, description=(
+                "Parts to drop (default: every visible part in the "
+                "assembly / the open Object).")),
+            "floor": {"type": "number",
+                      "description": "Floor height (default 0)."},
+            "settle": {"type": "boolean",
+                       "description": "Let parts tip over onto a stable "
+                                      "face (default true). False only "
+                                      "slides them straight down."},
+            "gap": {"type": "number",
+                    "description": "Clearance to leave under each part "
+                                   "(default 0)."},
+        }),
+    },
+    {
         "name": "reach",
         "description": (
             "Inverse kinematics: move a hand, foot, head or tool TIP to a "
