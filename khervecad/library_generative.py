@@ -7,10 +7,12 @@ arms): a studless beam of n holes, a cross axle of n units, a friction
 pin, and a gear (module 1 — 8, 16, 24 or 40 teeth, which is exactly
 Technic's spacing) with an axle hole.
 
-Generative panels, seeded so they are the same every time: a Voronoi
+Generative panels, seeded so they are the same every time (the maze's
+default seed 0 draws a NEW maze at every insert instead): a Voronoi
 panel (cells from seeded points by Bowyer–Watson Delaunay, walls by
 insetting each cell), a maze (recursive backtracker on a grid, walls as
-blocks) and a Hilbert-curve plate (a single raised path). Their cells,
+blocks — optionally rounded, and optionally CHANGING: several seeded
+mazes on one slider, walls rising and falling between them) and a Hilbert-curve plate (a single raised path). Their cells,
 walls and paths are written out as ordinary polygons, lines and cubes,
 so the result is editable.
 
@@ -263,33 +265,156 @@ def maze_walls(cols, rows, seed):
 
 
 MAZE_SIZES = {"10 × 10 cells": dict(cols=10, rows=10, cell=8.0, wall=1.6,
-                                    height=6.0, base=2.0, seed=3)}
+                                    height=6.0, base=2.0, seed=0,
+                                    rounding=0.0, mazes=1)}
+MAX_MAZES = 12
 
 
-def build_maze(dims):
-    """A printable maze: a base plate and walls between cells a
-    backtracker left closed; the entrance and exit are open."""
-    p = _d(dims, MAZE_SIZES)
-    cols, rows = max(int(p["cols"]), 2), max(int(p["rows"]), 2)
-    s, wall, h, base = p["cell"], p["wall"], p["height"], p["base"]
-    opened = maze_walls(cols, rows, p["seed"])
-    walls = _group("Walls")
-    W, D = cols * s + wall, rows * s + wall
+def new_seed():
+    """A fresh maze: seed 0 asks for one never seen before."""
+    return random.SystemRandom().randrange(1, 1_000_000)
+
+
+def _maze_segments(cols, rows, opened):
+    """The closed walls of one maze as {(axis, line, index)}: axis "x" is
+    a wall between (x, y) and (x + 1, y) — on line x + 1 at row y — and
+    "y" one between (x, y) and (x, y + 1)."""
+    closed = set()
     for x in range(cols):
         for y in range(rows):
             if x + 1 < cols and frozenset(((x, y), (x + 1, y))) not in opened:
-                walls.add(_cube("Wall", (x + 1) * s, y * s, base, wall,
-                                s + wall, h))
+                closed.add(("x", x + 1, y))
             if y + 1 < rows and frozenset(((x, y), (x, y + 1))) not in opened:
-                walls.add(_cube("Wall", x * s, (y + 1) * s, base, s + wall,
-                                wall, h))
+                closed.add(("y", y + 1, x))
+    return closed
+
+
+def maze_runs(cols, rows, seeds):
+    """The walls of a maze that changes through one maze per seed:
+    [(axis, line, first, last, on)] where *on* says, per maze, whether
+    the wall stands. Neighbouring segments on one line that stand in
+    the same mazes join into ONE run — one box, so a rounded wall has no
+    dip at every cell."""
+    frames = [_maze_segments(cols, rows, maze_walls(cols, rows, s))
+              for s in seeds]
+    pattern = {}
+    for i, closed in enumerate(frames):
+        for seg in closed:
+            pattern.setdefault(seg, [0] * len(frames))[i] = 1
+    runs = []
+    for (axis, line, index), on in sorted(pattern.items()):
+        last = runs[-1] if runs else None
+        if last and last[:2] == (axis, line) and last[3] == index - 1 \
+                and last[4] == on:
+            runs[-1] = (axis, line, last[2], index, on)
+        else:
+            runs.append((axis, line, index, index, on))
+    return [(a, ln, i, j, tuple(on)) for a, ln, i, j, on in runs]
+
+
+def _block(name, x, y, z, w, d, h, r):
+    """A wall block: a cube, or a box with every edge rounded."""
+    if r <= 0.01:
+        return _cube(name, x, y, z, w, d, h)
+    return CadNode("rounded_box", name, dict(
+        x=x, y=y, z=z, width=w, depth=d, height=h,
+        radius=min(r, w / 2, d / 2, h / 2), center=False, segments=8))
+
+
+def maze_variables(prefix, count):
+    """The Customizer variables that drive a changing maze: a ``<prefix>_t``
+    slider (0 → one maze per step; play sweeps through them) and the
+    hidden maze index and eased blend it feeds."""
+    t, k, u = (f"{prefix}_t", f"{prefix}_k", f"{prefix}_u")
+    return [
+        CadNode("assign", t, dict(
+            variable=t, value="0", options=f"0:0.05:{count}",
+            description="Maze morph — press play and the walls rise and "
+                        "fall into the next maze", group="Maze · Motion")),
+        CadNode("assign", k, dict(variable=k,
+                                  value=f"floor({t}) % {count}",
+                                  group="Hidden")),
+        CadNode("assign", u, dict(
+            variable=u, value=f"({t} - floor({t})) * ({t} - floor({t}))"
+                              f" * (3 - 2 * ({t} - floor({t})))",
+            group="Hidden")),
+    ]
+
+
+def build_maze(dims, prefix="maze", variables=True):
+    """A printable maze: a base plate and walls between cells a
+    backtracker left closed; the entrance and exit are open.
+
+    Seed 0 (the default) draws a new maze every time; the seed used is
+    in the part's name, so typing it back rebuilds that maze.
+    ``rounding`` > 0 rounds every wall edge (each straight run is one
+    rounded box, sunk into the base so no groove shows at its foot).
+    ``mazes`` ≥ 2 makes it CHANGE: one maze per seed from ``seed`` on,
+    every wall scaled by how much it stands at ``<prefix>_t``, so playing
+    that slider raises and lowers walls into each maze in turn."""
+    p = _d(dims, MAZE_SIZES)
+    cols, rows = max(int(p["cols"]), 2), max(int(p["rows"]), 2)
+    s, wall, h, base = p["cell"], p["wall"], p["height"], p["base"]
+    count = min(max(int(p.get("mazes") or 1), 1), MAX_MAZES)
+    r = max(min(float(p.get("rounding") or 0.0), wall / 2, base / 2, h / 2),
+            0.0)
+    seed = int(p["seed"]) or new_seed()
+    # sunk into the base: hides a rounded foot, and a lowered wall
+    sink = 2 * r if r > 0.01 else (min(0.2, base / 2) if count > 1 else 0.0)
+    W, D = cols * s + wall, rows * s + wall
+    k, u = f"{prefix}_k", f"{prefix}_u"
+    walls = _group("Walls")
+    for axis, line, i, j, on in maze_runs(cols, rows,
+                                          range(seed, seed + count)):
+        if axis == "x":
+            x, y, w, d = line * s, i * s, wall, (j - i + 1) * s + wall
+        else:
+            x, y, w, d = i * s, line * s, (j - i + 1) * s + wall, wall
+        if all(on):
+            walls.add(_block("Wall", x, y, base - sink, w, d, h + sink, r))
+            continue
+        pattern = "[" + ", ".join(map(str, on)) + "]"
+        rise = CadNode("scale", "Rise", dict(
+            x=1.0, y=1.0, z=f"max(0.001, {pattern}[{k}] * (1 - {u}) + "
+                            f"{pattern}[({k} + 1) % {count}] * {u})"))
+        rise.add(_block("Wall", 0, 0, 0, w, d, h + sink, r))
+        walls.add(_move(rise, x=x, y=y, z=base - sink))
     border = _group("Border",
-                    _cube("South", s, 0, base, W - s, wall, h),
-                    _cube("North", 0, D - wall, base, W - s, wall, h),
-                    _cube("West", 0, 0, base, wall, D, h),
-                    _cube("East", W - wall, 0, base, wall, D, h))
-    return _paint(_group("Maze", _cube("Base", 0, 0, 0, W, D, base), border,
-                         walls), dims, "Blue")
+                    _block("South", s, 0, base - sink, W - s, wall,
+                           h + sink, r),
+                    _block("North", 0, D - wall, base - sink, W - s, wall,
+                           h + sink, r),
+                    _block("West", 0, 0, base - sink, wall, D, h + sink, r),
+                    _block("East", W - wall, 0, base - sink, wall, D,
+                           h + sink, r))
+    maze = _group(("Changing maze" if count > 1 else "Maze")
+                  + f" (seed {seed})",
+                  _block("Base", 0, 0, 0, W, D, base, r), border, walls)
+    if count > 1 and variables:
+        for n, var in enumerate(maze_variables(prefix, count)):
+            maze.add(var, n)
+    return _paint(maze, dims, "Blue")
+
+
+def insert_maze(model, dims):
+    """Library insert: a still maze is one Object; a changing one also
+    puts its slider among the document's variables (``maze_t``, then
+    ``maze2_t``…) so the Customizer's play — or play_motion — runs it."""
+    from . import library_motion
+    p = _d(dims, MAZE_SIZES)
+    count = min(max(int(p.get("mazes") or 1), 1), MAX_MAZES)
+    dims = dict(dims, seed=int(p["seed"]) or new_seed())
+    prefix = "maze"
+    if count > 1:
+        prefix = library_motion.free_prefix(model, "maze")
+        holder = CadNode("union", "Variables")
+        for var in maze_variables(prefix, count):
+            holder.add(var)
+        library_motion.place(model, holder)
+    node = build_maze(dims, prefix=prefix, variables=False)
+    model.root.add(node)
+    model.structure_changed.emit()
+    return [model.enclose_as_part(node)]
 
 
 def hilbert(order):
@@ -360,7 +485,9 @@ PARTS = {
                       [("cols", "Columns"), ("rows", "Rows"),
                        ("cell", "Cell size"), ("wall", "Wall"),
                        ("height", "Wall height"), ("base", "Base"),
-                       ("seed", "Seed")]),
+                       ("seed", "Seed (0 = new maze each time)"),
+                       ("rounding", "Rounding"),
+                       ("mazes", "Mazes (2+ = changing)")]),
     "gen_hilbert": _spec("Hilbert-curve plate", GENERATIVE, HILBERT_SIZES,
                          build_hilbert,
                          [("order", "Order"), ("size", "Size"),
@@ -368,4 +495,12 @@ PARTS = {
                           ("base", "Base")]),
 }
 
-COUNT_FIELDS = {"holes", "units", "cells", "seed", "cols", "rows", "order"}
+PARTS["gen_maze"].update(
+    insert=insert_maze,
+    insert_note="Added as one Object. With mazes >= 2 it is a changing "
+                "maze: its maze_t slider (a document variable, prefixed "
+                "for a second copy) morphs it from maze to maze — "
+                "play_motion sets it running.")
+
+COUNT_FIELDS = {"holes", "units", "cells", "seed", "cols", "rows", "order",
+                "mazes"}

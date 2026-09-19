@@ -203,6 +203,14 @@ into a new module and import.
                        and seeded Voronoi panel (Bowyer–Watson `delaunay`,
                        cells by half-plane clipping, inset by the wall),
                        maze (backtracker spanning tree) and Hilbert plate.
+                       The maze's seed 0 (default) draws a NEW maze per
+                       insert (the seed lands in its name); straight runs
+                       join into one wall (`maze_runs`); `rounding` makes
+                       every block a rounded box sunk 2r into the base;
+                       `mazes` >= 2 is a CHANGING maze — `insert_maze`
+                       adds a `maze_t` slider (Customizer Motion group,
+                       play_motion finds it) and each wall scales in z by
+                       how much it stands between maze k and k+1.
   - `textured.py`    — `textured` node: a cylinder or panel whose surface
                        carries ribs / waves / diamonds / bricks / hexes /
                        dimples / checkers (`height` 0..1 over u, v mm),
