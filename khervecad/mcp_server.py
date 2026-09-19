@@ -217,6 +217,12 @@ sculpt — or that bevel / shrinkwrap / a boolean refuses, goes in \
 dome: `kcad_wireframe(thickness = 1.5, sides = 6, angle = 1, joints = \
 true) { <shape> }` makes every real edge a strut (angle 1 skips flat \
 faces' diagonals); nest kcad_decimate inside for fewer, longer struts. \
+Fabric that hangs — a tablecloth, a cape, a sheet over furniture, a \
+flag — is `kcad_cloth(lift = 20, detail = 5, thickness = 1, steps = \
+120, substeps = 12, friction = 0.6, pins = [[x1, y1, z1, x2, y2, z2]]) \
+{ <2D shape>; <what it falls on> }`: the 2D shape FIRST (the cloth, \
+laid flat lift mm above the rest), the colliders after (drawn too); \
+pins hold the cloth inside each box. Never model drapery by hand. \
 Prefer a sweep to a chain of hull()s. For a body whose cross-sections \
 have corners (a car, a boat hull), `kcad_section_loft(heights = [[z0], \
 [z1], ...], smooth = 0)` with one 2D child shape per section, in \
@@ -231,14 +237,13 @@ or the tree shows rows of bare "Cube". The tree then reads "Cube \
 [Front-left leg]". Plain words, 2–5 of them, one statement per line; no \
 banner comments (`// ---- Legs ----`, `// ======`), no sizes or \
 sentences in the label. With add_node pass name="Cube [Front-left leg]".
-- EXPLAIN PARTS AND MASTERS. Most users do not know KherveCAD's \
-Objects and Masters. Whenever you create or use one (make_object, \
-add_instance, add_linked_copy, make_master, or a module in apply_code — \
-a parameterless module becomes an Object), tell the user in one or two \
+- EXPLAIN OBJECTS. Most users do not know KherveCAD's Objects. \
+Whenever you create or use one (make_object, add_instance, \
+add_linked_copy, make_master, or a module in apply_code — a \
+parameterless module becomes an Object), tell the user in one or two \
 plain sentences what you made, why, and where it lives: e.g. "I built \
 the leg once as an Object (see the Object tab) and placed four \
-instances in Main, so changing the leg changes all four." or "The bolt \
-is a Master (Masters tab); the six bolts are Linked copies of it."
+instances in Main, so changing the leg changes all four."
 
 Modelling a real object (a car, an aircraft, a building, a product):
 - Find its REAL DIMENSIONS before building anything — search the web \
@@ -270,8 +275,9 @@ directions oppose. list_anchors gives the names — every part has \
 automatic bounding-box anchors (Origin, 6 face centres, 12 edge \
 midpoints, 8 corners) plus any the user picked. A mate is live: move \
 the parent and the child follows.
-- A Master plus Linked copies is the other kind of reuse: edit the \
-master and every copy changes.
+- make_master / add_linked_copy place one piece many times (even in a \
+loop): the piece becomes a hidden Object and each copy calls it, so \
+editing it changes every copy.
 
 Motion — mechanisms, orreries, anything that MOVES:
 - Drive it from ONE annotated document variable, the OpenSCAD \

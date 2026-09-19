@@ -67,7 +67,7 @@ OPERATION_GROUPS = [
                 "subdivide", "decimate", "remesh", "wireframe", "shell",
                 "sculpt",
                 "shrinkwrap"]),
-    ("character", ["symmetry", "joint", "paint", "hair_cap"]),
+    ("character", ["symmetry", "joint", "paint", "hair_cap", "cloth"]),
     ("logic", ["for_loop", "while_loop", "if_else", "pattern",
                "intersection_for", "let"]),
 ]

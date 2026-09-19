@@ -122,6 +122,26 @@ NODE_TYPES = {
         schema=[("voxel", "Voxel size (mm)", "float", 0.01, 1e4),
                 ("snap", "Snap onto the original surface", "bool",
                  None, None)]),
+    "cloth": dict(
+        label="Cloth (drape)", category=OPERATION,
+        icon="mdi.tshirt-crew",
+        params=dict(lift=20.0, detail=5.0, thickness=1.0, steps=120,
+                    substeps=12, offset=0.5, friction=0.6, floor=True,
+                    pins=[], show_target=True),
+        schema=[("lift", "Start above the colliders (mm)", "float",
+                 0.0, 1e5),
+                ("detail", "Cloth resolution (mm)", "float", 0.2, 1e4),
+                ("thickness", "Cloth thickness (mm)", "float", 0.01, 1e3),
+                ("steps", "Frames to simulate", "int", 1, 2000),
+                ("substeps", "Substeps a frame (stiffer)", "int", 1, 64),
+                ("offset", "Gap to the colliders (mm)", "float", 0.0, 1e3),
+                ("friction", "Friction (0 slides .. 1 sticks)", "float",
+                 0.0, 1.0),
+                ("floor", "Ground under the colliders", "bool", None, None),
+                ("pins", "Pinned boxes (two corners each)", "rows",
+                 ["X1", "Y1", "Z1", "X2", "Y2", "Z2"], None),
+                ("show_target", "Draw the colliders too", "bool",
+                 None, None)]),
     "wireframe": dict(
         label="Wireframe (struts)", category=OPERATION,
         icon="mdi.vector-polyline",
@@ -233,7 +253,7 @@ LEAVES = frozenset({"polyhedron", "loft", "human"})
 WRAPPERS = frozenset({"sweep", "section_loft", "blend", "bend", "twist",
                       "taper", "lattice", "subdivide", "fillet", "shell",
                       "sculpt", "hair_cap", "decimate", "shrinkwrap",
-                      "bevel", "remesh", "wireframe"})
+                      "bevel", "remesh", "wireframe", "cloth"})
 
 #: wrappers whose surface is computed here and baked into the program,
 #: with their helper module's parameters (besides points and faces)
@@ -249,6 +269,9 @@ _BAKED = {
     "subdivide": [("levels", 1)],
     "decimate": [("ratio", 0.5), ("tolerance", 0)],
     "remesh": [("voxel", 1), ("snap", True)],
+    "cloth": [("lift", 20), ("detail", 5), ("thickness", 1), ("steps", 120),
+              ("substeps", 12), ("offset", 0.5), ("friction", 0.6),
+              ("floor", True), ("pins", []), ("show_target", True)],
     "wireframe": [("thickness", 1), ("sides", 6), ("angle", 1),
                   ("joints", True)],
     "bevel": [("width", 1), ("segments", 4), ("profile", 0.5),
@@ -384,13 +407,14 @@ for _t, _args in _BAKED.items():
         "    polyhedron(points = points, faces = faces, convexity = 10);\n}")
 
 
-# a shrinkwrap draws its target (children 1..) as well as the baked
-# wrap, as Blender leaves the target object in the scene
-HELPERS["shrinkwrap"] = HELPERS["shrinkwrap"].replace(
-    "    polyhedron(points = points, faces = faces, convexity = 10);\n}",
-    "    polyhedron(points = points, faces = faces, convexity = 10);\n"
-    "    if (show_target && $children > 1) children([1 : $children - 1]);"
-    "\n}")
+# a shrinkwrap / cloth draws its target (children 1..) as well as the
+# baked result, as Blender leaves the target object in the scene
+for _t in ("shrinkwrap", "cloth"):
+    HELPERS[_t] = HELPERS[_t].replace(
+        "    polyhedron(points = points, faces = faces, convexity = 10);\n}",
+        "    polyhedron(points = points, faces = faces, convexity = 10);\n"
+        "    if (show_target && $children > 1) "
+        "children([1 : $children - 1]);\n}")
 
 
 def preamble(root) -> list:
@@ -518,6 +542,24 @@ def _compute(node, env) -> list:
                            pose=[[row[0]] + [mesh.rv(v, env) for v in row[1:4]]
                                  for row in p.get("pose") or []
                                  if isinstance(row, list) and len(row) == 4])
+    if t == "cloth":
+        from . import cloth
+        ops = mesh._operands(node, env)
+        if not ops:
+            return []
+        outlines = mesh.collect_outlines(ops[0][0], ops[0][1])
+        colliders = [tri for child, scope in ops[1:] for tri, _c, _s in
+                     mesh._tess(child, scope, None, frozenset(), False)]
+        pins = []
+        for row in p.get("pins") or []:
+            if isinstance(row, list) and len(row) == 6:
+                v = [mesh.rv(x, env) for x in row]
+                pins.append([v[:3], v[3:]])
+        return cloth.drape(
+            outlines, colliders, num("lift", 20.0), num("detail", 5.0),
+            num("thickness", 1.0), int(num("steps", 120.0)),
+            int(num("substeps", 12.0)), num("offset", 0.5),
+            num("friction", 0.6), pins or None, bool(p.get("floor", True)))
     if t == "shrinkwrap":
         from . import deform, shrinkwrap
         parts = [[tri for tri, _c, _s in
@@ -747,12 +789,13 @@ def _b_baked(kind):
                                if isinstance(row, list) and len(row) == width] \
                     if isinstance(value, list) else []
             elif key in ("offsets", "path", "heights", "strokes", "warp",
-                         "within", "region"):
+                         "within", "region", "pins"):
                 params[key] = ([[_num(v) for v in row] for row in value
                                 if isinstance(row, list)]
                                if isinstance(value, list)
                                else [list(r) for r in defaults[key]])
-            elif key in ("closed", "show_target", "snap", "joints"):
+            elif key in ("closed", "show_target", "snap", "joints",
+                         "floor"):
                 params[key] = value is True or value == "true"
             elif key == "which":
                 from .bevel import EDGES
@@ -765,6 +808,8 @@ def _b_baked(kind):
                                  ("subdivide", "levels"),
                                  ("bevel", "segments"),
                                  ("wireframe", "sides"),
+                                 ("cloth", "steps"),
+                                 ("cloth", "substeps"),
                                  ("sweep", "smooth"),
                                  ("section_loft", "smooth")):
                 try:
@@ -901,6 +946,17 @@ def _check_baked(node, env):
                     "fastest, then y, then z")
     if t == "sculpt":
         return _check_sculpt(p, env)
+    if t == "cloth":
+        from . import mesh
+        ops = mesh._operands(node, env)
+        if not ops or not mesh.collect_outlines(ops[0][0], ops[0][1]):
+            return ("a cloth drapes its FIRST child, a flat 2D shape (a "
+                    "square tablecloth, a circle, a cape's outline) — "
+                    "put one first, then what it falls on")
+        for number, row in enumerate(p.get("pins") or []):
+            if not isinstance(row, list) or len(row) != 6:
+                return (f"pin {number} needs 6 values: two corners "
+                        "x1 y1 z1 x2 y2 z2")
     if t == "wireframe":
         from . import csg, mesh, wireframe
         if not csg.available():
@@ -1097,8 +1153,8 @@ def tess(node, env, color, sel, selected):
         except Exception:                  # validation has flagged it
             tris = []
         out = mesh._emit(tris, color, selected)
-        if node.type == "shrinkwrap" and node.params.get("show_target",
-                                                         True):
+        if node.type in ("shrinkwrap", "cloth") and \
+                node.params.get("show_target", True):
             for child, scope in mesh._operands(node, env)[1:]:
                 out.extend(mesh._tess(child, scope, color, sel, selected))
             return out

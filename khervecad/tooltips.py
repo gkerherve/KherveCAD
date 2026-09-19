@@ -393,6 +393,18 @@ TIPS = {
          "Or within: a distance in mm the surface may move instead — "
          "0.05 is invisible on a print."],
         "A closed solid stays closed, so it still prints."),
+    "cloth": (
+        "Cloth (drape)",
+        "Drops a sheet of cloth over things and lets it settle: a "
+        "tablecloth over a table, a cape over shoulders, a throw over a "
+        "sofa, a flag hanging from pinned corners.",
+        [_SELECTION + " Select the cloth's 2D shape FIRST (a square, a "
+         "circle, an outline), then what it falls on (Ctrl+click).",
+         "Click Cloth.",
+         "Friction: how much it clings; Substeps: how little it "
+         "stretches; Pinned boxes hold the cloth where it starts (a "
+         "flag's pole side)."],
+        "More frames if it has not finished falling."),
     "wireframe": (
         "Wireframe (struts)",
         "Turns a part's edges into round printable struts with balls at "

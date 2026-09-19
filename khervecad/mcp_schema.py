@@ -103,7 +103,7 @@ WRAP_TYPES = [
     "while_loop", "if_else", "component", "symmetry", "joint", "sweep",
     "section_loft", "blend", "bend", "twist", "taper", "lattice", "subdivide",
     "pattern", "shell", "sculpt", "decimate", "shrinkwrap", "bevel",
-    "remesh", "wireframe",
+    "remesh", "wireframe", "cloth",
 ]
 
 
@@ -1097,21 +1097,23 @@ TOOLS = [
     {
         "name": "make_master",
         "description": (
-            "Move a node into the Masters store and leave a Linked copy "
-            "where it was. Editing the master then updates every copy — "
-            "the other kind of reuse, for repeated geometry rather than "
-            "named parts."
+            "Define a node once and place it by reference: it becomes a "
+            "hidden Object (the Object tab) and a Linked copy of it takes "
+            "its place — even inside a loop. Editing the Object then "
+            "updates every copy. (The Masters tab was retired; this now "
+            "makes an Object.)"
         ),
         "input_schema": _obj({"node_id": _ID}, ["node_id"]),
     },
     {
         "name": "add_linked_copy",
         "description": (
-            "Add another Linked copy of a master, with its own "
-            "placement."
+            "Add another Linked copy of a named node or Object, with its "
+            "own placement."
         ),
         "input_schema": _obj({
-            "node_id": dict(_ID, description="The master to copy."),
+            "node_id": dict(_ID, description="The node or Object to "
+                            "copy."),
             "params": _PARAMS,
         }, ["node_id"]),
     },

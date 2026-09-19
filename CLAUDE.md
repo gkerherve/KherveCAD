@@ -594,7 +594,7 @@ into a new module and import.
                        examples (parametric box, L-bracket, bolt & nut,
                        bolted flange joint, pillow block, spur gear,
                        meshing gear pair, ball bearing, V-belt pulley,
-                       threaded rod, fan impeller, a **Masters +
+                       threaded rod, fan impeller, an **Object +
                        Linked-copy bolt circle**) — several placing
                        library fasteners round a bolt circle by for-loop
                        — plus **Showcase** examples (orientation cubes,
@@ -2170,12 +2170,13 @@ into a new module and import.
                        jumps to a wrapped modifier's properties.
                        Context menu: hide/show, Apply operation, group/
                        ungroup, rename, duplicate, delete, **Make
-                       Object**, **Make Master**, and for a single
+                       Object**, and for a single
                        Object: Edit in Object tab (also double-click),
                        Anchors (add-by-pick / set origin / remove) and
                        Attach/Detach; drag & drop reparent/reorder.
-                       Tab order: **Main | Object | Masters | Variables
-                       | Code**. The **Variables** sheet is scoped
+                       Tab order: **Main | Object | Variables | Code**
+                       (the Masters tab was retired 2026-09-19 — see
+                       `retire_masters`). The **Variables** sheet is scoped
                        (Global vs per-Object, following the active
                        Object); the Code tab — an editable OpenSCAD view
                        with syntax highlighting, a **line-number
@@ -2638,6 +2639,36 @@ into a new module and import.
                        Drop (gravity); MCP `drop_parts`. Tipping is on the
                        floor only — a part resting on another does not
                        slide or roll off it.
+  - `cloth.py`       — **Cloth** (Blender's Cloth, 2026-09-19; Character
+                       family, baked `kcad_cloth(lift=, detail=,
+                       thickness=, steps=, substeps=, offset=, friction=,
+                       floor=, pins=, show_target=) { 2D shape; colliders
+                       }`). The cloth is the FIRST child as a 2D shape,
+                       meshed as ONE sheet (`sheet`: grid triangles inside
+                       the outline, border vertices snapped onto it) — a
+                       thin 3D plate failed: its skins meet only at the
+                       rim and the top one fell through the bottom — and
+                       thickened after (`thicken`: both skins + rim,
+                       watertight). Position-based dynamics with SMALL
+                       STEPS (each frame `substeps` substeps of one pass;
+                       many passes of one step let a sheet hang 2-6x
+                       long), constraints Gauss-Seidel by EDGE COLOUR
+                       (`colour_edges`: each colour one exact numpy pass;
+                       Jacobi stretched 4x), collisions against a
+                       winding-number voxel grid grown by the offset
+                       (`Colliders.close`, one lookup) then pushed back
+                       along the vertex's OWN PATH (Manifold ray, the face
+                       it came through — the nearest face threw a vertex
+                       by a table's edge sideways and the cloth slid off),
+                       velocity capped at half an edge per substep, and
+                       Macklin's position-based static/kinetic friction
+                       with a contact band (a resting vertex a hair above
+                       the surface missed its friction and the cloth
+                       crept). `SMOOTH_PASSES` Laplacian passes settle
+                       the crumple. No self-collision, and collision is
+                       per vertex: a sharp collider edge can show between
+                       two cloth vertices (finer `detail` or larger
+                       `offset`). Table drape ~3 s, baked + cached.
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.
@@ -3980,15 +4011,23 @@ into a new module and import.
   `for (x = [0])`. `if_else` keeps its else branch in a child
   union named "Else" (auto-created).
 - Organisational groups: `variables` (leading assignments, transparent
-  in codegen) and `masters` (a **definitions store**). A `masters`
-  group holds reusable **masters**; it renders **no geometry of its own**
-  (skipped in `emit()` and `mesh._tess()`) but is still walked to index
-  its masters as reference targets. Masters appear in their own Masters
-  tab, not the Objects tree. A `reference` ("Linked copy") inlines a
-  master's geometry by name (its own move/rotate applied), so editing a
-  master updates every copy. `make_master()` promotes a scene object
-  into the store and leaves a Linked copy behind; `instance_master()`
-  drops a copy into the scene.
+  in codegen). A `reference` ("Linked copy") places a node by NAME: a
+  copy of an Object is one placed call of its module, a copy of
+  anything else inlines it (its own move/rotate applied), so editing
+  the original updates every copy.
+- **Masters were retired** (2026-09-19, the user: "is it of any use?"):
+  an Object did the same "define once, place many" and also takes a
+  colour, anchors, mates, the exploded view and its own module. There
+  is no Masters tab or Make Master item any more. `model.
+  retire_masters` turns an old document's `masters` store into hidden
+  Objects where it stood (on `load_kcad` and undo restores), so its
+  Linked copies call those Objects and the scene is unchanged;
+  `_definition` wraps anything but a plain Group (a Group's own move /
+  colour would be dropped from the module — it goes on the call) as
+  "<name> body". `make_master()` (kept for MCP `make_master`) now does
+  the same to one node: hidden Object at the top, Linked copy in its
+  place, even inside a loop. The `masters` node type stays registered
+  so old files parse.
 
 The document-wide `$fn` (Edit ▸ common segments, on by default at 45)
 replaces every round object's own segment count **except an intended
