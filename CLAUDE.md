@@ -2480,6 +2480,27 @@ into a new module and import.
                        an O and an outline-minus-inset pot were extruded
                        filled. Hole-free shapes keep the ear-clip caps;
                        union pieces stay separate solids.
+  - `csg.py`         — **exact preview booleans** (2026-09-19, the
+                       first of the Blender-inspired tools the user
+                       picked): `difference` / `intersection` /
+                       `minkowski` and a fillet's convex cuts go
+                       through **Manifold** (`manifold3d`, Apache 2.0 —
+                       the library OpenSCAD itself renders with), so the
+                       preview cuts holes at once instead of showing the
+                       first operand. Each operand's rows are welded
+                       (`WELD`), split into solids and unioned (two
+                       overlapping cubes are edge-manifold but not a
+                       solid); colour index + selection flag ride as
+                       vertex properties, so a cut face wears the tool's
+                       colour like OpenSCAD's. An operand that is not a
+                       closed solid (a flat 2D shape, an open scan) makes
+                       `boolean` return None: the old approximation, and
+                       the node goes in `FAILED`. `mesh.approximates`
+                       (not `uses_booleans`) is what the warnings, the
+                       badge and `needs_exact` ask — a part Manifold cut
+                       is no longer sent to OpenSCAD for an exact mesh.
+                       Optional: absent, everything is as before. The
+                       spec keeps numpy for it.
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.

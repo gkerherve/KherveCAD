@@ -392,7 +392,9 @@ def test_an_approximate_stl_export_says_so_loudly(ex, tmp_path, window):
     assert out.exists()
     if not window.engine.available:
         assert result["exact"] is False
-        assert "APPROXIMATED" in result["warning"]
+        from khervecad import csg
+        # Manifold cuts the preview exactly, so only its absence is loud
+        assert ("APPROXIMATED" in result["warning"]) != csg.available()
 
 
 def test_opening_a_scad_program_imports_it_as_objects(ex, tmp_path):
@@ -592,7 +594,8 @@ def test_get_node_bounds_combines_several_and_flags_booleans(ex):
     b = cube(ex, x=50.0, width=10.0, depth=10.0, height=10.0)
     out = call(ex, "get_node_bounds", node_ids=[a, b])
     assert out["combined"]["size"] == pytest.approx([60, 10, 10])
-    call(ex, "apply_code", code="difference() { cube(10); cube(5); }")
+    # a flat operand is not a solid: that boolean stays approximated
+    call(ex, "apply_code", code="difference() { cube(10); square(5); }")
     diff = [n["id"] for n in call(ex, "list_tree")["nodes"]
             if n["type"] == "difference"]
     flagged = call(ex, "get_node_bounds", node_ids=diff)

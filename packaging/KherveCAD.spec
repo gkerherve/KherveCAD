@@ -89,7 +89,7 @@ if os.path.isdir(_showcase_dir):
 hiddenimports += collect_submodules("khervecad")
 
 # Dependencies that ship data files or dynamically-imported submodules.
-for _pkg in ("qtawesome",):
+for _pkg in ("qtawesome", "manifold3d"):
     try:
         d, b, h = collect_all(_pkg)
         datas += d
@@ -107,9 +107,10 @@ a = Analysis(
     hookspath=[],
     runtime_hooks=[],
     # Trim libraries the app never uses, to keep the folder smaller.
-    # KherveCAD's geometry is pure Python (mesh.py) — no numpy/scipy.
+    # numpy stays: manifold3d (csg.py, the preview's exact booleans)
+    # hands its meshes over as numpy arrays.
     excludes=["tkinter", "PyQt6", "PySide2", "PySide6", "PyQt5.QtQml",
-              "PyQt5.QtQuick", "PyQt5.QtWebEngine", "numpy", "scipy",
+              "PyQt5.QtQuick", "PyQt5.QtWebEngine", "scipy",
               "matplotlib", "pandas", "PIL"],
     noarchive=False,
 )

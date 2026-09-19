@@ -115,13 +115,21 @@ def test_hidden_node_not_tessellated(model):
     assert mesh.tessellate(model.root) == []
 
 
-def test_difference_shows_first_operand(model):
+def test_difference_is_cut_in_the_preview(model):
+    from khervecad import csg
     cube = model.add_node("cube", dict(width=4.0, depth=4.0, height=4.0))
     model.add_node("sphere", dict(radius=100.0))
     diff = model.wrap_nodes(list(model.root.children), "difference")
-    tris = mesh.tessellate(diff)
-    assert len(tris) == 12                 # just the cube
     assert mesh.uses_booleans(model.root)
+    if csg.available():                    # the sphere swallows the cube
+        assert mesh.tessellate(diff) == []
+        assert not mesh.approximates(model.root)
+    saved, csg.ENABLED = csg.ENABLED, False
+    try:                                   # without Manifold: operand 1
+        assert len(mesh.tessellate(diff)) == 12
+        assert mesh.approximates(model.root)
+    finally:
+        csg.ENABLED = saved
 
 
 def test_mirror_flips_and_keeps_winding(model):

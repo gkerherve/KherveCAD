@@ -35,7 +35,7 @@ def part_tris(window, nodes):
     ids = {n.id for n in nodes}
     with window._isolated_frame(iso):
         tris = mesh.selected_world_tris(root, ids, fn=fn)
-    approx = any(mesh.uses_booleans(n) for n in nodes)
+    approx = any(mesh.approximates(n) for n in nodes)
     return tris, approx
 
 

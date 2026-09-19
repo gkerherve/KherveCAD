@@ -1,6 +1,7 @@
 PyQt5>=5.15
 qtawesome>=1.3
 pygit2>=1.14        # optional: per-document Git (commit/push); degrades if absent
+manifold3d>=3.0     # optional: exact booleans in the preview (csg.py); approximated if absent
 
 # development only: khervecad.tools.carblueprint traces a car's shape
 # off a blueprint. The app itself never imports either.

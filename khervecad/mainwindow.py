@@ -1257,7 +1257,7 @@ class MainWindow(QMainWindow):
                 colored = plan.items
             else:
                 colored = mesh.tessellate_colored(root, fn=fn)
-            booleans = mesh.uses_booleans(root)
+            booleans = mesh.approximates(root)
         self._explode_plan = plan
         tris = [t for t, _c in colored]
         colors = [c for _t, c in colored]
@@ -2132,7 +2132,7 @@ class MainWindow(QMainWindow):
             write_stl(mesh.tessellate(self.model.root), path)
         if factor != 1.0:
             units.scale_mesh_file(path, factor)
-        if not self.engine.available and mesh.uses_booleans(self.model.root):
+        if not self.engine.available and mesh.approximates(self.model.root):
             QMessageBox.information(
                 self, APP_NAME,
                 "Exported with the built-in tessellator: booleans are "

@@ -716,7 +716,7 @@ class McpToolExecutor:
             his.append(hi)
             out.append({"id": node.id, "name": node.name,
                         **self._box_dict(lo, hi),
-                        "approximate": mesh.uses_booleans(node)})
+                        "approximate": mesh.approximates(node)})
         result = {"nodes": out, "unit": self._unit()}
         if len(out) > 1:
             result["combined"] = self._box_dict(
@@ -932,7 +932,7 @@ class McpToolExecutor:
             tris = self._world_tris(node)
             complete = True
             source = f"built-in tessellation of {node.name}"
-            if mesh.uses_booleans(node):
+            if mesh.approximates(node):
                 source += " (booleans approximated)"
         else:
             complete = (self._wait_for_render(timeout)
@@ -2061,10 +2061,10 @@ class McpToolExecutor:
                 "difference() keeps its first operand and the holes are "
                 "not cut. Do not send this to a printer; install "
                 "OpenSCAD and export again."
-                if mesh.uses_booleans(self._model.root) else
+                if mesh.approximates(self._model.root) else
                 "Exported with the built-in tessellator (OpenSCAD not "
-                "found). This model uses no booleans, so the geometry "
-                "is faithful."),
+                "found). Every boolean in it was cut exactly (Manifold), "
+                "so the geometry is faithful."),
         })
 
     def _t_publish_to_printables(self, params) -> dict:
@@ -2160,7 +2160,7 @@ class McpToolExecutor:
         for i, c in enumerate(chains):
             c["index"] = i
         return {"node": node.id, "name": node.name, "edges": chains,
-                "approximate": mesh.uses_booleans(node),
+                "approximate": mesh.approximates(node),
                 "note": ("Edges come from the built-in mesh: a union of "
                          "overlapping shapes has no edge where they "
                          "meet, and a difference's hole has none — only "

@@ -498,7 +498,7 @@ def build_bundle(window, folder, *, title, description="", tags=(),
                     " This model uses booleans and they are only "
                     "APPROXIMATED — holes are not cut. Do not upload "
                     "it: install OpenSCAD and build the bundle again."
-                    if mesh.uses_booleans(model.root) else
+                    if mesh.approximates(model.root) else
                     " This model uses no booleans, so the geometry is "
                     "faithful."))
 
@@ -660,7 +660,7 @@ def _render_previews(window, folder, stem, views, size, warnings) -> list:
             "OpenSCAD's exact meshes, because OpenSCAD was not found." + (
                 " This model uses booleans, which it only approximates "
                 "— holes are not cut in the pictures."
-                if mesh.uses_booleans(window.model.root) else ""))
+                if mesh.approximates(window.model.root) else ""))
     builder = getattr(window, "builder", None)
     part = builder.isolated_component() if builder is not None else None
     if part is not None:

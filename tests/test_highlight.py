@@ -104,8 +104,10 @@ def test_selected_subtracted_tool_is_highlightable(model):
                         segments=8, z=-1.0))
     diff.add(tool)                                # subtracted operand
     assert mesh.selected_world_tris(model.root, {tool.id})  # was empty
-    # the plain preview still approximates the difference as operand 1
-    assert len(mesh.tessellate(model.root)) == 12          # just the cube
+    # the plain preview cuts the bore (csg.py): more than the 12 of a cube
+    from khervecad import csg
+    if csg.available():
+        assert len(mesh.tessellate(model.root)) > 12
 
 
 def test_primitive_dimension_handles_edit_params(window):
@@ -560,7 +562,7 @@ def test_selecting_whole_difference_omits_subtracted_tools(model):
     # selecting the whole difference highlights only the kept body,
     # never the removed tool drawn as solid
     assert len(mesh.selected_world_tris(model.root, {diff.id})) == \
-        len(mesh.tessellate(body))
+        len(mesh.tessellate(diff))
     # but selecting the tool alone still shows it
     assert mesh.selected_world_tris(model.root, {tool.id})
 

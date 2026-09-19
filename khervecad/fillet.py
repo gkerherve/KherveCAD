@@ -608,15 +608,25 @@ def check(node, env):
 
 
 def tess(node, env, color, sel, selected):
-    """Preview: the children plus the concave fillers. The convex cuts
-    need a boolean the built-in tessellator cannot do — the exact
-    OpenSCAD render shows them, as it does for any difference."""
-    from . import mesh
+    """Preview: the children minus the convex cuts (through Manifold,
+    csg.py) plus the concave fillers. Without Manifold, or when a cut
+    fails, the cuts are left to the exact OpenSCAD render, as for any
+    difference."""
+    from . import csg, mesh
     out = list(mesh._children_mesh(node, env, color, sel, selected))
     try:
         result = baked(node, env)
     except Exception:
         return out
+    if result["cuts"] and csg.available():
+        tools = [row for body in result["cuts"]
+                 for row in mesh._emit(body, color, selected)]
+        cut = csg.boolean("difference", [out, tools])
+        if cut is None:
+            csg.FAILED.add(node.id)
+        else:
+            csg.FAILED.discard(node.id)
+            out = cut
     for body in result["adds"]:
         out.extend(mesh._emit(body, color, selected))
     return out

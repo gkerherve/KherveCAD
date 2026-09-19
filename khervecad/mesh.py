@@ -4,9 +4,9 @@ OpenSCAD is the real engine: when its binary is available the 3D view
 shows the exact mesh OpenSCAD renders. This module is the fallback
 (and the instant preview): it turns the object tree into triangles in
 pure Python, evaluating expressions and unrolling loops/conditionals
-like OpenSCAD would. CSG-heavy ops are approximated (difference/
-intersection/minkowski show their first operand, 3D hull unions) —
-the OpenSCAD engine renders them exactly.
+like OpenSCAD would. difference / intersection / minkowski are cut
+exactly through Manifold (csg.py) when manifold3d is installed, else
+they show their first operand and the OpenSCAD engine renders them.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -1216,7 +1216,7 @@ def needs_exact(node, env=None) -> bool:
     plain solids is already exact in the preview, and swapping in a
     second triangulation of the same surface is what caused the
     preview's glitches."""
-    return uses_booleans(node) and len(part_colours(node, env)) <= 1
+    return approximates(node) and len(part_colours(node, env)) <= 1
 
 
 def _component_mesh(node, env, color, sel, selected):
@@ -1533,12 +1533,29 @@ def _tess(node, env, color, sel, selected):
             out = _transform_colored(matrix, out)
         return out
     if t in ("difference", "intersection", "minkowski"):
-        # Approximation: show the first operand; the OpenSCAD engine
-        # renders the true CSG result.
-        ops = [c for c in node.children if c.type != "assign"]
+        # Exact through Manifold (csg.py) when it can; else show the
+        # first operand and leave the true result to OpenSCAD.
+        from . import csg
+        ops = _operands(node, env)
         if not ops:
             return []
-        mesh = _tess(ops[0], env, color, sel, selected)
+        if csg.available():
+            meshes = [_tess(c, scope, color, sel, selected)
+                      for c, scope in ops]
+            cut = csg.boolean(t, meshes)
+            if cut is not None:
+                csg.FAILED.discard(node.id)
+                if sel:
+                    # a selected tool (a bore) glows whole, as before
+                    for (child, _s), rows in zip(ops[1:], meshes[1:]):
+                        if any(n.id in sel for n in child.walk()):
+                            cut.extend(rows)
+                return cut
+            csg.FAILED.add(node.id)
+            mesh = meshes[0]
+        else:
+            mesh = _tess(ops[0][0], ops[0][1], color, sel, selected)
+        ops = [c for c, _s in ops]
         # a selected object hiding in a subtracted / later operand (e.g.
         # a bore removed from a body) still needs its own geometry so it
         # can be shown when *it* is picked — but selecting the whole
@@ -1672,6 +1689,28 @@ def _transform_colored(m, marked):
             in marked]
 
 
+def _operands(node, env):
+    """A boolean's operands with the scope each is tessellated in: an
+    assign among them binds for the ones after it, and a transparent
+    `variables` group's geometry counts one operand per child."""
+    env = dict(env)
+    out = []
+    for child in node.children:
+        if not child.visible:
+            continue
+        if child.type == "assign":
+            _apply_assign(child, env)
+        elif child.type == "variables":
+            for grandchild in child.children:
+                if grandchild.type == "assign":
+                    _apply_assign(grandchild, env)
+                elif grandchild.visible:
+                    out.append((grandchild, dict(env)))
+        else:
+            out.append((child, dict(env)))
+    return out
+
+
 def _children_mesh(node, env, color, sel, selected):
     mesh = []
     env = dict(env)
@@ -1696,4 +1735,17 @@ def uses_booleans(node: CadNode) -> bool:
     """True if the subtree contains ops the fallback preview can only
     approximate (booleans, minkowski, hull, offset)."""
     return any(n.type in APPROXIMATED
+               for n in node.walk() if n.visible)
+
+
+def approximates(node: CadNode) -> bool:
+    """True if the preview of this subtree is NOT the true shape: an
+    approximated op other than the booleans Manifold cuts exactly
+    (csg.py), or one of those whose last cut failed (an operand that is
+    not a closed solid). What the "booleans approximated" warnings and
+    the exact-render queue ask."""
+    from . import csg
+    exact = csg.HANDLED if csg.available() else frozenset()
+    return any(n.type in APPROXIMATED
+               and (n.type not in exact or n.id in csg.FAILED)
                for n in node.walk() if n.visible)
