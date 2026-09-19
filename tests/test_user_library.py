@@ -23,6 +23,7 @@ from khervecad.model import CadNode, validate
 def lib(tmp_path, monkeypatch):
     monkeypatch.setenv("KHERVECAD_USER_LIBRARY", str(tmp_path))
     yield tmp_path
+    monkeypatch.undo()          # back to the session's empty folder first
     user_library.refresh(library.PARTS)
 
 
@@ -88,6 +89,109 @@ def test_a_title_is_required_and_resaving_updates(lib):
     b = user_library.save(obj, "Hook", "second")
     assert a["path"] == b["path"]
     assert user_library.read_info(b["path"])["description"] == "second"
-    assert (lib / "Hook.kcad").exists()
+    # no area given: "hook" files it with the fasteners and brackets
+    assert (lib / "Fasteners & brackets" / "Hook.kcad").exists()
     assert user_library.parts()[a["part_id"]]["category"] == \
-        "My library: General"
+        "My library: Fasteners & brackets"
+
+
+def test_parts_are_filed_by_area_and_a_new_area_makes_a_folder(lib):
+    obj = _hook_object()
+    cases = [("sports", "Stadium seat", "Sport"),
+             ("Unit cells", "Quartz cell", "Unit cells & crystals"),
+             ("trees and plants", "Oak", "Trees & plants"),
+             ("football", "Corner flag", "Sport"),
+             ("MOLECULES", "Caffeine", "Molecules"),
+             ("Astronomy", "Telescope mount", "Astronomy"),
+             ("astronomy", "Star map", "Astronomy"),          # reused
+             ("", "Four-poster bed, 2 m, oak frame", "House & home"),
+             ("", "Wibble", "General")]
+    for section, title, folder_name in cases:
+        saved = user_library.save(obj, title, "desc", section)
+        assert saved["category"] == f"My library: {folder_name}", (
+            section, title)
+    assert (lib / "Astronomy").is_dir()
+    assert not (lib / "astronomy").exists() or \
+        (lib / "astronomy").samefile(lib / "Astronomy")
+    assert "Sport" in user_library.existing_sections()
+
+
+def test_manage_sections_and_parts(lib):
+    obj = _hook_object()
+    a = user_library.save(obj, "Bracket A", "one", "Brackets")
+    user_library.add_section("Drafts")
+    moved = user_library.move(a["path"], "Drafts")
+    assert moved.parent.name == "Drafts"
+    edited = user_library.update_info(moved, "Bracket B", "new text",
+                                      ["x"])
+    assert edited.name == "Bracket B.kcad"
+    assert user_library.read_info(edited)["description"] == "new text"
+    user_library.rename_section("Drafts", "Old drafts")
+    assert (lib / "Old drafts" / "Bracket B.kcad").exists()
+    user_library.remove(lib / "Old drafts")
+    assert not (lib / "Old drafts").exists()
+    assert a["uid"] in user_library.ignored()
+    with pytest.raises(ValueError):
+        user_library.remove(lib)
+    other = lib.parent / "outside.kcad"
+    other.write_text("{}")
+    with pytest.raises(ValueError):
+        user_library.remove(other)
+    src = lib.parent / "import_me.kcad"
+    src.write_text(open(user_library.save(obj, "Tmp", "t", "X")["path"])
+                   .read())
+    dst = user_library.import_file(src, "Imported")
+    assert dst.parent.name == "Imported"
+
+
+def test_autosave_keeps_designs_not_library_parts(lib):
+    obj = _hook_object()
+    saved = user_library.autosave(obj)
+    assert saved and saved["category"] == "My library: Fasteners & brackets"
+    meta = obj.params["library"]
+    assert meta["uid"] == saved["uid"] and "generated" in \
+        user_library.read_info(saved["path"])["description"]
+    obj.name = "Garage bike hook"                 # renamed: file follows
+    again = user_library.autosave(obj)
+    assert again["uid"] == saved["uid"]
+    assert not (lib / "Fasteners & brackets" / "Bike hook.kcad").exists()
+    assert (lib / "Fasteners & brackets" / "Garage bike hook.kcad").exists()
+    user_library.remove(again["path"])            # deleted: stays gone
+    assert user_library.autosave(obj) is None
+    generic = _hook_object()
+    generic.name = "Object 3"
+    assert user_library.autosave(generic) is None
+    wrapped = CadNode("component", "Sofa")
+    inner = library.build_part("home_sofa", library.default_dims(
+        "home_sofa"))
+    wrapped.add(inner)
+    assert user_library.autosave(wrapped) is None
+
+
+def test_the_autosaver_saves_new_objects_but_not_the_opened_ones(lib):
+    from PyQt5.QtWidgets import QApplication
+    from khervecad.model import DocumentModel
+    from khervecad import user_library_dialog as D
+    QApplication.instance() or QApplication([])
+
+    class Win:
+        def __init__(self):
+            self.model = DocumentModel()
+
+        def statusBar(self):
+            raise RuntimeError("no status bar in the test")
+    win = Win()
+    old = _hook_object()
+    old.name = "Old shelf"
+    win.model.root.add(old)
+    saver = D.AutoSaver.__new__(D.AutoSaver)
+    D.QObject.__init__(saver)
+    saver.window, saver.model = win, win.model
+    saver._timer = D.QTimer()
+    saver._rebaseline()
+    new = _hook_object()
+    new.name = "New coat hook, 3 pegs"
+    win.model.root.add(new)
+    saved = saver.flush()
+    assert [s["title"] for s in saved] == ["New coat hook, 3 pegs"]
+    assert saver.flush() == []                     # unchanged since

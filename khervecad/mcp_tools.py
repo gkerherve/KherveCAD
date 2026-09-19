@@ -639,7 +639,8 @@ class McpToolExecutor:
                 entry["description"] = spec["description"]
             groups.setdefault(spec["category"], []).append(entry)
         return {"categories": [{"category": c, "parts": p}
-                               for c, p in groups.items()]}
+                               for c, p in groups.items()],
+                "my_library_areas": user_library.existing_sections()}
 
     def _t_save_to_library(self, params) -> dict:
         from . import library, user_library
@@ -655,6 +656,10 @@ class McpToolExecutor:
                 global_fn=self._model.global_fn)
         except (ValueError, OSError) as exc:
             raise ToolError(str(exc))
+        if node.type == "component":
+            user_library.unignore(saved["uid"])
+            user_library.remember(node, saved, params.get("description", ""),
+                                  tags)
         user_library.refresh(library.PARTS)
         if not str(params.get("description") or "").strip():
             saved["note"] = ("Saved without a description: add one — it "

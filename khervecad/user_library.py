@@ -35,6 +35,8 @@ import datetime
 import json
 import os
 import re
+import shutil
+import uuid
 from pathlib import Path
 
 PREFIX = "My library"
@@ -57,6 +59,102 @@ def _safe_name(text: str) -> str:
     """A title as a file / folder name: readable, no path separators."""
     name = re.sub(r'[\\/:*?"<>|]+', "-", str(text)).strip(" .")
     return name[:120] or "Part"
+
+
+#: the usual areas of work, each with words that point to it — a save
+#: without a section, or with a synonym ("football", "sports", "unit
+#: cell"), lands in the right one; anything else becomes a new folder
+AREAS = {
+    "Sport": ("sport", "stadium", "football", "soccer", "rugby", "tennis",
+              "basketball", "badminton", "volleyball", "handball", "arena",
+              "pitch", "court", "goal", "athletic", "gym", "dugout"),
+    "House & home": ("house", "home", "room", "furniture", "chair", "table",
+                     "sofa", "bed", "kitchen", "bathroom", "shelf", "lamp",
+                     "cupboard", "wardrobe", "desk", "door", "window"),
+    "Buildings": ("building", "library", "church", "tower", "skyscraper",
+                  "bridge", "shed", "barn", "office", "school", "museum"),
+    "Trees & plants": ("tree", "leaf", "leaves", "plant", "flower", "bush",
+                       "shrub", "garden", "forest", "branch", "needle"),
+    "Molecules": ("molecule", "compound", "smiles", "protein", "peptide",
+                  "chemical", "caffeine", "reaction"),
+    "Unit cells & crystals": ("unit cell", "crystal", "lattice",
+                              "supercell", "nanotube", "graphene",
+                              "surface slab", "perovskite", "quartz"),
+    "Mechanical": ("gear", "bearing", "shaft", "pulley", "mechanism",
+                   "hinge", "spring", "piston", "cam", "linkage", "motor"),
+    "Fasteners & brackets": ("bolt", "screw", "nut", "washer", "bracket",
+                             "hook", "clip", "fastener", "rivet"),
+    "Electronics": ("electronic", "pcb", "arduino", "raspberry", "circuit",
+                    "resistor", "enclosure", "sensor", "connector"),
+    "Vacuum & UHV": ("vacuum", "uhv", "flange", "chamber", "manipulator",
+                     "pump", "valve", "cf40", "kf"),
+    "Vehicles": ("car", "vehicle", "truck", "bike", "bicycle", "boat",
+                 "plane", "aircraft", "train", "wheel"),
+    "Characters & animals": ("character", "person", "human", "figure",
+                             "animal", "dog", "cat", "hero", "robot"),
+    "3D printing": ("print", "printable", "snap-fit", "gridfinity",
+                    "dovetail", "insert boss"),
+    "Tools": ("tool", "spanner", "wrench", "hammer", "plier",
+              "screwdriver", "saw"),
+    "Toys & games": ("lego", "toy", "game", "card", "brick", "puzzle"),
+    "Kitchen & tableware": ("cup", "mug", "plate", "bowl", "glass",
+                            "teapot", "cutlery"),
+    "Music": ("instrument", "guitar", "piano", "drum", "violin", "music"),
+    "Science & space": ("planet", "moon", "orrery", "solar", "telescope",
+                        "lab", "experiment"),
+}
+
+
+def _norm(name: str) -> str:
+    """For matching area names: lower case, '&' / 'and' and plural s
+    folded ('Sports' = 'sport', 'Trees and plants' = 'trees & plants')."""
+    text = re.sub(r"\band\b", "&", str(name).lower())
+    text = re.sub(r"[^a-z0-9&]+", " ", text).strip()
+    return " ".join(w[:-1] if len(w) > 3 and w.endswith("s") else w
+                    for w in text.split())
+
+
+def existing_sections() -> list:
+    root = folder()
+    if not root.is_dir():
+        return []
+    return sorted(p.name for p in root.iterdir()
+                  if p.is_dir() and not p.name.startswith((".", "_")))
+
+
+def _keyword_area(text: str):
+    text = f" {str(text).lower()} "
+    best, score = None, 0
+    for area, words in AREAS.items():
+        hits = sum(1 for w in words
+                   if re.search(rf"(?<![a-z]){re.escape(w)}", text))
+        if hits > score:
+            best, score = area, hits
+    return best
+
+
+def choose_section(section="", title="", description="", tags=()) -> str:
+    """The folder a part goes in: the area named (matched to an existing
+    folder or a usual area whatever its case, plural or synonym), else
+    the area its title / tags / description point to, else General. A
+    new area name is kept as given and becomes a new folder."""
+    wanted = str(section or "").strip()
+    if wanted:
+        key = _norm(wanted)
+        for name in existing_sections() + list(AREAS):
+            if _norm(name) == key:
+                return name
+        for name in existing_sections() + list(AREAS):
+            if key and (key in _norm(name).split(" & ") or
+                        _norm(name).startswith(key + " ")):
+                return name
+        area = _keyword_area(wanted)
+        if area and _norm(wanted) in [_norm(w) for w in AREAS[area]]:
+            return area                    # "football" -> Sport
+        return _safe_name(wanted[:1].upper() + wanted[1:])
+    guess = _keyword_area(" ".join([str(title), " ".join(tags),
+                                    str(description)]))
+    return guess or DEFAULT_SECTION
 
 
 def category(section: str) -> str:
@@ -162,21 +260,26 @@ def definitions_for(node, root) -> list:
 
 def save(node, title: str, description: str, section: str = "",
          tags=(), root=None, unit: str = "mm", source: str = "assistant",
-         global_fn: int = 45) -> dict:
+         global_fn: int = 45, uid: str = "") -> dict:
     """Write *node* as a library part. An instance is saved as the Object
-    it places. Returns {part_id, path, category, title}."""
+    it places. *uid* ties the file to one Object: saving it again under
+    a new title or area replaces the old file instead of leaving it
+    behind. Returns {part_id, path, category, title, uid}."""
     from .document import FORMAT_VERSION, node_to_dict
     from .meshimport import relative_for_save
     title = str(title or "").strip()
     if not title:
         raise ValueError("A library part needs a title that says what "
                          "it is.")
+    if not uid and node.type == "component":
+        uid = meta_of(node).get("uid", "")
     if node.type == "reference" and root is not None:
         target = next((n for n in root.walk() if n.type == "component"
                        and n.name == node.params.get("ref")), None)
         node = target or node
-    section = _safe_name(section.strip()) if section and section.strip() \
-        else DEFAULT_SECTION
+    tags = [str(t).strip() for t in tags if str(t).strip()]
+    section = choose_section(section, title, description, tags)
+    uid = uid or uuid.uuid4().hex
     base = folder() if section == DEFAULT_SECTION else folder() / section
     base.mkdir(parents=True, exist_ok=True)
     path = base / f"{_safe_name(title)}.kcad"
@@ -200,15 +303,19 @@ def save(node, title: str, description: str, section: str = "",
                 "title": title,
                 "description": str(description or "").strip(),
                 "tags": [str(t).strip() for t in tags if str(t).strip()],
-                "source": source,
+                "source": source, "uid": uid,
                 "created": datetime.datetime.now().isoformat(
                     timespec="seconds")}}
     relative_for_save(data["tree"], str(path))
+    for old in files():               # the same Object, renamed or moved
+        if old != path and read_info(old).get("uid") == uid:
+            old.unlink()
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=1)
     info = read_info(path)
     return {"part_id": part_id(info), "path": str(path),
-            "category": category(info["section"]), "title": title}
+            "category": category(info["section"]), "title": title,
+            "uid": uid, "section": section}
 
 
 def matches(spec: dict, pid: str, words) -> bool:
@@ -218,3 +325,236 @@ def matches(spec: dict, pid: str, words) -> bool:
                      spec.get("description", "")]
                     + list(spec.get("tags") or [])).lower()
     return all(w in text for w in words)
+
+
+# ------------------------------------------------------------ managing
+IGNORED_FILE = ".ignored.json"
+
+
+def ignored() -> set:
+    """Object uids the user deleted from the library: autosave must not
+    bring them back."""
+    try:
+        with open(folder() / IGNORED_FILE, encoding="utf-8") as fh:
+            return set(json.load(fh))
+    except (OSError, ValueError):
+        return set()
+
+
+def _ignore(uids):
+    uids = {u for u in uids if u}
+    if not uids:
+        return
+    folder().mkdir(parents=True, exist_ok=True)
+    with open(folder() / IGNORED_FILE, "w", encoding="utf-8") as fh:
+        json.dump(sorted(ignored() | uids), fh)
+
+
+def unignore(uid):
+    keep = ignored() - {uid}
+    if folder().is_dir():
+        with open(folder() / IGNORED_FILE, "w", encoding="utf-8") as fh:
+            json.dump(sorted(keep), fh)
+
+
+def _check_inside(path) -> Path:
+    path = Path(path).resolve()
+    root = folder().resolve()
+    if root not in path.parents and path != root:
+        raise ValueError(f"{path} is not in My Library.")
+    return path
+
+
+def remove(path, trash=None):
+    """Take a part (a .kcad) or a whole section (a folder) out of the
+    library. *trash(path) -> bool* moves it to the system trash when it
+    can (the Qt side passes QFile.moveToTrash); otherwise it is deleted.
+    Its Objects are remembered so autosave leaves them out."""
+    path = _check_inside(path)
+    if path == folder().resolve():
+        raise ValueError("That is the whole library.")
+    targets = [path] if path.is_file() else sorted(path.glob("*.kcad"))
+    _ignore(read_info(p).get("uid") for p in targets)
+    if trash is not None and trash(str(path)):
+        return
+    if path.is_dir():
+        shutil.rmtree(path)
+    else:
+        path.unlink()
+
+
+def add_section(name) -> Path:
+    name = _safe_name(str(name).strip())
+    if not name or name == DEFAULT_SECTION:
+        raise ValueError("Give the section a name.")
+    path = folder() / name
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def rename_section(old, new) -> Path:
+    src = _check_inside(folder() / old)
+    dst = folder() / _safe_name(str(new).strip())
+    if not src.is_dir():
+        raise ValueError(f"No section {old!r}.")
+    if dst.exists() and dst.resolve() != src:
+        raise ValueError(f"There is already a section {new!r}.")
+    src.rename(dst)
+    return dst
+
+
+def move(path, section) -> Path:
+    """Move a part into another section (made if new)."""
+    path = _check_inside(path)
+    base = folder() if not section or section == DEFAULT_SECTION else \
+        add_section(section)
+    dst = base / path.name
+    if dst.resolve() != path:
+        if dst.exists():
+            raise ValueError(f"{section} already has a {path.stem!r}.")
+        path.rename(dst)
+    return dst
+
+
+def update_info(path, title=None, description=None, tags=None) -> Path:
+    """Edit a part's title / description / tags; a new title renames
+    the file to match."""
+    path = _check_inside(path)
+    with open(path, encoding="utf-8") as fh:
+        data = json.load(fh)
+    lib = data.setdefault("library", {})
+    if title is not None and str(title).strip():
+        lib["title"] = str(title).strip()
+    if description is not None:
+        lib["description"] = str(description).strip()
+    if tags is not None:
+        lib["tags"] = [str(t).strip() for t in tags if str(t).strip()]
+    dst = path.with_name(f"{_safe_name(lib.get('title') or path.stem)}.kcad")
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(data, fh, indent=1)
+    if dst != path:
+        if dst.exists():
+            raise ValueError(f"There is already a {dst.stem!r} here.")
+        path.rename(dst)
+    return dst
+
+
+def import_file(src, section="") -> Path:
+    """Copy a .kcad from anywhere into the library (a section, or where
+    its content points)."""
+    src = Path(src)
+    info = read_info(src)
+    if not info:
+        raise ValueError(f"{src.name} is not a KherveCAD document.")
+    title = info.get("title") or src.stem
+    section = choose_section(section, title, info.get("description", ""),
+                             info.get("tags", []))
+    base = folder() if section == DEFAULT_SECTION else add_section(section)
+    dst = base / src.name
+    shutil.copy2(src, dst)
+    return dst
+
+
+# ------------------------------------------------------------ autosave
+GENERIC = re.compile(r"^(object|group|union|part|component|body|move|"
+                     r"color|colour|translate|rotate)( ?\d+)?$", re.I)
+#: an Object carrying one of these was built by a Library part or a
+#: builder (house, city, car, character...) — it is not the user's design
+BUILT_BY = ("library_part", "house", "city", "car", "character", "lego")
+
+
+def eligible(node) -> bool:
+    """An Object worth keeping: named, not generic, not from the Library
+    or a builder, holding geometry."""
+    if node.type != "component":
+        return False
+    if any(k in node.params for k in BUILT_BY):
+        return False
+    kids = [c for c in node.children if c.type not in ("assign",
+                                                       "variables")]
+    if len(kids) == 1 and "library_part" in kids[0].params:
+        return False                  # a Library part wrapped as an Object
+    name = node.name.strip()
+    if not name or GENERIC.match(name):
+        return False
+    return any(n is not node and n.type not in (
+        "assign", "variables", "union", "component", "color", "translate",
+        "rotate") for n in node.walk())
+
+
+def describe(node) -> str:
+    """A generated description: overall size, what it is built from, its
+    variables — until the user or an assistant writes a better one."""
+    from . import mesh
+    counts = {}
+    names = []
+    for n in node.walk():
+        if n is node:
+            continue
+        counts[n.type] = counts.get(n.type, 0) + 1
+        if n.type == "assign":
+            names.append(n.name.rstrip(" ="))
+    try:
+        tris = mesh.tessellate(node, fn=12)
+        xs = [p[0] for t in tris for p in t]
+        ys = [p[1] for t in tris for p in t]
+        zs = [p[2] for t in tris for p in t]
+        size = (f"{max(xs) - min(xs):.0f} x {max(ys) - min(ys):.0f} x "
+                f"{max(zs) - min(zs):.0f}") if tris else ""
+    except Exception:
+        size = ""
+    kinds = ", ".join(f"{v} {k}" for k, v in sorted(
+        counts.items(), key=lambda kv: -kv[1])[:6])
+    text = f"{node.name}."
+    if size:
+        text += f" Overall size {size} (document units)."
+    text += f" Built from {kinds}."
+    if names:
+        text += f" Parameters: {', '.join(names[:12])}."
+    return text + " (Description generated automatically.)"
+
+
+def meta_of(node) -> dict:
+    """The library info an Object carries (params["library"])."""
+    meta = node.params.get("library")
+    return dict(meta) if isinstance(meta, dict) else {}
+
+
+def autosave(node, root=None, unit="mm", global_fn=45) -> dict | None:
+    """Save *node* as the user's part, reusing its uid, title, area and
+    description from params["library"] when set (and storing them there
+    when not). None when it is not eligible or was deleted by the user."""
+    if not eligible(node):
+        return None
+    meta = meta_of(node)
+    uid = meta.get("uid") or uuid.uuid4().hex
+    if uid in ignored():
+        return None
+    title = meta.get("title") or node.name
+    if meta.get("title") and meta.get("named") != node.name:
+        title = node.name                 # renamed since: follow the tree
+    description = meta.get("description") or describe(node)
+    saved = save(node, title, description, meta.get("area", ""),
+                 meta.get("tags") or [], root=root, unit=unit,
+                 source=meta.get("source", "auto"), global_fn=global_fn,
+                 uid=uid)
+    meta.update(uid=uid, title=title, area=saved["section"],
+                named=node.name)
+    if meta.get("description"):
+        meta["description"] = description
+    node.params["library"] = meta
+    return saved
+
+
+def remember(node, saved, description="", tags=(), source="assistant"):
+    """Record an explicit save on the Object itself, so later autosaves
+    keep its title, area, description and file."""
+    target = node
+    meta = meta_of(target)
+    meta.update(uid=saved["uid"], title=saved["title"],
+                area=saved["section"], named=target.name, source=source)
+    if description:
+        meta["description"] = description
+    if tags:
+        meta["tags"] = [str(t) for t in tags]
+    target.params["library"] = meta

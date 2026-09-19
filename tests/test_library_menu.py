@@ -96,7 +96,9 @@ def test_city_menu_holds_builder_layouts_and_buildings(window):
 def test_library_is_sections_and_every_category_is_placed_once():
     from khervecad import library
     from khervecad.library_groups import SECTIONS, entry_categories
-    cats = {spec["category"] for spec in library.PARTS.values()}
+    # My Library's categories live in their own live submenu
+    cats = {spec["category"] for spec in library.PARTS.values()
+            if not spec["category"].startswith("My library")}
     placed = []
     for _title, entries in SECTIONS:
         for _name, _icon, spec in entries:

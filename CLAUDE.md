@@ -1720,8 +1720,48 @@ into a new module and import.
                        descriptive title + description and to check My
                        library first. UI: Library ▸ My Library (filled on
                        aboutToShow, tooltips = descriptions; Save
-                       Selection…, Open folder) and the tree's right-click
-                       Save to My Library… (`SaveDialog`).
+                       Selection…, Manage…, Open folder, Save New Objects
+                       Automatically) and the tree's right-click Save to
+                       My Library… (`SaveDialog`).
+                       **Areas** (same day, the user: "organise it with
+                       folders by area of work — sport, house, trees,
+                       molecules, unit cells; a new area makes a new
+                       folder"): `AREAS` (18 usual areas with keywords);
+                       `choose_section` matches a given name to an existing
+                       folder or an area whatever its case, plural, '&' /
+                       'and' or synonym ("football" -> Sport), keeps a new
+                       name as a new folder, and with none guesses the area
+                       from title / tags / description (else General).
+                       save_to_library requires it; list_parts reports
+                       `my_library_areas`.
+                       **Autosave** (the user: "objects should be saved
+                       automatically, but files and folders we do not want
+                       can be removed"): `AutoSaver` (user_library_dialog,
+                       made by the Library menu) watches the model, and 4 s
+                       after the last change saves every `eligible` Object
+                       whose fingerprint (its dict minus params["library"])
+                       changed — a document's Objects when it was opened or
+                       created are the baseline (a new `model.root`
+                       re-baselines, undo too). Not eligible: generic names
+                       ("Object 2"), builder output (params house / city /
+                       car / character / lego, names in model.house /
+                       model.city "objects") and a Library part wrapped as
+                       an Object — `build_part` now tags every part root
+                       `params["library_part"]` (in `mesh._TEXT_PARAMS`,
+                       with "library"). The Object carries
+                       params["library"] {uid, title, area, description,
+                       tags, named}: the uid ties it to ONE file (a rename
+                       or move replaces the old one), an explicit
+                       save_to_library / Save dialog records its text
+                       there (`remember`) so autosave keeps it, else
+                       `describe` generates one (size, what it is built
+                       from, its parameters). **Manage** (`ManageDialog`):
+                       sections and parts in a tree; new section, import
+                       .kcad files, rename a section, edit title /
+                       description / tags / section (move), delete to the
+                       trash (QFile.moveToTrash). `remove` records the
+                       deleted uids in `.ignored.json` so autosave never
+                       brings them back (an explicit save un-ignores).
   - `leafgen.py` / `library_leaves.py` — **Leaves** (2026-09-19, the
                        user: "start with the leaves of every kind of tree,
                        then the trees, very very detailed"), Library ▸

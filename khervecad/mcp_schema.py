@@ -431,13 +431,25 @@ TOOLS = [
                                            "dimensions, parameters, "
                                            "construction, how to reuse."},
             "section": {"type": "string",
-                        "description": "Subfolder / menu section, e.g. "
-                                       "'Furniture', 'Brackets', "
-                                       "'Characters' (default General)."},
+                        "description": "The AREA of work it belongs to — "
+                                       "its folder: Sport, House & home, "
+                                       "Buildings, Trees & plants, "
+                                       "Molecules, Unit cells & crystals, "
+                                       "Mechanical, Fasteners & brackets, "
+                                       "Electronics, Vacuum & UHV, "
+                                       "Vehicles, Characters & animals, "
+                                       "3D printing, Tools, Toys & games, "
+                                       "Kitchen & tableware, Music, "
+                                       "Science & space — or a new area's "
+                                       "name, which makes a new folder. "
+                                       "Matched whatever the case, plural "
+                                       "or synonym ('football' -> Sport); "
+                                       "list_parts reports the areas "
+                                       "that already exist."},
             "tags": {"type": "array", "items": {"type": "string"},
                      "description": "Search words: synonyms, materials, "
                                     "uses, other languages."},
-        }, required=("node_id", "title", "description")),
+        }, required=("node_id", "title", "description", "section")),
     },
     {
         "name": "list_examples",

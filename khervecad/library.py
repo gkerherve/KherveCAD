@@ -1350,6 +1350,8 @@ def build_part(part_id: str, dims: dict) -> CadNode:
     node = _build_part(part_id, dims)
     if (PARTS.get(part_id) or {}).get("category") == _VAC:
         node = metallic(node)
+    # My Library's autosave keeps the user's designs, not Library parts
+    node.params["library_part"] = part_id
     return node
 
 
