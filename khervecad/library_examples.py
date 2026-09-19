@@ -1,7 +1,9 @@
-"""Example models that are really parts: the flowers and the stylised
-trees of the Examples menu as Library parts ("Flowers", "Stylised
-trees"), so a rose or a palm drops into a design as one Object instead
-of replacing the document. Like the Lego sets, each is built by its
+"""Example models that are really parts: the flowers of the Examples
+menu as Library parts ("Flowers"), so a rose drops into a design as one
+Object instead of replacing the document. (The stylised trees were
+listed too until 2026-09-19: the grown trees and the Leaves replaced
+them, so the Library no longer offers them; `examples.EXAMPLES` still
+has them for MCP load_example.) Like the Lego sets, each is built by its
 example's own function (lazy import: examples imports the library), so
 the two never drift apart.
 
@@ -16,7 +18,7 @@ the Free Software Foundation, either version 3 of the License, or
 from .model import CadNode
 
 #: example category -> library category its models are listed under
-CATEGORIES = {"Flowers": "Flowers", "Trees": "Stylised trees"}
+CATEGORIES = {"Flowers": "Flowers"}
 
 #: part id -> (library category, Examples label)
 MODELS = {
@@ -32,12 +34,6 @@ MODELS = {
     "flower_hibiscus": ("Flowers", "Hibiscus"),
     "flower_orchid": ("Flowers", "Orchid"),
     "flower_cherry": ("Flowers", "Cherry blossom"),
-    "stylised_pine": ("Stylised trees", "Pine / conifer"),
-    "stylised_oak": ("Stylised trees", "Oak"),
-    "stylised_palm": ("Stylised trees", "Palm"),
-    "stylised_willow": ("Stylised trees", "Weeping willow"),
-    "stylised_birch": ("Stylised trees", "Silver birch"),
-    "stylised_cherry": ("Stylised trees", "Cherry blossom tree"),
 }
 
 

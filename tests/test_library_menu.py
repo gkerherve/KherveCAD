@@ -160,10 +160,11 @@ def test_hand_tools_are_split_into_submenus(window):
             assert spec["label"] in labels, pid
 
 
-def test_flowers_and_stylised_trees_insert_as_parts():
+def test_flowers_insert_as_parts_and_stylised_trees_are_gone():
     from khervecad import library, mesh
     from khervecad.model import validate
-    for pid in ("flower_rose", "stylised_palm"):
+    assert not any(pid.startswith("stylised_") for pid in library.PARTS)
+    for pid in ("flower_rose",):
         node = library.default_part(pid)
         assert not validate(node)
         assert mesh.tessellate(node, fn=12)

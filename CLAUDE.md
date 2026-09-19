@@ -1317,9 +1317,11 @@ into a new module and import.
                        Mechanical category), Course projects, Showcase
                        (+ vacuum starter, desk setup). Models that are
                        really parts left the Examples menu:
-                       `library_examples.py` makes the flowers and the
-                       stylised trees Library parts (built by the
-                       example's own function, like `library_lego_sets`);
+                       `library_examples.py` makes the flowers Library
+                       parts (built by the example's own function, like
+                       `library_lego_sets`; the stylised trees were
+                       dropped from the Library 2026-09-19 — the grown
+                       Trees and Leaves replaced them);
                        `examples.EXAMPLES` itself is unchanged, so MCP
                        load_example still offers them. `library_kcad.label`
                        splits CamelCase stems ("Minecraft Cat").
