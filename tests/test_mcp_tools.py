@@ -346,6 +346,13 @@ def test_insert_part_takes_a_colour(ex, window):
     assert "Red" in result["error"]
 
 
+def test_list_parts_searches_the_library(ex):
+    found = call(ex, "list_parts", search="CF flange")["categories"]
+    ids = {p["part_id"] for c in found for p in c["parts"]}
+    assert "cf_flange" in ids and "lego_brick" not in ids
+    assert call(ex, "list_parts", search="zzz nothing")["categories"] == []
+
+
 def test_an_unknown_part_size_lists_the_real_ones(ex):
     result = ex.execute("insert_part", {"part_id": "cf_flange",
                                         "size": "CF999"})

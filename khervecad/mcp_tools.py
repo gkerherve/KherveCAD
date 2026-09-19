@@ -620,9 +620,13 @@ class McpToolExecutor:
                 "unit": spec.get("unit", "mm"),
             }
         want = params.get("category")
+        words = str(params.get("search") or "").lower().split()
         groups = {}
         for pid, spec in library.PARTS.items():
             if want and spec["category"] != want:
+                continue
+            text = " ".join((pid, spec["label"], spec["category"])).lower()
+            if words and not all(w in text for w in words):
                 continue
             groups.setdefault(spec["category"], []).append(
                 {"part_id": pid, "label": spec["label"],

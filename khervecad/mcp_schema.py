@@ -372,12 +372,20 @@ TOOLS = [
             "molecules ('Molecules: ...') — "
             "with each part's standard sizes, "
             "the dimensions you may override and, where it has them, "
-            "its colours. Use a library part rather than modelling a CF "
-            "flange or a brick from scratch."
+            "its colours. ALWAYS check it before modelling anything: "
+            "call list_parts with `search` (words from the request, "
+            "e.g. 'gate valve', 'sofa', 'M6 bolt'). Use a library part "
+            "rather than modelling a CF flange or a brick from scratch."
         ),
         "input_schema": _obj({
             "category": {"type": "string",
                          "description": "Filter to one category."},
+            "search": {"type": "string",
+                       "description": "Words to look for in part "
+                                      "labels, ids and categories "
+                                      "(every word must match; "
+                                      "case-insensitive). The cheap way "
+                                      "to check the library first."},
             "part_id": {"type": "string",
                         "description": "Full detail for one part, "
                                        "including its size table."},
