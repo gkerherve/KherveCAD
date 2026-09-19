@@ -5,8 +5,9 @@ and pose, the muscles as `sculpt` strokes, the clothes as a `paint`
 wrapper projecting a colour map from the front, and the pieces a body
 cannot grow (hair, cape, cowl ears, chest crest) as ordinary nodes.
 
-- **Man** and **Woman**: everyday clothes (polo and jeans; top and
-  trousers), arms relaxed at the sides, short or long hair.
+- **People**: every `human_design` preset (casual, office, doctor,
+  chef, runner, grandparents, …), dressed by the `outfit` node — the
+  Human Builder's own choices.
 - **Caped superhero** and **Dark knight**: 1.91 m, heroically muscled
   (sculpted — the base mesh has no muscle target, and its "weight" is
   fat), hands on hips, capes, and the same original "K" crest in their
@@ -43,7 +44,6 @@ FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 MAP_X, MAP_W, MAP_H, PIXEL = -450.0, 900.0, 1950.0, 5.0
 
 SKIN = (224, 172, 138)
-SKIN_2 = (238, 190, 160)
 
 
 def _hex(rgb):
@@ -85,43 +85,7 @@ def _knight(x, z):
     return grey
 
 
-def _man(x, z, s=1780.0):
-    f, a = z / s, abs(x) / s
-    polo, jeans = (40, 62, 96), (58, 90, 140)
-    belt, shoes = (74, 50, 34), (60, 42, 32)
-    if f >= 0.885:
-        return SKIN
-    if 0.835 <= f < 0.885 and a < 0.034 + (f - 0.835) * 0.5:
-        return SKIN                                   # neck, open collar
-    if (a > 0.112 and 0.52 <= f < 0.74) or (a > 0.122 and 0.36 <= f < 0.52):
-        return SKIN                                   # forearms, hands
-    if f >= 0.545:
-        return polo
-    if f >= 0.525:
-        return belt
-    if f >= 0.045:
-        return jeans
-    return shoes
-
-
-def _woman(x, z, s=1650.0):
-    f, a = z / s, abs(x) / s
-    top, trousers, shoes = (214, 104, 95), (38, 38, 44), (30, 30, 34)
-    if f >= 0.885:
-        return SKIN_2
-    if 0.80 <= f < 0.885 and a < 0.03 + (f - 0.80) * 0.9:
-        return SKIN_2                                 # V neck
-    if (a > 0.112 and 0.52 <= f < 0.75) or (a > 0.122 and 0.36 <= f < 0.52):
-        return SKIN_2                                 # forearms, hands
-    if f >= 0.56:
-        return top
-    if f >= 0.04:
-        return trousers
-    return shoes
-
-
-RULES = {"hero": _hero, "knight": _knight, "man": _man, "woman": _woman,
-         "skin": lambda x, z: SKIN}
+RULES = {"hero": _hero, "knight": _knight, "skin": lambda x, z: SKIN}
 
 
 def png_bytes(rule, width=int(MAP_W / PIXEL), height=int(MAP_H / PIXEL)):
@@ -156,9 +120,6 @@ def write_pngs():
 
 
 # ---------------------------------------------------------------- body
-#: arms relaxed at the sides (the rest pose is an A)
-ARMS_DOWN = [["upperarm01.L", 12.0, 24.0, 0.0],
-             ["upperarm01.R", 12.0, -24.0, 0.0]]
 #: hands on the hips, feet a little apart
 HANDS_ON_HIPS = [["upperarm01.L", 35.0, 5.0, 0.0],
                  ["upperarm01.R", 35.0, -5.0, 0.0],
@@ -190,11 +151,6 @@ HERO_MUSCLES = [
     _s(1, 38, -125, 1180, 42, 10), _s(1, 38, -128, 1250, 42, 10),
     _s(1, 38, -130, 1320, 42, 10), _s(2, 150, -40, 1400, 260, 1),
     _s(2, 90, -20, 1610, 120, 2)]
-
-
-#: clothes over the chest: the base mesh's nipples smoothed away
-MAN_SMOOTH = [_s(2, 80, -115, 1375, 90, 3)]
-WOMAN_SMOOTH = [_s(2, 72, -120, 1270, 80, 3)]
 
 
 def _figure(name, human, map_key, strokes=None, face=None):
@@ -329,37 +285,6 @@ color("#d6aa34") union() {  // Belt pouches
                   _parts(KNIGHT_CREST))
 
 
-def build_man(dims):
-    """A man in a navy polo shirt, jeans and brown shoes."""
-    body = _figure("Man body", dict(gender=1, age=0.35, weight=0.1,
-                                    height=0.3, stature=1780,
-                                    pose=ARMS_DOWN), "man", MAN_SMOOTH)
-    hair = _parts("""
-color("#3b2a1e") union() {  // Hair
-  kcad_ellipsoid(c = [0, -38, 1714], r = [90, 114, 74]);  // Hair cap
-  kcad_ellipsoid(c = [0, -104, 1750], r = [70, 42, 28]);  // Front hair
-}""")
-    return _group("Man", body, hair)
-
-
-def build_woman(dims):
-    """A woman in a coral top, black trousers and shoes, long hair."""
-    body = _figure("Woman body", dict(gender=0, age=0.3, weight=0.0,
-                                      height=0.2, stature=1650,
-                                      pose=ARMS_DOWN), "woman",
-                   WOMAN_SMOOTH)
-    hair = _parts("""
-color("#5a3a22") union() {  // Hair
-  kcad_ellipsoid(c = [0, -36, 1590], r = [86, 110, 70]);  // Hair cap
-  kcad_ellipsoid(c = [0, -98, 1620], r = [66, 40, 28]);  // Fringe
-  hull() {  // Long hair
-    kcad_ellipsoid(c = [0, -10, 1560], r = [84, 70, 60]);  // Back of head
-    kcad_ellipsoid(c = [0, 30, 1360], r = [95, 40, 40]);  // Hair ends
-  }
-}""")
-    return _group("Woman", body, hair)
-
-
 def build_figure(dims):
     """A plain human figure (the toolbar's human) to pose and sculpt."""
     p = dict(FIGURE_SIZES.get(dims.get("_size", ""), FIGURE_SIZES["Man"]))
@@ -376,8 +301,6 @@ FIGURE_SIZES = {
                 stature=1780.0),
     "Woman": dict(gender=0.0, age=0.3, weight=0.0, height=0.1,
                   stature=1650.0),
-    "Child": dict(gender=0.5, age=0.0, weight=-0.2, height=-0.6,
-                  stature=1200.0),
     "Senior": dict(gender=1.0, age=1.0, weight=0.3, height=0.0,
                    stature=1720.0),
 }
@@ -393,11 +316,34 @@ PARTS = {
                            build_figure, FIGURE_SIZES,
                            [("stature", "Height"), ("gender", "Gender 0-1"),
                             ("age", "Age 0-1"), ("weight", "Weight -1..1")]),
-    "person_man": _spec("Man (everyday clothes)", build_man),
-    "person_woman": _spec("Woman (everyday clothes)", build_woman),
+    "person_man": _spec("Man (everyday clothes)",
+                        lambda dims: _preset("Casual man")),
+    "person_woman": _spec("Woman (everyday clothes)",
+                          lambda dims: _preset("Casual woman")),
     "person_hero": _spec("Caped superhero", build_hero),
     "person_knight": _spec("Dark knight", build_knight),
 }
+
+
+def _preset(name):
+    from . import human_design
+    return human_design.build({"preset": name})
+
+
+def _slug(name):
+    return "person_" + "".join(c if c.isalnum() else "_"
+                               for c in name.lower()).strip("_")
+
+
+def _add_presets():
+    from . import human_design
+    for name in human_design.PRESETS:
+        if name in ("Casual man", "Casual woman"):
+            continue
+        PARTS[_slug(name)] = _spec(name, lambda dims, n=name: _preset(n))
+
+
+_add_presets()
 
 
 if __name__ == "__main__":

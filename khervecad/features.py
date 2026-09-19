@@ -24,10 +24,11 @@ the Free Software Foundation, either version 3 of the License, or
 
 from __future__ import annotations
 
-from . import curves2d, gears, holes, solids, textured, textures, threads
+from . import (curves2d, gears, holes, outfit, solids, textured, textures,
+               threads)
 
 MODULES = [gears, threads, holes, solids, curves2d, textures,
-           textured]
+           textured, outfit]
 
 NODE_TYPES = {}
 LEAVES = frozenset()
@@ -42,6 +43,9 @@ for _mod in MODULES:
     for _t in _mod.NODE_TYPES:
         _OWNER[_t] = _mod
 TYPES = frozenset(NODE_TYPES)
+#: wrappers whose faces carry their own colours (never cached colourless)
+COLORED = frozenset().union(*(getattr(m, "COLORED", frozenset())
+                              for m in MODULES))
 #: 2D feature types whose outlines mesh.node_outlines asks for
 SHAPES_2D = frozenset(t for t, d in NODE_TYPES.items()
                       if d["category"] == "2d")
@@ -77,6 +81,8 @@ MESH_CACHE_SIZE = 256
 
 def tess(node, env, color, sel, selected):
     from . import mesh
+    if node.type in COLORED:
+        return _OWNER[node.type].tess(node, env, color, sel, selected)
     try:
         resolved = mesh.rp(node, env)
         key = (node.type, repr(sorted(resolved.items())),

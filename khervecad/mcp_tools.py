@@ -1370,6 +1370,34 @@ class McpToolExecutor:
         except molecule_build.BuildError as exc:
             raise ToolError(str(exc))
 
+    def _t_list_character_options(self, params) -> dict:
+        from . import human_design
+        return human_design.options()
+
+    def _t_build_character(self, params) -> dict:
+        from . import human_design
+        params = dict(params)
+        place = {k: params.pop(k) for k in ("x", "y", "rz")
+                 if params.get(k) is not None}
+        replace_id = params.pop("replace_id", None)
+        replace = self._node(replace_id) if replace_id is not None else None
+        if replace is not None and not (replace.params or {}).get(
+                "character"):
+            raise ToolError(f"Node {replace_id} is not a person built by "
+                            "build_character or the Human Builder.")
+        try:
+            part = human_design.insert(
+                self._model, params, x=place.get("x"),
+                y=place.get("y", 0.0), rz=place.get("rz", 0.0),
+                replace=replace)
+        except human_design.SpecError as exc:
+            raise ToolError(f"{exc}. Call list_character_options.")
+        spec = part.params["character"]
+        return {"id": part.id, "name": part.name, "spec": spec,
+                "garments": human_design.garment_rows(spec),
+                "note": "Clothes follow body parts. Look at it with "
+                        "render_view (target_node) from Front and Right."}
+
     def _t_build_molecule(self, params) -> dict:
         from . import molecule_build
         try:

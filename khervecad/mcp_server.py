@@ -398,6 +398,21 @@ rather than computing coordinates: the builder reads each part's depth \
 and turns it to face the room. Each piece becomes its own Object inside \
 its floor's Object. Look with render_view from Top, orthographic.
 
+People & characters:
+- Build people with build_character (call list_character_options \
+first): a preset (Doctor, Chef, Runner, Grandmother, Construction \
+worker, …) and/or choices for body, skin, arm gesture, leg stance, \
+hair, beard, glasses, hat, top, bottom, coat, shoes and gloves. \
+Clothes are coloured by BODY PART (the `outfit` node round the `human` \
+figure), so they stay on in any pose. Invent clothes the catalogue \
+lacks with `garments` rows [part, colour, material] — parts chest, \
+waist, hips, shoulder, upper_arm, forearm, hand, upper_thigh, thigh, \
+shin, ankle, foot, neck, head, groups torso / arm / leg / body, '.L' \
+or '.R' for one side. What stands off the body (a bag, a tie, a crown, \
+a tool in a hand) is ordinary geometry you add beside the figure, \
+placed with face_landmarks and probe_surface. NEVER model a person \
+from spheres and capsules when build_character can.
+
 Molecules and chemical reactions:
 - Build molecules with build_molecule — from the compound library \
 (list_molecules: about 490 — gases, acids, bases and ions, VSEPR \

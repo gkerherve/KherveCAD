@@ -58,7 +58,8 @@ SECTIONS = [
     ("Toys & models", [
         ("Lego", "mdi.toy-brick-outline", ("lego", ["Lego", "Lego sets"])),
         ("Lego Technic", "mdi.cog-outline", ["Lego Technic"]),
-        ("People & characters", "mdi.human", ["Characters"]),
+        ("People & characters", "mdi.human",
+         ("people", ["Characters"])),
         ("Minecraft", "mdi.cube-outline", ["Minecraft"]),
         ("Generative", "mdi.chart-bubble", ["Generative"]),
         ("Cars", "mdi.car-sports", ("cars", ["Cars (from blueprints)",

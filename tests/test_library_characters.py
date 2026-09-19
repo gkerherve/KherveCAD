@@ -36,7 +36,7 @@ def test_shipped_colour_maps_match_their_rules(key):
 
 
 def test_paints_point_at_shipped_maps():
-    for pid in C.PARTS:
+    for pid in ("person_hero", "person_knight"):
         for n in library.PARTS[pid]["build"]({}).walk():
             if n.type == "paint":
                 assert os.path.isfile(n.params["image"])
@@ -46,11 +46,13 @@ def test_heroes_are_muscled_and_people_are_not_hands_on_hips():
     hero = C.build_hero({})
     assert any(n.type == "sculpt" and len(n.params["strokes"]) > 10
                for n in hero.walk())
-    man = next(n for n in C.build_man({}).walk() if n.type == "human")
-    assert man.params["pose"] == C.ARMS_DOWN
+    from khervecad import human_design
+    man = next(n for n in library.PARTS["person_man"]["build"]({}).walk()
+               if n.type == "human")
+    assert man.params["pose"] == human_design.GESTURES["Arms down"]
 
 
 def test_characters_have_their_own_library_menu():
     sub = {name: cats for section in library_groups.SECTIONS
            for name, _icon, cats in section[1]}
-    assert sub["People & characters"] == ["Characters"]
+    assert sub["People & characters"] == ("people", ["Characters"])

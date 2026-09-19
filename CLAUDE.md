@@ -3011,6 +3011,51 @@ into a new module and import.
                        show as skin. Heroes carry an original "K" crest:
                        no studio's logo (a swept-wing crest read as a bat
                        and was dropped).
+  - `outfit.py`      — the **`outfit`** wrapper (2026-09-19, feature
+                       module in `features.MODULES`, `COLORED` so
+                       `features.tess` never caches it colourless):
+                       clothes a `human` BY BODY PART. `PARTS` groups the
+                       rig's bones (head, neck, chest = spine01/02 +
+                       clavicle/breast/shoulder01, waist = spine03/04,
+                       hips = spine05 + pelvis, shoulder = upperarm01,
+                       upper_arm = upperarm02, forearm, hand, upper_thigh
+                       = upperleg01, thigh = upperleg02, shin, ankle,
+                       foot), `GROUPS` (torso, arm, leg, body, all),
+                       ".L"/".R" for one side. Each face takes the part of
+                       the POSED body's nearest vertex (`face_parts`,
+                       40 mm hashed grid, cached) — position-based, so a
+                       sleeve stays on the arm in any pose and a sculpted
+                       body still finds its parts. `garments` rows
+                       [part, colour, material], later wins; `skin` for
+                       the rest. `kcad_outfit(...) { children }` helper
+                       renders children unchanged; the importer unquotes
+                       nested strings (`_text`).
+  - `human_design.py` — the **Human Builder**'s model (Qt-free): a spec
+                       (gender, age, build, stature, skin, gesture,
+                       stance, hair, beard, glasses, hat, top, bottom,
+                       coat, shoes, gloves + colours, `garments`) ->
+                       `build` = outfit(human) + loose solids fitted from
+                       `measure` (posed landmarks + part extents): hair
+                       (11 styles), beards, hats (7), glasses, skirts and
+                       dresses (closed cones from `waist_half` flaring past
+                       `hip_half`), coat tails (a 300° `rotate_extrude`
+                       shell OPEN at the front — a closed cone read as a
+                       dress), hood, cape. GESTURES (13) and STANCES (4)
+                       were checked from front and side: upperarm ry
+                       lowers/raises, rz swings forward, lowerarm rx lifts
+                       the forearm; arms-crossed was not reachable.
+                       ~26 `PRESETS` (also Library parts via
+                       library_characters). `insert` keeps the spec on the
+                       Object (`params["character"]`) for Update selected.
+                       MCP `list_character_options` / `build_character`
+                       (bodies here; instructions have a People section).
+  - `human_dialog.py` / `human_views.py` — Library ▸ People & characters
+                       ▸ **Human Builder…**: combo boxes (item + colour
+                       pairs) and Front / Side / Back views at one scale,
+                       painted by `planview` (Back = the figure turned
+                       half round); builds on a worker QThread (newest
+                       request wins, ~2 s a figure), Random, Insert, Update
+                       selected.
   - `deform.py` `split_long_edges(region=)` refines only edges whose
                        midpoint lies in a box: the sculpt's `region`
                        rows (two corners) refine the head of a 1.6 m
@@ -3328,7 +3373,7 @@ into a new module and import.
                        out. The test also checks the pin 6 mm short of
                        home DOES press on the bore — or it would never
                        hold.
-  - `mcp_schema.py`  — the **MCP tool table**: 68 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 70 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -3649,7 +3694,7 @@ into a new module and import.
   the variable reaching it only through PLACEMENT, and NEVER into the
   geometry of a part (a cube's size, a gear's teeth, a polygon's
   points) — that re-cuts the solid every frame.
-- `docs/MCP.md` — how to connect an assistant, what the 68 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 70 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -3923,7 +3968,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **68 tools**: the object tree, OpenSCAD in
+client gets the whole app as **70 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

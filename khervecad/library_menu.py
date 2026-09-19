@@ -186,6 +186,13 @@ def _cars(window, sub):
     sub.addSeparator()
 
 
+def _people(window, sub):
+    from . import human_dialog
+    sub.addAction(icons.icon("mdi.human-edit"), "Human Builder...",
+                  lambda: human_dialog.open_builder(window))
+    sub.addSeparator()
+
+
 def _crystals(window, sub):
     from . import crystal_dialog
     sub.addAction(icons.icon("mdi.molecule"), "Crystal Builder...",
@@ -216,7 +223,7 @@ def _vacuum(window, sub):
     sub.addSeparator()
 
 
-_BUILDERS = {"vacuum": _vacuum, "cars": _cars, "lego": _lego, "city": _city, "crystals": _crystals,
+_BUILDERS = {"people": _people, "vacuum": _vacuum, "cars": _cars, "lego": _lego, "city": _city, "crystals": _crystals,
              "surfaces": _surfaces,
              "molecules": _molecules}
 

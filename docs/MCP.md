@@ -237,6 +237,29 @@ after it is placed. The fullerenes also build through `build_molecule`
 with `compound: "c60"`. The server's instructions tell a client never
 to place these atoms by hand.
 
+## People & characters
+
+`list_character_options` returns the Human Builder's whole catalogue:
+genders, ages, builds, skin tones, arm gestures (arms down, waving,
+pointing, thinking, hands on hips…) and leg stances (standing,
+walking, sitting…), hair styles and colours, beards, glasses, hats,
+and every top, bottom, coat and pair of shoes with the body parts it
+covers, the named colours, the body parts and part groups, and about
+25 presets (Doctor, Chef, Runner, Grandmother, Construction worker…).
+
+`build_character` adds a dressed, posed person as one Object from a
+preset and/or those choices. Clothes are an `outfit` node round the
+`human` figure that colours each face by the **body part** under it,
+so a sleeve stays on the arm in any pose; skirts, coat tails, hoods,
+capes, hair, hats and glasses are solids fitted to the posed body. An
+assistant invents clothes the catalogue lacks with `garments` rows
+`[part, colour, material]` — `chest`, `waist`, `hips`, `shoulder`,
+`upper_arm`, `forearm`, `hand`, `upper_thigh`, `thigh`, `shin`,
+`ankle`, `foot`, `neck`, `head`, or the groups `torso`, `arm`, `leg`,
+`body`, with `.L` / `.R` for one side. `replace_id` rebuilds a person
+in place. The same builder is **Library ▸ People & characters ▸ Human
+Builder…** in the app, with Front, Side and Back views.
+
 ## Molecules and chemical reactions
 
 `list_molecules` is a compound library of about 490 molecules — gases,

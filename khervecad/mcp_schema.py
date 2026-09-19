@@ -1557,6 +1557,80 @@ TOOLS = [
         }),
     },
     {
+        "name": "list_character_options",
+        "description": (
+            "Everything build_character accepts: genders, ages, builds, "
+            "skin tones, arm gestures and leg stances, hair styles and "
+            "colours, beards, glasses, hats, and every top, bottom, coat "
+            "and pair of shoes with the BODY PARTS it covers; the named "
+            "colours; the body parts and part groups a custom garment "
+            "row may name; the materials; and the presets (Doctor, "
+            "Chef, Runner, Grandmother, …). Call it before "
+            "build_character, and to invent clothes the catalogue lacks."
+        ),
+        "input_schema": _obj({}),
+    },
+    {
+        "name": "build_character",
+        "description": (
+            "Add a dressed, posed PERSON as one Object — the Human "
+            "Builder in one call. Start from a `preset` or none; every "
+            "other key overrides it: body (gender, age, build, stature "
+            "in mm), skin, gesture (arms) and stance (legs), hair and "
+            "hair_colour, beard, glasses, hat + hat_colour, top / bottom "
+            "/ coat / shoes / gloves each + its _colour (a colour name "
+            "from list_character_options or #rrggbb). Clothes are "
+            "painted by BODY PART, so they stay on in any pose; skirts, "
+            "coat tails, hoods, capes, hair, hats and glasses are solids "
+            "fitted to the posed body. To make clothes the catalogue "
+            "lacks, add `garments`: rows [part, colour, material] "
+            "applied last — a part (chest, waist, hips, shoulder, "
+            "upper_arm, forearm, hand, upper_thigh, thigh, shin, ankle, "
+            "foot, neck, head) or group (torso, arm, leg, body), "
+            "optionally '.L' / '.R' for one side: a glove on one hand is "
+            "['hand.R', '#1d1e22', 'Rubber'], striped socks are two "
+            "rows, a one-shoulder top covers 'chest' + 'shoulder.L'. "
+            "Anything that stands off the body (a bag, a tie, a crown) "
+            "is ordinary geometry you add beside it with apply_code, "
+            "placed with face_landmarks / probe_surface on the figure. "
+            "`replace_id` rebuilds an earlier person in place."
+        ),
+        "input_schema": _obj({
+            "preset": {"type": "string",
+                       "description": "A preset from "
+                                      "list_character_options."},
+            "name": {"type": "string"},
+            "gender": {"type": "string"}, "age": {"type": "string"},
+            "build": {"type": "string"},
+            "stature": {"type": "number",
+                        "description": "Height in mm (0 = typical)."},
+            "skin": {"type": "string",
+                     "description": "Skin tone name or #rrggbb."},
+            "gesture": {"type": "string"}, "stance": {"type": "string"},
+            "hair": {"type": "string"}, "hair_colour": {"type": "string"},
+            "beard": {"type": "string"}, "glasses": {"type": "string"},
+            "hat": {"type": "string"}, "hat_colour": {"type": "string"},
+            "top": {"type": "string"}, "top_colour": {"type": "string"},
+            "bottom": {"type": "string"},
+            "bottom_colour": {"type": "string"},
+            "coat": {"type": "string"}, "coat_colour": {"type": "string"},
+            "shoes": {"type": "string"}, "shoes_colour": {"type": "string"},
+            "gloves": {"type": "string"},
+            "gloves_colour": {"type": "string"},
+            "garments": {"type": "array",
+                         "items": {"type": "array"},
+                         "description": "Custom garment rows [part, "
+                                        "colour, material], applied "
+                                        "last."},
+            "x": {"type": "number"}, "y": {"type": "number"},
+            "rz": {"type": "number",
+                   "description": "Turn about Z, degrees (0 faces -Y)."},
+            "replace_id": {"type": "integer",
+                           "description": "A person Object to rebuild "
+                                          "in place."},
+        }),
+    },
+    {
         "name": "build_reaction",
         "description": (
             "Write a chemical reaction in 3D: '2 H2 + O2 -> 2 H2O', 'CH4 "
