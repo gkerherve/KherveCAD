@@ -2613,6 +2613,17 @@ into a new module and import.
                        chain, point; `miss` — never "error", which means a
                        failed call). `mesh.node_matrix` now knows `joint`
                        (ancestor_matrix ignored joints before).
+  - `wireframe.py`   — **Wireframe** (Blender's modifier, 2026-09-19;
+                       Deform family, baked `kcad_wireframe(thickness=,
+                       sides=, angle=, joints=)`): every REAL edge (faces
+                       meeting past `angle`°, so a flat face's diagonal is
+                       skipped) a Manifold cylinder, a ball per corner
+                       (radius / cos(π/segments) so the faceted ball holds
+                       every cap), one batch union. Where many struts cross
+                       symmetrically the union leaves 0.0007 µm edges:
+                       each strut's radius varies by < 0.1 % and the result
+                       is welded at 4 digits (`weld_tiny`, what codegen
+                       writes anyway) — watertight. `MAX_STRUTS` 20000.
   - `engine.py`      — OpenSCAD integration: binary discovery,
                        debounced background renders via QProcess,
                        STL parse (binary + ASCII) and STL write.

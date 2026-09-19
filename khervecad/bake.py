@@ -122,6 +122,15 @@ NODE_TYPES = {
         schema=[("voxel", "Voxel size (mm)", "float", 0.01, 1e4),
                 ("snap", "Snap onto the original surface", "bool",
                  None, None)]),
+    "wireframe": dict(
+        label="Wireframe (struts)", category=OPERATION,
+        icon="mdi.vector-polyline",
+        params=dict(thickness=1.0, sides=6, angle=1.0, joints=True),
+        schema=[("thickness", "Strut thickness (mm)", "float", 0.01, 1e4),
+                ("sides", "Strut sides", "int", 3, 32),
+                ("angle", "Skip edges flatter than (°, 0 = all)", "float",
+                 0.0, 179.0),
+                ("joints", "Balls at the corners", "bool", None, None)]),
     "bevel": dict(
         label="Bevel edges", category=OPERATION,
         icon="mdi.square-rounded-outline",
@@ -224,7 +233,7 @@ LEAVES = frozenset({"polyhedron", "loft", "human"})
 WRAPPERS = frozenset({"sweep", "section_loft", "blend", "bend", "twist",
                       "taper", "lattice", "subdivide", "fillet", "shell",
                       "sculpt", "hair_cap", "decimate", "shrinkwrap",
-                      "bevel", "remesh"})
+                      "bevel", "remesh", "wireframe"})
 
 #: wrappers whose surface is computed here and baked into the program,
 #: with their helper module's parameters (besides points and faces)
@@ -240,6 +249,8 @@ _BAKED = {
     "subdivide": [("levels", 1)],
     "decimate": [("ratio", 0.5), ("tolerance", 0)],
     "remesh": [("voxel", 1), ("snap", True)],
+    "wireframe": [("thickness", 1), ("sides", 6), ("angle", 1),
+                  ("joints", True)],
     "bevel": [("width", 1), ("segments", 4), ("profile", 0.5),
               ("angle", 30), ("which", "convex")],
     "shrinkwrap": [("mode", "nearest"), ("axis", "normal"),
@@ -522,6 +533,12 @@ def _compute(node, env) -> list:
            mesh._children_mesh(node, env, None, frozenset(), False)]
     if t == "subdivide":
         return deform.loop_subdivide(src, int(num("levels", 1.0)))
+    if t == "wireframe":
+        from . import wireframe
+        out = wireframe.wireframe(src, num("thickness", 1.0),
+                                  int(num("sides", 6.0)), num("angle", 1.0),
+                                  bool(p.get("joints", True)))
+        return src if out is None else out
     if t == "remesh":
         from . import remesh
         return remesh.remesh(src, num("voxel", 1.0),
@@ -735,7 +752,7 @@ def _b_baked(kind):
                                 if isinstance(row, list)]
                                if isinstance(value, list)
                                else [list(r) for r in defaults[key]])
-            elif key in ("closed", "show_target", "snap"):
+            elif key in ("closed", "show_target", "snap", "joints"):
                 params[key] = value is True or value == "true"
             elif key == "which":
                 from .bevel import EDGES
@@ -747,6 +764,7 @@ def _b_baked(kind):
             elif (kind, key) in (("blend", "detail"),
                                  ("subdivide", "levels"),
                                  ("bevel", "segments"),
+                                 ("wireframe", "sides"),
                                  ("sweep", "smooth"),
                                  ("section_loft", "smooth")):
                 try:
@@ -883,6 +901,19 @@ def _check_baked(node, env):
                     "fastest, then y, then z")
     if t == "sculpt":
         return _check_sculpt(p, env)
+    if t == "wireframe":
+        from . import csg, mesh, wireframe
+        if not csg.available():
+            return ("wireframe needs the manifold3d package (pip install "
+                    "manifold3d) to join its struts")
+        src = [tri for tri, _c, _s in
+               mesh._children_mesh(node, env, None, frozenset(), False)]
+        n = len(wireframe.edges(src, mesh.rv(p.get("angle", 1.0), env,
+                                              1.0)))
+        if n > wireframe.MAX_STRUTS:
+            return (f"wireframe: {n} struts is too many (max "
+                    f"{wireframe.MAX_STRUTS}) — Decimate the part first "
+                    "or raise the angle")
     if t == "remesh":
         from . import mesh
         if mesh.rv(p.get("voxel", 1.0), env, 1.0) <= 0:

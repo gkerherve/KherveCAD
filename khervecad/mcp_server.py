@@ -213,7 +213,10 @@ it has vertices to bend. A part check_printability calls not \
 watertight — a union of overlapping pieces, an imported scan, a folded \
 sculpt — or that bevel / shrinkwrap / a boolean refuses, goes in \
 `kcad_remesh(voxel = 0.5, snap = true) { … }`: one closed solid again \
-(voxel = the detail kept, mm). \
+(voxel = the detail kept, mm). A lattice, cage, lamp shade or geodesic \
+dome: `kcad_wireframe(thickness = 1.5, sides = 6, angle = 1, joints = \
+true) { <shape> }` makes every real edge a strut (angle 1 skips flat \
+faces' diagonals); nest kcad_decimate inside for fewer, longer struts. \
 Prefer a sweep to a chain of hull()s. For a body whose cross-sections \
 have corners (a car, a boat hull), `kcad_section_loft(heights = [[z0], \
 [z1], ...], smooth = 0)` with one 2D child shape per section, in \

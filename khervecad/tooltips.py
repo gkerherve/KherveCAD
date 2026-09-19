@@ -393,6 +393,17 @@ TIPS = {
          "Or within: a distance in mm the surface may move instead — "
          "0.05 is invisible on a print."],
         "A closed solid stays closed, so it still prints."),
+    "wireframe": (
+        "Wireframe (struts)",
+        "Turns a part's edges into round printable struts with balls at "
+        "the corners — lamp shades, cages, geodesic domes, lightweight "
+        "lattices, wire sculptures.",
+        [_SELECTION + " Pick the part whose edges become struts.",
+         "Click Wireframe.",
+         "Strut thickness (mm) and sides (6 is round enough).",
+         "Skip edges flatter than: 1° drops the diagonals of flat faces; "
+         "0 keeps every triangle edge."],
+        "Put a Decimate or Remesh inside it to choose the pattern."),
     "remesh": (
         "Remesh (clean solid)",
         "Rebuilds a messy part as ONE clean closed solid of even "
