@@ -274,21 +274,18 @@ def shot_tutorial(win):
     save(win.grab(), "tutorial_4_difference", WIDE)
     save(win.view3d.grab(), "view3d_plate")
     save(win.builder.grab(), "tab_object")
-    win.builder.setCurrentIndex(4)                   # Code tab
+    win.builder.setCurrentIndex(3)                   # Code tab
     settle(300)
     save(win.builder.grab(), "tab_code")
 
 
 def shot_tabs(win):
-    load(win, "Bolt circle (Masters demo)")
+    load(win, "Bolt circle (Object instances)")
     win.builder.setCurrentIndex(0)
     settle(200)
     save(win.builder.grab(), "tab_main")
-    win.builder.setCurrentIndex(2)
-    settle(200)
-    save(win.builder.grab(), "tab_masters")
     load(win, "Parametric box")
-    win.builder.setCurrentIndex(3)
+    win.builder.setCurrentIndex(2)
     settle(200)
     save(win.builder.grab(), "tab_variables")
     win.builder.setCurrentIndex(0)

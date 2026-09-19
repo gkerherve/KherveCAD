@@ -287,7 +287,8 @@ def test_add_instance_refuses_something_that_is_not_an_object(ex):
 def test_a_master_and_its_linked_copies(ex, window):
     ident = cube(ex)
     out = call(ex, "make_master", node_id=ident)
-    assert window.model.masters_group() is not None
+    master = window.model.find(out["master"])
+    assert master.type == "component" and not master.visible
     call(ex, "add_linked_copy", node_id=out["master"],
          params={"x": 30.0})
     refs = [n for n in window.model.root.children

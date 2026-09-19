@@ -33,7 +33,7 @@ the <b>Code</b> tab is written from the tree, so the two always agree
 <table>
 <tr><td><b>1</b></td><td><b>Object tree &amp; tabs</b> &mdash; the
 model itself. Main (the assembly), Object (the part you are building),
-Masters, Variables and Code.</td></tr>
+Variables and Code.</td></tr>
 <tr><td><b>2</b></td><td><b>Properties</b> &mdash; every setting of the
 selected object: sizes, positions, angles, colour.</td></tr>
 <tr><td><b>3</b></td><td><b>2D sketch</b> &mdash; a millimetre grid
@@ -126,8 +126,7 @@ While this tab is open, the 2D and 3D views show only this part, at its
 own origin.</p>
 {figure("tab_object", "Object tab: the construction of one part, step "
         "by step.", 430)}
-<p><b>Masters</b> holds reusable definitions &mdash; see the chapter on
-Masters. <b>Variables</b> is a small spreadsheet of named numbers
+<p><b>Variables</b> is a small spreadsheet of named numbers
 (<i>w</i>, <i>wall</i>&hellip;) you can use in any field. <b>Code</b>
 shows the OpenSCAD program and lets you edit it.</p>
 {figure("tab_variables", "Variables tab: named values used by "
@@ -635,22 +634,21 @@ one part</b> to each other, so a part can itself be assembled from
 pieces.</p>
 """),
 
-        ("masters", "Masters and linked copies", f"""
-<p>A <b>Master</b> is a reusable piece kept in the <b>Masters</b> tab; a
-<b>Linked copy</b> places it in the model with its own position. Edit
-the master and every copy changes &mdash; the classic example is one
+        ("masters", "Linked copies", """
+<p>To use one piece many times, make it an <b>Object</b> and place
+<b>Linked copies</b> of it, each with its own position and colour. Edit
+the Object and every copy changes &mdash; the classic example is one
 bolt copied round a bolt circle.</p>
 <ol>
-<li>Right-click an object &rsaquo; <b>Make Master</b>. It moves to the
-Masters tab and a Linked copy is left where it was.</li>
-<li>In the Masters tab, select a master and add more copies; give each
-copy its position (or put one copy in a For loop).</li>
+<li>Right-click an object &rsaquo; <b>Make Object</b>, then in Main
+right-click &rsaquo; <b>Insert Object</b> for each copy (or <b>To
+Main</b> in the Object tab).</li>
+<li>Or right-click anything &rsaquo; <b>Linked copy</b>: a copy that
+follows the original. Put one copy in a For loop to place many.</li>
 </ol>
-{figure("tab_masters", "The Masters tab.", 430)}
-<p>Masters are for repeated <i>geometry</i> inside one model; Objects
-are for <i>parts</i> in an assembly. Library &rsaquo; Learn OpenSCAD &rsaquo;
-21&nbsp;&middot;&nbsp;Masters and Mechanical &rsaquo; Bolt circle show
-both.</p>
+<p>Older documents with a <b>Masters</b> tab open with each master
+turned into an Object and its copies unchanged. Library &rsaquo; Learn
+OpenSCAD &rsaquo; 21 and Mechanical &rsaquo; Bolt circle show both.</p>
 """),
 
         ("colour", "Colour and materials", """

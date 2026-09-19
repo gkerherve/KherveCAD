@@ -4,7 +4,7 @@ Each entry builds a complete document tree (a fresh ``root`` node) that
 replaces the current document, so a new user can load something real and
 take it apart. The examples double as a tour of the app: variables and
 expressions, booleans, the part library, the fasteners (hex bolts,
-socket screws, nuts), and Masters with Linked copies.
+socket screws, nuts), and Objects placed as Linked copies.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -396,14 +396,14 @@ def fan_impeller() -> CadNode:
 
 
 def bolt_circle() -> CadNode:
-    """A Masters demo: one M6 bolt lives in the Masters store, and a
-    for-loop drops six Linked copies of it around a flange disc. Edit
-    the master and every bolt in the ring updates."""
+    """An Object demo: one M6 bolt is defined once as an Object (the
+    Object tab), and a for-loop drops six Linked copies of it around a
+    flange disc. Edit the Object and every bolt in the ring updates."""
     from .library import default_part
+    from .model import _definition
     bolt = default_part("bolt_hex")
     bolt.name = "Bolt"
-    masters = CadNode("masters", "Masters")
-    masters.add(bolt)
+    bolt = _definition(bolt, set())
     disc = _cyl("Flange disc", 42, 6, segments=96)
     ref = CadNode("reference", "Copy of Bolt",
                   dict(ref="Bolt", x="30 * cos(i * 60)",
@@ -412,7 +412,7 @@ def bolt_circle() -> CadNode:
     ring = CadNode("for_loop", "Bolt ring",
                    dict(variable="i", start=0, end=5, step=1, values=""))
     ring.add(ref)
-    return _root(masters, disc, ring)
+    return _root(bolt, disc, ring)
 
 
 def _pattern(name, kind, child, **params) -> CadNode:
@@ -947,17 +947,15 @@ def learn_20_while() -> CadNode:
 
 
 def learn_21_masters() -> CadNode:
-    """21 · Masters — define a part once, place it many times. The
-    "Widget" lives in the Masters tab; three Linked copies sit in the
-    scene. Edit the master and every copy updates. (See the Masters tab
-    and the Objects tree.)"""
-    widget = CadNode("union", "Widget")
+    """21 · Objects — define a part once, place it many times. The
+    "Widget" is an Object (open it in the Object tab); three instances
+    sit in Main. Edit the Object and every copy updates."""
+    widget = CadNode("component", "Widget")
     widget.add(_cyl("Base", 12, 6, segments=32))
     widget.add(_sphere("Knob", 7, z=12))
     widget.add(_cyl("Stem", 3, 12, z=6, segments=16))
-    masters = CadNode("masters", "Masters")
-    masters.add(widget)
-    root = _root(masters)
+    widget.visible = False                  # a definition, placed below
+    root = _root(widget)
     for i, x in enumerate((-45.0, 0.0, 45.0)):
         root.add(CadNode("reference", f"Copy {i + 1}",
                          dict(ref="Widget", x=x, y=0.0, z=0.0,
@@ -1330,7 +1328,7 @@ EXAMPLES = [
     ("18 · Variables", "Learn", learn_18_variables),
     ("19 · If / else", "Learn", learn_19_if_else),
     ("20 · While loop (spiral)", "Learn", learn_20_while),
-    ("21 · Masters", "Learn", learn_21_masters),
+    ("21 · Objects — define once, place many", "Learn", learn_21_masters),
     ("Parametric box", "Mechanical", parametric_box),
     ("L-bracket with holes", "Mechanical", l_bracket),
     ("Bolt & nut through a plate", "Mechanical", bolt_and_nut),
@@ -1345,7 +1343,7 @@ EXAMPLES = [
     ("Pipe run & handrail (sweep)", "Mechanical", pipe_run),
     ("Filleted block (fillet edges)", "Mechanical", filleted_block),
     ("Hollow cup (shell)", "Mechanical", hollow_cup),
-    ("Bolt circle (Masters demo)", "Mechanical", bolt_circle),
+    ("Bolt circle (Object instances)", "Mechanical", bolt_circle),
     ("Bolt circle & stair (pattern)", "Mechanical", pattern_demo),
     ("Ch.2 · Wall anchor", "Projects", project_02_wall_anchor),
     ("Ch.3 · Window stopper", "Projects", project_03_window_stopper),

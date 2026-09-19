@@ -542,6 +542,63 @@ def _group_prefix(p) -> str:
     return prefix
 
 
+def _definitions_index(root) -> int:
+    """Where a new top-level definition goes: after the leading
+    variables / assignments."""
+    index = 0
+    for child in root.children:
+        if child.type not in ("variables", "assign", "scad_use"):
+            break
+        index += 1
+    return index
+
+
+def _definition(node, taken) -> "CadNode":
+    """*node* (detached) as a hidden Object definition named after it.
+    A plain Group simply becomes the Object; anything else — or a Group
+    with its own move / turn / colour, which an Object's module would
+    drop (a component's placement goes on its CALL) — is wrapped, and
+    the wrapped node renamed "<name> body" so the name stays unique."""
+    if node.type == "component":
+        comp = node
+    elif node.type == "union" and not _group_prefix(node.params):
+        node.type = "component"
+        comp = node
+    else:
+        comp = CadNode("component", node.name)
+        base = candidate = f"{node.name} body"
+        for i in itertools.count(2):
+            if candidate not in taken:
+                break
+            candidate = f"{base} {i}"
+        node.name = candidate
+        comp.add(node)
+    comp.visible = False
+    return comp
+
+
+def retire_masters(root) -> int:
+    """Masters were folded into Objects (2026-09-19): an Object is the
+    same "define once, place many" and also takes a colour, anchors,
+    mates, the exploded view and its own module. Every master of an old
+    document's Masters store becomes a hidden Object where the store
+    stood; its Linked copies then call that Object's module
+    (`CadNode._emit_reference`), so the scene is unchanged. Returns how
+    many masters were converted."""
+    moved = 0
+    for store in [c for c in root.children if c.type == "masters"]:
+        index = store.index()
+        root.remove(store)
+        taken = {n.name for n in root.walk()} | \
+            {n.name for n in store.walk()}
+        for master in list(store.children):
+            store.remove(master)
+            root.add(_definition(master, taken), index)
+            index += 1
+            moved += 1
+    return moved
+
+
 # ------------------------------------------------------------------ node
 
 #: "Cube [Body]" — a node's generic name plus the label that says what
@@ -1133,6 +1190,7 @@ class DocumentModel(QObject):
         try:
             data = json.loads(state)
             self.root = node_from_dict(data["tree"])
+            retire_masters(self.root)
             self.dimensions = [dict(d) for d in data.get("dimensions", [])]
             self.reference_images = [dict(r) for r in
                                      data.get("references", [])]
@@ -1556,52 +1614,39 @@ class DocumentModel(QObject):
 
     # -------------------------------------------------------- masters
     def masters_group(self, create: bool = False) -> CadNode:
-        """The Masters definitions store at the top of the tree (created
-        on demand). Returns None when absent and *create* is False."""
+        """The retired Masters store, if an unconverted tree still has
+        one (``retire_masters`` removes it on load). Never created."""
         for child in self.root.children:
             if child.type == "masters":
                 return child
-        if not create:
-            return None
-        group = CadNode("masters", "Masters")
-        # keep it at the top, just below a leading Variables group
-        idx = 1 if (self.root.children
-                    and self.root.children[0].type == "variables") else 0
-        self.root.add(group, idx)
-        return group
-
-    def new_master(self, name: str = "") -> CadNode:
-        """Create an empty master (a union container) in the store."""
-        group = self.masters_group(create=True)
-        master = CadNode("union", name or self.unique_name("union"))
-        group.add(master)
-        self.structure_changed.emit()
-        return master
+        return None
 
     def make_master(self, node: CadNode) -> CadNode:
-        """Move *node* into the Masters store and leave a Linked copy in
-        its place, so the scene is unchanged but the definition now lives
-        in the Masters tab. Returns the Linked copy."""
-        if node.parent is None or node.type in ("masters", "root"):
+        """Define *node* once and place it by reference: it becomes a
+        hidden Object at the top level (listed in the Object tab) and a
+        Linked copy — an instance of it — takes its place, even inside a
+        loop. What the retired Masters store did, now with an Object, so
+        the copies can be coloured, mated and exploded. Returns the
+        Linked copy."""
+        if node.parent is None or \
+                node.type in ("masters", "variables", "root", "assign"):
             return None
-        group = self.masters_group(create=True)
-        if node is group or group in node.walk():
-            return None
-        # a unique name so the reference resolves reliably
         names = [n.name for n in self.root.walk()]
-        if names.count(node.name) > 1:
+        if not node.name or names.count(node.name) > 1:
             node.name = self.unique_name(node.type)
         parent, index = node.parent, node.index()
-        ref = CadNode("reference", f"Copy of {node.name}",
-                      dict(ref=node.name))
         parent.remove(node)
+        comp = _definition(node, {n.name for n in self.root.walk()})
+        ref = CadNode("reference", f"Copy of {comp.name}",
+                      dict(ref=comp.name))
         parent.add(ref, index)
-        group.add(node)
+        self.root.add(comp, _definitions_index(self.root))
         self.structure_changed.emit()
         return ref
 
     def instance_master(self, master: CadNode) -> CadNode:
-        """Add a Linked copy of *master* to the document (the scene)."""
+        """Add a Linked copy of *master* (any named node) to the top of
+        the document."""
         if master.name and \
                 [n.name for n in self.root.walk()].count(master.name) > 1:
             master.name = self.unique_name(master.type)

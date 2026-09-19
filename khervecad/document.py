@@ -17,7 +17,7 @@ import json
 import os
 
 from .meshimport import relative_for_save, resolve_paths
-from .model import NODE_TYPES, CadNode, DocumentModel
+from .model import NODE_TYPES, CadNode, DocumentModel, retire_masters
 from .units import coerce
 
 FORMAT_VERSION = 12         # 4: "component" (Object) node type
@@ -88,6 +88,7 @@ def load_kcad(model: DocumentModel, path: str):
     if data.get("format") != "kcad":
         raise ValueError("not a KherveCAD document")
     model.root = node_from_dict(data["tree"])
+    retire_masters(model.root)          # an old Masters store -> Objects
     resolve_paths(model.root, os.path.dirname(os.path.abspath(path)))
     # segment override — default on at 45 when the file predates it
     model.global_fn = int(data.get("global_fn", 45))
