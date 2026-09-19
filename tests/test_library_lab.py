@@ -60,15 +60,21 @@ def test_template_builds_furnished(app, name):
     floor = house.floors[0]
     assert len(floor.rooms) >= 4 and H.collect_walls(floor)
     count = 0
-    for spec_room, room in zip(T.spec(name)["floors"][0]["rooms"],
-                               floor.rooms):
-        for fs, f in zip(spec_room["furniture"], room.furniture):
-            count += 1
-            assert room.x <= f.x <= room.x + room.w, (room.name, f.part_id)
-            assert room.y <= f.y <= room.y + room.d, (room.name, f.part_id)
-            if fs.get("on_top"):              # landed on a bench or desk
-                assert f.z > 500, (room.name, f.part_id)
-    assert count > 20
+    for spec_floor, built in zip(T.spec(name)["floors"], house.floors):
+        for spec_room, room in zip(spec_floor["rooms"], built.rooms):
+            # every piece the spec lists is built: none silently dropped
+            assert len(room.furniture) == len(spec_room["furniture"]), \
+                room.name
+            for fs, f in zip(spec_room["furniture"], room.furniture):
+                count += 1
+                assert room.x <= f.x <= room.x + room.w, (room.name, f.part_id)
+                assert room.y <= f.y <= room.y + room.d, (room.name, f.part_id)
+                if fs.get("on_top"):          # landed on a bench or desk
+                    assert f.z > 500, (room.name, f.part_id)
+    # the smallest design (a 1-bedroom bungalow) is 18 pieces over all
+    # floors; the old "> 20" counted the ground floor only, which a
+    # two-storey house's bedrooms are not on
+    assert count >= 15
     tris = mesh.tessellate(H.build_floor(floor, True), fn=12)
     assert len(tris) < 150_000
 
