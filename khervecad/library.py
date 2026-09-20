@@ -1209,7 +1209,7 @@ from . import (library_cards, library_chem, library_crystal,  # noqa: E402
                library_motion, library_solar, library_music,
                library_music_more, library_kitchen, library_electronics,
                library_characters, library_animals, library_sport,
-               stadium, library_leaves)
+               stadium, library_leaves, library_stones)
 PARTS.update(library_vacuum.PARTS)
 PARTS.update(library_uhv.PARTS)
 PARTS.update(library_manip.PARTS)
@@ -1262,6 +1262,7 @@ PARTS.update(library_kitchen.PARTS)
 PARTS.update(library_sport.PARTS)
 PARTS.update(stadium.PARTS)
 PARTS.update(library_leaves.PARTS)
+PARTS.update(library_stones.PARTS)
 # the user's own saved parts (My Library, on disk) — re-read after saves
 from . import user_library  # noqa: E402
 try:
@@ -1290,7 +1291,8 @@ _COUNT_FIELDS = ({"bolts"} | library_lego.COUNT_FIELDS
                  | library_kitchen.COUNT_FIELDS
                  | library_sport.COUNT_FIELDS
                  | stadium.COUNT_FIELDS
-                 | library_leaves.COUNT_FIELDS)
+                 | library_leaves.COUNT_FIELDS
+                 | library_stones.COUNT_FIELDS)
 
 
 def insert_hook(part_id: str):

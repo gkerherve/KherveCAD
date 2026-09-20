@@ -13,10 +13,13 @@ A tree is grown, not assembled from balls:
 - each branch becomes ONE closed tube — rings carried along the
   polyline by parallel transport, capped at both ends — so bark
   triangles stay few and no two pieces share a vertex;
-- LEAVES are small closed diamonds (a flat bipyramid, 8 triangles; a
-  4-triangle tetrahedron at city detail) set along the last twigs,
-  facing outward, in several greens; blossom, needles, fronds and fruit
-  are the same pieces in other shapes and colours.
+- LEAVES: a broadleaf at high / medium detail carries the Leaves
+  library's real blades in bunches (`treeleaves`); the rest are small
+  closed diamonds (a flat bipyramid, 8 triangles; a 4-triangle
+  tetrahedron at city detail) set along the last twigs, facing outward,
+  in several greens; blossom, needles, fronds and fruit are the same
+  pieces in other shapes and colours. Trunks and limbs get their bark
+  from `treebark` (smoothed, furrowed, flared foot, collars).
 
 Everything is written as `polyhedron` nodes built point by point (no
 welding: coincident vertices of neighbouring pieces would pair one edge
@@ -39,6 +42,7 @@ import math
 import random
 from functools import lru_cache
 
+from . import treebark, treeleaves
 from .model import CadNode
 
 GOLDEN = math.radians(137.5)
@@ -225,9 +229,10 @@ class Mesh:
             fixed.append((a, b, c) if out >= 0 else (a, c, b))
         self.piece(pts, fixed)
 
-    def tube(self, path, radii, sides):
+    def tube(self, path, radii, sides, radial=None):
         """A closed tube through *path* (points), radius per point:
-        rings by parallel transport, capped with fans."""
+        rings by parallel transport, capped with fans. *radial*
+        (ring index, angle) -> multiplier roughens the surface (bark)."""
         if len(path) < 2:
             return
         d = _norm(_sub(path[1], path[0]))
@@ -245,10 +250,12 @@ class Mesh:
                 d = nd
             v = _cross(d, u)
             r = max(radii[i], 0.5)
-            rings.append([_add(p, _add(_mul(u, math.cos(a) * r),
-                                        _mul(v, math.sin(a) * r)))
-                          for a in (k * 2 * math.pi / sides
-                                    for k in range(sides))])
+            rings.append([
+                _add(p, _add(_mul(u, math.cos(a) * r * (
+                    radial(i, a) if radial else 1.0)),
+                    _mul(v, math.sin(a) * r * (
+                        radial(i, a) if radial else 1.0))))
+                for a in (k * 2 * math.pi / sides for k in range(sides))])
         pts = [q for ring in rings for q in ring]
         tris = []
         for i in range(len(rings) - 1):
@@ -506,7 +513,7 @@ def _build(species, height, season, detail, seed):
     h = height or sp["height"]
     frac, sides, cut, full = DETAIL.get(detail, DETAIL["high"])
     rng = random.Random(f"leaves:{species}:{seed}")
-    bark = Mesh()
+    bark, marks = Mesh(), Mesh()
     greens = sp["greens"]
     if species not in EVERGREEN and season in SEASONS and \
             SEASONS[season] is not None and species != "cherry":
@@ -514,7 +521,7 @@ def _build(species, height, season, detail, seed):
     if species == "cherry" and season == "Summer":
         greens = ("#4f7d35", "#5f8e3c", "#6a9a44")
     leaves = [Mesh(), Mesh(), Mesh()]
-    extras = Mesh()
+    extras, mass = Mesh(), Mesh()
     scale = h / 10000.0
     ll, lw, shape = sp["leaf"]
     ll, lw = ll * max(scale, 0.35) ** 0.5, lw * max(scale, 0.35) ** 0.5
@@ -529,23 +536,42 @@ def _build(species, height, season, detail, seed):
     else:
         branches = grow(species, h, seed, cut)
         depth = max(b.level for b in branches)
+        rich = treebark.SIDES.get(detail)       # furrowed bark, flared foot
         for b in branches:
             s = sides if b.level < 2 else max(3, sides - 2)
             if detail == "city" and b.level >= max(2, depth) and \
                     sp["crown"] != "weeping":
                 continue                     # twigs hide in the leaves
-            bark.tube(b.path, b.radii, s)
+            if rich and b.level <= 1:
+                trunk_sides, limb_sides, sub = rich
+                path, radii = treebark.limb(
+                    bark, b, species,
+                    trunk_sides if b.level == 0 else limb_sides,
+                    sub if b.level == 0 else max(2, sub // 2),
+                    treebark.seeded(species, seed, len(bark.faces)))
+                if b.level == 0 and species == "birch":
+                    treebark.lenticels(marks, treebark.seeded(
+                        species, seed, "marks"), path, radii, h)
+            else:
+                bark.tube(b.path, b.radii, s)
         if greens:
             _foliage(rng, sp, species, branches, h, leaves, extras, detail,
-                     full, season)
+                     full, season, mass)
     group = CadNode("union", f"{sp['label']}", {})
     group.add(_colour(bark.node("Branches"), sp["bark"], "Bark", "Bark"))
+    if marks.faces:
+        group.add(_colour(marks.node("Lenticels"), "#2b2a28", "Matte",
+                          "Bark marks"))
     for i, m in enumerate(leaves):
         if m.faces:
             mat = "Leaves" if shape != "blossom" or season != "Spring" and \
                 species != "cherry" else "Matte"
             group.add(_colour(m.node("Leaves"), greens[i % len(greens)],
                               mat, "Leaves"))
+    if mass.faces:                    # the dense core the real leaves sit on
+        group.add(_colour(mass.node("Foliage mass"),
+                          treeleaves.shade(greens[0], 0.72), "Leaves",
+                          "Foliage mass"))
     if extras.faces:
         group.add(_colour(extras.node("Fruit"), sp["fruit"], "Plastic",
                           "Fruit"))
@@ -556,6 +582,8 @@ def _build(species, height, season, detail, seed):
 #: fraction of the tree's height, by leaf shape
 FOLIAGE = {"broad": (60, 0.02), "blossom": (70, 0.018),
            "needle": (26, 0.03)}
+#: at most this many leaf bunches a crown (one per outer twig)
+MAX_BUNCHES = 150
 #: the smallest leaf, mm — a shrub's leaves at 2 % of 1.5 m vanished
 MIN_LEAF = 70.0
 
@@ -565,7 +593,7 @@ def weeping_leaf(sp):
 
 
 def _foliage(rng, sp, species, branches, h, leaves, extras, detail, full,
-             season):
+             season, mass=None):
     """Leaves as a CLOUD round every twig — a real crown is thousands of
     leaves in clumps, which the eye reads as mass with light between.
     Broad leaves fill a ball round the twig's outer half, facing out
@@ -608,6 +636,16 @@ def _foliage(rng, sp, species, branches, h, leaves, extras, detail, full,
                                               length * 0.5, width * 0.5,
                                               thick, False)
         return
+    real = treeleaves.uses_real_leaves(species, shape, season, detail)
+    if real:                               # the Leaves library's blades
+        n = treeleaves.per_twig(detail, len(twigs))
+        length *= treeleaves.SIZE_K[detail]
+        tpl = treeleaves.template(species, round(length / 10.0) * 10.0)
+        unit = length / max(round(length / 10.0) * 10.0, 1.0)
+    if real and mass is not None and not weeping_leaf(sp):
+        _real_crown(rng, dict(sp, species=species), branches, h, leaves, mass,
+                    tpl, unit, detail, extras, season, length)
+        return
     tufts = sp.get("tufts", False)
     if shape == "needle":                   # sprays on every side branch
         if not tufts:
@@ -619,7 +657,7 @@ def _foliage(rng, sp, species, branches, h, leaves, extras, detail, full,
             n *= 2
     weeping = sp["crown"] == "weeping"
     for b in twigs:
-        count = n * (2 if weeping else 1)
+        count = n * (2 if weeping and not real else 1)
         if shape == "needle" and b.level < depth:
             count = max(2, n // 2)
         for _k in range(count):
@@ -648,11 +686,61 @@ def _foliage(rng, sp, species, branches, h, leaves, extras, detail, full,
                 wv = _norm(_cross(ld, _add(out, (0.2, 0.1, 0.9))))
             k = rng.uniform(0.7, 1.3)
             q = (q[0], q[1], max(q[2], length * k * 1.1))
-            leaves[rng.randrange(3)].leaf(q, ld, wv, length * k, width * k,
-                                          thick, full)
+            if real:
+                treeleaves.place(leaves[rng.randrange(3)], tpl, q, ld,
+                                 (rng.gauss(0, 0.35), rng.gauss(0, 0.35),
+                                  0.0), unit * k, rng.uniform(-0.5, 0.5))
+            else:
+                leaves[rng.randrange(3)].leaf(q, ld, wv, length * k,
+                                              width * k, thick, full)
             if sp.get("fruit") and season in ("Summer", "Autumn") \
                     and rng.random() < 0.06:
                 extras.blob(_add(q, (0, 0, -length * 0.3)), length * 0.3)
+
+
+def _real_crown(rng, sp, branches, h, leaves, mass, tpl, unit, detail,
+                extras, season, reach):
+    """A crown of leaf BUNCHES: at each outer twig a small dark core
+    (32 triangles, hidden by its own leaves) with the Leaves library's
+    real blades radiating from it, pointing out and drooping, like the
+    rosette a real shoot carries — from a distance the tree is a full
+    mass, close up every leaf has its species' true outline."""
+    depth = max(b.level for b in branches)
+    spots = []                       # (branch, fraction along it)
+    for b in branches:
+        if b.level == depth:
+            spots += [(b, 1.0), (b, rng.uniform(0.55, 0.8))]
+        elif b.level == depth - 1 and depth > 1:
+            spots.append((b, rng.uniform(0.6, 0.95)))
+    if len(spots) > MAX_BUNCHES:
+        spots = rng.sample(spots, MAX_BUNCHES)
+    n = treeleaves.per_twig(detail, len(spots))
+    for b, t in spots:
+        p, d, _r = _point_at(b, min(t, 0.999))
+        rad = reach * 0.5 * rng.uniform(0.85, 1.15)
+        c = _add(p, _mul(d, rad * 0.5))
+        c = (c[0], c[1], max(c[2], reach * 1.1))      # never in the ground
+        mass.clump(rng, c, rad)
+        for _k in range(n):
+            out = _norm((rng.gauss(0, 1), rng.gauss(0, 1),
+                         rng.gauss(0, 1) * 0.7))
+            at = _add(c, _mul(out, rad * 0.8))
+            side = _norm(_cross(out, (rng.gauss(0, 1), rng.gauss(0, 1),
+                                      rng.gauss(0, 1))))
+            ld = _norm(_add(_add(_mul(out, 0.9), _mul(side, 0.25)),
+                            (0.0, 0.0, -0.15)))
+            at = (at[0], at[1], max(at[2], reach * 0.4))
+            # a leaf near the ground points sideways, never into it
+            floor_z = -(at[2] - reach * 0.35) / (reach * 1.2)
+            if ld[2] < floor_z:
+                ld = _norm((ld[0], ld[1], floor_z))
+            treeleaves.place(leaves[rng.randrange(3)], tpl, at, ld,
+                             (rng.gauss(0, 0.4), rng.gauss(0, 0.4), 0.0),
+                             unit * rng.uniform(0.8, 1.25),
+                             rng.uniform(-0.6, 0.6))
+        if sp.get("fruit") and season in ("Summer", "Autumn") \
+                and rng.random() < 0.5:
+            extras.blob(_add(c, (rad * 0.3, 0, -rad * 0.9)), rad * 0.3)
 
 
 def _palm(rng, sp, h, bark, leaves, sides, full, frac):

@@ -1712,6 +1712,48 @@ into a new module and import.
                        Nothing grows below z = 0. `library_trees.py`: every
                        species as a Trees part (Young/Mature/Old, Variation
                        seed, season as the colour combo).
+                       **Real leaves and a real trunk** (2026-09-20, the
+                       user: "use the trees with the leaves we created,
+                       and improve the trunk"). `treeleaves.py`: broadleaf
+                       species (`LEAF_OF`: oak, maple, lime, birch, cherry,
+                       apple, willow, poplar, shrub -> bay) carry the
+                       Leaves library's own blades (`leafgen`, detail
+                       "low", ~130 triangles, several times life size) —
+                       one template per (species, length), copied by a
+                       rotation + uniform scale (winding kept, upper face
+                       up, random roll). A crown is **leaf bunches**
+                       (`treegen._real_crown`): a small dark 32-triangle
+                       core at each outer twig with blades radiating from
+                       it, budgeted (`treeleaves.BUDGET`, ~150k triangles a
+                       tree at high, ~90k medium; the first try — cores as
+                       big low-poly "rocks" with leaves on them — read as
+                       boulders, and a plain leaf cloud as a bare tree). A
+                       weeping willow keeps the strand cloud, a cherry in
+                       Spring its petals; conifers, palms and the city
+                       detail are unchanged. `treebark.py`: limbs are
+                       Catmull-Rom smoothed, the trunk 14-sided with
+                       furrows (three drifting sine harmonics), a flared
+                       foot of buttress roots and a collar where a limb
+                       leaves its parent (none on a shrub's ground-level
+                       stems — they dipped below z = 0); a birch gets dark
+                       lenticels. All through `Mesh.tube(radial=)`.
+  - `stonegen.py` / `library_stones.py` — **Stones** (2026-09-20, the
+                       user: "pebbles of different sizes in the library,
+                       next to Leaves"), Nature & garden ▸ Stones: pebble,
+                       river cobble, flat skipping stone, broken (angular)
+                       rock, weathered boulder, standing stone, flagstone,
+                       plus a pebble scatter, gravel patch, rock garden
+                       and a cairn; 3 sizes each, a Shape seed and 9
+                       rocks (granite, sandstone, limestone, basalt,
+                       slate, marble, red sandstone, mossy, river mix).
+                       A stone = a subdivided octahedron whose vertex
+                       directions are pushed to r(u), the p-norm smooth
+                       minimum of an ellipsoid and random cutting planes
+                       (low p round, high p sharp) times sine ripples —
+                       star-shaped, so always one closed 2-manifold; a
+                       clamp of z gives a flat base, the part sits on
+                       z = 0. Scatters drop non-overlapping stones (small
+                       ones far commoner) at level 1-2 to stay light.
   - `user_library.py` / `user_library_dialog.py` — **My Library**
                        (2026-09-19, the user: what the AI designs should be
                        saved to a user library on disk so the next request

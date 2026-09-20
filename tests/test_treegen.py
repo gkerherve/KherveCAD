@@ -14,7 +14,10 @@ import pytest
 
 from khervecad import bake, mesh, treegen as T
 
-BUDGET = {"high": 90000, "medium": 45000, "city": 6000}
+#: high / medium carry the Leaves library's real blades (~130 triangles
+#: each, `treeleaves.BUDGET` of them), which is why a tree is ~150k
+#: triangles now — it was 30k with diamond leaves; city trees are unchanged
+BUDGET = {"high": 165000, "medium": 100000, "city": 6000}
 
 
 @pytest.mark.parametrize("species", list(T.SPECIES))
