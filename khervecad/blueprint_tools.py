@@ -123,6 +123,16 @@ class ViewSnap:
                 best, best_d = c, d
         return best
 
+    def on_rim(self, p, c, slack=0.5):
+        """True when the snap point *p* lies on the round edge *c* — the
+        vertex of its polygon, which snaps as an endpoint. A finely
+        faceted circle has vertices closer together than the click
+        tolerance, so without this its rim never reads as a rim."""
+        for C, R, other in self.circles:
+            if other is c:
+                return abs(math.hypot(p[0] - C[0], p[1] - C[1]) - R) <= slack
+        return False
+
 
 def _foot(a, b, p):
     dx, dy = b[0] - a[0], b[1] - a[1]
@@ -345,7 +355,8 @@ class DimensionTool(Tool):
         if not self.points and self.kind in ("smart", "radius",
                                              "diameter"):
             c = snap.circle(q.x(), q.y(), self.tol())
-            if c is not None and kind not in ("centre", "end"):
+            if c is not None and (kind != "centre" and (
+                    kind != "end" or snap.on_rim(p, c))):
                 self._place_radial(view, c, pos)
                 return
             if self.kind != "smart":
