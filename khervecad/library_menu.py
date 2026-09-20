@@ -248,8 +248,8 @@ def _home_menu(window, menu, parts, categories):
     home.addAction(icons.icon("mdi.home-city-outline"), "House Builder...",
                    lambda: house_dialog.open_builder(window))
     home.addSeparator()
-    finished = [pid for pid, spec in parts.items()
-                if spec.get("category") == "Finished houses"]
+    finished = [pid for pid, spec in parts.items()      # the built designs
+                if spec.get("category") in ("Finished houses", "Houses")]
     if finished:
         _add_parts(window, home.addMenu(icons.icon("mdi.home-outline"),
                                         "Finished houses"), finished, parts)
