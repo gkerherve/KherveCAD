@@ -53,6 +53,8 @@ def app():
 
 @pytest.fixture
 def fake_blender(tmp_path, monkeypatch):
+    if sys.platform == "win32":
+        pytest.skip("the fake Blender is a shebang script; Windows cannot run one")
     path = tmp_path / "blender"
     path.write_text(FAKE.format(python=sys.executable))
     path.chmod(path.stat().st_mode | stat.S_IEXEC)

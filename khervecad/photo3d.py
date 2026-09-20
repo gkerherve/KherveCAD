@@ -29,6 +29,7 @@ from __future__ import annotations
 import base64
 import json
 import mimetypes
+import os
 import shlex
 import struct
 import subprocess
@@ -186,6 +187,16 @@ def generate_meshy(image, out_dir, key, opener=None, sleep=time.sleep,
     raise Photo3DError(f"Meshy finished without a model: {state}")
 
 
+def _split(command):
+    """The command's words. POSIX rules would eat the backslashes of a
+    Windows path (C:\tools\gen.exe), so Windows splits without them and
+    strips the quotes that mode leaves on."""
+    if os.name != "nt":
+        return shlex.split(command)
+    return [w[1:-1] if len(w) > 1 and w[0] == w[-1] and w[0] in "\"'" else w
+            for w in shlex.split(command, posix=False)]
+
+
 def generate_local(image, out_dir, command, run=subprocess.run,
                    timeout=TIMEOUT_S):
     """Run *command* with ``{image}`` and ``{output}`` filled in; the
@@ -199,7 +210,7 @@ def generate_local(image, out_dir, command, run=subprocess.run,
     if ".obj" in command or ".stl" in command:
         out = out.with_suffix(".obj" if ".obj" in command else ".stl")
     args = [a.replace("{image}", str(image)).replace("{output}", str(out))
-            for a in shlex.split(command)]
+            for a in _split(command)]
     if out.exists():                 # never mistake last time's file
         out.unlink()                 # for this run's
     try:

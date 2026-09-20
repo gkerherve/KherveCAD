@@ -159,7 +159,13 @@ def test_plus_sign_text_has_no_hole_where_its_strokes_cross():
     that overlap with the odd-even fill rule, which treats the doubly
     covered centre square as OUTSIDE — the "+" came back as four
     disjoint arms with a square hole exactly where they should meet."""
+    from PyQt5.QtGui import QFontDatabase
+    from PyQt5.QtWidgets import QApplication
     from khervecad.model import CadNode
+    QApplication.instance() or QApplication([])
+    if mesh.DEFAULT_FONT not in QFontDatabase().families():
+        pytest.skip(f"{mesh.DEFAULT_FONT} is not installed; another font "
+                    "draws '+' as one contour")
     node = CadNode("text", params=dict(x=0.0, y=0.0, text="+", size=0.22))
     outlines = mesh._oriented(node, mesh.node_outlines(node, {}))
     assert len(outlines) == 2
