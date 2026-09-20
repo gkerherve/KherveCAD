@@ -20,12 +20,13 @@ The steps, in order:
    spec bundles — a frozen build has no ``.git`` and would otherwise report
    the ``0.1.0`` placeholder.
 2. Freeze with PyInstaller (one folder).
-3. Unpack the official OpenSCAD portable ZIP into ``dist/KherveCAD/openscad/``
+3. Unpack the official OpenSCAD snapshot ZIP (pinned; Manifold backend) into ``dist/KherveCAD/openscad/``
    so the engine is guaranteed present (``engine.bundled_openscad()`` looks
    there). The ZIP is cached in ``packaging/vendor/`` and downloaded on
    first use. Shipping OpenSCAD's binary makes this a redistribution, so
-   its GPL licence text goes in beside it — and the matching OpenSCAD
-   source archive must be attached to the GitHub release.
+   its GPL licence text goes in beside it, and the matching upstream source
+   is downloaded to ``dist/openscad-<ver>-source-<sha>.tar.gz`` to be
+   attached to the GitHub release.
 4. Zip the folder, compile the installer, copy the stable name.
 
 Copyright (C) 2026 Gwilherm Kerherve
@@ -51,12 +52,15 @@ _ROOT = _HERE.parent                             # project root
 _DIST = _ROOT / "dist"
 _APP = "KherveCAD"
 
-#: The OpenSCAD build bundled with the app. Bump both together, and attach
-#: the matching source archive to the release (GPL-2.0-or-later).
-OPENSCAD_VERSION = "2021.01"
+#: The OpenSCAD build bundled with the app — a dated snapshot, not the 2021.01
+#: release: only snapshots have the Manifold backend (engine.backend_args),
+#: which the app relies on for speed, and the macOS build ships a snapshot
+#: too, so both platforms run the same engine. Pinned rather than "newest"
+#: so a release is reproducible; bump it deliberately and re-run the tests.
+#: Override with KHERVECAD_OPENSCAD_VERSION=YYYY.MM.DD.
+OPENSCAD_VERSION = os.environ.get("KHERVECAD_OPENSCAD_VERSION", "2026.09.18")
 OPENSCAD_ZIP = f"OpenSCAD-{OPENSCAD_VERSION}-x86-64.zip"
-OPENSCAD_URL = f"https://files.openscad.org/{OPENSCAD_ZIP}"
-OPENSCAD_SRC_URL = f"https://files.openscad.org/openscad-{OPENSCAD_VERSION}.src.tar.gz"
+OPENSCAD_URL = f"https://files.openscad.org/snapshots/{OPENSCAD_ZIP}"
 
 _ISCC = Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Inno Setup 6" / "ISCC.exe"
 
@@ -98,6 +102,28 @@ def write_version() -> str:
 
 
 # -------------------------------------------------------------- freeze
+
+#: modules the frozen app needs at run time. The spec skips a missing
+#: optional package silently and the app then degrades without a word
+#: (no manifold3d = approximate booleans, no Bevel / Wireframe / push-pull),
+#: so a build without them is refused rather than shipped.
+_REQUIRED_MODULES = ("PyQt5", "qtawesome", "numpy", "manifold3d",
+                     "pygit2", "certifi")
+
+
+def check_dependencies() -> None:
+    import importlib
+    missing = []
+    for name in _REQUIRED_MODULES:
+        try:
+            importlib.import_module(name)
+        except Exception:
+            missing.append(name)
+    if missing:
+        raise SystemExit("refusing to build: not installed in this Python: "
+                         + ", ".join(missing)
+                         + "\n  pip install -r requirements.txt")
+
 
 def freeze() -> None:
     _run([sys.executable, "-m", "PyInstaller",
@@ -142,16 +168,30 @@ def bundle_openscad() -> None:
     if not exe.is_file():
         raise SystemExit(f"no openscad.exe in {OPENSCAD_ZIP}")
 
+    # GPL source: snapshots have no source archive on files.openscad.org, so
+    # take the upstream commit the snapshot was built from (the same rule
+    # the macOS build uses). It is a release asset, so it goes to dist/.
+    from build_macos import _github_source         # noqa: E402
+    src_url, sha = _github_source(OPENSCAD_VERSION)
+    if not src_url:
+        raise SystemExit(f"no upstream source found for OpenSCAD {OPENSCAD_VERSION}")
+    src = _DIST / f"openscad-{OPENSCAD_VERSION}-source-{sha[:12]}.tar.gz"
+    if not src.is_file():
+        print(f"downloading {src_url}", flush=True)
+        urllib.request.urlretrieve(src_url, src)
+    print(f"OpenSCAD source: {src.name}", flush=True)
+
     # GPL: we are redistributing OpenSCAD's binary, so its licence ships
     # with it and the release carries the matching source archive.
     shutil.copy2(_HERE / "openscad-COPYING.txt", target / "COPYING.txt")
     (target / "README-OpenSCAD.txt").write_text(
-        f"OpenSCAD {OPENSCAD_VERSION} (x86-64 portable build)\n"
+        f"OpenSCAD {OPENSCAD_VERSION} (x86-64 development snapshot, portable build)\n"
         f"{OPENSCAD_URL}\n\n"
         "OpenSCAD is free software licensed GPL-2.0-or-later; its licence is\n"
         "in COPYING.txt beside this file. KherveCAD runs it as a separate\n"
         "process and does not link against it. The corresponding source is\n"
-        f"attached to the KherveCAD release and available at\n{OPENSCAD_SRC_URL}\n",
+        "attached to the KherveCAD release; it is the upstream commit\n"
+        f"{src_url}\n",
         encoding="utf-8",
     )
     size = sum(f.stat().st_size for f in target.rglob("*") if f.is_file())
@@ -193,6 +233,7 @@ def main() -> None:
                         help="reuse the existing dist/KherveCAD folder")
     args = parser.parse_args()
 
+    check_dependencies()
     version = write_version()
     if not args.skip_freeze:
         freeze()

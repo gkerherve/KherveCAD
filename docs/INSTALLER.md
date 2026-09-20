@@ -36,10 +36,12 @@ The steps it runs, and the reason each exists:
    pulls the whole `khervecad` package in with `collect_submodules` —
    the `examples_*` and `library_*` modules register themselves by import
    side effect, so nothing static references them.
-3. **Bundle OpenSCAD** from the official *portable ZIP* (cached in
+3. **Bundle OpenSCAD** from the official *portable ZIP of a pinned snapshot* (the 2021.01
+   release has no Manifold backend; cached in
    `packaging/vendor/`, downloaded on first use), unpacked into an
    `openscad/` subfolder of the frozen app. `OPENSCAD_VERSION` in
-   `build_installer.py` is the single place that decides which build.
+   `build_installer.py` is the single place that decides which build
+   (`KHERVECAD_OPENSCAD_VERSION` overrides it).
 4. **Zip**, then compile `packaging/khervecad.iss`, then copy the stable
    name.
 
@@ -70,7 +72,8 @@ Rejected alternatives, for the record:
     `openscad/README-OpenSCAD.txt` naming the version and where it came
     from, and
   - the matching **OpenSCAD source archive must be attached to the same
-    GitHub release** (`OPENSCAD_SRC_URL` in `build_installer.py`).
+    GitHub release**: the build downloads the upstream commit the snapshot
+    was built from to `dist/openscad-<ver>-source-<sha>.tar.gz`.
 
 If `OPENSCAD_VERSION` is ever bumped, re-vendor `openscad-COPYING.txt`
 from that tag and attach that version's source archive.
