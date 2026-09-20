@@ -58,6 +58,8 @@ ROOF_EAVE = 300.0
 DOOR_SIZE = (900.0, 2000.0, 0.0)      # width, height, sill
 WINDOW_SIZE = (1200.0, 1200.0, 900.0)
 GARAGE_DOOR_SIZE = (2400.0, 2100.0, 0.0)
+ARCH_WINDOW_SIZE = (900.0, 1600.0, 950.0)
+ARCH_DOOR_SIZE = (1100.0, 2500.0, 0.0)
 GARDEN_THICKNESS = 50.0
 #: how far below the ground floor the ground lies (downpipes end there)
 PLINTH_GROUND = 150.0
@@ -87,7 +89,10 @@ from . import house_finishes as _F  # noqa: E402
 FINISH_THICKNESS = _F.TILE_THICKNESS
 
 SIDES = ("N", "S", "E", "W")
-OPENING_KINDS = ("door", "window", "garage door")
+OPENING_KINDS = ("door", "window", "garage door", "arch window",
+                 "arch door")
+#: the round-headed openings (an Arabic, Moorish or Mediterranean house)
+ARCHED = ("arch window", "arch door")
 #: what a room is: indoors (walls, slab, roof) or an outdoor area
 SURFACES = ("indoor", "garden", "paving", "void")
 SURFACE_COLORS = {"garden": GRASS_COLOR, "paving": PAVING_COLOR}
@@ -115,7 +120,8 @@ ROOF_COLORS = {"Brown tiles": (ROOF_COLOR, "Roof tiles"),
                "Green roof": ("#5f8f4f", "Leaves"),
                "Zinc": ("#8a9096", "Standing seam"),
                "Copper (verdigris)": ("#5f9a86", "Standing seam"),
-               "Solar panels": ("#2b3a4a", "Solar panels")}
+               "Solar panels": ("#2b3a4a", "Solar panels"),
+               "Flat terrace": ("#cfc8b8", "Concrete")}
 #: which way the ridge runs: along the longer side, or along X / Y
 ROOF_RIDGES = ("auto", "x", "y")
 #: the roof over a SIDE WING — a part of a floor with nothing above it,
@@ -277,7 +283,7 @@ class HouseError(ValueError):
 @dataclass
 class Opening:
     """A door, window or garage door cut into one room's wall side."""
-    kind: str                          # "door" | "window" | "garage door"
+    kind: str            # door | window | garage door | arch window | arch door
     side: str                          # "N" | "S" | "E" | "W"
     offset: float                      # from the side's start corner, mm
     width: float
@@ -288,7 +294,9 @@ class Opening:
 def opening_size(kind: str):
     """(width, height, sill) an opening of *kind* starts with."""
     return {"door": DOOR_SIZE, "window": WINDOW_SIZE,
-            "garage door": GARAGE_DOOR_SIZE}.get(kind, DOOR_SIZE)
+            "garage door": GARAGE_DOOR_SIZE,
+            "arch window": ARCH_WINDOW_SIZE,
+            "arch door": ARCH_DOOR_SIZE}.get(kind, DOOR_SIZE)
 
 
 @dataclass
@@ -388,6 +396,10 @@ class Roof:
     #: chimneys (CHIMNEYS): "auto" over every fireplace, "none", or
     #: "ridge" — one on the ridge even without a fireplace
     chimney: str = "auto"
+    #: a flat roof's parapet: its height in mm round every outside wall
+    #: (0 = none), and whether it is crenellated (merlons and gaps)
+    parapet: float = 0.0
+    crenellated: bool = False
 
 
 @dataclass
@@ -948,7 +960,8 @@ def house_to_spec(house: House) -> dict:
     spec["roof"] = {"style": r.style, "pitch": r.pitch,
                     "overhang": r.overhang, "ridge": r.ridge,
                     "color": r.color, "wings": r.wings,
-                    "chimney": r.chimney}
+                    "chimney": r.chimney, "parapet": r.parapet,
+                    "crenellated": r.crenellated}
     spec["walls"] = {"outside": house.outer_wall,
                      "inside": house.inner_wall}
     if house.joinery:
@@ -1065,8 +1078,9 @@ def _opening_from_spec(spec: dict) -> Opening:
     if not isinstance(spec, dict):
         raise HouseError("Each opening must be an object.")
     kind = str(spec.get("kind", "door")).strip().lower()
-    if kind == "garage":
-        kind = "garage door"
+    kind = {"garage": "garage door", "arched window": "arch window",
+            "arched door": "arch door", "arch": "arch window",
+            "arched": "arch window"}.get(kind, kind)
     if kind not in OPENING_KINDS:
         raise HouseError(f"Opening 'kind' must be one of "
                          f"{', '.join(OPENING_KINDS)} — not {kind!r}.")
@@ -1121,7 +1135,11 @@ def roof_from_spec(spec) -> Roof:
     if chimney not in CHIMNEYS:
         raise HouseError(f"Roof 'chimney' must be one of "
                          f"{', '.join(CHIMNEYS)}.")
-    return Roof(style, pitch, overhang, ridge, color, wing, chimney)
+    parapet = _num(spec, "parapet", 0.0)
+    if parapet < 0:
+        raise HouseError("Roof 'parapet' cannot be negative.")
+    return Roof(style, pitch, overhang, ridge, color, wing, chimney,
+                parapet, bool(spec.get("crenellated", False)))
 
 
 def walls_from_spec(spec):

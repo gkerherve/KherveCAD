@@ -28,6 +28,10 @@ WALL_STYLES = {
     "White render": ("#f5f3ee", "Render"),
     "Cream render": ("#e8dfc9", "Render"),
     "Grey render": ("#b9b9b4", "Render"),
+    "Sand render": ("#e2cba1", "Render"),
+    "Ochre render": ("#d9b47a", "Render"),
+    "Terracotta render": ("#c98a63", "Render"),
+    "Lime-washed white": ("#f7f3ea", "Render"),
     "Red brick": ("#9c5a45", "Brick"),
     "Buff brick": ("#c9a879", "Brick"),
     "Yellow stock brick": ("#c8a66a", "Brick"),
@@ -88,6 +92,8 @@ JOINERY = {
     "Oak": ("#9a6e3f", "Default"),
     "Sage green": ("#8b9c86", "Plastic"),
     "Cream": ("#ebe4d0", "Plastic"),
+    "Walnut": ("#5a3b26", "Default"),
+    "Turquoise": ("#2f8f8b", "Plastic"),
 }
 #: the joinery an outside finish looks right with, when none is chosen
 _AUTO_JOINERY = {"brick": "White", "stone": "Sage green",
@@ -177,9 +183,10 @@ _KINDS = (
     ("garage", ("garage", "workshop", "carport")),
     ("bedroom", ("bed", "nursery", "kids", "guest", "dressing")),
     ("hall", ("hall", "entrance", "porch", "lobby", "landing",
-              "corridor", "stair", "reception")),
+              "corridor", "stair", "reception", "gallery")),
     ("living", ("living", "lounge", "sitting", "family", "snug", "dining",
-                "study", "office", "library", "den", "playroom")),
+                "study", "office", "library", "den", "playroom", "majlis",
+                "diwan")),
     ("lab", ("lab", "server", "store", "plant", "meeting", "break")),
 )
 

@@ -409,6 +409,22 @@ DESIGNS = {
                        lambda b, f: apartment_block(10, b, f)),
 }
 
+#: the Arab courtyard house (house_arabic): finished houses whose colour
+#: combo is the outside render, not a brick
+ARAB_STYLES = ("Sand render", "Ochre render", "Lime-washed white",
+               "Terracotta render")
+
+
+def _arab(style, furnished):
+    from . import house_arabic            # it imports this module
+    return house_arabic.courtyard_house(style, furnished)
+
+
+ARAB = {
+    "house_arab_courtyard": ("Arab courtyard house",
+                             lambda s, f: _arab(s, f)),
+}
+
 #: finished laboratories — not houses, so their own category
 LAB_CATEGORY = "Finished labs"
 LABS = {
@@ -425,7 +441,7 @@ LABS = {
 #: designs that keep their own walls and roof (no brick choice)
 SAVED = set(LABS)
 
-ALL = {**DESIGNS, **LABS}
+ALL = {**DESIGNS, **ARAB, **LABS}
 
 
 def _template(name):
@@ -490,7 +506,8 @@ def _sizes(part_id):
 PARTS = {
     pid: dict(label=label, sizes=_sizes(pid), fields=[],
               category=LAB_CATEGORY if pid in LABS else CATEGORY,
-              colors=[] if pid in SAVED else list(BRICKS),
+              colors=[] if pid in SAVED else list(
+                  ARAB_STYLES if pid in ARAB else BRICKS),
               build=lambda dims, pid=pid: build_design(pid, dims),
               insert=lambda model, dims, pid=pid:
               insert_design(pid, model, dims))
@@ -504,5 +521,6 @@ def templates():
     template is already house_templates' own."""
     out = {label: (lambda make=make: make("Red brick", True))
            for label, make in DESIGNS.values()}
+    out["Arab courtyard house"] = lambda: _arab("Sand render", True)
     out["Chemistry lab"] = lambda: saved("chemistry_lab")
     return out

@@ -1307,6 +1307,52 @@ into a new module and import.
                        (beside Finished houses, not in it);
                        no brick combo. The saved Chemistry lab also
                        replaces the built-in template.
+  - `house_arabic.py` — the **Arab courtyard house** (2026-09-20, the
+                       user: "I'd like to create an Arab house — the City
+                       menu has one but it is not part of the House
+                       Builder, so improve it until it is"): the dar /
+                       riad as a build_house spec, 13.6 x 14 m, two
+                       floors. Rooms turn inward round a "paving"
+                       Courtyard (fountain via `park_fountain`, planters,
+                       benches): majlis, entrance hall, dining room, family
+                       room, kitchen, diwan, guest bedroom, stair hall
+                       below; four bedrooms, an upper sitting room and a
+                       bathroom round a first-floor **gallery** (four
+                       rectangles named "Gallery" round a "Gallery void":
+                       `room_kind("Gallery")` is "hall", so the void gets a
+                       balustrade) above. Library part "Arab courtyard
+                       house" in Finished houses (`house_designs.ARAB`,
+                       colour combo = the outside render: Sand / Ochre /
+                       Lime-washed / Terracotta, with walnut or turquoise
+                       joinery) and House Builder + MCP template. It needed
+                       three things the builder lacked, now general:
+                       **arched openings** (`arch window` / `arch door`
+                       kinds in `house.OPENING_KINDS`, `ARCHED`;
+                       `house_walls._arched`: the wall's rectangular hole
+                       is kept and the two spandrels poured back in
+                       (`_spandrels`, both leaves) so the head reads round,
+                       then an arched frame ring (`arch_shape`, outline
+                       minus its inset), arched glazing or a studded walnut
+                       leaf, and a stone ring proud of the face — a U for a
+                       door, which has no sill); a **terrace roof**
+                       (`Roof.parapet` mm and `Roof.crenellated`; with a
+                       parapet `house_roof._terrace` lays one slab per
+                       indoor room of the top floor instead of one over the
+                       bounding box, so the courtyard stays open, and
+                       stands a parapet — merlons 550 / gaps 350 — on every
+                       outside wall; a top-floor "void" named court /
+                       atrium / light well / gallery is open to the sky
+                       (`open_to_sky`, a low wall rings it), any other, a
+                       stairwell, is roofed — note a void counts as
+                       `indoor`); and the finishes (sand / ochre /
+                       terracotta / lime-washed render, walnut / turquoise
+                       joinery, "Flat terrace" roof colour, room kinds
+                       majlis / diwan / gallery). The dialog offers the
+                       arched kinds and a Parapet + Crenellated control;
+                       the MCP build_house schema lists all of it.
+                       City ▸ Arabic house (`city_buildings_world`) stays
+                       the outside-only version for street scenes. Tested
+                       in `tests/test_house_arabic.py`.
   - Library & Examples menus (`library_menu.py`, reorganised 2026-09-17
                        — the user found the Library "all over the place"
                        and asked what Examples was for): **Library = parts

@@ -196,6 +196,9 @@ def build_roof(roof, floor, bounds=None, style=None, attach=None,
             height=max(abs(zb - za), 0.01), center=False))
 
     out = []
+    if sh.style == "Flat" and roof.parapet > 0 and bounds is None:
+        return _terrace(roof, floor, sh, name, joinery, colour, material,
+                        wall_colour, wall_material)
     if sh.style == "Flat":
         H = sh.Hw
         E = max(e, 40.0)
@@ -254,6 +257,93 @@ def build_roof(roof, floor, bounds=None, style=None, attach=None,
     out += _gables(sh, cube, wall_colour, wall_material)
     out += _eaves(sh, name, joinery, ground_z)
     out += _ridge_tiles(sh, colour, material)
+    return out
+
+
+#: a crenellated parapet: merlon and gap lengths along the wall, mm, and
+#: how much of the parapet's height the solid base takes
+MERLON, GAP, BASE_FRACTION = 550.0, 350.0, 0.55
+
+
+#: a top-floor "void" named like one of these is open to the sky (a
+#: courtyard, an atrium, a light well); any other void — a stairwell — is
+#: under the roof, which covers it
+SKY_WORDS = ("court", "atrium", "light well", "lightwell", "gallery")
+
+
+def open_to_sky(room) -> bool:
+    low = (room.name or "").lower()
+    return any(w in low for w in SKY_WORDS)
+
+
+def _terrace(roof, floor, sh, name, joinery, colour, material,
+             wall_colour, wall_material):
+    """A flat roof of an Arab house: a slab over each INDOOR room of the
+    top floor (a courtyard stays open to the sky) and a parapet — plain
+    or crenellated — standing on every outside wall, the courtyard ones
+    included."""
+    hw = sh.hw
+    z0, z1 = sh.Hw, sh.Hw + ROOF_THICKNESS
+    deck = "#3b3d40" if material in ("Roof tiles", "Slate", "Default",
+                                     "Shingles", "Thatch", "Clay") \
+        else colour
+    deck_mat = "Concrete" if deck != colour else material
+    out = []
+    for room in floor.rooms:
+        if not room.indoor or (room.surface == "void"
+                               and open_to_sky(room)):
+            continue                  # a court, a garden: open to the sky
+        out.append(_color(CadNode("cube", f"{name} slab", dict(
+            x=room.x - hw, y=room.y - hw, z=z0, width=room.w + 2 * hw,
+            depth=room.d + 2 * hw, height=ROOF_THICKNESS - 30.0,
+            center=False)), wall_colour, wall_material))
+        out.append(_color(CadNode("cube", f"{name} covering", dict(
+            x=room.x - hw + 40, y=room.y - hw + 40, z=z1 - 40,
+            width=room.w + 2 * hw - 80, depth=room.d + 2 * hw - 80,
+            height=40.0, center=False)), deck, deck_mat))
+    height = float(roof.parapet)
+    top = z1 - 40.0
+    for room in floor.rooms:          # a low wall round each opening
+        if room.surface == "void" and open_to_sky(room):
+            t = 60.0
+            for label, x, y, w, d in (
+                    ("S", room.x - t, room.y - t, room.w + 2 * t, 2 * t),
+                    ("N", room.x - t, room.y + room.d - t, room.w + 2 * t,
+                     2 * t),
+                    ("W", room.x - t, room.y - t, 2 * t, room.d + 2 * t),
+                    ("E", room.x + room.w - t, room.y - t, 2 * t,
+                     room.d + 2 * t)):
+                out.append(_color(CadNode("cube", f"Court parapet {label}",
+                                          dict(x=x, y=y, z=top, width=w,
+                                               depth=d, height=height * 0.6,
+                                               center=False)),
+                                  wall_colour, wall_material))
+    for sg in wall_segments(floor):
+        if not sg.outside or sg.rail:
+            continue
+        fr = WallFrame(sg.horizontal)
+        t = sg.thickness / 2.0
+        a, b = sg.a - sg.ext_a, sg.b + sg.ext_b
+        if roof.crenellated and height > 300.0:
+            base = height * BASE_FRACTION
+            out.append(_color(fr.box("Parapet", a, b, sg.c - t, sg.c + t,
+                                     top, top + base), wall_colour,
+                              wall_material))
+            n = max(1, int((b - a + GAP) // (MERLON + GAP)))
+            step = (b - a - MERLON) / max(n - 1, 1) if n > 1 else 0.0
+            merlons = []
+            for i in range(n):
+                u = a + step * i if n > 1 else (a + b - MERLON) / 2.0
+                merlons.append(fr.box("Merlon", u, u + MERLON, sg.c - t,
+                                      sg.c + t, top + base, top + height))
+            group = CadNode("union", "Merlons", {})
+            for m in merlons:
+                group.add(m)
+            out.append(_color(group, wall_colour, wall_material))
+        else:
+            out.append(_color(fr.box("Parapet", a, b, sg.c - t, sg.c + t,
+                                     top, top + height), wall_colour,
+                              wall_material))
     return out
 
 

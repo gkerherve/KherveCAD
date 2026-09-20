@@ -486,9 +486,167 @@ def _frame_loops(u0, u1, z0, z1, w, bottom=True):
     return region_loops([(u0, z0, u1, z1)], [inner])
 
 
+# ------------------------------------------------------- arched openings
+ARCH_STEPS = 14
+#: the stone ring round an arched opening: how wide, how proud, mm
+ARCH_SURROUND = 90.0
+ARCH_SURROUND_PROUD = 35.0
+ARCH_DOOR = ("#5a3b26", "Default")
+STUD = "#c9a54a"
+
+
+def _arch_head(u0, u1, sill, top, steps=ARCH_STEPS):
+    """(springing z, half width, head height, the arc from the right
+    jamb over to the left) of the round head of an opening — a
+    semicircle when the opening is tall enough, else a flatter ellipse."""
+    rx = (u1 - u0) / 2.0
+    rz = max(min(rx, top - sill), 1e-3)
+    zs = top - rz
+    cu = (u0 + u1) / 2.0
+    arc = [(cu + rx * math.cos(k * math.pi / steps),
+            zs + rz * math.sin(k * math.pi / steps))
+           for k in range(steps + 1)]
+    return zs, arc
+
+
+def arch_shape(u0, u1, sill, top, inset=0.0, steps=ARCH_STEPS):
+    """A round-headed outline in (u, z), counter-clockwise: the sill,
+    straight jambs and a head arched over the springing line. *inset*
+    shrinks it evenly (negative grows it)."""
+    a0, a1 = u0 + inset, u1 - inset
+    b0, t = sill + inset, top - inset
+    zs, arc = _arch_head(a0, a1, b0, t, steps)
+    pts = [(a0, b0), (a1, b0)]
+    if zs > b0 + 1e-6:
+        pts.append((a1, zs))
+    pts += arc[1:-1]
+    if zs > b0 + 1e-6:
+        pts.append((a0, zs))
+    return pts
+
+
+def _spandrels(u0, u1, sill, top, steps=ARCH_STEPS):
+    """The two solid corners between a rectangular opening and its round
+    head, as outlines (counter-clockwise) — poured back into the
+    rectangular hole so the wall reads as arched."""
+    zs, arc = _arch_head(u0, u1, sill, top, steps)
+    half = steps // 2
+    left = [arc[k] for k in range(steps, half - 1, -1)] + [(u0, top)]
+    right = [(u1, zs), (u1, top)] + [arc[k] for k in range(half, 0, -1)]
+    return [(left, []), (right, [])]
+
+
+def _arched(fr, sg, u0, u1, sill, top, kind, look, H, ground):
+    """An arched window or door: the wall filled in round the round head
+    (both leaves), a frame ring, the glazing or a studded timber door,
+    and a stone ring proud of the outside face."""
+    hw = sg.thickness / 2.0
+    s = sg.outside or 1
+    face = sg.c + s * hw
+    depth = min(FRAME_DEPTH, sg.thickness * 0.6)
+    reveal = max(0.0, min(REVEAL, sg.thickness - depth - 10.0)) \
+        if sg.outside else (sg.thickness - depth) / 2.0
+    f_out = face - s * reveal
+    f_in = f_out - s * depth
+    mid = (f_out + f_in) / 2.0
+    width, height = u1 - u0, top - sill
+    jc, jm = look.joinery
+    spans = _spandrels(u0, u1, sill, top)
+    out = []
+    if sg.outside:
+        out.append(_color(fr.slab("Arch fill", spans, sg.c, sg.c + s * hw),
+                          *look.outside))
+        out.append(_color(fr.slab("Arch fill lining", spans, sg.c - s * hw,
+                                  sg.c), *look.inside))
+    else:
+        out.append(_color(fr.slab("Arch fill", spans, sg.c - hw, sg.c + hw),
+                          *look.inside))
+    hole = arch_shape(u0, u1, sill, top)
+    if kind == "arch window":
+        fw = min(FRAME_W, width / 6.0, height / 6.0)
+        inner = arch_shape(u0, u1, sill, top, inset=fw)
+        out.append(_color(fr.slab("Window frame",
+                                  [(hole, [inner[::-1]])], f_out, f_in),
+                          jc, jm))
+        out.append(_color(fr.slab("Glazing", [(inner, [])], mid - 3.0,
+                                  mid + 3.0), GLASS_COLOR, "Glass",
+                          GLASS_ALPHA))
+        zs, _arc = _arch_head(u0, u1, sill, top)
+        if zs - sill > 500.0:
+            out.append(_color(fr.box("Transom", u0 + fw, u1 - fw,
+                                     f_out - s * 5, f_in + s * 5,
+                                     zs - 22.0, zs + 22.0), jc, jm))
+        if width >= 1300.0:
+            out.append(_color(fr.box("Mullion", (u0 + u1) / 2.0 - 22.0,
+                                     (u0 + u1) / 2.0 + 22.0, f_out - s * 5,
+                                     f_in + s * 5, sill + fw, zs), jc, jm))
+        if sg.outside and sill > 1.0:
+            sc, sm = look.detail["sill"]
+            out.append(_color(fr.box("Sill", u0 - 40.0, u1 + 40.0, f_out,
+                                     face + s * 45.0, sill - 50.0,
+                                     sill + 15.0), sc, sm))
+    else:
+        fw = min(FRAME_W, width / 5.0)
+        inner = arch_shape(u0, u1, sill - 2.0 * fw, top, inset=fw)
+        if sg.outside:
+            out.append(_color(fr.slab("Door frame",
+                                      [(hole, [inner[::-1]])], f_out, f_in),
+                              jc, jm))
+            leaf = arch_shape(u0 + fw + 3, u1 - fw - 3, sill + 12.0,
+                              top - fw - 3)
+            out.append(_color(fr.slab("Door", [(leaf, [])], mid - 24.0,
+                                      mid + 24.0), *ARCH_DOOR))
+            studs = []
+            for col in (0.28, 0.5, 0.72):
+                for row in (0.12, 0.27, 0.42, 0.57):
+                    studs.append(fr.box(
+                        "Stud", u0 + width * col - 40, u0 + width * col + 40,
+                        mid + s * 24.0, mid + s * 54.0,
+                        sill + height * row, sill + height * row + 80))
+            g = CadNode("union", "Door studs", {})
+            for st in studs:
+                g.add(st)
+            out.append(_color(g, STUD, "Gold"))
+            out += _threshold(fr, sg, u0, u1, look, ground)
+            if ground and sill < 1.0:
+                sc, sm = look.detail["sill"]
+                out.append(_color(fr.box(
+                    "Front step", u0 - 150.0, u1 + 150.0, face - s * 5.0,
+                    face + s * 320.0, -180.0, -20.0), sc, sm))
+        else:
+            lining = arch_shape(u0, u1, sill, top, inset=30.0)
+            out.append(_color(fr.slab("Door lining",
+                                      [(hole, [lining[::-1]])],
+                                      sg.c - hw, sg.c + hw), *F.SKIRTING))
+            leaf = arch_shape(u0 + 33.0, u1 - 33.0, sill + 8.0, top - 33.0)
+            out.append(_color(fr.slab("Door", [(leaf, [])], sg.c - 20.0,
+                                      sg.c + 20.0), *F.INTERIOR_DOOR))
+            out += _threshold(fr, sg, u0, u1, look, ground)
+    if sg.outside:
+        sc, sm = look.detail["sill"]
+        R = ARCH_SURROUND
+        if kind == "arch door":
+            # a door has no sill: the ring is a U standing on the ground
+            zo, arc_o = _arch_head(u0 - R, u1 + R, sill, top + R)
+            zi, arc_i = _arch_head(u0, u1, sill, top)
+            ring = [(u1 + R, sill), (u1 + R, zo)] + arc_o[1:-1] + [
+                (u0 - R, zo), (u0 - R, sill), (u0, sill), (u0, zi)] + [
+                arc_i[k] for k in range(len(arc_i) - 2, 0, -1)] + [
+                (u1, zi), (u1, sill)]
+            loops = [(ring, [])]
+        else:
+            loops = [(arch_shape(u0, u1, sill, top, inset=-R),
+                      [hole[::-1]])]
+        out.append(_color(fr.slab("Arch surround", loops, face - s * 1.0,
+                                  face + s * ARCH_SURROUND_PROUD), sc, sm))
+    return out
+
+
 def opening_nodes(fr, sg, u0, u1, sill, top, kind, look, H, ground):
     """The joinery filling one opening of wall *sg* from u0 to u1 and
     sill to top."""
+    if kind in ("arch window", "arch door"):
+        return _arched(fr, sg, u0, u1, sill, top, kind, look, H, ground)
     hw = sg.thickness / 2.0
     s = sg.outside or 1                    # interior walls: either way
     face = sg.c + s * hw                   # the outside (or +) face

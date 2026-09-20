@@ -426,6 +426,7 @@ class OpeningItem(QGraphicsItem):
     def boundingRect(self):
         body = self._body()
         reach = {"door": self.opening.width,
+                 "arch door": self.opening.width,
                  "garage door": min(self.opening.height, 2200.0) * 0.9
                  }.get(self.opening.kind, 0.0)
         return QRectF(body.left(), body.top(), body.width(),
@@ -441,7 +442,7 @@ class OpeningItem(QGraphicsItem):
         body = self._body()
         w = self.opening.width
         painter.setRenderHint(QPainter.Antialiasing)
-        if self.opening.kind == "window":
+        if self.opening.kind in ("window", "arch window"):
             painter.setPen(_cosmetic(WINDOW_LINE, 1.4))
             painter.setBrush(WINDOW_FILL)
             painter.drawRect(body)

@@ -1559,7 +1559,8 @@ TOOLS = [
                                   "Two-storey house — 1 bedroom",
                                   "Two-storey house — 2 bedrooms",
                                   "Two-storey house — 3 bedrooms",
-                                  "Block of flats — 10 storeys"],
+                                  "Block of flats — 10 storeys",
+                                  "Arab courtyard house"],
                          "description": "Start from a whole furnished "
                                         "building (fume hoods, benches, "
                                         "optical tables, UHV chambers, "
@@ -1568,7 +1569,12 @@ TOOLS = [
                                         "unless you pass your own; other "
                                         "keys (roof, walls) override it. "
                                         "Lab and office pieces are "
-                                        "lab_* / office_* part ids."},
+                                        "lab_* / office_* part ids. 'Arab "
+                                        "courtyard house': rooms round a "
+                                        "courtyard with a fountain, a "
+                                        "first-floor gallery, arched "
+                                        "openings and a crenellated "
+                                        "terrace roof."},
             "floors": {
                 "type": "array",
                 "description": "Bottom to top.",
@@ -1638,7 +1644,18 @@ TOOLS = [
                                 "type": "object", "properties": {
                                     "kind": {"type": "string",
                                              "enum": ["door", "window",
-                                                      "garage door"]},
+                                                      "garage door",
+                                                      "arch window",
+                                                      "arch door"],
+                                             "description": "arch window "
+                                             "and arch door are "
+                                             "round-headed (an Arab, "
+                                             "Moorish or Mediterranean "
+                                             "house): arch door 1100 x "
+                                             "2500 with a studded timber "
+                                             "leaf, arch window 900 x "
+                                             "1600 on a 950 sill, each "
+                                             "with a stone ring."},
                                     "side": {"type": "string",
                                              "enum": ["N", "S", "E", "W"]},
                                     "offset": {
@@ -1677,6 +1694,18 @@ TOOLS = [
                          "pitch": {"type": "number",
                                    "description": "Degrees, 5-60."},
                          "overhang": {"type": "number"},
+                         "parapet": {
+                             "type": "number",
+                             "description": "A FLAT roof's parapet: its "
+                             "height in mm round every outside wall "
+                             "(courtyard-facing ones too), 0 for none. "
+                             "With a parapet the roof is a slab over "
+                             "each indoor room of the top floor, so a "
+                             "courtyard (a paving room) stays open."},
+                         "crenellated": {
+                             "type": "boolean",
+                             "description": "The parapet as merlons and "
+                             "gaps, as on an Arab house."},
                          "ridge": {"type": "string",
                                    "enum": ["auto", "x", "y"]},
                          "color": {
@@ -1687,7 +1716,8 @@ TOOLS = [
                                  "Black pantiles, Slate, Dark slate, "
                                  "Cedar shingles, Thatch, Green, Green "
                                  "roof, Zinc, Copper (verdigris), Solar "
-                                 "panels.")},
+                                 "panels, Flat terrace (light concrete "
+                                 "for a flat roof).")},
                          "wings": {
                              "type": "string",
                              "enum": ["Lean-to", "Gable", "Hip", "Flat",
@@ -1719,7 +1749,9 @@ TOOLS = [
                             "Blue engineering brick, Painted brick, "
                             "Grey stone, Cotswold stone, Timber "
                             "cladding, Grey cladding, White "
-                            "weatherboard, Concrete.")},
+                            "weatherboard, Concrete, Sand render, "
+                            "Ochre render, Terracotta render, "
+                            "Lime-washed white.")},
                     "inside": {
                         "type": "string",
                         "description": (
@@ -1731,8 +1763,8 @@ TOOLS = [
                         "description": (
                             "Window and door frames, fascias: White, "
                             "Anthracite grey, Black, Oak, Sage green, "
-                            "Cream; omit for what suits the outside "
-                            "walls.")}}},
+                            "Cream, Walnut, Turquoise; omit for what "
+                            "suits the outside walls.")}}},
             "garden": {"type": "object",
                        "description": "Lawn beside the house; omit for "
                                       "none.",

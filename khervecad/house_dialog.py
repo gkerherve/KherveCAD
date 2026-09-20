@@ -762,6 +762,10 @@ class HouseBuilder(QDialog):
                              "Window", "window")
         self.op_kind.addItem(icons.icon("mdi.garage"), "Garage door",
                              "garage door")
+        self.op_kind.addItem(icons.icon("mdi.window-open-variant"),
+                             "Arched window", "arch window")
+        self.op_kind.addItem(icons.icon("mdi.door-open"), "Arched door",
+                             "arch door")
         self.op_kind.currentIndexChanged.connect(
             lambda _i: self._opening_field("kind",
                                            self.op_kind.currentData()))
@@ -1216,7 +1220,7 @@ class HouseBuilder(QDialog):
         if key == "kind":                    # its usual size and sill
             op.width, op.height, op.sill = H.opening_size(value)
             self._sync_editor()
-        if op.kind != "window":
+        if op.kind not in ("window", "arch window"):
             op.sill = 0.0
         self._sync_item_captions()
         self._rebuild_canvas()
@@ -1327,6 +1331,17 @@ class HouseBuilder(QDialog):
             "without a fireplace")
         self.roof_chimney.currentIndexChanged.connect(
             lambda _i: self._roof_changed())
+        self.roof_parapet = MetreSpin(0.0, 2.0, 0.1)
+        self.roof_parapet.setToolTip(
+            "A flat roof's parapet: a wall standing round the edge of the "
+            "terrace (0 for none). It also opens the roof over a "
+            "courtyard.")
+        self.roof_parapet.valueChanged.connect(
+            lambda _v: self._roof_changed())
+        self.roof_crenels = QCheckBox("Crenellated")
+        self.roof_crenels.setToolTip("Merlons and gaps along the parapet, "
+                                     "as on an Arab house")
+        self.roof_crenels.toggled.connect(lambda _c: self._roof_changed())
         self.roof_style.currentIndexChanged.connect(
             lambda _i: self._roof_changed(style_changed=True))
         self.roof_pitch.valueChanged.connect(lambda _v: self._roof_changed())
@@ -1340,9 +1355,11 @@ class HouseBuilder(QDialog):
                         ("Ridge:", self.roof_ridge),
                         ("Covering:", self.roof_color),
                         ("Side wings:", self.roof_wings),
-                        ("Chimney:", self.roof_chimney)):
+                        ("Chimney:", self.roof_chimney),
+                        ("Parapet:", self.roof_parapet)):
             row.addWidget(QLabel(text))
             row.addWidget(w)
+        row.addWidget(self.roof_crenels)
         row.addStretch(1)
         self._sync_roof_fields()
         return box
@@ -1359,7 +1376,9 @@ class HouseBuilder(QDialog):
                                  self.roof_ridge.currentData(),
                                  self.roof_color.currentData(),
                                  self.roof_wings.currentData(),
-                                 self.roof_chimney.currentData())
+                                 self.roof_chimney.currentData(),
+                                 self.roof_parapet.mm(),
+                                 self.roof_crenels.isChecked())
         self._enable_roof_fields()
         self._rebuild_canvas()
         pitch = "" if style == "Flat" else f", {self.roof_pitch.value():.0f}°"
@@ -1370,6 +1389,8 @@ class HouseBuilder(QDialog):
         sloped = (self.house.roof or H.Roof()).style != "Flat"
         self.roof_pitch.setEnabled(sloped)
         self.roof_ridge.setEnabled(sloped)
+        self.roof_parapet.setEnabled(not sloped)
+        self.roof_crenels.setEnabled(not sloped)
 
     def _sync_roof_fields(self):
         r = self.house.roof or H.Roof()
@@ -1385,6 +1406,8 @@ class HouseBuilder(QDialog):
                 max(0, self.roof_wings.findData(r.wings)))
             self.roof_chimney.setCurrentIndex(
                 max(0, self.roof_chimney.findData(r.chimney)))
+            self.roof_parapet.set_mm(r.parapet)
+            self.roof_crenels.setChecked(bool(r.crenellated))
         self._enable_roof_fields()
 
     # --------------------------------------------------------- garden
@@ -1500,7 +1523,7 @@ class HouseBuilder(QDialog):
 
     def _item_icon(self, obj):
         if isinstance(obj, H.Opening):
-            return icons.icon({"door": "mdi.door",
+            return icons.icon({"door": "mdi.door", "arch door": "mdi.door",
                                "garage door": "mdi.garage"}.get(
                 obj.kind, "mdi.window-closed-variant"))
         return icons.icon("mdi.sofa-outline")
@@ -1542,7 +1565,7 @@ class HouseBuilder(QDialog):
                 self.op_width.set_mm(obj.width)
                 self.op_height.set_mm(obj.height)
                 self.op_sill.set_mm(obj.sill)
-                self.op_sill.setEnabled(obj.kind == "window")
+                self.op_sill.setEnabled(obj.kind in ("window", "arch window"))
             elif isinstance(obj, H.Furniture):
                 room = self._room_of(obj) or self.current_room
                 self.editor.setCurrentIndex(2)
