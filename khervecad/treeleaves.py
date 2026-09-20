@@ -38,7 +38,9 @@ LEAF_OF = {"oak": "oak", "maple": "maple", "lime": "lime",
 #: an oak's twigs)
 BUDGET = {"high": 950, "medium": 400}
 SIZE_K = {"high": 2.1, "medium": 2.5}
-PER_TWIG = BUDGET                      # the detail levels that use them
+#: narrow blades (a willow strand is 12 times as long as wide) need to be
+#: bigger still to read as foliage
+SIZE_BOOST = {"willow": 2.3, "cherry": 1.3, "poplar": 1.1, "shrub": 1.2}
 
 
 def per_twig(detail, twigs) -> int:
@@ -55,7 +57,7 @@ def shade(hexcol: str, factor: float) -> str:
 def uses_real_leaves(species, shape, season, detail) -> bool:
     """A broadleaf at high / medium detail: conifers keep needle
     sprays, palms their fronds, a cherry in blossom its petals."""
-    if species not in LEAF_OF or detail not in PER_TWIG:
+    if species not in LEAF_OF or detail not in BUDGET:
         return False
     if shape == "blossom" and season == "Spring":
         return False
@@ -74,14 +76,6 @@ def template(species: str, length: float):
         blade, _v = leafgen.blade_mesh(sp, length, "low")
     return ([tuple(p) for p in blade.points],
             [tuple(f) for f in blade.faces])
-
-
-def natural_length(species: str) -> float:
-    """The species' own leaf length, mm (the palmate radius for a
-    maple), used to scale the tree's leaf size sensibly."""
-    from . import leafgen
-    sp = leafgen.SPECIES[LEAF_OF[species]]
-    return float(sp["R"] if sp["kind"] == "palm" else sp["L"])
 
 
 def _cross(a, b):

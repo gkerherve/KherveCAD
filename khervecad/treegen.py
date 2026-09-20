@@ -639,7 +639,10 @@ def _foliage(rng, sp, species, branches, h, leaves, extras, detail, full,
     real = treeleaves.uses_real_leaves(species, shape, season, detail)
     if real:                               # the Leaves library's blades
         n = treeleaves.per_twig(detail, len(twigs))
-        length *= treeleaves.SIZE_K[detail]
+        length *= treeleaves.SIZE_K[detail] * treeleaves.SIZE_BOOST.get(
+            species, 1.0)
+        if weeping_leaf(sp):                # strands: more of them
+            n = max(n, 8)
         tpl = treeleaves.template(species, round(length / 10.0) * 10.0)
         unit = length / max(round(length / 10.0) * 10.0, 1.0)
     if real and mass is not None and not weeping_leaf(sp):
