@@ -86,7 +86,12 @@ if os.path.isdir(_showcase_dir):
 # functions or purely for their import side effects (examples_flowers /
 # examples_trees extend examples.EXAMPLES on import, the library_* modules
 # register parts into PARTS), so nothing static would pull them in.
-hiddenimports += collect_submodules("khervecad")
+#
+# khervecad.tools.* are generators run by hand in a checkout (carsheet pulls
+# in scikit-image, and through it torch, pyarrow, sphinx ... — 1 GB); the
+# app never imports them, so they stay out of the freeze.
+hiddenimports += collect_submodules(
+    "khervecad", filter=lambda name: not name.startswith("khervecad.tools"))
 
 # Dependencies that ship data files or dynamically-imported submodules.
 for _pkg in ("qtawesome", "manifold3d"):
@@ -111,7 +116,9 @@ a = Analysis(
     # hands its meshes over as numpy arrays.
     excludes=["tkinter", "PyQt6", "PySide2", "PySide6", "PyQt5.QtQml",
               "PyQt5.QtQuick", "PyQt5.QtWebEngine", "scipy",
-              "matplotlib", "pandas", "PIL"],
+              "matplotlib", "pandas", "PIL", "skimage", "sklearn",
+              "torch", "pyarrow", "wx", "sphinx", "IPython", "ipykernel",
+              "sympy"],
     noarchive=False,
 )
 
