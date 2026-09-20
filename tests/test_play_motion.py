@@ -107,7 +107,11 @@ def test_spin_makes_a_still_part_turn(app, window, ex):
     spin = _var(window.model, "moon_spin")
     assert spin.params["options"] == motion_play.SPIN_OPTIONS
     assert spin.params["group"] == "Motion"
-    _pump(app, 0.3)
+    # wait for the first tick rather than for a fixed 0.3 s: on a slow CI
+    # runner the first preview refresh alone can take longer than that
+    deadline = time.monotonic() + 20.0
+    while float(spin.params["value"]) <= 0 and time.monotonic() < deadline:
+        _pump(app, 0.05)
     assert float(spin.params["value"]) > 0
     # asking again plays the same spin, it does not stack another
     again = ex.execute("play_motion", {"spin": part.id})
