@@ -115,7 +115,8 @@ def test_human_is_a_toolbar_primitive_with_a_tip_and_a_tool(app):
     from khervecad import toolbars, tooltips
     from khervecad.mainwindow import MainWindow
     from khervecad.mcp_tools import McpToolExecutor
-    assert "human" in toolbars.PRIMITIVES
+    # the Human button sits beside House Builder, not among the PRIMITIVES
+    assert "human" in toolbars.NODE_TYPES and "human" not in toolbars.PRIMITIVES
     assert "Human" in tooltips.TIPS["human"][0]
     win = MainWindow()
     ex = McpToolExecutor(win)
