@@ -1353,6 +1353,18 @@ into a new module and import.
                        City ▸ Arabic house (`city_buildings_world`) stays
                        the outside-only version for street scenes. Tested
                        in `tests/test_house_arabic.py`.
+  - `house_modern.py` — the **Modern house with pool** (2026-09-22): a
+                       flat-roofed two-storey spec (15 × 11 m, grey
+                       render, double garage, stairwell landing), with
+                       terrace, pool deck round an open "Pool" void room
+                       holding `kcad_garden_swimming_pool_10x4_m`, and
+                       gardens planted with grown `tree_*` parts. A
+                       Finished house (`house_modern_pool`) and a House
+                       Builder template, registered through
+                       `house_designs.MODERN` (no brick choice: SAVED).
+                       The furnished-template test ignores `tree_*`
+                       pieces in its triangle cap — the trees are
+                       detailed on purpose.
   - Library & Examples menus (`library_menu.py`, reorganised 2026-09-17
                        — the user found the Library "all over the place"
                        and asked what Examples was for): **Library = parts

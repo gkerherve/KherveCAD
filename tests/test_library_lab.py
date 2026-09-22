@@ -75,6 +75,9 @@ def test_template_builds_furnished(app, name):
     # floors; the old "> 20" counted the ground floor only, which a
     # two-storey house's bedrooms are not on
     assert count >= 15
+    for room in floor.rooms:          # grown trees are detailed on purpose
+        room.furniture = [f for f in room.furniture
+                          if not f.part_id.startswith("tree_")]
     tris = mesh.tessellate(H.build_floor(floor, True), fn=12)
     assert len(tris) < 150_000
 

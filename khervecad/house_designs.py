@@ -425,6 +425,17 @@ ARAB = {
                              lambda s, f: _arab(s, f)),
 }
 
+def _modern(_colour, furnished):
+    from . import house_modern            # it imports this module
+    return house_modern.modern_house(furnished)
+
+
+#: the flat-roofed modern house with its pool (house_modern)
+MODERN = {
+    "house_modern_pool": ("Modern house with pool",
+                          lambda c, f: _modern(c, f)),
+}
+
 #: finished laboratories — not houses, so their own category
 LAB_CATEGORY = "Finished labs"
 LABS = {
@@ -439,9 +450,9 @@ LABS = {
 }
 
 #: designs that keep their own walls and roof (no brick choice)
-SAVED = set(LABS)
+SAVED = set(LABS) | set(MODERN)
 
-ALL = {**DESIGNS, **ARAB, **LABS}
+ALL = {**DESIGNS, **ARAB, **MODERN, **LABS}
 
 
 def _template(name):
@@ -522,5 +533,6 @@ def templates():
     out = {label: (lambda make=make: make("Red brick", True))
            for label, make in DESIGNS.values()}
     out["Arab courtyard house"] = lambda: _arab("Sand render", True)
+    out["Modern house with pool"] = lambda: _modern(None, True)
     out["Chemistry lab"] = lambda: saved("chemistry_lab")
     return out

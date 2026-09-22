@@ -1560,7 +1560,8 @@ TOOLS = [
                                   "Two-storey house — 2 bedrooms",
                                   "Two-storey house — 3 bedrooms",
                                   "Block of flats — 10 storeys",
-                                  "Arab courtyard house"],
+                                  "Arab courtyard house",
+                                  "Modern house with pool"],
                          "description": "Start from a whole furnished "
                                         "building (fume hoods, benches, "
                                         "optical tables, UHV chambers, "
