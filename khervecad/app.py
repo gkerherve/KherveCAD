@@ -102,6 +102,9 @@ def main():
     from .style import apply_style
     apply_style(app)
 
+    from . import language
+    language.install(app)
+
     # the start-up picture: the window's modules take seconds to load
     from .splash import Splash
     splash = Splash()

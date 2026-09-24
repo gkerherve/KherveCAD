@@ -57,6 +57,10 @@ if os.path.isfile(_version_file):
 _help_dir = os.path.join(_ROOT, "khervecad", "help")
 if os.path.isdir(_help_dir):
     datas.append((_help_dir, os.path.join("khervecad", "help")))
+# The language tables (language.py): khervecad/i18n/*.json.
+_i18n_dir = os.path.join(_ROOT, "khervecad", "i18n")
+if os.path.isdir(_i18n_dir):
+    datas.append((_i18n_dir, os.path.join("khervecad", "i18n")))
 # The KCAD-file library (library_kcad.py): khervecad/parts/*.kcad.
 _parts_dir = os.path.join(_ROOT, "khervecad", "parts")
 if os.path.isdir(_parts_dir):

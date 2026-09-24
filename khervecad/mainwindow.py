@@ -190,51 +190,51 @@ class MainWindow(QMainWindow):
     def _build_menus(self):
         m = self.menuBar()
 
-        file_menu = m.addMenu("&File")
-        file_menu.addAction("&New", self.new_document, "Ctrl+N")
-        file_menu.addAction("New &Window", self.new_window,
+        file_menu = m.addMenu(self.tr("&File"))
+        file_menu.addAction(self.tr("&New"), self.new_document, "Ctrl+N")
+        file_menu.addAction(self.tr("New &Window"), self.new_window,
                             "Ctrl+Shift+N")
-        file_menu.addAction("&Open...", self.open_file, "Ctrl+O")
-        self.recent_menu = file_menu.addMenu("Open &Recent")
+        file_menu.addAction(self.tr("&Open..."), self.open_file, "Ctrl+O")
+        self.recent_menu = file_menu.addMenu(self.tr("Open &Recent"))
         self.recent_menu.aboutToShow.connect(self._rebuild_recent_menu)
         self._rebuild_recent_menu()
-        file_menu.addAction("&Save", self.save_file, "Ctrl+S")
-        file_menu.addAction("Save &As...", self.save_file_as,
+        file_menu.addAction(self.tr("&Save"), self.save_file, "Ctrl+S")
+        file_menu.addAction(self.tr("Save &As..."), self.save_file_as,
                             "Ctrl+Shift+S")
         file_menu.addAction(icons.icon("mdi.folder-eye-outline"),
-                            "Show in File E&xplorer",
+                            self.tr("Show in File E&xplorer"),
                             self._show_in_explorer)
         file_menu.addSeparator()
-        file_menu.addAction("&Import OpenSCAD...", self.import_scad,
+        file_menu.addAction(self.tr("&Import OpenSCAD..."), self.import_scad,
                             "Ctrl+I")
-        file_menu.addAction("Import &Mesh (STL/OBJ/OFF/3MF)...",
+        file_menu.addAction(self.tr("Import &Mesh (STL/OBJ/OFF/3MF)..."),
                             self.import_stl, "Ctrl+Shift+I")
         file_menu.addAction(icons.icon("mdi.svg"),
-                            "Import 2D &Drawing (SVG/DXF)...",
+                            self.tr("Import 2D &Drawing (SVG/DXF)..."),
                             self.import_drawing)
         file_menu.addAction(icons.icon("mdi.image-filter-hdr"),
-                            "Import &Height Map (surface)...",
+                            self.tr("Import &Height Map (surface)..."),
                             self.import_surface)
         file_menu.addSeparator()
-        file_menu.addAction("Export Open&SCAD...", self.export_scad,
+        file_menu.addAction(self.tr("Export Open&SCAD..."), self.export_scad,
                             "Ctrl+E")
-        file_menu.addAction("Export S&TL...", self.export_stl,
+        file_menu.addAction(self.tr("Export S&TL..."), self.export_stl,
                             "Ctrl+Shift+E")
         from .pngexport import open_dialog as export_png_dialog
         file_menu.addAction(icons.icon("mdi.image-outline"),
-                            "Export PN&G...",
+                            self.tr("Export PN&G..."),
                             lambda: export_png_dialog(self),
                             "Ctrl+Alt+E")
         from . import photoreal_ui
         file_menu.addAction(icons.icon("mdi.camera-iris"),
-                            "Render P&hoto (Blender)...",
+                            self.tr("Render P&hoto (Blender)..."),
                             lambda: photoreal_ui.open_dialog(self))
         file_menu.addAction(icons.icon("mdi.drawing-box"),
-                            "&Blueprint (2D Drawing)...",
+                            self.tr("&Blueprint (2D Drawing)..."),
                             self.open_blueprint, "Ctrl+Shift+D")
         file_menu.addSeparator()
         file_menu.addAction(icons.icon("mdi.cloud-upload-outline"),
-                            "&Publish to Printables...",
+                            self.tr("&Publish to Printables..."),
                             self.publish_to_printables,
                             "Ctrl+Shift+P")
 
@@ -242,62 +242,69 @@ class MainWindow(QMainWindow):
             from . import planetcraft_dialog
             planetcraft_dialog.open_dialog(self)
         file_menu.addAction(icons.icon("mdi.earth"),
-                            "Send to Planet&Craft...", _planetcraft)
+                            self.tr("Send to Planet&Craft..."), _planetcraft)
         file_menu.addSeparator()
         # Qt moves an action called "Exit" into the macOS application
         # menu unless told otherwise, so File had no way out on a Mac.
         # There the app menu's own Quit owns Cmd+Q; claiming it twice
         # would make Qt fire neither.
         exit_act = file_menu.addAction(
-            "E&xit", self.close,
+            self.tr("E&xit"), self.close,
             "" if sys.platform == "darwin" else "Ctrl+Q")
         exit_act.setMenuRole(QAction.NoRole)
 
-        edit_menu = m.addMenu("&Edit")
-        undo_act = self.model.undo_stack.createUndoAction(self, "&Undo")
+        edit_menu = m.addMenu(self.tr("&Edit"))
+        undo_act = self.model.undo_stack.createUndoAction(
+            self, self.tr("&Undo"))
         undo_act.setIcon(icons.icon("mdi.undo"))
         undo_act.setShortcut("Ctrl+Z")
         edit_menu.addAction(undo_act)
-        redo_act = self.model.undo_stack.createRedoAction(self, "&Redo")
+        redo_act = self.model.undo_stack.createRedoAction(
+            self, self.tr("&Redo"))
         redo_act.setIcon(icons.icon("mdi.redo"))
         redo_act.setShortcuts(["Ctrl+Y", "Ctrl+Shift+Z"])
         edit_menu.addAction(redo_act)
         edit_menu.addSeparator()
         edit_menu.addAction(icons.icon("mdi.content-cut"),
-                            "Cu&t\tCtrl+X",
+                            self.tr("Cu&t") + "\tCtrl+X",
                             lambda: self._tree_command("cut"))
         edit_menu.addAction(icons.icon("mdi.content-copy"),
-                            "&Copy\tCtrl+C",
+                            self.tr("&Copy") + "\tCtrl+C",
                             lambda: self._tree_command("copy"))
         edit_menu.addAction(icons.icon("mdi.content-paste"),
-                            "&Paste\tCtrl+V",
+                            self.tr("&Paste") + "\tCtrl+V",
                             lambda: self._tree_command("paste"))
         edit_menu.addSeparator()
-        edit_menu.addAction("Move &Up\tCtrl+Up",
+        edit_menu.addAction(self.tr("Move &Up") + "\tCtrl+Up",
                             lambda: self._tree_command("shift", -1))
-        edit_menu.addAction("Move Dow&n\tCtrl+Down",
+        edit_menu.addAction(self.tr("Move Dow&n") + "\tCtrl+Down",
                             lambda: self._tree_command("shift", 1))
         edit_menu.addSeparator()
-        edit_menu.addAction("&Delete", self._delete_selection, "Delete")
-        edit_menu.addAction("D&uplicate", self._duplicate_selection,
-                            "Ctrl+D")
+        edit_menu.addAction(self.tr("&Delete"), self._delete_selection,
+                            "Delete")
+        edit_menu.addAction(self.tr("D&uplicate"),
+                            self._duplicate_selection, "Ctrl+D")
         edit_menu.addSeparator()
-        edit_menu.addAction("&Group", lambda: self._apply_operation(
+        edit_menu.addAction(self.tr("&Group"), lambda: self._apply_operation(
             "union"), "Ctrl+G")
-        edit_menu.addAction("&Ungroup", self._ungroup_selection,
+        edit_menu.addAction(self.tr("&Ungroup"), self._ungroup_selection,
                             "Ctrl+Shift+G")
         edit_menu.addSeparator()
-        edit_menu.addAction("Document &Units...", self.choose_unit)
-        edit_menu.addAction("Document &Scale (1 : N)...", self.choose_scale)
-        edit_menu.addAction("&Locate OpenSCAD...", self._locate_openscad)
+        edit_menu.addAction(self.tr("Document &Units..."), self.choose_unit)
+        edit_menu.addAction(self.tr("Document &Scale (1 : N)..."),
+                            self.choose_scale)
+        edit_menu.addAction(self.tr("&Locate OpenSCAD..."),
+                            self._locate_openscad)
+        edit_menu.addSeparator()
+        self._build_language_menu(edit_menu)
 
-        insert_menu = m.addMenu("&Insert")
+        insert_menu = m.addMenu(self.tr("&Insert"))
         insert_menu.addAction(icons.icon("mdi.package-variant-closed"),
-                              "New &Object", self._new_object,
+                              self.tr("New &Object"), self._new_object,
                               "Ctrl+Alt+N")
         insert_menu.addSeparator()
         insert_menu.addAction(icons.icon("mdi.toy-brick-outline"),
-                              "&Part Library...", self.open_library,
+                              self.tr("&Part Library..."), self.open_library,
                               "Ctrl+L")
         insert_menu.addSeparator()
         # every toolbar tool, grouped the way the toolbars group them
@@ -306,14 +313,14 @@ class MainWindow(QMainWindow):
 
         self._build_library_menu(m)
 
-        view_menu = m.addMenu("&View")
+        view_menu = m.addMenu(self.tr("&View"))
         customizer_act = self._customizer_dock.toggleViewAction()
         customizer_act.setIcon(icons.icon("mdi.tune-variant"))
-        customizer_act.setText("&Customizer (sliders)")
+        customizer_act.setText(self.tr("&Customizer (sliders)"))
         view_menu.addAction(customizer_act)
         from . import animate
         view_menu.addAction(icons.icon("mdi.play-circle-outline"),
-                            "&Animate ($t)...",
+                            self.tr("&Animate ($t)..."),
                             lambda: animate.open_panel(self))
         view_menu.addAction(self._grid_act)
         view_menu.addAction(self._snap_act)
@@ -323,40 +330,43 @@ class MainWindow(QMainWindow):
             "show_dims", True, type=bool)
         self.scene.show_dims = show_dims
         self._dims_act = QAction(icons.icon("mdi.ruler-square"),
-                                 "Dimensions on selection", self)
+                                 self.tr("Dimensions on selection"), self)
         self._dims_act.setCheckable(True)
         self._dims_act.setChecked(show_dims)
-        self._dims_act.setToolTip("Show the size of selected shapes")
+        self._dims_act.setToolTip(self.tr("Show the size of selected "
+                                          "shapes"))
         self._dims_act.toggled.connect(self._set_show_dims)
         view_menu.addAction(self._dims_act)
-        view_menu.addAction("Clear &Dimensions",
+        view_menu.addAction(self.tr("Clear &Dimensions"),
                             self.model.clear_dimensions)
         view_menu.addAction(icons.icon("mdi.image-outline"),
-                            "Add &Reference Image…",
+                            self.tr("Add &Reference Image…"),
                             self._add_reference_image)
-        view_menu.addAction("Clear Reference &Images",
+        view_menu.addAction(self.tr("Clear Reference &Images"),
                             self.model.clear_reference_images)
         view_menu.addSeparator()
-        view_menu.addAction("Zoom &In", lambda: self.view2d.zoom(1.25),
-                            "Ctrl++")
-        view_menu.addAction("Zoom &Out",
+        view_menu.addAction(self.tr("Zoom &In"),
+                            lambda: self.view2d.zoom(1.25), "Ctrl++")
+        view_menu.addAction(self.tr("Zoom &Out"),
                             lambda: self.view2d.zoom(1 / 1.25), "Ctrl+-")
-        view_menu.addAction("&Reset 2D Zoom", self.view2d.zoom_reset,
+        view_menu.addAction(self.tr("&Reset 2D Zoom"), self.view2d.zoom_reset,
                             "Ctrl+0")
-        view_menu.addAction("Fit &Sketch", self.view2d.fit_content,
+        view_menu.addAction(self.tr("Fit &Sketch"), self.view2d.fit_content,
                             "Ctrl+Shift+F")
-        view_menu.addAction("Zoom to Se&lection",
+        view_menu.addAction(self.tr("Zoom to Se&lection"),
                             self.view2d.zoom_selection)
-        view_menu.addAction("&Fit 3D View", self.view3d.fit, "Ctrl+F")
-        views_menu = view_menu.addMenu("3D &Camera")
+        view_menu.addAction(self.tr("&Fit 3D View"), self.view3d.fit,
+                            "Ctrl+F")
+        views_menu = view_menu.addMenu(self.tr("3D &Camera"))
         for name in self.view3d.VIEWS:
             views_menu.addAction(
-                name, lambda _=False, n=name: self.view3d.set_view(n))
+                self.tr(name),
+                lambda _=False, n=name: self.view3d.set_view(n))
         from .view3d import PROJECTIONS
-        proj_menu = view_menu.addMenu("3D &Projection")
+        proj_menu = view_menu.addMenu(self.tr("3D &Projection"))
         self._proj_group = QActionGroup(self)
         for name in PROJECTIONS:
-            act = QAction(name, self, checkable=True)
+            act = QAction(self.tr(name), self, checkable=True)
             act.setChecked(name == self.view3d.projection)
             act.triggered.connect(
                 lambda _, n=name: self.set_projection(n))
@@ -364,77 +374,81 @@ class MainWindow(QMainWindow):
             proj_menu.addAction(act)
         view_menu.addSeparator()
         from .view3d import BACKGROUNDS, RENDER_STYLES
-        style_menu = view_menu.addMenu("3D &Render Style")
+        style_menu = view_menu.addMenu(self.tr("3D &Render Style"))
         style_group = QActionGroup(self)
         for name in RENDER_STYLES:
-            act = QAction(name, self, checkable=True)
+            act = QAction(self.tr(name), self, checkable=True)
             act.setChecked(name == self.view3d.style)
             act.triggered.connect(
                 lambda _, n=name: self.view3d.set_style(n))
             style_group.addAction(act)
             style_menu.addAction(act)
-        bg_menu = view_menu.addMenu("3D &Background")
+        bg_menu = view_menu.addMenu(self.tr("3D &Background"))
         bg_group = QActionGroup(self)
         for name in BACKGROUNDS:
-            act = QAction(name, self, checkable=True)
+            act = QAction(self.tr(name), self, checkable=True)
             act.setChecked(name == self.view3d.background)
             act.triggered.connect(
                 lambda _, n=name: self.view3d.set_background(n))
             bg_group.addAction(act)
             bg_menu.addAction(act)
         # the model on a round platform with a soft shadow (stage.py)
-        self._stage_act = QAction("3D &Platform && Shadow", self,
+        self._stage_act = QAction(self.tr("3D &Platform and Shadow"), self,
                                   checkable=True)
         self._stage_act.setChecked(self.view3d.stage)
-        self._stage_act.setStatusTip(
+        self._stage_act.setStatusTip(self.tr(
             "Stand the model on a platform with a soft shadow from a "
-            "light at the top left, instead of the ground grid")
+            "light at the top left, instead of the ground grid"))
         self._stage_act.triggered.connect(self.view3d.set_stage)
         self.view3d.stage_toggled.connect(self._stage_act.setChecked)
         view_menu.addAction(self._stage_act)
         # Blender-style looks (shading.py): valleys darker, edges drawn
-        self._cavity_act = QAction("3D &Cavity Shading", self,
+        self._cavity_act = QAction(self.tr("3D &Cavity Shading"), self,
                                    checkable=True)
         self._cavity_act.setChecked(self.view3d.cavity)
-        self._cavity_act.setStatusTip("Darken valleys and lighten ridges "
-                                      "so the shape reads at a glance")
+        self._cavity_act.setStatusTip(self.tr(
+            "Darken valleys and lighten ridges so the shape reads at a "
+            "glance"))
         self._cavity_act.triggered.connect(self.view3d.set_cavity)
-        self._edges_act = QAction("3D &Edge Lines", self, checkable=True)
+        self._edges_act = QAction(self.tr("3D &Edge Lines"), self,
+                                  checkable=True)
         self._edges_act.setChecked(self.view3d.edges)
-        self._edges_act.setStatusTip("Draw the model's edges and outline "
-                                     "as thin lines")
+        self._edges_act.setStatusTip(self.tr(
+            "Draw the model's edges and outline as thin lines"))
         self._edges_act.triggered.connect(self.view3d.set_edges)
-        self._smooth_act = QAction("3D &Smooth Shading", self,
+        self._smooth_act = QAction(self.tr("3D &Smooth Shading"), self,
                                    checkable=True)
         self._smooth_act.setChecked(self.view3d.smooth)
-        self._smooth_act.setStatusTip(
+        self._smooth_act.setStatusTip(self.tr(
             "Shade curved surfaces smoothly (a normal per vertex) instead "
-            "of showing their facets; edges sharper than 40° stay hard")
+            "of showing their facets; edges sharper than 40° stay hard"))
         self._smooth_act.triggered.connect(self.view3d.set_smooth)
-        self._overlay_act = QAction("Compare to &Reference Image (overlay)",
-                                    self, checkable=True)
+        self._overlay_act = QAction(
+            self.tr("Compare to &Reference Image (overlay)"),
+            self, checkable=True)
         self._overlay_act.setChecked(self.view3d.overlay)
-        self._overlay_act.setStatusTip(
+        self._overlay_act.setStatusTip(self.tr(
             "Draw the reference pictures over the model as well as behind "
             "it: from the plane's square-on view (Front, Top, Right) the "
-            "model's outline is checked against the photo")
+            "model's outline is checked against the photo"))
         self._overlay_act.triggered.connect(self.view3d.set_overlay)
-        self._gl_act = QAction("3D &Hardware Rendering (OpenGL)", self,
-                               checkable=True)
+        self._gl_act = QAction(self.tr("3D &Hardware Rendering (OpenGL)"),
+                               self, checkable=True)
         self._gl_act.setChecked(self.view3d.hardware)
-        self._gl_act.setStatusTip(
+        self._gl_act.setStatusTip(self.tr(
             "Draw the model with OpenGL: exact occlusion at any size, "
-            "anti-aliased. Off, the built-in painter draws it")
+            "anti-aliased. Off, the built-in painter draws it"))
         self._gl_act.triggered.connect(self.view3d.set_hardware)
         # a bar in the document's unit, true at the orbit centre
         self.view3d.unit = self.model.unit
         self.view3d.real_scale = self.model.real_scale
-        self._scale_bar_act = QAction("3D Scale &Bar", self, checkable=True)
+        self._scale_bar_act = QAction(self.tr("3D Scale &Bar"), self,
+                                      checkable=True)
         self._scale_bar_act.setChecked(self.view3d.scale_bar)
-        self._scale_bar_act.setStatusTip(
+        self._scale_bar_act.setStatusTip(self.tr(
             "Show a scale bar in the document's unit in the 3D view — "
             "true at the point the camera orbits (everywhere in "
-            "orthographic)")
+            "orthographic)"))
         self._scale_bar_act.triggered.connect(self.view3d.set_scale_bar)
         self.view3d.look_toggled.connect(
             lambda key, on: {"cavity": self._cavity_act,
@@ -453,10 +467,10 @@ class MainWindow(QMainWindow):
         self._build_cut_menu(view_menu)
         self._add_view_toggles()
         view_menu.addSeparator()
-        theme_menu = view_menu.addMenu("&Theme")
+        theme_menu = view_menu.addMenu(self.tr("&Theme"))
         theme_group = QActionGroup(self)
         for name in THEMES:
-            act = QAction(name, self, checkable=True)
+            act = QAction(self.tr(name), self, checkable=True)
             act.setChecked(name == current_theme())
             act.triggered.connect(
                 lambda _, n=name: (apply_style(QApplication.instance(),
@@ -465,64 +479,94 @@ class MainWindow(QMainWindow):
             theme_group.addAction(act)
             theme_menu.addAction(act)
 
-        analyse_menu = m.addMenu("A&nalyse")
+        analyse_menu = m.addMenu(self.tr("A&nalyse"))
         from .analysis_dialog import open_analysis
         analyse_menu.addAction(
-            icons.icon("mdi.scale-balance"), "&Mass properties...",
+            icons.icon("mdi.scale-balance"), self.tr("&Mass properties..."),
             lambda: open_analysis(self, "mass"))
         analyse_menu.addAction(
             icons.icon("mdi.printer-3d-nozzle-outline"),
-            "Check for 3D &printing...",
+            self.tr("Check for 3D &printing..."),
             lambda: open_analysis(self, "print"))
         analyse_menu.addAction(
-            icons.icon("mdi.set-center"), "Check &interference...",
+            icons.icon("mdi.set-center"), self.tr("Check &interference..."),
             lambda: open_analysis(self, "interference"))
         from . import heatmap_ui
         heatmap_ui.add_menu(self, analyse_menu)
 
-        ai_menu = m.addMenu("&AI")
-        mcp_act = ai_menu.addAction("&Connect to Claude (Simple)\u2026",
-                                    self._open_mcp_dialog)
+        ai_menu = m.addMenu(self.tr("&AI"))
+        mcp_act = ai_menu.addAction(
+            self.tr("&Connect to Claude (Simple)\u2026"),
+            self._open_mcp_dialog)
         mcp_act.setIcon(icons.icon("mdi.lan-connect"))
-        mcp_act.setToolTip("Let Claude Desktop, Claude Code or "
-                           "another assistant build in this "
-                           "document \u2014 no API key, it uses the "
-                           "login you already have")
+        mcp_act.setToolTip(self.tr(
+            "Let Claude Desktop, Claude Code or another assistant build "
+            "in this document \u2014 no API key, it uses the login you "
+            "already have"))
         chat_act = self._chat_dock.toggleViewAction()
-        chat_act.setText("Chat&Box (requires API key)")
+        chat_act.setText(self.tr("Chat&Box (requires API key)"))
         chat_act.setIcon(icons.icon("mdi.robot-outline"))
         chat_act.setShortcut("Ctrl+/")
-        chat_act.setToolTip("A chat box docked in the window; it "
-                            "needs your own Claude, Mistral or "
-                            "Ollama API key")
+        chat_act.setToolTip(self.tr(
+            "A chat box docked in the window; it needs your own Claude, "
+            "Mistral or Ollama API key"))
         ai_menu.addAction(chat_act)
         photo_act = ai_menu.addAction(
-            icons.icon("mdi.camera-outline"), "Mesh from &Photo\u2026",
+            icons.icon("mdi.camera-outline"), self.tr("Mesh from &Photo\u2026"),
             self._open_photo3d)
-        photo_act.setToolTip("Turn one picture into a 3D surface with an "
-                             "image-to-3D model (Tripo, Meshy, or a "
-                             "command you run locally) and import it")
+        photo_act.setToolTip(self.tr(
+            "Turn one picture into a 3D surface with an image-to-3D "
+            "model (Tripo, Meshy, or a command you run locally) and "
+            "import it"))
 
-        git_menu = m.addMenu("&Git")
+        git_menu = m.addMenu(self.tr("&Git"))
         git_menu.addAction(icons.icon("mdi.source-commit"),
-                           "&Commit...", self._git_commit, "Ctrl+K")
+                           self.tr("&Commit..."), self._git_commit, "Ctrl+K")
         git_menu.addAction(icons.icon("mdi.cloud-upload-outline"),
-                           "&Push", self._git_push)
+                           self.tr("&Push"), self._git_push)
         git_menu.addAction(icons.icon("mdi.cloud-download-outline"),
-                           "P&ull", self._git_pull)
+                           self.tr("P&ull"), self._git_pull)
         git_menu.addSeparator()
         git_menu.addAction(icons.icon("mdi.github"),
-                           "Connect to Git&Hub / GitLab...",
+                           self.tr("Connect to Git&Hub / GitLab..."),
                            self._git_connect)
 
-        help_menu = m.addMenu("&Help")
-        help_menu.addAction("&User Guide", self._user_guide, "F1")
+        help_menu = m.addMenu(self.tr("&Help"))
+        help_menu.addAction(self.tr("&User Guide"), self._user_guide, "F1")
         help_menu.addSeparator()
         from .updater import Updater
         self.updater = Updater(self)
         self.updater.add_menu_actions(help_menu)
         help_menu.addSeparator()
-        help_menu.addAction("&About", self._about)
+        help_menu.addAction(self.tr("&About"), self._about)
+
+    def _build_language_menu(self, edit_menu):
+        """Edit \u25b8 Language: English / \u4e2d\u6587 / Fran\u00e7ais / Espa\u00f1ol.
+
+        Takes effect on the next launch (see language.py) \u2014 a running
+        window's widgets already hold their built text and KherveCAD
+        does not re-translate live."""
+        from . import language
+        lang_menu = edit_menu.addMenu(self.tr("&Language"))
+        group = QActionGroup(self)
+        current = language.current_language()
+        for code, label in language.LANGUAGES.items():
+            act = QAction(label, self, checkable=True)
+            act.setChecked(code == current)
+            act.triggered.connect(
+                lambda _, c=code: self._set_language(c))
+            group.addAction(act)
+            lang_menu.addAction(act)
+
+    def _set_language(self, code):
+        from . import language
+        if code == language.current_language():
+            return
+        language.set_language(code)
+        QMessageBox.information(
+            self, "KherveCAD",
+            self.tr("The new language takes effect the next time "
+                    "KherveCAD starts."))
 
     def _build_library_menu(self, menubar):
         """Library: parts to ADD, in themed sections (library_menu.py)."""
@@ -1426,21 +1470,23 @@ class MainWindow(QMainWindow):
         """View ▸ Exploded View: on/off, how far, which way."""
         from . import explode
         menu = self._explode_menu = view_menu.addMenu(
-            icons.icon("mdi.arrow-expand-all"), "E&xploded View")
-        self._explode_act = QAction("&Explode the Assembly", self,
+            icons.icon("mdi.arrow-expand-all"), self.tr("E&xploded View"))
+        self._explode_act = QAction(self.tr("&Explode the Assembly"), self,
                                     checkable=True)
         self._explode_act.setShortcut("Ctrl+Shift+X")
-        self._explode_act.setStatusTip(
+        self._explode_act.setStatusTip(self.tr(
             "Push every part away from the centre to show how the "
-            "assembly goes together — the model itself does not move")
+            "assembly goes together — the model itself does not move"))
         self._explode_act.triggered.connect(
             lambda on: self.set_explode(bool(on)))
         menu.addAction(self._explode_act)
         menu.addSeparator()
         self._explode_amounts = QActionGroup(self)
         for amount in explode.AMOUNTS:
-            act = QAction(f"Distance {int(round(amount * 100))} %", self,
-                          checkable=True)
+            act = QAction(
+                self.tr("Distance {percent} %").format(
+                    percent=int(round(amount * 100))),
+                self, checkable=True)
             act.setData(amount)
             act.triggered.connect(
                 lambda _=False, a=amount: self.set_explode(True, amount=a))
@@ -1449,8 +1495,9 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         self._explode_modes = QActionGroup(self)
         for mode in explode.MODES:
-            act = QAction("Outwards (radial)" if mode == "Radial"
-                          else f"Along {mode}", self, checkable=True)
+            act = QAction(self.tr("Outwards (radial)") if mode == "Radial"
+                          else self.tr("Along {axis}").format(axis=mode),
+                          self, checkable=True)
             act.setData(mode)
             act.triggered.connect(
                 lambda _=False, m=mode: self.set_explode(True, mode=m))
