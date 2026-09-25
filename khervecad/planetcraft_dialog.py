@@ -19,7 +19,7 @@ from PyQt5.QtWidgets import (QCheckBox, QDialog, QDialogButtonBox,
                              QHBoxLayout, QLabel, QLineEdit, QMessageBox,
                              QPushButton, QSpinBox, QVBoxLayout, QWidget)
 
-from . import planetcraft
+from . import language, planetcraft
 
 KEY = "planetcraft/folder"
 
@@ -28,7 +28,7 @@ class SendDialog(QDialog):
     def __init__(self, window):
         super().__init__(window)
         self.window = window
-        self.setWindowTitle("Send to PlanetCraft")
+        self.setWindowTitle(language.tr("Send to PlanetCraft"))
         model = window.model
         sel = window.builder.active_tree().selected_nodes() \
             if hasattr(window.builder, "active_tree") else []
@@ -40,14 +40,14 @@ class SendDialog(QDialog):
 
         form = QFormLayout()
         self.name = QLineEdit(name)
-        form.addRow("Creature name", self.name)
-        self.real = QCheckBox("Real size (1 block = 1 m)")
+        form.addRow(language.tr("Creature name"), self.name)
+        self.real = QCheckBox(language.tr("Real size (1 block = 1 m)"))
         self.real.setChecked(True)
         self.height = QDoubleSpinBox()
         self.height.setRange(0.2, 12.0)
         self.height.setDecimals(2)
         self.height.setValue(1.2)
-        self.height.setSuffix(" blocks")
+        self.height.setSuffix(" " + language.tr("blocks"))
         self.height.setEnabled(False)
         self.real.toggled.connect(lambda on: self.height.setEnabled(not on))
         row = QHBoxLayout()
@@ -55,16 +55,17 @@ class SendDialog(QDialog):
         row.addWidget(self.height)
         box = QWidget()
         box.setLayout(row)
-        form.addRow("Height", box)
+        form.addRow(language.tr("Height"), box)
         self.speed = QDoubleSpinBox()
         self.speed.setRange(0.1, 4.0)
         self.speed.setValue(1.0)
-        form.addRow("Speed", self.speed)
+        form.addRow(language.tr("Speed"), self.speed)
         self.health = QSpinBox()
         self.health.setRange(1, 200)
         self.health.setValue(12)
-        form.addRow("Health", self.health)
-        self.wild = QCheckBox("Roams the wild herds of new worlds")
+        form.addRow(language.tr("Health"), self.health)
+        self.wild = QCheckBox(
+            language.tr("Roams the wild herds of new worlds"))
         self.wild.setChecked(True)
         form.addRow("", self.wild)
         folder = QSettings().value(KEY, "") or planetcraft.default_folder()
@@ -76,19 +77,21 @@ class SendDialog(QDialog):
         frow.addWidget(pick)
         fbox = QWidget()
         fbox.setLayout(frow)
-        form.addRow("PlanetCraft folder", fbox)
+        form.addRow(language.tr("PlanetCraft folder"), fbox)
 
-        what = ("the selected part “%s”" % self.node.name
-                if self.node is not None else "the whole model")
-        self.info = QLabel(
-            f"Sends {what}. Name parts <b>Head</b>, <b>Tail</b>, <b>Wing</b> "
-            "or <b>Front left leg</b>… to choose the joints; unnamed legs "
-            "are found by themselves. Restart PlanetCraft (or reload the "
-            "page) and a pair appears near you.")
+        what = (language.tr("the selected part “{name}”").format(
+                    name=self.node.name)
+               if self.node is not None else language.tr("the whole model"))
+        self.info = QLabel(language.tr(
+            "Sends {what}. Name parts <b>Head</b>, <b>Tail</b>, "
+            "<b>Wing</b> or <b>Front left leg</b>… to choose the "
+            "joints; unnamed legs are found by themselves. Restart "
+            "PlanetCraft (or reload the page) and a pair appears near "
+            "you.").format(what=what))
         self.info.setWordWrap(True)
         buttons = QDialogButtonBox(QDialogButtonBox.Ok |
                                    QDialogButtonBox.Cancel)
-        buttons.button(QDialogButtonBox.Ok).setText("Send")
+        buttons.button(QDialogButtonBox.Ok).setText(language.tr("Send"))
         buttons.accepted.connect(self._send)
         buttons.rejected.connect(self.reject)
         lay = QVBoxLayout(self)
@@ -98,13 +101,14 @@ class SendDialog(QDialog):
         self.resize(460, self.sizeHint().height())
 
     def _pick(self):
-        d = QFileDialog.getExistingDirectory(self, "PlanetCraft folder",
-                                             self.folder.text())
+        d = QFileDialog.getExistingDirectory(
+            self, language.tr("PlanetCraft folder"), self.folder.text())
         if d:
             self.folder.setText(d)
 
     def _send(self):
         folder = self.folder.text().strip()
+        title = language.tr("Send to PlanetCraft")
         try:
             r = planetcraft.export(
                 self.window.model, self.name.text(), folder, self.node,
@@ -112,19 +116,22 @@ class SendDialog(QDialog):
                 self.speed.value(), self.health.value(),
                 self.wild.isChecked())
         except planetcraft.PlanetCraftError as exc:
-            QMessageBox.warning(self, "Send to PlanetCraft", str(exc))
+            QMessageBox.warning(self, title, str(exc))
             return
         QSettings().setValue(KEY, folder)
         legs = r["legs"]
-        QMessageBox.information(
-            self, "Send to PlanetCraft",
-            f"“{r['label']}” is in PlanetCraft: {r['height_blocks']} blocks "
-            f"tall, {r['triangles']} triangles, parts: "
-            f"{', '.join(r['parts'])}"
-            + (f" ({legs} legs found automatically)" if r["auto_legs"]
-               else "")
-            + ".\n\nReload PlanetCraft; a pair appears near you and it "
-              "joins the wild herds of new worlds.")
+        msg = language.tr(
+            "“{label}” is in PlanetCraft: {height} blocks tall, "
+            "{triangles} triangles, parts: {parts}").format(
+                label=r['label'], height=r['height_blocks'],
+                triangles=r['triangles'], parts=', '.join(r['parts']))
+        if r["auto_legs"]:
+            msg += " " + language.tr(
+                "({legs} legs found automatically)").format(legs=legs)
+        msg += "\n\n" + language.tr(
+            "Reload PlanetCraft; a pair appears near you and it joins "
+            "the wild herds of new worlds.")
+        QMessageBox.information(self, title, msg)
         self.accept()
 
 

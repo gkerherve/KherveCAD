@@ -12,7 +12,7 @@ the Free Software Foundation, either version 3 of the License, or
 import threading
 import time
 
-from . import photoreal
+from . import language, photoreal
 
 
 def scene(window):
@@ -71,24 +71,27 @@ def render_window(window, out, view="current", size=(1600, 1200),
 
 def open_dialog(window):
     from PyQt5.QtWidgets import QFileDialog, QMessageBox
+    title = language.tr("Render Photo")
     if photoreal.find_blender() is None:
         QMessageBox.information(
-            window, "Render Photo",
-            "Photo rendering uses Blender (free, blender.org) in the "
-            "background. Install it, or set KHERVECAD_BLENDER to its "
-            "executable, and try again.")
+            window, title, language.tr(
+                "Photo rendering uses Blender (free, blender.org) in "
+                "the background. Install it, or set KHERVECAD_BLENDER "
+                "to its executable, and try again."))
         return
-    path, _f = QFileDialog.getSaveFileName(window, "Render Photo",
+    path, _f = QFileDialog.getSaveFileName(window, title,
                                            "render.png", "PNG (*.png)")
     if not path:
         return
-    window.statusBar().showMessage("Rendering with Blender (Cycles)…")
+    window.statusBar().showMessage(
+        language.tr("Rendering with Blender (Cycles)…"))
     try:
         render_window(window, path)
     except Exception as exc:
-        QMessageBox.warning(window, "Render Photo", str(exc))
+        QMessageBox.warning(window, title, str(exc))
         return
-    window.statusBar().showMessage(f"Rendered {path}", 8000)
+    window.statusBar().showMessage(
+        language.tr("Rendered {path}").format(path=path), 8000)
     from PyQt5.QtCore import QUrl
     from PyQt5.QtGui import QDesktopServices
     QDesktopServices.openUrl(QUrl.fromLocalFile(path))
