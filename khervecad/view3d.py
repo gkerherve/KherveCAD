@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import (QGridLayout, QLabel, QSlider, QToolButton,
 
 from . import bsp as bsp_mod
 from . import glrender
+from . import language
 from .cut_ui import CutBar
 
 _SETTINGS = ("Kherve", "KherveCAD")
@@ -93,12 +94,17 @@ class LightingBar(QWidget):
     #: Redraw was clicked: rebuild both views from the tree.
     refresh_requested = pyqtSignal()
 
-    ROWS = (("brightness", "Bright",
-             "Lighten or darken every face (the model only — the "
-             "background and the theme are untouched)."),
-            ("contrast", "Contrast",
-             "Spread or flatten the shading between the lit and "
-             "unlit faces, about mid-grey."))
+    @staticmethod
+    def _rows():
+        return (
+            ("brightness", language.tr("Bright"),
+             language.tr(
+                 "Lighten or darken every face (the model only — the "
+                 "background and the theme are untouched).")),
+            ("contrast", language.tr("Contrast"),
+             language.tr(
+                 "Spread or flatten the shading between the lit and "
+                 "unlit faces, about mid-grey.")))
 
     def __init__(self, view):
         super().__init__(view)
@@ -118,7 +124,7 @@ class LightingBar(QWidget):
         grid.setHorizontalSpacing(6)
         grid.setVerticalSpacing(1)
         self.sliders = {}
-        for row, (key, label, tip) in enumerate(self.ROWS):
+        for row, (key, label, tip) in enumerate(self._rows()):
             slider = QSlider(Qt.Horizontal, self)
             slider.setRange(-100, 100)
             slider.setValue(int(round(getattr(view, key) * 100)))
@@ -131,14 +137,17 @@ class LightingBar(QWidget):
             self.sliders[key] = slider
         grid.addWidget(
             self._button("mdi.backup-restore", "⟲",
-                         "Back to the default lighting", self.reset),
+                         language.tr("Back to the default lighting"),
+                         self.reset),
             0, 2, 2, 1)
         grid.addWidget(
             self._button("mdi.refresh", "⟳",
-                         "Redraw: rebuild both views from the object "
-                         "tree, dropping the mesh caches. Rarely needed "
-                         "— the view finishes its exact drawing order "
-                         "by itself a moment after each change.",
+                         language.tr(
+                             "Redraw: rebuild both views from the "
+                             "object tree, dropping the mesh caches. "
+                             "Rarely needed — the view finishes its "
+                             "exact drawing order by itself a moment "
+                             "after each change."),
                          self.refresh_requested.emit),
             0, 3, 2, 1)
 
@@ -1365,8 +1374,10 @@ class View3D(QWidget):
                           scalebar.px_per_unit(self), self.unit,
                           painter.pen().color(), self.real_scale)
         painter.drawText(8, self.height() - 8,
-                         f"{self.source} — {len(self.mesh)} triangles "
-                         f"· {self.style}"
+                         language.tr("{source} — {count} triangles "
+                                    "· {style}").format(
+                             source=self.source, count=len(self.mesh),
+                             style=language.tr(self.style))
                          + (" · OpenGL" if self._gl_drew else ""))
         painter.end()
 

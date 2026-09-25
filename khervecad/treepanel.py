@@ -30,7 +30,7 @@ from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QCheckBox,
                              QToolBar, QTreeWidget, QTreeWidgetItem,
                              QVBoxLayout, QWidget)
 
-from . import expr, icons
+from . import expr, icons, language
 from .document import node_from_dict, node_to_dict
 from .model import (CadNode, NODE_TYPES, OPERATION, DocumentModel,
                     validate)
@@ -84,7 +84,7 @@ class _RowDelegate(QStyledItemDelegate):
 
     def paint(self, painter, option, index):
         super().paint(painter, option, index)
-        tag = "(hidden)" if index.data(ROLE_TAG) \
+        tag = language.tr("(hidden)") if index.data(ROLE_TAG) \
             else index.data(ROLE_MODIFIER)
         if not tag:
             return
@@ -273,8 +273,8 @@ class ObjectTree(QTreeWidget):
 
         out = []
         for label, keys, icon_type in (
-                ("Position", ("x", "y", "z"), "translate"),
-                ("Rotation", ("rx", "ry", "rz"), "rotate")):
+                (language.tr("Position"), ("x", "y", "z"), "translate"),
+                (language.tr("Rotation"), ("rx", "ry", "rz"), "rotate")):
             vals = [node.params.get(k, 0.0) for k in keys]
             if any(nonzero(v) for v in vals):
                 out.append((f"{label} ({', '.join(fmt(v) for v in vals)})",
@@ -285,9 +285,10 @@ class ObjectTree(QTreeWidget):
                 opacity = float(node.params.get("alpha", 1.0))
             except (TypeError, ValueError):
                 opacity = 1.0
-            text = f"Color ({color}"
+            text = language.tr("Color ({color}").format(color=color)
             if opacity < 1.0:
-                text += f", {opacity:g} opacity"
+                text += language.tr(", {opacity:g} opacity").format(
+                    opacity=opacity)
             out.append((text + ")", "color", "color"))
         return out
 
@@ -305,15 +306,19 @@ class ObjectTree(QTreeWidget):
             if kind == "color":
                 row.setIcon(0, _swatch_icon(
                     str(node.params.get("color", ""))))
-                row.setToolTip(0, "The part's colour — change it in "
-                                  "Properties or right-click > Colour")
+                row.setToolTip(0, language.tr(
+                    "The part's colour — change it in Properties or "
+                    "right-click > Colour"))
             else:
                 row.setIcon(0, icons.icon(NODE_TYPES[icon_type]["icon"]))
                 row.setToolTip(0, (
-                    f"Solved from the mate to {mate['parent']} — adjust "
-                    f"via Attach / snap to..." if mated else
-                    "The part's placement — edit x/y/z and rotation in "
-                    "Properties"))
+                    language.tr(
+                        "Solved from the mate to {parent} — adjust via "
+                        "Attach / snap to...").format(
+                        parent=mate['parent']) if mated else
+                    language.tr(
+                        "The part's placement — edit x/y/z and rotation "
+                        "in Properties")))
             row.setData(0, Qt.UserRole, node.id)
             row.setData(0, ROLE_PLACEMENT, True)
             row.setFlags((row.flags() | Qt.ItemNeverHasChildren)
@@ -396,14 +401,14 @@ class ObjectTree(QTreeWidget):
         from .model import MODIFIERS
         mod = node.params.get("modifier")
         item.setData(0, ROLE_TAG, own_hidden)
-        item.setData(0, ROLE_MODIFIER, f"{mod} {MODIFIERS[mod]}"
+        item.setData(0, ROLE_MODIFIER, f"{mod} {language.tr(MODIFIERS[mod])}"
                      if mod in MODIFIERS else "")
         # dim + italic if hidden by itself OR by an ancestor
         font = item.font(0)
         font.setItalic(eff_hidden)
         item.setFont(0, font)
         error = self.errors.get(node.id)
-        label = NODE_TYPES[node.type]["label"]
+        label = language.tr(NODE_TYPES[node.type]["label"])
         if error:
             color = ERROR_COLOR_DARK if dark else ERROR_COLOR
             item.setForeground(0, QBrush(QColor(color)))
@@ -411,22 +416,28 @@ class ObjectTree(QTreeWidget):
         elif eff_hidden:
             color = HIDDEN_COLOR_DARK if dark else HIDDEN_COLOR
             item.setForeground(0, QBrush(QColor(color)))
-            item.setToolTip(0, f"{label} — hidden (Space to show)"
+            item.setToolTip(0, language.tr(
+                "{label} — hidden (Space to show)").format(label=label)
                             if own_hidden
-                            else f"{label} — hidden by a parent")
+                            else language.tr(
+                                "{label} — hidden by a parent").format(
+                                label=label))
         elif node.type == "assign":
             color = VAR_COLOR_DARK if dark else VAR_COLOR
             item.setForeground(0, QBrush(QColor(color)))
-            item.setToolTip(0, "Variable — also editable in the "
-                               "Variables sheet")
+            item.setToolTip(0, language.tr(
+                "Variable — also editable in the Variables sheet"))
         else:
             item.setData(0, Qt.ForegroundRole, None)
             mate = node.params.get("mate") \
                 if node.type == "component" else None
             if isinstance(mate, dict) and mate.get("parent"):
                 item.setToolTip(
-                    0, f"{label} — attached to {mate['parent']} "
-                       f"({mate.get('parent_anchor', '')})")
+                    0, language.tr(
+                        "{label} — attached to {parent} "
+                        "({anchor})").format(
+                        label=label, parent=mate['parent'],
+                        anchor=mate.get('parent_anchor', '')))
             else:
                 item.setToolTip(0, label)
 
@@ -773,7 +784,8 @@ class ObjectTree(QTreeWidget):
         else:
             self._insert_object_menu(menu)
             menu.addAction(icons.icon("mdi.content-paste"),
-                           "Paste\tCtrl+V", self.paste_clipboard)
+                           language.tr("Paste\tCtrl+V"),
+                           self.paste_clipboard)
         if menu.actions():
             menu.exec_(self.viewport().mapToGlobal(pos))
 
@@ -787,7 +799,7 @@ class ObjectTree(QTreeWidget):
         if not comps:
             return
         sub = menu.addMenu(icons.icon("mdi.package-down"),
-                           "Insert Object")
+                           language.tr("Insert Object"))
         for comp in comps:
             sub.addAction(
                 icons.icon("mdi.package-variant-closed"), comp.name,
@@ -800,7 +812,8 @@ class ObjectTree(QTreeWidget):
         from .mates import AttachDialog, definition_of, detach, mate_of
         definition = definition_of(self.model, part) or part
         menu.addAction(
-            icons.icon("mdi.pencil-box-outline"), "Edit in Object tab",
+            icons.icon("mdi.pencil-box-outline"),
+            language.tr("Edit in Object tab"),
             lambda: self.open_component.emit(definition))
         if part.type == "component":
             self._anchor_menu(menu, part)
@@ -808,15 +821,17 @@ class ObjectTree(QTreeWidget):
             self._instance_anchor_menu(menu, part, definition)
         menu.addAction(
             icons.icon("mdi.magnet-on"),
-            "Snap by clicking faces\tJ", self.snap_objects.emit)
+            language.tr("Snap by clicking faces\tJ"),
+            self.snap_objects.emit)
         menu.addAction(
-            icons.icon("mdi.magnet"), "Attach / snap to...",
+            icons.icon("mdi.magnet"), language.tr("Attach / snap to..."),
             lambda: AttachDialog(self.model, part, self).exec_())
         mate = mate_of(part)
         if mate is not None:
             menu.addAction(
                 icons.icon("mdi.link-off"),
-                f"Detach from {mate['parent']}",
+                language.tr("Detach from {parent}").format(
+                    parent=mate['parent']),
                 lambda: detach(self.model, part))
         menu.addSeparator()
 
@@ -825,16 +840,16 @@ class ObjectTree(QTreeWidget):
         Object — the "secondary" anchors that arrange sub-parts inside
         a definition, distinct from the assembly anchors on Objects."""
         from .mates import AttachDialog, detach, mate_of
-        sub = menu.addMenu(icons.icon("mdi.anchor"), "Anchors")
+        sub = menu.addMenu(icons.icon("mdi.anchor"), language.tr("Anchors"))
         sub.addAction(
             icons.icon("mdi.target"),
-            "Add anchor (pick face/edge in 3D)...",
+            language.tr("Add anchor (pick face/edge in 3D)..."),
             lambda: self.pick_anchor.emit(group))
         from . import anchors as anc
         users = anc.user_anchors(group)
         if users:
             remove_menu = sub.addMenu(icons.icon("mdi.delete-outline"),
-                                      "Remove anchor")
+                                      language.tr("Remove anchor"))
             for anchor in users:
                 remove_menu.addAction(
                     anchor["name"],
@@ -842,15 +857,17 @@ class ObjectTree(QTreeWidget):
                         anc.remove_user_anchor(self.model, group, n))
         menu.addAction(
             icons.icon("mdi.magnet-on"),
-            "Snap by clicking faces\tJ", self.snap_objects.emit)
+            language.tr("Snap by clicking faces\tJ"),
+            self.snap_objects.emit)
         menu.addAction(
-            icons.icon("mdi.magnet"), "Attach / snap to...",
+            icons.icon("mdi.magnet"), language.tr("Attach / snap to..."),
             lambda: AttachDialog(self.model, group, self).exec_())
         mate = mate_of(group)
         if mate is not None:
             menu.addAction(
                 icons.icon("mdi.link-off"),
-                f"Detach from {mate['parent']}",
+                language.tr("Detach from {parent}").format(
+                    parent=mate['parent']),
                 lambda: detach(self.model, group))
         menu.addSeparator()
 
@@ -859,15 +876,15 @@ class ObjectTree(QTreeWidget):
         the *definition*, so every instance of the Object shares
         them."""
         from . import anchors as anc
-        sub = menu.addMenu(icons.icon("mdi.anchor"), "Anchors")
+        sub = menu.addMenu(icons.icon("mdi.anchor"), language.tr("Anchors"))
         sub.addAction(
             icons.icon("mdi.target"),
-            "Add anchor (pick face/edge in 3D)...",
+            language.tr("Add anchor (pick face/edge in 3D)..."),
             lambda: self.pick_anchor.emit(part))
         users = anc.user_anchors(definition)
         if users:
             remove_menu = sub.addMenu(icons.icon("mdi.delete-outline"),
-                                      "Remove anchor")
+                                      language.tr("Remove anchor"))
             for anchor in users:
                 remove_menu.addAction(
                     anchor["name"],
@@ -879,15 +896,15 @@ class ObjectTree(QTreeWidget):
         """The Anchors submenu of one Object: add a picked anchor,
         re-base the origin onto any anchor, remove picked ones."""
         from . import anchors as anc
-        sub = menu.addMenu(icons.icon("mdi.anchor"), "Anchors")
+        sub = menu.addMenu(icons.icon("mdi.anchor"), language.tr("Anchors"))
         sub.addAction(
             icons.icon("mdi.target"),
-            "Add anchor (pick face/edge in 3D)...",
+            language.tr("Add anchor (pick face/edge in 3D)..."),
             lambda: self.pick_anchor.emit(comp))
         env = anc.doc_env(self.model)
         fn = self.model.effective_fn()
         origin_menu = sub.addMenu(icons.icon("mdi.axis-arrow"),
-                                  "Set origin at")
+                                  language.tr("Set origin at"))
         for anchor in anc.auto_anchors(comp, env=env, fn=fn):
             if anchor["kind"] in ("face", "corner"):
                 origin_menu.addAction(
@@ -897,12 +914,13 @@ class ObjectTree(QTreeWidget):
         users = anc.user_anchors(comp)
         for anchor in users:
             origin_menu.addAction(
-                f"{anchor['name']} (picked)",
+                language.tr("{name} (picked)").format(
+                    name=anchor['name']),
                 lambda _=False, p=list(anchor["pos"]):
                     anc.set_origin(self.model, comp, p, env))
         if users:
             remove_menu = sub.addMenu(icons.icon("mdi.delete-outline"),
-                                      "Remove anchor")
+                                      language.tr("Remove anchor"))
             for anchor in users:
                 remove_menu.addAction(
                     anchor["name"],
@@ -916,21 +934,21 @@ class ObjectTree(QTreeWidget):
         from .anchors import doc_env
         env = doc_env(self.model)
         sub = menu.addMenu(icons.icon("mdi.file-import-outline"),
-                           "Imported mesh")
+                           language.tr("Imported mesh"))
         sub.addAction(
             icons.icon("mdi.image-filter-center-focus"),
-            "Centre on origin",
+            language.tr("Centre on origin"),
             lambda: [mi.place(self.model, n, env=env) for n in meshes])
         sub.addAction(
             icons.icon("mdi.arrow-collapse-down"),
-            "Centre and place on floor",
+            language.tr("Centre and place on floor"),
             lambda: [mi.place(self.model, n, floor=True, env=env)
                      for n in meshes])
         units = sub.addMenu(icons.icon("mdi.ruler"),
-                            "File was drawn in")
+                            language.tr("File was drawn in"))
         for label, factor in mi.UNITS:
             units.addAction(
-                label, lambda _=False, f=factor:
+                language.tr(label), lambda _=False, f=factor:
                     [mi.set_scale(self.model, n, f) for n in meshes])
         menu.addSeparator()
 
@@ -939,35 +957,39 @@ class ObjectTree(QTreeWidget):
                   is not None and roots[0].parent.type == "sculpt"
                   else None)
         if sculpt is not None and hasattr(win, "start_sculpt"):
-            menu.addAction(icons.icon("mdi.brush"), "Sculpt...",
+            menu.addAction(icons.icon("mdi.brush"), language.tr("Sculpt..."),
                            lambda: win.start_sculpt(sculpt))
         if hasattr(win, "view3d"):
             menu.addAction(
                 icons.icon("mdi.arrow-down-bold-box-outline"),
-                "Drop (gravity)",
+                language.tr("Drop (gravity)"),
                 lambda: self._drop(roots))
         pp = roots[0] if len(roots) == 1 and roots[0].type == "push_pull" \
             else None
         if pp is not None and hasattr(win, "view3d"):
             from . import faceedit_ui
             menu.addAction(icons.icon("mdi.arrow-expand-up"),
-                           "Pick faces to push / pull...",
+                           language.tr("Pick faces to push / pull..."),
                            lambda: faceedit_ui.start(win, pp))
         from . import ik_ui
         if len(roots) == 1 and hasattr(win, "view3d") and \
                 ik_ui.can_reach(nodes[0]):
             menu.addAction(icons.icon("mdi.human-handsup"),
-                           "Reach (IK)...",
+                           language.tr("Reach (IK)..."),
                            lambda: ik_ui.start(win, nodes[0]))
         menu.addAction(icons.icon("mdi.palette-outline"),
-                       "Color...", lambda: self._pick_color(nodes))
+                       language.tr("Color..."),
+                       lambda: self._pick_color(nodes))
         if len(nodes) == 1:
-            menu.addAction(icons.icon("mdi.rename-box"), "Rename",
+            menu.addAction(icons.icon("mdi.rename-box"),
+                           language.tr("Rename"),
                            lambda: self.editItem(self.selectedItems()[0], 0))
-        menu.addAction(icons.icon("mdi.content-duplicate"), "Duplicate",
+        menu.addAction(icons.icon("mdi.content-duplicate"),
+                       language.tr("Duplicate"),
                        lambda: [self.model.duplicate(n) for n in roots])
         menu.addSeparator()
-        menu.addAction(icons.icon("mdi.delete-outline"), "Delete",
+        menu.addAction(icons.icon("mdi.delete-outline"),
+                       language.tr("Delete"),
                        lambda: [self.model.remove_node(n) for n in roots])
 
     def _modifier_menu(self, menu, nodes):
@@ -975,10 +997,10 @@ class ObjectTree(QTreeWidget):
         ghosted, left out of the render), ! show only this."""
         from .model import MODIFIERS
         sub = menu.addMenu(icons.icon("mdi.bug-outline"),
-                           "Debug modifier (OpenSCAD)")
+                           language.tr("Debug modifier (OpenSCAD)"))
         current = {n.params.get("modifier", "") for n in nodes}
-        for mod, label in [("", "None")] + [
-                (m, f"{m}  {name.capitalize()}")
+        for mod, label in [("", language.tr("None"))] + [
+                (m, f"{m}  {language.tr(name.capitalize())}")
                 for m, name in MODIFIERS.items()]:
             act = sub.addAction(label, lambda _=False, m=mod: [
                 self.model.set_modifier(n, m) for n in nodes])
@@ -1000,14 +1022,14 @@ class ObjectTree(QTreeWidget):
         menu.addAction(
             icons.icon("mdi.eye-outline" if hidden
                        else "mdi.eye-off-outline"),
-            "Show" if hidden else "Hide",
+            language.tr("Show") if hidden else language.tr("Hide"),
             lambda: [self.model.set_visible(n, bool(hidden))
                      for n in nodes])
         self._modifier_menu(menu, nodes)
         if len(roots) == 1 and hasattr(self.window(), "statusBar"):
             from . import split_ui
             menu.addAction(icons.icon("mdi.box-cutter"),
-                           "Split for printing...",
+                           language.tr("Split for printing..."),
                            lambda: split_ui.open_dialog(self.window(),
                                                         roots[0]))
         menu.addSeparator()
@@ -1015,15 +1037,16 @@ class ObjectTree(QTreeWidget):
         meshes = mesh_nodes(roots)
         if meshes:
             self._mesh_menu(menu, meshes)
-        apply_menu = menu.addMenu(icons.icon("mdi.auto-fix"), "Apply")
+        apply_menu = menu.addMenu(icons.icon("mdi.auto-fix"),
+                                  language.tr("Apply"))
         for op in APPLY_OPS:
             apply_menu.addAction(
                 icons.icon(NODE_TYPES[op]["icon"]),
-                NODE_TYPES[op]["label"],
+                language.tr(NODE_TYPES[op]["label"]),
                 lambda _=False, o=op: self.model.wrap_nodes(roots, o))
         apply_menu.addSeparator()
         apply_menu.addAction(
-            icons.icon("mdi.blur"), "Round edges (3D)",
+            icons.icon("mdi.blur"), language.tr("Round edges (3D)"),
             lambda: self.model.round_edges(roots))
         fillet = roots[0] if len(roots) == 1 and roots[0].type == "fillet" \
             else (roots[0].parent if len(roots) == 1 and roots[0].parent
@@ -1032,49 +1055,54 @@ class ObjectTree(QTreeWidget):
         win = self.window()
         if fillet is not None and hasattr(win, "start_fillet_pick"):
             menu.addAction(
-                icons.icon("mdi.rounded-corner"), "Pick fillet edges...",
+                icons.icon("mdi.rounded-corner"),
+                language.tr("Pick fillet edges..."),
                 lambda: win.start_fillet_pick(fillet))
         sculpt = roots[0] if len(roots) == 1 and roots[0].type == "sculpt" \
             else (roots[0].parent if len(roots) == 1 and roots[0].parent
                   is not None and roots[0].parent.type == "sculpt"
                   else None)
         if sculpt is not None and hasattr(win, "start_sculpt"):
-            menu.addAction(icons.icon("mdi.brush"), "Sculpt...",
+            menu.addAction(icons.icon("mdi.brush"), language.tr("Sculpt..."),
                            lambda: win.start_sculpt(sculpt))
         menu.addAction(icons.icon("mdi.palette-outline"),
-                       "Color...", lambda: self._pick_color(nodes))
-        menu.addAction(icons.icon("mdi.group"), "Group\tCtrl+G",
+                       language.tr("Color..."),
+                       lambda: self._pick_color(nodes))
+        menu.addAction(icons.icon("mdi.group"), language.tr("Group\tCtrl+G"),
                        lambda: self.model.group_nodes(roots))
         containers = [n for n in roots if n.is_container()]
         if containers:
             menu.addAction(
-                icons.icon("mdi.ungroup"), "Ungroup\tCtrl+Shift+G",
+                icons.icon("mdi.ungroup"),
+                language.tr("Ungroup\tCtrl+Shift+G"),
                 lambda: [self.model.ungroup(n) for n in containers])
         menu.addSeparator()
         menu.addAction(icons.icon("mdi.content-cut"),
-                       "Cut\tCtrl+X", self.cut_selection)
+                       language.tr("Cut\tCtrl+X"), self.cut_selection)
         menu.addAction(icons.icon("mdi.content-copy"),
-                       "Copy\tCtrl+C", self.copy_selection)
+                       language.tr("Copy\tCtrl+C"), self.copy_selection)
         menu.addAction(icons.icon("mdi.content-paste"),
-                       "Paste\tCtrl+V", self.paste_clipboard)
+                       language.tr("Paste\tCtrl+V"), self.paste_clipboard)
         menu.addSeparator()
         if len(nodes) == 1:
-            menu.addAction(icons.icon("mdi.rename-box"), "Rename",
+            menu.addAction(icons.icon("mdi.rename-box"),
+                           language.tr("Rename"),
                            lambda: self.editItem(
                                self.selectedItems()[0], 0))
         menu.addAction(icons.icon("mdi.content-duplicate"),
-                       "Duplicate", lambda: [self.model.duplicate(n)
-                                             for n in roots])
+                       language.tr("Duplicate"),
+                       lambda: [self.model.duplicate(n)
+                               for n in roots])
         win = self.window()
         if len(roots) == 1 and roots[0].type == "sheet_metal":
             from . import sheetmetal_ui
             menu.addSeparator()
             menu.addAction(icons.icon("mdi.arrow-expand-horizontal"),
-                           "Unfold (flat pattern sketch)",
+                           language.tr("Unfold (flat pattern sketch)"),
                            lambda: sheetmetal_ui.unfold(self.window(),
                                                         roots[0]))
             menu.addAction(icons.icon("mdi.file-export-outline"),
-                           "Export flat pattern DXF...",
+                           language.tr("Export flat pattern DXF..."),
                            lambda: sheetmetal_ui.export_flat(
                                self.window(), roots[0]))
         if hasattr(win, "view3d") and len(roots) == 1:     # lego_convert
@@ -1082,29 +1110,31 @@ class ObjectTree(QTreeWidget):
             menu.addSeparator()
             menu.addAction(
                 icons.icon("mdi.toy-brick-plus-outline"),
-                "Convert to Lego...",
+                language.tr("Convert to Lego..."),
                 lambda: lego_convert.convert_to_lego(win, roots[0]))
             menu.addAction(
-                icons.icon("mdi.cube-outline"), "Fuse Lego into one solid",
+                icons.icon("mdi.cube-outline"),
+                language.tr("Fuse Lego into one solid"),
                 lambda: lego_convert.fuse_lego(win, roots[0]))
         if hasattr(win, "view3d"):              # Analyse (analysis_dialog)
             from .analysis_dialog import open_analysis
             menu.addSeparator()
             menu.addAction(icons.icon("mdi.scale-balance"),
-                           "Mass properties...",
+                           language.tr("Mass properties..."),
                            lambda: open_analysis(win, "mass", roots))
             menu.addAction(icons.icon("mdi.printer-3d-nozzle-outline"),
-                           "Check for 3D printing...",
+                           language.tr("Check for 3D printing..."),
                            lambda: open_analysis(win, "print", roots))
             menu.addAction(icons.icon("mdi.set-center"),
-                           "Check interference...",
+                           language.tr("Check interference..."),
                            lambda: open_analysis(win, "interference",
                                                  roots))
             menu.addSeparator()
         if len(roots) == 1:
             menu.addAction(
                 icons.icon("mdi.link-variant"),
-                "Linked copy (updates with the original)",
+                language.tr(
+                    "Linked copy (updates with the original)"),
                 lambda: self.model.add_linked_copy(roots[0]))
         promotable = [n for n in roots if n.type not in
                       ("assign", "variables", "masters", "reference")]
@@ -1112,22 +1142,25 @@ class ObjectTree(QTreeWidget):
         if objectable:
             menu.addAction(
                 icons.icon("mdi.package-variant-closed"),
-                "Make Object",
+                language.tr("Make Object"),
                 lambda: [self.model.make_component(n)
                          for n in objectable])
         if len(roots) == 1 and roots[0].type not in ("assign", "variables"):
             from .user_library_dialog import save_selection
             menu.addAction(
-                icons.icon("mdi.bookshelf"), "Save to My Library...",
+                icons.icon("mdi.bookshelf"),
+                language.tr("Save to My Library..."),
                 lambda: save_selection(self.window(), roots[0]))
         if promotable and self.SHOWS_INSERT_OBJECT:
             from .collections_panel import fill_move_menu
             fill_move_menu(menu.addMenu(
                 icons.icon("mdi.folder-arrow-right-outline"),
-                "Move to Collection"), self.model, lambda: promotable)
+                language.tr("Move to Collection")), self.model,
+                lambda: promotable)
         self._insert_object_menu(menu)
         menu.addSeparator()
-        menu.addAction(icons.icon("mdi.delete-outline"), "Delete",
+        menu.addAction(icons.icon("mdi.delete-outline"),
+                       language.tr("Delete"),
                        lambda: [self.model.remove_node(n)
                                 for n in roots])
 
@@ -1418,17 +1451,18 @@ class VariablesSheet(QWidget):
         layout.setContentsMargins(4, 4, 4, 4)
         from PyQt5.QtWidgets import QComboBox, QLabel
         scope_row = QHBoxLayout()
-        scope_row.addWidget(QLabel("Scope:"))
+        scope_row.addWidget(QLabel(language.tr("Scope:")))
         self.scope_combo = QComboBox()
-        self.scope_combo.setToolTip(
+        self.scope_combo.setToolTip(language.tr(
             "Whose variables to show — the document's globals or one "
-            "Object's own (module-local) variables")
+            "Object's own (module-local) variables"))
         self.scope_combo.currentIndexChanged.connect(self._scope_picked)
         scope_row.addWidget(self.scope_combo, 1)
         layout.addLayout(scope_row)
         self.table = QTableWidget(0, 3)
-        self.table.setHorizontalHeaderLabels(["Name", "Value / expression",
-                                              "Adjust"])
+        self.table.setHorizontalHeaderLabels(
+            [language.tr("Name"), language.tr("Value / expression"),
+             language.tr("Adjust")])
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setColumnWidth(0, 150)
         self.table.setColumnWidth(1, 120)
@@ -1437,11 +1471,13 @@ class VariablesSheet(QWidget):
         layout.addWidget(self.table)
 
         buttons = QHBoxLayout()
-        add = QPushButton(icons.icon("mdi.plus"), " Variable")
-        add.setToolTip("Add a variable")
+        add = QPushButton(icons.icon("mdi.plus"),
+                          " " + language.tr("Variable"))
+        add.setToolTip(language.tr("Add a variable"))
         add.clicked.connect(self._add)
-        remove = QPushButton(icons.icon("mdi.minus"), " Remove")
-        remove.setToolTip("Remove the selected variable")
+        remove = QPushButton(icons.icon("mdi.minus"),
+                             " " + language.tr("Remove"))
+        remove.setToolTip(language.tr("Remove the selected variable"))
         remove.clicked.connect(self._remove)
         buttons.addWidget(add)
         buttons.addWidget(remove)
@@ -1480,7 +1516,7 @@ class VariablesSheet(QWidget):
         Global."""
         self._updating = True
         self.scope_combo.clear()
-        self.scope_combo.addItem("Global (document)")
+        self.scope_combo.addItem(language.tr("Global (document)"))
         index = 0
         for i, comp in enumerate(self.model.components(), start=1):
             self.scope_combo.addItem(
@@ -1514,9 +1550,11 @@ class VariablesSheet(QWidget):
             name = QTableWidgetItem(str(node.params.get("variable", "")))
             tip = [str(node.params.get("description") or "")]
             if customizer.group_of(node):
-                tip.append(f"Group: {customizer.group_of(node)}")
+                tip.append(language.tr("Group: {group}").format(
+                    group=customizer.group_of(node)))
             if node.params.get("options"):
-                tip.append(f"Customizer: [{node.params['options']}]")
+                tip.append(language.tr("Customizer: [{options}]").format(
+                    options=node.params['options']))
             name.setToolTip("\n".join(t for t in tip if t))
             value = QTableWidgetItem(str(node.params.get("value", "")))
             if customizer.hidden(node):
@@ -1552,8 +1590,9 @@ class VariablesSheet(QWidget):
             box.setRange(0, steps)
             if isinstance(current, (int, float)):
                 box.setValue(int(round((float(current) - lo) / step)))
-            box.setToolTip(f"{spec['min']} to {spec['max']}, step "
-                           f"{spec['step']}")
+            box.setToolTip(language.tr("{min} to {max}, step {step}")
+                          .format(min=spec['min'], max=spec['max'],
+                                  step=spec['step']))
             box.valueChanged.connect(lambda k, n=node, r=row: self._set_value(
                 n, r, fmt(round(lo + k * step, 10))))
             return box
@@ -1691,10 +1730,10 @@ class BuilderPanel(QTabWidget):
         box.setContentsMargins(4, 4, 4, 0)
         box.setSpacing(4)
         row = QHBoxLayout()
-        self.fn_check = QCheckBox("Common segments ($fn)")
-        self.fn_check.setToolTip(
+        self.fn_check = QCheckBox(language.tr("Common segments ($fn)"))
+        self.fn_check.setToolTip(language.tr(
             "Force one segment count on every round object — cylinders, "
-            "spheres and revolved flanges — overriding their own $fn")
+            "spheres and revolved flanges — overriding their own $fn"))
         self.fn_check.setChecked(model.global_fn_on)
         self.fn_spin = QSpinBox()
         self.fn_spin.setRange(3, 512)
@@ -1724,19 +1763,20 @@ class BuilderPanel(QTabWidget):
         crow.setContentsMargins(4, 0, 4, 4)
         from PyQt5.QtWidgets import QComboBox
         self.code_scope = QComboBox()
-        self.code_scope.addItems(["Whole program", "Active object"])
-        self.code_scope.setToolTip(
+        self.code_scope.addItems([language.tr("Whole program"),
+                                  language.tr("Active object")])
+        self.code_scope.setToolTip(language.tr(
             "Show / apply the whole program, or only the active "
-            "Object's module")
+            "Object's module"))
         self.code_scope.currentIndexChanged.connect(
             lambda _i: self.refresh_code(force=True))
         crow.addWidget(self.code_scope)
         crow.addStretch()
         self.apply_btn = QPushButton(icons.icon("mdi.check"),
-                                     " Apply code")
-        self.apply_btn.setToolTip(
+                                     " " + language.tr("Apply code"))
+        self.apply_btn.setToolTip(language.tr(
             "Parse the edited program back into the object tree "
-            "(replaces the document; Ctrl+Z to undo)")
+            "(replaces the document; Ctrl+Z to undo)"))
         self.apply_btn.clicked.connect(self._apply_code)
         crow.addWidget(self.apply_btn)
         cbox.addLayout(crow)
@@ -1747,15 +1787,19 @@ class BuilderPanel(QTabWidget):
         # left column, so Code fell off the end behind a scroll arrow.
         self.setStyleSheet("QTabBar::tab { padding: 4px 9px; }")
         for page, label, tip in (
-                (objects, "Main", "The assembly: every part in the "
-                 "document"),
-                (self.object_tab, "Object", "Define and edit one Object "
-                 "(part) at its own origin"),
-                (self.collections, "Collections", "Sets of parts to "
-                 "show, hide or lock together (Blender's collections)"),
-                (self.variables, "Variables", "Document and per-Object "
-                 "variables"),
-                (code_tab, "Code", "The OpenSCAD program, editable")):
+                (objects, language.tr("Main"), language.tr(
+                    "The assembly: every part in the document")),
+                (self.object_tab, language.tr("Object"), language.tr(
+                    "Define and edit one Object (part) at its own "
+                    "origin")),
+                (self.collections, language.tr("Collections"),
+                 language.tr(
+                     "Sets of parts to show, hide or lock together "
+                     "(Blender's collections)")),
+                (self.variables, language.tr("Variables"), language.tr(
+                    "Document and per-Object variables")),
+                (code_tab, language.tr("Code"), language.tr(
+                    "The OpenSCAD program, editable"))):
             self.setTabToolTip(self.addTab(page, label), tip)
         self._code_page = code_tab
         self._code_dirty = False
@@ -1967,22 +2011,25 @@ class BuilderPanel(QTabWidget):
     def _build_code_toolbar(self) -> QToolBar:
         """A text-editor toolbar for the Code tab: undo/redo, cut/copy/
         paste and indent/dedent, acting on the code editor."""
-        tb = QToolBar("Code")
+        tb = QToolBar(language.tr("Code"))
         tb.setIconSize(QSize(18, 18))
         c = self.code
-        tb.addAction(icons.icon("mdi.undo"), "Undo (Ctrl+Z)", c.undo)
-        tb.addAction(icons.icon("mdi.redo"), "Redo (Ctrl+Y)", c.redo)
+        tb.addAction(icons.icon("mdi.undo"), language.tr("Undo (Ctrl+Z)"),
+                     c.undo)
+        tb.addAction(icons.icon("mdi.redo"), language.tr("Redo (Ctrl+Y)"),
+                     c.redo)
         tb.addSeparator()
-        tb.addAction(icons.icon("mdi.content-cut"), "Cut (Ctrl+X)", c.cut)
-        tb.addAction(icons.icon("mdi.content-copy"), "Copy (Ctrl+C)",
-                     c.copy)
-        tb.addAction(icons.icon("mdi.content-paste"), "Paste (Ctrl+V)",
-                     c.paste)
+        tb.addAction(icons.icon("mdi.content-cut"),
+                     language.tr("Cut (Ctrl+X)"), c.cut)
+        tb.addAction(icons.icon("mdi.content-copy"),
+                     language.tr("Copy (Ctrl+C)"), c.copy)
+        tb.addAction(icons.icon("mdi.content-paste"),
+                     language.tr("Paste (Ctrl+V)"), c.paste)
         tb.addSeparator()
         tb.addAction(icons.icon("mdi.format-indent-increase"),
-                     "Indent (Tab)", c.indent_selection)
+                     language.tr("Indent (Tab)"), c.indent_selection)
         tb.addAction(icons.icon("mdi.format-indent-decrease"),
-                     "Dedent (Shift+Tab)", c.dedent_selection)
+                     language.tr("Dedent (Shift+Tab)"), c.dedent_selection)
         return tb
 
     def refresh_theme(self):

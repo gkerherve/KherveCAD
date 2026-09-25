@@ -677,12 +677,15 @@ class MainWindow(QMainWindow):
 
     def _refresh_engine_label(self, busy=False):
         if self.engine.available:
-            state = "rendering…" if busy else "ready"
-            self._engine_label.setText(f"Engine: OpenSCAD ({state})")
-        else:
+            state = language.tr("rendering…") if busy \
+                else language.tr("ready")
             self._engine_label.setText(
+                language.tr("Engine: OpenSCAD ({state})")
+                .format(state=state))
+        else:
+            self._engine_label.setText(language.tr(
                 "Engine: built-in preview — OpenSCAD not found "
-                "(Edit > Locate OpenSCAD)")
+                "(Edit > Locate OpenSCAD)"))
 
     # ---------------------------------------------------------- editing
     def _set_tool(self, tool):
@@ -1343,16 +1346,19 @@ class MainWindow(QMainWindow):
         colors = [c for _t, c in colored]
         has_colors = any(c is not None for c in colors)
         exact, total = self._queue_part_renders(root)
-        label = "built-in preview"
+        label = language.tr("built-in preview")
         if iso is not None:
-            label += f" — Object: {root.name}"
+            label += language.tr(" — Object: {name}").format(
+                name=root.name)
         if total:
-            label += f" — {exact}/{total} parts exact"
+            label += language.tr(" — {exact}/{total} parts exact").format(
+                exact=exact, total=total)
         if booleans and not self.engine.available:
-            label += " (booleans approximated)"
+            label += language.tr(" (booleans approximated)")
         if plan is not None:
-            label += (" — exploded" if plan.group is not None
-                      else " — nothing to pull apart")
+            label += (language.tr(" — exploded")
+                      if plan.group is not None
+                      else language.tr(" — nothing to pull apart"))
         from . import heatmap_ui
         colors, label = heatmap_ui.apply(self, tris, colors, label)
         has_colors = has_colors or bool(self._heat_stats)
