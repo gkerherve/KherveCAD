@@ -11,9 +11,10 @@ the Free Software Foundation, either version 3 of the License, or
 import re
 
 import pytest
+from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QApplication
 
-from khervecad import tooltips, toolbars, userguide
+from khervecad import language, tooltips, toolbars, userguide
 from khervecad.userguide_content import chapters
 
 
@@ -72,3 +73,47 @@ def test_dialog_searches_and_jumps(app):
     assert doc.resource(QTextDocument.ImageResource,
                         QUrl("icon:mdi.cube-outline")) is not None
     dlg.close()
+
+
+@pytest.mark.parametrize("code", ["zh", "fr", "es"])
+def test_translated_chapters_match_english_structure(app, code):
+    """Each translated chapters() module must mirror the English one:
+    same anchors in the same order, every chapter actually translated
+    (not left as a stray copy of the English text), figure()/kbd()
+    still wired so no screenshot or shortcut silently vanishes."""
+    import importlib
+    module = importlib.import_module(f"khervecad.userguide_content_{code}")
+    en = chapters()
+    translated = module.chapters()
+    assert [a for a, _t, _h in translated] == [a for a, _t, _h in en]
+    en_titles = {t for _a, t, _h in en}
+    for (anchor, title, html), (_a, _t, en_html) in zip(translated, en):
+        assert title not in en_titles or anchor == "reference", anchor
+        if html == "@reference":
+            assert en_html == "@reference"
+            continue
+        assert len(html) > 200, anchor
+        # the figure() calls must survive translation (same image names,
+        # same count) — only their caption text may differ
+        assert (re.findall(r'figure\("([\w\-]+)"', html)
+                == re.findall(r'figure\("([\w\-]+)"', en_html)), anchor
+
+
+@pytest.mark.parametrize("code", ["zh", "fr", "es"])
+def test_the_guide_opens_in_every_translated_language(app, code):
+    """A language switch actually swaps which chapters() module the
+    dialog builds from (userguide._chapters_module reads the same
+    QSettings key language.set_language() writes, not the installed
+    DictTranslator, so this must work even before install() runs)."""
+    settings = QSettings("Kherve", "KherveCAD")
+    saved = settings.value("language")
+    try:
+        settings.setValue("language", code)
+        dlg = userguide.UserGuideDialog()
+        assert dlg.chapters.count() >= 20
+        dlg.close()
+    finally:
+        if saved is None:
+            settings.remove("language")
+        else:
+            settings.setValue("language", saved)

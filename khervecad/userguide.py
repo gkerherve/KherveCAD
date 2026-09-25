@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QHBoxLayout,
                              QListWidgetItem, QShortcut, QSplitter,
                              QTextBrowser, QVBoxLayout)
 
-from . import APP_NAME, __version__
+from . import APP_NAME, __version__, language
 
 #: screenshots shipped with the package (PyInstaller datas: see the spec)
 HELP_DIR = Path(__file__).resolve().parent / "help"
@@ -117,14 +117,37 @@ def _tool_reference():
     return "".join(out), icons_used
 
 
+#: chapters() lives in a per-language module — the manual is a
+#: translated document, not a table of short UI strings, so it does not
+#: go through language.tr()'s flat i18n/*.json dict.
+_CHAPTER_MODULES = {"zh": "userguide_content_zh",
+                    "fr": "userguide_content_fr",
+                    "es": "userguide_content_es"}
+
+
+def _chapters_module():
+    import importlib
+    name = _CHAPTER_MODULES.get(language.current_language())
+    if name is None:
+        from . import userguide_content
+        return userguide_content
+    return importlib.import_module(f".{name}", __package__)
+
+
 def build_html():
     """(title, anchor) chapters and the whole manual as one HTML page,
     plus the icon names the page references."""
-    from .userguide_content import chapters
+    chapters = _chapters_module().chapters
     reference, icons_used = _tool_reference()
+    guide_title = language.tr("User Guide")
+    version_line = language.tr("Version {version}").format(
+        version=__version__)
+    footer = language.tr(
+        "KherveCAD by Gwilherm Kerherve — part of the Kherve family of "
+        "native scientific apps. GPL-3.0.")
     parts = [f"<h1><span style='color:#3776ab'>Kherve</span><span "
-             f"style='color:#e07b39'>CAD</span> User Guide</h1>"
-             f"<p class='cap'>Version {__version__}</p>"]
+             f"style='color:#e07b39'>CAD</span> {guide_title}</h1>"
+             f"<p class='cap'>{version_line}</p>"]
     toc = []
     for n, (anchor, title, html) in enumerate(chapters(), 1):
         if html == "@reference":
@@ -132,9 +155,7 @@ def build_html():
         toc.append((f"{n}. {title}", anchor))
         parts.append(f"<a name='{anchor}'></a><h2>{n}. {title}</h2>"
                      f"{html}")
-    parts.append("<hr><p class='cap'>KherveCAD by Gwilherm Kerherve "
-                 "&mdash; part of the Kherve family of native scientific "
-                 "apps. GPL-3.0.</p>")
+    parts.append(f"<hr><p class='cap'>{footer}</p>")
     return toc, "".join(parts), icons_used
 
 
@@ -143,13 +164,14 @@ class UserGuideDialog(QDialog):
 
     def __init__(self, parent=None, chapter=None):
         super().__init__(parent)
-        self.setWindowTitle(f"{APP_NAME} — User Guide")
+        self.setWindowTitle(
+            f"{APP_NAME} — {language.tr('User Guide')}")
         self.resize(1120, 800)
         toc, html, icons_used = build_html()
 
         self.search = QLineEdit()
-        self.search.setPlaceholderText("Search the guide (Enter = next "
-                                       "match)")
+        self.search.setPlaceholderText(language.tr(
+            "Search the guide (Enter = next match)"))
         self.search.setClearButtonEnabled(True)
         self.search.returnPressed.connect(self.find_next)
         self.search.textChanged.connect(lambda _t: self.find_next(True))
@@ -217,7 +239,7 @@ class UserGuideDialog(QDialog):
             cursor.movePosition(cursor.Start)
             self.browser.setTextCursor(cursor)
             if not self.browser.find(text):
-                self.status.setText("not found")
+                self.status.setText(language.tr("not found"))
                 return
         self.status.setText("")
 

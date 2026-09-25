@@ -38,7 +38,17 @@ _NEUTRAL_SETTINGS = ("render_stage", "render_style", "render_bg",
                      # company and author: a test choosing Aluminium once
                      # made every real sheet after it weigh aluminium
                      "blueprint/material", "blueprint/company",
-                     "blueprint/drawn", "blueprint/dir")
+                     "blueprint/drawn", "blueprint/dir",
+                     # the developer's own chosen UI language: left as
+                     # "zh"/"fr"/"es" it silently switched
+                     # userguide._chapters_module()'s selection (which
+                     # reads this key directly, unlike language.tr()'s
+                     # calls, which need install() too) while no
+                     # DictTranslator was installed, so a User Guide test
+                     # compared an English search term against a Chinese
+                     # manual and only passed by the accident of the Tool
+                     # reference chapter staying English
+                     "language")
 
 #: looks that default to on, held off for the session instead of removed
 _NEUTRAL_OFF = ("render_stage", "render_edges", "render_scale_bar")
