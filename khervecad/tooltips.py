@@ -14,6 +14,8 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
+from . import language
+
 #: tooltip width in pixels — QToolTip otherwise lays a long paragraph
 #: out on a single line as wide as the screen
 WIDTH = 360
@@ -890,13 +892,21 @@ GROUPS = {
 
 
 def entry(key):
-    """(title, what, steps, tip) for *key*; unknown keys fall back to
-    the node type's label so a new tool is never silent."""
+    """(title, what, steps, tip) for *key*, translated for the active
+    language; unknown keys fall back to the node type's label so a new
+    tool is never silent."""
     if key in TIPS:
-        return TIPS[key]
-    from .model import NODE_TYPES
-    label = NODE_TYPES.get(key, {}).get("label", key)
-    return (label, f"Adds or applies {label}.", [], None)
+        title, what, steps, tip = TIPS[key]
+    else:
+        from .model import NODE_TYPES
+        label = NODE_TYPES.get(key, {}).get("label", key)
+        title, what, steps, tip = (
+            label,
+            language.tr("Adds or applies {label}.").format(label=label),
+            [], None)
+    return (language.tr(title), language.tr(what),
+            [language.tr(s) for s in steps],
+            language.tr(tip) if tip else None)
 
 
 def summary(key) -> str:
@@ -915,11 +925,12 @@ def rich(key, shortcut: str = "", footer: str = "") -> str:
              f"<p style='margin:4px 0 0 0'>{what}</p>"]
     if steps:
         items = "".join(f"<li>{s}</li>" for s in steps)
-        parts.append("<p style='margin:6px 0 0 0'><b>How to use</b></p>"
+        parts.append(f"<p style='margin:6px 0 0 0'><b>"
+                     f"{language.tr('How to use')}</b></p>"
                      f"<ol style='margin:2px 0 0 0'>{items}</ol>")
     if tip:
         parts.append(f"<p style='margin:4px 0 0 0; color:#8a8a8a'>"
-                     f"<i>Tip:</i> {tip}</p>")
+                     f"<i>{language.tr('Tip:')}</i> {tip}</p>")
     if footer:
         parts.append(f"<p style='margin:6px 0 0 0; color:#8a8a8a'>"
                      f"{footer}</p>")
@@ -930,8 +941,11 @@ def rich(key, shortcut: str = "", footer: str = "") -> str:
 def group_footer(group_key, labels) -> str:
     """The line a group button adds under its current tool's tip."""
     title, blurb = GROUPS.get(group_key, (group_key, ""))
-    return (f"<b>{title}</b> group ({blurb}) — the ▾ arrow lists: "
-            + ", ".join(labels) + ".")
+    template = language.tr(
+        "{title} group ({blurb}) — the ▾ arrow lists: {labels}.")
+    return template.format(title=f"<b>{language.tr(title)}</b>",
+                           blurb=language.tr(blurb),
+                           labels=", ".join(labels))
 
 
 def apply(target, key, shortcut: str = ""):

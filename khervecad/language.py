@@ -87,3 +87,19 @@ def install(app: QCoreApplication, code: str = None):
         return
     _active = DictTranslator(table)
     app.installTranslator(_active)
+
+
+def tr(text: str) -> str:
+    """Translate *text* against the active language's table directly.
+
+    For plain functions and data tables (tooltips.py's TIPS, a dialog
+    module with no QObject of its own) that cannot call `self.tr()`.
+    Looks the string up in the installed `DictTranslator`'s table with
+    no dependency on a live `QApplication` — safe to call even from the
+    MCP subprocess, which never builds one. Falls back to *text*
+    unchanged when there is no active translator or no entry for it.
+    """
+    if _active is None:
+        return text
+    found = _active._table.get(text)
+    return text if found is None else found

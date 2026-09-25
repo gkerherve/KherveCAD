@@ -22,7 +22,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDoubleSpinBox,
                              QSpinBox, QTableWidget, QTableWidgetItem,
                              QVBoxLayout, QWidget)
 
-from . import icons
+from . import icons, language
 from .rowsedit import ChoiceBox, RowsEditor
 from .model import NODE_TYPES, DocumentModel, fmt
 
@@ -43,7 +43,7 @@ class VarOrValueEdit(QComboBox):
         self.setEditable(True)
         self.setInsertPolicy(QComboBox.NoInsert)
         self.lineEdit().setPlaceholderText(
-            "value, expression or variable")
+            language.tr("value, expression or variable"))
         self.lineEdit().editingFinished.connect(self._commit)
         self.activated.connect(lambda _i: self._commit())
 
@@ -106,7 +106,8 @@ class PointsEditor(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         self.table = QTableWidget(len(points), 2)
-        self.table.setHorizontalHeaderLabels(["X", "Y"])
+        self.table.setHorizontalHeaderLabels(
+            [language.tr("X"), language.tr("Y")])
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.verticalHeader().setDefaultSectionSize(self._ROW_H)
         for row, (x, y) in enumerate(points):
@@ -120,19 +121,22 @@ class PointsEditor(QWidget):
 
         buttons = QHBoxLayout()
         add = QPushButton(icons.icon("mdi.plus"), "")
-        add.setToolTip("Insert a point after the selected one, on the "
-                       "midpoint of its edge (keeps the outline)")
+        add.setToolTip(language.tr(
+            "Insert a point after the selected one, on the midpoint "
+            "of its edge (keeps the outline)"))
         add.clicked.connect(self._add_row)
         remove = QPushButton(icons.icon("mdi.minus"), "")
-        remove.setToolTip("Remove the selected point")
+        remove.setToolTip(language.tr("Remove the selected point"))
         remove.clicked.connect(self._remove_row)
         up = QPushButton(icons.icon("mdi.arrow-up"), "")
-        up.setToolTip("Move the point one place earlier — it lands "
-                      "midway between its new neighbours")
+        up.setToolTip(language.tr(
+            "Move the point one place earlier — it lands midway "
+            "between its new neighbours"))
         up.clicked.connect(lambda: self._move_row(-1))
         down = QPushButton(icons.icon("mdi.arrow-down"), "")
-        down.setToolTip("Move the point one place later — it lands "
-                        "midway between its new neighbours")
+        down.setToolTip(language.tr(
+            "Move the point one place later — it lands midway "
+            "between its new neighbours"))
         down.clicked.connect(lambda: self._move_row(1))
         buttons.addWidget(add)
         buttons.addWidget(remove)
@@ -258,8 +262,8 @@ class PropertiesPanel(QScrollArea):
         self._editors.clear()
         self._clear_layout(self._layout)
         if node is None:
-            hint = QLabel("Select an object in the tree\n"
-                          "to edit its properties.")
+            hint = QLabel(language.tr("Select an object in the tree\n"
+                                      "to edit its properties."))
             hint.setAlignment(Qt.AlignCenter)
             hint.setEnabled(False)
             self._layout.addStretch()
@@ -268,7 +272,7 @@ class PropertiesPanel(QScrollArea):
             return
 
         spec = NODE_TYPES[node.type]
-        title = QLabel(f"<b>{spec['label']}</b>")
+        title = QLabel(f"<b>{language.tr(spec['label'])}</b>")
         self._layout.addWidget(title)
 
         form = QFormLayout()
@@ -276,13 +280,13 @@ class PropertiesPanel(QScrollArea):
         name_edit = QLineEdit(node.name)
         name_edit.editingFinished.connect(
             lambda: self._rename(name_edit.text()))
-        form.addRow("Name", name_edit)
+        form.addRow(language.tr("Name"), name_edit)
 
         for key, label, kind, minimum, maximum in spec["schema"]:
             editor = self._make_editor(key, kind, minimum, maximum)
             if editor is not None:
                 self._editors[key] = editor
-                form.addRow(label, editor)
+                form.addRow(language.tr(label), editor)
         self._layout.addLayout(form)
         self._layout.addStretch()
         self._load_values()
@@ -350,7 +354,7 @@ class PropertiesPanel(QScrollArea):
         current = QColor(str(self.node.params.get(key, "#4a90d9")))
         chosen = QColorDialog.getColor(
             current if current.isValid() else QColor("#4a90d9"),
-            self, "Colour")
+            self, language.tr("Colour"))
         if chosen.isValid():
             self._set_param(key, chosen.name())
             self._swatch(button, chosen.name())

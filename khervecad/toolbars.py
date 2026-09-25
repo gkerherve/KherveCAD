@@ -26,14 +26,16 @@ from PyQt5.QtWidgets import (QAbstractSpinBox, QAction, QActionGroup,
                              QComboBox, QDoubleSpinBox, QLabel, QMenu,
                              QToolBar, QToolButton)
 
-from . import icons, tooltips
+from . import icons, language, tooltips
 from .model import NODE_TYPES
 from .view2d import (CIRCLE, DIMENSION, LINE, MEASURE, PLANES, POLYGON,
                      RECT, SELECT, TEXT)
 
 ICON_SIZE = QSize(28, 28)
 
-#: (tool id, mdi icon, label, shortcut) for the 2D drawing tools.
+#: (tool id, mdi icon, label, shortcut) for the 2D drawing tools. The
+#: label is translated at the point of use (`_action`), not here — a
+#: module-level dict is built once, before a language is chosen.
 TOOLS = [
     (SELECT, "mdi.cursor-default-outline", "Select", "V"),
     (LINE, "mdi.vector-line", "Line", "L"),
@@ -93,7 +95,7 @@ class GroupButton(QToolButton):
         self.family = list(actions)
         self.setPopupMode(QToolButton.MenuButtonPopup)
         self.setAutoRaise(True)
-        title = tooltips.GROUPS.get(key, (key, ""))[0]
+        title = language.tr(tooltips.GROUPS.get(key, (key, ""))[0])
         menu = QMenu(title, self)
         menu.setToolTipsVisible(True)       # the rich tips while browsing
         for act in self.family:
@@ -143,7 +145,7 @@ def _action(win, glyph, text, key, slot=None, shortcut="",
     """A toolbar action with its rich tooltip. *bind* False shows the
     shortcut in the tip without claiming it — a menu already owns it,
     and two actions on one key make Qt ignore both."""
-    act = QAction(icons.icon(glyph), text, win)
+    act = QAction(icons.icon(glyph), language.tr(text), win)
     act.setData(key)
     act.setCheckable(checkable)
     if shortcut and bind:
@@ -226,7 +228,7 @@ def build_options_bar(win):
              "redo", "Ctrl+Y")):
         act = make(win)
         act.setIcon(icons.icon(glyph))
-        act.setText(text)
+        act.setText(language.tr(text))
         tooltips.apply(act, key, keys)
         bar.addAction(act)
     bar.addSeparator()
@@ -266,7 +268,7 @@ def build_options_bar(win):
     win._snap_act.setChecked(win.scene.snap_enabled)
     win._snap_act.toggled.connect(win._set_snap)
     bar.addAction(win._snap_act)
-    bar.addWidget(QLabel(" Grid "))
+    bar.addWidget(QLabel(" " + language.tr("Grid") + " "))
     win._grid_spin = QDoubleSpinBox()
     win._grid_spin.setDecimals(2)                   # down to 0.01 mm
     win._grid_spin.setRange(0.01, 1000.0)
@@ -278,7 +280,7 @@ def build_options_bar(win):
     win._grid_spin.valueChanged.connect(win._set_grid_size)
     tooltips.apply(win._grid_spin, "grid_size")
     bar.addWidget(win._grid_spin)
-    bar.addWidget(QLabel(" Plane "))
+    bar.addWidget(QLabel(" " + language.tr("Plane") + " "))
     win._plane_combo = QComboBox()
     win._plane_combo.addItems(list(PLANES))
     tooltips.apply(win._plane_combo, "plane")
@@ -338,12 +340,14 @@ def build_insert_menu(win, menu):
     (the tick shows the tool in use); the rest run the same slot as
     their button, with the same how-to tooltip."""
     menu.setToolTipsVisible(True)
-    shapes = menu.addMenu(icons.icon("mdi.vector-polygon"), "&2D Shapes")
+    shapes = menu.addMenu(icons.icon("mdi.vector-polygon"),
+                          language.tr("&2D Shapes"))
     shapes.setToolTipsVisible(True)
     by_key = {a.data(): a for a in win._tool_group.actions()}
     for tool, _glyph, _label, _key in TOOLS[1:]:          # not Select
         shapes.addAction(by_key[tool])
-    solids = menu.addMenu(icons.icon("mdi.cube-outline"), "3D &Solids")
+    solids = menu.addMenu(icons.icon("mdi.cube-outline"),
+                          language.tr("3D &Solids"))
     solids.setToolTipsVisible(True)
     for prim in PRIMITIVES:
         spec = NODE_TYPES[prim]
@@ -352,7 +356,8 @@ def build_insert_menu(win, menu):
             lambda _=False, t=prim: win._add_primitive(t)))
     menu.addSeparator()
     for key, ops in OPERATION_GROUPS:
-        title = tooltips.GROUPS.get(key, (key, ""))[0].replace("&", "&&")
+        title = language.tr(
+            tooltips.GROUPS.get(key, (key, ""))[0]).replace("&", "&&")
         sub = menu.addMenu(icons.icon(NODE_TYPES[ops[0]]["icon"]), title)
         sub.setToolTipsVisible(True)
         for op in ops:
@@ -363,17 +368,18 @@ def build_insert_menu(win, menu):
                 _OP_SHORTCUTS.get(op, ""), bind=False))
     menu.addSeparator()
     measure = menu.addMenu(icons.icon("mdi.tape-measure"),
-                           "&Measure && annotate")
+                           language.tr("&Measure && annotate"))
     measure.setToolTipsVisible(True)
     for tool, _glyph, _label, _key in MEASURE_TOOLS:
         measure.addAction(by_key[tool])
-    assembly = menu.addMenu(icons.icon("mdi.magnet-on"), "&Assembly")
+    assembly = menu.addMenu(icons.icon("mdi.magnet-on"),
+                            language.tr("&Assembly"))
     assembly.setToolTipsVisible(True)
     assembly.addAction(_action(win, "mdi.magnet-on", "Snap objects",
                                "snap_objects", win._start_snap, "J",
                                bind=False))
     for title, keys in INSERT_EXTRAS:
-        sub = menu.addMenu(icons.icon("mdi.code-braces"), title)
+        sub = menu.addMenu(icons.icon("mdi.code-braces"), language.tr(title))
         sub.setToolTipsVisible(True)
         for key in keys:
             spec = NODE_TYPES[key]
