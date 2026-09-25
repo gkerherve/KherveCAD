@@ -915,11 +915,13 @@ class HouseBuilder(QDialog):
 
     def _garden_group(self):
         box = QGroupBox(language.tr("Garden"))
-        row = QHBoxLayout(box)
+        col = QVBoxLayout(box)
         self.garden_on = QCheckBox(
             language.tr("Add a garden beside the house"))
         self.garden_on.toggled.connect(self._garden_toggled)
-        row.addWidget(self.garden_on)
+        col.addWidget(self.garden_on)
+        row = QHBoxLayout()                # the sizes under it: narrower
+        col.addLayout(row)
         self.garden_w = MetreSpin(0.5, 200.0, 0.5)
         self.garden_d = MetreSpin(0.5, 200.0, 0.5)
         self.garden_gap = MetreSpin(0.0, 50.0, 0.5)
@@ -1351,7 +1353,10 @@ class HouseBuilder(QDialog):
     # ----------------------------------------------------------- roof
     def _roof_group(self):
         box = QGroupBox(language.tr("Roof (on the top floor)"))
-        row = QHBoxLayout(box)
+        # rows of three: on one row the eleven fields set a window
+        # minimum near 2000 px, and a builder embedded in a narrower
+        # window (KherveHouse's tab) forced the whole window that wide
+        grid = QGridLayout(box)
         self.roof_style = QComboBox()
         self.roof_style.addItems(list(H.ROOF_STYLES))
         self.roof_style.setToolTip(language.tr(
@@ -1427,10 +1432,11 @@ class HouseBuilder(QDialog):
                         (language.tr("Side wings:"), self.roof_wings),
                         (language.tr("Chimney:"), self.roof_chimney),
                         (language.tr("Parapet:"), self.roof_parapet)):
-            row.addWidget(QLabel(text))
-            row.addWidget(w)
-        row.addWidget(self.roof_crenels)
-        row.addStretch(1)
+            n = grid.count() // 2
+            grid.addWidget(QLabel(text), n // 3, (n % 3) * 2)
+            grid.addWidget(w, n // 3, (n % 3) * 2 + 1)
+        grid.addWidget(self.roof_crenels, 2, 5)          # beside Parapet
+        grid.setColumnStretch(6, 1)
         self._sync_roof_fields()
         return box
 
