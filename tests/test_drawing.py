@@ -143,3 +143,15 @@ def test_dialog_helper_and_mcp_tool(app, tmp_path):
     finally:
         win._dirty = False
         win.close()
+
+
+def test_every_scale_can_be_picked_or_typed():
+    from khervecad import drawing
+    labels = [drawing.scale_label(s) for s in drawing.CHOICES]
+    for want in ("1:7", "1:8", "1:13", "1:75", "1:5000", "3:1"):
+        assert want in labels
+    assert drawing.parse_scale("1:7") == 1 / 7
+    assert drawing.parse_scale("50") == 0.02         # 50 reads as 1:50
+    assert drawing.parse_scale("2:1") == 2.0
+    assert drawing.parse_scale("nonsense") is None
+    assert drawing.scale_label(1 / 333) == "1:333"

@@ -406,8 +406,39 @@ def nice_scale(model_w, model_h, box_w, box_h):
     return SCALES[-1]
 
 
+#: every scale the Scale list offers: enlargements, each 1:N to 1:20,
+#: then the usual engineering and architectural steps. Best fit still
+#: picks from the rounder SCALES.
+CHOICES = ([10, 5, 4, 3, 2, 1.5, 1]
+           + [1.0 / n for n in range(2, 21)]
+           + [1.0 / n for n in (25, 30, 40, 50, 60, 75, 80, 100, 125, 150,
+                                200, 250, 300, 400, 500, 750, 1000, 1250,
+                                1500, 2000, 2500, 5000)])
+
+
 def scale_label(s):
-    return f"{s:g}:1" if s >= 1 else f"1:{1 / s:g}"
+    """2:1, 1:7, 1:50 — whole numbers where they are whole."""
+    if s >= 1:
+        return f"{round(s, 3):g}:1"
+    n = 1.0 / s
+    return f"1:{round(n) if abs(n - round(n)) < 1e-6 else round(n, 3):g}"
+
+
+def parse_scale(text):
+    """A scale typed as "1:7", "1/7", "2:1", "7" (= 1:7) or "0.5" -> the
+    multiplier, or None when it does not read as a sensible scale."""
+    t = str(text or "").strip().replace(" ", "").replace("/", ":")
+    try:
+        if ":" in t:
+            a, b = (float(x) for x in t.split(":", 1))
+            value = a / b
+        else:
+            value = float(t)
+            if value > 10:                 # "50" means 1:50
+                value = 1.0 / value
+    except (ValueError, ZeroDivisionError):
+        return None
+    return value if 1e-5 <= value <= 100 else None
 
 
 def layout(tris, *, sheet="A4", views=("Front", "Top", "Right",

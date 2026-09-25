@@ -631,10 +631,16 @@ class BlueprintWindow(QMainWindow):
         top.addWidget(QLabel(" Scale "))
         self.scale_combo = QComboBox()
         self.scale_combo.addItem("Best fit", None)
-        for s in drawing.SCALES:
+        for s in drawing.CHOICES:
             self.scale_combo.addItem(drawing.scale_label(s), s)
-        self.scale_combo.setToolTip("Drawing scale — the title block "
-                                    "follows")
+        # any other scale can be typed: 1:7, 1:333, 3:1
+        self.scale_combo.setEditable(True)
+        self.scale_combo.setInsertPolicy(QComboBox.NoInsert)
+        self.scale_combo.lineEdit().editingFinished.connect(
+            self._scale_typed)
+        self.scale_combo.setToolTip("Drawing scale — pick one or type any "
+                                    "ratio (1:7, 1:333, 3:1); the title "
+                                    "block follows")
         self.scale_combo.activated.connect(self._scale_chosen)
         top.addWidget(self.scale_combo)
         self.style_combo = QComboBox()
@@ -882,7 +888,7 @@ class BlueprintWindow(QMainWindow):
             combo.setCurrentText(value)
             combo.blockSignals(False)
         self.scale_combo.blockSignals(True)
-        index = self.scale_combo.findData(self.scene.scale)
+        index = self._scale_index(self.scene.scale)
         self.scale_combo.setCurrentIndex(max(index, 0))
         self.scale_combo.blockSignals(False)
         self.style_combo.blockSignals(True)
@@ -1124,8 +1130,34 @@ class BlueprintWindow(QMainWindow):
         self.sheet.fit()
         self.commit("Sheet size")
 
+    def _scale_index(self, scale):
+        """The list entry for *scale*, added if it was typed (1:7)."""
+        for i in range(1, self.scale_combo.count()):
+            data = self.scale_combo.itemData(i)
+            if data and abs(data - scale) <= 1e-9 * max(scale, 1e-9):
+                return i
+        if not scale:
+            return 0
+        self.scale_combo.addItem(drawing.scale_label(scale), scale)
+        return self.scale_combo.count() - 1
+
     def _scale_chosen(self, _index):
         self.scene.set_scale(self.scale_combo.currentData())
+        self.sync_controls()
+        self.commit("Scale")
+
+    def _scale_typed(self):
+        text = self.scale_combo.currentText()
+        if text.strip().lower() in ("best fit", ""):
+            return
+        scale = drawing.parse_scale(text)
+        if scale is None:
+            self.status(f"'{text}' is not a scale — type it as 1:7 or 2:1.")
+            self.sync_controls()
+            return
+        if abs(scale - self.scene.scale) <= 1e-12:
+            return
+        self.scene.set_scale(scale)
         self.sync_controls()
         self.commit("Scale")
 
