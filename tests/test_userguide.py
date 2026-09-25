@@ -75,7 +75,7 @@ def test_dialog_searches_and_jumps(app):
     dlg.close()
 
 
-@pytest.mark.parametrize("code", ["zh", "fr", "es"])
+@pytest.mark.parametrize("code", ["zh", "fr", "es", "ja"])
 def test_translated_chapters_match_english_structure(app, code):
     """Each translated chapters() module must mirror the English one:
     same anchors in the same order, every chapter actually translated
@@ -104,7 +104,7 @@ def test_translated_chapters_match_english_structure(app, code):
                 == re.findall(r'figure\("([\w\-]+)"', en_html)), anchor
 
 
-@pytest.mark.parametrize("code", ["zh", "fr", "es"])
+@pytest.mark.parametrize("code", ["zh", "fr", "es", "ja"])
 def test_the_guide_opens_in_every_translated_language(app, code):
     """A language switch actually swaps which chapters() module the
     dialog builds from (userguide._chapters_module reads the same
