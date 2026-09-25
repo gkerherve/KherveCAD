@@ -38,6 +38,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
 )
 
+from . import language
 from .mcp_bridge import ACCESS_LEVELS
 from .mcp_hosts import HOSTS, Host, cli_command, host_config
 from .mcp_server import endpoint_path
@@ -49,18 +50,23 @@ SETTINGS = ("Kherve", "KherveCAD")
 DQ = '"'
 
 #: Access level → (label, what it means).  Order matches ACCESS_LEVELS.
-_ACCESS_LABELS = [
-    ("Read only",
-     "Inspect the model, read its OpenSCAD and look at the 3D view; "
-     "no changes."),
-    ("Edit",
-     "Build and edit objects, assemble parts, run code — and save "
-     "over the open file, but not open or export another one."),
-    ("Full (recommended)",
-     "Everything, including opening, saving and exporting files it "
-     "names itself, so 'open my bracket and add a hole' works in "
-     "one go."),
-]
+def _access_labels():
+    return [
+        (language.tr("Read only"),
+         language.tr(
+             "Inspect the model, read its OpenSCAD and look at the "
+             "3D view; no changes.")),
+        (language.tr("Edit"),
+         language.tr(
+             "Build and edit objects, assemble parts, run code — "
+             "and save over the open file, but not open or export "
+             "another one.")),
+        (language.tr("Full (recommended)"),
+         language.tr(
+             "Everything, including opening, saving and exporting "
+             "files it names itself, so 'open my bracket and add a "
+             "hole' works in one go.")),
+    ]
 
 
 class McpServerDialog(QDialog):
@@ -69,7 +75,7 @@ class McpServerDialog(QDialog):
     def __init__(self, bridge, parent=None):
         super().__init__(parent)
         self._bridge = bridge
-        self.setWindowTitle("Connect to Claude")
+        self.setWindowTitle(language.tr("Connect to Claude"))
         self.setMinimumWidth(620)
         self._build_ui()
         self._refresh()
@@ -85,19 +91,20 @@ class McpServerDialog(QDialog):
     def _build_ui(self):
         lay = QVBoxLayout(self)
 
-        blurb = QLabel(
-            "Let Claude build in this document directly — no API key, "
-            "it uses the login you already have. Works with <b>Claude "
-            "Desktop</b> and <b>Claude Code</b>, and with Cursor, "
-            "Cline, VS Code and LM Studio.<br><br>"
-            "Claude gets the whole app rather than a chat reply: the "
-            "object tree, OpenSCAD in and out, the part library, "
-            "assemblies and mates, and a look at the 3D view to check "
-            "its own work. Everything it does is undoable with Ctrl+Z.")
+        blurb = QLabel(language.tr(
+            "Let Claude build in this document directly — no API "
+            "key, it uses the login you already have. Works with "
+            "<b>Claude Desktop</b> and <b>Claude Code</b>, and with "
+            "Cursor, Cline, VS Code and LM Studio.<br><br>Claude "
+            "gets the whole app rather than a chat reply: the object "
+            "tree, OpenSCAD in and out, the part library, assemblies "
+            "and mates, and a look at the 3D view to check its own "
+            "work. Everything it does is undoable with Ctrl+Z."))
         blurb.setWordWrap(True)
         lay.addWidget(blurb)
 
-        self._enable = QCheckBox("Let assistants connect to this document")
+        self._enable = QCheckBox(
+            language.tr("Let assistants connect to this document"))
         self._enable.toggled.connect(self._on_toggled)
         lay.addWidget(self._enable)
 
@@ -106,9 +113,9 @@ class McpServerDialog(QDialog):
         lay.addWidget(self._status)
 
         acc_row = QHBoxLayout()
-        acc_row.addWidget(QLabel("The assistant may:"))
+        acc_row.addWidget(QLabel(language.tr("The assistant may:")))
         self._access = QComboBox()
-        for label, tip in _ACCESS_LABELS:
+        for label, tip in _access_labels():
             self._access.addItem(label)
             self._access.setItemData(self._access.count() - 1, tip,
                                      Qt.ToolTipRole)
@@ -120,27 +127,27 @@ class McpServerDialog(QDialog):
         self._access_hint.setWordWrap(True)
         lay.addWidget(self._access_hint)
 
-        host_box = QGroupBox("Connect an application")
+        host_box = QGroupBox(language.tr("Connect an application"))
         host_lay = QVBoxLayout(host_box)
-        host_lay.addWidget(QLabel(
+        host_lay.addWidget(QLabel(language.tr(
             "Pick yours and press Connect — KherveCAD writes itself "
             "into that application's own settings, so there is no "
-            "config file to edit by hand."))
+            "config file to edit by hand.")))
         self._hosts = QListWidget()
         self._hosts.setMaximumHeight(120)
         self._hosts.currentRowChanged.connect(self._refresh_host_buttons)
         host_lay.addWidget(self._hosts)
         hrow = QHBoxLayout()
-        self._connect_btn = QPushButton("Connect")
+        self._connect_btn = QPushButton(language.tr("Connect"))
         self._connect_btn.clicked.connect(self._on_connect)
-        self._disconnect_btn = QPushButton("Disconnect")
+        self._disconnect_btn = QPushButton(language.tr("Disconnect"))
         self._disconnect_btn.clicked.connect(self._on_disconnect)
         hrow.addWidget(self._connect_btn)
         hrow.addWidget(self._disconnect_btn)
-        other = QPushButton("Other application…")
-        other.setToolTip(
+        other = QPushButton(language.tr("Other application…"))
+        other.setToolTip(language.tr(
             "Point at another assistant's JSON config file and add "
-            "KherveCAD to it.")
+            "KherveCAD to it."))
         other.clicked.connect(self._on_other_host)
         hrow.addWidget(other)
         hrow.addStretch(1)
@@ -152,12 +159,12 @@ class McpServerDialog(QDialog):
         lay.addWidget(host_box)
 
         row = QHBoxLayout()
-        row.addWidget(QLabel("Or set it up by hand:"))
+        row.addWidget(QLabel(language.tr("Or set it up by hand:")))
         self._flavour = QComboBox()
         self._flavour.addItems([
-            "Claude Desktop / Cursor / Zed (JSON)",
-            "Claude Code (command line)",
-            "URL only (clients that take an HTTP endpoint)",
+            language.tr("Claude Desktop / Cursor / Zed (JSON)"),
+            language.tr("Claude Code (command line)"),
+            language.tr("URL only (clients that take an HTTP endpoint)"),
         ])
         self._flavour.currentIndexChanged.connect(self._refresh_snippet)
         row.addWidget(self._flavour, 1)
@@ -173,19 +180,19 @@ class McpServerDialog(QDialog):
         self._snippet.setMinimumHeight(150)
         lay.addWidget(self._snippet)
 
-        hint = QLabel(
-            "<b>Then say &quot;KherveCAD&quot; in the chat.</b> Claude "
-            "only reaches for this document when you point it here "
-            "&mdash; <i>&quot;in KherveCAD, build a 40&nbsp;mm bracket "
-            "with two M6 holes&quot;</i>. After that it carries on in "
-            "the open document.<br><br>"
-            "Restart the application after connecting &mdash; it reads "
-            "its tool list once at startup &mdash; and leave KherveCAD "
-            "running with the box above ticked.")
+        hint = QLabel(language.tr(
+            "<b>Then say &quot;KherveCAD&quot; in the chat.</b> "
+            "Claude only reaches for this document when you point it "
+            "here &mdash; <i>&quot;in KherveCAD, build a "
+            "40&nbsp;mm bracket with two M6 holes&quot;</i>. After "
+            "that it carries on in the open document.<br><br>Restart "
+            "the application after connecting &mdash; it reads its "
+            "tool list once at startup &mdash; and leave KherveCAD "
+            "running with the box above ticked."))
         hint.setWordWrap(True)
         lay.addWidget(hint)
 
-        act_box = QGroupBox("Recent activity")
+        act_box = QGroupBox(language.tr("Recent activity"))
         act_lay = QVBoxLayout(act_box)
         self._activity = QListWidget()
         self._activity.setMaximumHeight(110)
@@ -193,7 +200,7 @@ class McpServerDialog(QDialog):
         lay.addWidget(act_box)
 
         btns = QDialogButtonBox(QDialogButtonBox.Close)
-        copy = QPushButton("Copy")
+        copy = QPushButton(language.tr("Copy"))
         copy.clicked.connect(self._copy)
         btns.addButton(copy, QDialogButtonBox.ActionRole)
         btns.rejected.connect(self.reject)
@@ -219,9 +226,9 @@ class McpServerDialog(QDialog):
         if on:
             if not self._bridge.start():
                 self._enable.setChecked(False)
-                self._status.setText(
+                self._status.setText(language.tr(
                     "<b>Could not open a local port.</b> Another "
-                    "process may be holding it.")
+                    "process may be holding it."))
                 return
         else:
             self._bridge.stop()
@@ -230,10 +237,11 @@ class McpServerDialog(QDialog):
 
     def _refresh_access_hint(self):
         idx = self._access.currentIndex()
-        text = _ACCESS_LABELS[idx][1]
+        text = _access_labels()[idx][1]
         if ACCESS_LEVELS[idx] == "full":
-            text += (" It can read and overwrite files anywhere you can, "
-                     "so connect only applications you trust.")
+            text += " " + language.tr(
+                "It can read and overwrite files anywhere you can, "
+                "so connect only applications you trust.")
         self._access_hint.setText(text)
 
     def _refresh(self):
@@ -252,15 +260,17 @@ class McpServerDialog(QDialog):
                 f"{entry['time']}  {entry['tool']} — {entry['outcome']}")
         if running:
             http = self._bridge.http_url()
-            extra = f" &nbsp; HTTP: {http}" if http else ""
-            self._status.setText(
-                f"<b style='color:#2e7d32'>Listening</b> on "
-                f"127.0.0.1:{self._bridge.port()}{extra}<br>"
-                f"endpoint file: {endpoint_path()}")
+            extra = (" &nbsp; " + language.tr("HTTP: {url}").format(
+                url=http)) if http else ""
+            self._status.setText(language.tr(
+                "<b style='color:#2e7d32'>Listening</b> on "
+                "127.0.0.1:{port}{extra}<br>endpoint file: "
+                "{path}").format(port=self._bridge.port(), extra=extra,
+                                 path=endpoint_path()))
         else:
-            self._status.setText(
+            self._status.setText(language.tr(
                 "<b style='color:#b71c1c'>Stopped</b> — no assistant "
-                "can reach this document.")
+                "can reach this document."))
         self._refresh_snippet()
         self._refresh_hosts()
 
@@ -277,7 +287,8 @@ class McpServerDialog(QDialog):
         self._hosts.clear()
         for host in HOSTS:
             status = host.status()
-            item = QListWidgetItem(f"{host.label} — {status}")
+            item = QListWidgetItem(
+                f"{host.label} — {language.tr(status)}")
             if status.startswith("connected"):
                 item.setForeground(Qt.darkGreen)
             elif status == "not installed":
@@ -297,12 +308,13 @@ class McpServerDialog(QDialog):
         connected = host.connected()
         self._connect_btn.setEnabled(not host.manual)
         self._connect_btn.setText(
-            "Update entry" if connected and not host.up_to_date()
-            else "Connect")
+            language.tr("Update entry")
+            if connected and not host.up_to_date()
+            else language.tr("Connect"))
         self._disconnect_btn.setEnabled(connected and not host.manual)
         bits = []
         if host.manual:
-            bits.append("Cannot be edited automatically.")
+            bits.append(language.tr("Cannot be edited automatically."))
         bits.append(host.note)
         path = host.path()
         if path:
@@ -311,39 +323,46 @@ class McpServerDialog(QDialog):
 
     def _report(self, result: dict):
         """Show what a connect/disconnect actually did."""
+        title = language.tr("Connect to Claude")
         host = result.get("host", "host")
         if not result.get("ok"):
-            QMessageBox.warning(self, "Connect to Claude", result.get(
-                "error", f"Could not configure {host}."))
+            QMessageBox.warning(self, title, result.get(
+                "error", language.tr(
+                    "Could not configure {host}.").format(host=host)))
             self._refresh_hosts()
             return
-        lines = [f"{host}: KherveCAD {result.get('action', 'updated')}.",
-                 f"File: {result.get('path', '')}"]
+        action = language.tr(result.get('action', 'updated'))
+        lines = [language.tr("{host}: KherveCAD {action}.").format(
+                     host=host, action=action),
+                 language.tr("File: {path}").format(
+                     path=result.get('path', ''))]
         if result.get("backup"):
-            lines.append(f"Previous version saved as {result['backup']}")
+            lines.append(language.tr(
+                "Previous version saved as {backup}").format(
+                    backup=result['backup']))
         if result.get("restart"):
-            lines.append(f"\nRestart {host} for it to take effect.")
+            lines.append("\n" + language.tr(
+                "Restart {host} for it to take effect.").format(host=host))
         if result.get("action") != "removed":
             # The step with no visible cue: a correctly connected
             # assistant sits there doing nothing until a chat names
             # this application.
-            lines.append(
-                f"\nThen mention KherveCAD in your chat with {host} "
-                f"— say {DQ}in KherveCAD, build a 40 mm "
-                f"bracket{DQ} — and it will work in this "
-                f"document.")
-        QMessageBox.information(self, "Connect to Claude",
-                                "\n".join(lines))
+            lines.append("\n" + language.tr(
+                "Then mention KherveCAD in your chat with {host} — "
+                "say {dq}in KherveCAD, build a 40 mm bracket{dq} — "
+                "and it will work in this document.").format(
+                    host=host, dq=DQ))
+        QMessageBox.information(self, title, "\n".join(lines))
         self._refresh_hosts()
 
     def _require_running(self) -> bool:
         if self._bridge.is_running():
             return True
         QMessageBox.information(
-            self, "Connect to Claude",
-            "Tick 'Let assistants connect to this document' "
-            "first — the entry is only useful while "
-            "KherveCAD is listening.")
+            self, language.tr("Connect to Claude"), language.tr(
+                "Tick 'Let assistants connect to this document' "
+                "first — the entry is only useful while KherveCAD is "
+                "listening."))
         return False
 
     def _on_connect(self):
@@ -361,7 +380,7 @@ class McpServerDialog(QDialog):
         if not self._require_running():
             return
         path, _ = QFileDialog.getOpenFileName(
-            self, "Choose the client's MCP config file", "",
+            self, language.tr("Choose the client's MCP config file"), "",
             "JSON config (*.json);;All files (*)")
         if not path:
             return
@@ -387,9 +406,10 @@ class McpServerDialog(QDialog):
         if host is None:
             return
         if QMessageBox.question(
-                self, "Connect to Claude",
-                f"Remove KherveCAD from {host.label}'s configuration?\n"
-                "Other servers are left untouched.",
+                self, language.tr("Connect to Claude"), language.tr(
+                    "Remove KherveCAD from {host}'s configuration?\n"
+                    "Other servers are left untouched.").format(
+                        host=host.label),
                 QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
             return
         self._report(host.disconnect())
@@ -407,20 +427,22 @@ class McpServerDialog(QDialog):
         """Endpoint and token for a client that only takes a URL."""
         url = self._bridge.http_url()
         if not url:
-            return ("The HTTP endpoint is not listening.\n"
-                    "Tick the box above.")
-        return (
-            f"URL      {url}\n"
-            f"Transport  Streamable HTTP (POST JSON-RPC)\n"
-            f"Header   Authorization: Bearer {self._bridge.token()}\n"
+            return language.tr(
+                "The HTTP endpoint is not listening.\nTick the box "
+                "above.")
+        return language.tr(
+            "URL      {url}\n"
+            "Transport  Streamable HTTP (POST JSON-RPC)\n"
+            "Header   Authorization: Bearer {token}\n"
             "\n"
-            "For clients that take an endpoint rather than a command —\n"
-            "Open WebUI, n8n, and some IDE setups. The token changes\n"
-            "every time the server is switched on, so re-copy it after\n"
-            "restarting KherveCAD.\n"
+            "For clients that take an endpoint rather than a "
+            "command —\nOpen WebUI, n8n, and some IDE setups. The "
+            "token changes\nevery time the server is switched on, so "
+            "re-copy it after\nrestarting KherveCAD.\n"
             "\n"
-            "127.0.0.1 only: this is not reachable from another machine,\n"
-            "and cloud assistants (ChatGPT, Le Chat, Grok) cannot use it.")
+            "127.0.0.1 only: this is not reachable from another "
+            "machine,\nand cloud assistants (ChatGPT, Le Chat, Grok) "
+            "cannot use it.").format(url=url, token=self._bridge.token())
 
     def _copy(self):
         QApplication.clipboard().setText(self._snippet.toPlainText())
