@@ -4,17 +4,18 @@ The stdio server suits clients that spawn a subprocess.  Others — Open
 WebUI, n8n, some IDE setups — only take a URL, so this answers MCP
 directly over HTTP at ``http://127.0.0.1:<port>/mcp``.
 
-It binds to loopback only, exactly like the stdio bridge, and is not a
-step towards exposing the model to the internet: the tools rebuild
-someone's open document and the auth is a per-session bearer token,
-both of which are right for a local client and wrong for a public
-one.  Two things follow from that and are enforced below:
+It binds to loopback only, exactly like the stdio bridge.  A cloud
+assistant reaches it only when the user starts a tunnel
+(``mcp_tunnel``); it then presents the token in the path,
+``/mcp/<token>``, since such clients cannot send a header.  Two things
+are enforced below:
 
 * ``Origin`` is validated on every request.  A page in the user's
   browser can POST to 127.0.0.1 without any CORS preflight, so a
   hostile site could otherwise drive the model — the DNS-rebinding
   hole the MCP spec warns local servers about.
-* The bearer token is required on every request, as on the stdio side.
+* The token (bearer header or path) is required on every request, as on
+  the stdio side.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -97,9 +98,36 @@ class _Request:
             raise ValueError("bad Content-Length")
         if length > _MAX_BODY:
             raise ValueError("request body too large")
+        if "chunked" in headers.get("transfer-encoding", "").lower():
+            body = _dechunk(rest)            # a tunnel may re-chunk
+            if body is None:
+                return None
+            return cls(method, path, headers, body)
         if len(rest) < length:
             return None                      # keep reading
         return cls(method, path, headers, rest[:length])
+
+
+def _dechunk(data: bytes) -> Optional[bytes]:
+    """A chunked body, or None while its last chunk has not arrived."""
+    out, pos = b"", 0
+    while True:
+        end = data.find(b"\r\n", pos)
+        if end < 0:
+            return None
+        try:
+            size = int(data[pos:end].split(b";")[0], 16)
+        except ValueError:
+            raise ValueError("bad chunk size")
+        if size == 0:
+            return out
+        start = end + 2
+        if len(data) < start + size + 2:
+            return None
+        out += data[start:start + size]
+        if len(out) > _MAX_BODY:
+            raise ValueError("request body too large")
+        pos = start + size + 2
 
 
 _STATUS = {
@@ -178,14 +206,24 @@ class McpHttpServer(QObject):
             self._send(sock, 500, {"error": str(exc)})
 
     def _dispatch(self, sock, req: _Request):
-        if not _origin_ok(req.headers.get("origin", "")):
+        path = req.path.split("?", 1)[0].rstrip("/") or "/"
+        # A cloud assistant (ChatGPT, Le Chat...) reaches us through a
+        # tunnel and cannot send a header, so its URL carries the token
+        # as the last path segment: /mcp/<token>.
+        path_token = ""
+        if path.startswith(ENDPOINT_PATH + "/"):
+            path_token = path[len(ENDPOINT_PATH) + 1:]
+            path = ENDPOINT_PATH
+        token_ok = bool(path_token) and self._token_ok(path_token)
+        # A page cannot know a token in the URL, so the Origin guard
+        # (against a web page POSTing to 127.0.0.1) is not needed then.
+        if not token_ok and not _origin_ok(req.headers.get("origin", "")):
             # A web page trying to reach the model through the
             # user's own browser.  Refuse before authenticating.
             self._send(sock, 403,
                        {"error": "Origin not allowed for this local "
                                  "server."})
             return
-        path = req.path.split("?", 1)[0].rstrip("/") or "/"
         if path != ENDPOINT_PATH:
             self._send(sock, 404, {"error": f"Try {ENDPOINT_PATH}."})
             return
@@ -203,7 +241,7 @@ class McpHttpServer(QObject):
         if req.method != "POST":
             self._send(sock, 405, {"error": "Use POST."})
             return
-        if not self._authorised(req):
+        if not (token_ok or self._authorised(req)):
             self._send(sock, 401,
                        {"error": "Missing or invalid bearer token. It "
                                  "is in KherveCAD's endpoint file."})
@@ -223,13 +261,16 @@ class McpHttpServer(QObject):
         self._send(sock, 200 if reply is not None else 202, reply)
 
     def _authorised(self, req: _Request) -> bool:
-        want = self._bridge.token()
         got = req.headers.get("authorization", "")
         if got.lower().startswith("bearer "):
             got = got[7:].strip()
         else:
             got = req.headers.get("x-khervecad-token", "").strip()
+        return self._token_ok(got)
+
+    def _token_ok(self, got: str) -> bool:
         import secrets
+        want = self._bridge.token()
         return bool(want) and secrets.compare_digest(got, want)
 
     # ── MCP methods ─────────────────────────────────────────────

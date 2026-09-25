@@ -537,3 +537,89 @@ def test_http_refuses_a_web_page_origin(live):
                  "Origin: https://evil.example\r\n"))
     assert status == 403
     assert "Origin" in body["error"]
+
+
+# ── The public link (cloud assistants) ─────────────────────────────
+
+def _http_path(bridge, path, body, headers=""):
+    """_http, but to an arbitrary path (the token-in-URL door)."""
+    raw = json.dumps(body).encode()
+    port = int(bridge.http_url().split(":")[2].split("/")[0])
+    sock = socket.create_connection(("127.0.0.1", port), timeout=5)
+    sock.sendall(
+        f"POST {path} HTTP/1.1\r\nHost: x.trycloudflare.com\r\n"
+        f"Content-Type: application/json\r\n"
+        f"Content-Length: {len(raw)}\r\n{headers}\r\n".encode() + raw)
+    buf = b""
+    while b"\r\n\r\n" not in buf or not buf.partition(b"\r\n\r\n")[2]:
+        QApplication.processEvents()
+        sock.settimeout(0.05)
+        try:
+            chunk = sock.recv(65536)
+        except socket.timeout:
+            continue
+        if not chunk:
+            break
+        buf += chunk
+    sock.close()
+    head, _, payload = buf.partition(b"\r\n\r\n")
+    return int(head.split(b" ")[1]), (json.loads(payload) if payload else None)
+
+
+def test_http_takes_the_token_in_the_path(live):
+    _win, bridge, _path = live
+    status, body = _http_path(
+        bridge, f"/mcp/{bridge.token()}",
+        {"jsonrpc": "2.0", "id": 1, "method": "ping"},
+        headers="Origin: https://chatgpt.com\r\n")
+    assert status == 200 and body["result"] == {}
+
+
+def test_http_refuses_a_wrong_path_token(live):
+    _win, bridge, _path = live
+    status, _ = _http_path(bridge, "/mcp/nope",
+                           {"jsonrpc": "2.0", "id": 1, "method": "ping"})
+    assert status == 401
+
+
+def test_http_reads_a_chunked_body():
+    from khervecad.mcp_http import _Request
+    raw = (b"POST /mcp HTTP/1.1\r\nTransfer-Encoding: chunked\r\n\r\n"
+           b"4\r\n{\"a\"\r\n3\r\n:1}\r\n0\r\n\r\n")
+    assert _Request.parse(raw).body == b'{"a":1}'
+    assert _Request.parse(raw[:-7]) is None
+
+
+def test_tunnel_urls_are_parsed():
+    from khervecad import mcp_tunnel
+    line = "INF |  https://blue-cat-12.trycloudflare.com  |"
+    assert mcp_tunnel.parse_public_url("cloudflared", line) == \
+        "https://blue-cat-12.trycloudflare.com"
+    ng = '{"lvl":"info","url":"https://ab12.ngrok-free.app"}'
+    assert mcp_tunnel.parse_public_url("ngrok", ng) == \
+        "https://ab12.ngrok-free.app"
+    assert mcp_tunnel.public_mcp_url("https://h/", "T") == "https://h/mcp/T"
+    assert "--url" in mcp_tunnel.tunnel_args("cloudflared", 5)
+
+
+def test_tunnel_reports_a_public_link_from_a_fake_program(live, tmp_path):
+    """A stand-in 'cloudflared' prints a URL; the bridge hands out the
+    token-carrying MCP link and drops it when the bridge stops."""
+    import sys, time
+    _win, bridge, _path = live
+    fake = tmp_path / "cloudflared"
+    fake.write_text(f"#!{sys.executable}\nimport time\n"
+                    "print('https://fake-link.trycloudflare.com', "
+                    "flush=True)\ntime.sleep(30)\n")
+    fake.chmod(0o755)
+    from khervecad.mcp_tunnel import Tunnel
+    bridge.tunnel = Tunnel(bridge)
+    bridge.tunnel.start(1, bridge.token(), ("cloudflared", str(fake)))
+    end = time.time() + 10
+    while not bridge.tunnel_url() and time.time() < end:
+        QApplication.processEvents()
+        time.sleep(0.02)
+    assert bridge.tunnel_url() == \
+        f"https://fake-link.trycloudflare.com/mcp/{bridge.token()}"
+    bridge.stop()
+    assert not bridge.tunnel.is_running() and bridge.tunnel_url() == ""

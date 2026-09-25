@@ -192,6 +192,40 @@ class McpServerDialog(QDialog):
         hint.setWordWrap(True)
         lay.addWidget(hint)
 
+        cloud = QGroupBox(language.tr(
+            "Cloud assistants (ChatGPT, Le Chat, Grok)"))
+        cloud_lay = QVBoxLayout(cloud)
+        cloud_info = QLabel(language.tr(
+            "These run on their maker's servers and need a public "
+            "HTTPS link. <b>Start public link</b> opens one through "
+            "cloudflared (free, no account) or ngrok. In ChatGPT: "
+            "Settings ▸ Apps &amp; Connectors ▸ Advanced ▸ Developer "
+            "mode, then Create, paste the link, Authentication: "
+            "<i>No authentication</i>.<br><b>Anyone with the link "
+            "controls this document</b> — choose <i>Edit</i> access "
+            "above, and stop the link when you are done. A new link "
+            "is made every session."))
+        cloud_info.setWordWrap(True)
+        cloud_lay.addWidget(cloud_info)
+        crow = QHBoxLayout()
+        self._tunnel_btn = QPushButton(language.tr("Start public link"))
+        self._tunnel_btn.clicked.connect(self._on_tunnel)
+        crow.addWidget(self._tunnel_btn)
+        self._tunnel_copy = QPushButton(language.tr("Copy link"))
+        self._tunnel_copy.clicked.connect(
+            lambda: QApplication.clipboard().setText(
+                self._bridge.tunnel_url()))
+        crow.addWidget(self._tunnel_copy)
+        crow.addStretch(1)
+        cloud_lay.addLayout(crow)
+        self._tunnel_status = QLabel()
+        self._tunnel_status.setWordWrap(True)
+        self._tunnel_status.setTextInteractionFlags(
+            Qt.TextSelectableByMouse)
+        cloud_lay.addWidget(self._tunnel_status)
+        lay.addWidget(cloud)
+        self._tunnel_error = ""
+
         act_box = QGroupBox(language.tr("Recent activity"))
         act_lay = QVBoxLayout(act_box)
         self._activity = QListWidget()
@@ -245,6 +279,7 @@ class McpServerDialog(QDialog):
         self._access_hint.setText(text)
 
     def _refresh(self):
+        self._refresh_tunnel()
         running = self._bridge.is_running()
         self._enable.blockSignals(True)
         self._enable.setChecked(running)
@@ -414,6 +449,53 @@ class McpServerDialog(QDialog):
             return
         self._report(host.disconnect())
 
+    # ── Public link ──────────────────────────────────────────────────
+
+    def _on_tunnel(self):
+        if self._bridge.tunnel is not None and \
+                self._bridge.tunnel.is_running():
+            self._bridge.stop_tunnel()
+            self._refresh_tunnel()
+            return
+        if not self._require_running():
+            return
+        self._tunnel_error = ""
+        if not self._bridge.start_tunnel():
+            # The failure may be signalled before our slots are wired.
+            from .mcp_tunnel import INSTALL_HINT
+            self._tunnel_error = "No tunnel program found. " + INSTALL_HINT
+        self._refresh_tunnel()
+
+    def _on_tunnel_ready(self, _url: str):
+        self._refresh_tunnel()
+
+    def _on_tunnel_failed(self, why: str):
+        self._tunnel_error = why
+        self._refresh_tunnel()
+
+    def _refresh_tunnel(self):
+        tunnel = self._bridge.tunnel
+        if tunnel is not None and not getattr(self, "_tunnel_wired", False):
+            tunnel.ready.connect(self._on_tunnel_ready)
+            tunnel.failed.connect(self._on_tunnel_failed)
+            tunnel.stopped.connect(self._refresh_tunnel)
+            self._tunnel_wired = True
+        running = tunnel is not None and tunnel.is_running()
+        url = self._bridge.tunnel_url()
+        self._tunnel_btn.setText(language.tr(
+            "Stop public link" if running else "Start public link"))
+        self._tunnel_btn.setEnabled(self._bridge.is_running())
+        self._tunnel_copy.setEnabled(bool(url))
+        if url:
+            text = language.tr("Public link (paste into ChatGPT):") + \
+                f"<br><code>{url}</code>"
+        elif running:
+            text = language.tr("Starting {kind}…").format(
+                kind=tunnel.kind())
+        else:
+            text = self._tunnel_error
+        self._tunnel_status.setText(text)
+
     def _refresh_snippet(self):
         idx = self._flavour.currentIndex()
         if idx == 0:
@@ -441,8 +523,8 @@ class McpServerDialog(QDialog):
             "re-copy it after\nrestarting KherveCAD.\n"
             "\n"
             "127.0.0.1 only: this is not reachable from another "
-            "machine,\nand cloud assistants (ChatGPT, Le Chat, Grok) "
-            "cannot use it.").format(url=url, token=self._bridge.token())
+            "machine.\nFor cloud assistants (ChatGPT, Le Chat, Grok) "
+            "use\nStart public link below.").format(url=url, token=self._bridge.token())
 
     def _copy(self):
         QApplication.clipboard().setText(self._snippet.toPlainText())

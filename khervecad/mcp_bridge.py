@@ -140,6 +140,7 @@ class McpBridge(QObject):
         self._mw = mainwindow
         self._server: Optional[QTcpServer] = None
         self._http = None            # McpHttpServer, when listening
+        self.tunnel = None           # mcp_tunnel.Tunnel, made on demand
         self._buffers: Dict[QTcpSocket, bytes] = {}
         self._token = ""
         self._executor = None
@@ -204,7 +205,25 @@ class McpBridge(QObject):
         """The Streamable HTTP endpoint, or "" when it is not up."""
         return self._http.url() if self._http is not None else ""
 
+    def start_tunnel(self) -> bool:
+        """Open a public HTTPS link to the HTTP endpoint (cloud
+        assistants).  Results arrive on ``self.tunnel``'s signals."""
+        if self._http is None:
+            return False
+        if self.tunnel is None:
+            from .mcp_tunnel import Tunnel
+            self.tunnel = Tunnel(self)
+        return self.tunnel.start(self._http.port(), self._token)
+
+    def stop_tunnel(self):
+        if self.tunnel is not None:
+            self.tunnel.stop()
+
+    def tunnel_url(self) -> str:
+        return self.tunnel.url() if self.tunnel is not None else ""
+
     def stop(self):
+        self.stop_tunnel()      # the public link dies with the bridge
         if self._http is not None:
             self._http.stop()
             self._http = None

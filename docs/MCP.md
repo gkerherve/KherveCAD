@@ -660,12 +660,23 @@ client is. Someone using GPT, Mistral or Grok reaches KherveCAD through
 Cline, VS Code, LM Studio or any other local client with their own API
 key.
 
-Cloud assistants are the exception, and it is a hard one. ChatGPT
-connectors, Mistral's custom connectors and Grok's Bring Your Own MCP
-all require a **publicly reachable HTTPS URL** and cannot spawn a local
-process. KherveCAD drives a live window on your desk, so there is
-nothing for them to reach without tunnelling your document to the
-internet. That is not supported, on purpose.
+Cloud assistants — ChatGPT connectors, Mistral's custom connectors,
+Grok's remote MCP — run on their maker's servers: they need a
+**publicly reachable HTTPS URL** and cannot send a custom header. For
+them, the Connect dialog has **Cloud assistants ▸ Start public link**.
+It runs a tunnel — [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)
+(free, no account; `brew install cloudflared` /
+`winget install Cloudflare.cloudflared`) or ngrok — to the local HTTP
+endpoint and shows a link like
+`https://<random>.trycloudflare.com/mcp/<token>`: the session token
+rides in the path. In ChatGPT: Settings ▸ Apps & Connectors ▸ Advanced
+▸ Developer mode, then Create a connector with that URL and
+*No authentication*.
+
+**Anyone holding that link drives your open document** at the access
+level you chose — pick *Edit* (not Full) while it is on, and stop it
+when you are done. The link is off until you press Start, dies when the
+bridge is switched off, and every session makes a new token.
 
 ### Configuring by hand
 
@@ -718,7 +729,8 @@ claude mcp add khervecad -e PYTHONPATH="/path/to/KherveCAD" -- /path/to/python -
 ## Security
 
 - The listener binds to **127.0.0.1 only** — nothing on the network
-  can reach it.
+  can reach it unless you start a public link (above), which you do
+  per session.
 - Every request must carry a random per-session token, published in an
   endpoint file written user-readable only:
   - Windows: `%LOCALAPPDATA%\KherveCAD\mcp-bridge.json`

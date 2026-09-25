@@ -4038,6 +4038,15 @@ into a new module and import.
                        validates `Origin` (a local server needs no CORS
                        preflight, so a web page could otherwise drive
                        the model).
+  - `mcp_tunnel.py`  — **public link for cloud assistants** (ChatGPT,
+                       Le Chat, Grok; 2026-09-25, the user's request):
+                       runs cloudflared (quick tunnel) or ngrok to the
+                       HTTP endpoint and gives `https://…/mcp/<token>` —
+                       such clients cannot send a header, so mcp_http
+                       takes the token as the last path segment (and
+                       skips the Origin guard then) and reads chunked
+                       bodies. Owned by the bridge (`start_tunnel`,
+                       dies in `stop`); the dialog's Cloud assistants box.
   - `mcp_hosts.py`   — writes KherveCAD's entry into an MCP host's own
                        config (Claude Desktop, Claude Code via its CLI,
                        Cursor, Windsurf, VS Code, Cline, LM Studio).
