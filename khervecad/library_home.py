@@ -423,10 +423,14 @@ def build_coffee_table(dims):
     p = _dims(dims, COFFEE_SIZES)
     w, d, h = p["w"], p["d"], p["h"]
     wood, _dark = _pick(dims, WOODS, "Oak")
+    grain = "Wood" if wood in (WOODS["Oak"][0], WOODS["Walnut"][0]) \
+        else "Default"
     part = CadNode("union", "Coffee table")
-    part.add(_box("Top", -w / 2, -d / 2, h - 32, w, d, 32, wood, r=12))
+    part.add(_box("Top", -w / 2, -d / 2, h - 32, w, d, 32, wood, r=12,
+                  material=grain))
     part.add(_box("Shelf", -w / 2 + 45, -d / 2 + 45, 110.0, w - 90, d - 90,
-                  20, wood, r=4))
+                  20, wood, r=4,
+                  material=grain))
     for sx in (-1, 1):
         for sy in (-1, 1):
             part.add(_box("Leg", sx * (w / 2 - 40) - 12,
