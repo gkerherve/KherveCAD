@@ -10,7 +10,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-from . import mesh
+from . import language, mesh
 from .physics import _invert
 
 DEFAULT_DISTANCE = 5.0
@@ -27,10 +27,13 @@ def start(window, node):
 
     def banner():
         n = len(node.params.get("pushes") or [])
-        return (f"Push / pull: click a flat face to push it "
-                f"{DEFAULT_DISTANCE:g} mm (edit the distance in "
-                f"Properties; negative cuts a pocket)"
-                + (f" · {n} face(s)" if n else "") + " · Esc when done")
+        text = language.tr(
+            "Push / pull: click a flat face to push it {distance:g} "
+            "mm (edit the distance in Properties; negative cuts a "
+            "pocket)").format(distance=DEFAULT_DISTANCE)
+        if n:
+            text += " · " + language.tr("{count} face(s)").format(count=n)
+        return text + " · " + language.tr("Esc when done")
 
     def on_pick(desc, _key=None):
         if desc is None:

@@ -16,7 +16,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 from PyQt5.QtWidgets import QAction, QActionGroup
 
-from . import heatmap, icons
+from . import heatmap, icons, language
 
 
 def state(window) -> dict:
@@ -59,20 +59,30 @@ def apply(window, tris, colors, label):
     sym = units.symbol(window.model.unit)
     if st["kind"] == "thickness":
         thin = stats.get("thinnest")
-        label += (f" — heat map: wall thickness, red < {wall:g} {sym}"
-                  + (f", thinnest {thin:.2f}" if thin is not None else ""))
+        suffix = language.tr(
+            "— heat map: wall thickness, red < {wall:g} {unit}").format(
+                wall=wall, unit=sym)
+        if thin is not None:
+            suffix += ", " + language.tr(
+                "thinnest {thin:.2f}").format(thin=thin)
+        label += " " + suffix
     else:
-        label += (f" — heat map: overhang, red past {st['overhang']:g}°"
-                  f" ({stats['overhang_fraction'] * 100:.0f} %)")
+        label += " " + language.tr(
+            "— heat map: overhang, red past {angle:g}° "
+            "({fraction:.0f} %)").format(
+                angle=st['overhang'],
+                fraction=stats['overhang_fraction'] * 100)
     return cols, label
 
 
 def add_menu(window, menu):
-    sub = menu.addMenu(icons.icon("mdi.thermometer"), "&Heat Map")
+    sub = menu.addMenu(icons.icon("mdi.thermometer"),
+                       language.tr("&Heat Map"))
     group = QActionGroup(window)
     window._heat_actions = {}
-    for kind, text in (("off", "&Off"), ("thickness", "&Wall thickness"),
-                       ("overhang", "Over&hangs")):
+    for kind, text in (("off", language.tr("&Off")),
+                       ("thickness", language.tr("&Wall thickness")),
+                       ("overhang", language.tr("Over&hangs"))):
         act = QAction(text, window, checkable=True)
         act.setData(kind)
         act.setChecked(state(window)["kind"] == kind)

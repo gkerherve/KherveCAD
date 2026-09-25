@@ -9,7 +9,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-from . import ik
+from . import ik, language
 
 LABELS = {"Left hand": "left_hand", "Right hand": "right_hand",
           "Left foot": "left_foot", "Right foot": "right_foot",
@@ -24,34 +24,42 @@ def start(window, node):
     """Ask for the effector (a figure) and arm the 3D view: each click
     on the model moves it there, Esc finishes."""
     effector = None
+    what = node.name
     if ik.human_in(node) is not None and not ik.in_joint(node):
         from PyQt5.QtWidgets import QInputDialog
-        label, ok = QInputDialog.getItem(window, "Reach",
-                                         "What should reach?",
-                                         list(LABELS), 0, False)
+        translated = [language.tr(k) for k in LABELS]
+        label, ok = QInputDialog.getItem(
+            window, language.tr("Reach"), language.tr("What should reach?"),
+            translated, 0, False)
         if not ok:
             return
-        effector = LABELS[label]
-    what = effector.replace("_", " ") if effector else node.name
+        english = list(LABELS)[translated.index(label)]
+        effector = LABELS[english]
+        what = label
     view = window.view3d
 
     def on_pick(desc):
         if desc is None:
-            window.statusBar().showMessage(f"Reach: {what} posed.", 5000)
+            window.statusBar().showMessage(
+                language.tr("Reach: {what} posed.").format(what=what), 5000)
             return
         from . import anchors
         try:
             out = ik.reach(window.model, node, desc["point"], effector,
                            env=anchors.doc_env(window.model))
         except ValueError as exc:
-            window.statusBar().showMessage(f"Reach: {exc}", 8000)
+            window.statusBar().showMessage(
+                language.tr("Reach: {error}").format(error=exc), 8000)
             return
-        msg = (f"Reach: {what} there (±{out['miss']:.1f})"
-               if out["reached"] else f"Reach: {out['note']}")
+        msg = (language.tr("Reach: {what} there (±{miss:.1f})").format(
+                   what=what, miss=out["miss"])
+               if out["reached"] else
+               language.tr("Reach: {note}").format(note=out["note"]))
         window.statusBar().showMessage(msg, 8000)
         arm()
 
     def arm():
-        view.start_pick(on_pick, banner=f"Reach: click where the {what} "
-                        "should go · Esc when done")
+        view.start_pick(on_pick, banner=language.tr(
+            "Reach: click where the {what} should go · Esc when "
+            "done").format(what=what))
     arm()

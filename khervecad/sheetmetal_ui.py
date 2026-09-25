@@ -12,7 +12,7 @@ from pathlib import Path
 
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
-from . import sheetmetal
+from . import language, sheetmetal
 
 
 def _env(window):
@@ -39,10 +39,14 @@ def unfold(window, node):
     window.builder.tree.select_nodes([comp])
     lines = ", ".join(f"{f['edge'].upper()} {f['allowance']:.2f} mm"
                       for f in pat["flanges"])
-    window.statusBar().showMessage(
-        f"Flat pattern: {pat['width']:.1f} × {pat['height']:.1f} mm blank"
-        + (f" — bend allowance {lines}" if lines else "")
-        + " — Ctrl+Z to undo.", 10000)
+    msg = language.tr("Flat pattern: {width:.1f} × {height:.1f} mm "
+                      "blank").format(width=pat['width'],
+                                     height=pat['height'])
+    if lines:
+        msg += " " + language.tr(
+            "— bend allowance {lines}").format(lines=lines)
+    msg += " " + language.tr("— Ctrl+Z to undo.")
+    window.statusBar().showMessage(msg, 10000)
     return comp
 
 
@@ -50,8 +54,9 @@ def export_flat(window, node):
     pat = sheetmetal.flat_pattern(node.params, _env(window))
     start = str(Path(window._path).with_name(
         f"{node.name}-flat.dxf")) if window._path else f"{node.name}-flat.dxf"
-    path, _f = QFileDialog.getSaveFileName(window, "Export flat pattern",
-                                           start, "DXF (*.dxf)")
+    title = language.tr("Export flat pattern")
+    path, _f = QFileDialog.getSaveFileName(window, title, start,
+                                           "DXF (*.dxf)")
     if not path:
         return None
     if not path.lower().endswith(".dxf"):
@@ -59,10 +64,11 @@ def export_flat(window, node):
     try:
         sheetmetal.flat_dxf(pat, path)
     except OSError as exc:
-        QMessageBox.warning(window, "Export flat pattern",
-                            f"Could not write the DXF:\n{exc}")
+        QMessageBox.warning(window, title, language.tr(
+            "Could not write the DXF:\n{error}").format(error=exc))
         return None
-    window.statusBar().showMessage(
-        f"Flat pattern written: {path} ({pat['width']:.1f} × "
-        f"{pat['height']:.1f} mm, CUT and BEND layers).", 8000)
+    window.statusBar().showMessage(language.tr(
+        "Flat pattern written: {path} ({width:.1f} × {height:.1f} mm, "
+        "CUT and BEND layers).").format(
+            path=path, width=pat['width'], height=pat['height']), 8000)
     return path

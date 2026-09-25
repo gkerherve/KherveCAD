@@ -13,20 +13,29 @@ the Free Software Foundation, either version 3 of the License, or
 
 from PyQt5.QtWidgets import QInputDialog, QMessageBox
 
-from . import units
+from . import language, units
+
+
+def _unit_name(unit) -> str:
+    """`units.name()`, translated for display — `units.py` is Qt-free
+    by design (used from the MCP subprocess, which never imports Qt),
+    so the translation happens here, at the point of display."""
+    return language.tr(units.name(unit))
 
 
 def choose(win):
     """Edit ▸ Document Units… — what one model unit stands for. A
     label: nothing in the model is rescaled."""
     options = units.choices()
-    labels = [label for _code, label in options]
+    labels = [f"{units.symbol(code)} — {_unit_name(code)}"
+             for code, _label in options]
     current = [code for code, _l in options].index(
         units.coerce(win.model.unit))
     label, ok = QInputDialog.getItem(
-        win, "Document units",
-        "One model unit is one…\n(the geometry is not rescaled — "
-        "only what the numbers are called)", labels, current, False)
+        win, language.tr("Document units"),
+        language.tr("One model unit is one…\n(the geometry is not "
+                    "rescaled — only what the numbers are called)"),
+        labels, current, False)
     if ok:
         win.model.set_unit(options[labels.index(label)][0])
 
@@ -37,20 +46,23 @@ def choose_scale(win):
     60 mm Earth's bar says kilometres). A label: nothing is rescaled."""
     from PyQt5.QtWidgets import QInputDialog
     text, ok = QInputDialog.getText(
-        win, "Document scale",
-        "The model is to the real thing as…\n"
-        "1 : 1 is life size; 1 : 250000000 a planet on a desk; 25 : 1 "
-        "an insect enlarged.\nThe scale bar then measures the real "
-        "thing — the geometry is not rescaled.",
+        win, language.tr("Document scale"),
+        language.tr(
+            "The model is to the real thing as…\n"
+            "1 : 1 is life size; 1 : 250000000 a planet on a desk; "
+            "25 : 1 an insect enlarged.\nThe scale bar then measures "
+            "the real thing — the geometry is not rescaled."),
         text=units.ratio_text(win.model.real_scale))
     if not ok:
         return
     try:
         win.model.set_real_scale(text)
     except ValueError:
-        QMessageBox.warning(win, "Document scale",
-                            f"{text!r} is not a scale — write it as "
-                            "1 : 250000000, or 25 : 1.")
+        QMessageBox.warning(win, language.tr("Document scale"),
+                            language.tr(
+                                "{text!r} is not a scale — write it as "
+                                "1 : 250000000, or 25 : 1.").format(
+                                    text=text))
 
 
 def scale_changed(win, n):
@@ -59,10 +71,11 @@ def scale_changed(win, n):
     win.view3d.update()
     win._dirty = True
     win._update_title()
-    what = "life size" if abs(n - 1.0) < 1e-9 else units.ratio_text(n)
-    win.statusBar().showMessage(
-        f"Scale: {what} — the scale bar now measures the real thing; "
-        "the geometry itself is unchanged.", 6000)
+    what = (language.tr("life size") if abs(n - 1.0) < 1e-9
+           else units.ratio_text(n))
+    win.statusBar().showMessage(language.tr(
+        "Scale: {what} — the scale bar now measures the real thing; "
+        "the geometry itself is unchanged.").format(what=what), 6000)
 
 
 def changed(win, unit):
@@ -79,9 +92,10 @@ def changed(win, unit):
         win._sync_cut()
     win._dirty = True
     win._update_title()
-    win.statusBar().showMessage(
-        f"Units: {units.name(unit)} — every readout now says {u}; the "
-        "geometry itself is unchanged.", 6000)
+    win.statusBar().showMessage(language.tr(
+        "Units: {name} — every readout now says {symbol}; the "
+        "geometry itself is unchanged.").format(
+            name=_unit_name(unit), symbol=u), 6000)
 
 
 def export_scale(win):
@@ -92,13 +106,22 @@ def export_scale(win):
     if units.coerce(unit) == "mm":
         return 1.0
     box = QMessageBox(win)
-    box.setWindowTitle("Export STL")
+    title = language.tr("Export STL")
+    box.setWindowTitle(title)
     box.setIcon(QMessageBox.Question)
-    box.setText(units.export_note(unit))
-    scale = box.addButton(f"Scale to millimetres (×{units.to_mm(unit):g})",
-                          QMessageBox.AcceptRole)
-    keep = box.addButton(f"Keep 1:1 (1 {units.symbol(unit)} → 1 mm)",
-                         QMessageBox.AcceptRole)
+    box.setText(language.tr(
+        "The document is in {name}. STL and 3MF files are read as "
+        "millimetres, so exported 1:1 each {symbol} becomes 1 mm; "
+        "scaled to millimetres every length is multiplied by "
+        "{factor:g}.").format(name=_unit_name(unit),
+                              symbol=units.symbol(unit),
+                              factor=units.to_mm(unit)))
+    scale = box.addButton(
+        language.tr("Scale to millimetres (×{factor:g})").format(
+            factor=units.to_mm(unit)), QMessageBox.AcceptRole)
+    keep = box.addButton(
+        language.tr("Keep 1:1 (1 {symbol} → 1 mm)").format(
+            symbol=units.symbol(unit)), QMessageBox.AcceptRole)
     box.addButton(QMessageBox.Cancel)
     box.setDefaultButton(keep)
     box.exec_()
