@@ -34,6 +34,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QFormLayout,
                              QPlainTextEdit, QPushButton, QStackedWidget,
                              QWidget)
 
+from . import language
 from . import protein as P
 from . import protein_build as PB
 
@@ -60,78 +61,83 @@ class ProteinTab(QWidget):
         form = QFormLayout(self)
         self.source = QComboBox()
         for label, key in SOURCES:
-            self.source.addItem(label, key)
-        form.addRow("From:", self.source)
+            self.source.addItem(language.tr(label), key)
+        form.addRow(language.tr("From:"), self.source)
         self.stack = QStackedWidget()
         form.addRow(self.stack)
         # preset
         self.preset = QComboBox()
         for key, (name, seq, _ss, note) in PB.PRESETS.items():
             self.preset.addItem(name, key)
-            self.preset.setItemData(self.preset.count() - 1,
-                                    f"{note} — {len(seq)} residues",
-                                    Qt.ToolTipRole)
+            self.preset.setItemData(
+                self.preset.count() - 1,
+                language.tr("{note} — {count} residues").format(
+                    note=note, count=len(seq)),
+                Qt.ToolTipRole)
         self.stack.addWidget(self._row(self.preset))
         # sequence
         page = QWidget()
         seq_form = QFormLayout(page)
         seq_form.setContentsMargins(0, 0, 0, 0)
         self.sequence = QPlainTextEdit()
-        self.sequence.setPlaceholderText("One-letter codes, e.g. "
-                                         "GIGAVLKVLTTGLPALISWIKRKRQQ "
-                                         "(FASTA is fine)")
+        self.sequence.setPlaceholderText(language.tr(
+            "One-letter codes, e.g. GIGAVLKVLTTGLPALISWIKRKRQQ (FASTA "
+            "is fine)"))
         self.sequence.setMaximumHeight(70)
-        seq_form.addRow("Sequence:", self.sequence)
+        seq_form.addRow(language.tr("Sequence:"), self.sequence)
         self.secondary = QLineEdit("helix")
-        self.secondary.setToolTip(
-            "helix, strand, polyproline or coil for the whole chain — or "
-            "a letter per residue: H helix, G 3-10, E strand, T turn (two "
-            "between strands make a hairpin), P polyproline, L left-"
-            "handed, C coil. Short strings are padded with coil.")
-        seq_form.addRow("Structure:", self.secondary)
+        self.secondary.setToolTip(language.tr(
+            "helix, strand, polyproline or coil for the whole chain "
+            "— or a letter per residue: H helix, G 3-10, E strand, T "
+            "turn (two between strands make a hairpin), P "
+            "polyproline, L left-handed, C coil. Short strings are "
+            "padded with coil."))
+        seq_form.addRow(language.tr("Structure:"), self.secondary)
         self.name = QLineEdit()
-        self.name.setPlaceholderText("optional name")
-        seq_form.addRow("Name:", self.name)
+        self.name.setPlaceholderText(language.tr("optional name"))
+        seq_form.addRow(language.tr("Name:"), self.name)
         self.stack.addWidget(page)
         # PDB / AlphaFold
         self.pdb_id = QLineEdit("1CRN")
-        self.pdb_id.setToolTip("Four characters: 1CRN crambin, 1UBQ "
-                               "ubiquitin, 4HHB haemoglobin, 1GFL GFP")
-        self.fetch_pdb = QPushButton("Fetch")
+        self.pdb_id.setToolTip(language.tr(
+            "Four characters: 1CRN crambin, 1UBQ ubiquitin, 4HHB "
+            "haemoglobin, 1GFL GFP"))
+        self.fetch_pdb = QPushButton(language.tr("Fetch"))
         self.stack.addWidget(self._row(self.pdb_id, self.fetch_pdb))
         self.uniprot = QLineEdit("P69905")
-        self.uniprot.setToolTip("A UniProt accession: P69905 haemoglobin "
-                                "alpha, P0DTC2 SARS-CoV-2 spike, P04637 "
-                                "p53")
-        self.fetch_af = QPushButton("Fetch")
+        self.uniprot.setToolTip(language.tr(
+            "A UniProt accession: P69905 haemoglobin alpha, P0DTC2 "
+            "SARS-CoV-2 spike, P04637 p53"))
+        self.fetch_af = QPushButton(language.tr("Fetch"))
         self.stack.addWidget(self._row(self.uniprot, self.fetch_af))
         # file
         self.path = QLineEdit()
-        self.path.setPlaceholderText(".pdb or .cif file")
-        browse = QPushButton("Browse…")
+        self.path.setPlaceholderText(language.tr(".pdb or .cif file"))
+        browse = QPushButton(language.tr("Browse…"))
         browse.clicked.connect(self._browse)
         self.stack.addWidget(self._row(self.path, browse))
         # drawing
         self.style = QComboBox()
         for key in PB.STYLES:
-            self.style.addItem(STYLE_LABELS[key], key)
-        form.addRow("Style:", self.style)
+            self.style.addItem(language.tr(STYLE_LABELS[key]), key)
+        form.addRow(language.tr("Style:"), self.style)
         self.colour = QComboBox()
-        self.colour.addItem("Automatic", "")
+        self.colour.addItem(language.tr("Automatic"), "")
         for key in PB.COLOURS:
-            self.colour.addItem(COLOUR_LABELS[key], key)
-        form.addRow("Colour:", self.colour)
+            self.colour.addItem(language.tr(COLOUR_LABELS[key]), key)
+        form.addRow(language.tr("Colour:"), self.colour)
         self.chains = QLineEdit()
-        self.chains.setPlaceholderText("all chains (or e.g. A, B)")
-        form.addRow("Chains:", self.chains)
+        self.chains.setPlaceholderText(
+            language.tr("all chains (or e.g. A, B)"))
+        form.addRow(language.tr("Chains:"), self.chains)
         extras = QHBoxLayout()
-        self.ligands = QCheckBox("Ligands")
+        self.ligands = QCheckBox(language.tr("Ligands"))
         self.ligands.setChecked(True)
-        self.water = QCheckBox("Water")
+        self.water = QCheckBox(language.tr("Water"))
         extras.addWidget(self.ligands)
         extras.addWidget(self.water)
         extras.addStretch(1)
-        self.save_pdb = QPushButton("Save PDB…")
+        self.save_pdb = QPushButton(language.tr("Save PDB…"))
         self.save_pdb.clicked.connect(self._save_pdb)
         extras.addWidget(self.save_pdb)
         form.addRow(extras)
@@ -170,7 +176,7 @@ class ProteinTab(QWidget):
 
     def _browse(self):
         path, _f = QFileDialog.getOpenFileName(
-            self, "Protein structure", "",
+            self, language.tr("Protein structure"), "",
             "Structures (*.pdb *.ent *.cif *.mmcif *.pdb.gz *.cif.gz);;"
             "All files (*)")
         if path:
@@ -198,7 +204,8 @@ class ProteinTab(QWidget):
         self._job[2].start()
         for b in (self.fetch_pdb, self.fetch_af):
             b.setEnabled(False)
-        self.info.setText(f"Downloading {key[1]}…")
+        self.info.setText(
+            language.tr("Downloading {id}…").format(id=key[1]))
         self._poll.start()
 
     def _check_job(self):
@@ -212,8 +219,9 @@ class ProteinTab(QWidget):
         if "protein" in box:
             self._fetched[key] = box["protein"]
         else:
-            self.info.setText("<span style='color:#c0392b'>"
-                              f"{box.get('error', 'Download failed')}</span>")
+            error = box.get('error') or language.tr("Download failed")
+            self.info.setText(
+                f"<span style='color:#c0392b'>{error}</span>")
             return
         self._changed()
 
@@ -226,18 +234,20 @@ class ProteinTab(QWidget):
             if kind == "sequence":
                 text = self.sequence.toPlainText().strip()
                 if not text:
-                    raise PB.BuildError("Type a sequence.")
+                    raise PB.BuildError(language.tr("Type a sequence."))
                 return P.build_peptide(text, self.secondary.text(),
                                        name=self.name.text().strip())
             if kind in ("pdb", "alphafold"):
                 key = self._key(kind)
                 if key not in self._fetched:
-                    raise PB.BuildError(f"Press Fetch to download "
-                                        f"{key[1] or 'the structure'}.")
+                    raise PB.BuildError(language.tr(
+                        "Press Fetch to download {what}.").format(
+                            what=key[1] or language.tr("the structure")))
                 return self._fetched[key]
             path = self.path.text().strip()
             if not path:
-                raise PB.BuildError("Choose a .pdb or .cif file.")
+                raise PB.BuildError(
+                    language.tr("Choose a .pdb or .cif file."))
             cached = self._fetched.get(("file", path))
             if cached is None:
                 cached = self._fetched[("file", path)] = \
@@ -258,30 +268,39 @@ class ProteinTab(QWidget):
                            stats["chains"].items())
         extra = []
         if stats.get("ligands"):
-            extra.append("ligands " + " ".join(stats["ligands"][:8]))
+            extra.append(language.tr("ligands {names}").format(
+                names=" ".join(stats["ligands"][:8])))
         if stats.get("clashes"):
-            extra.append(f"<span style='color:#c0392b'>{stats['clashes']} "
-                         "atom clashes — no fold, only local "
-                         "structure</span>")
-        return (f"<b>{stats['name']}</b> — {stats['residues']} residues, "
-                f"{stats['atoms']:,} atoms, {stats['mass_kda']} kDa<br>"
-                f"chains {chains}; {stats['helix_residues']} in helices, "
-                f"{stats['strand_residues']} in strands"
+            extra.append(
+                "<span style='color:#c0392b'>" + language.tr(
+                    "{count} atom clashes — no fold, only local "
+                    "structure").format(count=stats['clashes'])
+                + "</span>")
+        return (language.tr(
+            "<b>{name}</b> — {residues} residues, {atoms:,} atoms, "
+            "{mass} kDa<br>chains {chains}; {helix} in helices, "
+            "{strand} in strands").format(
+                name=stats['name'], residues=stats['residues'],
+                atoms=stats['atoms'], mass=stats['mass_kda'],
+                chains=chains, helix=stats['helix_residues'],
+                strand=stats['strand_residues'])
                 + ("<br>" + "; ".join(extra) if extra else "")
-                + f"<br>≈ {stats['triangles']:,} triangles")
+                + language.tr("<br>≈ {triangles:,} triangles").format(
+                    triangles=stats['triangles']))
 
     def _save_pdb(self):
+        title = language.tr("Save PDB")
         try:
             p = self.protein()
         except PB.BuildError as exc:
-            QMessageBox.warning(self, "Save PDB", str(exc))
+            QMessageBox.warning(self, title, str(exc))
             return
         path, _f = QFileDialog.getSaveFileName(
-            self, "Save PDB", f"{p.name}.pdb", "PDB (*.pdb)")
+            self, title, f"{p.name}.pdb", "PDB (*.pdb)")
         if not path:
             return
         try:
             with open(path, "w", encoding="utf-8") as fh:
                 fh.write(P.to_pdb(p))
         except OSError as exc:
-            QMessageBox.warning(self, "Save PDB", str(exc))
+            QMessageBox.warning(self, title, str(exc))

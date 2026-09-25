@@ -29,6 +29,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog,
                              QVBoxLayout)
 
 from . import crystal_build as cb
+from . import language
 from .crystal_library import CATEGORIES, LIBRARY
 
 BUILD_CHOICES = (("Unit cell, supercell and particle", "hierarchy"),
@@ -44,7 +45,7 @@ FILL_CHOICES = (("Automatic", "auto"), ("Atoms", "atoms"),
 def _combo(choices):
     box = QComboBox()
     for label, value in choices:
-        box.addItem(label, value)
+        box.addItem(language.tr(label), value)
     return box
 
 
@@ -64,7 +65,7 @@ class CrystalBuilder(QDialog):
     def __init__(self, window):
         super().__init__(window)
         self.window_ = window
-        self.setWindowTitle("Crystal Builder")
+        self.setWindowTitle(language.tr("Crystal Builder"))
         self.setModal(False)
         layout = QVBoxLayout(self)
         form = QFormLayout()
@@ -79,18 +80,19 @@ class CrystalBuilder(QDialog):
             for c in members:
                 self.crystal.addItem(f"   {c.name}", c.key)
         self.crystal.setCurrentIndex(self.crystal.findData("quartz"))
-        form.addRow("Crystal:", self.crystal)
+        form.addRow(language.tr("Crystal:"), self.crystal)
         self.info = QLabel()
         self.info.setWordWrap(True)
         self.info.setTextInteractionFlags(Qt.TextSelectableByMouse)
         form.addRow(self.info)
         self.build = _combo(BUILD_CHOICES)
-        form.addRow("Build:", self.build)
+        form.addRow(language.tr("Build:"), self.build)
         self.rep = _combo(REP_CHOICES)
-        self.rep.setToolTip("How a cell is drawn: its atoms (covalent "
-                            "radii), its coordination polyhedra (SiO4 "
-                            "tetrahedra…, ~10x lighter), or both")
-        form.addRow("Cells show:", self.rep)
+        self.rep.setToolTip(language.tr(
+            "How a cell is drawn: its atoms (covalent radii), its "
+            "coordination polyhedra (SiO4 tetrahedra…, ~10x "
+            "lighter), or both"))
+        form.addRow(language.tr("Cells show:"), self.rep)
         counts = QHBoxLayout()
         self.counts = []
         for _axis in "abc":
@@ -99,65 +101,70 @@ class CrystalBuilder(QDialog):
             box.setValue(4)
             counts.addWidget(box)
             self.counts.append(box)
-        form.addRow("Supercell (a × b × c):", counts)
+        form.addRow(language.tr("Supercell (a × b × c):"), counts)
         self.shape = QComboBox()
         for key in cb.SHAPES:
-            self.shape.addItem(key.replace("_", " ").capitalize(), key)
-        form.addRow("Particle shape:", self.shape)
+            self.shape.addItem(
+                language.tr(key.replace("_", " ").capitalize()), key)
+        form.addRow(language.tr("Particle shape:"), self.shape)
         self.size = _spin(0.5, 10000, 10.0, 1.0, 2, " nm")
-        self.size_label = QLabel("Diameter:")
+        self.size_label = QLabel(language.tr("Diameter:"))
         form.addRow(self.size_label, self.size)
         self.height = _spin(0.5, 10000, 10.0, 1.0, 2, " nm")
-        form.addRow("Height:", self.height)
+        form.addRow(language.tr("Height:"), self.height)
         edges = QHBoxLayout()
         self.edges = [_spin(0.5, 10000, v, 1.0, 2, " nm")
                       for v in (10.0, 10.0, 10.0)]
         for box in self.edges:
             edges.addWidget(box)
-        form.addRow("Box (x, y, z):", edges)
+        form.addRow(language.tr("Box (x, y, z):"), edges)
         self.fill = _combo(FILL_CHOICES)
-        self.fill.setToolTip("What fills the particle: every cell (as "
-                             "atoms or polyhedra) or blocks of N × N × N "
-                             "cells. Automatic keeps cells while the view "
-                             "can draw them, blocks beyond")
-        form.addRow("Particle made of:", self.fill)
+        self.fill.setToolTip(language.tr(
+            "What fills the particle: every cell (as atoms or "
+            "polyhedra) or blocks of N × N × N cells. Automatic "
+            "keeps cells while the view can draw them, blocks "
+            "beyond"))
+        form.addRow(language.tr("Particle made of:"), self.fill)
         self.block = QSpinBox()
         self.block.setRange(1, 1000)
         self.block.setValue(10)
-        self.block.setSuffix(" cells per edge")
-        form.addRow("Block:", self.block)
+        self.block.setSuffix(" " + language.tr("cells per edge"))
+        form.addRow(language.tr("Block:"), self.block)
         self.gap = _spin(0.0, 0.45, 0.03, 0.01, 2)
-        form.addRow("Gap between blocks:", self.gap)
+        form.addRow(language.tr("Gap between blocks:"), self.gap)
         # ---- scatter
         self.count = QSpinBox()
         self.count.setRange(1, 500)
         self.count.setValue(12)
-        self.count.setSuffix(" particles")
-        form.addRow("Scatter:", self.count)
+        self.count.setSuffix(" " + language.tr("particles"))
+        form.addRow(language.tr("Scatter:"), self.count)
         area = QHBoxLayout()
         self.area = [_spin(1.0, 100000, 100.0, 10.0, 1, " nm")
                      for _ in range(2)]
         for box in self.area:
             area.addWidget(box)
-        form.addRow("Over an area (x, y):", area)
+        form.addRow(language.tr("Over an area (x, y):"), area)
         self.min_gap = _spin(0.0, 1000.0, 1.0, 0.5, 2, " nm")
-        form.addRow("Smallest gap:", self.min_gap)
+        form.addRow(language.tr("Smallest gap:"), self.min_gap)
         self.seed = QSpinBox()
         self.seed.setRange(1, 99999)
         self.seed.setValue(1)
-        self.seed.setToolTip("The same seed gives the same arrangement")
-        form.addRow("Arrangement seed:", self.seed)
-        self.substrate = QCheckBox("Draw a substrate under them")
+        self.seed.setToolTip(
+            language.tr("The same seed gives the same arrangement"))
+        form.addRow(language.tr("Arrangement seed:"), self.seed)
+        self.substrate = QCheckBox(language.tr("Draw a substrate under "
+                                               "them"))
         self.substrate.setChecked(True)
         form.addRow(self.substrate)
-        self.random_turn = QCheckBox("Turn each particle at random")
+        self.random_turn = QCheckBox(
+            language.tr("Turn each particle at random"))
         self.random_turn.setChecked(True)
         form.addRow(self.random_turn)
         # ---- common
         self.atom_scale = _spin(0.05, 3.0, 1.0, 0.05, 2,
-                                " × covalent radius")
-        form.addRow("Atom size:", self.atom_scale)
-        self.cell_box = QCheckBox("Draw the lattice boxes")
+                                " " + language.tr("× covalent radius"))
+        form.addRow(language.tr("Atom size:"), self.atom_scale)
+        self.cell_box = QCheckBox(language.tr("Draw the lattice boxes"))
         self.cell_box.setChecked(True)
         form.addRow(self.cell_box)
         layout.addLayout(form)
@@ -165,10 +172,10 @@ class CrystalBuilder(QDialog):
         self.estimate.setWordWrap(True)
         layout.addWidget(self.estimate)
         buttons = QHBoxLayout()
-        self.go = QPushButton("Build")
+        self.go = QPushButton(language.tr("Build"))
         self.go.setDefault(True)
         self.go.clicked.connect(self.build_now)
-        close = QPushButton("Close")
+        close = QPushButton(language.tr("Close"))
         close.clicked.connect(self.close)
         buttons.addStretch(1)
         buttons.addWidget(self.go)
@@ -227,26 +234,32 @@ class CrystalBuilder(QDialog):
         for box in self.edges:
             box.setEnabled(particle and shape == "box")
         self.size.setEnabled(particle and shape != "box")
-        self.size_label.setText(cb.SHAPES[shape].split(";")[0]
-                                .split(" (")[0].capitalize() + ":")
+        label = cb.SHAPES[shape].split(";")[0].split(" (")[0].capitalize()
+        self.size_label.setText(language.tr(label) + ":")
         for widget in ([self.count, self.min_gap, self.seed,
                         self.substrate, self.random_turn] + self.area):
             widget.setEnabled(scatter)
         summary = c.summary()
         comp = " ".join(f"{el}{n}" for el, n in summary["composition"]
                         .items())
-        self.info.setText(
-            f"<b>{c.formula}</b> — {c.space_group}, {c.system}<br>"
-            f"a = {summary['a_nm']} nm, b = {summary['b_nm']} nm, "
-            f"c = {summary['c_nm']} nm; α = {c.alpha:g}°, β = {c.beta:g}°, "
-            f"γ = {c.gamma:g}°<br>{len(c.atoms)} atoms per cell ({comp}), "
-            f"{summary['density_g_cm3']} g/cm³"
-            + (f"; {summary['polyhedra']}" if summary["polyhedra"] else ""))
+        self.info.setText(language.tr(
+            "<b>{formula}</b> — {space_group}, {system}<br>a = {a} nm, "
+            "b = {b} nm, c = {c} nm; α = {alpha:g}°, β = {beta:g}°, "
+            "γ = {gamma:g}°<br>{count} atoms per cell ({comp}), "
+            "{density} g/cm³").format(
+                formula=c.formula, space_group=c.space_group,
+                system=c.system, a=summary['a_nm'], b=summary['b_nm'],
+                c=summary['c_nm'], alpha=c.alpha, beta=c.beta,
+                gamma=c.gamma, count=len(c.atoms), comp=comp,
+                density=summary['density_g_cm3'])
+            + (language.tr("; {polyhedra}").format(
+                polyhedra=summary['polyhedra'])
+               if summary["polyhedra"] else ""))
         try:
             _code, stats = cb.program(replace(self.spec(), prefix="x"))
         except cb.BuildError as exc:
-            self.estimate.setText(f"<span style='color:#c0392b'>{exc}"
-                                  "</span>")
+            self.estimate.setText(
+                f"<span style='color:#c0392b'>{exc}</span>")
             self.go.setEnabled(False)
             return
         self.go.setEnabled(True)
@@ -257,12 +270,14 @@ class CrystalBuilder(QDialog):
         try:
             stats = cb.apply(self.window_, self.spec())
         except cb.BuildError as exc:
-            QMessageBox.warning(self, "Crystal Builder", str(exc))
+            QMessageBox.warning(self, language.tr("Crystal Builder"),
+                                str(exc))
             return
         names = ", ".join(o["name"] for o in stats.get("objects", []))
         self.window_.statusBar().showMessage(
-            f"Built {names} — {stats['triangles']:,} triangles. "
-            + " ".join(stats.get("notes", [])), 12000)
+            language.tr("Built {names} — {triangles:,} triangles.").format(
+                names=names, triangles=stats['triangles'])
+            + " " + " ".join(stats.get("notes", [])), 12000)
         self._refresh()
 
 
@@ -271,32 +286,48 @@ def describe(stats: dict) -> str:
     rows = []
     scatter = stats.get("scatter")
     if scatter:
-        rows.append(f"Scatter: {scatter['particles']} particles over "
-                    f"{scatter['area_nm'][0]:g} × {scatter['area_nm'][1]:g}"
-                    " nm")
+        rows.append(language.tr(
+            "Scatter: {particles} particles over {x:g} × {y:g} nm").format(
+                particles=scatter['particles'], x=scatter['area_nm'][0],
+                y=scatter['area_nm'][1]))
     part = stats.get("particle")
     if part:
         if part.get("blocks"):
-            what = (f"{part['blocks']:,} blocks of {part['block_cells']}³ "
-                    f"cells ({part['cells']:,} cells)")
+            what = language.tr(
+                "{blocks:,} blocks of {block_cells}³ cells "
+                "({cells:,} cells)").format(
+                    blocks=part['blocks'], block_cells=part['block_cells'],
+                    cells=part['cells'])
         else:
-            what = f"{part['cells']:,} cells"
+            what = language.tr("{cells:,} cells").format(
+                cells=part['cells'])
             if part.get("polyhedra"):
-                what += f", {part['polyhedra']:,} polyhedra"
+                what += ", " + language.tr(
+                    "{count:,} polyhedra").format(count=part['polyhedra'])
             if part.get("atoms"):
-                what += f", {part['atoms']:,} atoms"
-        rows.append(f"{'Each particle' if scatter else 'Particle'}: {what}"
-                    + ("" if part.get("exact_count", True) else " (about)"))
+                what += ", " + language.tr(
+                    "{count:,} atoms").format(count=part['atoms'])
+        label = (language.tr("Each particle") if scatter
+                else language.tr("Particle"))
+        rows.append(f"{label}: {what}"
+                    + ("" if part.get("exact_count", True)
+                       else " " + language.tr("(about)")))
     sc = stats.get("supercell")
     if sc:
-        rows.append(f"Supercell: {'×'.join(map(str, sc['counts']))} = "
-                    f"{sc['cells']:,} cells")
+        rows.append(language.tr("Supercell: {counts} = {cells:,} "
+                                "cells").format(
+            counts='×'.join(map(str, sc['counts'])), cells=sc['cells']))
     uc = stats.get("unit_cell")
     if uc:
-        rows.append(f"Unit cell: {uc['atoms_per_cell']} atoms"
-                    + (f", {uc['polyhedra']} polyhedra"
-                       if uc["polyhedra"] else ""))
-    rows.append(f"≈ {stats['triangles']:,} triangles in the 3D view")
+        text = language.tr("Unit cell: {count} atoms").format(
+            count=uc['atoms_per_cell'])
+        if uc["polyhedra"]:
+            text += ", " + language.tr("{count} polyhedra").format(
+                count=uc['polyhedra'])
+        rows.append(text)
+    rows.append(language.tr(
+        "≈ {triangles:,} triangles in the 3D view").format(
+            triangles=stats['triangles']))
     rows += [f"<i>{n}</i>" for n in stats.get("notes", [])]
     return "<br>".join(rows)
 
