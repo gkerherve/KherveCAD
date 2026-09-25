@@ -55,8 +55,10 @@ SHEETS = {"A4": (297.0, 210.0), "A3": (420.0, 297.0),
           "A2": (594.0, 420.0), "A1": (841.0, 594.0),
           "A0": (1189.0, 841.0), "Letter": (279.4, 215.9),
           "Tabloid": (431.8, 279.4)}
-#: the scales a drawing may use, as multipliers (2 = 2:1, 0.5 = 1:2)
-SCALES = [10, 5, 2, 1, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01]
+#: the scales a drawing may use, as multipliers (2 = 2:1, 0.5 = 1:2),
+#: down to the architect's 1:25 … 1:1000 so a house plan or a site fits
+SCALES = [10, 5, 2, 1, 0.5, 0.2, 0.1, 0.05, 0.04, 0.02, 0.01, 0.005,
+          0.004, 0.002, 0.001]
 #: hidden-line sampling: samples per edge, and the depth tolerance as a
 #: fraction of the model's size
 SAMPLES = 24
