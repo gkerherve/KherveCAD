@@ -16,7 +16,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout,
                              QHBoxLayout, QLabel, QPushButton, QVBoxLayout)
 
-from . import mesh, sculpt
+from . import language, mesh, sculpt
 
 
 def meshes(window, node):
@@ -68,7 +68,8 @@ class SculptPanel(QDialog):
 
     def __init__(self, window, node):
         super().__init__(window)
-        self.setWindowTitle(f"Sculpt — {node.name}")
+        self.setWindowTitle(
+            language.tr("Sculpt — {name}").format(name=node.name))
         self.setWindowFlag(Qt.Tool, True)
         self.setAttribute(Qt.WA_DeleteOnClose, True)
         self.window_, self.node = window, node
@@ -76,7 +77,7 @@ class SculptPanel(QDialog):
         form = QFormLayout()
         self.kind = QComboBox()
         for name in sculpt.KINDS:
-            self.kind.addItem(name.capitalize(), name)
+            self.kind.addItem(language.tr(name.capitalize()), name)
         self.kind.setCurrentIndex(1)                 # inflate
         self.radius = QDoubleSpinBox()
         self.radius.setRange(0.05, 10000.0)
@@ -88,17 +89,20 @@ class SculptPanel(QDialog):
         self.strength.setValue(1.0)
         self.mirror = QComboBox()
         for name in sculpt.MIRRORS:
-            self.mirror.addItem(name, name)
-        self.mirror.setCurrentText(str(node.params.get("mirror", "none")))
-        self.mirror.currentTextChanged.connect(self._set_mirror)
-        form.addRow("Brush", self.kind)
-        form.addRow("Radius", self.radius)
-        form.addRow("Strength", self.strength)
-        form.addRow("Mirror", self.mirror)
+            self.mirror.addItem(
+                language.tr("none") if name == "none" else name, name)
+        self.mirror.setCurrentIndex(self.mirror.findData(
+            str(node.params.get("mirror", "none"))))
+        self.mirror.currentIndexChanged.connect(
+            lambda _i: self._set_mirror(self.mirror.currentData()))
+        form.addRow(language.tr("Brush"), self.kind)
+        form.addRow(language.tr("Radius"), self.radius)
+        form.addRow(language.tr("Strength"), self.strength)
+        form.addRow(language.tr("Mirror"), self.mirror)
         self.count = QLabel()
-        undo = QPushButton("Undo last stroke")
+        undo = QPushButton(language.tr("Undo last stroke"))
         undo.clicked.connect(self.undo_last)
-        done = QPushButton("Done")
+        done = QPushButton(language.tr("Done"))
         done.clicked.connect(self.close)
         row = QHBoxLayout()
         row.addWidget(undo)
@@ -106,9 +110,10 @@ class SculptPanel(QDialog):
         row.addWidget(done)
         lay = QVBoxLayout(self)
         lay.addLayout(form)
-        lay.addWidget(QLabel("Click the surface in the 3D view to sculpt. "
-                             "Grab drags along the surface normal; a "
-                             "negative strength pushes in."))
+        lay.addWidget(QLabel(language.tr(
+            "Click the surface in the 3D view to sculpt. Grab drags "
+            "along the surface normal; a negative strength pushes "
+            "in.")))
         lay.addWidget(self.count)
         lay.addLayout(row)
         self._refresh_count()
@@ -117,35 +122,38 @@ class SculptPanel(QDialog):
     # -- the pick -------------------------------------------------------
     def _banner(self):
         n = len(self.node.params.get("strokes") or [])
-        return (f"Sculpt: {self.kind.currentData()} brush, "
-                f"{self.radius.value():g} mm · {n} stroke(s) · click the "
-                "surface; Esc or right-click when done")
+        return language.tr(
+            "Sculpt: {kind} brush, {radius:g} mm · {count} stroke(s) "
+            "· click the surface; Esc or right-click when done").format(
+                kind=language.tr(self.kind.currentData().capitalize()),
+                radius=self.radius.value(), count=n)
 
     def arm(self):
         self._world, self._local = meshes(self.window_, self.node)
         if self._world is None:
-            self.window_.statusBar().showMessage(
-                f"{self.node.name}: nothing to sculpt yet — put a solid "
-                "inside it first.", 6000)
+            self.window_.statusBar().showMessage(language.tr(
+                "{name}: nothing to sculpt yet — put a solid inside "
+                "it first.").format(name=self.node.name), 6000)
             return
         self.window_.view3d.start_pick(
             self._on_pick, groups=[(self.node, self._world)],
             banner=self._banner(),
-            labeler=lambda desc, _k: f"{self.kind.currentData()} here")
+            labeler=lambda desc, _k: language.tr("{kind} here").format(
+                kind=language.tr(self.kind.currentData().capitalize())))
 
     def _on_pick(self, desc, _key):
         if desc is None:                       # Esc / right-click
-            self.window_.statusBar().showMessage(
+            self.window_.statusBar().showMessage(language.tr(
                 "Sculpting paused — click a brush in the panel to "
-                "continue, or Done.", 5000)
+                "continue, or Done."), 5000)
             return
         ok = add_stroke(
             self.window_.model, self.node, self.kind.currentData(),
             desc.get("point"), self.radius.value(), self.strength.value(),
             desc.get("normal"), world=self._world, local=self._local)
         if not ok:
-            self.window_.statusBar().showMessage(
-                "That click missed the sculpted surface.", 3000)
+            self.window_.statusBar().showMessage(language.tr(
+                "That click missed the sculpted surface."), 3000)
         self._refresh_count()
         self.arm()                             # the surface has moved
 
@@ -161,8 +169,8 @@ class SculptPanel(QDialog):
         self.arm()
 
     def _refresh_count(self):
-        self.count.setText(
-            f"{len(self.node.params.get('strokes') or [])} stroke(s)")
+        self.count.setText(language.tr("{count} stroke(s)").format(
+            count=len(self.node.params.get('strokes') or [])))
 
     def closeEvent(self, event):
         view = self.window_.view3d

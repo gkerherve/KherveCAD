@@ -25,7 +25,7 @@ from PyQt5.QtWidgets import (QApplication, QDialog, QHBoxLayout, QLabel,
                              QListWidget, QListWidgetItem, QPushButton,
                              QVBoxLayout)
 
-from . import icons, scadlib
+from . import icons, language, scadlib
 
 
 def run_install(lib, progress=None) -> str:
@@ -48,7 +48,8 @@ def run_install(lib, progress=None) -> str:
     if "error" in result:
         raise result["error"]
     if progress:
-        progress(f"Installed in {result['folder']}")
+        progress(language.tr("Installed in {folder}").format(
+            folder=result['folder']))
     return result["folder"]
 
 
@@ -73,15 +74,16 @@ class LibrariesDialog(QDialog):
     def __init__(self, window):
         super().__init__(window)
         self.window = window
-        self.setWindowTitle("OpenSCAD Libraries")
+        self.setWindowTitle(language.tr("OpenSCAD Libraries"))
         self.resize(620, 460)
         layout = QVBoxLayout(self)
-        intro = QLabel(
-            "Community libraries for OpenSCAD. Once installed, a program "
-            "that includes one opens here: calls that import cleanly "
-            "become objects, the rest stay as OpenSCAD code rendered by "
-            "the engine. Installing downloads the project from GitHub "
-            "into your OpenSCAD library folder, shared with OpenSCAD.")
+        intro = QLabel(language.tr(
+            "Community libraries for OpenSCAD. Once installed, a "
+            "program that includes one opens here: calls that import "
+            "cleanly become objects, the rest stay as OpenSCAD code "
+            "rendered by the engine. Installing downloads the project "
+            "from GitHub into your OpenSCAD library folder, shared "
+            "with OpenSCAD."))
         intro.setWordWrap(True)
         layout.addWidget(intro)
         self.list = QListWidget()
@@ -92,15 +94,16 @@ class LibrariesDialog(QDialog):
         self.detail.setTextInteractionFlags(Qt.TextSelectableByMouse)
         layout.addWidget(self.detail)
         buttons = QHBoxLayout()
-        self.install_btn = QPushButton(icons.icon("mdi.download"), "Install")
+        self.install_btn = QPushButton(icons.icon("mdi.download"),
+                                       language.tr("Install"))
         self.install_btn.clicked.connect(self._install)
         self.insert_btn = QPushButton(icons.icon("mdi.bookshelf"),
-                                      "Insert include line")
+                                      language.tr("Insert include line"))
         self.insert_btn.clicked.connect(self._insert)
         folder = QPushButton(icons.icon("mdi.folder-open-outline"),
-                             "Open library folder")
+                             language.tr("Open library folder"))
         folder.clicked.connect(self._open_folder)
-        close = QPushButton("Close")
+        close = QPushButton(language.tr("Close"))
         close.clicked.connect(self.close)
         for b in (self.install_btn, self.insert_btn, folder):
             buttons.addWidget(b)
@@ -129,12 +132,16 @@ class LibrariesDialog(QDialog):
         entry = self._entry()
         if entry is None:
             return
-        self.detail.setText(
-            f"<b>{entry['title']}</b> — {entry['about']}<br>"
-            f"Program line: <code>{entry['include']}</code><br>"
-            f"Licence: {entry['licence']} · {entry['project']}")
-        self.install_btn.setText("Reinstall" if entry["installed"]
-                                 else "Install")
+        self.detail.setText(language.tr(
+            "<b>{title}</b> — {about}<br>Program line: "
+            "<code>{include}</code><br>Licence: {licence} · "
+            "{project}").format(
+                title=entry['title'], about=entry['about'],
+                include=entry['include'], licence=entry['licence'],
+                project=entry['project']))
+        self.install_btn.setText(
+            language.tr("Reinstall") if entry["installed"]
+            else language.tr("Install"))
 
     def _install(self):
         entry = self._entry()
@@ -142,13 +149,18 @@ class LibrariesDialog(QDialog):
             return
         lib = next(lib for lib in scadlib.KNOWN if lib.key == entry["key"])
         self.install_btn.setEnabled(False)
-        self.status.setText(f"Downloading {lib.title}…")
+        self.status.setText(
+            language.tr("Downloading {title}…").format(title=lib.title))
         try:
             folder = run_install(lib)
         except Exception as exc:
-            self.status.setText(f"Could not install {lib.title}: {exc}")
+            self.status.setText(language.tr(
+                "Could not install {title}: {error}").format(
+                    title=lib.title, error=exc))
         else:
-            self.status.setText(f"Installed {lib.title} in {folder}")
+            self.status.setText(language.tr(
+                "Installed {title} in {folder}").format(
+                    title=lib.title, folder=folder))
         finally:
             self.install_btn.setEnabled(True)
         self._fill()
@@ -160,9 +172,10 @@ class LibrariesDialog(QDialog):
         import re
         match = re.match(r"(use|include)\s*<([^>]*)>", entry["include"])
         if match is None or "..." in match.group(2):
-            self.status.setText("This library has no single file to "
-                                "include — write the use line for the "
-                                "file you need in the Code tab.")
+            self.status.setText(language.tr(
+                "This library has no single file to include — write "
+                "the use line for the file you need in the Code "
+                "tab."))
             return
         model = self.window.model
         node = model.add_node("scad_use", dict(kind=match.group(1),
@@ -170,7 +183,9 @@ class LibrariesDialog(QDialog):
         node.parent.remove(node)
         model.root.add(node, 0)                   # a program starts with it
         model.structure_changed.emit()
-        self.status.setText(f"Added {entry['include']} to the document.")
+        self.status.setText(language.tr(
+            "Added {include} to the document.").format(
+                include=entry['include']))
 
     def _open_folder(self):
         folder = scadlib.user_library_dir()
