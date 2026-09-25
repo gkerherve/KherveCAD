@@ -19,7 +19,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog,
                              QFormLayout, QHBoxLayout, QLabel,
                              QPushButton, QTextBrowser, QVBoxLayout)
 
-from . import analysis, mesh, units
+from . import analysis, language, mesh, units
 
 _SETTINGS = ("Kherve", "KherveCAD")
 
@@ -67,51 +67,68 @@ def mass_html(props, material, price, currency, unit="mm") -> str:
     grams = analysis.mass(volume_mm3, material)
     hours = analysis.print_time(volume_mm3)
     rows = [
-        ("Volume", f"{_fmt(volume_mm3 / 1000, 3)} cm³ "
+        (language.tr("Volume"), f"{_fmt(volume_mm3 / 1000, 3)} cm³ "
                    f"({_fmt(props['volume'], 0)} {u}³)"),
-        ("Surface area", f"{_fmt(units.mm(props['area'], unit, 2) / 100, 2)}"
-                         f" cm²"),
-        ("Size", " × ".join(_fmt(s, 2) for s in props["size"]) + f" {u}"),
-        ("Centre of mass", ", ".join(_fmt(c, 2) for c in props["centroid"])
-                           + f" {u}"),
-        ("Bounding box", f"{[round(v, 2) for v in props['min']]} to "
-                         f"{[round(v, 2) for v in props['max']]} {u}"),
-        (f"Mass ({material}, solid)", f"{_fmt(grams, 1)} g"),
+        (language.tr("Surface area"),
+         f"{_fmt(units.mm(props['area'], unit, 2) / 100, 2)} cm²"),
+        (language.tr("Size"),
+         " × ".join(_fmt(s, 2) for s in props["size"]) + f" {u}"),
+        (language.tr("Centre of mass"),
+         ", ".join(_fmt(c, 2) for c in props["centroid"]) + f" {u}"),
+        (language.tr("Bounding box"),
+         f"{[round(v, 2) for v in props['min']]} to "
+         f"{[round(v, 2) for v in props['max']]} {u}"),
+        (language.tr("Mass ({material}, solid)").format(material=material),
+         f"{_fmt(grams, 1)} g"),
     ]
     if units.printable(unit):
         rows += [
-            ("Material cost",
-             f"{currency}{_fmt(analysis.cost(grams, price), 2)}"
-             f" at {currency}{price:g}/kg"),
-            ("Print time (rough)", f"about {hours:.1f} h at "
-                                   f"{analysis.PRINT_MM3_PER_S:g} mm³/s"),
+            (language.tr("Material cost"),
+             language.tr("{currency}{cost} at {currency}{price:g}/kg").format(
+                 currency=currency, cost=_fmt(analysis.cost(grams, price), 2),
+                 price=price)),
+            (language.tr("Print time (rough)"),
+             language.tr("about {hours:.1f} h at {rate:g} mm³/s").format(
+                 hours=hours, rate=analysis.PRINT_MM3_PER_S)),
         ]
     else:
-        rows.append(("Cost, print time",
-                     f"not estimated — the model is in {units.name(unit)}, "
-                     "a scale no printer works at 1:1"))
+        rows.append((language.tr("Cost, print time"), language.tr(
+            "not estimated — the model is in {unit}, a scale no "
+            "printer works at 1:1").format(unit=language.tr(
+                units.name(unit)))))
     body = "".join(f"<tr><td><b>{k}</b></td><td>{v}</td></tr>"
                    for k, v in rows)
     return f"<table cellpadding='4'>{body}</table>"
+
+
+_STATUS_WORD = {"pass": "PASS", "warn": "WARN", "fail": "FAIL"}
 
 
 def print_html(report) -> str:
     rows = []
     for c in report["checks"]:
         color = _STATUS_COLOR[c["status"]]
-        rows.append(f"<tr><td><b>{c['name']}</b></td>"
-                    f"<td style='color:{color}'><b>{c['status'].upper()}"
-                    f"</b></td><td>{c['message']}</td></tr>")
+        rows.append(
+            f"<tr><td><b>{c['name']}</b></td>"
+            f"<td style='color:{color}'><b>"
+            f"{language.tr(_STATUS_WORD[c['status']])}</b></td>"
+            f"<td>{c['message']}</td></tr>")
     worst = report["summary"]
-    head = (f"<p style='color:{_STATUS_COLOR.get(worst, '#000')}'><b>"
-            f"{'Ready to print' if worst == 'pass' else 'Look at the ' + ('warnings' if worst == 'warn' else 'failures')}"
-            f"</b></p>")
+    if worst == "pass":
+        headline = language.tr("Ready to print")
+    elif worst == "warn":
+        headline = language.tr("Look at the warnings")
+    else:
+        headline = language.tr("Look at the failures")
+    head = (f"<p style='color:{_STATUS_COLOR.get(worst, '#000')}'>"
+            f"<b>{headline}</b></p>")
     return head + f"<table cellpadding='4'>{''.join(rows)}</table>"
 
 
 def interference_html(pairs) -> str:
     if not pairs:
-        return "<p>Select at least two parts (or have two in Main).</p>"
+        return "<p>" + language.tr(
+            "Select at least two parts (or have two in Main).") + "</p>"
     words = {"intersect": ("#c0392b", "INTERSECT"),
              "contains": ("#d08a00", "CONTAINS"),
              "inside": ("#d08a00", "INSIDE"),
@@ -119,20 +136,25 @@ def interference_html(pairs) -> str:
     rows = []
     for p in pairs:
         color, word = words[p["status"]]
+        word = language.tr(word)
         detail = ""
         if p["status"] == "intersect":
-            detail = f"crossing near {p['points'][0]}" if p.get("points") \
-                else ""
+            detail = language.tr("crossing near {point}").format(
+                point=p['points'][0]) if p.get("points") else ""
         elif p["status"] == "contains":
-            detail = f"{p['b']} lies inside {p['a']}"
+            detail = language.tr("{b} lies inside {a}").format(
+                b=p['b'], a=p['a'])
         elif p["status"] == "inside":
-            detail = f"{p['a']} lies inside {p['b']}"
+            detail = language.tr("{a} lies inside {b}").format(
+                a=p['a'], b=p['b'])
         rows.append(f"<tr><td>{p['a']}</td><td>{p['b']}</td>"
                     f"<td style='color:{color}'><b>{word}</b></td>"
                     f"<td>{detail}</td></tr>")
     bad = sum(1 for p in pairs if p["status"] != "clear")
-    head = ("<p><b>No parts overlap.</b></p>" if not bad else
-            f"<p style='color:#c0392b'><b>{bad} pair(s) overlap.</b></p>")
+    head = (f"<p><b>{language.tr('No parts overlap.')}</b></p>" if not bad
+           else f"<p style='color:#c0392b'><b>"
+                f"{language.tr('{count} pair(s) overlap.').format(count=bad)}"
+                f"</b></p>")
     return head + f"<table cellpadding='4'>{''.join(rows)}</table>"
 
 
@@ -148,9 +170,9 @@ class AnalysisDialog(QDialog):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(560, 420)
         self._highlighted = False
-        titles = {"mass": "Mass properties",
-                  "print": "Check for 3D printing",
-                  "interference": "Check interference"}
+        titles = {"mass": language.tr("Mass properties"),
+                  "print": language.tr("Check for 3D printing"),
+                  "interference": language.tr("Check interference")}
         self.setWindowTitle(titles[kind])
         layout = QVBoxLayout(self)
         settings = QSettings(*_SETTINGS)
@@ -168,8 +190,9 @@ class AnalysisDialog(QDialog):
                 "analysis/price_per_kg", analysis.DEFAULT_PRICE)))
             self.currency = str(settings.value("analysis/currency",
                                                analysis.DEFAULT_CURRENCY))
-            form.addRow("Material", self.material)
-            form.addRow(f"Price per kg ({self.currency})", self.price)
+            form.addRow(language.tr("Material"), self.material)
+            form.addRow(language.tr("Price per kg ({currency})").format(
+                currency=self.currency), self.price)
             layout.addLayout(form)
             self.material.currentTextChanged.connect(self.refresh)
             self.price.valueChanged.connect(self.refresh)
@@ -186,15 +209,15 @@ class AnalysisDialog(QDialog):
             self.min_wall.setSuffix(" mm")
             self.min_wall.setValue(float(settings.value(
                 "analysis/min_wall", analysis.DEFAULT_MIN_WALL)))
-            form.addRow("Overhang limit", self.overhang)
-            form.addRow("Minimum wall", self.min_wall)
+            form.addRow(language.tr("Overhang limit"), self.overhang)
+            form.addRow(language.tr("Minimum wall"), self.min_wall)
             layout.addLayout(form)
             row = QHBoxLayout()
-            self.show_box = QCheckBox("Show overhangs and thin walls on "
-                                      "the model")
+            self.show_box = QCheckBox(language.tr(
+                "Show overhangs and thin walls on the model"))
             self.show_box.toggled.connect(self._toggle_highlight)
             row.addWidget(self.show_box)
-            again = QPushButton("Check again")
+            again = QPushButton(language.tr("Check again"))
             again.clicked.connect(self.refresh)
             row.addWidget(again)
             layout.addLayout(row)
@@ -220,10 +243,10 @@ class AnalysisDialog(QDialog):
             self.browser.setHtml(interference_html(self.report))
             return
         tris, approx = part_tris(self.window_, self.nodes)
-        self.note.setText(
+        self.note.setText(language.tr(
             "The mesh comes from the built-in preview, which only "
             "approximates booleans (holes uncut) — figures are "
-            "approximate until the exact render lands." if approx else "")
+            "approximate until the exact render lands.") if approx else "")
         if self.kind == "mass":
             material = self.material.currentText()
             price = self.price.value()
@@ -277,8 +300,8 @@ def open_analysis(window, kind, nodes=None):
                      if n.visible and n.type not in ("variables",
                                                      "masters", "assign")]
         if not nodes:
-            window.statusBar().showMessage(
-                "Nothing to analyse — select a part, or build one.", 4000)
+            window.statusBar().showMessage(language.tr(
+                "Nothing to analyse — select a part, or build one."), 4000)
             return None
         dialog = AnalysisDialog(window, kind, nodes)
     dialog.show()

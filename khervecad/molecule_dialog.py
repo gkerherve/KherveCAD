@@ -30,6 +30,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QFormLayout,
                              QPushButton, QRadioButton, QTabWidget,
                              QVBoxLayout, QWidget)
 
+from . import language
 from . import molecule as mol
 from . import molecule_build as mb
 from .protein_dialog import ProteinTab
@@ -55,7 +56,7 @@ EXAMPLES = (
 def _styles():
     box = QComboBox()
     for label, value in STYLE_CHOICES:
-        box.addItem(label, value)
+        box.addItem(language.tr(label), value)
     return box
 
 
@@ -65,7 +66,7 @@ class CompoundBuilder(QDialog):
     def __init__(self, window):
         super().__init__(window)
         self.window_ = window
-        self.setWindowTitle("Compound Builder")
+        self.setWindowTitle(language.tr("Compound Builder"))
         self.setModal(False)
         # the tabs connect their widgets to it as they are built
         self._timer = QTimer(self)
@@ -75,15 +76,15 @@ class CompoundBuilder(QDialog):
         layout = QVBoxLayout(self)
         self.tabs = QTabWidget()
         layout.addWidget(self.tabs)
-        self.tabs.addTab(self._molecule_tab(), "Molecule")
-        self.tabs.addTab(self._reaction_tab(), "Reaction")
+        self.tabs.addTab(self._molecule_tab(), language.tr("Molecule"))
+        self.tabs.addTab(self._reaction_tab(), language.tr("Reaction"))
         self.protein_tab = ProteinTab(self._timer.start)
-        self.tabs.addTab(self.protein_tab, "Protein")
+        self.tabs.addTab(self.protein_tab, language.tr("Protein"))
         buttons = QHBoxLayout()
-        self.go = QPushButton("Build")
+        self.go = QPushButton(language.tr("Build"))
         self.go.setDefault(True)
         self.go.clicked.connect(self.build_now)
-        close = QPushButton("Close")
+        close = QPushButton(language.tr("Close"))
         close.clicked.connect(self.close)
         buttons.addStretch(1)
         buttons.addWidget(self.go)
@@ -96,8 +97,8 @@ class CompoundBuilder(QDialog):
     def _molecule_tab(self):
         page = QWidget()
         form = QFormLayout(page)
-        self.from_library = QRadioButton("From the library")
-        self.from_smiles = QRadioButton("From SMILES")
+        self.from_library = QRadioButton(language.tr("From the library"))
+        self.from_smiles = QRadioButton(language.tr("From SMILES"))
         self.from_library.setChecked(True)
         pick = QHBoxLayout()
         pick.addWidget(self.from_library)
@@ -114,16 +115,16 @@ class CompoundBuilder(QDialog):
             for key, (name, _s, _c, _f) in members:
                 self.compound.addItem(f"   {name}", key)
         self.compound.setCurrentIndex(self.compound.findData("caffeine"))
-        form.addRow("Compound:", self.compound)
+        form.addRow(language.tr("Compound:"), self.compound)
         self.smiles = QLineEdit()
-        self.smiles.setPlaceholderText("e.g. CCO (ethanol), c1ccccc1O "
-                                       "(phenol)")
-        form.addRow("SMILES:", self.smiles)
+        self.smiles.setPlaceholderText(
+            language.tr("e.g. CCO (ethanol), c1ccccc1O (phenol)"))
+        form.addRow(language.tr("SMILES:"), self.smiles)
         self.name = QLineEdit()
-        self.name.setPlaceholderText("optional name")
-        form.addRow("Name:", self.name)
+        self.name.setPlaceholderText(language.tr("optional name"))
+        form.addRow(language.tr("Name:"), self.name)
         self.mol_style = _styles()
-        form.addRow("Style:", self.mol_style)
+        form.addRow(language.tr("Style:"), self.mol_style)
         self.mol_info = QLabel()
         self.mol_info.setWordWrap(True)
         self.mol_info.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -139,25 +140,26 @@ class CompoundBuilder(QDialog):
         page = QWidget()
         form = QFormLayout(page)
         self.example = QComboBox()
-        self.example.addItem("Examples…", "")
+        self.example.addItem(language.tr("Examples…"), "")
         for label, eq in EXAMPLES:
-            self.example.addItem(label, eq)
+            self.example.addItem(language.tr(label), eq)
         self.example.currentIndexChanged.connect(self._use_example)
         form.addRow(self.example)
         self.equation = QLineEdit("CH4 + O2 -> CO2 + H2O")
-        self.equation.setToolTip(
+        self.equation.setToolTip(language.tr(
             "Species: library names or keys (ethanol), formulas (H2O, "
             "NH4+, SO4^2-) or smiles:... ; arrows -> <=> → ⇌ ; "
-            "coefficients optional")
-        form.addRow("Equation:", self.equation)
-        self.balance = QCheckBox("Balance it (find the coefficients)")
+            "coefficients optional"))
+        form.addRow(language.tr("Equation:"), self.equation)
+        self.balance = QCheckBox(
+            language.tr("Balance it (find the coefficients)"))
         self.balance.setChecked(True)
         form.addRow(self.balance)
-        self.labels = QCheckBox("Formula under each molecule")
+        self.labels = QCheckBox(language.tr("Formula under each molecule"))
         self.labels.setChecked(False)
         form.addRow(self.labels)
         self.rx_style = _styles()
-        form.addRow("Style:", self.rx_style)
+        form.addRow(language.tr("Style:"), self.rx_style)
         self.rx_info = QLabel()
         self.rx_info.setWordWrap(True)
         self.rx_info.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -178,7 +180,7 @@ class CompoundBuilder(QDialog):
         if self.from_smiles.isChecked():
             text = self.smiles.text().strip()
             if not text:
-                raise mb.BuildError("Type a SMILES string.")
+                raise mb.BuildError(language.tr("Type a SMILES string."))
             try:
                 return mol.from_smiles(text, name=self.name.text().strip()
                                        or text)
@@ -216,20 +218,32 @@ class CompoundBuilder(QDialog):
             return
         self.go.setEnabled(True)
         if self.tabs.currentIndex() == 0:
-            info.setText(f"<b>{stats['formula']}</b> — {stats['molar_mass']}"
-                         f" g/mol, {stats['atoms']} atoms, {stats['bonds']} "
-                         f"bonds<br>SMILES {stats['smiles']}<br>≈ "
-                         f"{stats['triangles']:,} triangles")
+            info.setText(language.tr(
+                "<b>{formula}</b> — {molar_mass} g/mol, {atoms} atoms, "
+                "{bonds} bonds<br>SMILES {smiles}<br>≈ {triangles:,} "
+                "triangles").format(
+                    formula=stats['formula'], molar_mass=stats['molar_mass'],
+                    atoms=stats['atoms'], bonds=stats['bonds'],
+                    smiles=stats['smiles'], triangles=stats['triangles']))
         elif self.tabs.currentIndex() == 2:
             info.setText(self.protein_tab.describe(stats))
         else:
-            verdict = ("balanced" if stats["balanced"] else
-                       "<span style='color:#c0392b'>does not balance: " +
-                       ", ".join(f"{k} {a:g} → {b:g}" for k, (a, b) in
-                                 stats["atom_balance"].items() if a != b)
-                       + "</span>")
-            info.setText(f"<b>{stats['equation']}</b><br>{verdict}<br>≈ "
-                         f"{stats['triangles']:,} triangles")
+            if stats["balanced"]:
+                verdict = language.tr("balanced")
+            else:
+                mismatch = ", ".join(
+                    f"{k} {a:g} → {b:g}" for k, (a, b) in
+                    stats["atom_balance"].items() if a != b)
+                verdict = (
+                    "<span style='color:#c0392b'>"
+                    + language.tr("does not balance: {mismatch}").format(
+                        mismatch=mismatch)
+                    + "</span>")
+            info.setText(language.tr(
+                "<b>{equation}</b><br>{verdict}<br>≈ {triangles:,} "
+                "triangles").format(
+                    equation=stats['equation'], verdict=verdict,
+                    triangles=stats['triangles']))
 
     # ----------------------------------------------------------- build
     def build_now(self):
@@ -238,11 +252,13 @@ class CompoundBuilder(QDialog):
             out = mb.apply(self.window_, code, stats,
                            stats.get("segments", 16))
         except (mb.BuildError, ValueError) as exc:
-            QMessageBox.warning(self, "Compound Builder", str(exc))
+            QMessageBox.warning(self, language.tr("Compound Builder"),
+                                str(exc))
             return
         names = ", ".join(o["name"] for o in out.get("objects", []))
         self.window_.statusBar().showMessage(
-            f"Built {names}. " + " ".join(out.get("notes", [])), 10000)
+            language.tr("Built {names}.").format(names=names)
+            + " " + " ".join(out.get("notes", [])), 10000)
 
 
 def open_builder(window):
