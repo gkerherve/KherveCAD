@@ -38,20 +38,29 @@ from PyQt5.QtWidgets import (QAction, QActionGroup, QColorDialog, QComboBox,
 from . import city as C
 from . import city_buildings as B
 from . import city_items as CI
-from . import icons
+from . import icons, language
 from .city_trees import TREE_KINDS
 from .house_dialog import MetreSpin
 
 from .city_buildings import DEFAULT_SIZE  # noqa: E402
 
-TOOLS = (("select", "mdi.cursor-default-outline", "Select and move (S)"),
-         ("road", "mdi.road-variant", "Draw a road: click its points, "
-          "double-click or Enter to finish (D)"),
-         ("building", "mdi.home-city-outline", "Place a building (B)"),
-         ("tree", "mdi.pine-tree", "Plant a tree (T)"),
-         ("light", "mdi.lightbulb-outline", "Place a street light (L)"),
-         ("prop", "mdi.shape-plus", "Place a library piece — park, court, "
-          "lamp, traffic light, landscape (P)"))
+
+def _tools():
+    return (
+        ("select", "mdi.cursor-default-outline",
+         language.tr("Select and move (S)")),
+        ("road", "mdi.road-variant", language.tr(
+            "Draw a road: click its points, double-click or Enter to "
+            "finish (D)")),
+        ("building", "mdi.home-city-outline",
+         language.tr("Place a building (B)")),
+        ("tree", "mdi.pine-tree", language.tr("Plant a tree (T)")),
+        ("light", "mdi.lightbulb-outline",
+         language.tr("Place a street light (L)")),
+        ("prop", "mdi.shape-plus", language.tr(
+            "Place a library piece — park, court, lamp, traffic "
+            "light, landscape (P)")),
+    )
 
 #: library sections the piece tool offers
 PROP_CATEGORIES = ("Buildings", "Park & sport", "Lighting & signals",
@@ -358,7 +367,8 @@ class ColorButton(QPushButton):
         self.setStyleSheet(f"background:{colour}; color:{text};")
 
     def _choose(self):
-        c = QColorDialog.getColor(QColor(self.colour), self, "Colour")
+        c = QColorDialog.getColor(QColor(self.colour), self,
+                                  language.tr("Colour"))
         if c.isValid():
             self.set_colour(c.name())
             self.on_pick(c.name())
@@ -370,7 +380,7 @@ class CityBuilder(QDialog):
     def __init__(self, window):
         super().__init__(window)
         self.window = window
-        self.setWindowTitle("City Builder")
+        self.setWindowTitle(language.tr("City Builder"))
         self.setWindowFlag(Qt.WindowMaximizeButtonHint, True)
         self.resize(1300, 820)
         self.spec = empty_spec()
@@ -401,12 +411,13 @@ class CityBuilder(QDialog):
         right = QVBoxLayout()
         self.canvas = CityCanvas(self)
         right.addWidget(self._toolbar())
-        right.addWidget(_hint(
-            "Click a piece to select it (with any tool), drag to move it "
-            "(0.5 m grid), drag its round handle to turn it 0-360° or press "
-            "R / Shift+R; Shift+drag on empty ground selects several. "
-            "Delete removes. Roads: click each point, double-click or Enter "
-            "to finish. Drag empty space to pan, wheel to zoom."))
+        right.addWidget(_hint(language.tr(
+            "Click a piece to select it (with any tool), drag to move "
+            "it (0.5 m grid), drag its round handle to turn it "
+            "0-360° or press R / Shift+R; Shift+drag on empty ground "
+            "selects several. Delete removes. Roads: click each "
+            "point, double-click or Enter to finish. Drag empty "
+            "space to pan, wheel to zoom.")))
         right.addWidget(self.canvas, 1)
         bottom = QHBoxLayout()
         self.coords = QLabel("")
@@ -414,8 +425,9 @@ class CityBuilder(QDialog):
         bottom.addWidget(self.counts)
         bottom.addStretch(1)
         bottom.addWidget(self.coords)
-        self.build_btn = QPushButton(icons.icon("mdi.city-variant-outline"),
-                                     "  Build into the document")
+        self.build_btn = QPushButton(
+            icons.icon("mdi.city-variant-outline"),
+            "  " + language.tr("Build into the document"))
         self.build_btn.setDefault(True)
         self.build_btn.clicked.connect(self._build)
         bottom.addWidget(self.build_btn)
@@ -426,7 +438,7 @@ class CityBuilder(QDialog):
         bar = QToolBar()
         self.tool_actions = {}
         group = QActionGroup(self)
-        for key, icon, tip in TOOLS:
+        for key, icon, tip in _tools():
             act = QAction(icons.icon(icon), tip.split(" (")[0].split(":")[0],
                           self)
             act.setToolTip(tip)
@@ -438,42 +450,46 @@ class CityBuilder(QDialog):
         self.tool_actions["select"].setChecked(True)
         bar.addSeparator()
         for icon, text, slot in (
-                ("mdi.rotate-left", "Turn left", lambda: self._rotate_selected(90)),
-                ("mdi.rotate-right", "Turn right",
+                ("mdi.rotate-left", language.tr("Turn left"),
+                 lambda: self._rotate_selected(90)),
+                ("mdi.rotate-right", language.tr("Turn right"),
                  lambda: self._rotate_selected(-90)),
-                ("mdi.delete-outline", "Delete", self._remove_selected),
-                ("mdi.fit-to-page-outline", "Fit", self.canvas.fit)):
+                ("mdi.delete-outline", language.tr("Delete"),
+                 self._remove_selected),
+                ("mdi.fit-to-page-outline", language.tr("Fit"),
+                 self.canvas.fit)):
             act = bar.addAction(icons.icon(icon), text)
             act.triggered.connect(slot)
         return bar
 
     def _generate_group(self):
-        box = QGroupBox("1  Start from a layout")
+        box = QGroupBox(language.tr("1  Start from a layout"))
         form = QFormLayout(box)
         self.layout_combo = QComboBox()
         self.layout_combo.addItems(["village", "town", "city"])
         self.blocks = QSpinBox()
         self.blocks.setRange(0, 12)
-        self.blocks.setSpecialValueText("auto")
+        self.blocks.setSpecialValueText(language.tr("auto"))
         self.seed = QSpinBox()
         self.seed.setRange(1, 99999)
-        form.addRow("Layout", self.layout_combo)
-        form.addRow("Blocks", self.blocks)
-        form.addRow("Seed", self.seed)
+        form.addRow(language.tr("Layout"), self.layout_combo)
+        form.addRow(language.tr("Blocks"), self.blocks)
+        form.addRow(language.tr("Seed"), self.seed)
         row = QHBoxLayout()
-        gen = QPushButton("Generate")
+        gen = QPushButton(language.tr("Generate"))
         gen.clicked.connect(self._generate)
-        clear = QPushButton("Clear plan")
+        clear = QPushButton(language.tr("Clear plan"))
         clear.clicked.connect(self._clear)
         row.addWidget(gen)
         row.addWidget(clear)
         form.addRow(row)
-        form.addRow(_hint("Generating replaces the plan; every piece stays "
-                          "editable afterwards."))
+        form.addRow(_hint(language.tr(
+            "Generating replaces the plan; every piece stays editable "
+            "afterwards.")))
         return box
 
     def _place_group(self):
-        box = QGroupBox("3  What the tools place")
+        box = QGroupBox(language.tr("3  What the tools place"))
         form = QFormLayout(box)
         self.style_combo = QComboBox()
         self.style_combo.addItems(list(B.STYLES))
@@ -482,9 +498,9 @@ class CityBuilder(QDialog):
         self.road_combo = QComboBox()
         self.road_combo.addItems(list(C.ROAD_KINDS))
         self.road_combo.setCurrentText("street")
-        form.addRow("Building", self.style_combo)
-        form.addRow("Tree", self.tree_combo)
-        form.addRow("Road", self.road_combo)
+        form.addRow(language.tr("Building"), self.style_combo)
+        form.addRow(language.tr("Tree"), self.tree_combo)
+        form.addRow(language.tr("Road"), self.road_combo)
         from .library import PARTS
         self.prop_combo = QComboBox()
         for cat in PROP_CATEGORIES:
@@ -496,9 +512,9 @@ class CityBuilder(QDialog):
         self.prop_size = QComboBox()
         self.prop_colour = QComboBox()
         self.prop_combo.currentIndexChanged.connect(self._fill_prop_combos)
-        form.addRow("Library piece", self.prop_combo)
-        form.addRow("  size", self.prop_size)
-        form.addRow("  look", self.prop_colour)
+        form.addRow(language.tr("Library piece"), self.prop_combo)
+        form.addRow("  " + language.tr("size"), self.prop_size)
+        form.addRow("  " + language.tr("look"), self.prop_colour)
         self._fill_prop_combos()
         return box
 
@@ -534,9 +550,9 @@ class CityBuilder(QDialog):
         return dims
 
     def _editor_group(self):
-        box = QGroupBox("4  Selected")
+        box = QGroupBox(language.tr("4  Selected"))
         lay = QVBoxLayout(box)
-        self.sel_label = QLabel("Nothing selected")
+        self.sel_label = QLabel(language.tr("Nothing selected"))
         self.sel_label.setWordWrap(True)
         lay.addWidget(self.sel_label)
         self.stack = QStackedWidget()
@@ -590,16 +606,19 @@ class CityBuilder(QDialog):
         self.b_roof_mat.addItems(list(B.ROOFS))
         self.b_roof_mat.activated.connect(self._roof_mat_changed)
         self.b_roof_col = ColorButton(lambda c: self._set_b("roof_color", c))
-        for label, widget in (("Name", self.b_name), ("Style", self.b_style),
-                              ("Floors", self.b_floors),
-                              ("Floor height", self.b_fh),
-                              ("Width (along front)", self.b_w),
-                              ("Depth", self.b_d), ("Rotation", self.b_rz),
-                              ("Walls", self.b_wall),
-                              ("Wall colour", self.b_wall_col),
-                              ("Roof", self.b_roof),
-                              ("Roof covering", self.b_roof_mat),
-                              ("Roof colour", self.b_roof_col)):
+        for label, widget in (
+                (language.tr("Name"), self.b_name),
+                (language.tr("Style"), self.b_style),
+                (language.tr("Floors"), self.b_floors),
+                (language.tr("Floor height"), self.b_fh),
+                (language.tr("Width (along front)"), self.b_w),
+                (language.tr("Depth"), self.b_d),
+                (language.tr("Rotation"), self.b_rz),
+                (language.tr("Walls"), self.b_wall),
+                (language.tr("Wall colour"), self.b_wall_col),
+                (language.tr("Roof"), self.b_roof),
+                (language.tr("Roof covering"), self.b_roof_mat),
+                (language.tr("Roof colour"), self.b_roof_col)):
             f.addRow(label, widget)
         return w
 
@@ -615,9 +634,9 @@ class CityBuilder(QDialog):
         self.r_walk = MetreSpin(0.0, 10.0, 0.25)
         self.r_walk.valueChanged.connect(
             lambda _v: self._set_r("sidewalk", self.r_walk.mm()))
-        f.addRow("Kind", self.r_kind)
-        f.addRow("Carriageway", self.r_width)
-        f.addRow("Pavement each side", self.r_walk)
+        f.addRow(language.tr("Kind"), self.r_kind)
+        f.addRow(language.tr("Carriageway"), self.r_width)
+        f.addRow(language.tr("Pavement each side"), self.r_walk)
         return w
 
     def _tree_editor(self):
@@ -629,8 +648,8 @@ class CityBuilder(QDialog):
         self.t_height = MetreSpin(1.0, 40.0, 0.5)
         self.t_height.valueChanged.connect(
             lambda _v: self._set_t("height", self.t_height.mm()))
-        f.addRow("Kind", self.t_kind)
-        f.addRow("Height", self.t_height)
+        f.addRow(language.tr("Kind"), self.t_kind)
+        f.addRow(language.tr("Height"), self.t_height)
         return w
 
     def _light_editor(self):
@@ -643,9 +662,9 @@ class CityBuilder(QDialog):
         self.l_rz.setSuffix("°")
         self.l_rz.setKeyboardTracking(False)
         self.l_rz.valueChanged.connect(lambda v: self._set_l(v))
-        face = QPushButton("Face the nearest road")
+        face = QPushButton(language.tr("Face the nearest road"))
         face.clicked.connect(self._face_road)
-        f.addRow("Facing", self.l_rz)
+        f.addRow(language.tr("Facing"), self.l_rz)
         f.addRow(face)
         return w
 
@@ -663,24 +682,25 @@ class CityBuilder(QDialog):
         self.p_rz.setSuffix("°")
         self.p_rz.setKeyboardTracking(False)
         self.p_rz.valueChanged.connect(self._set_p_rz)
-        f.addRow("Size", self.p_size)
-        f.addRow("Look", self.p_look)
-        f.addRow("Rotation", self.p_rz)
+        f.addRow(language.tr("Size"), self.p_size)
+        f.addRow(language.tr("Look"), self.p_look)
+        f.addRow(language.tr("Rotation"), self.p_rz)
         return w
 
     def _ground_group(self):
         """2 Ground: flat grass, or a landscape the city is built on —
         roads follow its slopes, buildings stand on levelled pads."""
         from .city_ground import KINDS
-        box = QGroupBox("2  Ground (landscape)")
+        box = QGroupBox(language.tr("2  Ground (landscape)"))
         form = QFormLayout(box)
         self.terrain_kind = QComboBox()
-        self.terrain_kind.addItem("Flat", "flat")
+        self.terrain_kind.addItem(language.tr("Flat"), "flat")
         for kind in KINDS:
-            self.terrain_kind.addItem(kind.capitalize(), kind)
+            self.terrain_kind.addItem(language.tr(kind.capitalize()), kind)
         self.terrain_relief = MetreSpin(1.0, 500.0, 5.0, decimals=0)
         self.terrain_relief.set_mm(30000)
-        self.terrain_kind.addItem("Measured (map import)", "heights")
+        self.terrain_kind.addItem(
+            language.tr("Measured (map import)"), "heights")
         self.terrain_seed = QSpinBox()
         self.terrain_seed.setRange(1, 99999)
         self.terrain_rough = QSpinBox()
@@ -688,22 +708,22 @@ class CityBuilder(QDialog):
         self.terrain_rough.setSingleStep(10)
         self.terrain_rough.setSuffix(" %")
         self.terrain_rough.setValue(50)
-        self.terrain_rough.setToolTip(
-            "0 %: long smooth swells · 50 %: as generated · 100 %: tight, "
-            "bumpy ground with hummocks and hollows")
+        self.terrain_rough.setToolTip(language.tr(
+            "0 %: long smooth swells · 50 %: as generated · 100 %: "
+            "tight, bumpy ground with hummocks and hollows"))
         for w in (self.terrain_kind, self.terrain_relief, self.terrain_seed,
                   self.terrain_rough):
             sig = (w.currentIndexChanged if isinstance(w, QComboBox)
                    else w.valueChanged)
             sig.connect(self._terrain_changed)
-        form.addRow("Landscape", self.terrain_kind)
-        form.addRow("Relief", self.terrain_relief)
-        form.addRow("Shape", self.terrain_seed)
-        form.addRow("Roughness", self.terrain_rough)
-        form.addRow(_hint("The city is built on it: streets climb and dip "
-                          "with the hills, every building gets a levelled "
-                          "pad and a foundation. The plan shades the "
-                          "relief."))
+        form.addRow(language.tr("Landscape"), self.terrain_kind)
+        form.addRow(language.tr("Relief"), self.terrain_relief)
+        form.addRow(language.tr("Shape"), self.terrain_seed)
+        form.addRow(language.tr("Roughness"), self.terrain_rough)
+        form.addRow(_hint(language.tr(
+            "The city is built on it: streets climb and dip with the "
+            "hills, every building gets a levelled pad and a "
+            "foundation. The plan shades the relief.")))
         return box
 
     def _terrain_changed(self, _v=None):
@@ -735,24 +755,25 @@ class CityBuilder(QDialog):
         self.canvas.show_relief(self.spec)
 
     def _along_group(self):
-        box = QGroupBox("5  Along the roads")
+        box = QGroupBox(language.tr("5  Along the roads"))
         form = QFormLayout(box)
         self.spacing = MetreSpin(5.0, 200.0, 1.0, decimals=0)
         self.spacing.set_mm(30000)
-        form.addRow("Spacing", self.spacing)
+        form.addRow(language.tr("Spacing"), self.spacing)
         row = QHBoxLayout()
-        lights = QPushButton("Line with lights")
-        lights.setToolTip("Replace every street light with a row along "
-                          "both pavements of every road")
+        lights = QPushButton(language.tr("Line with lights"))
+        lights.setToolTip(language.tr(
+            "Replace every street light with a row along both "
+            "pavements of every road"))
         lights.clicked.connect(self._line_lights)
-        trees = QPushButton("Add street trees")
+        trees = QPushButton(language.tr("Add street trees"))
         trees.clicked.connect(self._line_trees)
         row.addWidget(lights)
         row.addWidget(trees)
         form.addRow(row)
         self.margin = MetreSpin(0.0, 500.0, 5.0, decimals=0)
         self.margin.valueChanged.connect(self._margin_changed)
-        form.addRow("Grass beyond the plan", self.margin)
+        form.addRow(language.tr("Grass beyond the plan"), self.margin)
         return box
 
     # ------------------------------------------------------------ state
@@ -801,10 +822,12 @@ class CityBuilder(QDialog):
 
     def _update_counts(self):
         s = self.spec
-        self.counts.setText(
-            f"{len(s['roads'])} roads · {len(s['buildings'])} buildings · "
-            f"{len(s['trees'])} trees · {len(s['lights'])} lights · "
-            f"{len(s.get('props') or [])} library pieces")
+        self.counts.setText(language.tr(
+            "{roads} roads · {buildings} buildings · {trees} trees · "
+            "{lights} lights · {props} library pieces").format(
+                roads=len(s['roads']), buildings=len(s['buildings']),
+                trees=len(s['trees']), lights=len(s['lights']),
+                props=len(s.get('props') or [])))
 
     def set_tool(self, tool):
         if tool != "road":
@@ -843,8 +866,8 @@ class CityBuilder(QDialog):
         try:
             if kind is None:
                 self.stack.setCurrentIndex(0)
-                self.sel_label.setText("Nothing selected — click a piece "
-                                       "on the plan.")
+                self.sel_label.setText(language.tr(
+                    "Nothing selected — click a piece on the plan."))
                 return
             item = self.canvas.items_by_id.get(id(s))
             self.sel_label.setText(item.label() if item else "")
@@ -1115,9 +1138,10 @@ class CityBuilder(QDialog):
         except RuntimeError:                   # the scene is being cleared
             return
         if len(items) > 1:
-            self.sel_label.setText(f"{len(items)} pieces selected — drag one "
-                                   "to move them all, R turns each, Delete "
-                                   "removes them.")
+            self.sel_label.setText(language.tr(
+                "{count} pieces selected — drag one to move them all, "
+                "R turns each, Delete removes them.").format(
+                    count=len(items)))
 
     def _set_p_rz(self, value):
         if self._quiet or self._kind_of(self.selected) != "props":
@@ -1135,8 +1159,8 @@ class CityBuilder(QDialog):
     def _generate(self):
         if (self.spec["roads"] or self.spec["buildings"]) and \
                 QMessageBox.question(
-                    self, "Generate",
-                    "Replace the plan with a generated layout?") \
+                    self, language.tr("Generate"), language.tr(
+                        "Replace the plan with a generated layout?")) \
                 != QMessageBox.Yes:
             return
         try:
@@ -1145,15 +1169,17 @@ class CityBuilder(QDialog):
                                   seed=self.seed.value(),
                                   terrain=self.spec.get("terrain")))
         except C.CityError as exc:
-            QMessageBox.warning(self, "Generate", str(exc))
+            QMessageBox.warning(self, language.tr("Generate"), str(exc))
             return
         self.spec = spec
         self.selected = None
         self._refresh(fit=True)
 
     def _clear(self):
-        if QMessageBox.question(self, "Clear plan", "Remove every road, "
-                                "building, tree and light from the plan?") \
+        if QMessageBox.question(
+                self, language.tr("Clear plan"), language.tr(
+                    "Remove every road, building, tree and light from "
+                    "the plan?")) \
                 != QMessageBox.Yes:
             return
         self.spec = empty_spec()
@@ -1182,14 +1208,16 @@ class CityBuilder(QDialog):
         try:
             result = C.apply(self.window.model, self.spec)
         except C.CityError as exc:
-            QMessageBox.warning(self, "City Builder", str(exc))
+            QMessageBox.warning(self, language.tr("City Builder"), str(exc))
             return
         self._loaded = json.dumps(self.window.model.city, sort_keys=True)
         self.window.view3d.fit()
         c = result["counts"]
-        self.window.statusBar().showMessage(
-            f"City built: {c['buildings']} buildings, {c['roads']} roads, "
-            f"{c['trees']} trees, {c['lights']} lights", 6000)
+        self.window.statusBar().showMessage(language.tr(
+            "City built: {buildings} buildings, {roads} roads, "
+            "{trees} trees, {lights} lights").format(
+                buildings=c['buildings'], roads=c['roads'],
+                trees=c['trees'], lights=c['lights']), 6000)
 
 
 def open_builder(window):
