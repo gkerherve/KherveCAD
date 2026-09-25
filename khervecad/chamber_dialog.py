@@ -41,6 +41,7 @@ from PyQt5.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox,
                              QVBoxLayout, QWidget)
 
 from . import chamber_design as cd
+from . import language
 
 #: accessory -> map colour
 COLOURS = {"open": "#9aa0a6", "blank": "#b9bfc7", "viewport": "#6fc3df",
@@ -54,8 +55,13 @@ COLOURS = {"open": "#9aa0a6", "blank": "#b9bfc7", "viewport": "#6fc3df",
            "carousel": "#2fb3a0", "wobble": "#5fa35f", "rga": "#b35f9a",
            "door": "#9aa0a6", "kf_blank": "#b9bfc7", "pirani": "#e0a040"}
 
-COLUMNS = ("Name", "Flange", "θ (°)", "φ (°)", "Focus", "Length",
-           "Accessory", "Variant", "Spin (°)")
+def _columns():
+    return (language.tr("Name"), language.tr("Flange"), "θ (°)", "φ (°)",
+           language.tr("Focus"), language.tr("Length"),
+           language.tr("Accessory"), language.tr("Variant"),
+           language.tr("Spin (°)"))
+
+
 SPINS = {"theta": 2, "phi": 3, "focus": 4, "length": 5, "spin": 8}
 
 
@@ -114,19 +120,20 @@ class PortMap(QWidget):
         text = pal.text().color()
         self._paint_map(qp, text)
         top, side = self._view_rects()
-        self._paint_view(qp, top, "Top view (looking down)", text,
-                         lambda d: (d[0], -d[1]))
-        self._paint_view(qp, side, "Side view (chamber axis up)", text,
-                         lambda d: (d[0], -d[2]))
+        self._paint_view(qp, top, language.tr("Top view (looking down)"),
+                         text, lambda d: (d[0], -d[1]))
+        self._paint_view(qp, side,
+                         language.tr("Side view (chamber axis up)"),
+                         text, lambda d: (d[0], -d[2]))
         qp.end()
 
     def _paint_map(self, qp, text):
         r = self._map_rect()
         qp.setPen(QPen(text, 1))
         qp.setFont(QFont(qp.font().family(), 8))
-        qp.drawText(QPointF(r.left(), r.top() - 8),
-                    "Port directions — φ across, θ down (drag to aim, "
-                    "double-click to add)")
+        qp.drawText(QPointF(r.left(), r.top() - 8), language.tr(
+                    "Port directions — φ across, θ down (drag to "
+                    "aim, double-click to add)"))
         grid = QColor(text)
         grid.setAlpha(50)
         for k in range(0, 361, 45):
@@ -236,9 +243,10 @@ class PortMap(QWidget):
                 qp.drawText(QPointF(c.x() + 8, c.y() + 4), f"{f:g}")
         if not top_view and (s["rx"] or s["ry"] or s["rz"]):
             qp.setPen(QPen(text, 1))
-            qp.drawText(QPointF(rect.left(), rect.bottom()),
-                        f"turned {s['rx']:g}°, {s['ry']:g}°, {s['rz']:g}° "
-                        "(chamber frame shown)")
+            qp.drawText(QPointF(rect.left(), rect.bottom()), language.tr(
+                        "turned {rx:g}°, {ry:g}°, {rz:g}° (chamber "
+                        "frame shown)").format(rx=s['rx'], ry=s['ry'],
+                                               rz=s['rz']))
 
     # ------------------------------------------------------------- mouse
     def _hit(self, pos):
@@ -283,7 +291,7 @@ class ChamberDesigner(QDialog):
     def __init__(self, window):
         super().__init__(window)
         self.window_ = window
-        self.setWindowTitle("Chamber Designer")
+        self.setWindowTitle(language.tr("Chamber Designer"))
         self.setModal(False)
         self.resize(1180, 760)
         self.spec = cd.preset(next(iter(cd.PRESETS)))
@@ -307,18 +315,19 @@ class ChamberDesigner(QDialog):
         self.info.setTextInteractionFlags(Qt.TextSelectableByMouse)
         layout.addWidget(self.info)
         buttons = QHBoxLayout()
-        for label, slot in (("Load…", self.load), ("Save…", self.save)):
+        for label, slot in ((language.tr("Load…"), self.load),
+                           (language.tr("Save…"), self.save)):
             b = QPushButton(label)
             b.clicked.connect(slot)
             buttons.addWidget(b)
         buttons.addStretch(1)
-        self.update_btn = QPushButton("Update last build")
+        self.update_btn = QPushButton(language.tr("Update last build"))
         self.update_btn.clicked.connect(lambda: self.build_now(True))
         self.update_btn.setEnabled(False)
-        self.go = QPushButton("Build")
+        self.go = QPushButton(language.tr("Build"))
         self.go.setDefault(True)
         self.go.clicked.connect(lambda: self.build_now(False))
-        close = QPushButton("Close")
+        close = QPushButton(language.tr("Close"))
         close.clicked.connect(self.close)
         for b in (self.update_btn, self.go, close):
             buttons.addWidget(b)
@@ -327,20 +336,20 @@ class ChamberDesigner(QDialog):
 
     # ------------------------------------------------------------ panels
     def _body_box(self):
-        box = QGroupBox("Chamber")
+        box = QGroupBox(language.tr("Chamber"))
         form = QFormLayout(box)
         self.preset = QComboBox()
-        self.preset.addItem("Start from a preset…", "")
+        self.preset.addItem(language.tr("Start from a preset…"), "")
         for name in cd.PRESETS:
             self.preset.addItem(name, name)
         self.preset.activated.connect(self._use_preset)
         form.addRow(self.preset)
         self.name = QLineEdit()
-        form.addRow("Name:", self.name)
+        form.addRow(language.tr("Name:"), self.name)
         self.body = QComboBox()
         for b in cd.BODIES:
-            self.body.addItem(b.capitalize(), b)
-        form.addRow("Body:", self.body)
+            self.body.addItem(language.tr(b.capitalize()), b)
+        form.addRow(language.tr("Body:"), self.body)
 
         def spin(lo, hi, step=1.0, suffix=" mm"):
             s = QDoubleSpinBox()
@@ -350,29 +359,29 @@ class ChamberDesigner(QDialog):
             s.setSuffix(suffix)
             return s
         self.radius = spin(20.0, 1000.0, 5.0)
-        form.addRow("Radius (half-width):", self.radius)
+        form.addRow(language.tr("Radius (half-width):"), self.radius)
         self.height = spin(20.0, 3000.0, 10.0)
-        form.addRow("Height (cylinder):", self.height)
+        form.addRow(language.tr("Height (cylinder):"), self.height)
         self.wall = spin(0.5, 50.0, 0.5)
-        form.addRow("Wall:", self.wall)
-        self.liner = QCheckBox("Mu-metal liner inside")
+        form.addRow(language.tr("Wall:"), self.wall)
+        self.liner = QCheckBox(language.tr("Mu-metal liner inside"))
         form.addRow(self.liner)
         self.liner_gap = spin(1.0, 100.0, 1.0)
-        form.addRow("Liner gap:", self.liner_gap)
+        form.addRow(language.tr("Liner gap:"), self.liner_gap)
         self.liner_t = spin(0.2, 10.0, 0.1)
-        form.addRow("Liner thickness:", self.liner_t)
+        form.addRow(language.tr("Liner thickness:"), self.liner_t)
         self.bench = QComboBox()
         for key, label in cd.BENCHES.items():
-            self.bench.addItem(label, key)
-        form.addRow("Bench:", self.bench)
+            self.bench.addItem(language.tr(label), key)
+        form.addRow(language.tr("Bench:"), self.bench)
         self.beam = spin(0.0, 3000.0, 10.0)
-        form.addRow("Focal point height:", self.beam)
+        form.addRow(language.tr("Focal point height:"), self.beam)
         self.bench_w = spin(0.0, 4000.0, 50.0)
-        self.bench_w.setSpecialValueText("automatic")
-        form.addRow("Bench width:", self.bench_w)
+        self.bench_w.setSpecialValueText(language.tr("automatic"))
+        form.addRow(language.tr("Bench width:"), self.bench_w)
         self.bench_d = spin(0.0, 4000.0, 50.0)
-        self.bench_d.setSpecialValueText("automatic")
-        form.addRow("Bench depth:", self.bench_d)
+        self.bench_d.setSpecialValueText(language.tr("automatic"))
+        form.addRow(language.tr("Bench depth:"), self.bench_d)
         turn = QHBoxLayout()
         self.rx, self.ry, self.rz = (spin(-180.0, 180.0, 5.0, " °")
                                      for _k in range(3))
@@ -381,14 +390,14 @@ class ChamberDesigner(QDialog):
             w.setDecimals(0)
             turn.addWidget(QLabel(label))
             turn.addWidget(w)
-        form.addRow("Turn the chamber:", turn)
-        hint = QLabel("θ is measured from the chamber's own axis (0° up "
-                      "it, 90° equator, 180° down), φ from +X. A port aims "
-                      "at its focal point — a height on the manipulator "
-                      "axis — and its length is measured from there to the "
-                      "sealing face; a tool on it reaches that point. The "
-                      "chamber and everything on it turn together; the "
-                      "bench stays level.")
+        form.addRow(language.tr("Turn the chamber:"), turn)
+        hint = QLabel(language.tr(
+            "θ is measured from the chamber's own axis (0° up it, "
+            "90° equator, 180° down), φ from +X. A port aims at its "
+            "focal point — a height on the manipulator axis — and "
+            "its length is measured from there to the sealing face; "
+            "a tool on it reaches that point. The chamber and "
+            "everything on it turn together; the bench stays level."))
         hint.setWordWrap(True)
         form.addRow(hint)
         for w in (self.radius, self.height, self.wall, self.liner_gap,
@@ -406,8 +415,8 @@ class ChamberDesigner(QDialog):
         box = QWidget()
         v = QVBoxLayout(box)
         v.setContentsMargins(0, 0, 0, 0)
-        self.table = QTableWidget(0, len(COLUMNS))
-        self.table.setHorizontalHeaderLabels(COLUMNS)
+        self.table = QTableWidget(0, len(_columns()))
+        self.table.setHorizontalHeaderLabels(_columns())
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         head = self.table.horizontalHeader()
@@ -415,10 +424,12 @@ class ChamberDesigner(QDialog):
         self.table.itemSelectionChanged.connect(self._row_changed)
         v.addWidget(self.table)
         row = QHBoxLayout()
-        for label, slot in (("Add port", lambda: self._add_port(90.0, 0.0)),
-                            ("Duplicate", self._duplicate),
-                            ("Remove", self._remove),
-                            ("Shortest length", self._shortest)):
+        for label, slot in (
+                (language.tr("Add port"),
+                 lambda: self._add_port(90.0, 0.0)),
+                (language.tr("Duplicate"), self._duplicate),
+                (language.tr("Remove"), self._remove),
+                (language.tr("Shortest length"), self._shortest)):
             b = QPushButton(label)
             b.clicked.connect(slot)
             row.addWidget(b)
@@ -484,7 +495,8 @@ class ChamberDesigner(QDialog):
             self.table.setCellWidget(i, SPINS[key], box)
         acc = QComboBox()
         for key, (label, _pid, fam) in cd.ACCESSORIES.items():
-            acc.addItem(label if fam == "any" else f"{label} ({fam})", key)
+            text = language.tr(label)
+            acc.addItem(text if fam == "any" else f"{text} ({fam})", key)
         acc.setCurrentIndex(acc.findData(p["accessory"]))
         acc.currentIndexChanged.connect(
             lambda _i, r=i, w=acc: self._set_accessory(r, w.currentData()))
@@ -494,7 +506,7 @@ class ChamberDesigner(QDialog):
     def _variant_box(self, i, p):
         box = QComboBox()
         rows = cd.variants(p["accessory"])
-        box.addItem("default", "")
+        box.addItem(language.tr("default"), "")
         for row in rows:
             box.addItem(row, row)
         box.setCurrentIndex(max(box.findData(p.get("variant") or ""), 0))
@@ -526,7 +538,8 @@ class ChamberDesigner(QDialog):
         if self._loading:
             return
         s = self.spec
-        s.update(name=self.name.text().strip() or "UHV chamber",
+        s.update(name=self.name.text().strip()
+                 or language.tr("UHV chamber"),
                  body=self.body.currentData(), radius=self.radius.value(),
                  height=self.height.value(), wall=self.wall.value(),
                  liner=self.liner.isChecked(),
@@ -554,10 +567,13 @@ class ChamberDesigner(QDialog):
         self.map.update()
         n = len(self.spec["ports"])
         if problems:
-            self.info.setText(f"{n} ports. <span style='color:#c0392b'>"
-                              + "; ".join(problems) + "</span>")
+            self.info.setText(
+                language.tr("{count} ports.").format(count=n)
+                + " <span style='color:#c0392b'>"
+                + "; ".join(problems) + "</span>")
         else:
-            self.info.setText(f"{n} ports, no clashes.")
+            self.info.setText(
+                language.tr("{count} ports, no clashes.").format(count=n))
 
     def _current(self):
         rows = self.table.selectionModel().selectedRows()
@@ -633,23 +649,25 @@ class ChamberDesigner(QDialog):
     # ------------------------------------------------------------ files
     def save(self):
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save chamber", f"{self.spec['name']}.json",
+            self, language.tr("Save chamber"), f"{self.spec['name']}.json",
             "Chamber (*.json)")
         if path:
             with open(path, "w", encoding="utf-8") as fh:
                 json.dump(self.spec, fh, indent=2, ensure_ascii=False)
 
     def load(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Load chamber", "",
-                                              "Chamber (*.json)")
+        path, _ = QFileDialog.getOpenFileName(
+            self, language.tr("Load chamber"), "", "Chamber (*.json)")
         if not path:
             return
         try:
             with open(path, encoding="utf-8") as fh:
                 self._load_spec(json.load(fh))
         except (OSError, ValueError, TypeError, KeyError) as exc:
-            QMessageBox.warning(self, "Chamber Designer",
-                                f"Could not read the chamber:\n{exc}")
+            QMessageBox.warning(self, language.tr("Chamber Designer"),
+                                language.tr(
+                                    "Could not read the chamber:\n"
+                                    "{error}").format(error=exc))
 
     # ------------------------------------------------------------ build
     def build_now(self, replace=False):
@@ -657,8 +675,10 @@ class ChamberDesigner(QDialog):
         try:
             node = cd.build(self.spec)
         except Exception as exc:                 # noqa: BLE001
-            QMessageBox.warning(self, "Chamber Designer",
-                                f"Could not build the chamber:\n{exc}")
+            QMessageBox.warning(self, language.tr("Chamber Designer"),
+                                language.tr(
+                                    "Could not build the chamber:\n"
+                                    "{error}").format(error=exc))
             return
         old = self.built
         if replace and old is not None and old.parent is not None:
@@ -676,8 +696,9 @@ class ChamberDesigner(QDialog):
             self.window_.view3d.fit()
         except AttributeError:
             pass
-        self.window_.statusBar().showMessage(
-            f"Built {node.name}: {len(self.spec['ports'])} ports.", 8000)
+        self.window_.statusBar().showMessage(language.tr(
+            "Built {name}: {count} ports.").format(
+                name=node.name, count=len(self.spec['ports'])), 8000)
 
 
 def open_designer(window):
