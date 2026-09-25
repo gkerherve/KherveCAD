@@ -136,5 +136,5 @@ def test_set_color_takes_a_material(app):
     node = ex._model.find(out["colored"][0])
     assert node.params["material"] == "Gold"
     bad = ex.execute("set_color", {"ids": [cube], "color": "#fff",
-                                   "material": "Velvet"})
-    assert "Velvet" in bad["error"]
+                                   "material": "Tweed"})
+    assert "Tweed" in bad["error"]
