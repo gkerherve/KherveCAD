@@ -94,7 +94,8 @@ class Host:
     """
 
     def __init__(self, key, label, paths, note="", manual=False,
-                 cli=None, shape="mcpServers", entry_extra=None):
+                 cli=None, shape="mcpServers", entry_extra=None,
+                 mac_app=None):
         self.key = key
         self.label = label
         self._paths = paths
@@ -106,6 +107,10 @@ class Host:
         self.shape = shape
         #: Extra keys this client wants inside the entry itself.
         self.entry_extra = entry_extra or {}
+        #: the macOS app that owns the file while it runs. Claude Desktop
+        #: keeps its settings in memory and writes them back, so an entry
+        #: added while it is open vanished a minute later
+        self.mac_app = mac_app
         self._override_path = None
 
     # ── What is being connected (overridable) ───────────────────
@@ -274,6 +279,57 @@ class Host:
         return {"ok": True, "host": self.label, "path": p,
                 "backup": backup, "action": "removed", "restart": True}
 
+    # ── A host that rewrites its own file while it runs ─────────
+    def is_running(self) -> bool:
+        """Is the app that owns this config open (macOS only)?"""
+        if not self.mac_app or sys.platform != "darwin":
+            return False
+        try:
+            return subprocess.run(["pgrep", "-x", self.mac_app],
+                                  capture_output=True,
+                                  timeout=5).returncode == 0
+        except (OSError, subprocess.SubprocessError):
+            return False
+
+    def _quit_app(self, wait_s: float = 20.0) -> bool:
+        try:
+            subprocess.run(["osascript", "-e",
+                            f'tell application "{self.mac_app}" to quit'],
+                           capture_output=True, timeout=10)
+        except (OSError, subprocess.SubprocessError):
+            return False
+        end = time.time() + wait_s
+        while time.time() < end:
+            if not self.is_running():
+                time.sleep(0.5)          # let it finish writing its file
+                return True
+            time.sleep(0.25)
+        return False
+
+    def _open_app(self):
+        try:
+            subprocess.Popen(["open", "-a", self.mac_app])
+        except OSError:
+            pass
+
+    def connect_restarting(self) -> dict:
+        """connect(), with the owning app quit first and reopened after,
+        so it reads the new entry instead of overwriting it. The entry is
+        checked on disk before the app comes back."""
+        was_open = self.is_running()
+        if was_open and not self._quit_app():
+            return {"ok": False, "host": self.label,
+                    "error": f"{self.label} did not quit. Quit it yourself "
+                             "(Cmd+Q), then press Connect again."}
+        out = self.connect()
+        if out.get("ok") and not self.connected():
+            out = {"ok": False, "host": self.label,
+                   "error": f"The entry did not stay in {self.path()}."}
+        if was_open:
+            self._open_app()
+            out["reopened"] = True
+        return out
+
     # ── CLI-managed hosts ───────────────────────────────────────
     #
     # Claude Code keeps its servers in ~/.claude.json alongside a great
@@ -330,7 +386,8 @@ HOSTS = [
                   "claude_desktop_config.json",
         "win": "%APPDATA%/Claude/claude_desktop_config.json",
         "linux": "~/.config/Claude/claude_desktop_config.json",
-    }, note="Restart Claude Desktop to pick up the change."),
+    }, note="Restart Claude Desktop to pick up the change.",
+       mac_app="Claude"),
     Host("claude-code", "Claude Code", {
         "darwin": "~/.claude.json",
         "win": "~/.claude.json",

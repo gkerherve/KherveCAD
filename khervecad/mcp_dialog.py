@@ -404,6 +404,18 @@ class McpServerDialog(QDialog):
         host = self._selected_host()
         if host is None or not self._require_running():
             return
+        if host.is_running():
+            # it keeps its settings in memory and would write the file
+            # back without us — so quit it, write, and reopen it
+            if QMessageBox.question(
+                    self, language.tr("Connect to Claude"), language.tr(
+                        "{app} is open and would undo this change the "
+                        "next time it saves its settings. Quit it, "
+                        "connect, and open it again now?").format(
+                            app=host.label)) != QMessageBox.Yes:
+                return
+            self._report(host.connect_restarting())
+            return
         self._report(host.connect())
 
     def _on_other_host(self):

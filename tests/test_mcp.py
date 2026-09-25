@@ -623,3 +623,29 @@ def test_tunnel_reports_a_public_link_from_a_fake_program(live, tmp_path):
         f"https://fake-link.trycloudflare.com/mcp/{bridge.token()}"
     bridge.stop()
     assert not bridge.tunnel.is_running() and bridge.tunnel_url() == ""
+
+
+def test_a_running_host_is_quit_written_and_reopened(tmp_path, monkeypatch):
+    """Claude Desktop rewrites its config from memory while it runs: an
+    entry written under it vanished. connect_restarting quits it first."""
+    import json as _json
+    import sys as _sys
+    from khervecad import mcp_hosts
+    cfg = tmp_path / "claude_desktop_config.json"
+    cfg.write_text(_json.dumps({"mcpServers": {"other": {"command": "x"}}}))
+    h = mcp_hosts.Host("t", "Claude Desktop", {_sys.platform[:3]: str(cfg)},
+                       mac_app="Claude")
+    state = {"running": True, "quit": 0, "opened": 0}
+    monkeypatch.setattr(h, "is_running", lambda: state["running"])
+
+    def quit_app(wait_s=20.0):
+        state["quit"] += 1
+        state["running"] = False
+        return True
+    monkeypatch.setattr(h, "_quit_app", quit_app)
+    monkeypatch.setattr(h, "_open_app",
+                        lambda: state.__setitem__("opened", 1))
+    out = h.connect_restarting()
+    assert out["ok"] and out["reopened"]
+    assert state == {"running": False, "quit": 1, "opened": 1}
+    assert mcp_hosts.SERVER_NAME in _json.loads(cfg.read_text())["mcpServers"]
