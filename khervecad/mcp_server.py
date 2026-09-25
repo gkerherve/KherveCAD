@@ -464,6 +464,35 @@ rather than computing coordinates: the builder reads each part's depth \
 and turns it to face the room. Each piece becomes its own Object inside \
 its floor's Object. Look with render_view from Top, orthographic.
 
+Air conditioning — a split system always has an INDOOR unit and an \
+OUTDOOR one, piped together THROUGH A WALL; never draw that pipework \
+by hand:
+- One insert_part of "hvac_split_system" (category "Air \
+conditioning", size = the BTU rating) builds both units AND the \
+liquid + insulated-gas refrigerant lines and condensate drain between \
+them, routed straight through a wall sleeve. dims wall_thickness, \
+outdoor_offset (the outdoor unit's sideways shift along the wall), \
+outdoor_gap (its clearance off the wall face) and indoor_height (the \
+indoor unit's mounting height) shape the run; leave them unset for \
+sensible defaults.
+- Placing it against a real wall: the part's own origin (x, y, z = 0, \
+rz) is the FLOOR directly below where the indoor unit hangs, with its \
+BACK flush on the wall's inside face — put x/y/rz there (rz turns the \
+whole system to face into the room) and set wall_thickness to that \
+wall's real thickness (get_node_bounds on the wall, or the house \
+spec's own wall thickness) so the pipe run neither floats short of \
+the outside face nor pokes through it.
+- Need the two units on their own (different rooms, a longer run, a \
+bend round a corner) — insert_part "hvac_indoor_unit" (it hangs near \
+the ceiling by itself in a House Builder room) and \
+"hvac_outdoor_unit" (ground-standing) separately, then pipe them: \
+both cabinets carry the same three connectors — liquid, insulated \
+gas, drain — at their BACK face, near the bottom-left corner; \
+probe_surface the back of each to find the exact points, then a \
+`kcad_sweep(path = [[x, y, z], ...]) { circle(r = 8); }` (or a chain \
+of capsules for a short bare run) carries the bundle from one to the \
+other through the wall.
+
 People & characters:
 - Build people with build_character (call list_character_options \
 first): a preset (Doctor, Chef, Runner, Grandmother, Construction \

@@ -30,6 +30,8 @@ SECTIONS = [
         ("Electronics", "mdi.chip",
          ["Electronics boards", "Electronic components",
           "Electronics lab"]),
+        ("Air conditioning", "mdi.air-conditioner",
+         ["Air conditioning"]),
         ("3D printing", "mdi.printer-3d",
          ["Printed joints & hinges", "Printed organisers", "Enclosures",
           "Prusa"]),
