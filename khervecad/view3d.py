@@ -524,6 +524,9 @@ class View3D(QWidget):
     #: the model and nothing else — no grid, axes, badge, selection or
     #: anchors — optionally on a transparent ground.
     _clean = False
+    #: the CAD furniture: ground grid, X/Y/Z axes and the status line.
+    #: A viewer built on this view (KherveHouse) turns it off.
+    cad_furniture = True
     _transparent = False
 
     def set_view(self, name: str):
@@ -565,7 +568,7 @@ class View3D(QWidget):
         Returns ``(image, camera_state)``."""
         from PyQt5.QtCore import QPoint, QSize
         from PyQt5.QtGui import QImage, QPainter, QRegion
-        twin = View3D()
+        twin = type(self)()
         twin.lighting_bar.hide()
         twin._clean, twin._transparent = bool(clean), bool(transparent)
         ratio = max(float(pixel_ratio or 1.0), 1.0)
@@ -1033,7 +1036,7 @@ class View3D(QWidget):
         # the stage (platform & shadow) belongs in an exported picture;
         # the grid is viewport furniture and does not
         if not self._draw_stage(painter, t, eye, right, up, forward) \
-                and not self._clean:
+                and not self._clean and self.cad_furniture:
             self._draw_ground(painter, t, eye, right, up, forward)
         if self.reference_images:
             from . import refimage
@@ -1361,7 +1364,8 @@ class View3D(QWidget):
         if self._clean:                  # an exported picture: model only
             painter.end()
             return
-        self._draw_axes(painter, t, eye, right, up, forward)
+        if self.cad_furniture:
+            self._draw_axes(painter, t, eye, right, up, forward)
         pair = BACKGROUNDS.get(self.background)
         if pair is None:
             painter.setPen(QColor(t["text"]))
@@ -1373,7 +1377,8 @@ class View3D(QWidget):
             scalebar.draw(painter, self.width(), self.height(),
                           scalebar.px_per_unit(self), self.unit,
                           painter.pen().color(), self.real_scale)
-        painter.drawText(8, self.height() - 8,
+        if self.cad_furniture:
+            painter.drawText(8, self.height() - 8,
                          language.tr("{source} — {count} triangles "
                                     "· {style}").format(
                              source=self.source, count=len(self.mesh),
