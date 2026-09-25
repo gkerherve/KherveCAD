@@ -19,33 +19,35 @@ from PyQt5.QtWidgets import (QComboBox, QDialog, QDialogButtonBox,
                              QFormLayout, QLineEdit, QMessageBox,
                              QPlainTextEdit)
 
-from . import icons, user_library
+from . import icons, language, user_library
 
 
 def add_menu(window, menu):
     """Library ▸ My Library, rebuilt on every opening."""
-    sub = menu.addMenu(icons.icon("mdi.bookshelf"), "My Library")
+    sub = menu.addMenu(icons.icon("mdi.bookshelf"), language.tr("My "
+                                                                 "Library"))
 
     def fill():
         from . import library
         sub.clear()
         sub.addAction(icons.icon("mdi.content-save-outline"),
-                      "Save Selection to My Library...",
+                      language.tr("Save Selection to My Library..."),
                       lambda: save_selection(window))
         sub.addAction(icons.icon("mdi.folder-cog-outline"),
-                      "Manage My Library...",
+                      language.tr("Manage My Library..."),
                       lambda: ManageDialog(window).exec_())
         sub.addAction(icons.icon("mdi.folder-open-outline"),
-                      "Open My Library Folder",
+                      language.tr("Open My Library Folder"),
                       lambda: open_folder())
-        auto = sub.addAction("Save New Objects Automatically")
+        auto = sub.addAction(
+            language.tr("Save New Objects Automatically"))
         auto.setCheckable(True)
         auto.setChecked(autosave_enabled())
         auto.toggled.connect(lambda on: QSettings(
             "Kherve", "KherveCAD").setValue(AUTOSAVE_KEY, bool(on)))
         mine = user_library.refresh(library.PARTS)
         if not mine:
-            empty = sub.addAction("(nothing saved yet)")
+            empty = sub.addAction(language.tr("(nothing saved yet)"))
             empty.setEnabled(False)
             return
         sub.addSeparator()
@@ -87,29 +89,32 @@ def sections():
 class SaveDialog(QDialog):
     def __init__(self, parent, title=""):
         super().__init__(parent)
-        self.setWindowTitle("Save to My Library")
+        self.setWindowTitle(language.tr("Save to My Library"))
         form = QFormLayout(self)
         self.title = QLineEdit(title)
-        self.title.setPlaceholderText("What it is, with its key size — "
-                                      "e.g. Shelf bracket, 150 mm, 2 screws")
+        self.title.setPlaceholderText(language.tr(
+            "What it is, with its key size — e.g. Shelf bracket, "
+            "150 mm, 2 screws"))
         self.section = QComboBox()
         self.section.setEditable(True)
         self.section.addItems(sections())
         self.section.setCurrentText(user_library.choose_section(
             "", title))
-        self.section.setToolTip("The area of work — its folder. Type a "
-                                "new name to make a new folder.")
+        self.section.setToolTip(language.tr(
+            "The area of work — its folder. Type a new name to make "
+            "a new folder."))
         self.description = QPlainTextEdit()
-        self.description.setPlaceholderText(
-            "What it is for, its overall size, its parameters and what "
-            "they change, how it is built. This is what a search — yours "
-            "or the assistant's — reads.")
+        self.description.setPlaceholderText(language.tr(
+            "What it is for, its overall size, its parameters and "
+            "what they change, how it is built. This is what a "
+            "search — yours or the assistant's — reads."))
         self.tags = QLineEdit()
-        self.tags.setPlaceholderText("Search words, comma separated")
-        form.addRow("Title", self.title)
-        form.addRow("Section", self.section)
-        form.addRow("Description", self.description)
-        form.addRow("Tags", self.tags)
+        self.tags.setPlaceholderText(
+            language.tr("Search words, comma separated"))
+        form.addRow(language.tr("Title"), self.title)
+        form.addRow(language.tr("Section"), self.section)
+        form.addRow(language.tr("Description"), self.description)
+        form.addRow(language.tr("Tags"), self.tags)
         buttons = QDialogButtonBox(QDialogButtonBox.Save
                                    | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self.accept)
@@ -133,15 +138,16 @@ def save_selection(window, node=None):
         picked = tree.selected_nodes() if hasattr(tree, "selected_nodes") \
             else []
         node = picked[0] if picked else None
+    title = language.tr("My Library")
     if node is None:
-        QMessageBox.information(window, "My Library",
-                                "Select the Object to save first.")
+        QMessageBox.information(window, title, language.tr(
+            "Select the Object to save first."))
         return None
     dlg = SaveDialog(window, node.name)
     while dlg.exec_():
         v = dlg.values()
         if not v["title"]:
-            QMessageBox.warning(dlg, "My Library", "Give it a title.")
+            QMessageBox.warning(dlg, title, language.tr("Give it a title."))
             continue
         model = window.model
         try:
@@ -151,7 +157,7 @@ def save_selection(window, node=None):
                                       source="user",
                                       global_fn=model.global_fn)
         except (ValueError, OSError) as exc:
-            QMessageBox.warning(window, "My Library", str(exc))
+            QMessageBox.warning(window, title, str(exc))
             return None
         if node.type == "component":
             user_library.unignore(saved["uid"])
@@ -159,7 +165,8 @@ def save_selection(window, node=None):
                                   source="user")
         user_library.refresh(library.PARTS)
         window.statusBar().showMessage(
-            f"Saved to My Library: {saved['path']}", 8000)
+            language.tr("Saved to My Library: {path}").format(
+                path=saved['path']), 8000)
         return saved
     return None
 
@@ -265,8 +272,8 @@ class AutoSaver(QObject):
             user_library.refresh(library.PARTS)
             try:
                 self.window.statusBar().showMessage(
-                    "Saved to My Library: " + ", ".join(
-                        s["title"] for s in saved), 6000)
+                    language.tr("Saved to My Library: {titles}").format(
+                        titles=", ".join(s["title"] for s in saved)), 6000)
             except Exception:
                 pass
         return saved
@@ -297,20 +304,21 @@ class ManageDialog(QDialog):
     def __init__(self, window):
         super().__init__(window)
         self.window = window
-        self.setWindowTitle("Manage My Library")
+        self.setWindowTitle(language.tr("Manage My Library"))
         self.resize(900, 560)
         layout = QHBoxLayout(self)
         left = QVBoxLayout()
         self.tree = QTreeWidget()
-        self.tree.setHeaderLabels(["Section / part"])
+        self.tree.setHeaderLabels([language.tr("Section / part")])
         self.tree.itemSelectionChanged.connect(self._picked)
         left.addWidget(self.tree)
         row = QHBoxLayout()
-        for text, slot in (("New section...", self._new_section),
-                           ("Import files...", self._import),
-                           ("Rename...", self._rename),
-                           ("Delete", self._delete),
-                           ("Open folder", open_folder)):
+        for text, slot in (
+                (language.tr("New section..."), self._new_section),
+                (language.tr("Import files..."), self._import),
+                (language.tr("Rename..."), self._rename),
+                (language.tr("Delete"), self._delete),
+                (language.tr("Open folder"), open_folder)):
             b = QPushButton(text)
             b.clicked.connect(slot)
             row.addWidget(b)
@@ -326,13 +334,13 @@ class ManageDialog(QDialog):
         self.path = QLabel()
         self.path.setWordWrap(True)
         self.path.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        save = QPushButton("Save changes")
+        save = QPushButton(language.tr("Save changes"))
         save.clicked.connect(self._save_changes)
-        form.addRow("Title", self.title)
-        form.addRow("Section", self.section)
-        form.addRow("Description", self.description)
-        form.addRow("Tags", self.tags)
-        form.addRow("File", self.path)
+        form.addRow(language.tr("Title"), self.title)
+        form.addRow(language.tr("Section"), self.section)
+        form.addRow(language.tr("Description"), self.description)
+        form.addRow(language.tr("Tags"), self.tags)
+        form.addRow(language.tr("File"), self.path)
         form.addRow(save)
         layout.addWidget(panel, 4)
         self.reload()
@@ -395,7 +403,7 @@ class ManageDialog(QDialog):
         self.reload(select)
 
     def _warn(self, exc):
-        QMessageBox.warning(self, "My Library", str(exc))
+        QMessageBox.warning(self, language.tr("My Library"), str(exc))
 
     def _save_changes(self):
         kind, path = self._current()
@@ -416,8 +424,9 @@ class ManageDialog(QDialog):
         self._done(new)
 
     def _new_section(self):
-        name, ok = QInputDialog.getText(self, "New section",
-                                        "Name of the area:")
+        name, ok = QInputDialog.getText(
+            self, language.tr("New section"),
+            language.tr("Name of the area:"))
         if ok and name.strip():
             try:
                 user_library.add_section(name)
@@ -427,7 +436,8 @@ class ManageDialog(QDialog):
 
     def _import(self):
         paths, _ = QFileDialog.getOpenFileNames(
-            self, "Add to My Library", "", "KherveCAD (*.kcad)")
+            self, language.tr("Add to My Library"), "",
+            "KherveCAD (*.kcad)")
         kind, path = self._current()
         section = ""
         if kind == "section":
@@ -443,8 +453,9 @@ class ManageDialog(QDialog):
         kind, path = self._current()
         if kind == "section":
             old = self.tree.currentItem().text(0)
-            new, ok = QInputDialog.getText(self, "Rename section",
-                                           "New name:", text=old)
+            new, ok = QInputDialog.getText(
+                self, language.tr("Rename section"),
+                language.tr("New name:"), text=old)
             if ok and new.strip() and new != old:
                 try:
                     user_library.rename_section(old, new)
@@ -459,13 +470,14 @@ class ManageDialog(QDialog):
         kind, path = self._current()
         if kind not in ("part", "section"):
             return
-        what = ("the section and every part in it" if kind == "section"
-                else "this part")
+        what = (language.tr("the section and every part in it")
+                if kind == "section" else language.tr("this part"))
         name = self.tree.currentItem().text(0)
         if QMessageBox.question(
-                self, "My Library",
-                f"Move {what} ({name}) to the trash?\nAutosave will not "
-                "bring it back.") != QMessageBox.Yes:
+                self, language.tr("My Library"), language.tr(
+                    "Move {what} ({name}) to the trash?\nAutosave "
+                    "will not bring it back.").format(
+                        what=what, name=name)) != QMessageBox.Yes:
             return
         try:
             user_library.remove(path, trash=trash)
