@@ -86,9 +86,14 @@ def test_translated_chapters_match_english_structure(app, code):
     en = chapters()
     translated = module.chapters()
     assert [a for a, _t, _h in translated] == [a for a, _t, _h in en]
-    en_titles = {t for _a, t, _h in en}
+    # most titles must actually change; a stray cognate (e.g. French
+    # "Collections") is fine, a whole untouched module full of English
+    # titles is not
+    en_titles = [t for _a, t, _h in en]
+    tr_titles = [t for _a, t, _h in translated]
+    unchanged = sum(1 for a, b in zip(en_titles, tr_titles) if a == b)
+    assert unchanged <= max(2, len(en_titles) // 10)
     for (anchor, title, html), (_a, _t, en_html) in zip(translated, en):
-        assert title not in en_titles or anchor == "reference", anchor
         if html == "@reference":
             assert en_html == "@reference"
             continue
