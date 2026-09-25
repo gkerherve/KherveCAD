@@ -25,6 +25,8 @@ LANGUAGES = {
     "zh": "中文",
     "fr": "Français",
     "es": "Español",
+    "ja": "日本語",
+    "hi": "हिन्दी",
 }
 
 _DATA_DIR = Path(__file__).parent / "i18n"
