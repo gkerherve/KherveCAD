@@ -19,8 +19,8 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-from . import (icons, library_kcad, library_kitchen, library_lego_parts,
-               library_music, library_surfaces)
+from . import (icons, language, library_kcad, library_kitchen,
+               library_lego_parts, library_music, library_surfaces)
 from .library_groups import SECTIONS, entry_categories, short_name
 
 #: category -> function(label) -> submenu name, for a category whose
@@ -71,18 +71,18 @@ def _header(menu, text):
     """A section title: a greyed, unclickable line (menu sections lose
     their text in the macOS menu bar)."""
     menu.addSeparator()
-    act = menu.addAction(menu_text(text.upper()))
+    act = menu.addAction(menu_text(language.tr(text).upper()))
     act.setEnabled(False)
 
 
 def build_library_menu(window, menubar):
     from .library import PARTS
-    menu = menubar.addMenu("&Library")
+    menu = menubar.addMenu(language.tr("&Library"))
     menu.addAction(icons.icon("mdi.toy-brick-outline"),
-                   "Part Library (customise)...", window.open_library,
-                   "Ctrl+L")
+                   language.tr("Part Library (customise)..."),
+                   window.open_library, "Ctrl+L")
     menu.addAction(icons.icon("mdi.bookshelf"),
-                   "OpenSCAD Libraries (BOSL2, MCAD...)...",
+                   language.tr("OpenSCAD Libraries (BOSL2, MCAD...)..."),
                    window._open_scad_libraries)
     from .user_library_dialog import add_menu
     add_menu(window, menu)
@@ -107,7 +107,7 @@ def build_library_menu(window, menubar):
                 subs[name] = _home_menu(window, menu, PARTS, cats)
                 continue
             sub = subs[name] = menu.addMenu(icons.icon(icon),
-                                            menu_text(name))
+                                            menu_text(language.tr(name)))
             if special:
                 _BUILDERS[special](window, sub)
             if len(cats) == 1:            # straight into the menu
@@ -115,8 +115,9 @@ def build_library_menu(window, menubar):
                           category=cats[0])
                 continue
             for cat in cats:
-                _add_parts(window, sub.addMenu(menu_text(short_name(cat))),
-                           by_cat[cat], PARTS, category=cat)
+                _add_parts(window, sub.addMenu(
+                    menu_text(language.tr(short_name(cat)))),
+                    by_cat[cat], PARTS, category=cat)
         _add_examples(window, menu, title, subs)
     # My Library has its own live submenu (user_library_dialog)
     rest = [c for c in by_cat if c not in placed
@@ -124,8 +125,8 @@ def build_library_menu(window, menubar):
     if rest:
         _header(menu, "Other")
         for cat in rest:
-            _add_parts(window, menu.addMenu(menu_text(cat)), by_cat[cat],
-                       PARTS)
+            _add_parts(window, menu.addMenu(menu_text(language.tr(cat))),
+                       by_cat[cat], PARTS)
     return menu
 
 
@@ -153,12 +154,14 @@ def _add_parts(window, sub, ids, parts, category=None):
 
 def _lego(window, sub):
     from . import lego_builder, lego_convert
-    sub.addAction(icons.icon("mdi.toy-brick-outline"), "Lego Builder...",
+    sub.addAction(icons.icon("mdi.toy-brick-outline"),
+                  language.tr("Lego Builder..."),
                   lambda: lego_builder.open_builder(window))
     sub.addAction(icons.icon("mdi.toy-brick-plus-outline"),
-                  "Convert Selection to Lego...",
+                  language.tr("Convert Selection to Lego..."),
                   lambda: lego_convert.convert_to_lego(window))
-    sub.addAction(icons.icon("mdi.cube-outline"), "Fuse Lego into One Solid",
+    sub.addAction(icons.icon("mdi.cube-outline"),
+                  language.tr("Fuse Lego into One Solid"),
                   lambda: lego_convert.fuse_lego(window))
     sub.addSeparator()
 
@@ -167,7 +170,8 @@ def _city(window, sub):
     """The City Builder and quick random layouts; a build replaces the
     last one. Assistants use build_city."""
     from . import city, city_dialog
-    sub.addAction(icons.icon("mdi.city-variant-outline"), "City Builder...",
+    sub.addAction(icons.icon("mdi.city-variant-outline"),
+                  language.tr("City Builder..."),
                   lambda: city_dialog.open_builder(window))
 
     def build(layout):
@@ -179,9 +183,12 @@ def _city(window, sub):
         if panel is not None:
             panel.load_from_document()
 
-    new = sub.addMenu("New layout (random)")
+    new = sub.addMenu(language.tr("New layout (random)"))
+    layout_labels = {"village": language.tr("Village"),
+                      "town": language.tr("Town"),
+                      "city": language.tr("City")}
     for layout in ("village", "town", "city"):
-        new.addAction(layout.capitalize(),
+        new.addAction(layout_labels[layout],
                       lambda _=False, lay=layout: build(lay))
     sub.addSeparator()
 
@@ -190,21 +197,24 @@ def _cars(window, sub):
     """The Car Builder (paint, wheels, tyres) on top; the cars
     themselves follow as one-click parts."""
     from . import car_dialog
-    sub.addAction(icons.icon("mdi.car-sports"), "Car Builder...",
+    sub.addAction(icons.icon("mdi.car-sports"),
+                  language.tr("Car Builder..."),
                   lambda: car_dialog.open_builder(window))
     sub.addSeparator()
 
 
 def _people(window, sub):
     from . import human_dialog
-    sub.addAction(icons.icon("mdi.human-edit"), "Human Builder...",
+    sub.addAction(icons.icon("mdi.human-edit"),
+                  language.tr("Human Builder..."),
                   lambda: human_dialog.open_builder(window))
     sub.addSeparator()
 
 
 def _crystals(window, sub):
     from . import crystal_dialog
-    sub.addAction(icons.icon("mdi.molecule"), "Crystal Builder...",
+    sub.addAction(icons.icon("mdi.molecule"),
+                  language.tr("Crystal Builder..."),
                   lambda: crystal_dialog.open_builder(window))
     sub.addSeparator()
 
@@ -213,21 +223,24 @@ def _surfaces(window, sub):
     """The Surface Builder (any crystal, any (hkl)) on top; graphene,
     graphite and every crystal's usual faces follow as parts."""
     from . import crystal_surface_dialog
-    sub.addAction(icons.icon("mdi.layers-outline"), "Surface Builder...",
+    sub.addAction(icons.icon("mdi.layers-outline"),
+                  language.tr("Surface Builder..."),
                   lambda: crystal_surface_dialog.open_builder(window))
     sub.addSeparator()
 
 
 def _molecules(window, sub):
     from . import molecule_dialog
-    sub.addAction(icons.icon("mdi.atom"), "Compound Builder...",
+    sub.addAction(icons.icon("mdi.atom"),
+                  language.tr("Compound Builder..."),
                   lambda: molecule_dialog.open_builder(window))
     sub.addSeparator()
 
 
 def _vacuum(window, sub):
     from . import chamber_dialog
-    sub.addAction(icons.icon("mdi.pipe"), "Chamber Designer...",
+    sub.addAction(icons.icon("mdi.pipe"),
+                  language.tr("Chamber Designer..."),
                   lambda: chamber_dialog.open_designer(window))
     sub.addSeparator()
 
@@ -244,27 +257,31 @@ def _home_menu(window, menu, parts, categories):
     room lists under Fixtures & other."""
     from . import house_dialog
     from .house import FURNITURE_CATALOG
-    home = menu.addMenu(icons.icon("mdi.home-city-outline"), "House && home")
-    home.addAction(icons.icon("mdi.home-city-outline"), "House Builder...",
+    home = menu.addMenu(icons.icon("mdi.home-city-outline"),
+                        menu_text(language.tr("House & home")))
+    home.addAction(icons.icon("mdi.home-city-outline"),
+                   language.tr("House Builder..."),
                    lambda: house_dialog.open_builder(window))
     home.addSeparator()
     finished = [pid for pid, spec in parts.items()      # the built designs
                 if spec.get("category") in ("Finished houses", "Houses")]
     if finished:
         _add_parts(window, home.addMenu(icons.icon("mdi.home-outline"),
-                                        "Finished houses"), finished, parts)
+                                        language.tr("Finished houses")),
+                   finished, parts)
         home.addSeparator()
     labs = [pid for pid, spec in parts.items()
             if spec.get("category") == "Finished labs"]
     if labs:
         _add_parts(window, home.addMenu(icons.icon("mdi.microscope"),
-                                        "Finished labs"), labs, parts)
+                                        language.tr("Finished labs")),
+                   labs, parts)
         home.addSeparator()
     commercial = [pid for pid, spec in parts.items()
                   if spec.get("category") == "Finished commercial"]
     if commercial:
         _add_parts(window, home.addMenu(icons.icon("mdi.storefront-outline"),
-                                        "Finished commercial"),
+                                        language.tr("Finished commercial")),
                    commercial, parts)
         home.addSeparator()
     listed = set(finished) | set(labs) | set(commercial)
@@ -272,20 +289,22 @@ def _home_menu(window, menu, parts, categories):
         ids = [pid for pid in ids if pid in parts]
         if not ids:
             continue
-        sub = home.addMenu(menu_text(room if room != "Other"
-                                     else "Other pieces"))
+        sub = home.addMenu(menu_text(language.tr(
+            room if room != "Other" else "Other pieces")))
         _add_parts(window, sub, ids, parts)
         listed.update(ids)
     for cat in HOME_CATEGORY_MENUS:            # the categories that are
         ids = [pid for pid, spec in parts.items()      # a menu of their own
                if spec.get("category") == cat and pid not in listed]
         if ids:
-            _add_parts(window, home.addMenu(menu_text(cat)), ids, parts)
+            _add_parts(window, home.addMenu(menu_text(language.tr(cat))),
+                       ids, parts)
             listed.update(ids)
     rest = [pid for pid, spec in parts.items()
             if spec.get("category") in categories and pid not in listed]
     if rest:
-        _add_parts(window, home.addMenu("Fixtures && other"), rest, parts)
+        _add_parts(window, home.addMenu(
+            menu_text(language.tr("Fixtures & other"))), rest, parts)
     return home
 
 
@@ -302,10 +321,10 @@ def _add_examples(window, menu, section, subs):
             continue
         sub = subs.get(title)
         if sub is None:
-            sub = menu.addMenu(icons.icon(icon), menu_text(title))
+            sub = menu.addMenu(icons.icon(icon), menu_text(language.tr(title)))
         else:
             sub.addSeparator()
-        note = sub.addAction(EXAMPLE_NOTE)
+        note = sub.addAction(language.tr(EXAMPLE_NOTE))
         note.setEnabled(False)
         for label, build in items:
             sub.addAction(menu_text(label),
