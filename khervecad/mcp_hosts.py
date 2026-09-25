@@ -108,6 +108,20 @@ class Host:
         self.entry_extra = entry_extra or {}
         self._override_path = None
 
+    # ── What is being connected (overridable) ───────────────────
+    #: A sibling app built on this module (KherveHouse) subclasses Host
+    #: and overrides these four; everything below reads them.
+    server_name = SERVER_NAME
+
+    def launch(self) -> list:
+        return launch_command()
+
+    def root(self) -> str:
+        return checkout_root()
+
+    def base_entry(self) -> dict:
+        return server_entry()
+
     @classmethod
     def for_file(cls, path: str, shape: str = "mcpServers"):
         """A one-off host for a config file the user picked themselves.
@@ -123,7 +137,7 @@ class Host:
         return h
 
     def entry(self) -> dict:
-        e = dict(server_entry())
+        e = dict(self.base_entry())
         e.update(self.entry_extra)
         return e
 
@@ -148,14 +162,14 @@ class Host:
         doc = self._read()
         if doc is None:
             return False
-        return SERVER_NAME in (doc.get(self.shape) or {})
+        return self.server_name in (doc.get(self.shape) or {})
 
     def up_to_date(self) -> bool:
         """Is the entry present *and* pointing at this installation?"""
         doc = self._read()
         if doc is None:
             return False
-        return (doc.get(self.shape) or {}).get(SERVER_NAME) == \
+        return (doc.get(self.shape) or {}).get(self.server_name) == \
             self.entry()
 
     def status(self) -> str:
@@ -227,8 +241,8 @@ class Host:
         if not isinstance(servers, dict):
             return {"ok": False, "host": self.label, "path": p,
                     "error": f"'{self.shape}' in {p} is not an object."}
-        existed = SERVER_NAME in servers
-        servers[SERVER_NAME] = self.entry()
+        existed = self.server_name in servers
+        servers[self.server_name] = self.entry()
         try:
             backup = self._write(doc)
         except OSError as exc:
@@ -248,10 +262,10 @@ class Host:
             return {"ok": False, "host": self.label,
                     "error": f"Could not read {p}."}
         servers = doc.get(self.shape)
-        if not isinstance(servers, dict) or SERVER_NAME not in servers:
+        if not isinstance(servers, dict) or self.server_name not in servers:
             return {"ok": True, "host": self.label, "path": p,
                     "action": "already absent"}
-        servers.pop(SERVER_NAME)
+        servers.pop(self.server_name)
         try:
             backup = self._write(doc)
         except OSError as exc:
@@ -289,11 +303,11 @@ class Host:
     def _connect_via_cli(self) -> dict:
         # Remove first so a stale entry is replaced rather than
         # rejected: `claude mcp add` refuses a name that already exists.
-        self._run_cli(["mcp", "remove", SERVER_NAME])
-        argv = launch_command()
-        args = ["mcp", "add", SERVER_NAME]
+        self._run_cli(["mcp", "remove", self.server_name])
+        argv = self.launch()
+        args = ["mcp", "add", self.server_name]
         if not getattr(sys, "frozen", False):
-            args += ["-e", f"PYTHONPATH={checkout_root()}"]
+            args += ["-e", f"PYTHONPATH={self.root()}"]
         args += ["--"] + argv
         out = self._run_cli(args)
         if out.get("ok"):
@@ -302,7 +316,7 @@ class Host:
         return out
 
     def _disconnect_via_cli(self) -> dict:
-        out = self._run_cli(["mcp", "remove", SERVER_NAME])
+        out = self._run_cli(["mcp", "remove", self.server_name])
         if out.get("ok"):
             out.update(action="removed", path="managed by the claude CLI",
                        restart=False)
