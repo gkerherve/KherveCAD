@@ -32,7 +32,8 @@ MATERIALS = ["Default", "Plastic", "Metal", "Matte", "Clay", "Glass",
              "Floor tiles", "Checker tiles", "Terrazzo", "Zellige",
              "Floorboards", "Parquet", "Carpet", "Plaster", "Cladding",
              "Shingles", "Thatch", "Standing seam", "Solar panels",
-             "Panelling", "Fabric", "Velvet", "Leather", "Bouclé"]
+             "Panelling", "Fabric", "Velvet", "Leather", "Bouclé",
+             "Wood"]
 
 #: 3D projections (view3d.PROJECTIONS — repeated here because this
 #: module must not import Qt).

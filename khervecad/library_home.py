@@ -483,16 +483,23 @@ def build_sideboard(dims):
     w, d, h = p["w"], p["d"], p["h"]
     wood, dark = _pick(dims, WOODS, "Walnut")
     face = _mix(wood, dark, 0.25)
+    # real timber shows its grain; the White and Black are painted
+    grain = "Wood" if wood in (WOODS["Oak"][0], WOODS["Walnut"][0]) \
+        else "Default"
     n = max(2, int(round(w / 500.0)))
     legs = 130.0
     part = CadNode("union", "Sideboard")
     _legs(part, w, d, 60, legs, 14, dark, r2=20)
-    part.add(_box("Body", -w / 2, -d / 2, legs, w, d, h - legs, wood, r=6))
+    for leg in part.children:
+        leg.params["material"] = grain
+    part.add(_box("Body", -w / 2, -d / 2, legs, w, d, h - legs, wood, r=6,
+                  material=grain))
     fw = (w - 12 - (n - 1) * 4) / n
     for i in range(n):
         x = -w / 2 + 6 + i * (fw + 4)
         part.add(_box("Front", x, -d / 2 - 16, legs + 12, fw, 18,
-                      h - legs - 24, face, r=3))
+                      h - legs - 24, face, r=3,
+                      material=grain))
         part.add(_rod("Handle", (x + fw / 2 - 60, -d / 2 - 22, h - 50),
                       (x + fw / 2 + 60, -d / 2 - 22, h - 50), 7, BRASS))
     return part

@@ -51,7 +51,9 @@ SURFACES = {"Brick": 1, "Concrete": 2, "Render": 3, "Roof tiles": 4,
             "Cladding": 22, "Shingles": 23, "Thatch": 24,
             "Standing seam": 25, "Solar panels": 26, "Panelling": 27,
             # upholstery (sofas, armchairs): weave, pile, grain, loops
-            "Fabric": 28, "Velvet": 29, "Leather": 30, "Bouclé": 31}
+            "Fabric": 28, "Velvet": 29, "Leather": 30, "Bouclé": 31,
+            # furniture timber: flat-sawn grain, pores, veneer leaves
+            "Wood": 32}
 #: (gloss strength, saturation scale) of a surface: glazed tiles and
 #: marble catch the light, carpet and thatch do not
 SURFACE_LOOK = {"Wall tiles": (0.45, 0.95), "Metro tiles": (0.5, 0.95),
@@ -64,7 +66,7 @@ SURFACE_LOOK = {"Wall tiles": (0.45, 0.95), "Metro tiles": (0.5, 0.95),
                 "Standing seam": (0.35, 0.6), "Solar panels": (0.6, 0.9),
                 "Panelling": (0.1, 0.9), "Fabric": (0.0, 0.9),
                 "Velvet": (0.08, 1.0), "Leather": (0.3, 0.95),
-                "Bouclé": (0.0, 0.85)}
+                "Bouclé": (0.0, 0.85), "Wood": (0.22, 1.0)}
 #: roof coverings: their courses run up the slope, not up the world Z
 ROOF_SURFACES = ("Roof tiles", "Slate", "Shingles", "Thatch",
                  "Standing seam", "Solar panels")
@@ -318,6 +320,39 @@ vec3 finishes(float id, vec2 uv, vec3 rgb, float px) {
     c = mix(c, vec3(0.75, 0.78, 0.8), joint(cl.x, 1.2, px) * 0.6);
     return mix(c, vec3(0.7, 0.72, 0.74), joint(m.x, 18.0, px));
 }
+vec3 wood(vec2 uv, vec3 rgb, float px) {
+    // veneer leaves 180 mm wide, each cut from its own part of the log
+    float leaf = floor(uv.y / 180.0);
+    float lh = hash(vec2(leaf, 11.0));
+    float fy = fract(uv.y / 180.0) * 180.0;
+    float x = uv.x + lh * 7000.0;
+    // flat-sawn figure: the log's growth rings sliced at a slant, so
+    // they close into arches (cathedrals) and run straight at the edge
+    float arch = mod(x, 3000.0) - 1500.0;
+    float wob = 45.0 * fbm(vec2(x * 0.0016, fy * 0.004 + lh * 9.0));
+    float r = length(vec2(fy - 70.0 - 60.0 * lh + wob, arch * 0.05));
+    float t = r / (10.0 + 6.0 * lh)
+              + 0.35 * fbm(vec2(x * 0.004, fy * 0.03));
+    float ring = fract(t);
+    // earlywood pale, darkening through the season, a crisp boundary
+    float late = pow(smoothstep(0.15, 0.97, ring), 2.2)
+                 * (1.0 - smoothstep(0.97, 1.0, ring));
+    late = mix(late, 0.3, clamp(px / 8.0, 0.0, 1.0));   // far: blend
+    vec3 c = mix(rgb * (1.12 + 0.08 * lh), rgb * vec3(0.6, 0.53, 0.48),
+                 late * 0.62);
+    // colour drift of the log, and fine fibres along the grain
+    c *= 0.9 + 0.2 * fbm(vec2(x * 0.0009, fy * 0.012 + lh * 4.0));
+    float fibre = noise(vec2(x * 0.05, fy * 1.6));
+    c *= 1.0 + 0.07 * (fibre - 0.5) * (1.0 - smoothstep(0.5, 2.5, px));
+    // open pores: fine dark flecks drawn out along the grain
+    float fine = 1.0 - smoothstep(0.35, 1.3, px);
+    vec2 pc = vec2(x / 3.5, fy / 0.35);
+    float pore = step(0.955, hash(floor(pc)))
+                 * sin(fract(pc.x) * 3.14159);
+    c *= 1.0 - 0.16 * pore * fine;
+    // a hairline where two leaves meet
+    return c * (1.0 - 0.12 * joint(min(fy, 180.0 - fy), 0.2, px) * fine);
+}
 vec3 upholstery(float id, vec2 uv, vec3 n, vec3 rgb, float px) {
     if (id == 28.0) {                      // woven fabric: plain weave
         float fine = 1.0 - smoothstep(0.7, 2.8, px);
@@ -454,6 +489,7 @@ vec3 surface(float id, vec3 n, vec3 rgb, float px) {
         return c + vec3(0.05, 0.08, 0.0) * step(0.8, f);
     }
     if (id >= 9.0 && id <= 17.0) return tiles(id, uv, rgb, px);
+    if (id == 32.0) return wood(uv, rgb, px);
     if (id >= 28.0) return upholstery(id, uv, n, rgb, px);
     if (id >= 18.0) return finishes(id, uv, rgb, px);
     return rgb;
@@ -485,6 +521,7 @@ void main() {
                      (id == 20.0 || id == 21.0) ? 12.0 :
                      (id == 18.0 || id == 22.0 || id == 23.0) ? 140.0 :
                      (id == 25.0) ? 500.0 : (id == 29.0) ? 1e6 :
+                     (id == 32.0) ? 120.0 :
                      (id >= 28.0) ? 80.0 : 100.0;
         float px = length(fwidth(v_pos));
         float fade = smoothstep(feat * 0.5, feat * 1.2, px);
