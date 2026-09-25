@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog,
 
 from . import crystal_build as cb
 from . import crystal_surface as cs
+from . import language
 from .crystal_library import CATEGORIES, LIBRARY
 
 PRESETS = (("Si (111)", "si", "111"), ("Si (100)", "si", "100"),
@@ -43,16 +44,16 @@ class SurfaceBuilder(QDialog):
     def __init__(self, window):
         super().__init__(window)
         self.window_ = window
-        self.setWindowTitle("Surface Builder")
+        self.setWindowTitle(language.tr("Surface Builder"))
         self.setModal(False)
         layout = QVBoxLayout(self)
         form = QFormLayout()
         self.preset = QComboBox()
-        self.preset.addItem("Common surfaces…")
+        self.preset.addItem(language.tr("Common surfaces…"))
         for label, key, hkl in PRESETS:
             self.preset.addItem(label, (key, hkl))
         self.preset.activated.connect(self._use_preset)
-        form.addRow("Preset:", self.preset)
+        form.addRow(language.tr("Preset:"), self.preset)
         self.crystal = QComboBox()
         for cat in CATEGORIES:
             members = [c for c in LIBRARY.values() if c.category == cat]
@@ -64,11 +65,12 @@ class SurfaceBuilder(QDialog):
             for c in members:
                 self.crystal.addItem(f"   {c.name}", c.key)
         self.crystal.setCurrentIndex(self.crystal.findData("si"))
-        form.addRow("Crystal:", self.crystal)
+        form.addRow(language.tr("Crystal:"), self.crystal)
         self.miller = QLineEdit("111")
-        self.miller.setToolTip("Miller indices: 111, 1 1 0, 1-10; four for "
-                               "a hexagonal crystal: 0001, 10-10")
-        form.addRow("Surface (hkl):", self.miller)
+        self.miller.setToolTip(language.tr(
+            "Miller indices: 111, 1 1 0, 1-10; four for a hexagonal "
+            "crystal: 0001, 10-10"))
+        form.addRow(language.tr("Surface (hkl):"), self.miller)
         reps = QHBoxLayout()
         self.repeat = []
         for _axis in "uv":
@@ -77,29 +79,31 @@ class SurfaceBuilder(QDialog):
             box.setValue(8)
             reps.addWidget(box)
             self.repeat.append(box)
-        form.addRow("Surface cells (u × v):", reps)
+        form.addRow(language.tr("Surface cells (u × v):"), reps)
         self.layers = QSpinBox()
         self.layers.setRange(1, 60)
         self.layers.setValue(4)
-        self.layers.setSuffix(" layers")
-        form.addRow("Depth:", self.layers)
-        self.auto_cut = QCheckBox("Cut where the fewest bonds break")
+        self.layers.setSuffix(" " + language.tr("layers"))
+        form.addRow(language.tr("Depth:"), self.layers)
+        self.auto_cut = QCheckBox(
+            language.tr("Cut where the fewest bonds break"))
         self.auto_cut.setChecked(True)
         form.addRow(self.auto_cut)
         self.term = QDoubleSpinBox()
         self.term.setRange(0.0, 0.99)
         self.term.setSingleStep(0.05)
         self.term.setDecimals(3)
-        self.term.setToolTip("Where the cut falls, as a fraction of one "
-                             "layer: picks the terminating plane")
-        form.addRow("Termination:", self.term)
+        self.term.setToolTip(language.tr(
+            "Where the cut falls, as a fraction of one layer: picks "
+            "the terminating plane"))
+        form.addRow(language.tr("Termination:"), self.term)
         self.atom_scale = QDoubleSpinBox()
         self.atom_scale.setRange(0.05, 3.0)
         self.atom_scale.setSingleStep(0.05)
         self.atom_scale.setValue(1.0)
-        self.atom_scale.setSuffix(" × covalent radius")
-        form.addRow("Atom size:", self.atom_scale)
-        self.cell_box = QCheckBox("Draw the slab's base plate")
+        self.atom_scale.setSuffix(" " + language.tr("× covalent radius"))
+        form.addRow(language.tr("Atom size:"), self.atom_scale)
+        self.cell_box = QCheckBox(language.tr("Draw the slab's base plate"))
         self.cell_box.setChecked(True)
         form.addRow(self.cell_box)
         layout.addLayout(form)
@@ -108,10 +112,10 @@ class SurfaceBuilder(QDialog):
         self.estimate.setTextInteractionFlags(Qt.TextSelectableByMouse)
         layout.addWidget(self.estimate)
         buttons = QHBoxLayout()
-        self.go = QPushButton("Build")
+        self.go = QPushButton(language.tr("Build"))
         self.go.setDefault(True)
         self.go.clicked.connect(self.build_now)
-        close = QPushButton("Close")
+        close = QPushButton(language.tr("Close"))
         close.clicked.connect(self.close)
         buttons.addStretch(1)
         buttons.addWidget(self.go)
@@ -151,8 +155,8 @@ class SurfaceBuilder(QDialog):
         try:
             _code, st = cs.program(replace(self.spec(), prefix="x"))
         except cb.BuildError as exc:
-            self.estimate.setText(f"<span style='color:#c0392b'>{exc}"
-                                  "</span>")
+            self.estimate.setText(
+                f"<span style='color:#c0392b'>{exc}</span>")
             self.go.setEnabled(False)
             return
         self.go.setEnabled(True)
@@ -166,11 +170,13 @@ class SurfaceBuilder(QDialog):
         try:
             stats = cs.apply(self.window_, self.spec())
         except cb.BuildError as exc:
-            QMessageBox.warning(self, "Surface Builder", str(exc))
+            QMessageBox.warning(self, language.tr("Surface Builder"),
+                                str(exc))
             return
-        self.window_.statusBar().showMessage(
-            f"Built {stats['surface']} — {stats['atoms']:,} atoms. "
-            + " ".join(stats.get("notes", [])), 12000)
+        self.window_.statusBar().showMessage(language.tr(
+            "Built {surface} — {atoms:,} atoms.").format(
+                surface=stats['surface'], atoms=stats['atoms'])
+            + " " + " ".join(stats.get("notes", [])), 12000)
 
 
 def describe(st: dict) -> str:
@@ -178,10 +184,16 @@ def describe(st: dict) -> str:
     x, y, z = st["slab_nm"]
     return "<br>".join([
         f"<b>{st['surface']}</b>",
-        f"Surface cell {a:g} × {b:g} nm at {st['surface_angle_deg']:g}°; "
-        f"layer spacing {st['interplanar_spacing_nm']:g} nm",
-        f"Slab {x:g} × {y:g} nm, {z:g} nm deep: {st['atoms']:,} atoms, "
-        f"≈ {st['triangles']:,} triangles",
+        language.tr(
+            "Surface cell {a:g} × {b:g} nm at {angle:g}°; layer "
+            "spacing {spacing:g} nm").format(
+                a=a, b=b, angle=st['surface_angle_deg'],
+                spacing=st['interplanar_spacing_nm']),
+        language.tr(
+            "Slab {x:g} × {y:g} nm, {z:g} nm deep: {atoms:,} atoms, "
+            "≈ {triangles:,} triangles").format(
+                x=x, y=y, z=z, atoms=st['atoms'],
+                triangles=st['triangles']),
         f"<i>{st['notes'][0]}</i>"])
 
 

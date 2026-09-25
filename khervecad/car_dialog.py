@@ -20,7 +20,7 @@ the Free Software Foundation, either version 3 of the License, or
 from PyQt5.QtWidgets import (QComboBox, QDialog, QDialogButtonBox,
                              QFormLayout, QLabel, QPushButton, QVBoxLayout)
 
-from . import car_build, car_models, car_wheels, icons, mesh
+from . import car_build, car_models, car_wheels, icons, language, mesh
 from .model import CadNode
 
 
@@ -28,7 +28,7 @@ class CarBuilder(QDialog):
     def __init__(self, window):
         super().__init__(window)
         self.window = window
-        self.setWindowTitle("Car Builder")
+        self.setWindowTitle(language.tr("Car Builder"))
         self.setModal(False)
         layout = QVBoxLayout(self)
         form = QFormLayout()
@@ -51,12 +51,14 @@ class CarBuilder(QDialog):
         self._caliper.addItems(list(car_wheels.CALIPERS))
         self._scale.addItems(list(car_build.SCALES))
         self._scale.setCurrentText("Full-size")
-        for label, w in (("Make", self._make), ("Model", self._model),
-                         ("Paint", self._paint), ("Wheels", self._rim),
-                         ("Tyres", self._tyre),
-                         ("Wheel finish", self._finish),
-                         ("Calipers", self._caliper),
-                         ("Size", self._scale)):
+        for label, w in ((language.tr("Make"), self._make),
+                         (language.tr("Model"), self._model),
+                         (language.tr("Paint colour"), self._paint),
+                         (language.tr("Wheels"), self._rim),
+                         (language.tr("Tyres"), self._tyre),
+                         (language.tr("Wheel finish"), self._finish),
+                         (language.tr("Calipers"), self._caliper),
+                         (language.tr("Size"), self._scale)):
             form.addRow(label, w)
 
         self._info = QLabel()
@@ -64,11 +66,13 @@ class CarBuilder(QDialog):
         layout.addWidget(self._info)
 
         buttons = QDialogButtonBox()
-        self._build = QPushButton(icons.icon("mdi.car-sports"), "Build")
-        self._update = QPushButton("Update selected")
+        self._build = QPushButton(icons.icon("mdi.car-sports"),
+                                  language.tr("Build"))
+        self._update = QPushButton(language.tr("Update selected"))
         buttons.addButton(self._build, QDialogButtonBox.AcceptRole)
         buttons.addButton(self._update, QDialogButtonBox.ApplyRole)
-        buttons.addButton(QDialogButtonBox.Close)
+        close_btn = buttons.addButton(QDialogButtonBox.Close)
+        close_btn.setText(language.tr("Close"))
         buttons.rejected.connect(self.close)
         layout.addWidget(buttons)
 
@@ -107,11 +111,14 @@ class CarBuilder(QDialog):
         if not key:
             return
         car = car_models.CARS[key]
-        self._info.setText(
-            f"{car['L']} × {car['W']} × {car['H']} mm, wheelbase "
-            f"{car['wb']} mm; tyres {car['tyre_front']} front, "
-            f"{car['tyre_rear']} rear. Published figures — the body is "
-            "shaped to those proportions, not traced from a drawing.")
+        self._info.setText(language.tr(
+            "{length} × {width} × {height} mm, wheelbase {wheelbase} "
+            "mm; tyres {tyre_front} front, {tyre_rear} rear. "
+            "Published figures — the body is shaped to those "
+            "proportions, not traced from a drawing.").format(
+                length=car['L'], width=car['W'], height=car['H'],
+                wheelbase=car['wb'], tyre_front=car['tyre_front'],
+                tyre_rear=car['tyre_rear']))
 
     def load_from(self, node: CadNode):
         """Show the choices a built car carries (`params['car']`)."""
@@ -133,7 +140,7 @@ class CarBuilder(QDialog):
         node = selected_car(self.window)
         if node is None:
             self.window.statusBar().showMessage(
-                "Select a car built here first.", 6000)
+                language.tr("Select a car built here first."), 6000)
             return
         self._apply(node)
 
