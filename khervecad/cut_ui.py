@@ -14,6 +14,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QAction, QActionGroup, QGridLayout, QLabel,
                              QSlider, QToolButton, QWidget)
 
+from . import language
+
 
 def _unit(view) -> str:
     """The unit symbol of the document the 3D *view* shows."""
@@ -46,21 +48,23 @@ class CutBar(QWidget):
         grid = QGridLayout(self)
         grid.setContentsMargins(8, 4, 6, 4)
         grid.setHorizontalSpacing(4)
-        grid.addWidget(QLabel("Cut", self), 0, 0)
+        grid.addWidget(QLabel(language.tr("Cut"), self), 0, 0)
         self.axis_buttons = {}
         for col, axis in enumerate("xyz", 1):
             button = QToolButton(self)
             button.setText(axis.upper())
             button.setCheckable(True)
             button.setAutoExclusive(True)
-            button.setToolTip(f"Slice across the {axis.upper()} axis")
+            button.setToolTip(language.tr(
+                "Slice across the {axis} axis").format(axis=axis.upper()))
             button.clicked.connect(
                 lambda _=False, a=axis: self.view.set_cut(axis=a))
             grid.addWidget(button, 0, col)
             self.axis_buttons[axis] = button
         down = QToolButton(self)
         down.setText("−")
-        down.setToolTip("Move the cut back a little (Ctrl+Alt+Down)")
+        down.setToolTip(language.tr(
+            "Move the cut back a little (Ctrl+Alt+Down)"))
         down.setAutoRepeat(True)
         down.clicked.connect(lambda: self._step(-0.02))
         grid.addWidget(down, 0, 4)
@@ -68,15 +72,15 @@ class CutBar(QWidget):
         self.slider.setRange(0, 1000)
         self.slider.setFixedWidth(170)
         self.slider.setPageStep(50)
-        self.slider.setToolTip("Where the cut goes, across the whole model "
-                               "— the arrow keys nudge it a tenth of a "
-                               "percent")
+        self.slider.setToolTip(language.tr(
+            "Where the cut goes, across the whole model — the arrow "
+            "keys nudge it a tenth of a percent"))
         self.slider.valueChanged.connect(
             lambda value: self.view.set_cut(position=value / 1000.0))
         grid.addWidget(self.slider, 0, 5)
         up = QToolButton(self)
         up.setText("+")
-        up.setToolTip("Move the cut on a little (Ctrl+Alt+Up)")
+        up.setToolTip(language.tr("Move the cut on a little (Ctrl+Alt+Up)"))
         up.setAutoRepeat(True)
         up.clicked.connect(lambda: self._step(0.02))
         grid.addWidget(up, 0, 6)
@@ -85,13 +89,13 @@ class CutBar(QWidget):
         grid.addWidget(self.readout, 0, 7)
         flip = QToolButton(self)
         flip.setText("⇄")
-        flip.setToolTip("Keep the other half")
+        flip.setToolTip(language.tr("Keep the other half"))
         flip.clicked.connect(lambda: self.view.set_cut(
             flip=not (self.view.cut or {}).get("flip", False)))
         grid.addWidget(flip, 0, 8)
         close = QToolButton(self)
         close.setText("✕")
-        close.setToolTip("Stop cutting — show the whole model")
+        close.setToolTip(language.tr("Stop cutting — show the whole model"))
         close.clicked.connect(lambda: self.view.set_cut(enabled=False))
         grid.addWidget(close, 0, 9)
 
@@ -108,29 +112,31 @@ class CutBar(QWidget):
         self.slider.blockSignals(True)
         self.slider.setValue(int(round(cut["position"] * 1000)))
         self.slider.blockSignals(False)
-        self.readout.setText(f"{cut['axis'].upper()} = "
-                             f"{cut.get('offset', 0.0):.1f} "
-                             f"{_unit(self.view)}  ·  "
-                             f"{cut['position'] * 100:.0f} %")
+        self.readout.setText(
+            f"{cut['axis'].upper()} = {cut.get('offset', 0.0):.1f} "
+            f"{_unit(self.view)}  ·  {cut['position'] * 100:.0f} %")
 
 
 def build_menu(win, view_menu):
     """View ▸ Cut Through: on/off, which axis, which half."""
     from . import icons
-    menu = win._cut_menu = view_menu.addMenu(icons.icon("mdi.content-cut"),
-                                             "C&ut Through")
-    win._cut_act = QAction("&Cut Through the Model", win, checkable=True)
+    menu = win._cut_menu = view_menu.addMenu(
+        icons.icon("mdi.content-cut"), language.tr("C&ut Through"))
+    win._cut_act = QAction(language.tr("&Cut Through the Model"), win,
+                           checkable=True)
     win._cut_act.setShortcut("Ctrl+Alt+X")
-    win._cut_act.setStatusTip(
-        "Slice the 3D view with a plane and cap the cut face, to see the "
-        "holes, walls and threads inside — the model itself is not cut")
+    win._cut_act.setStatusTip(language.tr(
+        "Slice the 3D view with a plane and cap the cut face, to see "
+        "the holes, walls and threads inside — the model itself is "
+        "not cut"))
     win._cut_act.triggered.connect(lambda on: win.set_cut(bool(on)))
     menu.addAction(win._cut_act)
     menu.addSeparator()
     win._cut_axes = QActionGroup(win)
-    for axis, label in (("x", "Across &X (side to side)"),
-                        ("y", "Across &Y (front to back)"),
-                        ("z", "Across &Z (top to bottom)")):
+    for axis, label in (
+            ("x", language.tr("Across &X (side to side)")),
+            ("y", language.tr("Across &Y (front to back)")),
+            ("z", language.tr("Across &Z (top to bottom)"))):
         act = QAction(label, win, checkable=True)
         act.setData(axis)
         act.triggered.connect(lambda _=False, a=axis: win.set_cut(True, axis=a))
@@ -141,27 +147,29 @@ def build_menu(win, view_menu):
     # (and the 3D view's own button) has no slider. Quarters alone were
     # too coarse for a house: every tenth, and a storey of its own.
     win._cut_positions = QActionGroup(win)
-    where = menu.addMenu("&Where")
+    where = menu.addMenu(language.tr("&Where"))
     for step in range(1, 10):
         value = step / 10.0
-        act = QAction(f"At &{step}0 %", win, checkable=True)
+        act = QAction(language.tr("At &{step}0 %").format(step=step), win,
+                     checkable=True)
         act.setData(value)
         act.triggered.connect(
             lambda _=False, v=value: win.set_cut(True, position=v))
         win._cut_positions.addAction(act)
         where.addAction(act)
-    storeys = win._cut_storeys = menu.addMenu("Cut at a &Storey")
+    storeys = win._cut_storeys = menu.addMenu(
+        language.tr("Cut at a &Storey"))
     storeys.aboutToShow.connect(lambda: _fill_storeys(win, storeys))
     _fill_storeys(win, storeys)
-    for label, shortcut, delta in (("Move the Cut &Up", "Ctrl+Alt+Up", 0.02),
-                                   ("Move the Cut &Down", "Ctrl+Alt+Down",
-                                    -0.02)):
+    for label, shortcut, delta in (
+            (language.tr("Move the Cut &Up"), "Ctrl+Alt+Up", 0.02),
+            (language.tr("Move the Cut &Down"), "Ctrl+Alt+Down", -0.02)):
         act = QAction(label, win)
         act.setShortcut(shortcut)
         act.triggered.connect(lambda _=False, d=delta: step_cut(win, d))
         menu.addAction(act)
     menu.addSeparator()
-    other = QAction("Keep the &Other Half", win)
+    other = QAction(language.tr("Keep the &Other Half"), win)
     other.triggered.connect(lambda: win.set_cut(
         True, flip=not (win.view3d.cut or {}).get("flip", False)))
     menu.addAction(other)
@@ -205,12 +213,14 @@ def _fill_storeys(win, menu):
     levels = storey_positions(win)
     menu.setEnabled(bool(levels))
     for name, value in levels:
-        act = QAction(f"{name} (waist height)", win)
+        act = QAction(language.tr("{name} (waist height)").format(
+            name=name), win)
         act.triggered.connect(
             lambda _=False, v=value: win.set_cut(True, axis="z", position=v))
         menu.addAction(act)
     if not levels:
-        menu.addAction(QAction("Build a house to cut it by storey", win))
+        menu.addAction(QAction(
+            language.tr("Build a house to cut it by storey"), win))
 
 
 def step_cut(win, delta):
@@ -226,15 +236,17 @@ def set_cut(win, on=True, axis=None, position=None, flip=None):
     status line saying how to move it and how to get the whole back."""
     if not on:
         win.view3d.set_cut(enabled=False)
-        win.statusBar().showMessage("The whole model again.", 4000)
+        win.statusBar().showMessage(
+            language.tr("The whole model again."), 4000)
         return
     win.view3d.set_cut(axis=axis, position=position, flip=flip)
     cut = win.view3d.cut_state()
-    win.statusBar().showMessage(
-        f"Cut through {cut['axis'].upper()} at {cut['offset']:.1f} "
-        f"{_unit(win.view3d)} — "
-        "slide it along the bar at the bottom of the 3D view; Ctrl+Alt+X "
-        "shows the whole model again.", 8000)
+    win.statusBar().showMessage(language.tr(
+        "Cut through {axis} at {offset:.1f} {unit} — slide it along "
+        "the bar at the bottom of the 3D view; Ctrl+Alt+X shows the "
+        "whole model again.").format(
+            axis=cut['axis'].upper(), offset=cut['offset'],
+            unit=_unit(win.view3d)), 8000)
 
 
 def sync(win):
