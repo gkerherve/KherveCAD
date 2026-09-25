@@ -28,7 +28,7 @@ from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout,
                              QPushButton, QScrollArea, QVBoxLayout, QWidget)
 
 from . import human_design as D
-from . import icons
+from . import icons, language
 
 DEFAULT_LABEL = "(default)"
 VIEW_W, VIEW_H = 260, 420
@@ -68,7 +68,7 @@ class HumanBuilder(QDialog):
     def __init__(self, window):
         super().__init__(window)
         self.window = window
-        self.setWindowTitle("Human Builder")
+        self.setWindowTitle(language.tr("Human Builder"))
         self.setModal(False)
         self.resize(1180, 700)
         self._serial = 0
@@ -88,11 +88,12 @@ class HumanBuilder(QDialog):
 
         top = QFormLayout()
         self._preset = QComboBox()
-        self._preset.addItems(["(choose a preset)"] + list(D.PRESETS))
+        self._preset.addItems(
+            [language.tr("(choose a preset)")] + list(D.PRESETS))
         self._preset.activated[str].connect(self._load_preset)
         self._name = QLineEdit("Person")
-        top.addRow("Preset", self._preset)
-        top.addRow("Name", self._name)
+        top.addRow(language.tr("Preset"), self._preset)
+        top.addRow(language.tr("Name"), self._name)
         form_box.addLayout(top)
 
         def group(title, rows):
@@ -107,30 +108,34 @@ class HumanBuilder(QDialog):
         self._stature.setSingleStep(0.01)
         self._stature.setDecimals(2)
         self._stature.setSuffix(" m")
-        self._stature.setSpecialValueText("Typical")
+        self._stature.setSpecialValueText(language.tr("Typical"))
         self._stature.setMinimum(1.19)
         self._stature.setValue(1.19)
-        group("Body", [("Gender", self._combo("gender")),
-                       ("Age", self._combo("age")),
-                       ("Build", self._combo("build")),
-                       ("Height", self._stature),
-                       ("Skin", self._combo("skin"))])
-        group("Pose", [("Arms", self._combo("gesture")),
-                       ("Legs", self._combo("stance"))])
-        group("Head", [("Hair", self._combo("hair")),
-                       ("Hair colour", self._combo("hair_colour")),
-                       ("Beard", self._combo("beard")),
-                       ("Glasses", self._combo("glasses")),
-                       ("Hat", self._pair("hat"))])
-        group("Clothes", [("Top", self._pair("top")),
-                          ("Bottom", self._pair("bottom")),
-                          ("Coat", self._pair("coat")),
-                          ("Shoes", self._pair("shoes")),
-                          ("Gloves", self._pair("gloves"))])
-        note = QLabel("Clothes follow the body parts, so they stay on in "
-                      "any pose. An assistant can add its own garments "
-                      "(any part, any colour) through the MCP tool "
-                      "build_character.")
+        group(language.tr("Body"),
+              [(language.tr("Gender"), self._combo("gender")),
+               (language.tr("Age"), self._combo("age")),
+               (language.tr("Body type"), self._combo("build")),
+               (language.tr("Stature"), self._stature),
+               (language.tr("Skin"), self._combo("skin"))])
+        group(language.tr("Pose"),
+              [(language.tr("Arms"), self._combo("gesture")),
+               (language.tr("Legs"), self._combo("stance"))])
+        group(language.tr("Head"),
+              [(language.tr("Hair"), self._combo("hair")),
+               (language.tr("Hair colour"), self._combo("hair_colour")),
+               (language.tr("Beard"), self._combo("beard")),
+               (language.tr("Glasses"), self._combo("glasses")),
+               (language.tr("Hat"), self._pair("hat"))])
+        group(language.tr("Clothes"),
+              [(language.tr("Top garment"), self._pair("top")),
+               (language.tr("Bottom garment"), self._pair("bottom")),
+               (language.tr("Coat"), self._pair("coat")),
+               (language.tr("Shoes"), self._pair("shoes")),
+               (language.tr("Gloves"), self._pair("gloves"))])
+        note = QLabel(language.tr(
+            "Clothes follow the body parts, so they stay on in any "
+            "pose. An assistant can add its own garments (any part, "
+            "any colour) through the MCP tool build_character."))
         note.setWordWrap(True)
         note.setStyleSheet("color: gray;")
         form_box.addWidget(note)
@@ -151,11 +156,12 @@ class HumanBuilder(QDialog):
         right.addWidget(self._status)
         buttons = QHBoxLayout()
         for text, icon, slot in (
-                ("Random", "mdi.dice-multiple", self._random),
-                ("Insert", "mdi.account-plus", lambda: self._apply(None)),
-                ("Update selected", "mdi.account-edit",
+                (language.tr("Random"), "mdi.dice-multiple", self._random),
+                (language.tr("Insert"), "mdi.account-plus",
+                 lambda: self._apply(None)),
+                (language.tr("Update selected"), "mdi.account-edit",
                  lambda: self._apply(selected_character(self.window))),
-                ("Close", "mdi.close", self.close)):
+                (language.tr("Close"), "mdi.close", self.close)):
             b = QPushButton(icons.icon(icon), text)
             b.clicked.connect(slot)
             buttons.addWidget(b)
@@ -194,7 +200,7 @@ class HumanBuilder(QDialog):
         colour = QComboBox()
         colour.setEditable(True)
         colour.addItems([DEFAULT_LABEL] + list(D.COLOURS))
-        colour.setToolTip("A colour name or #rrggbb")
+        colour.setToolTip(language.tr("A colour name or #rrggbb"))
         colour.currentTextChanged.connect(self._changed)
         self._colours[f"{key}_colour"] = colour
         row.addWidget(colour, 2)
@@ -246,7 +252,7 @@ class HumanBuilder(QDialog):
     def _changed(self, *_args):
         if self._quiet:
             return
-        self._status.setText("Updating…")
+        self._status.setText(language.tr("Updating…"))
         self._timer.start()
 
     def _rebuild(self):
@@ -262,11 +268,13 @@ class HumanBuilder(QDialog):
         if serial != self._serial:
             return
         if images is None:
-            self._status.setText(f"Could not build: {error}")
+            self._status.setText(language.tr(
+                "Could not build: {error}").format(error=error))
             return
         for label, view in zip(self._views, ("Front", "Side", "Back")):
             label.setPixmap(QPixmap.fromImage(images[view]))
-        self._status.setText("Front, left side and back, to one scale.")
+        self._status.setText(
+            language.tr("Front, left side and back, to one scale."))
 
     def _apply(self, replace):
         try:
@@ -277,8 +285,8 @@ class HumanBuilder(QDialog):
         part = D.insert(self.window.model, spec, replace=replace)
         self.window.builder.tree.select_nodes([part])
         self.window.view3d.fit()
-        self._status.setText(f"{'Updated' if replace else 'Inserted'} "
-                             f"{spec['name']}.")
+        verb = language.tr("Updated") if replace else language.tr("Inserted")
+        self._status.setText(f"{verb} {spec['name']}.")
 
     def load_from(self, node):
         spec = (node.params or {}).get("character")
