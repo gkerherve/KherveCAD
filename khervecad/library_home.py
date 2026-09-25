@@ -1,7 +1,9 @@
 """Home furniture for the parts library: a section that furnishes a
 whole house — dining room, living room, bedroom, kitchen and bathroom.
 
-Dining table and chairs, a sofa and an armchair, a coffee table, a
+Dining table and chairs, sofas (classic, Chesterfield, mid-century
+settee, cloud and tuxedo — each upholstered in a shader texture:
+Fabric, Leather, Bouclé, Velvet) and an armchair, a coffee table, a
 bookcase (with books), a sideboard and a floor lamp; a made-up bed
 with duvet and pillows, a bedside table with its lamp, a wardrobe and a
 chest of drawers; a run of kitchen units with sink, hob, oven, wall
@@ -51,6 +53,12 @@ WOODS = {"Oak": ("#c89f6e", "#a47a4f"), "Walnut": ("#7b5436", "#5b3d27"),
 FABRICS = {"Grey": "#8d949c", "Charcoal": "#4a4f56", "Navy": "#34496b",
            "Sage": "#8ea58a", "Mustard": "#c9a043",
            "Terracotta": "#b8674a", "Cream": "#e3d8c0"}
+LEATHERS = {"Tan": "#9a5b32", "Oxblood": "#5e1f22", "Chocolate": "#4a2e22",
+            "Black": "#2a2624", "Bottle green": "#2f4a3a"}
+VELVETS = {"Emerald": "#1f5c46", "Navy": "#23345a", "Mustard": "#c08a2a",
+           "Blush": "#c98f8a", "Plum": "#5a2d4a", "Teal": "#1f5c63"}
+BOUCLES = {"Ivory": "#ebe4d6", "Oatmeal": "#d6c9b0", "Sand": "#c9b28f",
+           "Stone grey": "#a9a59d", "Blush": "#dcb8ad"}
 FRONTS = {"White": "#f1efea", "Sage": "#9aad96", "Navy": "#34496b",
           "Charcoal": "#4a4f56", "Oak": "#c89f6e"}
 APPLIANCE = {"Steel": STEEL, "White": "#f4f4f2", "Black": "#2a2c30"}
@@ -209,20 +217,201 @@ def build_sofa(dims, sizes=None):
     part = CadNode("union", "Sofa" if n > 1 else "Armchair")
     _legs(part, w, d, 70, foot, 20, WOODS["Walnut"][1], r2=16)
     part.add(_box("Base", -w / 2, -d / 2, foot, w, d, seat - 130 - foot,
-                  fab, r=25))
+                  fab, r=25, material="Fabric"))
     part.add(_box("Back", -w / 2, d / 2 - back, foot, w, back, h - foot,
-                  fab, r=45))
+                  fab, r=45, material="Fabric"))
     for sx in (-1, 1):
         x = -w / 2 if sx < 0 else w / 2 - arm
         part.add(_box("Arm", x, -d / 2, foot, arm, d, seat + 190 - foot,
-                      fab, r=50))
+                      fab, r=50, material="Fabric"))
     cw = (w - 2 * arm) / n
     for i in range(n):
         x = -w / 2 + arm + i * cw
         part.add(_box("Seat cushion", x + 6, -d / 2 + 25, seat - 135,
-                      cw - 12, d - back - 30, 140, soft, r=45))
+                      cw - 12, d - back - 30, 140, soft, r=45,
+                      material="Fabric"))
         part.add(_box("Back cushion", x + 8, d / 2 - back - 160, seat,
-                      cw - 16, 180, h - seat - 30, soft, r=60))
+                      cw - 16, 180, h - seat - 30, soft, r=60,
+                      material="Fabric"))
+    return part
+
+
+def _stud(name, x, y, z, r, color, material="Default"):
+    """A small low-poly ball: a tufting button, a brass nail head."""
+    return _paint(CadNode("sphere", name, dict(x=x, y=y, z=z, radius=r,
+                                               segments=10)),
+                  color, material)
+
+
+def build_chesterfield(dims):
+    """Deep-buttoned leather: arms as high as the back, both rolled."""
+    p = _dims(dims, CHESTERFIELD_SIZES)
+    w, d, h, seat = p["w"], p["d"], p["h"], p["seat"]
+    n = _count(p, "seats", 1, 5)
+    hide = _pick(dims, LEATHERS, "Tan")
+    soft = _mix(hide, "#ffffff", 0.06)
+    button = _mix(hide, "#000000", 0.35)
+    arm, back, foot, roll = 210.0, 210.0, 90.0, 80.0
+    part = CadNode("union", "Chesterfield")
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            part.add(_ball("Bun foot", sx * (w / 2 - 90), sy * (d / 2 - 90),
+                           50.0, 50.0, WOODS["Walnut"][1]))
+    part.add(_box("Base", -w / 2, -d / 2, foot, w, d, seat - 120 - foot,
+                  hide, r=30, material="Leather"))
+    part.add(_box("Back", -w / 2 + arm / 2, d / 2 - back, foot, w - arm,
+                  back, h - foot - roll, hide, r=50, material="Leather"))
+    part.add(_rod("Back roll", (-w / 2 + arm / 2, d / 2 - back / 2, h - roll),
+                  (w / 2 - arm / 2, d / 2 - back / 2, h - roll), roll, hide,
+                  "Leather"))
+    for sx in (-1, 1):
+        x = -w / 2 if sx < 0 else w / 2 - arm
+        part.add(_box("Arm", x, -d / 2, foot, arm, d, h - foot - roll - 10,
+                      hide, r=45, material="Leather"))
+        cx = sx * (w / 2 - arm / 2 + 12)
+        part.add(_rod("Arm roll", (cx, -d / 2 + roll + 5, h - roll - 10),
+                      (cx, d / 2 - back / 2, h - roll - 10), roll + 12, hide,
+                      "Leather"))
+    cw = (w - 2 * arm) / n
+    for i in range(n):
+        x = -w / 2 + arm + i * cw
+        part.add(_box("Seat cushion", x + 5, -d / 2 + 30, seat - 120,
+                      cw - 10, d - back - 35, 120, soft, r=35,
+                      material="Leather"))
+    # diamond tufting: staggered rows of buttons on the back and arms
+    step, y = 150.0, d / 2 - back - 3
+    rows = max(1, int((h - roll - seat - 40) // 80) + 1)
+    for r in range(rows):
+        z = seat + 50 + r * 80
+        off = step / 2 if r % 2 else 0.0
+        k = int((w - 2 * arm - off) // step)
+        for j in range(k):
+            x = -w / 2 + arm + off + step * (j + 0.5) + (
+                w - 2 * arm - off - k * step) / 2
+            part.add(_stud("Button", x, y, z, 11, button, "Leather"))
+    for sx in (-1, 1):
+        for r in range(max(1, int((h - roll - foot - 200) // 110))):
+            z = foot + 140 + r * 110
+            off = step / 2 if r % 2 else 0.0
+            for j in range(int((d - 2 * roll - off) // step)):
+                part.add(_stud("Button", sx * (w / 2 + 3),
+                               -d / 2 + roll + off + step * (j + 0.5), z, 11,
+                               button, "Leather"))
+    return part
+
+
+def build_settee(dims):
+    """A slim mid-century settee on splayed walnut legs, wooden arms."""
+    p = _dims(dims, SETTEE_SIZES)
+    w, d, h, seat = p["w"], p["d"], p["h"], p["seat"]
+    n = _count(p, "seats", 1, 4)
+    fab = _pick(dims, FABRICS, "Mustard")
+    soft = _mix(fab, "#ffffff", 0.08)
+    wood = WOODS["Walnut"][0]
+    frame, back, arm = 230.0, 110.0, 60.0
+    part = CadNode("union", "Mid-century settee")
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            part.add(_rod("Leg", (sx * (w / 2 - 50), sy * (d / 2 - 50), 14),
+                          (sx * (w / 2 - 110), sy * (d / 2 - 110), frame),
+                          14, wood, "Default"))
+    part.add(_box("Frame", -w / 2 + 30, -d / 2 + 30, frame, w - 60, d - 60,
+                  50, wood, r=8))
+    part.add(_box("Back", -w / 2 + arm, d / 2 - back - 20, frame + 30,
+                  w - 2 * arm, back, h - frame - 30, fab, r=30,
+                  material="Fabric"))
+    part.add(_box("Seat cushion", -w / 2 + arm + 10, -d / 2 + 35,
+                  frame + 50, w - 2 * arm - 20, d - back - 70,
+                  seat - frame - 50, fab, r=30, material="Fabric"))
+    cw = (w - 2 * arm - 20) / n
+    for i in range(n):
+        x = -w / 2 + arm + 10 + i * cw
+        part.add(_box("Back cushion", x + 6, d / 2 - back - 150, seat,
+                      cw - 12, 135, h - seat - 50, soft, r=45,
+                      material="Fabric"))
+        for bx in (0.33, 0.67):
+            part.add(_stud("Button", x + cw * bx, d / 2 - back - 152,
+                           seat + (h - seat - 50) * 0.55, 9,
+                           _mix(fab, "#000000", 0.3), "Fabric"))
+    for sx in (-1, 1):
+        x = -w / 2 if sx < 0 else w / 2 - arm
+        for y in (-d / 2 + 40, d / 2 - 90):
+            part.add(_box("Arm post", x + 10, y, frame + 50, arm - 20, 50,
+                          seat + 150 - frame - 50, wood, r=8))
+        part.add(_box("Arm rest", x, -d / 2 + 25, seat + 150, arm, d - 60,
+                      32, wood, r=12))
+    return part
+
+
+def build_cloud_sofa(dims):
+    """A low, deep, over-stuffed sofa in boucle with fat arms."""
+    p = _dims(dims, CLOUD_SIZES)
+    w, d, h, seat = p["w"], p["d"], p["h"], p["seat"]
+    n = _count(p, "seats", 1, 5)
+    fab = _pick(dims, BOUCLES, "Ivory")
+    soft = _mix(fab, "#ffffff", 0.08)
+    accent = _mix(fab, "#7a5a3c", 0.45)
+    arm, back, plinth = 300.0, 230.0, 50.0
+    part = CadNode("union", "Cloud sofa")
+    part.add(_box("Plinth", -w / 2 + 60, -d / 2 + 60, 0.0, w - 120, d - 120,
+                  plinth + 5, PLINTH))
+    part.add(_box("Base", -w / 2, -d / 2, plinth, w, d, seat - 200 - plinth,
+                  fab, r=60, material="Bouclé"))
+    part.add(_box("Back", -w / 2 + arm - 30, d / 2 - back, plinth,
+                  w - 2 * arm + 60, back, h - plinth - 80, fab, r=110,
+                  material="Bouclé"))
+    for sx in (-1, 1):
+        x = -w / 2 if sx < 0 else w / 2 - arm
+        part.add(_box("Arm", x, -d / 2, plinth, arm, d, seat + 170 - plinth,
+                      fab, r=140, material="Bouclé"))
+    cw = (w - 2 * arm) / n
+    for i in range(n):
+        x = -w / 2 + arm + i * cw
+        part.add(_box("Seat cushion", x + 4, -d / 2 + 25, seat - 210,
+                      cw - 8, d - back - 45, 215, soft, r=100,
+                      material="Bouclé"))
+        part.add(_box("Back pillow", x + 6, d / 2 - back - 230, seat - 10,
+                      cw - 12, 270, h - seat + 50, soft, r=125,
+                      material="Bouclé"))
+    for sx in (-1, 1):
+        part.add(_box("Scatter cushion", sx * (w / 2 - arm - 30) - 190,
+                      d / 2 - back - 350, seat - 15, 380, 130, 360, accent,
+                      r=60, material="Velvet"))
+    return part
+
+
+def build_tuxedo_sofa(dims):
+    """Velvet with arms flush to the back, channel-tufted, brass legs."""
+    p = _dims(dims, TUXEDO_SIZES)
+    w, d, h, seat = p["w"], p["d"], p["h"], p["seat"]
+    vel = _pick(dims, VELVETS, "Emerald")
+    soft = _mix(vel, "#ffffff", 0.05)
+    arm, back, foot = 180.0, 180.0, 150.0
+    part = CadNode("union", "Tuxedo sofa")
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            part.add(_cyl("Leg", sx * (w / 2 - 70), sy * (d / 2 - 70), 0.0,
+                          foot, 12, BRASS, r2=20, seg=20, material="Metal"))
+    part.add(_box("Base", -w / 2, -d / 2, foot, w, d, seat - 120 - foot, vel,
+                  r=30, material="Velvet"))
+    part.add(_box("Back", -w / 2, d / 2 - back, foot, w, back, h - foot, vel,
+                  r=40, material="Velvet"))
+    for sx in (-1, 1):
+        x = -w / 2 if sx < 0 else w / 2 - arm
+        part.add(_box("Arm", x, -d / 2, foot, arm, d, h - foot, vel, r=40,
+                      material="Velvet"))
+    inner = w - 2 * arm
+    k = max(2, int(round(inner / 170.0)))
+    cw = inner / k
+    for i in range(k):
+        part.add(_box("Channel", -w / 2 + arm + i * cw + 3,
+                      d / 2 - back - 75, seat - 5, cw - 6, 85,
+                      h - seat - 25, soft, r=40, material="Velvet"))
+    part.add(_box("Seat cushion", -w / 2 + arm + 6, -d / 2 + 30, seat - 120,
+                  inner - 12, d - back - 110, 120, soft, r=40,
+                  material="Velvet"))
+    part.add(_rod("Piping", (-w / 2 + 40, -d / 2 - 1, foot + 12),
+                  (w / 2 - 40, -d / 2 - 1, foot + 12), 5, BRASS))
     return part
 
 
@@ -675,6 +864,28 @@ SOFA_SIZES = {
     "4-seater (2700)": dict(w=2700.0, d=980.0, h=820.0, seat=440.0,
                             seats=4),
 }
+CHESTERFIELD_SIZES = {
+    "3-seater (2200)": dict(w=2200.0, d=950.0, h=760.0, seat=460.0,
+                            seats=3),
+    "2-seater (1700)": dict(w=1700.0, d=950.0, h=760.0, seat=460.0,
+                            seats=2),
+}
+SETTEE_SIZES = {
+    "3-seater (1900)": dict(w=1900.0, d=820.0, h=800.0, seat=430.0,
+                            seats=3),
+    "2-seater (1450)": dict(w=1450.0, d=820.0, h=800.0, seat=430.0,
+                            seats=2),
+}
+CLOUD_SIZES = {
+    "3-seater (2600)": dict(w=2600.0, d=1100.0, h=740.0, seat=420.0,
+                            seats=3),
+    "2-seater (2000)": dict(w=2000.0, d=1100.0, h=740.0, seat=420.0,
+                            seats=2),
+}
+TUXEDO_SIZES = {
+    "Standard (2100)": dict(w=2100.0, d=900.0, h=780.0, seat=450.0),
+    "Loveseat (1600)": dict(w=1600.0, d=900.0, h=780.0, seat=450.0),
+}
 ARMCHAIR_SIZES = {
     "Armchair (900)": dict(w=900.0, d=900.0, h=820.0, seat=440.0, seats=1),
 }
@@ -758,6 +969,23 @@ PARTS = {
         "Sofa", build_sofa, SOFA_SIZES,
         [("w", "Width"), ("d", "Depth"), ("h", "Back height"),
          ("seat", "Seat height"), ("seats", "Seats")], FABRICS),
+    "home_chesterfield": _entry(
+        "Chesterfield (buttoned leather)", build_chesterfield,
+        CHESTERFIELD_SIZES,
+        [("w", "Width"), ("d", "Depth"), ("h", "Back height"),
+         ("seat", "Seat height"), ("seats", "Seats")], LEATHERS),
+    "home_settee": _entry(
+        "Mid-century settee", build_settee, SETTEE_SIZES,
+        [("w", "Width"), ("d", "Depth"), ("h", "Back height"),
+         ("seat", "Seat height"), ("seats", "Seats")], FABRICS),
+    "home_cloud_sofa": _entry(
+        "Cloud sofa (bouclé)", build_cloud_sofa, CLOUD_SIZES,
+        [("w", "Width"), ("d", "Depth"), ("h", "Back height"),
+         ("seat", "Seat height"), ("seats", "Seats")], BOUCLES),
+    "home_tuxedo_sofa": _entry(
+        "Tuxedo sofa (velvet)", build_tuxedo_sofa, TUXEDO_SIZES,
+        [("w", "Width"), ("d", "Depth"), ("h", "Back height"),
+         ("seat", "Seat height")], VELVETS),
     "home_armchair": _entry(
         "Armchair", build_armchair, ARMCHAIR_SIZES,
         [("w", "Width"), ("d", "Depth"), ("h", "Back height"),

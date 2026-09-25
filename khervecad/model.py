@@ -49,7 +49,7 @@ MATERIALS = ["Default", "Plastic", "Metal", "Matte", "Clay", "Glass",
              "Floor tiles", "Checker tiles", "Terrazzo", "Zellige",
              "Floorboards", "Parquet", "Carpet", "Plaster", "Cladding",
              "Shingles", "Thatch", "Standing seam", "Solar panels",
-             "Panelling"]
+             "Panelling", "Fabric", "Velvet", "Leather", "Bouclé"]
 
 #: OpenSCAD's debug modifiers a node may carry as params["modifier"]
 #: (written before its statement, read back by scadparse). Unlike the

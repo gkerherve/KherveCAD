@@ -119,36 +119,36 @@ def build_corner_sofa(dims):
                  (w / 2 - 70, -d / 2 + 70), (-w / 2 + 70, d / 2 - l + 70),
                  (-w / 2 + d - 70, d / 2 - l + 70)):
         part.add(_cyl("Leg", x, y, 0.0, foot, 20, leg, r2=16, seg=24))
-    part.add(_box("Base", -w / 2, -d / 2, foot, w, d, base_h, fab, r=25))
+    part.add(_box("Base", -w / 2, -d / 2, foot, w, d, base_h, fab, r=25, material="Fabric"))
     part.add(_box("Chaise base", -w / 2, d / 2 - l, foot, d, l - d + 25,
-                  base_h, fab, r=25))
+                  base_h, fab, r=25, material="Fabric"))
     part.add(_box("Back", -w / 2, d / 2 - back, foot, w, back, h - foot, fab,
-                  r=45))
+                  r=45, material="Fabric"))
     part.add(_box("Side back", -w / 2, d / 2 - l, foot, back, l - back,
-                  h - foot, fab, r=45))
+                  h - foot, fab, r=45, material="Fabric"))
     part.add(_box("Arm", w / 2 - arm, -d / 2, foot, arm, d,
-                  seat + 190 - foot, fab, r=50))
+                  seat + 190 - foot, fab, r=50, material="Fabric"))
     part.add(_box("End arm", -w / 2, d / 2 - l, foot, d, arm,
-                  seat + 190 - foot, fab, r=50))
+                  seat + 190 - foot, fab, r=50, material="Fabric"))
     run = w - arm - d
     n = max(1, int(round(run / 700.0)))
     cw = run / n
     for i in range(n):
         x = -w / 2 + d + i * cw
         part.add(_box("Seat cushion", x + 6, -d / 2 + 25, seat - 135,
-                      cw - 12, d - back - 30, 140, soft, r=45))
+                      cw - 12, d - back - 30, 140, soft, r=45, material="Fabric"))
     part.add(_box("Chaise cushion", -w / 2 + back + 6, d / 2 - l + arm + 6,
                   seat - 135, d - back - 12, l - arm - back - 12, 140, soft,
-                  r=45))
+                  r=45, material="Fabric"))
     run = w - back - arm
     m = max(1, int(round(run / 750.0)))
     bw = run / m
     for i in range(m):
         x = -w / 2 + back + i * bw
         part.add(_box("Back cushion", x + 8, d / 2 - back - 160, seat,
-                      bw - 16, 180, h - seat - 30, soft, r=60))
+                      bw - 16, 180, h - seat - 30, soft, r=60, material="Fabric"))
     part.add(_box("Back cushion", -w / 2 + back, d / 2 - l + arm + 8, seat,
-                  180, l - arm - back - 176, h - seat - 30, soft, r=60))
+                  180, l - arm - back - 176, h - seat - 30, soft, r=60, material="Fabric"))
     return part
 
 

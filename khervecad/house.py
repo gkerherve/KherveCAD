@@ -140,8 +140,10 @@ def floor_default_name(index: int) -> str:
 #: library_home_extra), minus the fixtures (door, wall panel) the House
 #: Builder itself provides. A piece may sit in several rooms.
 FURNITURE_CATALOG = {
-    "Living room": ["home_sofa", "home_corner_sofa", "home_armchair",
-                    "home_coffee_table", "home_side_table", "home_ottoman",
+    "Living room": ["home_sofa", "home_corner_sofa", "home_chesterfield",
+                    "home_settee", "home_cloud_sofa", "home_tuxedo_sofa",
+                    "home_armchair", "home_coffee_table", "home_side_table",
+                    "home_ottoman",
                     "home_sideboard", "room_tv", "home_bookcase",
                     "home_floor_lamp", "home_table_lamp", "home_rug",
                     "home_plant", "home_piano", "home_fireplace",

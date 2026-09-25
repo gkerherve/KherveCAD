@@ -49,7 +49,9 @@ SURFACES = {"Brick": 1, "Concrete": 2, "Render": 3, "Roof tiles": 4,
             "Checker tiles": 15, "Terrazzo": 16, "Zellige": 17,
             "Floorboards": 18, "Parquet": 19, "Carpet": 20, "Plaster": 21,
             "Cladding": 22, "Shingles": 23, "Thatch": 24,
-            "Standing seam": 25, "Solar panels": 26, "Panelling": 27}
+            "Standing seam": 25, "Solar panels": 26, "Panelling": 27,
+            # upholstery (sofas, armchairs): weave, pile, grain, loops
+            "Fabric": 28, "Velvet": 29, "Leather": 30, "Bouclé": 31}
 #: (gloss strength, saturation scale) of a surface: glazed tiles and
 #: marble catch the light, carpet and thatch do not
 SURFACE_LOOK = {"Wall tiles": (0.45, 0.95), "Metro tiles": (0.5, 0.95),
@@ -60,7 +62,9 @@ SURFACE_LOOK = {"Wall tiles": (0.45, 0.95), "Metro tiles": (0.5, 0.95),
                 "Parquet": (0.15, 0.9), "Plaster": (0.0, 0.95),
                 "Carpet": (0.0, 0.9), "Cladding": (0.05, 0.85),
                 "Standing seam": (0.35, 0.6), "Solar panels": (0.6, 0.9),
-                "Panelling": (0.1, 0.9)}
+                "Panelling": (0.1, 0.9), "Fabric": (0.0, 0.9),
+                "Velvet": (0.08, 1.0), "Leather": (0.3, 0.95),
+                "Bouclé": (0.0, 0.85)}
 #: roof coverings: their courses run up the slope, not up the world Z
 ROOF_SURFACES = ("Roof tiles", "Slate", "Shingles", "Thatch",
                  "Standing seam", "Solar panels")
@@ -314,6 +318,57 @@ vec3 finishes(float id, vec2 uv, vec3 rgb, float px) {
     c = mix(c, vec3(0.75, 0.78, 0.8), joint(cl.x, 1.2, px) * 0.6);
     return mix(c, vec3(0.7, 0.72, 0.74), joint(m.x, 18.0, px));
 }
+vec3 upholstery(float id, vec2 uv, vec3 n, vec3 rgb, float px) {
+    if (id == 28.0) {                      // woven fabric: plain weave
+        float fine = 1.0 - smoothstep(0.7, 2.8, px);
+        vec2 t = uv / 1.6;
+        float over = mod(floor(t.x) + floor(t.y), 2.0);
+        float thread = mix(sin(fract(t.x) * 3.14159),
+                           sin(fract(t.y) * 3.14159), over);
+        float slub = noise(vec2(uv.x * 0.04, uv.y * 0.7));
+        vec3 c = rgb * (0.9 + 0.12 * fbm(uv * 0.025) + 0.08 * (slub - 0.5));
+        c *= 1.0 - fine * 0.2 * (1.0 - thread);
+        float fleck = smoothstep(0.72, 0.9,
+                                 noise(vec2(uv.x / 7.0, uv.y / 1.8)));
+        float mid = 1.0 - smoothstep(1.5, 6.0, px);
+        return mix(c, c * 1.15 + 0.03, fleck * mid * 0.45);
+    }
+    if (id == 29.0) {                      // velvet: pile sheen at the rim
+        float rim = 1.0 - abs(dot(n, normalize(v_to_eye)));
+        float crush = fbm(uv * 0.012 + 2.5 * fbm(uv * 0.003));
+        vec3 c = rgb * (0.7 + 0.26 * crush);
+        return mix(c, min(rgb * 1.7 + 0.1, vec3(1.0)), 0.6 * pow(rim, 2.2));
+    }
+    if (id == 30.0) {                      // leather: pebble grain, patina
+        float fine = 1.0 - smoothstep(0.5, 2.2, px);
+        vec2 g = uv / 1.8;
+        vec2 i = floor(g), f = fract(g);
+        float d = 9.0, d2 = 9.0;
+        for (int y = -1; y <= 1; y++)
+            for (int x = -1; x <= 1; x++) {
+                vec2 o = vec2(float(x), float(y));
+                float l = length(o + vec2(hash(i + o), hash(i + o + 3.1)) - f);
+                if (l < d) { d2 = d; d = l; } else if (l < d2) d2 = l;
+            }
+        vec3 c = rgb * (0.84 + 0.26 * fbm(uv * 0.006));
+        c *= 1.0 - 0.1 * pow(fbm(uv * 0.03 + 7.0), 3.0);    // worn creases
+        c *= 1.0 - fine * 0.1 * (1.0 - smoothstep(0.0, 0.2, d2 - d));
+        return c * (1.0 + fine * 0.05 * (0.5 - d));          // pebbles
+    }
+    // boucle: knots of looped yarn, a nubbly coat
+    float fine = 1.0 - smoothstep(1.0, 4.5, px);
+    vec2 g = uv / 5.0;
+    vec2 i = floor(g), f = fract(g);
+    float d = 9.0;
+    for (int y = -1; y <= 1; y++)
+        for (int x = -1; x <= 1; x++) {
+            vec2 o = vec2(float(x), float(y));
+            d = min(d, length(o + vec2(hash(i + o), hash(i + o + 5.7)) - f));
+        }
+    float loop = 1.0 - smoothstep(0.1, 0.62, d);
+    vec3 c = rgb * (0.9 + 0.12 * fbm(uv * 0.02) + 0.1 * (noise(uv / 12.0) - 0.5));
+    return c * (1.0 - fine * (0.26 * (1.0 - loop) - 0.06));
+}
 vec3 surface(float id, vec3 n, vec3 rgb, float px) {
     vec3 an = abs(n);
     vec2 uv;
@@ -399,6 +454,7 @@ vec3 surface(float id, vec3 n, vec3 rgb, float px) {
         return c + vec3(0.05, 0.08, 0.0) * step(0.8, f);
     }
     if (id >= 9.0 && id <= 17.0) return tiles(id, uv, rgb, px);
+    if (id >= 28.0) return upholstery(id, uv, n, rgb, px);
     if (id >= 18.0) return finishes(id, uv, rgb, px);
     return rgb;
 }
@@ -428,7 +484,8 @@ void main() {
                      (id == 15.0) ? 300.0 : (id == 16.0) ? 18.0 :
                      (id == 20.0 || id == 21.0) ? 12.0 :
                      (id == 18.0 || id == 22.0 || id == 23.0) ? 140.0 :
-                     (id == 25.0) ? 500.0 : 100.0;
+                     (id == 25.0) ? 500.0 : (id == 29.0) ? 1e6 :
+                     (id >= 28.0) ? 80.0 : 100.0;
         float px = length(fwidth(v_pos));
         float fade = smoothstep(feat * 0.5, feat * 1.2, px);
         vec3 mean = v_rgb * ((id == 1.0) ? 0.93 : (id == 4.0) ? 0.82 :
