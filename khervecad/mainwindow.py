@@ -27,7 +27,7 @@ from PyQt5.QtWidgets import (QAction, QActionGroup, QApplication,
                              QDockWidget, QFileDialog, QLabel,
                              QMainWindow, QMessageBox, QSplitter)
 
-from . import APP_NAME, __version__, document, icons, mesh, units
+from . import APP_NAME, __version__, document, icons, language, mesh, units
 from .engine import ScadEngine, set_openscad_path
 from .model import NODE_TYPES, DocumentModel
 from .properties import PropertiesPanel
@@ -147,8 +147,10 @@ class MainWindow(QMainWindow):
         self.model.scale_changed.connect(self._scale_changed)
         self.model.mate_released.connect(
             lambda n: self.statusBar().showMessage(
-                f"{n.name} detached — its position is now yours to "
-                f"set (the mate would have overwritten it).", 5000))
+                language.tr(
+                    "{name} detached — its position is now yours to "
+                    "set (the mate would have overwritten it).")
+                .format(name=n.name), 5000))
         self.view3d.lighting_bar.refresh_requested.connect(
             self.force_refresh)
         self.engine.mesh_ready.connect(self._engine_mesh)
@@ -546,7 +548,6 @@ class MainWindow(QMainWindow):
         Takes effect on the next launch (see language.py) \u2014 a running
         window's widgets already hold their built text and KherveCAD
         does not re-translate live."""
-        from . import language
         lang_menu = edit_menu.addMenu(self.tr("&Language"))
         group = QActionGroup(self)
         current = language.current_language()
@@ -559,7 +560,6 @@ class MainWindow(QMainWindow):
             lang_menu.addAction(act)
 
     def _set_language(self, code):
-        from . import language
         if code == language.current_language():
             return
         language.set_language(code)
@@ -590,7 +590,7 @@ class MainWindow(QMainWindow):
                 nodes = hook(self.model, default_dims(part_id))
             except Exception as exc:
                 QMessageBox.warning(self, APP_NAME,
-                                    f"Could not build the part:\n{exc}")
+                                    language.tr("Could not build the part:\n{exc}").format(exc=exc))
                 return
             self.builder.tree.select_nodes([])
             self.view3d.fit()
@@ -599,7 +599,7 @@ class MainWindow(QMainWindow):
             node = default_part(part_id)
         except Exception as exc:
             QMessageBox.warning(self, APP_NAME,
-                                f"Could not build the part:\n{exc}")
+                                language.tr("Could not build the part:\n{exc}").format(exc=exc))
             return
         self.model.root.add(node)
         self.model.structure_changed.emit()
@@ -707,9 +707,10 @@ class MainWindow(QMainWindow):
         self.builder.open_component(comp)
         self.builder.object_tab.tree.select_nodes([node])
         self.statusBar().showMessage(
-            f"New Object '{comp.name}' — it shows as one part in Main; "
-            f"keep building it here, then switch back to Main to place "
-            f"or snap it.", 8000)
+            language.tr(
+                "New Object '{name}' — it shows as one part in Main; "
+                "keep building it here, then switch back to Main to "
+                "place or snap it.").format(name=comp.name), 8000)
 
     def _new_object(self):
         """Insert > New Object: create an empty Object and open it for
@@ -739,7 +740,7 @@ class MainWindow(QMainWindow):
                 self._add_primitive(op)       # empty, fill it after
                 return
             self.statusBar().showMessage(
-                "Select objects in the tree first.", 3000)
+                language.tr("Select objects in the tree first."), 3000)
             return
         wrapper = self.model.wrap_nodes(nodes, op)
         if wrapper is not None:
@@ -924,15 +925,17 @@ class MainWindow(QMainWindow):
             if not tris:
                 return
             self.statusBar().showMessage(
-                f"Click a face or edge of {comp.name} in the 3D view "
-                f"to add an anchor (stored on {definition.name}, "
-                f"shared by all its instances) — right-click to "
-                f"cancel.", 10000)
+                language.tr(
+                    "Click a face or edge of {name} in the 3D view "
+                    "to add an anchor (stored on {definition}, "
+                    "shared by all its instances) — right-click to "
+                    "cancel.").format(name=comp.name,
+                                      definition=definition.name), 10000)
 
             def done_instance(desc, _key=None):
                 if desc is None:
                     self.statusBar().showMessage(
-                        "Anchor pick cancelled.", 3000)
+                        language.tr("Anchor pick cancelled."), 3000)
                     return
                 pos = anchors.to_local(comp, desc["pos"], env)
                 direction = anchors.dir_to_local(comp, desc["dir"], env)
@@ -940,8 +943,11 @@ class MainWindow(QMainWindow):
                     self.model, definition, pos, direction,
                     name=desc.get("name", "Anchor"), kind="custom")
                 self.statusBar().showMessage(
-                    f"Anchor '{anchor['name']}' added to "
-                    f"{definition.name} ({desc['kind']}).", 5000)
+                    language.tr(
+                        "Anchor '{anchor}' added to "
+                        "{definition} ({kind}).").format(
+                        anchor=anchor['name'], definition=definition.name,
+                        kind=desc['kind']), 5000)
                 self._refresh_anchor_markers()
             self.view3d.start_pick(done_instance, groups=[(comp, tris)])
             return
@@ -954,13 +960,15 @@ class MainWindow(QMainWindow):
             if not tris:
                 return
             self.statusBar().showMessage(
-                f"Click a face or edge of {comp.name} to add a "
-                f"secondary anchor — right-click to cancel.", 10000)
+                language.tr(
+                    "Click a face or edge of {name} to add a "
+                    "secondary anchor — right-click to cancel.")
+                .format(name=comp.name), 10000)
 
             def done_group(desc, _key=None):
                 if desc is None:
                     self.statusBar().showMessage(
-                        "Anchor pick cancelled.", 3000)
+                        language.tr("Anchor pick cancelled."), 3000)
                     return
                 pos = anchors.to_local(comp, desc["pos"], env)
                 direction = anchors.dir_to_local(comp, desc["dir"], env)
@@ -968,20 +976,24 @@ class MainWindow(QMainWindow):
                     self.model, comp, pos, direction,
                     name=desc.get("name", "Anchor"), kind="custom")
                 self.statusBar().showMessage(
-                    f"Secondary anchor '{anchor['name']}' added to "
-                    f"{comp.name} ({desc['kind']}).", 5000)
+                    language.tr(
+                        "Secondary anchor '{anchor}' added to "
+                        "{name} ({kind}).").format(
+                        anchor=anchor['name'], name=comp.name,
+                        kind=desc['kind']), 5000)
                 self._refresh_anchor_markers()
             self.view3d.start_pick(done_group, groups=[(comp, tris)])
             return
         self.builder.open_component(comp)
         self.statusBar().showMessage(
-            "Click a face or edge of the object in the 3D view to add "
-            "an anchor — right-click to cancel.", 10000)
+            language.tr(
+                "Click a face or edge of the object in the 3D view to "
+                "add an anchor — right-click to cancel."), 10000)
 
         def done(desc):
             if desc is None:
-                self.statusBar().showMessage("Anchor pick cancelled.",
-                                             3000)
+                self.statusBar().showMessage(
+                    language.tr("Anchor pick cancelled."), 3000)
                 return
             env = anchors.doc_env(self.model)
             pos = anchors.to_local(comp, desc["pos"], env)
@@ -990,12 +1002,14 @@ class MainWindow(QMainWindow):
                 self.model, comp, pos, direction,
                 name=desc.get("name", "Anchor"), kind="custom")
             self.statusBar().showMessage(
-                f"Anchor '{anchor['name']}' added to {comp.name} "
-                f"({desc['kind']}).", 5000)
+                language.tr(
+                    "Anchor '{anchor}' added to {name} ({kind}).").format(
+                    anchor=anchor['name'], name=comp.name,
+                    kind=desc['kind']), 5000)
             self._refresh_anchor_markers()
         self.view3d.start_pick(
-            done, banner="Click a face or edge to add an anchor "
-                         "(Esc cancels)")
+            done, banner=language.tr(
+                "Click a face or edge to add an anchor (Esc cancels)"))
 
     # ------------------------------------------------- two-click snap
     def _snap_scope(self):
@@ -1093,26 +1107,31 @@ class MainWindow(QMainWindow):
         scope = self._snap_scope()
         groups = self._snap_groups(scope)
         if len(groups) < 2:
-            where = (f"inside {scope.name}" if scope is not None
-                     else "in the Main assembly")
+            where = (language.tr("inside {scope}").format(scope=scope.name)
+                     if scope is not None
+                     else language.tr("in the Main assembly"))
             found = ", ".join(part.name for part, _tris in groups) \
-                or "none"
+                or language.tr("none")
             self.statusBar().showMessage(
-                f"Snap needs two visible parts {where} — found "
-                f"{len(groups)} ({found}). Hidden parts don't count; "
-                f"select loose geometry and Group it (Ctrl+G) to make "
-                f"it a part.", 8000)
+                language.tr(
+                    "Snap needs two visible parts {where} — found "
+                    "{count} ({found}). Hidden parts don't count; "
+                    "select loose geometry and Group it (Ctrl+G) to "
+                    "make it a part.").format(
+                    where=where, count=len(groups), found=found), 8000)
             return
         if scope is None:
             self.builder.setCurrentIndex(0)      # the assembly view
         labeler = self._snap_labeler()
         self.statusBar().showMessage(
-            "Snap 1/2: click the face or edge of the part to MOVE "
-            "— Esc or right-click cancels.", 0)
+            language.tr(
+                "Snap 1/2: click the face or edge of the part to MOVE "
+                "— Esc or right-click cancels."), 0)
 
         def first(desc, comp):
             if desc is None:
-                self.statusBar().showMessage("Snap cancelled.", 3000)
+                self.statusBar().showMessage(
+                    language.tr("Snap cancelled."), 3000)
                 return
             # the part that MOVES has to hold the mate: a Move or a
             # bare boolean has nowhere to put the rotation, so it is
@@ -1120,8 +1139,10 @@ class MainWindow(QMainWindow):
             promoted = mates.ensure_part(self.model, comp)
             if promoted is not comp:
                 self.statusBar().showMessage(
-                    f"{comp.name} is now in '{promoted.name}' so it can "
-                    f"carry the snap.", 6000)
+                    language.tr(
+                        "{name} is now in '{group}' so it can carry "
+                        "the snap.").format(name=comp.name,
+                                            group=promoted.name), 6000)
                 comp = promoted
             child_anchor = self._anchor_for_pick(comp, desc)
             self.builder.active_tree().select_nodes([comp])
@@ -1130,22 +1151,28 @@ class MainWindow(QMainWindow):
             self.view3d.set_pick_pinned(
                 desc, f"{comp.name} · {child_anchor['name']}")
             self.statusBar().showMessage(
-                f"Snap 2/2: {comp.name} · {child_anchor['name']} — now "
-                f"click the target face on ANOTHER object.", 0)
+                language.tr(
+                    "Snap 2/2: {name} · {anchor} — now click the "
+                    "target face on ANOTHER object.").format(
+                    name=comp.name, anchor=child_anchor['name']), 0)
 
             def second(desc2, target):
                 if desc2 is None:
-                    self.statusBar().showMessage("Snap cancelled.",
-                                                 3000)
+                    self.statusBar().showMessage(
+                        language.tr("Snap cancelled."), 3000)
                     return
                 if target is comp:
                     self.statusBar().showMessage(
-                        "That is the same object — click a face on a "
-                        "different one (right-click cancels).", 0)
+                        language.tr(
+                            "That is the same object — click a face "
+                            "on a different one (right-click "
+                            "cancels)."), 0)
                     self.view3d.start_pick(
                         second, groups=groups, labeler=labeler,
-                        banner=f"Snap 2/2 — that was {comp.name} "
-                               f"itself: click a face on ANOTHER part")
+                        banner=language.tr(
+                            "Snap 2/2 — that was {name} itself: click "
+                            "a face on ANOTHER part").format(
+                            name=comp.name))
                     return
                 self.view3d.set_pick_pinned(None)
                 parent_anchor = self._anchor_for_pick(target, desc2)
@@ -1153,19 +1180,24 @@ class MainWindow(QMainWindow):
                              child_anchor["name"],
                              parent_anchor["name"])
                 self.statusBar().showMessage(
-                    f"Snapped {comp.name} ({child_anchor['name']}) "
-                    f"onto {target.name} ({parent_anchor['name']}).",
-                    8000)
+                    language.tr(
+                        "Snapped {name} ({anchor}) onto {target} "
+                        "({target_anchor}).").format(
+                        name=comp.name, anchor=child_anchor['name'],
+                        target=target.name,
+                        target_anchor=parent_anchor['name']), 8000)
                 self._show_snap_tweak(comp)
             self.view3d.start_pick(
                 second, groups=groups, labeler=labeler,
-                banner=f"Snap 2/2 — {comp.name}: "
-                       f"{child_anchor['name']} picked. Click the "
-                       f"target face on ANOTHER part (Esc cancels)")
+                banner=language.tr(
+                    "Snap 2/2 — {name}: {anchor} picked. Click the "
+                    "target face on ANOTHER part (Esc cancels)").format(
+                    name=comp.name, anchor=child_anchor['name']))
         self.view3d.start_pick(
             first, groups=groups, labeler=labeler,
-            banner="Snap 1/2 — click the face or edge of the part to "
-                   "MOVE (Esc cancels)")
+            banner=language.tr(
+                "Snap 1/2 — click the face or edge of the part to "
+                "MOVE (Esc cancels)"))
 
     def _show_snap_tweak(self, comp):
         """The small non-modal follow-up after a two-click snap:
@@ -1362,18 +1394,21 @@ class MainWindow(QMainWindow):
         from PyQt5.QtWidgets import QFileDialog, QInputDialog
         from . import refimage
         path, _filter = QFileDialog.getOpenFileName(
-            self, "Reference image", "",
-            "Images (*.png *.jpg *.jpeg *.bmp *.gif *.webp)")
+            self, language.tr("Reference image"), "",
+            language.tr("Images (*.png *.jpg *.jpeg *.bmp *.gif *.webp)"))
         if not path:
             return
         ratio = refimage.aspect(path)
         if ratio is None:
-            QMessageBox.warning(self, "Reference image",
-                                f"Could not read an image from {path}.")
+            QMessageBox.warning(
+                self, language.tr("Reference image"),
+                language.tr("Could not read an image from {path}.")
+                .format(path=path))
             return
         width, ok = QInputDialog.getDouble(
-            self, "Reference image",
-            f"Width on the plane ({self._unit()}):", 100.0, 0.1, 1e6, 1)
+            self, language.tr("Reference image"),
+            language.tr("Width on the plane ({unit}):")
+            .format(unit=self._unit()), 100.0, 0.1, 1e6, 1)
         if not ok:
             return
         height = width * ratio
@@ -1382,9 +1417,10 @@ class MainWindow(QMainWindow):
             y=-height / 2, width=width, height=height, offset=0.0,
             opacity=0.5, visible=True))
         self.statusBar().showMessage(
-            f"Reference image on the {self.scene.plane} plane — the MCP "
-            "tool set_reference_image can place and size it exactly.",
-            6000)
+            language.tr(
+                "Reference image on the {plane} plane — the MCP tool "
+                "set_reference_image can place and size it exactly.")
+            .format(plane=self.scene.plane), 6000)
 
     def set_projection(self, name: str):
         """Perspective or orthographic 3D view, with the View menu's
@@ -1553,17 +1589,19 @@ class MainWindow(QMainWindow):
         self._refresh_preview()
         plan = getattr(self, "_explode_plan", None)
         if not state["on"]:
-            message = "Parts back together."
+            message = language.tr("Parts back together.")
         elif plan is None or plan.group is None:
             # say so: switching it on and seeing nothing move read as a
             # broken menu item
             message = plan.note if plan is not None else \
-                "Nothing to pull apart."
+                language.tr("Nothing to pull apart.")
         else:
-            message = (f"Exploded view — {plan.note}, "
-                       f"{int(round(state['amount'] * 100))} %, "
-                       f"{state['mode'].lower()}; Ctrl+F frames it, "
-                       "Ctrl+Shift+X puts the parts back.")
+            message = language.tr(
+                "Exploded view — {note}, {percent} %, {mode}; Ctrl+F "
+                "frames it, Ctrl+Shift+X puts the parts back.").format(
+                note=plan.note,
+                percent=int(round(state['amount'] * 100)),
+                mode=state['mode'].lower())
         self.statusBar().showMessage(message, 8000)
 
     def force_refresh(self):
@@ -1576,18 +1614,19 @@ class MainWindow(QMainWindow):
         self.scene.rebuild()
         self._refresh_preview()
         self.view3d.update()
-        self.statusBar().showMessage("Redrew both views from the "
-                                     "object tree.", 3000)
+        self.statusBar().showMessage(
+            language.tr("Redrew both views from the object tree."), 3000)
 
     def _render_now(self):
         if self.engine.available:
             self.engine.request_render(self._render_scope()[1]())
-            self.statusBar().showMessage("Rendering with OpenSCAD…",
-                                         2000)
+            self.statusBar().showMessage(
+                language.tr("Rendering with OpenSCAD…"), 2000)
         else:
             self._refresh_preview()
             self.statusBar().showMessage(
-                "OpenSCAD not found — using built-in preview.", 4000)
+                language.tr("OpenSCAD not found — using built-in "
+                            "preview."), 4000)
 
     def _engine_mesh(self, tris):
         color = getattr(self, "_engine_color", None)
@@ -1624,7 +1663,7 @@ class MainWindow(QMainWindow):
 
     def _locate_openscad(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Locate the OpenSCAD executable")
+            self, language.tr("Locate the OpenSCAD executable"))
         if not path:
             return
         set_openscad_path(path)
@@ -1719,10 +1758,11 @@ class MainWindow(QMainWindow):
         recent = self._recent_files()
         start = str(Path(recent[0]).parent) if recent else ""
         path, _ = QFileDialog.getOpenFileName(
-            self, "Open", start,
-            "All supported (*.kcad *.scad *.stl *.obj *.off *.3mf);;"
-            "KherveCAD document (*.kcad);;OpenSCAD program (*.scad);;"
-            "Mesh (*.stl *.obj *.off *.3mf)")
+            self, language.tr("Open"), start,
+            language.tr(
+                "All supported (*.kcad *.scad *.stl *.obj *.off "
+                "*.3mf);;KherveCAD document (*.kcad);;OpenSCAD program "
+                "(*.scad);;Mesh (*.stl *.obj *.off *.3mf)"))
         if not path:
             return
         self.open_any(path)
@@ -1749,9 +1789,11 @@ class MainWindow(QMainWindow):
         else:
             QMessageBox.warning(
                 self, APP_NAME,
-                f"KherveCAD can open .kcad, .scad, .csg, mesh files "
-                f"(.stl/.obj/.off/.3mf/.amf/.glb), 2D drawings (.svg/.dxf) "
-                f"and height maps (.dat) — not {ext or 'this type'}.")
+                language.tr(
+                    "KherveCAD can open .kcad, .scad, .csg, mesh files "
+                    "(.stl/.obj/.off/.3mf/.amf/.glb), 2D drawings "
+                    "(.svg/.dxf) and height maps (.dat) — not "
+                    "{ext}.").format(ext=ext or language.tr("this type")))
 
     # ------------------------------------------------------ drag & drop
     _DROP_EXTS = (".kcad", ".scad", ".csg", ".stl", ".obj", ".off", ".3mf",
@@ -1788,13 +1830,17 @@ class MainWindow(QMainWindow):
             return
         if not Path(path).exists():
             QMessageBox.warning(
-                self, APP_NAME, f"File no longer exists:\n{path}")
+                self, APP_NAME,
+                language.tr("File no longer exists:\n{path}")
+                .format(path=path))
             self._forget_recent(path)
             return
         try:
             document.load_kcad(self.model, path)
         except Exception as exc:
-            QMessageBox.warning(self, APP_NAME, f"Could not open:\n{exc}")
+            QMessageBox.warning(
+                self, APP_NAME,
+                language.tr("Could not open:\n{exc}").format(exc=exc))
             return
         self._path = path
         self._dirty = False
@@ -1819,7 +1865,9 @@ class MainWindow(QMainWindow):
         try:
             document.save_kcad(self.model, self._path)
         except Exception as exc:
-            QMessageBox.warning(self, APP_NAME, f"Could not save:\n{exc}")
+            QMessageBox.warning(
+                self, APP_NAME,
+                language.tr("Could not save:\n{exc}").format(exc=exc))
             return
         self._dirty = False
         self._add_recent(self._path)
@@ -1828,13 +1876,16 @@ class MainWindow(QMainWindow):
         kept = design_saved(self, self._path)
         if kept:
             self.statusBar().showMessage(
-                f"Saved — and kept in My Library ▸ {kept['section']}", 6000)
+                language.tr(
+                    "Saved — and kept in My Library ▸ {section}")
+                .format(section=kept['section']), 6000)
 
     def save_file_as(self):
         recent = self._recent_files()
         start = str(Path(recent[0]).parent) if recent else ""
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save As", start, "KherveCAD document (*.kcad)")
+            self, language.tr("Save As"), start,
+            language.tr("KherveCAD document (*.kcad)"))
         if not path:
             return
         if not path.lower().endswith(".kcad"):
@@ -1847,7 +1898,9 @@ class MainWindow(QMainWindow):
         if not self._path:
             QMessageBox.information(
                 self, APP_NAME,
-                "Save the document first — there is no file to show yet.")
+                language.tr(
+                    "Save the document first — there is no file to "
+                    "show yet."))
             return
         import subprocess
         import sys
@@ -1860,8 +1913,10 @@ class MainWindow(QMainWindow):
             else:
                 subprocess.Popen(["xdg-open", str(path.parent)])
         except Exception as exc:
-            QMessageBox.warning(self, APP_NAME,
-                                f"Could not open the file manager:\n{exc}")
+            QMessageBox.warning(
+                self, APP_NAME,
+                language.tr("Could not open the file manager:\n{exc}")
+                .format(exc=exc))
 
     # -------------------------------------------------------------- git
     def _git_ready(self):
@@ -1872,8 +1927,9 @@ class MainWindow(QMainWindow):
         if not git_backend.is_available():
             QMessageBox.warning(
                 self, APP_NAME,
-                "Git support needs the 'pygit2' package, which isn't "
-                "installed.\n\n    pip install pygit2")
+                language.tr(
+                    "Git support needs the 'pygit2' package, which "
+                    "isn't installed.\n\n    pip install pygit2"))
             return None
         if self._path is None:
             self.save_file_as()
@@ -1891,20 +1947,24 @@ class MainWindow(QMainWindow):
         from . import git_backend
         stem = Path(self._path).stem
         message, ok = QInputDialog.getText(
-            self, "Commit", "Commit message:",
-            text=f"Update {Path(self._path).name}")
+            self, language.tr("Commit"), language.tr("Commit message:"),
+            text=language.tr("Update {name}")
+            .format(name=Path(self._path).name))
         if not ok or not message.strip():
             return
         oid = git_backend.commit_all(repo_dir, message.strip(),
                                      file_stem=stem)
         if oid:
             self.statusBar().showMessage(
-                f"Committed {oid[:8]} on "
-                f"{git_backend.current_branch(repo_dir) or '?'}", 5000)
+                language.tr("Committed {sha} on {branch}").format(
+                    sha=oid[:8],
+                    branch=git_backend.current_branch(repo_dir) or '?'),
+                5000)
         else:
             self.statusBar().showMessage(
-                "Nothing to commit — no changes since the last commit.",
-                5000)
+                language.tr(
+                    "Nothing to commit — no changes since the last "
+                    "commit."), 5000)
 
     def _git_push(self):
         repo_dir = self._git_ready()
@@ -1914,8 +1974,9 @@ class MainWindow(QMainWindow):
         if not git_backend.get_remotes(repo_dir):
             if QMessageBox.question(
                     self, APP_NAME,
-                    "No remote is configured. Connect to GitHub / GitLab "
-                    "now?") == QMessageBox.Yes:
+                    language.tr(
+                        "No remote is configured. Connect to GitHub / "
+                        "GitLab now?")) == QMessageBox.Yes:
                 self._git_connect()
             return
         branch = git_backend.current_branch(repo_dir) or "main"
@@ -1940,17 +2001,19 @@ class MainWindow(QMainWindow):
         from . import git_backend
         current = dict(git_backend.get_remotes(repo_dir)).get("origin", "")
         url, ok = QInputDialog.getText(
-            self, "Connect to GitHub / GitLab",
-            "Remote URL for 'origin'\n"
-            "(e.g. https://github.com/you/repo.git):", text=current)
+            self, language.tr("Connect to GitHub / GitLab"),
+            language.tr(
+                "Remote URL for 'origin'\n"
+                "(e.g. https://github.com/you/repo.git):"), text=current)
         if not ok or not url.strip():
             return
         if git_backend.set_remote(repo_dir, "origin", url.strip()):
             self.statusBar().showMessage(
-                "Remote 'origin' configured — use Git > Push.", 5000)
+                language.tr(
+                    "Remote 'origin' configured — use Git > Push."), 5000)
         else:
             QMessageBox.warning(self, APP_NAME,
-                                "Could not set the remote.")
+                                language.tr("Could not set the remote."))
 
     def open_library(self):
         """Non-modal: the library stays open while you keep editing."""
@@ -1972,7 +2035,8 @@ class MainWindow(QMainWindow):
         if not self._confirm_discard():
             return
         path, _ = QFileDialog.getOpenFileName(
-            self, "Import OpenSCAD", "", "OpenSCAD program (*.scad)")
+            self, language.tr("Import OpenSCAD"), "",
+            language.tr("OpenSCAD program (*.scad)"))
         if not path:
             return
         self._import_scad_path(path)
@@ -1985,11 +2049,14 @@ class MainWindow(QMainWindow):
             # KherveCAD couldn't parse it into objects at all (e.g. it
             # uses vector .x/.y, ranges, custom modules). Offer the raw
             # OpenSCAD block so the file still opens and renders.
-            reason = (f"KherveCAD couldn't read this file as editable "
-                      f"objects:\n{exc}")
+            reason = language.tr(
+                "KherveCAD couldn't read this file as editable "
+                "objects:\n{exc}").format(exc=exc)
             if not self._offer_scad_raw(path, reason):
-                QMessageBox.warning(self, APP_NAME,
-                                    f"Could not import:\n{exc}")
+                QMessageBox.warning(
+                    self, APP_NAME,
+                    language.tr("Could not import:\n{exc}")
+                    .format(exc=exc))
             return
         # Parsed, but a file built on custom modules/functions comes in
         # empty — offer the raw block for that case too.
@@ -1998,9 +2065,10 @@ class MainWindow(QMainWindow):
         advanced = any("not supported" in w or "unsupported" in w
                        for w in warnings)
         if empty and advanced:
-            reason = ("This file is built from custom OpenSCAD "
-                      "modules/functions that KherveCAD can't turn into "
-                      "editable objects, so the object tree is empty.")
+            reason = language.tr(
+                "This file is built from custom OpenSCAD "
+                "modules/functions that KherveCAD can't turn into "
+                "editable objects, so the object tree is empty.")
             if self._offer_scad_raw(path, reason):
                 return
         # the imported program's loose geometry lands as ONE part in
@@ -2017,21 +2085,22 @@ class MainWindow(QMainWindow):
         if warnings:
             QMessageBox.information(
                 self, APP_NAME,
-                "Imported with limitations:\n- "
+                language.tr("Imported with limitations:\n- ")
                 + "\n- ".join(warnings[:12])
                 + ("\n…" if len(warnings) > 12 else ""))
 
     def _offer_scad_raw(self, path, reason):
         """Ask whether to load *path* as a raw OpenSCAD block; do it and
         return True if the user accepts."""
-        note = "" if self.engine.available else (
+        note = "" if self.engine.available else language.tr(
             "\n\n(OpenSCAD isn't detected — set it via Edit > Locate "
             "OpenSCAD to render it.)")
         answer = QMessageBox.question(
             self, APP_NAME,
-            reason + "\n\nLoad the whole file as a raw OpenSCAD block? "
-            "It renders through the OpenSCAD engine and is editable as "
-            "text in the Code tab (not as objects)." + note,
+            reason + language.tr(
+                "\n\nLoad the whole file as a raw OpenSCAD block? It "
+                "renders through the OpenSCAD engine and is editable "
+                "as text in the Code tab (not as objects).") + note,
             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if answer == QMessageBox.Yes:
             self._load_scad_raw(path)
@@ -2058,8 +2127,9 @@ class MainWindow(QMainWindow):
 
     def import_drawing(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Import 2D drawing", "",
-            "2D drawing (*.svg *.dxf);;SVG (*.svg);;DXF (*.dxf)")
+            self, language.tr("Import 2D drawing"), "",
+            language.tr("2D drawing (*.svg *.dxf);;SVG (*.svg);;"
+                        "DXF (*.dxf)"))
         if path:
             self._import_drawing_path(path)
 
@@ -2079,16 +2149,19 @@ class MainWindow(QMainWindow):
         if not self.view3d.user_moved:
             self.view3d.fit()
         self.statusBar().showMessage(
-            f"Imported {Path(path).name} as a 3 mm extrusion — select the "
-            f"drawing to set its layer, DPI or centre, or the extrude to "
-            f"change the height.", 10000)
+            language.tr(
+                "Imported {name} as a 3 mm extrusion — select the "
+                "drawing to set its layer, DPI or centre, or the "
+                "extrude to change the height.")
+            .format(name=Path(path).name), 10000)
         return node
 
     def import_surface(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Import height map", "",
-            "Height map (*.dat *.png *.jpg *.jpeg);;Heights (*.dat);;"
-            "Picture (*.png *.jpg *.jpeg)")
+            self, language.tr("Import height map"), "",
+            language.tr(
+                "Height map (*.dat *.png *.jpg *.jpeg);;"
+                "Heights (*.dat);;Picture (*.png *.jpg *.jpeg)"))
         if path:
             self._import_surface_path(path)
 
@@ -2103,17 +2176,20 @@ class MainWindow(QMainWindow):
         if not self.view3d.user_moved:
             self.view3d.fit()
         self.statusBar().showMessage(
-            f"Imported {Path(path).name} as a surface — one cell per "
-            f"value or pixel, heights 0 to 100 for a picture: wrap it in "
-            f"a Scale or Resize to size it.", 10000)
+            language.tr(
+                "Imported {name} as a surface — one cell per value or "
+                "pixel, heights 0 to 100 for a picture: wrap it in a "
+                "Scale or Resize to size it.")
+            .format(name=Path(path).name), 10000)
         return node
 
     def import_stl(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Import mesh", "",
-            "Mesh (*.stl *.obj *.off *.3mf *.glb);;STL (*.stl);;"
-            "Wavefront OBJ (*.obj);;OFF (*.off);;3MF (*.3mf);;"
-            "glTF binary (*.glb)")
+            self, language.tr("Import mesh"), "",
+            language.tr(
+                "Mesh (*.stl *.obj *.off *.3mf *.glb);;STL (*.stl);;"
+                "Wavefront OBJ (*.obj);;OFF (*.off);;3MF (*.3mf);;"
+                "glTF binary (*.glb)"))
         if not path:
             return
         self._import_mesh_path(path)
@@ -2133,7 +2209,9 @@ class MainWindow(QMainWindow):
                 try:
                     write_stl(tris, str(stl_path), Path(path).stem)
                     use_path = str(stl_path)
-                    note = f" (converted to {stl_path.name} to render)"
+                    note = language.tr(
+                        " (converted to {name} to render)").format(
+                        name=stl_path.name)
                 except OSError:
                     pass                     # fall back to the .obj path
         # an imported mesh arrives as one Object holding the whole
@@ -2149,17 +2227,20 @@ class MainWindow(QMainWindow):
         # inches or metres is only obviously wrong once it is measured
         from .meshimport import size_text
         self.statusBar().showMessage(
-            f"Imported {Path(path).name}"
-            f"{size_text(node, unit=self.model.unit)}{note} — "
-            "right-click ▸ Imported mesh to centre it, stand it on the "
-            "floor or fix its units.", 12000)
+            language.tr(
+                "Imported {name}{size}{note} — right-click ▸ "
+                "Imported mesh to centre it, stand it on the floor or "
+                "fix its units.").format(
+                name=Path(path).name,
+                size=size_text(node, unit=self.model.unit), note=note),
+            12000)
 
     def export_scad(self):
         suggestion = str(Path(self._path).with_suffix(".scad")) \
             if self._path else ""
         path, _ = QFileDialog.getSaveFileName(
-            self, "Export OpenSCAD", suggestion,
-            "OpenSCAD program (*.scad)")
+            self, language.tr("Export OpenSCAD"), suggestion,
+            language.tr("OpenSCAD program (*.scad)"))
         if not path:
             return
         if not path.lower().endswith(".scad"):
@@ -2167,14 +2248,16 @@ class MainWindow(QMainWindow):
         try:
             document.export_scad(self.model, path)
         except Exception as exc:
-            QMessageBox.warning(self, APP_NAME,
-                                f"Could not export:\n{exc}")
+            QMessageBox.warning(
+                self, APP_NAME,
+                language.tr("Could not export:\n{exc}").format(exc=exc))
 
     def export_stl(self):
         suggestion = str(Path(self._path).with_suffix(".stl")) \
             if self._path else ""
         path, _ = QFileDialog.getSaveFileName(
-            self, "Export STL", suggestion, "STL mesh (*.stl)")
+            self, language.tr("Export STL"), suggestion,
+            language.tr("STL mesh (*.stl)"))
         if not path:
             return
         if not path.lower().endswith(".stl"):
@@ -2185,8 +2268,10 @@ class MainWindow(QMainWindow):
         if self.engine.available:
             error = self.engine.export_stl(self.model.to_scad(), path)
             if error:
-                QMessageBox.warning(self, APP_NAME,
-                                    f"OpenSCAD export failed:\n{error}")
+                QMessageBox.warning(
+                    self, APP_NAME,
+                    language.tr("OpenSCAD export failed:\n{error}")
+                    .format(error=error))
                 return
         else:
             from .engine import write_stl
@@ -2196,8 +2281,10 @@ class MainWindow(QMainWindow):
         if not self.engine.available and mesh.approximates(self.model.root):
             QMessageBox.information(
                 self, APP_NAME,
-                "Exported with the built-in tessellator: booleans are "
-                "approximated. Install OpenSCAD for exact geometry.")
+                language.tr(
+                    "Exported with the built-in tessellator: booleans "
+                    "are approximated. Install OpenSCAD for exact "
+                    "geometry."))
 
     def _export_scale(self):
         from . import units_ui
@@ -2234,7 +2321,7 @@ class MainWindow(QMainWindow):
                 level if level in ACCESS_LEVELS else DEFAULT_ACCESS)
             self._mcp_bridge.tool_invoked.connect(
                 lambda name, _s: self.statusBar().showMessage(
-                    f"MCP: {name}", 3000))
+                    language.tr("MCP: {name}").format(name=name), 3000))
         return self._mcp_bridge
 
     def start_mcp_if_enabled(self):
@@ -2259,7 +2346,8 @@ class MainWindow(QMainWindow):
 
     # ------------------------------------------------------------- misc
     def _update_title(self):
-        name = Path(self._path).name if self._path else "Untitled"
+        name = Path(self._path).name if self._path \
+            else language.tr("Untitled")
         # `use <...>` resolves beside the open document, as in OpenSCAD
         from . import scadlib
         scadlib.DOCUMENT_DIR = str(Path(self._path).parent) \
@@ -2269,17 +2357,19 @@ class MainWindow(QMainWindow):
         label = getattr(self, "_file_label", None)
         if label is not None:
             if self._path:
-                label.setText(f"File: {star}{self._path}")
+                label.setText(language.tr("File: {star}{path}").format(
+                    star=star, path=self._path))
                 label.setToolTip(str(self._path))
             else:
-                label.setText(f"File: {star}Untitled (not saved)")
+                label.setText(language.tr(
+                    "File: {star}Untitled (not saved)").format(star=star))
                 label.setToolTip("")
 
     def _confirm_discard(self) -> bool:
         if not self._dirty:
             return True
         answer = QMessageBox.question(
-            self, APP_NAME, "Discard unsaved changes?",
+            self, APP_NAME, language.tr("Discard unsaved changes?"),
             QMessageBox.Discard | QMessageBox.Cancel)
         return answer == QMessageBox.Discard
 
