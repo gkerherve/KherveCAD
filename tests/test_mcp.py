@@ -602,6 +602,8 @@ def test_tunnel_urls_are_parsed():
     assert "--url" in mcp_tunnel.tunnel_args("cloudflared", 5)
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason="the stand-in program is a #! script")
 def test_tunnel_reports_a_public_link_from_a_fake_program(live, tmp_path):
     """A stand-in 'cloudflared' prints a URL; the bridge hands out the
     token-carrying MCP link and drops it when the bridge stops."""
