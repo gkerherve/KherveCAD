@@ -62,7 +62,20 @@ OPENSCAD_VERSION = os.environ.get("KHERVECAD_OPENSCAD_VERSION", "2026.09.18")
 OPENSCAD_ZIP = f"OpenSCAD-{OPENSCAD_VERSION}-x86-64.zip"
 OPENSCAD_URL = f"https://files.openscad.org/snapshots/{OPENSCAD_ZIP}"
 
-_ISCC = Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Inno Setup 6" / "ISCC.exe"
+def _find_iscc() -> Path:
+    """Inno Setup's compiler: KHERVECAD_ISCC, else the per-user install, else
+    the machine-wide one (where GitHub's Windows runners have it)."""
+    if os.environ.get("KHERVECAD_ISCC"):
+        return Path(os.environ["KHERVECAD_ISCC"])
+    candidates = [
+        Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Inno Setup 6" / "ISCC.exe",
+        Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")) / "Inno Setup 6" / "ISCC.exe",
+        Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Inno Setup 6" / "ISCC.exe",
+    ]
+    return next((c for c in candidates if c.is_file()), candidates[0])
+
+
+_ISCC = _find_iscc()
 
 
 def _run(cmd, **kwargs):

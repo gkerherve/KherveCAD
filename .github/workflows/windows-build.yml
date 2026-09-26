@@ -1,0 +1,123 @@
+name: Windows build
+
+# The same one-shot script used on the Windows desktop
+# (packaging/build_installer.py): stamp VERSION, freeze with PyInstaller,
+# bundle the pinned OpenSCAD snapshot, zip, compile the Inno installer.
+# Lets a release be cut from a Mac: trigger this and macos-build.yml on
+# the same commit so both platforms carry the same 0.1.<n>.
+#
+# release=false (the default) only uploads a workflow artifact. Publishing
+# is a separate, deliberate step: the v* release becomes
+# releases/latest, which the website's download button points at.
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Publish the v<ver> GitHub release (becomes latest)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write          # needed only when release=true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The version is `git rev-list --count HEAD`, so a shallow
+          # clone would silently ship the wrong build number.
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller pytest
+
+      - name: Install Inno Setup
+        # Not guaranteed on the runner image; choco is. build_installer.py
+        # finds it under Program Files (x86).
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup -y --no-progress
+          }
+
+      - name: Run the test suite
+        env:
+          QT_QPA_PLATFORM: offscreen
+          KHERVECAD_DISABLE_ENGINE: "1"
+        run: python -m pytest tests/ -q
+
+      - name: Build the installer and portable zip
+        env:
+          GITHUB_TOKEN: ${{ github.token }}   # OpenSCAD source lookup
+        run: python packaging/build_installer.py
+
+      - name: Read the version back
+        id: ver
+        shell: bash
+        run: |
+          VERSION=$(cut -d+ -f1 khervecad/VERSION | tr -d '\r\n')
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check the build
+        # No launch test (GUI on a headless runner). Checks what a freeze
+        # breaks: placeholder version, missing engine or its licence.
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$VERSION" != "0.1.0"
+          test -f dist/KherveCAD/KherveCAD.exe
+          ls dist/KherveCAD/openscad/*.exe
+          ls dist/KherveCAD/openscad | grep -qi copying
+          ls -lh dist/KherveCAD-Setup-$VERSION.exe dist/KherveCAD-$VERSION-portable.zip \
+                 dist/KherveCAD-Setup.exe dist/openscad-*.tar.gz
+
+      - name: Upload the installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: KherveCAD-${{ env.VERSION }}-windows
+          path: |
+            dist/KherveCAD-Setup-*.exe
+            dist/KherveCAD-Setup.exe
+            dist/KherveCAD-*-portable.zip
+            dist/openscad-*.tar.gz
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: inputs.release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          ls -lh artifacts
+          # KherveCAD-Setup.exe is mandatory: the site links to
+          # releases/latest/download/KherveCAD-Setup.exe by filename.
+          test -f artifacts/KherveCAD-Setup.exe
+          gh release create "v${VERSION}" --target "${{ github.sha }}" \
+            --title "KherveCAD v${VERSION}" \
+            --notes "Windows installer and portable zip. OpenSCAD is bundled (GPL-2.0-or-later); its source archive is attached." \
+            artifacts/*
