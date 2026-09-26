@@ -1220,6 +1220,8 @@ PARTS.update(library_room.PARTS)
 PARTS.update(library_home.PARTS)
 PARTS.update(library_home_more.PARTS)
 PARTS.update(library_home_extra.PARTS)
+from . import custom_part  # noqa: E402
+PARTS.update(custom_part.PARTS)
 PARTS.update(library_prusa.PARTS)
 PARTS.update(library_minecraft.PARTS)
 PARTS.update(library_fasteners.PARTS)
@@ -1350,10 +1352,17 @@ def metallic(node, colour=STAINLESS):
 
 def build_part(part_id: str, dims: dict) -> CadNode:
     """Build the requested part from (possibly customised) *dims*.
-    Vacuum hardware comes out metal (`metallic`)."""
+    Vacuum hardware comes out metal (`metallic`); ``dims["_finish"]``
+    repaints components (`part_finish`)."""
+    finish = (dims or {}).get("_finish")
+    if finish:
+        dims = {k: v for k, v in dims.items() if k != "_finish"}
     node = _build_part(part_id, dims)
     if (PARTS.get(part_id) or {}).get("category") == _VAC:
         node = metallic(node)
+    if finish:                            # the user's own colour/texture
+        from . import part_finish
+        part_finish.apply(node, finish)
     # My Library's autosave keeps the user's designs, not Library parts
     node.params["library_part"] = part_id
     return node
