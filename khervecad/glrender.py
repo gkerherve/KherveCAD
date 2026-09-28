@@ -53,7 +53,9 @@ SURFACES = {"Brick": 1, "Concrete": 2, "Render": 3, "Roof tiles": 4,
             # upholstery (sofas, armchairs): weave, pile, grain, loops
             "Fabric": 28, "Velvet": 29, "Leather": 30, "Bouclé": 31,
             # furniture timber: flat-sawn grain, pores, veneer leaves
-            "Wood": 32}
+            "Wood": 32,
+            # a lawn: blades, clumps and mowing stripes on a flat slab
+            "Grass": 33}
 #: (gloss strength, saturation scale) of a surface: glazed tiles and
 #: marble catch the light, carpet and thatch do not
 SURFACE_LOOK = {"Wall tiles": (0.45, 0.95), "Metro tiles": (0.5, 0.95),
@@ -66,7 +68,8 @@ SURFACE_LOOK = {"Wall tiles": (0.45, 0.95), "Metro tiles": (0.5, 0.95),
                 "Standing seam": (0.35, 0.6), "Solar panels": (0.6, 0.9),
                 "Panelling": (0.1, 0.9), "Fabric": (0.0, 0.9),
                 "Velvet": (0.08, 1.0), "Leather": (0.3, 0.95),
-                "Bouclé": (0.0, 0.85), "Wood": (0.22, 1.0)}
+                "Bouclé": (0.0, 0.85), "Wood": (0.22, 1.0),
+                "Grass": (0.0, 1.05)}
 #: roof coverings: their courses run up the slope, not up the world Z
 ROOF_SURFACES = ("Roof tiles", "Slate", "Shingles", "Thatch",
                  "Standing seam", "Solar panels")
@@ -269,6 +272,16 @@ vec3 finishes(float id, vec2 uv, vec3 rgb, float px) {
         float grain = noise(vec2(along * 0.02 + h * 30.0, across * 0.4));
         vec3 c = rgb * (0.8 + 0.3 * h) * (0.88 + 0.2 * grain);
         return mix(c, rgb * 0.4, joint(e, 0.8, px));
+    }
+    if (id == 33.0) {                      // lawn: blades in clumps
+        vec2 bl = vec2(uv.x * 0.9 + 6.0 * noise(uv * 0.02), uv.y * 0.18);
+        float blade = hash(floor(bl / 4.0));               // thin streaks
+        float clump = fbm(uv * 0.004);                     // tussocks
+        float dry = smoothstep(0.62, 0.9, fbm(uv * 0.0011 + 7.0));
+        float stripe = 0.94 + 0.06 * sign(sin(uv.x * 3.14159 / 900.0));
+        vec3 c = rgb * (0.72 + 0.34 * blade) * (0.82 + 0.3 * clump) * stripe;
+        c = mix(c, c * vec3(1.25, 1.12, 0.6), 0.35 * dry);  // straw patches
+        return c;
     }
     if (id == 20.0)                        // carpet
         return rgb * (0.9 + 0.12 * hash(floor(uv / 2.5)) + 0.1 * (fbm(uv * 0.006) - 0.5));
@@ -521,7 +534,7 @@ void main() {
                      (id == 20.0 || id == 21.0) ? 12.0 :
                      (id == 18.0 || id == 22.0 || id == 23.0) ? 140.0 :
                      (id == 25.0) ? 500.0 : (id == 29.0) ? 1e6 :
-                     (id == 32.0) ? 120.0 :
+                     (id == 32.0) ? 120.0 : (id == 33.0) ? 10.0 :
                      (id >= 28.0) ? 80.0 : 100.0;
         float px = length(fwidth(v_pos));
         float fade = smoothstep(feat * 0.5, feat * 1.2, px);
