@@ -255,32 +255,74 @@ def build_pi_zero2w(dims):
 
 
 def build_pi5(dims):
-    """Raspberry Pi 5: 85 × 56 mm, holes 58 × 49 mm like the Pi 4, RP1,
-    power button, fan and PCIe connectors."""
+    """Raspberry Pi 5: 85 × 56 mm, holes 58 × 49 mm like the Pi 4. Like
+    for like for enclosure work: Ethernet back at the bottom-right (the
+    Pi 4 had it at the top), hollow USB and RJ45 mouths so a case's cut-outs
+    can be checked against them, both FPC ports, the PCIe FPC, the RTC,
+    UART and fan headers, and the microSD card under the left edge."""
     holes = [(3.5, 3.5), (61.5, 3.5), (3.5, 52.5), (61.5, 52.5)]
-    parts = [("Ethernet", 65.0, 2.5, 21.0, 16.0, 13.5, STEEL, "Metal"),
-             ("USB 3 (pair)", 69.0, 20.5, 17.5, 13.5, 16.0, "#2f6db5",
-              "Default"),
-             ("USB 2 (pair)", 69.0, 38.0, 17.5, 13.5, 16.0, STEEL, "Metal"),
-             ("USB-C power", 11.2 - 4.5, -1.5, 9.0, 7.5, 3.3, STEEL,
-              "Metal"),
-             ("Micro-HDMI 0", 26.0 - 3.5, -1.5, 7.0, 8.0, 3.0, STEEL,
-              "Metal"),
-             ("Micro-HDMI 1", 39.5 - 3.5, -1.5, 7.0, 8.0, 3.0, STEEL,
-              "Metal"),
-             ("BCM2712", 25.0, 20.0, 16.0, 16.0, 2.4, "#8a8f96", "Metal"),
+    parts = [("BCM2712", 20.0, 20.0, 17.0, 17.0, 1.0, CHIP, "Default"),
              ("RP1", 49.0, 22.0, 9.0, 9.0, 1.0, CHIP, "Default"),
-             ("RAM", 26.0, 38.0, 14.0, 10.0, 1.1, CHIP, "Default"),
-             ("Power button", -0.5, 26.0, 4.0, 3.0, 2.0, BLACK, "Default"),
+             ("LPDDR4X RAM", 24.0, 39.0, 14.0, 9.5, 1.1, CHIP, "Default"),
+             ("PMIC", 8.0, 12.0, 7.0, 7.0, 0.9, CHIP, "Default"),
+             ("Ethernet PHY", 56.0, 6.0, 6.0, 6.0, 0.8, CHIP, "Default"),
+             ("Wi-Fi module", 6.0, 36.0, 10.0, 10.0, 1.3, MODULE, "Metal"),
              ("Fan header", 64.0, 44.0, 5.0, 3.0, 3.0, "#e9e9e6", "Default"),
-             ("PCIe FPC", -0.5, 9.0, 3.0, 17.0, 1.5, BLACK, "Default"),
-             ("Camera/Display 0", 45.0, 2.0, 3.0, 16.0, 2.0, BLACK,
-              "Default"),
-             ("Camera/Display 1", 51.0, 2.0, 3.0, 16.0, 2.0, BLACK,
+             ("PoE+ header", 57.0, 48.5, 5.0, 5.0, 3.5, BLACK, "Default"),
+             ("UART header", 31.5, 1.0, 4.5, 3.0, 4.0, "#e9e9e6", "Default"),
+             ("RTC battery header", 16.5, 1.5, 4.0, 3.0, 3.0, "#e9e9e6",
               "Default")]
     board = _board("Raspberry Pi 5", 85.0, 56.0, holes, 2.75, parts,
                    PCB_GREEN)
-    return _add(board, _header("GPIO header", 7.1, 50.0, 20, rows=2))
+    z = 1.6
+    ports = [
+        _b("SoC heat spreader", 21.0, 21.0, z + 1.0, 15.0, 15.0, 1.2,
+           MODULE, "Metal")]
+    for name, y, w, h, tongue in (("USB 2 (pair)", 21.0, 13.5, 16.0, BLACK),
+                                  ("USB 3 (pair)", 38.0, 13.5, 16.0,
+                                   "#2f6db5")):
+        shell = CadNode("difference", name)
+        shell.add(_b("Shell", 69.0, y, z, 17.5, w, h, STEEL, "Metal"))
+        for lz in (1.5, 9.0):
+            shell.add(_b("Mouth", 72.0, y + 1.0, z + lz, 16.0, w - 2.0,
+                         5.5, STEEL))
+        ports.append(shell)
+        for lz in (3.6, 11.1):
+            ports.append(_b("Tongue", 73.0, y + 1.9, z + lz, 12.5, w - 3.8,
+                            1.8, tongue))
+    rj = CadNode("difference", "Ethernet")
+    rj.add(_b("Shell", 65.0, 2.5, z, 21.0, 16.0, 13.5, STEEL, "Metal"))
+    rj.add(_b("Jack mouth", 75.0, 4.5, z + 2.0, 12.0, 12.0, 9.5, STEEL))
+    ports += [rj,
+              _b("Link LED", 85.6, 3.2, z + 11.0, 0.5, 2.0, 1.6, "#3ec43e"),
+              _b("Activity LED", 85.6, 15.3, z + 11.0, 0.5, 2.0, 1.6,
+                 "#f0b030")]
+    for name, x, w, h in (("USB-C power", 11.2, 9.0, 3.3),
+                          ("Micro-HDMI 0", 25.8, 7.0, 3.0),
+                          ("Micro-HDMI 1", 39.2, 7.0, 3.0)):
+        plug = CadNode("difference", name)
+        plug.add(_b("Shell", x - w / 2, -1.5, z, w, 7.5, h, STEEL, "Metal"))
+        plug.add(_b("Mouth", x - w / 2 + 0.7, -2.5, z + 0.6, w - 1.4, 6.0,
+                    h - 1.2, STEEL))
+        ports.append(plug)
+    for name, x in (("Camera/Display 0", 45.0), ("Camera/Display 1", 51.0)):
+        ports += [_b(name, x, 2.0, z, 3.5, 16.0, 1.8, "#e8e3d5"),
+                  _b(name + " latch", x, 2.0, z + 1.8, 3.5, 16.0, 1.0,
+                     BLACK)]
+    ports += [_b("PCIe FPC", -0.5, 9.0, z, 3.5, 17.0, 1.8, "#e8e3d5"),
+              _b("PCIe FPC latch", -0.5, 9.0, z + 1.8, 3.5, 17.0, 1.0,
+                 BLACK),
+              _b("Power button", -0.5, 26.0, z, 4.0, 3.0, 2.0, BLACK),
+              _b("Button cap", -1.0, 26.6, z + 0.5, 0.6, 1.8, 1.0, "#555555"),
+              _b("PWR LED", 0.8, 44.5, z, 1.0, 1.2, 0.6, "#e53030"),
+              _b("ACT LED", 0.8, 46.5, z, 1.0, 1.2, 0.6, "#3ec43e"),
+              _b("microSD socket", -0.5, 22.0, -1.5, 13.0, 12.0, 1.5, MODULE,
+                 "Metal"),
+              _b("microSD card", -2.5, 23.0, -1.3, 4.0, 10.0, 0.8, CHIP)]
+    for i in range(12):
+        ports.append(_b("Passive", 40.0 + i * 1.8, 17.0, z, 1.0, 0.5, 0.5,
+                        "#8b6d45"))
+    return _add(board, *ports, _header("GPIO header", 7.1, 50.0, 20, rows=2))
 
 
 def build_teensy40(dims):
