@@ -49,6 +49,10 @@ SEGMENTS = 16
 DEFAULT_COLOUR = (0.78, 0.78, 0.78)
 ROLES = ("head", "tail", "wingL", "wingR", "legFL", "legFR", "legBL",
          "legBR")
+# What the game makes of it: an animal grazes and bolts, a person walks about
+# and turns to look at you, a monster hunts you. "auto" leaves it to the game,
+# which reads a monster's name ("Troll", "Dragon"…) and a person's two legs.
+NATURES = ("auto", "animal", "person", "monster")
 
 
 class PlanetCraftError(ValueError):
@@ -251,8 +255,12 @@ def _part(name, role, game_tris):
 
 
 def build_creature(model, name, node=None, height=None, speed=1.0,
-                   health=10, wild=True):
+                   health=10, wild=True, nature="auto"):
     """The creature dict for the document (or *node*'s subtree)."""
+    nature = str(nature or "auto").lower()
+    if nature not in NATURES:
+        raise PlanetCraftError(
+            f"{nature!r} is not a nature; use one of {', '.join(NATURES)}.")
     root = node or model.root
     named = _named_parts(root)
     body = _body_without(root, named) if named else _coloured_world(
@@ -286,9 +294,16 @@ def build_creature(model, name, node=None, height=None, speed=1.0,
     for (n, r), tris in groups.items():
         if r.startswith("leg"):
             if len(r) < 5:
+                # "leg", "legF"/"legB" or "legL"/"legR": whatever the name
+                # did not say comes from where the leg stands. (A leg named
+                # "Left leg" used to read its SIDE as its end, came out as
+                # "legLL", matched no joint and was dropped — a man sent
+                # with named legs arrived with none.)
                 bx0, by0, _bz0, bx1, by1, _bz1 = _bbox(tris)
-                end = r[3:4] or ("F" if (by0 + by1) / 2 < cy else "B")
-                side = r[4:5] if len(r) == 5 else (
+                rest = r[3:]
+                end = rest[:1] if rest[:1] in ("F", "B") else (
+                    "F" if (by0 + by1) / 2 < cy else "B")
+                side = rest[-1:] if rest[-1:] in ("L", "R") else (
                     "L" if (bx0 + bx1) / 2 > cx else "R")
                 r = "leg" + end + side
             legs.setdefault(r, []).extend(tris)
@@ -319,11 +334,14 @@ def build_creature(model, name, node=None, height=None, speed=1.0,
         seen.add(role)
         parts.append(_part(pname, role, game(tris)))
     label = str(name).strip() or "Creature"
-    return dict(format=FORMAT, version=VERSION, kind="kc_" + slug(label),
-                label=label, height=round(float(height), 3),
-                speed=float(speed), health=int(health), wild=bool(wild),
-                source="KherveCAD", auto_legs=auto,
-                triangles=len(everything), parts=parts)
+    out = dict(format=FORMAT, version=VERSION, kind="kc_" + slug(label),
+               label=label, height=round(float(height), 3),
+               speed=float(speed), health=int(health), wild=bool(wild),
+               source="KherveCAD", auto_legs=auto,
+               triangles=len(everything), parts=parts)
+    if nature != "auto":
+        out["nature"] = nature
+    return out
 
 
 def summary(creature):
@@ -332,7 +350,8 @@ def summary(creature):
             "height_blocks": creature["height"],
             "triangles": creature["triangles"], "parts": roles,
             "legs": sum(1 for r in roles if r.startswith("leg")),
-            "auto_legs": creature["auto_legs"]}
+            "auto_legs": creature["auto_legs"],
+            "nature": creature.get("nature", "auto")}
 
 
 def write(creature, folder):
@@ -356,9 +375,9 @@ def write(creature, folder):
 
 
 def export(model, name, folder=None, node=None, height=None, speed=1.0,
-           health=10, wild=True):
+           health=10, wild=True, nature="auto"):
     folder = folder or default_folder()
     creature = build_creature(model, name, node, height, speed, health,
-                              wild)
+                              wild, nature)
     path = write(creature, folder)
     return dict(summary(creature), path=path)

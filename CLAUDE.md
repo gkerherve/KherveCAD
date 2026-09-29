@@ -1731,7 +1731,15 @@ into a new module and import.
                        Axes game = (-x, z, y) — a proper rotation, so winding
                        survives; KherveCAD +x is the creature's LEFT. Joints:
                        leg top, head back-bottom (neck), tail front-top.
-                       Real size (1 block = 1 m) unless `height`. The game side
+                       Real size (1 block = 1 m) unless `height`. A leg named
+                       by its side alone ("Left leg") takes its end from where
+                       it stands — it used to become `legLL`, match no joint
+                       and be DROPPED, so a man sent with named legs had none.
+                       `nature` (auto/animal/person/monster; dialog "What is
+                       it?", MCP `nature`) is written only when chosen: the
+                       game makes a person walk about and look at you and a
+                       monster hunt you, and on auto reads a monster's name
+                       and a person's two upright legs itself. The game side
                        is documented in KhervePlanet's CLAUDE.md.
   - `city_trees.py`  — trees (broadleaf, conifer, round, birch, poplar:
                        tapered Bark trunk, branches, Leaves clumps in two

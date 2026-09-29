@@ -89,3 +89,33 @@ def test_write_to_the_game_folder(app, tmp_path):
     assert r["legs"] == 4
     with pytest.raises(P.PlanetCraftError):
         P.export(model_of(HORSE), "x", str(tmp_path / "nowhere"))
+
+
+MAN = '''
+color("#6b8e23") translate([-200,-110,850]) cube([400,220,600]);
+color("#f1c27d") translate([-120,-120,1450]) cube([240,240,260]);  // Head
+color("#1e2a44") translate([-185,-90,0]) cube([165,180,850]);  // Left leg
+color("#1e2a44") translate([20,-90,0]) cube([165,180,850]);  // Right leg
+'''
+
+
+def test_legs_named_by_side_alone_keep_their_joints(app):
+    # "Left leg" says a side and no end; it used to come out as legLL,
+    # match no joint and be dropped, so the man arrived with no legs
+    c = P.build_creature(model_of(MAN), "Walker")
+    roles = {p["role"]: p for p in c["parts"]}
+    legs = sorted(r for r in roles if r.startswith("leg"))
+    assert len(legs) == 2 and all(r in P.ROLES for r in legs)
+    # the name says the side, so the pair is one of each...
+    assert {r[-1] for r in legs} == {"L", "R"}
+    # ...and each swings at its hip
+    assert all(roles[r]["pivot"][1] == pytest.approx(0.85) for r in legs)
+
+
+def test_nature_is_written_only_when_chosen(app):
+    auto = P.build_creature(model_of(MAN), "Walker")
+    assert "nature" not in auto and P.summary(auto)["nature"] == "auto"
+    troll = P.build_creature(model_of(MAN), "Troll", nature="monster")
+    assert troll["nature"] == "monster"
+    with pytest.raises(P.PlanetCraftError):
+        P.build_creature(model_of(MAN), "Walker", nature="vegetable")

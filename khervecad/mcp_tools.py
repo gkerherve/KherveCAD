@@ -1689,7 +1689,8 @@ class McpToolExecutor:
                         node=node, height=params.get("height"),
                         speed=float(params.get("speed") or 1.0),
                         health=int(params.get("health") or 12),
-                        wild=params.get("wild", True))
+                        wild=params.get("wild", True),
+                        nature=params.get("nature") or "auto")
             if params.get("dry_run"):
                 return {"dry_run": True, **planetcraft.summary(
                     planetcraft.build_creature(self._model, **args))}

@@ -2669,11 +2669,15 @@ TOOLS = [
             "KhervePlanet folder, where the game loads it at start-up, puts "
             "a pair near the player and adds it to the wild herds. Parts "
             "are chosen by NAME — nodes named Head, Tail, Wing (left/right) "
-            "or Leg (front/back, left/right) become joints (legs swing at "
-            "their top, the head nods at its neck); unnamed legs under a "
-            "clear middle are found automatically. Real size (1 block = 1 "
-            "m) unless `height` (blocks). Build creatures with the front "
-            "facing -Y, Z up."
+            "or Leg (front/back, left/right; 'Left leg' is enough for a "
+            "biped) become joints (legs swing at their top, the head nods "
+            "at its neck); unnamed legs under a clear middle are found "
+            "automatically. `nature` says what the game makes of it: "
+            "animal, person (walks about, turns to look at you) or monster "
+            "(hunts the player); auto reads a monster's name and a "
+            "person's two upright legs. Real size (1 block = 1 m) unless "
+            "`height` (blocks). Build creatures with the front facing -Y, "
+            "Z up."
         ),
         "input_schema": _obj({
             "name": {"type": "string"},
@@ -2686,6 +2690,14 @@ TOOLS = [
             "health": {"type": "integer"},
             "wild": {"type": "boolean",
                      "description": "Roams wild herds (default true)."},
+            "nature": {"type": "string",
+                       "enum": ["auto", "animal", "person", "monster"],
+                       "description": "What the game makes of it: an animal "
+                                      "grazes and bolts, a person walks about "
+                                      "and turns to look at you, a monster "
+                                      "hunts you. auto (default): the game "
+                                      "reads a monster's name and a person's "
+                                      "two legs."},
             "path": {"type": "string",
                      "description": "The PlanetCraft (KhervePlanet) folder; "
                                     "found automatically when omitted."},

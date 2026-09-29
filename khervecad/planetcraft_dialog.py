@@ -14,7 +14,8 @@ from __future__ import annotations
 import os
 
 from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import (QCheckBox, QDialog, QDialogButtonBox,
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog,
+                             QDialogButtonBox,
                              QDoubleSpinBox, QFileDialog, QFormLayout,
                              QHBoxLayout, QLabel, QLineEdit, QMessageBox,
                              QPushButton, QSpinBox, QVBoxLayout, QWidget)
@@ -41,6 +42,16 @@ class SendDialog(QDialog):
         form = QFormLayout()
         self.name = QLineEdit(name)
         form.addRow(language.tr("Creature name"), self.name)
+        # what the game makes of it — see planetcraft.NATURES
+        self.nature = QComboBox()
+        for label, key in ((language.tr("Automatic"), "auto"),
+                           (language.tr("Animal — grazes, bolts when hit"),
+                            "animal"),
+                           (language.tr("Person — walks about, looks at you"),
+                            "person"),
+                           (language.tr("Monster — hunts you"), "monster")):
+            self.nature.addItem(label, key)
+        form.addRow(language.tr("What is it?"), self.nature)
         self.real = QCheckBox(language.tr("Real size (1 block = 1 m)"))
         self.real.setChecked(True)
         self.height = QDoubleSpinBox()
@@ -84,9 +95,11 @@ class SendDialog(QDialog):
                if self.node is not None else language.tr("the whole model"))
         self.info = QLabel(language.tr(
             "Sends {what}. Name parts <b>Head</b>, <b>Tail</b>, "
-            "<b>Wing</b> or <b>Front left leg</b>… to choose the "
-            "joints; unnamed legs are found by themselves. Restart "
-            "PlanetCraft (or reload the page) and a pair appears near "
+            "<b>Wing</b> or <b>Left leg</b>, <b>Front left leg</b>… to "
+            "choose the joints; unnamed legs are found by themselves. A "
+            "man on two legs walks about as a person; call it a troll, a "
+            "dragon or a monster — or choose Monster — and it hunts you. "
+            "Restart PlanetCraft (or reload the page) and it appears near "
             "you.").format(what=what))
         self.info.setWordWrap(True)
         buttons = QDialogButtonBox(QDialogButtonBox.Ok |
@@ -114,7 +127,7 @@ class SendDialog(QDialog):
                 self.window.model, self.name.text(), folder, self.node,
                 None if self.real.isChecked() else self.height.value(),
                 self.speed.value(), self.health.value(),
-                self.wild.isChecked())
+                self.wild.isChecked(), self.nature.currentData())
         except planetcraft.PlanetCraftError as exc:
             QMessageBox.warning(self, title, str(exc))
             return
