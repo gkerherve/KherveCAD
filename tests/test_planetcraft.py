@@ -119,3 +119,69 @@ def test_nature_is_written_only_when_chosen(app):
     assert troll["nature"] == "monster"
     with pytest.raises(P.PlanetCraftError):
         P.build_creature(model_of(MAN), "Walker", nature="vegetable")
+
+
+WING_BEAST = '''union() {  // Wing Beast
+  color("#884422") {  // Body
+    kcad_ellipsoid(c = [0, 0, 600], r = [200, 400, 200], $fn = 12);  // Trunk
+  }
+  color("#884422") {  // Head
+    kcad_ellipsoid(c = [0, -450, 750], r = [120, 150, 120], $fn = 12);  // Skull
+    sphere(r = 30);  // Head top
+  }
+  color("#553311") {  // Legs
+    kcad_capsule(a = [120, -250, 500], b = [120, -250, 30], r = 40, $fn = 8);  // One
+    kcad_capsule(a = [-120, -250, 500], b = [-120, -250, 30], r = 40, $fn = 8);  // Two
+    kcad_capsule(a = [120, 250, 500], b = [120, 250, 30], r = 40, $fn = 8);  // Three
+    kcad_capsule(a = [-120, 250, 500], b = [-120, 250, 30], r = 40, $fn = 8);  // Four
+  }
+}'''
+
+
+def test_a_name_holding_a_part_word_is_not_that_part_when_it_holds_others(app):
+    # "Wing Beast" is the beast, not a wing; its Head keeps its own "Head
+    # top"; and "Legs" holding four is four legs, dealt out by where each
+    # stands — named, so nothing is found automatically
+    c = P.build_creature(model_of(WING_BEAST), "Wing Beast")
+    assert sorted(p["role"] for p in c["parts"]) == sorted(
+        ["body", "head", "legFL", "legFR", "legBL", "legBR"])
+    assert not c["auto_legs"]
+    assert P.role_of("Legs") == "legs" and P.role_of("Front legs") == "legsF"
+
+
+def test_a_built_creature_brings_its_own_game_numbers(app):
+    from khervecad import creature_build
+    m = DocumentModel()
+    node, _spec, _parts = creature_build.build(m, {"preset": "Ogre"})
+    c = P.build_creature(m, "Ogre", node=node)
+    assert (c["speed"], c["health"], c["damage"], c["nature"], c["plan"]) \
+        == (0.7, 50, 7, "monster", "biped")
+    # ...which a caller's own numbers still override
+    c = P.build_creature(m, "Ogre", node=node, speed=1.5, nature="animal")
+    assert c["speed"] == 1.5 and c["nature"] == "animal"
+
+
+def test_a_serpent_and_a_slime_are_not_given_legs(app):
+    from khervecad import creature_build
+    for preset in ("Serpent", "Slime"):
+        m = DocumentModel()
+        node, _spec, _parts = creature_build.build(m, {"preset": preset})
+        c = P.build_creature(m, preset, node=node)
+        assert not any(p["role"].startswith("leg") for p in c["parts"])
+        assert "head" in {p["role"] for p in c["parts"]}
+
+
+def test_list_and_remove_what_the_game_has(app, tmp_path):
+    (tmp_path / "js").mkdir()
+    (tmp_path / "js" / "entities.js").write_text("")
+    P.export(model_of(HORSE), "Box horse", str(tmp_path))
+    r = P.export(model_of(MAN), "Walker", str(tmp_path), nature="person")
+    assert r["book_url"].endswith("/creatures.html#kc_walker")
+    listed = P.list_creatures(str(tmp_path))["creatures"]
+    assert [c["name"] for c in listed] == ["box_horse", "walker"]
+    assert listed[1]["nature"] == "person" and listed[0]["legs"] == 4
+    assert P.remove("kc_box_horse", str(tmp_path))["left"] == ["walker"]
+    assert json.loads((tmp_path / "creatures" / "index.json").read_text()) \
+        == ["walker"]
+    with pytest.raises(P.PlanetCraftError):
+        P.remove("dragon", str(tmp_path))

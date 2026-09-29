@@ -1209,7 +1209,8 @@ from . import (library_cards, library_chem, library_crystal,  # noqa: E402
                library_motion, library_solar, library_music,
                library_music_more, library_kitchen, library_electronics,
                library_hvac,
-               library_characters, library_animals, library_sport,
+               library_characters, library_animals, library_monsters,
+               library_sport,
                stadium, library_leaves, library_stones)
 PARTS.update(library_vacuum.PARTS)
 PARTS.update(library_uhv.PARTS)
@@ -1255,6 +1256,7 @@ PARTS.update(library_electronics.PARTS)
 PARTS.update(library_hvac.PARTS)
 PARTS.update(library_characters.PARTS)
 PARTS.update(library_animals.PARTS)
+PARTS.update(library_monsters.PARTS)
 # library_animals_real is kept (and tested) but HIDDEN from the Library
 # until it is good enough: see its docstring and CLAUDE.md.
 PARTS.update(library_generative.PARTS)

@@ -13,7 +13,8 @@ from __future__ import annotations
 
 import os
 
-from PyQt5.QtCore import QSettings
+from PyQt5.QtCore import QSettings, QUrl
+from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog,
                              QDialogButtonBox,
                              QDoubleSpinBox, QFileDialog, QFormLayout,
@@ -36,8 +37,17 @@ class SendDialog(QDialog):
         self.node = sel[0] if len(sel) == 1 else None
         stem = os.path.splitext(os.path.basename(
             getattr(window, "_path", None) or ""))[0]
-        name = (self.node.name if self.node is not None else stem) or \
-            "Creature"
+        # a creature from build_creature or Library > Monsters knows what it
+        # is: its name (the tree's label, not "Group"), and its game numbers
+        from .model import name_tag
+        self.mark = planetcraft.creature_of(self.node or model.root)
+        label = name_tag(self.node.name) or self.node.name \
+            if self.node is not None else ""
+        if not label and self.mark:
+            found = [n for n in model.root.walk()
+                     if (n.params or {}).get("creature")]
+            label = name_tag(found[0].name) if len(found) == 1 else ""
+        name = label or stem or "Creature"
 
         form = QFormLayout()
         self.name = QLineEdit(name)
@@ -52,6 +62,9 @@ class SendDialog(QDialog):
                            (language.tr("Monster — hunts you"), "monster")):
             self.nature.addItem(label, key)
         form.addRow(language.tr("What is it?"), self.nature)
+        if self.mark.get("nature"):
+            self.nature.setCurrentIndex(max(0, self.nature.findData(
+                self.mark["nature"])))
         self.real = QCheckBox(language.tr("Real size (1 block = 1 m)"))
         self.real.setChecked(True)
         self.height = QDoubleSpinBox()
@@ -69,11 +82,11 @@ class SendDialog(QDialog):
         form.addRow(language.tr("Height"), box)
         self.speed = QDoubleSpinBox()
         self.speed.setRange(0.1, 4.0)
-        self.speed.setValue(1.0)
+        self.speed.setValue(float(self.mark.get("speed") or 1.0))
         form.addRow(language.tr("Speed"), self.speed)
         self.health = QSpinBox()
         self.health.setRange(1, 200)
-        self.health.setValue(12)
+        self.health.setValue(int(self.mark.get("health") or 12))
         form.addRow(language.tr("Health"), self.health)
         self.wild = QCheckBox(
             language.tr("Roams the wild herds of new worlds"))
@@ -99,8 +112,10 @@ class SendDialog(QDialog):
             "choose the joints; unnamed legs are found by themselves. A "
             "man on two legs walks about as a person; call it a troll, a "
             "dragon or a monster — or choose Monster — and it hunts you. "
-            "Restart PlanetCraft (or reload the page) and it appears near "
-            "you.").format(what=what))
+            "A running PlanetCraft picks it up within seconds and puts it "
+            "in front of you; it is also in the game's Creatures book "
+            "(menu ▸ Creatures). Ready-made monsters: Library ▸ Toys & "
+            "models ▸ Monsters.").format(what=what))
         self.info.setWordWrap(True)
         buttons = QDialogButtonBox(QDialogButtonBox.Ok |
                                    QDialogButtonBox.Cancel)
@@ -141,10 +156,26 @@ class SendDialog(QDialog):
         if r["auto_legs"]:
             msg += " " + language.tr(
                 "({legs} legs found automatically)").format(legs=legs)
-        msg += "\n\n" + language.tr(
-            "Reload PlanetCraft; a pair appears near you and it joins "
-            "the wild herds of new worlds.")
-        QMessageBox.information(self, title, msg)
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Information)
+        box.setWindowTitle(title)
+        if r.get("game_running"):
+            msg += "\n\n" + language.tr(
+                "PlanetCraft is running: it will walk up to you within a "
+                "few seconds, and it is in the Creatures book.")
+            show = box.addButton(language.tr("Show in PlanetCraft"),
+                                 QMessageBox.ActionRole)
+        else:
+            msg += "\n\n" + language.tr(
+                "Start PlanetCraft: it appears near you, joins the wild "
+                "herds of new worlds, and is in the Creatures book (menu ▸ "
+                "Creatures).")
+            show = None
+        box.setText(msg)
+        box.addButton(QMessageBox.Ok)
+        box.exec_()
+        if show is not None and box.clickedButton() is show:
+            QDesktopServices.openUrl(QUrl(r["book_url"]))
         self.accept()
 
 

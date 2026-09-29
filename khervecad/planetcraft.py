@@ -100,25 +100,62 @@ def role_of(name):
             "B" if words & {"back", "hind", "rear", "bl", "br"} else "")
         side = "L" if words & {"left", "l", "fl", "bl"} else (
             "R" if words & {"right", "r", "fr", "br"} else "")
+        # "Legs" — a loop or a group holding several — is split by where
+        # each piece stands, not sent as one leg
+        if "legs" in words and not (end and side):
+            return "legs" + end + side
         return "leg" + end + side
     return None
 
 
+def _family(role):
+    return "leg" if role.startswith("leg") else (
+        "wing" if role.startswith("wing") else role)
+
+
 def _named_parts(root):
-    """[(node, role)] — the outermost visible node per named part."""
+    """[(node, role)] — the outermost visible node per named part.
+
+    A node whose name merely CONTAINS a part's word is not that part when
+    it holds parts of another kind: a group called "Wing Beast" holding a
+    Head and four legs is the beast, not a wing, and a "Legs" group holding
+    "Tail" is not a leg. The same kind inside is fine — a Head's "Head top"
+    is still the head."""
     found = []
+
+    def others(node, family):
+        for ch in node.children:
+            if not ch.visible:
+                continue
+            r = role_of(ch.name)
+            if r and _family(r) != family:
+                return True
+            if others(ch, family):
+                return True
+        return False
 
     def walk(node, hidden):
         hidden = hidden or not node.visible
         if node is not root and not hidden:
             r = role_of(node.name)
-            if r:
+            if r and not others(node, _family(r)):
                 found.append((node, r))
                 return
         for ch in node.children:
             walk(ch, hidden)
     walk(root, False)
     return found
+
+
+def creature_of(root):
+    """The spec creature_build left on the creature's node — on *root*
+    itself, or on the one node under it that carries one — or {}."""
+    mark = (root.params or {}).get("creature") if root.params else None
+    if mark:
+        return dict(mark)
+    found = [n for n in root.walk() if n is not root
+             and (n.params or {}).get("creature")]
+    return dict(found[0].params["creature"]) if len(found) == 1 else {}
 
 
 # ------------------------------------------------------------ geometry
@@ -254,9 +291,17 @@ def _part(name, role, game_tris):
                 positions=positions, colors=colors)
 
 
-def build_creature(model, name, node=None, height=None, speed=1.0,
-                   health=10, wild=True, nature="auto"):
-    """The creature dict for the document (or *node*'s subtree)."""
+def build_creature(model, name, node=None, height=None, speed=None,
+                   health=None, wild=True, nature=None, damage=None):
+    """The creature dict for the document (or *node*'s subtree). A
+    creature built by creature_build brings its own game numbers (speed,
+    health, damage, what it is), used wherever the caller gives none."""
+    mark = creature_of(node or model.root)
+    speed = speed if speed is not None else (mark.get("speed") or 1.0)
+    health = health if health is not None else (mark.get("health") or 10)
+    damage = damage if damage is not None else mark.get("damage")
+    nature = nature if nature not in (None, "") else (
+        mark.get("nature") or "auto")
     nature = str(nature or "auto").lower()
     if nature not in NATURES:
         raise PlanetCraftError(
@@ -292,6 +337,20 @@ def build_creature(model, name, node=None, height=None, speed=1.0,
     legs = {}
     others = []
     for (n, r), tris in groups.items():
+        if r.startswith("legs"):
+            # a group of several legs, dealt out by where each triangle
+            # stands; whatever the name said (an end, a side) holds
+            want = r[4:]
+            for t in tris:
+                tri = t[0]
+                mx = sum(p[0] for p in tri) / 3
+                my = sum(p[1] for p in tri) / 3
+                end = want[:1] if want[:1] in ("F", "B") else (
+                    "F" if my < cy else "B")
+                side = want[-1:] if want[-1:] in ("L", "R") else (
+                    "L" if mx > cx else "R")
+                legs.setdefault("leg" + end + side, []).append(t)
+            continue
         if r.startswith("leg"):
             if len(r) < 5:
                 # "leg", "legF"/"legB" or "legL"/"legR": whatever the name
@@ -314,7 +373,8 @@ def build_creature(model, name, node=None, height=None, speed=1.0,
         else:
             others.append((n.name, r, tris))
     auto = False
-    if not legs:
+    legless = mark.get("plan") in ("serpent", "slime")
+    if not legs and not legless:
         body, legs = _auto_legs(body, box)
         auto = bool(legs)
 
@@ -341,17 +401,25 @@ def build_creature(model, name, node=None, height=None, speed=1.0,
                triangles=len(everything), parts=parts)
     if nature != "auto":
         out["nature"] = nature
+    if damage is not None:
+        out["damage"] = max(1, int(damage))
+    if mark.get("plan"):
+        out["plan"] = mark["plan"]
     return out
 
 
 def summary(creature):
     roles = [p["role"] for p in creature["parts"]]
-    return {"kind": creature["kind"], "label": creature["label"],
-            "height_blocks": creature["height"],
-            "triangles": creature["triangles"], "parts": roles,
-            "legs": sum(1 for r in roles if r.startswith("leg")),
-            "auto_legs": creature["auto_legs"],
-            "nature": creature.get("nature", "auto")}
+    out = {"kind": creature["kind"], "label": creature["label"],
+           "height_blocks": creature["height"],
+           "triangles": creature["triangles"], "parts": roles,
+           "legs": sum(1 for r in roles if r.startswith("leg")),
+           "auto_legs": creature["auto_legs"],
+           "nature": creature.get("nature", "auto"),
+           "speed": creature.get("speed"), "health": creature.get("health")}
+    if creature.get("damage") is not None:
+        out["damage"] = creature["damage"]
+    return out
 
 
 def write(creature, folder):
@@ -374,10 +442,114 @@ def write(creature, folder):
     return path
 
 
-def export(model, name, folder=None, node=None, height=None, speed=1.0,
-           health=10, wild=True, nature="auto"):
+def export(model, name, folder=None, node=None, height=None, speed=None,
+           health=None, wild=True, nature=None, damage=None):
     folder = folder or default_folder()
     creature = build_creature(model, name, node, height, speed, health,
-                              wild, nature)
+                              wild, nature, damage)
     path = write(creature, folder)
-    return dict(summary(creature), path=path)
+    return dict(summary(creature), path=path, **where_to_see(
+        creature["kind"]))
+
+
+# ------------------------------------------------------ the game's side
+#: the port PlanetCraft's own server listens on unless told otherwise
+GAME_PORT = 8123
+
+
+def game_running(port=GAME_PORT, timeout=0.3):
+    """True when something answers on PlanetCraft's port here."""
+    import socket
+    try:
+        with socket.create_connection(("127.0.0.1", int(port)), timeout):
+            return True
+    except OSError:
+        return False
+
+
+def where_to_see(kind=None, port=GAME_PORT):
+    """Where a creature can be looked at: the game's Creatures book (menu
+    ▸ Creatures, or creatures.html on its own), and whether the game is up
+    to show it. A running game picks a new creature up within seconds."""
+    url = f"http://localhost:{port}/creatures.html"
+    if kind:
+        url += "#" + kind
+    running = game_running(port)
+    return {"book_url": url, "game_running": running,
+            "see_it": ("PlanetCraft is running: it arrives near the player "
+                       "within a few seconds, and it is in the Creatures book "
+                       "(menu ▸ Creatures)." if running else
+                       "Start PlanetCraft: it arrives near the player, and it "
+                       "is in the Creatures book (menu ▸ Creatures).")}
+
+
+def list_creatures(folder=None):
+    """Every creature in the game's creatures/ folder, as the game reads
+    them: name, kind, what it is, size, joints, and when it was sent."""
+    import time
+    folder = folder or default_folder()
+    if not is_game_folder(folder):
+        raise PlanetCraftError(
+            f"{folder!r} is not the PlanetCraft (KhervePlanet) folder — it "
+            "should hold js/entities.js.")
+    out_dir = os.path.join(folder, "creatures")
+    rows = []
+    if os.path.isdir(out_dir):
+        for f in sorted(os.listdir(out_dir)):
+            if not f.endswith(".json") or f == "index.json":
+                continue
+            path = os.path.join(out_dir, f)
+            try:
+                with open(path, encoding="utf-8") as fh:
+                    data = json.load(fh)
+            except (OSError, ValueError) as exc:
+                rows.append({"file": f, "error": str(exc)})
+                continue
+            if data.get("format") != FORMAT:
+                continue
+            roles = [p.get("role") for p in data.get("parts", [])]
+            rows.append({
+                "file": f, "name": f[:-5], "kind": data.get("kind"),
+                "label": data.get("label"),
+                "nature": data.get("nature", "auto"),
+                "plan": data.get("plan"),
+                "height_blocks": data.get("height"),
+                "speed": data.get("speed"), "health": data.get("health"),
+                "damage": data.get("damage"),
+                "parts": roles,
+                "legs": sum(1 for r in roles if str(r).startswith("leg")),
+                "triangles": data.get("triangles"),
+                "sent": time.strftime("%Y-%m-%d %H:%M",
+                                      time.localtime(os.path.getmtime(path))),
+            })
+    return {"folder": out_dir, "creatures": rows, **where_to_see()}
+
+
+def remove(name, folder=None):
+    """Take one creature out of the game: its file, and its line in the
+    index. Worlds already made keep any that are roaming them until they
+    are reloaded."""
+    folder = folder or default_folder()
+    if not is_game_folder(folder):
+        raise PlanetCraftError(
+            f"{folder!r} is not the PlanetCraft (KhervePlanet) folder.")
+    out_dir = os.path.join(folder, "creatures")
+    stem = str(name)
+    stem = stem[3:] if stem.startswith("kc_") else stem
+    stem = stem[:-5] if stem.endswith(".json") else stem
+    candidates = [stem, slug(stem)]
+    path = next((os.path.join(out_dir, c + ".json") for c in candidates
+                 if os.path.isfile(os.path.join(out_dir, c + ".json"))), None)
+    if path is None:
+        have = [f[:-5] for f in os.listdir(out_dir)
+                if f.endswith(".json") and f != "index.json"] \
+            if os.path.isdir(out_dir) else []
+        raise PlanetCraftError(
+            f"No creature {name!r} in the game; it has "
+            f"{', '.join(have) or 'none'}.")
+    os.remove(path)
+    names = sorted(f[:-5] for f in os.listdir(out_dir)
+                   if f.endswith(".json") and f != "index.json")
+    with open(os.path.join(out_dir, "index.json"), "w", encoding="utf-8") as f:
+        json.dump(names, f)
+    return {"removed": os.path.basename(path), "left": names}
