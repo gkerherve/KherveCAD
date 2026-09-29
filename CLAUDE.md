@@ -1741,6 +1741,45 @@ into a new module and import.
                        monster hunt you, and on auto reads a monster's name
                        and a person's two upright legs itself. The game side
                        is documented in KhervePlanet's CLAUDE.md.
+                       2026-09-29 ("I'm still so unsure how to add monsters
+                       … so they go somewhere and we can see that they are
+                       in"): a node whose name holds a part word is NOT that
+                       part when it holds parts of another kind (`_family`:
+                       "Wing Beast" holding a Head is the beast; a Head's
+                       "Head top" is still the head); "Legs" (plural) holding
+                       several is split by quadrant (`legs`+end+side); a
+                       creature built by `creature_build` carries its plan
+                       and game numbers in its node's params (`creature_of`)
+                       — nature, speed, health, damage become the send's
+                       defaults (the dialog prefills them, and names it from
+                       the tree label rather than "Group"), and a serpent or
+                       slime is never given found legs. `export` answers
+                       `book_url` (the game's Creatures book,
+                       creatures.html#kind) and `game_running` (port 8123);
+                       the dialog offers "Show in PlanetCraft".
+                       `list_creatures` / `remove` read and prune the game's
+                       creatures/ folder. A RUNNING game picks a send up
+                       within seconds and puts it in front of the player.
+  - `creature_build.py` — **monsters for PlanetCraft in one call** (Qt-free,
+                       MCP `build_creature` / `list_creature_options`,
+                       Library ▸ Toys & models ▸ Monsters via
+                       `library_monsters.py`): plans biped, winged,
+                       quadruped, spider (eight legs, two to each of the
+                       game's four joints), serpent and slime; 17 presets
+                       (Troll … Slime) with real heights and game numbers.
+                       Each part is one `kcad_material() color() { … } //
+                       Head` block, so the label lands on the block and the
+                       exporter finds the joint; pieces inside carry labels
+                       with NO part words (a body piece called "Tail spikes"
+                       would become the tail). Only solids the built-in
+                       tessellator draws exactly (ellipsoid, capsule,
+                       cylinder, polyhedron plates for wing membranes) —
+                       never hull/booleans, which it approximates, because
+                       the export tessellates without OpenSCAD. Drawn at a
+                       nominal 1000 mm and wrapped in scale/translate to the
+                       height, feet on z = 0. MCP `list_planetcraft_creatures`
+                       and `remove_from_planetcraft` (a file tool: removal
+                       always needs the full access level) round it off.
   - `city_trees.py`  — trees (broadleaf, conifer, round, birch, poplar:
                        tapered Bark trunk, branches, Leaves clumps in two
                        greens; one loop per kind) and street lights. A
