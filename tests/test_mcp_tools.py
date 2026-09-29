@@ -814,3 +814,26 @@ def test_build_city_reads_and_writes_spec_files(ex, window, tmp_path):
     saved = json.loads(out.read_text())
     assert saved["buildings"][0]["footprint"] and saved["detail"] == "low"
     assert window.model.city["buildings"][0]["detail"] == "low"
+
+
+# ── PlanetCraft creatures ──────────────────────────────────────────
+def test_build_creature_sends_lists_and_removes(ex, tmp_path):
+    (tmp_path / "js").mkdir()
+    (tmp_path / "js" / "entities.js").write_text("")
+    opts = call(ex, "list_creature_options")
+    assert "Goblin" in opts["presets"]
+    r = call(ex, "build_creature", preset="Goblin", send=True,
+             path=str(tmp_path))
+    assert r["parts"][0] == "Body" and "Head" in r["parts"]
+    assert r["sent"]["legs"] == 2 and r["sent"]["nature"] == "monster"
+    assert r["sent"]["book_url"].endswith("#kc_goblin")
+    # the node it made can be sent again, and knows its numbers
+    again = call(ex, "send_to_planetcraft", name="Goblin", node_id=r["id"],
+                 dry_run=True)
+    assert again["speed"] == 1.3 and again["damage"] == 2
+    listed = call(ex, "list_planetcraft_creatures", path=str(tmp_path))
+    assert [c["name"] for c in listed["creatures"]] == ["goblin"]
+    call(ex, "remove_from_planetcraft", name="kc_goblin", path=str(tmp_path))
+    assert call(ex, "list_planetcraft_creatures",
+                path=str(tmp_path))["creatures"] == []
+    assert "error" in ex.execute("build_creature", {"preset": "Unicorn"})

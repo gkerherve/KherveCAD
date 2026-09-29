@@ -1681,21 +1681,74 @@ class McpToolExecutor:
 
     def _t_send_to_planetcraft(self, params) -> dict:
         from . import planetcraft
+
+        def num(key, kind):
+            return kind(params[key]) if params.get(key) is not None else None
         node = None
         if params.get("node_id") is not None:
             node = self._node(params["node_id"])
         try:
+            # left out, speed, health, damage and nature come from the
+            # creature (build_creature keeps them on it), then defaults
             args = dict(name=str(params.get("name") or "Creature"),
                         node=node, height=params.get("height"),
-                        speed=float(params.get("speed") or 1.0),
-                        health=int(params.get("health") or 12),
+                        speed=num("speed", float),
+                        health=num("health", int),
                         wild=params.get("wild", True),
-                        nature=params.get("nature") or "auto")
+                        nature=params.get("nature") or None,
+                        damage=num("damage", int))
             if params.get("dry_run"):
                 return {"dry_run": True, **planetcraft.summary(
                     planetcraft.build_creature(self._model, **args))}
             return planetcraft.export(self._model, folder=params.get("path"),
                                       **args)
+        except planetcraft.PlanetCraftError as exc:
+            raise ToolError(str(exc))
+
+    def _t_list_creature_options(self, params) -> dict:
+        from . import creature_build
+        return creature_build.options()
+
+    def _t_build_creature(self, params) -> dict:
+        from . import creature_build, planetcraft
+        params = dict(params or {})
+        send = bool(params.pop("send", False))
+        folder = params.pop("path", None)
+        try:
+            node, spec, parts = creature_build.build(self._model, params)
+        except creature_build.CreatureError as exc:
+            raise ToolError(f"{exc} Call list_creature_options.")
+        self._model.structure_changed.emit()
+        out = {"id": node.id, "name": spec["name"], "plan": spec["plan"],
+               "height_mm": spec["height"], "parts": parts,
+               "game": {k: spec.get(k) for k in
+                        ("nature", "speed", "health", "damage")},
+               "note": "Every piece is inside its part (the group named "
+                       "Head, Tail, Left leg...). Look at it with "
+                       "render_view (Front, Right); keep new pieces inside "
+                       "their part's group. Then send_to_planetcraft with "
+                       f"node_id {node.id}."}
+        if send:
+            try:
+                out["sent"] = planetcraft.export(
+                    self._model, spec["name"], folder=folder, node=node)
+            except planetcraft.PlanetCraftError as exc:
+                raise ToolError(f"Built it (node {node.id}) but could not "
+                                f"send it: {exc}")
+        return out
+
+    def _t_list_planetcraft_creatures(self, params) -> dict:
+        from . import planetcraft
+        try:
+            return planetcraft.list_creatures(params.get("path"))
+        except planetcraft.PlanetCraftError as exc:
+            raise ToolError(str(exc))
+
+    def _t_remove_from_planetcraft(self, params) -> dict:
+        from . import planetcraft
+        try:
+            return planetcraft.remove(params.get("name") or "",
+                                      params.get("path"))
         except planetcraft.PlanetCraftError as exc:
             raise ToolError(str(exc))
 

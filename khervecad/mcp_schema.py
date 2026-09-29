@@ -2666,18 +2666,22 @@ TOOLS = [
         "description": (
             "Send the model (or one node) to the PlanetCraft game as a "
             "WALKING CREATURE: writes creatures/<name>.json into the "
-            "KhervePlanet folder, where the game loads it at start-up, puts "
-            "a pair near the player and adds it to the wild herds. Parts "
-            "are chosen by NAME — nodes named Head, Tail, Wing (left/right) "
-            "or Leg (front/back, left/right; 'Left leg' is enough for a "
-            "biped) become joints (legs swing at their top, the head nods "
-            "at its neck); unnamed legs under a clear middle are found "
-            "automatically. `nature` says what the game makes of it: "
-            "animal, person (walks about, turns to look at you) or monster "
-            "(hunts the player); auto reads a monster's name and a "
-            "person's two upright legs. Real size (1 block = 1 m) unless "
-            "`height` (blocks). Build creatures with the front facing -Y, "
-            "Z up."
+            "KhervePlanet folder. A running game picks it up within "
+            "seconds and puts it in front of the player; it also joins "
+            "the wild herds and the game's Creatures book (menu > "
+            "Creatures; the result's book_url). Parts are chosen by NAME "
+            "— nodes named Head, Tail, Wing (left/right) or Leg "
+            "(front/back, left/right; 'Left leg' is enough for a biped; "
+            "'Legs' holding several is split by where each stands) become "
+            "joints (legs swing at their top, the head nods at its neck); "
+            "unnamed legs under a clear middle are found automatically. "
+            "A creature from build_creature is already named and carries "
+            "its own nature, speed, health and damage. `nature` says what "
+            "the game makes of it: animal, person (walks about, turns to "
+            "look at you) or monster (hunts the player); auto reads a "
+            "monster's name and a person's two upright legs. Real size "
+            "(1 block = 1 m) unless `height` (blocks). Build creatures "
+            "with the front facing -Y, Z up, +X the creature's left."
         ),
         "input_schema": _obj({
             "name": {"type": "string"},
@@ -2698,11 +2702,127 @@ TOOLS = [
                                       "hunts you. auto (default): the game "
                                       "reads a monster's name and a person's "
                                       "two legs."},
+            "damage": {"type": "integer",
+                       "description": "Hearts a monster's blow takes "
+                                      "(default: from its size)."},
             "path": {"type": "string",
                      "description": "The PlanetCraft (KhervePlanet) folder; "
                                     "found automatically when omitted."},
             "dry_run": {"type": "boolean",
                         "description": "Report the parts, write nothing."},
+        }, ["name"]),
+    },
+    {
+        "name": "list_creature_options",
+        "description": (
+            "Everything build_creature accepts: the body plans, the "
+            "presets (name, plan, real height, what the game makes of it), "
+            "the features (horns, ears, nose, tail, weapon, tusks, fangs, "
+            "claws, wings, spikes, eyes), the shape keys and the colours. "
+            "Call it before build_creature."
+        ),
+        "input_schema": _obj({}),
+    },
+    {
+        "name": "build_creature",
+        "description": (
+            "Build a MONSTER or beast for the PlanetCraft game in one call "
+            "— every piece already inside the part the game turns it "
+            "about (Head, Tail, Left/Right wing, each leg), so "
+            "send_to_planetcraft makes it walk, run and hunt at once. "
+            "Start from a `preset` (Troll, Ogre, Goblin, Orc, Minotaur, "
+            "Yeti, Cyclops, Gargoyle, Imp, Dragon, Dire wolf, Cave bear, "
+            "Boar, Basilisk, Giant spider, Serpent, Slime) or a `plan`; "
+            "every other key overrides it: height (mm, real size), colours "
+            "(#rrggbb), features and shape. It is an ordinary editable "
+            "tree afterwards — render_view it, change pieces, keep "
+            "each piece inside its part's group — then "
+            "send_to_planetcraft with node_id, or pass send=true to send "
+            "it at once. The creature keeps its nature, speed, health and "
+            "damage for the send."
+        ),
+        "input_schema": _obj({
+            "preset": {"type": "string",
+                       "description": "A preset from list_creature_options."},
+            "plan": {"type": "string",
+                     "enum": ["biped", "winged", "quadruped", "spider",
+                              "serpent", "slime"]},
+            "name": {"type": "string",
+                     "description": "Its name in the game (default: the "
+                                    "preset's)."},
+            "height": {"type": "number",
+                       "description": "Feet to crown in mm, 200-12000 "
+                                      "(1000 mm = 1 block)."},
+            "skin": {"type": "string"}, "belly": {"type": "string"},
+            "accent": {"type": "string",
+                       "description": "Horns, tusks, claws, teeth, spikes."},
+            "eyes": {"type": "string",
+                     "description": "Eye colour; the eyes glow."},
+            "cloth": {"type": "string"}, "wood": {"type": "string"},
+            "metal": {"type": "string"}, "wing": {"type": "string"},
+            "hair": {"type": "string"},
+            "horns": {"type": "string",
+                      "enum": ["none", "bull", "ram", "straight", "swept",
+                               "nubs"]},
+            "ears": {"type": "string",
+                     "enum": ["none", "round", "pointy", "long"]},
+            "nose": {"type": "string", "enum": ["none", "big", "snout"]},
+            "tail": {"type": "string",
+                     "enum": ["none", "thin", "tuft", "spade", "bushy",
+                              "stub", "curly", "long"]},
+            "weapon": {"type": "string",
+                       "enum": ["none", "club", "spiked club", "axe",
+                                "spear", "dagger"]},
+            "tusks": {"type": "boolean"}, "fangs": {"type": "boolean"},
+            "claws": {"type": "boolean"}, "wings": {"type": "boolean"},
+            "loincloth": {"type": "boolean"}, "face": {"type": "boolean"},
+            "ruff": {"type": "boolean"}, "hood": {"type": "boolean"},
+            "spade_tip": {"type": "boolean"},
+            "spikes": {"type": "integer", "description": "0-14."},
+            "eyes_n": {"type": "integer", "description": "1 or 2."},
+            "eye_size": {"type": "number"},
+            "bulk": {"type": "number"}, "leg": {"type": "number"},
+            "head": {"type": "number"}, "arm": {"type": "number"},
+            "hunch": {"type": "number"}, "length": {"type": "number"},
+            "neck": {"type": "number"}, "wing_span": {"type": "number"},
+            "nature": {"type": "string",
+                       "enum": ["auto", "animal", "person", "monster"]},
+            "speed": {"type": "number"}, "health": {"type": "integer"},
+            "damage": {"type": "integer"},
+            "x": {"type": "number"}, "y": {"type": "number"},
+            "send": {"type": "boolean",
+                     "description": "Send it to PlanetCraft as soon as it "
+                                    "is built."},
+            "path": {"type": "string",
+                     "description": "The PlanetCraft folder, for send."},
+        }),
+    },
+    {
+        "name": "list_planetcraft_creatures",
+        "description": (
+            "What the PlanetCraft game already has in its creatures/ "
+            "folder: each creature's name, kind, nature, height, joints "
+            "and when it was sent — plus whether the game is running "
+            "and the URL of its Creatures book."
+        ),
+        "input_schema": _obj({
+            "path": {"type": "string",
+                     "description": "The PlanetCraft folder; found "
+                                    "automatically when omitted."},
+        }),
+    },
+    {
+        "name": "remove_from_planetcraft",
+        "description": (
+            "Take one creature out of the PlanetCraft game: deletes "
+            "creatures/<name>.json and its line in the index. Ask the "
+            "user first — the file is the game's only copy."
+        ),
+        "input_schema": _obj({
+            "name": {"type": "string",
+                     "description": "Its name, file name or kind "
+                                    "(kc_troll)."},
+            "path": {"type": "string"},
         }, ["name"]),
     },
     {

@@ -508,6 +508,35 @@ a tool in a hand) is ordinary geometry you add beside the figure, \
 placed with face_landmarks and probe_surface. NEVER model a person \
 from spheres and capsules when build_character can.
 
+Creatures and monsters for the PlanetCraft game:
+- PlanetCraft (the user's voxel game) makes a model WALK when it arrives \
+as named parts: a group called Head (nods at its neck), Tail, Left wing \
+and Right wing, and each leg by end and side — Left leg / Right leg for \
+two, Front left leg … Back right leg for four. Everything else is the \
+body. Anything not in a named group does not move.
+- For a monster, troll, dragon, beast or any creature for the game, use \
+build_creature: a preset (list_creature_options — Troll, Ogre, Goblin, \
+Orc, Minotaur, Yeti, Cyclops, Gargoyle, Imp, Dragon, Dire wolf, Cave \
+bear, Boar, Basilisk, Giant spider, Serpent, Slime) or a plan (biped, \
+winged, quadruped, spider, serpent, slime) with height (mm, real size: \
+1 block = 1 m), colours and features. Every piece lands in the right \
+group. render_view it (Front and Right), change what the user asks for, \
+keeping each new piece INSIDE its part's group (into_id on apply_code), \
+and never give a piece of the body a name with head, tail, wing or leg \
+in it — that name would make it a joint.
+- Then send_to_planetcraft with its node_id (or build_creature with \
+send=true). nature says what the game does with it: monster hunts the \
+player, person walks about and looks at you, animal grazes and bolts; \
+a built creature carries its own nature, speed, health and damage. A \
+running game picks it up within seconds and puts it in front of the \
+player; it is also in the game's Creatures book (menu ▸ Creatures) — \
+tell the user so, with the book_url the send returns. \
+list_planetcraft_creatures says what the game already has; \
+remove_from_planetcraft takes one out.
+- A model the user made themselves: name its groups as above (the tree \
+labels do it), or send it as it is — unnamed legs under a clear middle \
+are found automatically — and check the parts the send reports.
+
 Molecules and chemical reactions:
 - Build molecules with build_molecule — from the compound library \
 (list_molecules: about 490 — gases, acids, bases and ions, VSEPR \

@@ -54,7 +54,8 @@ _READ_ONLY_TOOLS = frozenset({
     "get_document_info", "list_node_types", "list_tree", "get_node",
     "get_code", "render_view", "list_parts", "list_examples",
     "list_crystals", "list_molecules", "list_proteins", "get_city",
-    "list_character_options",
+    "list_character_options", "list_creature_options",
+    "list_planetcraft_creatures",
     "list_scad_libraries",
     "list_anchors", "select_nodes", "get_node_bounds", "measure",
     "probe_surface", "sample_surface", "face_landmarks", "section",
@@ -72,6 +73,7 @@ _NO_SNAPSHOT_TOOLS = _READ_ONLY_TOOLS | {
     "save_document", "export_document", "export_drawing",
     "publish_to_printables", "install_scad_library",
     "save_to_library",      # writes a file, the document is unchanged
+    "remove_from_planetcraft",  # the game's folder, not the document
 }
 
 #: Tools that can read or write a file the client names.  Everything
@@ -82,6 +84,7 @@ _FILE_TOOLS = frozenset({
     "open_document", "save_document", "export_document",
     "export_drawing", "publish_to_printables", "set_reference_image",
     "mesh_from_photo", "build_city", "import_map", "send_to_planetcraft",
+    "build_creature", "list_planetcraft_creatures", "remove_from_planetcraft",
     "install_scad_library", "build_protein", "render_photo",
 })
 
@@ -99,6 +102,10 @@ def _names_a_path(name: str, tool_input: dict) -> bool:
     """
     if name in ("publish_to_printables", "send_to_planetcraft"):
         return not (tool_input or {}).get("dry_run")
+    if name == "remove_from_planetcraft":           # deletes a game file
+        return True
+    if name == "build_creature":                    # send=true writes one
+        return bool((tool_input or {}).get("send"))
     if name == "install_scad_library":            # writes a library folder
         return True
     tool_input = tool_input or {}
