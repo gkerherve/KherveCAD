@@ -221,3 +221,22 @@ def test_exact_cache_evicts_oldest_instead_of_clearing(monkeypatch):
     mesh.set_exact_mesh("d", tri)            # over budget: evict one
     assert [k for k in "abcd" if mesh.has_exact_mesh(k)] == ["a", "c", "d"]
     mesh.clear_exact_meshes()
+
+
+def test_nested_object_colours_keep_the_parent_out_of_exact(model):
+    """An Object holding two Objects of their own colours must not be
+    rendered as ONE colourless STL: each child is rendered and tinted
+    alone. The parent used to count only `color` nodes, found none,
+    and its single grey mesh hid both coloured children."""
+    outer = model.new_component("Case", visible=True)
+    for name, colour in (("Base", "Crimson"), ("Lid", "White")):
+        child = model.new_component(name, visible=True)
+        model.add_node("scad_raw", dict(code="cube(1);"), parent=child)
+        child.params["color"] = colour
+        model.move_node(child, outer) if hasattr(model, "move_node") \
+            else (child.parent.children.remove(child),
+                  outer.children.append(child),
+                  setattr(child, "parent", outer))
+    assert mesh.part_colours(outer) == {("Crimson", 1.0), ("White", 1.0)}
+    assert not mesh.needs_exact(outer)
+    assert mesh.needs_exact(outer.children[0])

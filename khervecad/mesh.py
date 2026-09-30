@@ -1223,7 +1223,17 @@ def part_colours(node, env=None) -> set:
     several it would paint them all one colour."""
     out = set()
     for n in node.walk():
-        if n is node or n.type != "color" or not n.visible:
+        if n is node or not n.visible:
+            continue
+        if n.type in ("component", "reference"):
+            # a nested Object or instance may wear its own colour: an
+            # assembly of a red base and a white lid, each one scad_raw,
+            # was rendered as ONE colourless STL that hid both
+            own = str(n.params.get("color", "")).strip()
+            if own:
+                out.add((own, rv(n.params.get("alpha", 1.0), env, 1.0)))
+            continue
+        if n.type != "color":
             continue
         colour = (str(n.params.get("color", "#4a90d9")),
                   rv(n.params.get("alpha", 1.0), env, 1.0))
