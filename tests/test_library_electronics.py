@@ -58,6 +58,7 @@ def test_electronics_has_its_own_library_menu():
            for name, _icon, cats in section[1]}
     assert sub["Electronics"] == ["Electronics boards",
                                   "Electronic components",
+                                  "RPi enclosures",
                                   "Electronics lab"]
 
 

@@ -1,0 +1,285 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Pi 5 case 05 - HAT tower",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library_part": "user_electronics_raspberry_pi_5_enclosure_parametric_91x62_mm_snap_fit_lid"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Pi 5 case 05 Base",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "ForestGreen",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "assign",
+        "name": "Variable 1",
+        "visible": true,
+        "params": {
+         "variable": "height",
+         "value": "45",
+         "options": "[26:1:60]",
+         "description": "Base height mm (26 min for USB/Ethernet + lid lip; 45 for HAT/NVMe)",
+         "group": "Box"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "Variable 2",
+        "visible": true,
+        "params": {
+         "variable": "side_vents",
+         "value": "1",
+         "options": "[0:No, 1:Yes]",
+         "description": "Intake slots on the microSD wall",
+         "group": "Box"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "Variable 3",
+        "visible": true,
+        "params": {
+         "variable": "lid_style",
+         "value": "0",
+         "options": "[0:Slots, 1:Hex grille, 2:Honeycomb, 3:Fan 40 mm, 4:Fan 30 mm, 5:Raspberry cut-out, 6:Tux cut-out, 7:Text cut-out, 8:Raspberry embossed, 9:Tux embossed]",
+         "description": "Lid ventilation / decoration",
+         "group": "Lid"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "Variable 4",
+        "visible": true,
+        "params": {
+         "variable": "lid_text",
+         "value": "\"RPI\"",
+         "description": "Text cut through the lid (lid_style 7); bridged so letter centres stay",
+         "group": "Lid"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "Variable 5",
+        "visible": true,
+        "params": {
+         "variable": "text_size",
+         "value": "16",
+         "options": "[6:1:30]",
+         "group": "Lid"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "Variable 8",
+        "visible": true,
+        "params": {
+         "variable": "explode",
+         "value": "20",
+         "options": "[0:1:60]",
+         "description": "Gap between base and lid for display (0 = closed)",
+         "group": "Display"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "Variable 9",
+        "visible": true,
+        "params": {
+         "variable": "show_fan",
+         "value": "1",
+         "options": "[0:No, 1:Yes]",
+         "description": "Show the fan model for lid styles 3/4",
+         "group": "Display"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "Variable part",
+        "visible": true,
+        "params": {
+         "variable": "part",
+         "value": "\"base\"",
+         "description": "Which piece this Object draws",
+         "group": "Display"
+        }
+       },
+       {
+        "type": "scad_raw",
+        "name": "Pi 5 enclosure geometry",
+        "visible": true,
+        "params": {
+         "code": "// Raspberry Pi 5 enclosure - one piece per colour: part = \"all\", \"base\", \"lid\", \"berry\", \"leaves\", \"tuxbody\", \"tuxwhite\", \"tuxorange\", \"fanframe\", \"fanblades\".\npi5_case(height, side_vents, lid_style, lid_text, text_size, explode, show_fan, is_undef(part) ? \"all\" : part);\n\nmodule pi5_case(h=26, sv=1, ls=1, txt=\"RPI\", ts=16, ex=20, sf=1, pt=\"all\") {\n  function on(p) = pt == \"all\" || pt == p;\n  if (on(\"base\")) pi5_base(h, sv);\n  translate([0,0,h+ex]) {\n    if (on(\"lid\")) pi5_lid(ls, txt, ts);\n    if (ls==8) translate([32,27.5,2.8]) {\n      if (on(\"berry\")) linear_extrude(1.2) scale(1.1) pi5_berry();\n      if (on(\"leaves\")) linear_extrude(1.2) scale(1.1) pi5_leaves();\n    }\n    if (ls==9) translate([32,29,2.8]) {\n      if (on(\"tuxbody\")) linear_extrude(1) { translate([0,-3]) scale([1,1.35]) circle(r=8.5,$fn=32); translate([0,10]) circle(r=6,$fn=32); }\n      if (on(\"tuxwhite\")) linear_extrude(1.4) { translate([0,-4.5]) scale([1,1.3]) circle(r=6,$fn=32); for(x=[-2.2,2.2]) translate([x,11.5]) circle(r=1.3,$fn=16); }\n      if (on(\"tuxorange\")) linear_extrude(1.6) { translate([0,8.3]) scale([1.4,0.7]) circle(r=2,$fn=16); pi5_tuxfeet(); }\n    }\n    if (sf==1 && ls==3) translate([30,29.5,-10]) pi5_fan(40,10,pt);\n    if (sf==1 && ls==4) translate([28,29.5,-7]) pi5_fan(30,7,pt);\n  }\n}\nPW=91; PD=62; PR=4;\nmodule pi5_rr(w,d,h,r){ hull() for(x=[r,w-r]) for(y=[r,d-r]) { translate([x,y,2]) cylinder(r=r,h=h-2,$fn=32); translate([x,y,2]) scale([1,1,0.5]) sphere(r,$fn=24); } }\nmodule pi5_rc(w,d,h,r){ hull() for(x=[r,w-r]) for(y=[r,d-r]) translate([x,y,0]) cylinder(r=r,h=h,$fn=32); }\nmodule pi5_holes(){ for(p=[[3.5,3.5],[61.5,3.5],[3.5,52.5],[61.5,52.5]]) translate([p[0],p[1],0]) children(); }\nmodule pi5_base(h,sv){\n  difference(){\n    union(){\n      difference(){ translate([-3,-3,0]) pi5_rr(PW,PD,h,PR); translate([-1,-1,2]) pi5_rc(87,58,h,2.5); }\n      pi5_holes() cylinder(d=7,h=5,$fn=24);\n    }\n    pi5_holes() translate([0,0,-1]) cylinder(d=2.7,h=10,$fn=16);\n    pi5_holes() translate([0,0,-1]) cylinder(d=5,h=3.2,$fn=20);\n    translate([85,39.2,6]) cube([10,17.5,15.5]);   // Ethernet\n    translate([85,20.3,6]) cube([10,16,17.5]);     // USB 3\n    translate([85,1.8,6]) cube([10,16,17.5]);      // USB 2\n    translate([5.4,-6,5.6]) cube([11.6,6,6.5]);    // USB-C\n    for(x=[25.8,39.2]) translate([x-6,-6,5.6]) cube([12,6,6.5]); // micro-HDMI\n    translate([-6,21,1.5]) cube([6,14,4.5]);       // microSD\n    translate([-6,44,7]) cube([6,8,3]);            // LEDs\n    for(y=[-1,57]) translate([26,y,h-1.8]) rotate([0,90,0]) cylinder(r=0.75,h=32,$fn=12);  // clip grooves\n    for(x=[-1,86]) translate([x,12,h-1.8]) rotate([-90,0,0]) cylinder(r=0.75,h=32,$fn=12);\n    translate([60,-4.5,h-1.5]) cube([10,2.5,2]);   // pry notch\n    for(i=[0:12]) translate([10+i*5.5,55,8]) cube([2.2,6,h-12]);   // rear exhaust\n    for(i=[0:4], j=[0:3]) translate([22+i*5,17+j*6,-1]) cylinder(d=4,h=4,$fn=6); // floor vents\n    if(sv==1) for(j=[0:3]) translate([-6,8+j*3.5,8]) cube([6,1.8,h-12]);\n  }\n}\nmodule pi5_lidshell(){\n  hull() for(x=[PR,PW-PR]) for(y=[PR,PD-PR]) translate([x-3,y-3,0]) { cylinder(r=PR,h=1.5,$fn=32); translate([0,0,1.5]) scale([1,1,0.375]) sphere(PR,$fn=24); }\n  difference(){ translate([-0.75,-0.75,-3]) pi5_rc(86.5,57.5,3,2.25); translate([0.45,0.45,-4]) pi5_rc(84.1,55.1,5,1.5); }\n  for(y=[-0.75,56.75]) translate([27,y,-1.8]) rotate([0,90,0]) cylinder(r=0.6,h=30,$fn=12);   // clip beads\n  for(x=[-0.75,85.75]) translate([x,13,-1.8]) rotate([-90,0,0]) cylinder(r=0.6,h=30,$fn=12);\n}\nmodule pi5_berry(){ for(p=[[0,-10],[-3.2,-6.8],[3.2,-6.8],[-6,-3],[0,-3],[6,-3],[-3,1],[3,1],[-7,2.2],[7,2.2],[0,4.8],[-4.6,5.4],[4.6,5.4]]) translate(p) circle(r=2.7,$fn=20); }\nmodule pi5_leaves(){ for(m=[0,1]) mirror([m,0]) translate([-4.5,10.5]) rotate(25) scale([2.1,1]) circle(r=2.4,$fn=20); }\nmodule pi5_tux(){ translate([0,-3]) scale([1,1.35]) circle(r=8.5,$fn=32); translate([0,10]) circle(r=6,$fn=32); pi5_tuxfeet(); }\nmodule pi5_tuxfeet(){ for(m=[0,1]) mirror([m,0]) translate([5,-14]) scale([1.6,0.7]) circle(r=3,$fn=20); }\nmodule pi5_lid(ls,txt,ts){\n  difference(){\n    pi5_lidshell();\n    if(ls==0||ls==8||ls==9) for(i=[0:3]) translate([62+i*5,10,-1]) cube([2.2,36,6]);\n    if(ls==0) for(i=[0:7]) translate([12+i*5,12,-1]) cube([2.2,32,6]);\n    if(ls==1) for(i=[-3:3], j=[-3:3]) if(i*i+j*j<=10) translate([28+i*4.2+(j%2)*2.1,29.5+j*3.64,-1]) cylinder(d=3.6,h=6,$fn=6);\n    if(ls==2) for(i=[0:13], j=[0:8]) translate([8+i*5.2+(j%2)*2.6,8+j*4.6,-1]) cylinder(d=4,h=6,$fn=6);\n    if(ls==3) { translate([30,29.5,-1]) cylinder(d=37,h=6,$fn=48); for(a=[-16,16], b=[-16,16]) translate([30+a,29.5+b,-1]) cylinder(d=3.4,h=6,$fn=16); }\n    if(ls==4) { translate([28,29.5,-1]) cylinder(d=28,h=6,$fn=48); for(a=[-12,12], b=[-12,12]) translate([28+a,29.5+b,-1]) cylinder(d=3.2,h=6,$fn=16); translate([5,48,-1]) cube([54,7.5,6]); }\n    if(ls==5) { translate([30,29.5,-2]) linear_extrude(8) scale(1.2) { pi5_berry(); pi5_leaves(); } for(i=[0:4]) translate([56+i*5,12,-1]) cube([2.2,32,6]); }\n    if(ls==6) { translate([30,29,-2]) linear_extrude(8) scale(1.1) pi5_tux(); for(i=[0:4]) translate([56+i*5,12,-1]) cube([2.2,32,6]); }\n    if(ls==7) translate([42,28,-2]) linear_extrude(8) difference(){ text(txt,size=ts,halign=\"center\",valign=\"center\",font=\"Arial:style=Bold\"); for(k=[-1,1]) translate([-60,k*ts*0.18-0.4]) square([120,0.8]); }\n  }\n}\nmodule pi5_fan(s,t,pt=\"all\"){\n  if (pt==\"all\" || pt==\"fanframe\") difference(){ translate([-s/2,-s/2,0]) pi5_rc(s,s,t,2.5); translate([0,0,-1]) cylinder(d=s-2,h=t+2,$fn=48); for(a=[-1,1], b=[-1,1]) translate([a*s*0.4,b*s*0.4,-1]) cylinder(d=3,h=t+2,$fn=12); }\n  if (pt==\"all\" || pt==\"fanblades\") { cylinder(d=s*0.38,h=t,$fn=32); for(a=[0:45:315]) rotate(a) translate([s*0.15,-2.5,t/2-0.5]) rotate([25,0,0]) cube([s*0.32,5,1]); }\n}\n"
+        }
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "Pi 5 case 05 Lid",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "Honeydew",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "assign",
+        "name": "Variable 1",
+        "visible": true,
+        "params": {
+         "variable": "height",
+         "value": "45",
+         "options": "[26:1:60]",
+         "description": "Base height mm (26 min for USB/Ethernet + lid lip; 45 for HAT/NVMe)",
+         "group": "Box"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "Variable 2",
+        "visible": true,
+        "params": {
+         "variable": "side_vents",
+         "value": "1",
+         "options": "[0:No, 1:Yes]",
+         "description": "Intake slots on the microSD wall",
+         "group": "Box"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "Variable 3",
+        "visible": true,
+        "params": {
+         "variable": "lid_style",
+         "value": "0",
+         "options": "[0:Slots, 1:Hex grille, 2:Honeycomb, 3:Fan 40 mm, 4:Fan 30 mm, 5:Raspberry cut-out, 6:Tux cut-out, 7:Text cut-out, 8:Raspberry embossed, 9:Tux embossed]",
+         "description": "Lid ventilation / decoration",
+         "group": "Lid"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "Variable 4",
+        "visible": true,
+        "params": {
+         "variable": "lid_text",
+         "value": "\"RPI\"",
+         "description": "Text cut through the lid (lid_style 7); bridged so letter centres stay",
+         "group": "Lid"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "Variable 5",
+        "visible": true,
+        "params": {
+         "variable": "text_size",
+         "value": "16",
+         "options": "[6:1:30]",
+         "group": "Lid"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "Variable 8",
+        "visible": true,
+        "params": {
+         "variable": "explode",
+         "value": "20",
+         "options": "[0:1:60]",
+         "description": "Gap between base and lid for display (0 = closed)",
+         "group": "Display"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "Variable 9",
+        "visible": true,
+        "params": {
+         "variable": "show_fan",
+         "value": "1",
+         "options": "[0:No, 1:Yes]",
+         "description": "Show the fan model for lid styles 3/4",
+         "group": "Display"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "Variable part",
+        "visible": true,
+        "params": {
+         "variable": "part",
+         "value": "\"lid\"",
+         "description": "Which piece this Object draws",
+         "group": "Display"
+        }
+       },
+       {
+        "type": "scad_raw",
+        "name": "Pi 5 enclosure geometry",
+        "visible": true,
+        "params": {
+         "code": "// Raspberry Pi 5 enclosure - one piece per colour: part = \"all\", \"base\", \"lid\", \"berry\", \"leaves\", \"tuxbody\", \"tuxwhite\", \"tuxorange\", \"fanframe\", \"fanblades\".\npi5_case(height, side_vents, lid_style, lid_text, text_size, explode, show_fan, is_undef(part) ? \"all\" : part);\n\nmodule pi5_case(h=26, sv=1, ls=1, txt=\"RPI\", ts=16, ex=20, sf=1, pt=\"all\") {\n  function on(p) = pt == \"all\" || pt == p;\n  if (on(\"base\")) pi5_base(h, sv);\n  translate([0,0,h+ex]) {\n    if (on(\"lid\")) pi5_lid(ls, txt, ts);\n    if (ls==8) translate([32,27.5,2.8]) {\n      if (on(\"berry\")) linear_extrude(1.2) scale(1.1) pi5_berry();\n      if (on(\"leaves\")) linear_extrude(1.2) scale(1.1) pi5_leaves();\n    }\n    if (ls==9) translate([32,29,2.8]) {\n      if (on(\"tuxbody\")) linear_extrude(1) { translate([0,-3]) scale([1,1.35]) circle(r=8.5,$fn=32); translate([0,10]) circle(r=6,$fn=32); }\n      if (on(\"tuxwhite\")) linear_extrude(1.4) { translate([0,-4.5]) scale([1,1.3]) circle(r=6,$fn=32); for(x=[-2.2,2.2]) translate([x,11.5]) circle(r=1.3,$fn=16); }\n      if (on(\"tuxorange\")) linear_extrude(1.6) { translate([0,8.3]) scale([1.4,0.7]) circle(r=2,$fn=16); pi5_tuxfeet(); }\n    }\n    if (sf==1 && ls==3) translate([30,29.5,-10]) pi5_fan(40,10,pt);\n    if (sf==1 && ls==4) translate([28,29.5,-7]) pi5_fan(30,7,pt);\n  }\n}\nPW=91; PD=62; PR=4;\nmodule pi5_rr(w,d,h,r){ hull() for(x=[r,w-r]) for(y=[r,d-r]) { translate([x,y,2]) cylinder(r=r,h=h-2,$fn=32); translate([x,y,2]) scale([1,1,0.5]) sphere(r,$fn=24); } }\nmodule pi5_rc(w,d,h,r){ hull() for(x=[r,w-r]) for(y=[r,d-r]) translate([x,y,0]) cylinder(r=r,h=h,$fn=32); }\nmodule pi5_holes(){ for(p=[[3.5,3.5],[61.5,3.5],[3.5,52.5],[61.5,52.5]]) translate([p[0],p[1],0]) children(); }\nmodule pi5_base(h,sv){\n  difference(){\n    union(){\n      difference(){ translate([-3,-3,0]) pi5_rr(PW,PD,h,PR); translate([-1,-1,2]) pi5_rc(87,58,h,2.5); }\n      pi5_holes() cylinder(d=7,h=5,$fn=24);\n    }\n    pi5_holes() translate([0,0,-1]) cylinder(d=2.7,h=10,$fn=16);\n    pi5_holes() translate([0,0,-1]) cylinder(d=5,h=3.2,$fn=20);\n    translate([85,39.2,6]) cube([10,17.5,15.5]);   // Ethernet\n    translate([85,20.3,6]) cube([10,16,17.5]);     // USB 3\n    translate([85,1.8,6]) cube([10,16,17.5]);      // USB 2\n    translate([5.4,-6,5.6]) cube([11.6,6,6.5]);    // USB-C\n    for(x=[25.8,39.2]) translate([x-6,-6,5.6]) cube([12,6,6.5]); // micro-HDMI\n    translate([-6,21,1.5]) cube([6,14,4.5]);       // microSD\n    translate([-6,44,7]) cube([6,8,3]);            // LEDs\n    for(y=[-1,57]) translate([26,y,h-1.8]) rotate([0,90,0]) cylinder(r=0.75,h=32,$fn=12);  // clip grooves\n    for(x=[-1,86]) translate([x,12,h-1.8]) rotate([-90,0,0]) cylinder(r=0.75,h=32,$fn=12);\n    translate([60,-4.5,h-1.5]) cube([10,2.5,2]);   // pry notch\n    for(i=[0:12]) translate([10+i*5.5,55,8]) cube([2.2,6,h-12]);   // rear exhaust\n    for(i=[0:4], j=[0:3]) translate([22+i*5,17+j*6,-1]) cylinder(d=4,h=4,$fn=6); // floor vents\n    if(sv==1) for(j=[0:3]) translate([-6,8+j*3.5,8]) cube([6,1.8,h-12]);\n  }\n}\nmodule pi5_lidshell(){\n  hull() for(x=[PR,PW-PR]) for(y=[PR,PD-PR]) translate([x-3,y-3,0]) { cylinder(r=PR,h=1.5,$fn=32); translate([0,0,1.5]) scale([1,1,0.375]) sphere(PR,$fn=24); }\n  difference(){ translate([-0.75,-0.75,-3]) pi5_rc(86.5,57.5,3,2.25); translate([0.45,0.45,-4]) pi5_rc(84.1,55.1,5,1.5); }\n  for(y=[-0.75,56.75]) translate([27,y,-1.8]) rotate([0,90,0]) cylinder(r=0.6,h=30,$fn=12);   // clip beads\n  for(x=[-0.75,85.75]) translate([x,13,-1.8]) rotate([-90,0,0]) cylinder(r=0.6,h=30,$fn=12);\n}\nmodule pi5_berry(){ for(p=[[0,-10],[-3.2,-6.8],[3.2,-6.8],[-6,-3],[0,-3],[6,-3],[-3,1],[3,1],[-7,2.2],[7,2.2],[0,4.8],[-4.6,5.4],[4.6,5.4]]) translate(p) circle(r=2.7,$fn=20); }\nmodule pi5_leaves(){ for(m=[0,1]) mirror([m,0]) translate([-4.5,10.5]) rotate(25) scale([2.1,1]) circle(r=2.4,$fn=20); }\nmodule pi5_tux(){ translate([0,-3]) scale([1,1.35]) circle(r=8.5,$fn=32); translate([0,10]) circle(r=6,$fn=32); pi5_tuxfeet(); }\nmodule pi5_tuxfeet(){ for(m=[0,1]) mirror([m,0]) translate([5,-14]) scale([1.6,0.7]) circle(r=3,$fn=20); }\nmodule pi5_lid(ls,txt,ts){\n  difference(){\n    pi5_lidshell();\n    if(ls==0||ls==8||ls==9) for(i=[0:3]) translate([62+i*5,10,-1]) cube([2.2,36,6]);\n    if(ls==0) for(i=[0:7]) translate([12+i*5,12,-1]) cube([2.2,32,6]);\n    if(ls==1) for(i=[-3:3], j=[-3:3]) if(i*i+j*j<=10) translate([28+i*4.2+(j%2)*2.1,29.5+j*3.64,-1]) cylinder(d=3.6,h=6,$fn=6);\n    if(ls==2) for(i=[0:13], j=[0:8]) translate([8+i*5.2+(j%2)*2.6,8+j*4.6,-1]) cylinder(d=4,h=6,$fn=6);\n    if(ls==3) { translate([30,29.5,-1]) cylinder(d=37,h=6,$fn=48); for(a=[-16,16], b=[-16,16]) translate([30+a,29.5+b,-1]) cylinder(d=3.4,h=6,$fn=16); }\n    if(ls==4) { translate([28,29.5,-1]) cylinder(d=28,h=6,$fn=48); for(a=[-12,12], b=[-12,12]) translate([28+a,29.5+b,-1]) cylinder(d=3.2,h=6,$fn=16); translate([5,48,-1]) cube([54,7.5,6]); }\n    if(ls==5) { translate([30,29.5,-2]) linear_extrude(8) scale(1.2) { pi5_berry(); pi5_leaves(); } for(i=[0:4]) translate([56+i*5,12,-1]) cube([2.2,32,6]); }\n    if(ls==6) { translate([30,29,-2]) linear_extrude(8) scale(1.1) pi5_tux(); for(i=[0:4]) translate([56+i*5,12,-1]) cube([2.2,32,6]); }\n    if(ls==7) translate([42,28,-2]) linear_extrude(8) difference(){ text(txt,size=ts,halign=\"center\",valign=\"center\",font=\"Arial:style=Bold\"); for(k=[-1,1]) translate([-60,k*ts*0.18-0.4]) square([120,0.8]); }\n  }\n}\nmodule pi5_fan(s,t,pt=\"all\"){\n  if (pt==\"all\" || pt==\"fanframe\") difference(){ translate([-s/2,-s/2,0]) pi5_rc(s,s,t,2.5); translate([0,0,-1]) cylinder(d=s-2,h=t+2,$fn=48); for(a=[-1,1], b=[-1,1]) translate([a*s*0.4,b*s*0.4,-1]) cylinder(d=3,h=t+2,$fn=12); }\n  if (pt==\"all\" || pt==\"fanblades\") { cylinder(d=s*0.38,h=t,$fn=32); for(a=[0:45:315]) rotate(a) translate([s*0.15,-2.5,t/2-0.5]) rotate([25,0,0]) cube([s*0.32,5,1]); }\n}\n"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Pi 5 case 05 - HAT tower, 91x62x45 mm",
+  "description": "Raspberry Pi 5 enclosure, 91 x 62 x 45 mm tall to fit a HAT or NVMe board, snap-fit lid covered in slots. Forest green base, honeydew lid. Same base as every RPi enclosure: M2.5 counterbored standoffs, all port openings, rear, floor and side vents. Each colour is a sub-Object with the same OpenSCAD code and a `part` variable; edit height, side_vents, lid_style 0-9, lid_text, text_size, explode in every sub-Object alike.",
+  "tags": [
+   "Raspberry Pi 5",
+   "RPi",
+   "case",
+   "enclosure",
+   "HAT",
+   "NVMe",
+   "tall"
+  ],
+  "source": "assistant",
+  "uid": "5ec6cae3de8648d4b8eebc1bf798ff37",
+  "created": "2026-09-30T20:01:01"
+ }
+}

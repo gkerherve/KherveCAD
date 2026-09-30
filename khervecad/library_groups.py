@@ -29,7 +29,7 @@ SECTIONS = [
          ["Motion & motors"]),
         ("Electronics", "mdi.chip",
          ["Electronics boards", "Electronic components",
-          "Electronics lab"]),
+          "RPi enclosures", "Electronics lab"]),
         ("Air conditioning", "mdi.air-conditioner",
          ["Air conditioning"]),
         ("3D printing", "mdi.printer-3d",

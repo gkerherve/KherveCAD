@@ -1586,6 +1586,16 @@ into a new module and import.
                        extractor, meters, spectrum analyser, load, logic
                        analyser, microscope, helping hands, ESD mat,
                        drawer cabinet — `library_lab` helpers, `on_top`.
+                       **RPi enclosures** (2026-09-30, the user's
+                       request): 35 shipped `parts/RPi enclosures`
+                       Raspberry Pi 5 cases (snap-fit lids, vents, fans,
+                       logo and text vents), placed in this menu. Each is
+                       one Object per COLOUR, all holding the same
+                       scad_raw with a `part` variable picking the piece —
+                       a scad_raw renders to one colourless STL, so a
+                       colour must live on its own sub-Object. They have
+                       no built-in preview; test_library_kcad lets a
+                       scad_raw part preview empty.
                        `house_templates.electronics_lab` (6 benches, store,
                        entrance with coats, office) is a template and a
                        Finished lab; FURNITURE_CATALOG / ROOM_TYPES have an

@@ -49,7 +49,10 @@ def test_every_shipped_kcad_is_a_valid_part(app, path):
     # else with errors is a file that should not have been added
     if path.stem not in KNOWN_IMPERFECT:
         assert errors == {}, (path.name, list(errors.values()))
-    assert mesh.tessellate(node), f"{path.name} previews empty"
+    # a part written as OpenSCAD code (scad_raw) has no built-in
+    # preview: OpenSCAD's exact per-part render draws it
+    if not any(n.type == "scad_raw" for n in node.walk()):
+        assert mesh.tessellate(node), f"{path.name} previews empty"
 
 
 def test_part_ids_normalise_names():
