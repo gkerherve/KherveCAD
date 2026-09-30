@@ -240,6 +240,41 @@ def backend_args(binary: str) -> list:
     return list(_backend_cache[binary])
 
 
+_JOBS_ENV = "KHERVECAD_RENDER_JOBS"
+
+
+def default_jobs() -> int:
+    """OpenSCAD processes rendering parts at once: one per core bar one
+    (the app's own), at most 6 — OpenSCAD's Manifold backend is already
+    multi-threaded, so more only fights over memory. Overridden by
+    ``KHERVECAD_RENDER_JOBS``."""
+    try:
+        forced = int(os.environ.get(_JOBS_ENV, "0"))
+    except ValueError:
+        forced = 0
+    if forced > 0:
+        return forced
+    return max(1, min(6, (os.cpu_count() or 2) - 1))
+
+
+_binstl_cache = {}
+
+
+def binary_stl_args(binary: str) -> list:
+    """``--export-format binstl`` when the binary knows it, else [].
+
+    OpenSCAD writes ASCII STL by default: about five times the bytes of
+    a binary one, and far slower to parse — every exact part of the
+    preview goes through that file. Probed off --help once per binary,
+    and not at all when the backend is forced (a stand-in binary)."""
+    if not binary or os.environ.get(_BACKEND_ENV, "").strip():
+        return []
+    if binary not in _binstl_cache:
+        _binstl_cache[binary] = (["--export-format", "binstl"]
+                                 if "binstl" in _help_text(binary) else [])
+    return list(_binstl_cache[binary])
+
+
 def backend_name(binary: str) -> str:
     """'Manifold' or 'CGAL': the backend a run of *binary* uses."""
     return "Manifold" if backend_args(binary) else "CGAL"
@@ -286,15 +321,10 @@ def parse_stl(path: str):
 
 
 def _parse_binary(data: bytes, count: int):
-    mesh = []
-    offset = 84
-    for _ in range(count):
-        values = struct.unpack_from("<12f", data, offset)
-        mesh.append(((values[3], values[4], values[5]),
-                     (values[6], values[7], values[8]),
-                     (values[9], values[10], values[11])))
-        offset += 50
-    return mesh
+    # one iter_unpack over the records instead of an unpack per triangle
+    return [((v[3], v[4], v[5]), (v[6], v[7], v[8]), (v[9], v[10], v[11]))
+            for v in struct.iter_unpack("<12f2x",
+                                        data[84:84 + count * 50])]
 
 
 def _parse_ascii(text: str):
@@ -503,6 +533,14 @@ class ScadEngine(QObject):
         #: key of the one running (so it is never queued twice)
         self._part_queue = {}
         self._running_part = None
+        #: extra part renders running beside the main one:
+        #: {lane number: (QProcess, content key)}
+        self._lanes = {}
+        #: how many OpenSCAD processes may render parts at once
+        self.max_jobs = default_jobs()
+        #: folder of finished part meshes kept between sessions, keyed
+        #: by content (None: no disk cache — the tests' engines)
+        self.cache_dir = None
         self._timer = QTimer(self)
         self._timer.setSingleShot(True)
         self._timer.setInterval(self.DEBOUNCE_MS)
@@ -519,6 +557,7 @@ class ScadEngine(QObject):
 
     def refresh_binary(self):
         _backend_cache.clear()            # a new binary may know new flags
+        _binstl_cache.clear()
         self.binary = find_openscad()
         return self.binary
 
@@ -545,16 +584,74 @@ class ScadEngine(QObject):
         A stale result cannot mislead: the key IS the content."""
         if not self.available or not key:
             return
-        if key in self._part_queue or key == self._running_part:
+        if key in self._part_queue or key == self._running_part or \
+                any(k == key for _p, k in self._lanes.values()):
+            return
+        cached = self._load_cached_part(key)
+        if cached:
+            # rendered in an earlier session: no OpenSCAD run at all
+            QTimer.singleShot(0, lambda k=key, m=cached:
+                              self.part_ready.emit(k, m))
             return
         self._part_queue[key] = scad_code
         self._timer.start()
+
+    # ------------------------------------------------ part disk cache
+    def _cache_path(self, key: str):
+        if not self.cache_dir:
+            return None
+        import hashlib
+        digest = hashlib.sha256(
+            f"{self.backend}\0{key}".encode("utf-8", "replace")).hexdigest()
+        return Path(self.cache_dir) / f"{digest[:40]}.stl"
+
+    def _load_cached_part(self, key: str):
+        path = self._cache_path(key)
+        if path is None or not path.exists():
+            return None
+        try:
+            os.utime(path)                     # recently used: keep it
+            return parse_stl(str(path))
+        except Exception:
+            return None
+
+    def _store_cached_part(self, key: str, stl_path: str):
+        path = self._cache_path(key)
+        if path is None:
+            return
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = path.with_suffix(".tmp")
+            shutil.copyfile(stl_path, tmp)
+            os.replace(tmp, path)
+        except OSError:
+            pass                               # a cache, never an error
+
+    def prune_cache(self, max_bytes: int = 1 << 30):
+        """Keep the disk cache under *max_bytes*, dropping the least
+        recently used meshes first."""
+        if not self.cache_dir or not Path(self.cache_dir).is_dir():
+            return
+        files = sorted(Path(self.cache_dir).glob("*.stl"),
+                       key=lambda p: p.stat().st_mtime, reverse=True)
+        total = 0
+        for path in files:
+            total += path.stat().st_size
+            if total > max_bytes:
+                try:
+                    path.unlink()
+                except OSError:
+                    pass
 
     def is_idle(self) -> bool:
         """Nothing rendering and nothing waiting: what the 3D view shows
         is final until the model changes again."""
         return (self._process is None and self._pending_code is None
-                and not self._part_queue and not self._timer.isActive())
+                and not self._part_queue and not self._lanes
+                and not self._timer.isActive())
+
+    def _busy(self) -> bool:
+        return self._process is not None or bool(self._lanes)
 
     def wait_idle(self, timeout_s: float) -> bool:
         """See `wait_until_idle`."""
@@ -606,7 +703,10 @@ class ScadEngine(QObject):
         self._generation += 1
         process, self._process = self._process, None
         self._running_part = None
-        if process is not None:
+        lanes, self._lanes = [p for p, _k in self._lanes.values()], {}
+        for process in [process, *lanes]:
+            if process is None:
+                continue
             try:
                 process.finished.disconnect()
             except TypeError:                 # nothing connected
@@ -617,10 +717,14 @@ class ScadEngine(QObject):
     def _start(self):
         if self._process is not None:
             # A render is running: keep the code pending; _finished
-            # restarts the timer so the newest code wins.
+            # restarts the timer so the newest code wins. Parts may
+            # still use the spare lanes meanwhile.
+            if self._pending_code is None:
+                self._fill_lanes()
             return
         if self._pending_code is None:
             self._start_part()
+            self._fill_lanes()
             return
         code = self._pending_code
         self._pending_code = None
@@ -632,7 +736,8 @@ class ScadEngine(QObject):
         path = str(stl_path)
         self._watch(self._process, lambda eng: eng._finished(path))
         self._process.start(self.binary,
-                            openscad_args(self.binary, stl_path, scad_path))
+                            openscad_args(self.binary, stl_path, scad_path,
+                                          binary_stl_args(self.binary)))
         self.busy_changed.emit(True)
 
     def _start_part(self):
@@ -651,14 +756,35 @@ class ScadEngine(QObject):
                     lambda eng, k=key, p=str(stl_path):
                     eng._part_finished(k, p))
         self._process.start(self.binary,
-                            openscad_args(self.binary, stl_path, scad_path))
+                            openscad_args(self.binary, stl_path, scad_path,
+                                          binary_stl_args(self.binary)))
         self.busy_changed.emit(True)
 
-    def _part_finished(self, key: str, stl_path: str):
-        process = self._process
-        self._process = None
-        self._running_part = None
-        self.busy_changed.emit(False)
+    def _fill_lanes(self):
+        """Start queued parts on the spare lanes: parts are independent,
+        so several OpenSCAD processes render them side by side (one per
+        core, bar one for the app) instead of strictly one after
+        another. Each lane has its own files, so none overwrites
+        another's program or mesh."""
+        while self._part_queue and len(self._lanes) < self.max_jobs - 1:
+            lane = next(n for n in range(1, self.max_jobs)
+                        if n not in self._lanes)
+            key, code = next(iter(self._part_queue.items()))
+            del self._part_queue[key]
+            scad_path = self._dir / f"part{lane}.scad"
+            stl_path = self._dir / f"part{lane}.stl"
+            scad_path.write_text(code, encoding="utf-8")
+            process = _process(self)
+            self._lanes[lane] = (process, key)
+            self._watch(process,
+                        lambda eng, n=lane, k=key, p=str(stl_path):
+                        eng._lane_finished(n, k, p))
+            process.start(self.binary,
+                          openscad_args(self.binary, stl_path, scad_path,
+                                        binary_stl_args(self.binary)))
+            self.busy_changed.emit(True)
+
+    def _deliver_part(self, process, key: str, stl_path: str):
         exit_ok = (process.exitStatus() == QProcess.NormalExit
                    and process.exitCode() == 0)
         if exit_ok and Path(stl_path).exists():
@@ -667,16 +793,31 @@ class ScadEngine(QObject):
             except Exception:
                 mesh = None
             if mesh:
+                self._store_cached_part(key, stl_path)
                 # keyed by content, so a late result is never wrong —
                 # it just lands under a key nothing is asking for
                 self.part_ready.emit(key, mesh)
         if self._pending_code is not None or self._part_queue:
             self._timer.start()
 
+    def _lane_finished(self, lane: int, key: str, stl_path: str):
+        entry = self._lanes.pop(lane, None)
+        if entry is None:                     # shut down meanwhile
+            return
+        self.busy_changed.emit(self._busy())
+        self._deliver_part(entry[0], key, stl_path)
+
+    def _part_finished(self, key: str, stl_path: str):
+        process = self._process
+        self._process = None
+        self._running_part = None
+        self.busy_changed.emit(self._busy())
+        self._deliver_part(process, key, stl_path)
+
     def _finished(self, stl_path: str):
         process = self._process
         self._process = None
-        self.busy_changed.emit(False)
+        self.busy_changed.emit(self._busy())
         if self._running_generation != self._generation:
             # superseded or cancelled while it ran: its mesh is of the
             # old model, so it must not reach the view

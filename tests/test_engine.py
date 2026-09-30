@@ -370,3 +370,60 @@ def test_renders_and_exports_all_go_through_the_backend(qt_app, tmp_path,
     eng.shutdown()
     assert eng.export_mesh("cube(3);", str(tmp_path / "out.3mf")) == ""
     assert calls == ["model.stl", "part.stl", "out.3mf"]
+
+
+# ------------------------------------ parallel lanes and the disk cache
+
+def test_parts_render_side_by_side(qt_app, tmp_path, monkeypatch):
+    """Queued parts fill the spare lanes at once instead of waiting for
+    each other, each lane with its own files."""
+    if sys.platform == "win32":
+        pytest.skip("the fake OpenSCAD is a POSIX shell script")
+    monkeypatch.setenv("KHERVECAD_OPENSCAD_BACKEND", "cgal")
+    fake = tmp_path / "slow-openscad"
+    fake.write_text("#!/bin/sh\nsleep 30\n")
+    fake.chmod(0o755)
+    eng = engine.ScadEngine()
+    eng.binary = str(fake)
+    eng.max_jobs = 3
+    for key in ("a", "b", "c", "d"):
+        eng.request_part_render(key, f"cube({len(key)});")
+    eng._timer.stop()
+    eng._start()
+    assert eng._running_part == "a"
+    assert sorted(k for _p, k in eng._lanes.values()) == ["b", "c"]
+    assert list(eng._part_queue) == ["d"]
+    eng.request_part_render("b", "cube(1);")      # running: not queued
+    assert list(eng._part_queue) == ["d"]
+    eng.shutdown()
+    assert not eng._lanes and eng._process is None
+
+
+def test_finished_part_is_cached_on_disk(qt_app, scad_engine, tmp_path):
+    """A rendered part is kept on disk by content, so the next request
+    for it (a reopened document) is answered without OpenSCAD."""
+    scad_engine.cache_dir = str(tmp_path / "cache")
+    path = tmp_path / "part.stl"
+    engine.write_stl(TRIS, str(path))
+    scad_engine.request_part_render("key-a", "cube(1);")
+    scad_engine._timer.stop()
+    scad_engine._part_queue.clear()
+    scad_engine._running_part = "key-a"
+    scad_engine._process = _FakeProcess()
+    scad_engine._part_finished("key-a", str(path))
+
+    got = []
+    scad_engine.part_ready.connect(lambda k, m: got.append((k, len(m))))
+    scad_engine.request_part_render("key-a", "cube(1);")
+    assert not scad_engine._part_queue            # no OpenSCAD run
+    for _ in range(5):
+        qt_app.processEvents()
+    assert got == [("key-a", 2)]
+
+
+def test_binary_stl_parses_like_before(tmp_path):
+    path = tmp_path / "t.stl"
+    engine.write_stl(TRIS, str(path))
+    got = engine.parse_stl(str(path))
+    assert len(got) == len(TRIS)
+    assert got[0][1] == pytest.approx(TRIS[0][1])

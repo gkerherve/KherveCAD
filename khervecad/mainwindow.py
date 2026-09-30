@@ -49,6 +49,14 @@ class MainWindow(QMainWindow):
 
         self.model = DocumentModel()
         self.engine = ScadEngine(self)
+        # exact part meshes survive the session: a document reopened is
+        # shown exact at once instead of re-rendered part by part
+        from PyQt5.QtCore import QStandardPaths as _QStandardPaths
+        _cache_root = _QStandardPaths.writableLocation(
+            _QStandardPaths.CacheLocation)
+        if _cache_root:
+            self.engine.cache_dir = str(Path(_cache_root) / "exact_parts")
+            self.engine.prune_cache()
         self._path = None
         self._dirty = False
         self._syncing = False
@@ -1312,10 +1320,20 @@ class MainWindow(QMainWindow):
         return exact, total
 
     def _part_mesh_ready(self, key, tris):
-        """One part finished rendering: keep its exact mesh and redraw
-        (cheap — every other part comes from the cache)."""
+        """One part finished rendering: keep its exact mesh and redraw.
+        Parts now land several at a time (parallel renders, or straight
+        from the disk cache on opening), so the redraw is coalesced:
+        one preview rebuild for a burst, not one per part."""
         mesh.set_exact_mesh(key, tris)
-        self._refresh_preview()
+        timer = getattr(self, "_part_refresh_timer", None)
+        if timer is None:
+            from PyQt5.QtCore import QTimer as _QTimer
+            timer = self._part_refresh_timer = _QTimer(self)
+            timer.setSingleShot(True)
+            timer.setInterval(120)
+            timer.timeout.connect(self._refresh_preview)
+        if not timer.isActive():
+            timer.start()
 
     def _refresh_preview(self):
         # a hidden collection's parts stay out of the views and the

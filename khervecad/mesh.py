@@ -18,6 +18,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 import math
 import re
+from collections import OrderedDict
 from pathlib import Path
 
 from . import expr
@@ -1077,8 +1078,13 @@ _PLACEMENT_KEYS = ("x", "y", "z", "rx", "ry", "rz", "color", "alpha",
 #: survive (an STL of the whole document could only carry one), and a
 #: part is re-rendered only when its own contents change — moving,
 #: snapping or colouring it costs nothing.
-_EXACT = {}
-_EXACT_MAX = 64
+#: Least-recently-used, bounded by triangles rather than by parts: it
+#: used to hold 64 parts and CLEAR ITSELF on the 65th, so a document of
+#: more than 64 exact parts re-rendered them one by one for ever (each
+#: arrival wiped the others, which were then queued again).
+_EXACT = OrderedDict()
+_EXACT_MAX_TRIS = 8_000_000
+_exact_tris = 0
 
 
 def clear_component_cache():
@@ -1109,11 +1115,18 @@ def set_exact_mesh(key, tris):
     """Store OpenSCAD's exact mesh for one part. A late result is
     harmless: the key is the part's *content*, so a mesh for an old
     version simply lands under a key nothing asks for."""
+    global _exact_tris
     if not key:
         return
-    if len(_EXACT) >= _EXACT_MAX:
-        _EXACT.clear()
+    old = _EXACT.pop(key, None)
+    if old is not None:
+        _exact_tris -= len(old)
+    # evict the least recently used parts, never the whole cache
+    while _EXACT and _exact_tris + len(tris) > _EXACT_MAX_TRIS:
+        _k, dropped = _EXACT.popitem(last=False)
+        _exact_tris -= len(dropped)
     _EXACT[key] = tris
+    _exact_tris += len(tris)
     # the local (approximate) tessellation of that part is now stale
     for node_id, cached in list(_COMP_CACHE.items()):
         if cached[0] == key:
@@ -1121,11 +1134,16 @@ def set_exact_mesh(key, tris):
 
 
 def has_exact_mesh(key) -> bool:
-    return bool(key) and key in _EXACT
+    if not key or key not in _EXACT:
+        return False
+    _EXACT.move_to_end(key)          # still on screen: evict it last
+    return True
 
 
 def clear_exact_meshes():
+    global _exact_tris
     _EXACT.clear()
+    _exact_tris = 0
     _COMP_CACHE.clear()
 
 

@@ -206,3 +206,18 @@ def test_exact_key_matches_the_one_used_while_tessellating(model):
     mesh.set_exact_mesh(key, marker)
     assert mesh.tessellate(model.root, fn=model.effective_fn()) == marker
     mesh.clear_exact_meshes()
+
+
+def test_exact_cache_evicts_oldest_instead_of_clearing(monkeypatch):
+    """More exact parts than the cache holds must evict the oldest one,
+    never wipe the others: wiping them re-queued every part and the
+    preview re-rendered a 70-part document one part at a time for ever."""
+    mesh.clear_exact_meshes()
+    monkeypatch.setattr(mesh, "_EXACT_MAX_TRIS", 3)
+    tri = [((0.0, 0.0, 0.0), (1.0, 0.0, 0.0), (0.0, 1.0, 0.0))]
+    for key in ("a", "b", "c"):
+        mesh.set_exact_mesh(key, tri)
+    assert mesh.has_exact_mesh("a")          # a is now the freshest
+    mesh.set_exact_mesh("d", tri)            # over budget: evict one
+    assert [k for k in "abcd" if mesh.has_exact_mesh(k)] == ["a", "c", "d"]
+    mesh.clear_exact_meshes()

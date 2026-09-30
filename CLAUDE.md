@@ -4541,6 +4541,20 @@ switching to the Object tab) arrived afterwards and silently repainted
 the view with the *previous* model — the "3D forgot my colours" bug.
 The 3D view's **Redraw** button (`MainWindow.force_refresh`) is the
 manual escape hatch: clear the mesh caches, rebuild both views.
+**Exact-part speed** (2026-09-30, a 70-part document of scad_raw Pi
+cases rendered "one by one" for ever): `mesh._EXACT` held 64 parts and
+CLEARED ITSELF on the 65th, so every arrival wiped the rest, which were
+queued again — now an LRU bounded by triangles (`_EXACT_MAX_TRIS`),
+touched by `has_exact_mesh`. Parts render on `ScadEngine.max_jobs`
+parallel OpenSCAD processes (`default_jobs`: cores − 1, max 6,
+`KHERVECAD_RENDER_JOBS`; the main `_process` lane plus `_lanes`, each
+with its own `part<n>` files), write binary STL (`binary_stl_args`),
+and are kept on disk by content (`cache_dir`, set by the main window to
+the platform cache folder, pruned to 1 GB) so a reopened document is
+exact at once. `_part_mesh_ready` coalesces redraws (120 ms). The disk
+key does not see a library file change: clear the folder after
+updating BOSL2 & co. OpenSCAD is only needed for what the built-in
+Manifold preview cannot read — scad_raw, libraries, exports.
 A part is only sent for an exact render when `mesh.needs_exact` says
 so: the preview cannot show it right (`uses_booleans`) AND it has at
 most one colour inside (`part_colours`). The STL is colourless: it
