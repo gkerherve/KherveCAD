@@ -2035,6 +2035,8 @@ class McpToolExecutor:
             win.view3d.set_overlay(bool(params["overlay"]))
         if params.get("scale_bar") is not None:
             win.view3d.set_scale_bar(bool(params["scale_bar"]))
+        if params.get("grid") is not None:
+            win.view3d.set_grid(bool(params["grid"]))
         if params.get("opengl") is not None:
             win.view3d.set_hardware(bool(params["opengl"]))
         if params.get("explode") is not None or params.get("explode_mode"):
@@ -2079,6 +2081,7 @@ class McpToolExecutor:
                 "smooth": bool(win.view3d.smooth),
                 "overlay": bool(win.view3d.overlay),
                 "scale_bar": bool(win.view3d.scale_bar),
+                "grid": bool(win.view3d.grid),
                 "cut": win.view3d.cut_state()}
 
     def _guard_unsaved(self, params, tool: str):

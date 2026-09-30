@@ -460,16 +460,24 @@ class MainWindow(QMainWindow):
             "true at the point the camera orbits (everywhere in "
             "orthographic)"))
         self._scale_bar_act.triggered.connect(self.view3d.set_scale_bar)
+        self._grid3d_act = QAction(self.tr("3D Ground &Grid"), self,
+                                   checkable=True)
+        self._grid3d_act.setChecked(self.view3d.grid)
+        self._grid3d_act.setStatusTip(self.tr(
+            "Draw the square ground grid under the model in the 3D view"))
+        self._grid3d_act.triggered.connect(self.view3d.set_grid)
         self.view3d.look_toggled.connect(
             lambda key, on: {"cavity": self._cavity_act,
                              "edges": self._edges_act,
                              "smooth": self._smooth_act,
                              "overlay": self._overlay_act,
                              "scale_bar": self._scale_bar_act,
+                             "grid": self._grid3d_act,
                              "hardware": self._gl_act}[key].setChecked(on))
         view_menu.addAction(self._cavity_act)
         view_menu.addAction(self._edges_act)
         view_menu.addAction(self._scale_bar_act)
+        view_menu.addAction(self._grid3d_act)
         view_menu.addAction(self._smooth_act)
         view_menu.addAction(self._overlay_act)
         view_menu.addAction(self._gl_act)

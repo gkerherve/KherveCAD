@@ -285,6 +285,9 @@ class View3D(QWidget):
         #: a scale bar in the document's unit, true at the orbit centre
         #: (scalebar.py); the main window keeps `unit` in step
         self.scale_bar = settings.value("render_scale_bar", True, type=bool)
+        #: the ground grid under the model (off by default: the user did
+        #: not want square lines in the 3D view)
+        self.grid = settings.value("render_grid", False, type=bool)
         self.unit = "mm"
         self.real_scale = 1.0           # 1 : N, what the scale bar measures
         self._info = None               # shading.MeshInfo of self.mesh
@@ -440,6 +443,13 @@ class View3D(QWidget):
         self.look_toggled.emit("overlay", self.overlay)
         self.update()
 
+    def set_grid(self, on: bool):
+        """Show the ground grid (when the stage is off); persisted."""
+        self.grid = bool(on)
+        QSettings(*_SETTINGS).setValue("render_grid", self.grid)
+        self.look_toggled.emit("grid", self.grid)
+        self.update()
+
     def set_scale_bar(self, on: bool):
         """Show the scale bar (scalebar.py); persisted."""
         self.scale_bar = bool(on)
@@ -583,6 +593,7 @@ class View3D(QWidget):
         twin.cavity, twin.edges = self.cavity, self.edges
         twin.smooth = self.smooth
         twin.scale_bar, twin.unit = self.scale_bar, self.unit
+        twin.grid = self.grid
         twin.real_scale = self.real_scale
         twin.overlay = self.overlay if overlay is None else bool(overlay)
         twin.hardware = self.hardware
@@ -1036,7 +1047,7 @@ class View3D(QWidget):
         # the stage (platform & shadow) belongs in an exported picture;
         # the grid is viewport furniture and does not
         if not self._draw_stage(painter, t, eye, right, up, forward) \
-                and not self._clean and self.cad_furniture:
+                and not self._clean and self.cad_furniture and self.grid:
             self._draw_ground(painter, t, eye, right, up, forward)
         if self.reference_images:
             from . import refimage

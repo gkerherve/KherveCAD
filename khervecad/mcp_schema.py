@@ -2138,6 +2138,11 @@ TOOLS = [
             "edges": {"type": "boolean",
                       "description": "Draw crease and outline edges as "
                                      "thin lines."},
+            "grid": {"type": "boolean",
+                     "description": "Draw the square ground grid under "
+                                    "the model in the 3D view (off by "
+                                    "default; hidden while the platform "
+                                    "is shown)."},
             "scale_bar": {"type": "boolean",
                           "description": "Show a scale bar in the "
                                          "document's unit in the 3D view, "
