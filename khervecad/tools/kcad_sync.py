@@ -24,12 +24,18 @@ import shutil
 import sys
 from pathlib import Path
 
+from khervecad.meshimport import PATH_PARAMS
+
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 os.environ.setdefault("KHERVECAD_DISABLE_ENGINE", "1")
 
 DEFAULT_FOLDERS = [Path.home() / "Documents" / "KCAD Projects",
                    Path.home() / "Documents"]
 MESH_EXTS = (".stl", ".obj", ".off", ".3mf")
+#: every file a document may refer to: meshes, and the pictures a
+#: paint, surface or 2D import reads
+ASSET_EXTS = MESH_EXTS + (".png", ".jpg", ".jpeg", ".dat", ".svg",
+                          ".dxf")
 
 
 def _app():
@@ -97,8 +103,8 @@ def referenced_meshes(path):
     while stack:
         d = stack.pop()
         stack.extend(d.get("children", []))
-        if d.get("type") == "stl_import":
-            raw = str(d.get("params", {}).get("path", ""))
+        for key in PATH_PARAMS.get(d.get("type"), ()):
+            raw = str(d.get("params", {}).get(key, ""))
             if raw:
                 out.append(raw)
     return out
@@ -126,7 +132,7 @@ def cmd_add(paths, into=None):
             out = dest / (m.name if m.is_absolute() else m)
             if not m.is_absolute():
                 m = src.parent / m
-            if m.is_file() and m.suffix.lower() in MESH_EXTS:
+            if m.is_file() and m.suffix.lower() in ASSET_EXTS:
                 out.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(m, out)
         count, errors = describe(target)

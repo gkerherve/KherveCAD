@@ -1,0 +1,244 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "union",
+    "name": "The Scream (Munch), framed painting",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library_part": "user_art_the_scream_munch_1893_relief"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "The Scream (Munch), framed painting",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "6b79e877bfe145c1afc3f37c5cd7bcae",
+        "title": "The Scream (Munch 1893), relief",
+        "area": "General",
+        "named": "The Scream (Munch 1893), relief"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c88a4a",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Canvas]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 735.0,
+           "depth": 910.0,
+           "height": 5.0,
+           "center": false
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "paint",
+        "name": "Paint [Your image]",
+        "visible": true,
+        "params": {
+         "image": "The Scream painting image.png",
+         "plane": "Top (XY)",
+         "x": 0,
+         "y": 0,
+         "width": 735,
+         "height": 910,
+         "sides": "front",
+         "image2": "",
+         "plane2": "Side (YZ)",
+         "x2": 0.0,
+         "y2": 0.0,
+         "width2": 100.0,
+         "height2": 0.0,
+         "region": []
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate [Image surface]",
+          "visible": true,
+          "params": {
+           "x": 0,
+           "y": 0,
+           "z": 5
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale 1",
+            "visible": true,
+            "params": {
+             "x": 2.3186,
+             "y": 2.2807,
+             "z": 0.01
+            },
+            "children": [
+             {
+              "type": "surface",
+              "name": "Surface [Canvas grid]",
+              "visible": true,
+              "params": {
+               "file": "The Scream painting grid.png",
+               "center": false,
+               "invert": false,
+               "convexity": 1
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#7a5530",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -60.0,
+             "y": -60.0,
+             "z": 0.0,
+             "width": 855.0,
+             "depth": 1030.0,
+             "height": 40.0,
+             "center": false
+            },
+            "children": []
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Frame]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": -1.0,
+             "width": 735.0,
+             "depth": 910.0,
+             "height": 50.0,
+             "center": false
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c9a24a",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": -18.0,
+             "y": -18.0,
+             "z": 40.0,
+             "width": 771.0,
+             "depth": 946.0,
+             "height": 8.0,
+             "center": false
+            },
+            "children": []
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Gilt slip]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 39.0,
+             "width": 735.0,
+             "depth": 910.0,
+             "height": 20.0,
+             "center": false
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
