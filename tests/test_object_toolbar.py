@@ -110,19 +110,35 @@ def _actions(menu):
     return out
 
 
-def test_insert_menu_lists_every_toolbar_tool(app):
+def _subs(menu):
+    return [a.text().replace("&&", "\x00").replace("&", "")
+            .replace("\x00", "&") for a in menu.actions() if a.menu()]
+
+
+def test_insert_and_tools_menus_list_every_toolbar_tool(app):
+    """Insert holds what ADDS something, Tools what works on the
+    selection; between them every toolbar tool is there."""
     from khervecad.mainwindow import MainWindow
     from khervecad.toolbars import (MEASURE_TOOLS, OPERATIONS, PRIMITIVES,
                                     TOOLS)
     w = MainWindow()
-    insert = next(a.menu() for a in w.menuBar().actions()
-                  if a.text().replace("&", "") == "Insert")
-    keys = set(_actions(insert))
+    menus = {a.text().replace("&", ""): a.menu()
+             for a in w.menuBar().actions()}
+    insert, tools = menus["Insert"], menus["Tools"]
+    keys = set(_actions(insert)) | set(_actions(tools))
     wanted = ({t for t, *_rest in TOOLS[1:]} | {t for t, *_r in MEASURE_TOOLS}
               | set(PRIMITIVES) | set(OPERATIONS)
-              | {"snap_objects", "assign", "stl_import", "scad_raw"})
+              | {"snap_objects", "edit_mesh", "assign", "stl_import",
+                 "scad_raw"})
     assert wanted <= keys, wanted - keys
-    subs = [a.text().replace("&&", "\x00").replace("&", "")
-            .replace("\x00", "&") for a in insert.actions() if a.menu()]
+    subs = _subs(insert)
     assert "2D Shapes" in subs and "3D Solids" in subs
-    assert "Extrude" in subs and "Repeat & logic" in subs
+    assert "Repeat & logic" in subs
+    assert "Extrude" not in subs and "Measure & annotate" not in subs
+    tool_subs = _subs(tools)
+    assert "Extrude" in tool_subs and "Deform & sculpt" in tool_subs
+    assert "Measure & annotate" in tool_subs
+    assert "Repeat & logic" not in tool_subs
+    assert "edit_mesh" in _actions(tools)
+    w._dirty = False
+    w.close()

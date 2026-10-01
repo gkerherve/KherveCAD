@@ -205,6 +205,44 @@ def test_tab_opens_edit_mode_on_the_selection_and_closes_it(window):
     assert not window._edit_mesh_act.isChecked()
 
 
+def test_the_button_with_nothing_selected_asks_for_a_click(window):
+    """The user's report: Edit vertices with nothing selected looked
+    dead — its refusal went to a status bar the button's own hint
+    overwrote. Now it waits for a click on the part, and says so."""
+    model, view = window.model, window.view3d
+    model.add_node("cube")
+    model.add_node("sphere", dict(x=60.0))
+    window.view3d.fit()
+    QApplication.processEvents()
+    window.builder.tree.clearSelection()
+    window._edit_mesh_act.trigger()
+    assert window._edit_session is None and view._pick_cb is not None
+    assert "click the part" in view._pick_banner
+    from khervecad import meshedit_ui
+    node, tris = next((n, t) for n, t in meshedit_ui._parts(window)
+                      if n.type == "cube")
+    eye, right, up, forward = view._camera()
+    centre = [sum(v[i] for tri in tris for v in tri) / (3 * len(tris))
+              for i in range(3)]
+    p = view._project(eye, right, up, forward, centre)
+    QTest.mouseClick(view, Qt.LeftButton, Qt.NoModifier,
+                     QPoint(int(p[0]), int(p[1])))
+    session = window._edit_session
+    assert session is not None and len(session.points) == 8
+    assert window._edit_mesh_act.isChecked()
+    assert "converted" in view._flash_text      # seen on the 3D view
+
+
+def test_a_refusal_is_shown_on_the_3d_view(window):
+    loop = window.model.add_node("for_loop")
+    cube = CadNode("cube", "c", dict())
+    loop.add(cube)
+    window.set_edit_mode(True, node=cube)
+    assert window._edit_session is None
+    assert "loop" in window.view3d._flash_text
+    assert not window._edit_mesh_act.isChecked()
+
+
 def test_dragging_a_vertex_moves_it_and_keeps_the_solid(window):
     session = _open_cube(window)
     view = window.view3d

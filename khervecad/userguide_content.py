@@ -215,24 +215,33 @@ node you can drag objects into.</p>
 chapter.</p>
 """),
 
-        ("insert_menu", "The Insert menu", f"""
-<p>Every tool on the two toolbars is also in the <b>Insert</b> menu, one
-submenu per group &mdash; handy when you know a tool's name but not its
-icon, and every entry keeps the icon's how-to tooltip:</p>
+        ("insert_menu", "The Insert and Tools menus", f"""
+<p>Every tool on the two toolbars is also in a menu, one submenu per
+group &mdash; handy when you know a tool's name but not its icon, and
+every entry keeps the icon's how-to tooltip. <b>Insert</b> holds what
+<i>adds</i> something; <b>Tools</b> holds what <i>works on</i> what is
+already there.</p>
+<p><b>Insert</b>:</p>
 <ul>
 <li><b>2D Shapes</b> &mdash; line, rectangle, circle, polygon, text (the
 same drawing tools as the left bar; the tick shows the one in use).</li>
 <li><b>3D Solids</b> &mdash; cube, sphere, cylinder, capsule, ellipsoid,
 rounded box, loft.</li>
-<li><b>Extrude</b>, <b>Move &amp; transform</b>, <b>Combine</b>,
-<b>Finish</b>, <b>Deform &amp; sculpt</b>, <b>Character</b> and
-<b>Repeat &amp; logic</b> &mdash; the operation families of the main
-toolbar, applied to the selection.</li>
-<li><b>Measure &amp; annotate</b>, <b>Assembly</b> (Snap objects
-{K("J")}) and <b>Code &amp; files</b> (variables, imported meshes,
-OpenSCAD code, sheet metal).</li>
+<li><b>Repeat &amp; logic</b> (loops, if/else, patterns), <b>Code &amp;
+files</b> (variables, imported meshes, OpenSCAD code, sheet metal),
+<b>Mechanical features</b> and <b>Shapes &amp; patterns</b>.</li>
 </ul>
-<p>The menu is built from the very tables the toolbars are, so a new
+<p><b>Tools</b>:</p>
+<ul>
+<li><b>Extrude</b>, <b>Move &amp; transform</b>, <b>Combine</b>,
+<b>Finish</b>, <b>Deform &amp; sculpt</b> and <b>Character</b> &mdash;
+the operation families of the main toolbar, applied to the
+selection.</li>
+<li><b>Edit Vertices</b> {K("Tab")} &mdash; Blender's Edit Mode: drag
+the part's vertices, add new ones, extrude, subdivide.</li>
+<li><b>Snap objects</b> {K("J")} and <b>Measure &amp; annotate</b>.</li>
+</ul>
+<p>Both menus are built from the very tables the toolbars are, so a new
 tool appears in both at once.</p>
 """),
         ("exploded", "Exploded views", f"""

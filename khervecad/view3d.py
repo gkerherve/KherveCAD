@@ -315,6 +315,13 @@ class View3D(QWidget):
         #: the mouse, keys and paint first, and whatever it declines
         #: (orbit, pan, zoom) falls through to the view as usual
         self.edit_tool = None
+        #: a short message drawn across the top of the view (flash) —
+        #: the status bar's is replaced by a toolbar button's own hint
+        #: the moment the mouse is still over the button that was pressed
+        self._flash_text = ""
+        self._flash_timer = QTimer(self)
+        self._flash_timer.setSingleShot(True)
+        self._flash_timer.timeout.connect(self._end_flash)
         # a click gives the view the keyboard, so Tab (Edit Mode) and
         # the Edit Mode keys reach it
         self.setFocusPolicy(Qt.ClickFocus)
@@ -1385,6 +1392,8 @@ class View3D(QWidget):
         if self.edit_tool is not None and not self._clean:
             self.edit_tool.paint(painter, lambda v: self._project(
                 eye, right, up, forward, v))
+        if not self._clean:
+            self._draw_flash(painter)
         if self._clean:                  # an exported picture: model only
             painter.end()
             return
@@ -1658,6 +1667,36 @@ class View3D(QWidget):
             painter.drawEllipse(QPointF(head[0], head[1]), 4.0, 4.0)
             self._marker_label(painter, head[0] + 8, head[1] - 6,
                                label, color)
+
+    def flash(self, text, ms=6000):
+        """Show *text* across the top of the view for *ms*."""
+        self._flash_text = str(text or "")
+        self._flash_timer.start(int(ms))
+        self.update()
+
+    def _end_flash(self):
+        self._flash_text = ""
+        self.update()
+
+    def _draw_flash(self, painter):
+        if not self._flash_text or self._pick_cb is not None:
+            return
+        font = painter.font()
+        font.setBold(True)
+        font.setPointSizeF(9.5)
+        painter.setFont(font)
+        metrics = painter.fontMetrics()
+        w = min(metrics.horizontalAdvance(self._flash_text) + 28,
+                self.width() - 16)
+        h = metrics.height() + 12
+        # under the lighting and navigation bars
+        rect = QRectF((self.width() - w) / 2.0, 48.0, w, h)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor(140, 60, 20, 225))
+        painter.drawRoundedRect(rect, 6.0, 6.0)
+        painter.setPen(QColor("#fff6ee"))
+        painter.drawText(rect, Qt.AlignCenter, metrics.elidedText(
+            self._flash_text, Qt.ElideRight, int(w - 16)))
 
     def _draw_pick_overlays(self, painter, eye, right, up, forward):
         """Pick mode's visual state: what the cursor is over, what the

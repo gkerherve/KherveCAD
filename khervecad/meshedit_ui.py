@@ -135,6 +135,9 @@ class EditSession(QObject):
         self._box = None               # (start, now, mode) screen rect
         self._box_armed = False        # B pressed: the next drag boxes
         self._hover = None             # last mouse position in the view
+        self._geometry_serial = 0      # bumps whenever the points move
+        self._solid = None             # (serial, Manifold) for occlusion
+        self._occlusion = None         # (camera + serial, hidden set)
         self._committing = False
         self._pending = None
         self._commit_timer = QTimer(self)
@@ -215,6 +218,7 @@ class EditSession(QObject):
     def _place(self):
         m = self.matrix
         self.world = [meshedit.apply(m, p) for p in self.points]
+        self._geometry_serial += 1
 
     def _to_local_point(self, w):
         t = (self.matrix[0][3], self.matrix[1][3], self.matrix[2][3])
@@ -282,7 +286,7 @@ class EditSession(QObject):
         return True
 
     def say(self, text, ms=5000):
-        self.win.statusBar().showMessage(text, ms)
+        _tell(self.win, text, ms)
 
     # ------------------------------------------------- geometry help
     def _camera(self):
@@ -305,21 +309,77 @@ class EditSession(QObject):
             out.append(front)
         return out
 
-    def _visible_vertices(self, front):
+    def _visible_vertices(self, front, eye=None, forward=None):
+        """Vertices to draw and pick: all with X-ray, else those on a
+        face turned to the camera that the surface does not hide (a
+        hollow pot's inner wall stays out of a box select)."""
         if self.xray:
             return set(range(len(self.points)))
         vis = set()
         for face, f in zip(self.faces, front):
             if f:
                 vis.update(face)
-        return vis
+        if eye is None or self._xform is not None:
+            return vis                   # moving: no time for the rays
+        key = (len(self.world), tuple(self.world[0]) if self.world else
+               None, self._geometry_serial, tuple(round(v, 4) for v in eye),
+               self.view.projection)
+        if self._occlusion is not None and self._occlusion[0] == key:
+            return vis - self._occlusion[1]
+        hidden = self._hidden(vis, eye, forward)
+        self._occlusion = (key, hidden)
+        return vis - hidden
+
+    def _hidden(self, candidates, eye, forward):
+        """Of *candidates*, the vertices the part's own surface hides,
+        by a Manifold ray from each to the eye (none without it)."""
+        from . import csg
+        if not csg.available() or not candidates:
+            return set()
+        if self._solid is None or self._solid[0] != self._geometry_serial:
+            tris = []
+            for face in self.faces:
+                ring = face[::-1]                 # our CCW
+                for k in range(1, len(ring) - 1):
+                    tris.append(((self.world[ring[0]], self.world[ring[k]],
+                                  self.world[ring[k + 1]]), None, False))
+            try:
+                solid = csg.to_manifold(tris, {})
+            except Exception:
+                solid = None
+            self._solid = (self._geometry_serial, solid)
+        solid = self._solid[1]
+        if solid is None:
+            return set()
+        ortho = self.view.projection == "Orthographic"
+        far = max(self.view.distance, 1.0) * 4.0
+        hidden = set()
+        for i in candidates:
+            p = self.world[i]
+            if ortho:
+                d = (-forward[0], -forward[1], -forward[2])
+                end = (p[0] + d[0] * far, p[1] + d[1] * far,
+                       p[2] + d[2] * far)
+            else:
+                end = eye
+                d = _unit(_vsub(eye, p))
+            span = math.sqrt(_vdot(_vsub(end, p), _vsub(end, p))) or 1.0
+            eps = max(1e-3, span * 1e-5)
+            start = (p[0] + d[0] * eps, p[1] + d[1] * eps,
+                     p[2] + d[2] * eps)
+            try:
+                if solid.ray_cast(start, end):
+                    hidden.add(i)
+            except Exception:
+                return set()
+        return hidden
 
     def _screen(self):
         """(projected points, front flags, visible vertex set)."""
         project, eye, _r, _u, forward = self._camera()
         proj = [project(w) for w in self.world]
         front = self._front_faces(eye, forward)
-        return proj, front, self._visible_vertices(front)
+        return proj, front, self._visible_vertices(front, eye, forward)
 
     def vertex_at(self, x, y):
         proj, _front, vis = self._screen()
@@ -336,7 +396,7 @@ class EditSession(QObject):
 
     def edge_at(self, x, y):
         """``(a, b, t)`` of the visible edge nearest screen (x, y)."""
-        proj, front, _vis = self._screen()
+        proj, front, vis = self._screen()
         best, best_d = None, EDGE_PICK_PX
         seen = set()
         for face, f in zip(self.faces, front):
@@ -346,7 +406,7 @@ class EditSession(QObject):
             for k in range(n):
                 a, b = face[k], face[(k + 1) % n]
                 key = (min(a, b), max(a, b))
-                if key in seen:
+                if key in seen or a not in vis or b not in vis:
                     continue
                 seen.add(key)
                 pa, pb = proj[a], proj[b]
@@ -676,7 +736,8 @@ class EditSession(QObject):
         panel, self.panel = self.panel, _NoPanel()
         panel.session = None
         panel.close()
-        self.say(message or language.tr("Edit Mode closed."))
+        self.win.statusBar().showMessage(
+            message or language.tr("Edit Mode closed."), 5000)
 
     # ------------------------------------------------- the view's hooks
     def wants_key(self, event):
@@ -904,7 +965,7 @@ class EditSession(QObject):
         proj = [project(w) for w in self.world]
         _p, eye, _r, _u, forward = self._camera()
         front = self._front_faces(eye, forward)
-        vis = self._visible_vertices(front)
+        vis = self._visible_vertices(front, eye, forward)
         sel = self.selection
         painter.setPen(Qt.NoPen)
         painter.setBrush(FACE_FILL)
@@ -924,8 +985,8 @@ class EditSession(QObject):
         thin, hot = QPen(EDGE, 1.0), QPen(SELECT, 1.8)
         back = QPen(BACK_EDGE, 1.0)
         for (a, b), f in drawn.items():
-            if not f and not self.xray:
-                continue
+            if not self.xray and (not f or a not in vis or b not in vis):
+                continue                 # behind, or under the surface
             pa, pb = proj[a], proj[b]
             if pa is None or pb is None:
                 continue
@@ -1174,41 +1235,110 @@ def _target(window):
     return iso if not nodes and iso is not None else None
 
 
+def _tell(window, text, ms=7000):
+    """Say it where it is seen: the 3D view, and the status bar. A
+    toolbar button's own hint replaces a status-bar message while the
+    mouse is still on the button, so a refusal from Edit vertices was
+    gone the instant it was shown — "nothing happened"."""
+    window.statusBar().showMessage(text, ms)
+    flash = getattr(window.view3d, "flash", None)
+    if flash is not None:
+        flash(text, ms)
+
+
+def _uncheck(window):
+    act = getattr(window, "_edit_mesh_act", None)
+    if act is not None:
+        act.blockSignals(True)
+        act.setChecked(False)
+        act.blockSignals(False)
+
+
+def _parts(window):
+    """``[(node, world triangles)]`` of the parts in view a click could
+    choose — the scope's visible children that draw something."""
+    from . import mesh
+    root = window._render_scope()[0]
+    iso = root if root is not window.model.root else None
+    fn = window.model.effective_fn()
+    out = []
+    with window._isolated_frame(iso):
+        for child in root.children:
+            if not child.visible or child.type in ("assign", "variables"):
+                continue
+            tris = mesh.selected_world_tris(root, {child.id}, fn=fn)
+            if tris:
+                out.append((child, tris))
+    return out
+
+
+def _choose_by_click(window):
+    """Nothing selected: ask for a click on the part to edit (Blender
+    edits the active object; here the click makes it active)."""
+    parts = _parts(window)
+    if not parts:
+        _uncheck(window)
+        _tell(window, language.tr(
+            "Edit Mode: there is no solid in view to edit — add a cube "
+            "or a part first."))
+        return None
+    if len(parts) == 1:
+        return start(window, parts[0][0])
+
+    def picked(desc, node):
+        window._edit_picking = False
+        if desc is None or node is None:
+            _uncheck(window)
+            window.statusBar().showMessage(
+                language.tr("Edit Mode cancelled."), 3000)
+            return
+        window.builder.active_tree().select_nodes([node])
+        start(window, node)
+
+    window._edit_picking = True
+    window.view3d.start_pick(
+        picked, groups=parts,
+        banner=language.tr("Edit Mode: click the part whose vertices you "
+                           "want to edit · Esc cancels"),
+        labeler=lambda _desc, node: language.tr("Edit {name}").format(
+            name=getattr(node, "name", "")))
+    return None
+
+
 def start(window, node=None):
-    """Open Edit Mode on *node* (default: the one selected part),
-    converting it into an editable polyhedron first if it is not one.
-    Returns the session, or None (the status bar says why)."""
+    """Open Edit Mode on *node* (default: the one selected part, else
+    the part you click next), converting it into an editable
+    polyhedron first if it is not one. Returns the session, or None."""
     old = getattr(window, "_edit_session", None)
     if old is not None:
         old.exit()
-    node = node if node is not None else _target(window)
-    act = getattr(window, "_edit_mesh_act", None)
-
-    def refuse(text):
-        window.statusBar().showMessage(text, 7000)
-        if act is not None:
-            act.blockSignals(True)
-            act.setChecked(False)
-            act.blockSignals(False)
-        return None
     if node is None:
-        return refuse(language.tr(
-            "Edit Mode: select one part first (in the tree or the 2D "
-            "view), then press Tab over the 3D view."))
+        node = _target(window)
+        if node is None:
+            if len(window.builder.active_tree().selected_nodes()) > 1:
+                _uncheck(window)
+                _tell(window, language.tr(
+                    "Edit Mode edits one part at a time — select just "
+                    "one."))
+                return None
+            return _choose_by_click(window)
     existing = meshedit.find_editable(node)
     target, why = meshedit.convert(window.model, node,
                                    fn=window.model.effective_fn())
     if target is None:
-        return refuse(language.tr("Edit Mode: {name} — {why}").format(
+        _uncheck(window)
+        _tell(window, language.tr("Edit Mode: {name} — {why}").format(
             name=node.name, why=language.tr(why)))
+        return None
     session = EditSession(window, target)
     window._edit_session = session
+    act = getattr(window, "_edit_mesh_act", None)
     if act is not None:
         act.blockSignals(True)
         act.setChecked(True)
         act.blockSignals(False)
     if existing is None:
-        session.say(language.tr(
+        _tell(window, language.tr(
             "{name} converted to an editable mesh ({count} vertices) — "
             "Ctrl+Z gives the original back.").format(
                 name=node.name, count=len(session.points)), 8000)
@@ -1218,10 +1348,17 @@ def start(window, node=None):
 def toggle(window, on=None):
     """Tab: open Edit Mode on the selection, or close the open one."""
     session = getattr(window, "_edit_session", None)
+    picking = getattr(window, "_edit_picking", False) and \
+        window.view3d._pick_cb is not None
+    if on is None and session is None and picking:
+        window.view3d.cancel_pick()          # Tab again: never mind
+        return None
     if on is None:
         on = session is None
     if not on:
         if session is not None:
             session.exit()
+        elif picking:
+            window.view3d.cancel_pick()      # stop waiting for a click
         return None
     return start(window)

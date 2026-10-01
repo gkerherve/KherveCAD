@@ -67,7 +67,10 @@ def test_toolbar_icons_carry_rich_tooltips(window):
     checked = 0
     for bar in (window._tools_bar, window._options_bar):
         for act in bar.actions():
-            if act.isSeparator() or isinstance(act, QWidgetAction):
+            # ask Qt, not the wrapper: once an address is reused, sip
+            # can hand back a widget slot typed as a plain QAction
+            if act.isSeparator() or isinstance(act, QWidgetAction) or \
+                    act.metaObject().className() == "QWidgetAction":
                 continue                    # labels, spin box, groups
             assert act.toolTip().startswith("<table"), act.text()
             assert act.statusTip(), act.text()

@@ -245,28 +245,38 @@ vacío en el que arrastrar objetos.</p>
 <b>Referencia de herramientas</b>.</p>
 """),
 
-        ("insert_menu", "El menú Insertar", f"""
+        ("insert_menu", "Los menús Insertar y Herramientas", f"""
 <p>Cada herramienta de las dos barras de herramientas también está en
-el menú <b>Insertar</b>, un submenú por grupo &mdash; útil cuando
-conoce el nombre de una herramienta pero no su icono, y cada entrada
-conserva la información de uso del icono:</p>
+un menú, un submenú por grupo &mdash; útil cuando conoce el nombre de
+una herramienta pero no su icono, y cada entrada conserva la
+información de uso del icono. <b>Insertar</b> reúne lo que
+<i>añade</i> algo; <b>Herramientas</b>, lo que <i>actúa sobre</i> lo
+que ya existe.</p>
+<p><b>Insertar</b>:</p>
 <ul>
 <li><b>Formas 2D</b> &mdash; línea, rectángulo, círculo, polígono,
 texto (las mismas herramientas de dibujo que la barra izquierda; la
 marca indica la que está en uso).</li>
 <li><b>Sólidos 3D</b> &mdash; cubo, esfera, cilindro, cápsula,
 elipsoide, caja redondeada, loft.</li>
-<li><b>Extrusión</b>, <b>Mover y transformar</b>, <b>Combinar</b>,
-<b>Acabado</b>, <b>Deformar y esculpir</b>, <b>Personaje</b> y
-<b>Repetir y lógica</b> &mdash; las familias de operaciones de la
-barra de herramientas principal, aplicadas a la selección.</li>
-<li><b>Medir y anotar</b>, <b>Ensamblaje</b> (Ajustar objetos
-{K("J")}) y <b>Código y archivos</b> (variables, mallas importadas,
-código OpenSCAD, chapa metálica).</li>
+<li><b>Repetir y lógica</b> (bucles, si/si no, patrones), <b>Código y
+archivos</b> (variables, mallas importadas, código OpenSCAD, chapa
+metálica), <b>Elementos mecánicos</b> y <b>Formas y patrones</b>.</li>
 </ul>
-<p>El menú se construye a partir de las mismas tablas que las barras
-de herramientas, así que una herramienta nueva aparece en ambos
-sitios a la vez.</p>
+<p><b>Herramientas</b>:</p>
+<ul>
+<li><b>Extrusión</b>, <b>Mover y transformar</b>, <b>Combinar</b>,
+<b>Acabado</b>, <b>Deformar y esculpir</b> y <b>Personaje</b> &mdash;
+las familias de operaciones de la barra de herramientas principal,
+aplicadas a la selección.</li>
+<li><b>Editar vértices</b> {K("Tab")} &mdash; el modo Edición de
+Blender: arrastrar los vértices de la pieza, añadir nuevos, extruir,
+subdividir.</li>
+<li><b>Ajustar objetos</b> {K("J")} y <b>Medir y anotar</b>.</li>
+</ul>
+<p>Ambos menús se construyen a partir de las mismas tablas que las
+barras de herramientas, así que una herramienta nueva aparece en todas
+partes a la vez.</p>
 """),
         ("exploded", "Vistas explosionadas", f"""
 <p>Una <b>vista explosionada</b> separa cada pieza de un ensamblaje

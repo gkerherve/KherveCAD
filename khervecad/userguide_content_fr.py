@@ -243,28 +243,38 @@ ils ajoutent un nœud vide dans lequel glisser des objets.</p>
 des outils</b>.</p>
 """),
 
-        ("insert_menu", "Le menu Insertion", f"""
-<p>Chaque outil des deux barres d'outils se trouve aussi dans le
-menu <b>Insertion</b>, un sous-menu par groupe &mdash; pratique quand
-vous connaissez le nom d'un outil mais pas son icône, et chaque
-entrée conserve l'info-bulle explicative de l'icône :</p>
+        ("insert_menu", "Les menus Insertion et Outils", f"""
+<p>Chaque outil des deux barres d'outils se trouve aussi dans un menu,
+un sous-menu par groupe &mdash; pratique quand vous connaissez le nom
+d'un outil mais pas son icône, et chaque entrée conserve l'info-bulle
+explicative de l'icône. <b>Insertion</b> regroupe ce qui
+<i>ajoute</i> quelque chose ; <b>Outils</b> ce qui <i>agit sur</i> ce
+qui existe déjà.</p>
+<p><b>Insertion</b> :</p>
 <ul>
 <li><b>Formes 2D</b> &mdash; ligne, rectangle, cercle, polygone,
 texte (les mêmes outils de dessin que la barre de gauche ; la coche
 indique celui en cours d'utilisation).</li>
 <li><b>Solides 3D</b> &mdash; cube, sphère, cylindre, capsule,
 ellipsoïde, boîte arrondie, loft.</li>
-<li><b>Extrusion</b>, <b>Déplacer et transformer</b>,
-<b>Combiner</b>, <b>Finition</b>, <b>Déformer et sculpter</b>,
-<b>Personnage</b> et <b>Répéter et logique</b> &mdash; les familles
-d'opérations de la barre d'outils principale, appliquées à la
-sélection.</li>
-<li><b>Mesurer et annoter</b>, <b>Assemblage</b> (Accrocher les
-objets {K("J")}) et <b>Code et fichiers</b> (variables, maillages
-importés, code OpenSCAD, tôlerie).</li>
+<li><b>Répéter et logique</b> (boucles, si/sinon, motifs), <b>Code et
+fichiers</b> (variables, maillages importés, code OpenSCAD, tôlerie),
+<b>Fonctions mécaniques</b> et <b>Formes et motifs</b>.</li>
 </ul>
-<p>Le menu est construit à partir des tables mêmes que les barres
-d'outils, si bien qu'un nouvel outil apparaît aux deux endroits à la
+<p><b>Outils</b> :</p>
+<ul>
+<li><b>Extrusion</b>, <b>Déplacer et transformer</b>,
+<b>Combiner</b>, <b>Finition</b>, <b>Déformer et sculpter</b> et
+<b>Personnage</b> &mdash; les familles d'opérations de la barre
+d'outils principale, appliquées à la sélection.</li>
+<li><b>Modifier les sommets</b> {K("Tab")} &mdash; le mode Édition de
+Blender : glisser les sommets de la pièce, en ajouter, extruder,
+subdiviser.</li>
+<li><b>Accrocher les objets</b> {K("J")} et <b>Mesurer et
+annoter</b>.</li>
+</ul>
+<p>Les deux menus sont construits à partir des tables mêmes que les
+barres d'outils, si bien qu'un nouvel outil apparaît partout à la
 fois.</p>
 """),
         ("exploded", "Vues éclatées", f"""

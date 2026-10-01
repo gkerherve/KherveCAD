@@ -2562,10 +2562,15 @@ into a new module and import.
                        sculpt, Character, Repeat & logic): a click runs
                        the family's last-used tool (QSettings
                        `toolbar/<family>`), the chevron opens the rest.
-                       `build_insert_menu` lays every tool of both bars
-                       out as the Insert menu (2D Shapes, 3D Solids, one
-                       submenu per family, Measure, Assembly, Code &
-                       files) from these same tables.
+                       `build_insert_menu` and `build_tools_menu` lay
+                       every tool of both bars out as menus from these
+                       same tables, split by what a tool DOES (2026-10-01,
+                       the user): **Insert** = what adds something (2D
+                       Shapes, 3D Solids, Repeat & logic, Code & files,
+                       features); **Tools** = what works on the selection
+                       (the `TOOL_FAMILIES`: Extrude, Move & transform,
+                       Combine, Finish, Deform & sculpt, Character; Edit
+                       Vertices, Snap objects, Measure & annotate).
                        A shortcut a menu already owns is shown in the
                        tip but not bound (`bind=False`) — two actions on
                        one key make Qt fire neither.
@@ -3070,7 +3075,7 @@ into a new module and import.
   - `meshedit.py` / `meshedit_ui.py` / `meshedit_mcp.py` — **Edit Mode**
                        (2026-10-01, the user: "like Blender — vertices we
                        drag with the mouse, and add more"). Tab over the 3D
-                       view (toolbar Edit vertices, Edit menu, tree
+                       view (toolbar Edit vertices, Tools menu, tree
                        right-click) opens the selected part's `polyhedron`
                        — anything else is CONVERTED first
                        (`meshedit.convert`, one undo step: the preview
@@ -3112,7 +3117,17 @@ into a new module and import.
                        set / subdivide / extrude / merge / dissolve /
                        smooth / split_edge / poke, vertices by index,
                        `within` box or `all`, world mm) and
-                       get_document_info `edit_mode`. Tested in
+                       get_document_info `edit_mode`. With NOTHING
+                       selected it asks for a click on the part (pick
+                       mode over the scope's parts; the only part is
+                       taken at once), and every message is also
+                       `View3D.flash`ed: a toolbar button's own status tip
+                       replaces a status-bar message while the mouse is on
+                       it, so the first version's refusal was invisible
+                       ("nothing happened"). Vertices and edges the part's
+                       own surface hides are not drawn or picked (a
+                       Manifold ray to the eye, cached per camera; X-ray
+                       shows all). Tested in
                        `tests/test_meshedit.py` with real mouse events.
   - `photoreal.py` / `photoreal_ui.py` — **photoreal renders** through
                        Blender Cycles when installed (2026-09-19; nothing

@@ -148,6 +148,7 @@ class MainWindow(QMainWindow):
         self.view2d.step_object.connect(
             lambda step: self._tree_command("step", step))
         self.model.structure_changed.connect(self._model_edited)
+        self._edit_session = None          # meshedit_ui.EditSession, if open
         self.view3d.tab_pressed.connect(lambda: self.set_edit_mode(None))
         self.model.node_changed.connect(lambda _n: self._model_edited())
         self.model.references_changed.connect(self._model_edited)
@@ -301,10 +302,6 @@ class MainWindow(QMainWindow):
         edit_menu.addAction(self.tr("&Ungroup"), self._ungroup_selection,
                             "Ctrl+Shift+G")
         edit_menu.addSeparator()
-        edit_menu.addAction(icons.icon("mdi.vector-polyline-edit"),
-                            self.tr("Edit &Vertices (Edit Mode)") + "\tTab",
-                            lambda: self.set_edit_mode(None))
-        edit_menu.addSeparator()
         edit_menu.addAction(self.tr("Document &Units..."), self.choose_unit)
         edit_menu.addAction(self.tr("Document &Scale (1 : N)..."),
                             self.choose_scale)
@@ -325,6 +322,11 @@ class MainWindow(QMainWindow):
         # every toolbar tool, grouped the way the toolbars group them
         from .toolbars import build_insert_menu
         build_insert_menu(self, insert_menu)
+
+        # what works on the selection rather than adding something
+        tools_menu = m.addMenu(self.tr("&Tools"))
+        from .toolbars import build_tools_menu
+        build_tools_menu(self, tools_menu)
 
         self._build_library_menu(m)
 
