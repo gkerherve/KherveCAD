@@ -230,3 +230,130 @@ def armature_report(node) -> dict:
                      "Head, Tail, Left wing, Front left leg … and "
                      "send_to_planetcraft walks it. reach (IK) takes a bone "
                      "name as its effector.")}
+
+
+# --------------------------------------------------------- shape keys
+
+def _local_dir(node, d, stop=None):
+    from . import mesh
+    m = mesh.mat_mul(mesh.ancestor_matrix(node, stop=stop),
+                     mesh.node_matrix(node))
+    inv = _inverse(m)
+    return [round(sum(inv[r][k] * d[k] for k in range(3)), 5)
+            for r in range(3)]
+
+
+def _stroke_rows(node, specs, stop):
+    """Sculpt stroke rows (no key index) in *node*'s frame from world
+    specs {kind, at, radius, strength, direction, to, tip}."""
+    from . import sculpt
+    rows = []
+    for spec in specs:
+        if not isinstance(spec, dict):
+            raise CreatureError("Each stroke is {kind, at, radius, "
+                                "strength, direction, to, tip}.")
+        k = sculpt.kind_index(spec.get("kind", "inflate"))
+        if k < 0:
+            raise CreatureError(f"Unknown brush {spec.get('kind')!r}: "
+                                f"{', '.join(sculpt.KINDS)}.")
+        kind = sculpt.KINDS[k]
+        if kind == "snake_hook":
+            raise CreatureError("A shape key keeps the vertices; a snake "
+                                "hook adds some — sculpt the horn first.")
+        at = _vec(spec.get("at"), "at")
+        radius = float(spec.get("radius", 5.0))
+        strength = float(spec.get("strength", 1.0))
+        direction = spec.get("direction")
+        if spec.get("to") is not None:
+            end = _vec(spec["to"], "to")
+            direction = [end[i] - at[i] for i in range(3)]
+            if kind in ("grab", "elastic_grab") and \
+                    spec.get("strength") is None:
+                strength = sum(c * c for c in direction) ** 0.5
+        d = _local_dir(node, _vec(direction, "direction"), stop) \
+            if direction is not None else [0.0, 0.0, 0.0]
+        row = [k] + to_local(node, [at], stop)[0] + [radius, strength] + d
+        if kind == "pose":
+            if spec.get("tip") is None:
+                raise CreatureError("A pose stroke needs 'tip'.")
+            row += to_local(node, [_vec(spec["tip"], "tip")], stop)[0]
+        rows.append(row)
+    return rows
+
+
+def shape_key(window, params) -> dict:
+    """Add or change a shape key; set key values; make a slider."""
+    from .model import validate
+    model = window.model
+    if params.get("node_id") is None:
+        raise CreatureError("Give 'node_id': the face/body (wrapped in "
+                            "shape keys) or a shape_keys node.")
+    target = _find(model, int(params["node_id"]))
+    node = target if target.type == "shape_keys" else next(
+        (n for n in target.walk() if n.type == "shape_keys"), None)
+    if node is None:
+        if target.parent is None:
+            raise CreatureError("The document root cannot take keys.")
+        node = model.wrap_nodes([target], "shape_keys")
+        node.name = "Shape keys"
+    for key in ("mirror", "detail"):
+        if params.get(key) is not None:
+            node.params[key] = params[key]
+    keys = [list(r) for r in node.params.get("keys") or []]
+    strokes = [list(r) for r in node.params.get("strokes") or []]
+    names = [str(r[0]) for r in keys]
+    name = params.get("key")
+    if name is not None:
+        name = str(name).strip()
+        if not name:
+            raise CreatureError("'key' needs a name (blink, jaw_open…).")
+        if name not in names:
+            keys.append([name, 0.0])
+            names.append(name)
+        index = names.index(name)
+        if params.get("strokes") is not None:
+            new = _stroke_rows(node, params["strokes"], _scope(window))
+            if params.get("replace", True):
+                strokes = [r for r in strokes if int(float(r[0])) != index]
+            strokes += [[index] + r for r in new]
+        if params.get("slider"):
+            var = _slider(model, name)
+            keys[index][1] = var
+        if params.get("value") is not None:
+            keys[index][1] = params["value"]
+    for kname, value in (params.get("values") or {}).items():
+        if kname not in names:
+            raise CreatureError(f"No shape key {kname!r}. Keys: "
+                                f"{', '.join(names) or 'none'}.")
+        keys[names.index(kname)][1] = value
+    node.params["keys"] = keys
+    node.params["strokes"] = strokes
+    model.node_changed.emit(node)
+    model.structure_changed.emit()
+    errors = validate(model.root)
+    if node.id in errors:
+        raise CreatureError(errors[node.id])
+    return {"shape_keys": node.id, "keys": keys,
+            "strokes": len(strokes),
+            "note": ("A key's strokes are sculpted once; its value (0-1, "
+                     "or a variable) blends it in. With slider true the "
+                     "value is a Customizer variable — play_motion sweeps "
+                     "it.")}
+
+
+def _slider(model, key):
+    """A document variable for *key* with a 0-1 Customizer slider in the
+    'Shape keys' group (reused when it exists)."""
+    import re
+    var = re.sub(r"\W", "_", key.strip().lower()) or "key"
+    if var[0].isdigit():
+        var = "k_" + var
+    for n in model.root.walk():
+        if n.type == "assign" and n.params.get("variable") == var:
+            return var
+    from .model import CadNode
+    model.root.add(CadNode("assign", var, dict(
+        variable=var, value="0", options="0:0.01:1", group="Shape keys")),
+        0)                             # first: every part can read it
+    model.structure_changed.emit()
+    return var

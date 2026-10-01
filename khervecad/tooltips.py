@@ -365,6 +365,19 @@ TIPS = {
          "the bend a sleeve instead of a crease."],
         "Name bones Head, Tail, Left wing, Front left leg… and Send to "
         "PlanetCraft walks the creature by its bones."),
+    "shape_keys": (
+        "Shape keys (morph targets)",
+        "Saved shapes you blend between with a value — a blink, an open "
+        "mouth, a snarl, a breath. Like Blender's shape keys; a value "
+        "can be a Customizer slider, so the face moves on screen.",
+        [_SELECTION + " (a face or a body).",
+         "Click Shape keys, then add a key in Properties: a name and a "
+         "value from 0 to 1 (or a variable).",
+         "Key strokes are sculpt strokes with the key's number first: "
+         "grab an eyelid down, pinch the lips, grab the jaw open.",
+         "Turn the value up and the key blends in; several keys add up."],
+        "Use a variable as the value and give it a slider (Variables tab, "
+        "Customizer [0:0.01:1]): its play button animates the face."),
     "symmetry": (
         "Symmetry (mirror copy)",
         "Keeps its contents AND their mirror image: model one arm, one "

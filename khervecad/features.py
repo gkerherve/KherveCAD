@@ -25,11 +25,12 @@ the Free Software Foundation, either version 3 of the License, or
 from __future__ import annotations
 
 from . import (armature, curves2d, displace, gears, holes, outfit,
-               scatter, solids, textured, textures, threads, weathering)
+               scatter, shapekeys, solids, textured, textures, threads,
+               weathering)
 
 MODULES = [gears, threads, holes, solids, curves2d, textures,
            textured, outfit, weathering, scatter, displace.KIT,
-           armature.KIT]
+           armature.KIT, shapekeys.KIT]
 
 NODE_TYPES = {}
 LEAVES = frozenset()

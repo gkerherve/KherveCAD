@@ -114,9 +114,8 @@ def test_the_program_round_trips_and_the_kit_caches(app):
         assert back.params[key] == node.params[key], key
     assert [c.type for c in back.children] == ["sphere"]
     # one bake, served from the cache the second time
-    displace.KIT.baked(node, {})
-    hit = displace.KIT.baked(node, {})
-    assert hit is displace.KIT.baked(node, {})
+    hit = displace.KIT.triangles(node, {})
+    assert hit is displace.KIT.triangles(node, {})
 
 
 def test_validation(app):

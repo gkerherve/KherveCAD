@@ -121,7 +121,9 @@ def make(kind, label, icon, params, schema, compute, *, leaf=False,
         return (f"module kcad_{kind}({args}{extra}, points = [], "
                 f"faces = []) {{\n{body}\n}}").split("\n")
 
-    def baked(node, env):
+    def triangles(node, env):
+        """The baked triangles, cached by content (the program's points
+        and faces are only welded when codegen asks for them)."""
         from . import document, mesh
         from . import model as model_mod
         fn = mesh._FN_OVERRIDE
@@ -132,7 +134,6 @@ def make(kind, label, icon, params, schema, compute, *, leaf=False,
                          sort_keys=True, default=str)
         hit = _CACHE.get(key)
         if hit is None:
-            from . import bake
             saved, saved_detail = mesh._FN_OVERRIDE, mesh._DETAIL
             mesh._set_fn(fn)
             mesh._DETAIL = None
@@ -141,11 +142,18 @@ def make(kind, label, icon, params, schema, compute, *, leaf=False,
             finally:
                 mesh._set_fn(saved)
                 mesh._DETAIL = saved_detail
-            points, faces = bake.to_polyhedron(tris)
-            hit = _CACHE[key] = (points, faces, tris)
+            hit = _CACHE[key] = [tris, None]
             while len(_CACHE) > CACHE_SIZE:
                 _CACHE.pop(next(iter(_CACHE)))
         return hit
+
+    def baked(node, env):
+        """(points, faces, triangles), cached by content."""
+        hit = triangles(node, env)
+        if hit[1] is None:
+            from . import bake
+            hit[1] = bake.to_polyhedron(hit[0])
+        return hit[1][0], hit[1][1], hit[0]
 
     def statement(node, fmt, fn) -> str:
         from . import bake
@@ -232,7 +240,7 @@ def make(kind, label, icon, params, schema, compute, *, leaf=False,
     def tess(node, env, color, sel, selected):
         from . import mesh
         try:
-            _points, _faces, tris = baked(node, env)
+            tris = triangles(node, env)[0]
         except Exception:                    # validation has flagged it
             tris = []
         own = colour(node) if colour is not None else None
@@ -254,7 +262,7 @@ def make(kind, label, icon, params, schema, compute, *, leaf=False,
         COLORED=types, TEXT_PARAMS=frozenset(text),
         BUILDERS={f"kcad_{kind}": build},
         preamble=preamble, statement=statement, check=check_node,
-        tess=tess, baked=baked)
+        tess=tess, baked=baked, triangles=triangles)
 
 
 def source_tris(node, env):

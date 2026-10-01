@@ -107,7 +107,7 @@ WRAP_TYPES = [
     "section_loft", "blend", "bend", "twist", "taper", "lattice", "subdivide",
     "pattern", "shell", "sculpt", "decimate", "shrinkwrap", "bevel",
     "remesh", "wireframe", "cloth", "push_pull", "bisect", "weathering",
-    "scatter", "displace", "armature",
+    "scatter", "displace", "armature", "shape_keys",
 ]
 
 
@@ -823,6 +823,36 @@ TOOLS = [
                                                "skeleton edge."),
             "falloff": {"type": "number"},
             "smooth": {"type": "integer"},
+            "detail": {"type": "number"},
+        }, ["node_id"]),
+    },
+    {
+        "name": "shape_key",
+        "description": (
+            "Shape keys (morph targets) — Blender's: a blink, an open "
+            "jaw, a snarl, a breath, blended by a 0-1 value. `node_id` is "
+            "the face/body (wrapped in a shape_keys node) or one to "
+            "change. `key` names a key and `strokes` sculpts it: the same "
+            "brushes as sculpt_stroke ({kind, at, radius, strength, "
+            "direction, to, tip}, WORLD mm — grab an eyelid down, pinch "
+            "the lips, grab the jaw open), applied once to the base "
+            "(`replace` true: the key's old strokes go). `value` sets its "
+            "weight now; `slider` true makes a document variable with a "
+            "0-1 Customizer slider (group 'Shape keys') drive it, so "
+            "play_motion animates it; `values` {key: value} sets several. "
+            "A key keeps the vertices (no snake_hook). Put shape keys "
+            "OUTSIDE the sculpt, inside the armature: the face morphs, "
+            "then the body poses."
+        ),
+        "input_schema": _obj({
+            "node_id": _ID,
+            "key": {"type": "string"},
+            "strokes": {"type": "array", "items": {"type": "object"}},
+            "replace": {"type": "boolean"},
+            "value": {"type": ["number", "string"]},
+            "slider": {"type": "boolean"},
+            "values": {"type": "object"},
+            "mirror": {"type": "string", "enum": ["none", "x", "y", "z"]},
             "detail": {"type": "number"},
         }, ["node_id"]),
     },

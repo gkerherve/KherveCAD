@@ -587,6 +587,13 @@ x, y, z, x, y, z], ["Head", "spine", ...]], pose = [["Head", 0, 20, \
 0]]) { body }`, OUTSIDE the sculpt/displace and inside the colour. Bone \
 names Head / Tail / Left wing / Front left leg make PlanetCraft walk it.
 
+Expressions — shape keys: a blink, jaw open, snarl or breath is a \
+SHAPE KEY, never a second model: shape_key with `key` + `strokes` \
+(sculpt brushes in world mm) and `slider` true, then play_motion to \
+show it moving. In code `kcad_shape_keys(keys = [["blink", "blink"]], \
+strokes = [[0, kind, x, y, z, radius, strength, dx, dy, dz], ...]) { \
+face }` with a variable `blink = 0; // [0:0.01:1]`.
+
 Creature detail — scatter: spikes, warts, scales, barnacles, teeth, \
 eye clusters are ONE scatter, not hand-placed copies. Model the piece at \
 the origin pointing up +Z (base at z = 0), then scatter_on_surface with \
