@@ -357,3 +357,46 @@ def _slider(model, key):
         0)                             # first: every part can read it
     model.structure_changed.emit()
     return var
+
+
+# ---------------------------------------------------------- hair strands
+
+def grow_hair(window, params) -> dict:
+    """Wrap a body in hair_strands (or change one); `within` in world
+    mm, the rest as the node's parameters."""
+    from . import strands
+    from .model import validate
+    model = window.model
+    if params.get("node_id") is None:
+        raise CreatureError("Give 'node_id': the head or body to grow hair "
+                            "on, or a hair_strands node.")
+    target = _find(model, int(params["node_id"]))
+    node = target if target.type == "hair_strands" else None
+    if node is None:
+        if target.parent is None:
+            raise CreatureError("The document root cannot grow hair.")
+        node = model.wrap_nodes([target], "hair_strands")
+        node.name = str(params.get("name") or "Hair")
+    known = strands.KIT.NODE_TYPES["hair_strands"]["params"]
+    for key, value in params.items():
+        if key in ("node_id", "name", "within"):
+            continue
+        if key not in known:
+            raise CreatureError(f"hair_strands has no {key!r}. It takes: "
+                                f"{', '.join(sorted(known))}.")
+        node.params[key] = value
+    if params.get("within") is not None:
+        box = params["within"]
+        lo, hi = _vec(box.get("min"), "within.min"), \
+            _vec(box.get("max"), "within.max")
+        a, b = to_local(node, [lo, hi], _scope(window))
+        node.params["within"] = [[min(a[k], b[k]) for k in range(3)],
+                                 [max(a[k], b[k]) for k in range(3)]]
+    model.node_changed.emit(node)
+    errors = validate(model.root)
+    if node.id in errors:
+        raise CreatureError(errors[node.id])
+    tris = strands.KIT.triangles(node, {})[0]
+    return {"hair": node.id, "name": node.name,
+            "strands": int(node.params.get("count", 0)),
+            "triangles": len(tris)}

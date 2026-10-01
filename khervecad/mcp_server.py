@@ -600,6 +600,14 @@ show it moving. In code `kcad_shape_keys(keys = [["blink", "blink"]], \
 strokes = [[0, kind, x, y, z, radius, strength, dx, dy, dz], ...]) { \
 face }` with a variable `blink = 0; // [0:0.01:1]`.
 
+Creature hair — manes, beards, fur tufts, whiskers are grow_hair \
+STRANDS, not spheres or a hair cap: `count` 500-3000, `length`, \
+`gravity` 0.5-0.9 for a mane, `clumps` 40-80 + `clump_strength` 0.7 so \
+it reads as locks, `within` for the scalp / chin / spine, `color`. Short \
+dense fur on a body: the Fur material on its colour is cheaper; strands \
+for tufts. In code `kcad_hair_strands(count = 1200, length = 40, ...) { \
+head }`.
+
 Creature detail — scatter: spikes, warts, scales, barnacles, teeth, \
 eye clusters are ONE scatter, not hand-placed copies. Model the piece at \
 the origin pointing up +Z (base at z = 0), then scatter_on_surface with \

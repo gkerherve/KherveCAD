@@ -378,6 +378,19 @@ TIPS = {
          "Turn the value up and the key blends in; several keys add up."],
         "Use a variable as the value and give it a slider (Variables tab, "
         "Customizer [0:0.01:1]): its play button animates the face."),
+    "hair_strands": (
+        "Hair strands (fur, manes, beards)",
+        "Grows real strands from the surface — a mane, a beard, fur "
+        "tufts, whiskers — combed, drooping, curled and gathered into "
+        "locks. Like Blender's hair particles.",
+        [_SELECTION + " (the head or body).",
+         "Click Hair strands: strands grow everywhere except the faces "
+         "looking forward (-y, the face).",
+         "In Properties: how many, how long, root and tip thickness, "
+         "gravity, curl, locks and how strongly they gather, a comb "
+         "direction, a region (Only inside), the colour and material."],
+        "A mane reads best as locks: 40-80 locks, gathered 0.6-0.8, a "
+        "little curl. Use the Fur material for short fur."),
     "symmetry": (
         "Symmetry (mirror copy)",
         "Keeps its contents AND their mirror image: model one arm, one "

@@ -107,7 +107,7 @@ WRAP_TYPES = [
     "section_loft", "blend", "bend", "twist", "taper", "lattice", "subdivide",
     "pattern", "shell", "sculpt", "decimate", "shrinkwrap", "bevel",
     "remesh", "wireframe", "cloth", "push_pull", "bisect", "weathering",
-    "scatter", "displace", "armature", "shape_keys",
+    "scatter", "displace", "armature", "shape_keys", "hair_strands",
 ]
 
 
@@ -854,6 +854,49 @@ TOOLS = [
             "values": {"type": "object"},
             "mirror": {"type": "string", "enum": ["none", "x", "y", "z"]},
             "detail": {"type": "number"},
+        }, ["node_id"]),
+    },
+    {
+        "name": "grow_hair",
+        "description": (
+            "Grow real STRANDS of hair or fur from a surface — Blender's "
+            "hair particles: a troll's mane, a beard, fur tufts, a ruff, "
+            "whiskers (the hair cap only makes a bumpy shell). `node_id` "
+            "is the head/body (wrapped in hair_strands, drawn as it is) "
+            "or one to change. `count` strands of `length` mm (± "
+            "`length_jitter`), `root_radius` → `tip_radius`; `gravity` "
+            "0-1 droops them, `curl` mm + `curl_turns` corkscrews them, "
+            "`clumps` locks with `clump_strength` 0-1 gathers them (a "
+            "mane reads as locks), `comb_x/y/z` + `comb_strength` combs "
+            "them one way (fur lying back: comb_x -1, strength 2). "
+            "`within` {min, max} world mm keeps them to the scalp / chin "
+            "/ back; `clear` (default -y) + `clear_angle` keeps them off "
+            "the face. `color` and `material` (Fur, Matte…) colour the "
+            "strands. Keep count × segments modest: each strand is ~50 "
+            "triangles."
+        ),
+        "input_schema": _obj({
+            "node_id": _ID, "name": {"type": "string"},
+            "count": {"type": "integer"}, "length": {"type": "number"},
+            "length_jitter": {"type": "number"},
+            "root_radius": {"type": "number"},
+            "tip_radius": {"type": "number"},
+            "segments": {"type": "integer"}, "sides": {"type": "integer"},
+            "gravity": {"type": "number"}, "curl": {"type": "number"},
+            "curl_turns": {"type": "number"},
+            "clumps": {"type": "integer"},
+            "clump_strength": {"type": "number"},
+            "comb_x": {"type": "number"}, "comb_y": {"type": "number"},
+            "comb_z": {"type": "number"},
+            "comb_strength": {"type": "number"},
+            "within": {"type": "object",
+                       "description": "{min: [x, y, z], max: [x, y, z]} "
+                                      "world mm."},
+            "clear": {"type": "string",
+                      "enum": ["none", "-y", "+y", "-x", "+x", "+z", "-z"]},
+            "clear_angle": {"type": "number"},
+            "seed": {"type": "integer"},
+            "color": {"type": "string"}, "material": {"type": "string"},
         }, ["node_id"]),
     },
     {
