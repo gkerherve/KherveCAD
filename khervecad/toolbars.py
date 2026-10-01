@@ -72,7 +72,7 @@ OPERATION_GROUPS = [
                 "shrinkwrap"]),
     ("character", ["symmetry", "joint", "paint", "weathering", "hair_cap",
                    "cloth"]),
-    ("logic", ["for_loop", "while_loop", "if_else", "pattern",
+    ("logic", ["for_loop", "while_loop", "if_else", "pattern", "scatter",
                "intersection_for", "let"]),
 ]
 OPERATIONS = [op for _key, ops in OPERATION_GROUPS for op in ops]

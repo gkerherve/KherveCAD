@@ -24,11 +24,11 @@ the Free Software Foundation, either version 3 of the License, or
 
 from __future__ import annotations
 
-from . import (curves2d, gears, holes, outfit, solids, textured, textures,
-               threads, weathering)
+from . import (curves2d, gears, holes, outfit, scatter, solids, textured,
+               textures, threads, weathering)
 
 MODULES = [gears, threads, holes, solids, curves2d, textures,
-           textured, outfit, weathering]
+           textured, outfit, weathering, scatter]
 
 NODE_TYPES = {}
 LEAVES = frozenset()

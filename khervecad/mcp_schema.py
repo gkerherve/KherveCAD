@@ -105,6 +105,7 @@ WRAP_TYPES = [
     "section_loft", "blend", "bend", "twist", "taper", "lattice", "subdivide",
     "pattern", "shell", "sculpt", "decimate", "shrinkwrap", "bevel",
     "remesh", "wireframe", "cloth", "push_pull", "bisect", "weathering",
+    "scatter",
 ]
 
 
@@ -729,6 +730,62 @@ TOOLS = [
                                       "a blend or a scan is dense "
                                       "already; a cube needs it)."},
         }, ["node_id"]),
+    },
+    {
+        "name": "scatter_on_surface",
+        "description": (
+            "Scatter copies of one piece over a surface — Blender's "
+            "particle instancing: spikes down a spine, warts, scales, "
+            "barnacles, rows of teeth, eye clusters, rivets, studs. "
+            "Model the piece FIRST at the origin standing up along +Z "
+            "with its base at z = 0 (a cone for a spike, a flattened "
+            "sphere for a wart, a small ellipsoid tilted for a scale); "
+            "then give `piece_id` and `surface_id` (the body: a sculpt, "
+            "a blend, a mesh) and they are wrapped in one scatter node "
+            "— the piece first, the surface after it, drawn too. "
+            "`count` copies darted over the surface at least `spacing` "
+            "mm apart (0 = even), `seed`; `facing` + `max_angle` keep "
+            "faces looking one way (the top of a back: +z, 60) and "
+            "`within` {min, max} (world mm) a region. Or `path` (world "
+            "points: a spine, a jaw line, a brow ridge) puts `count` "
+            "copies evenly along it, each dropped onto the surface — "
+            "`taper` makes them smaller towards its ends. Each copy "
+            "stands along the surface normal (`align` normal / up / "
+            "blend), `sink` mm into it, `scale` × (1 ± `scale_jitter`), "
+            "`spin_jitter` / `tilt_jitter` degrees of randomness. "
+            "`scatter_id` changes an existing one. The piece stays "
+            "editable: change it and every copy follows. OpenSCAD "
+            "renders the real piece at every spot (the placements are "
+            "baked into kcad_scatter)."
+        ),
+        "input_schema": _obj({
+            "piece_id": _ID,
+            "surface_id": _ID,
+            "scatter_id": _ID,
+            "name": {"type": "string"},
+            "mode": {"type": "string", "enum": ["surface", "path"]},
+            "count": {"type": "integer"},
+            "spacing": {"type": "number", "description": "mm."},
+            "seed": {"type": "integer"},
+            "scale": {"type": "number"},
+            "scale_jitter": {"type": "number", "description": "0-1."},
+            "spin_jitter": {"type": "number", "description": "degrees."},
+            "tilt_jitter": {"type": "number", "description": "degrees."},
+            "align": {"type": "string", "enum": ["normal", "up", "blend"]},
+            "align_blend": {"type": "number"},
+            "sink": {"type": "number", "description": "mm into the "
+                                                      "surface."},
+            "facing": {"type": "string",
+                       "enum": ["any", "+z", "-z", "+x", "-x", "+y", "-y"]},
+            "max_angle": {"type": "number"},
+            "within": {"type": "object",
+                       "description": "{min: [x, y, z], max: [x, y, z]} "
+                                      "world mm."},
+            "path": {"type": "array", "items": {"type": "array"},
+                     "description": "World points [[x, y, z], ...]."},
+            "taper": {"type": "number", "description": "0-1."},
+            "show_target": {"type": "boolean"},
+        }),
     },
     {
         "name": "edit_mesh",

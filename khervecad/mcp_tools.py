@@ -2887,6 +2887,13 @@ class McpToolExecutor:
                        "the next one.")
         return out
 
+    def _t_scatter_on_surface(self, params) -> dict:
+        from . import creature_mcp
+        try:
+            return creature_mcp.scatter_on_surface(self._w, params)
+        except creature_mcp.CreatureError as exc:
+            raise ToolError(str(exc))
+
     def _t_edit_mesh(self, params) -> dict:
         from . import meshedit_mcp
         node = self._node(params.get("node_id"))

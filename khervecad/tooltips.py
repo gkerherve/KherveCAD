@@ -318,6 +318,24 @@ TIPS = {
          "darker nose)."],
         "Sculpt creases and ridges first (Sculpt ▸ Crease / Ridge): "
         "weathering darkens every wrinkle by itself."),
+    "scatter": (
+        "Scatter on surface",
+        "Copies one piece over a surface — spikes down a spine, warts, "
+        "scales, barnacles, rows of teeth, eye clusters, rivets. Like "
+        "Blender's particles: each copy stands along the surface normal, "
+        "sized and turned a little at random.",
+        ["Model the piece at the origin standing up along +Z, base at "
+         "z = 0 (a cone for a spike).",
+         "Select the piece, then the body (Ctrl+click), and click "
+         "Scatter: the first child is the piece, the rest the surface.",
+         "In Properties: how many copies and how far apart, size and its "
+         "variation, random spin and lean, sink into the surface, only "
+         "faces looking one way, or a region.",
+         "Mode Path puts the copies evenly along points you give — a "
+         "spine, a jaw line — each dropped onto the surface; Taper makes "
+         "them smaller towards the ends."],
+        "Edit the piece and every copy follows. Sink a little so no gap "
+        "shows under a copy on a curved body."),
     "symmetry": (
         "Symmetry (mirror copy)",
         "Keeps its contents AND their mirror image: model one arm, one "

@@ -564,6 +564,16 @@ age spots (`spots` 0-1) and tints (a red eye rim, a darker nose). Use \
 it on skin, leather, stone, rust; the preview and pictures show it, \
 OpenSCAD's own render is one colour.
 
+Creature detail — scatter: spikes, warts, scales, barnacles, teeth, \
+eye clusters are ONE scatter, not hand-placed copies. Model the piece at \
+the origin pointing up +Z (base at z = 0), then scatter_on_surface with \
+piece_id + surface_id: `count`/`spacing` over the whole surface, \
+`facing` "+z" + `max_angle` for the top of a back, `within` for a \
+region, or `path` (world points along a spine or jaw) for a row, \
+`taper` for smaller ones at the ends; `sink` 0.5-2 mm so they sit IN \
+the skin. In code: `kcad_scatter(count = 40, ..., placements = []) { \
+piece; body }` — placements are recomputed, leave them empty.
+
 Creatures and monsters for the PlanetCraft game:
 - PlanetCraft (the user's voxel game) makes a model WALK when it arrives \
 as named parts: a group called Head (nods at its neck), Tail, Left wing \
