@@ -55,7 +55,11 @@ SURFACES = {"Brick": 1, "Concrete": 2, "Render": 3, "Roof tiles": 4,
             # furniture timber: flat-sawn grain, pores, veneer leaves
             "Wood": 32,
             # a lawn: blades, clumps and mowing stripes on a flat slab
-            "Grass": 33}
+            "Grass": 33,
+            # creature skins, projected from all three axes so they wrap
+            # a curved body without a seam (`creature()`)
+            "Scales": 34, "Reptile": 35, "Fur": 36, "Feathers": 37,
+            "Chitin": 38, "Slime": 39}
 #: (gloss strength, saturation scale) of a surface: glazed tiles and
 #: marble catch the light, carpet and thatch do not
 SURFACE_LOOK = {"Wall tiles": (0.45, 0.95), "Metro tiles": (0.5, 0.95),
@@ -69,7 +73,10 @@ SURFACE_LOOK = {"Wall tiles": (0.45, 0.95), "Metro tiles": (0.5, 0.95),
                 "Panelling": (0.1, 0.9), "Fabric": (0.0, 0.9),
                 "Velvet": (0.08, 1.0), "Leather": (0.3, 0.95),
                 "Bouclé": (0.0, 0.85), "Wood": (0.22, 1.0),
-                "Grass": (0.0, 1.05)}
+                "Grass": (0.0, 1.05), "Scales": (0.35, 1.0),
+                "Reptile": (0.2, 0.95), "Fur": (0.0, 0.95),
+                "Feathers": (0.1, 1.0), "Chitin": (0.6, 1.05),
+                "Slime": (0.85, 1.15)}
 #: roof coverings: their courses run up the slope, not up the world Z
 ROOF_SURFACES = ("Roof tiles", "Slate", "Shingles", "Thatch",
                  "Standing seam", "Solar panels")
@@ -417,7 +424,92 @@ vec3 upholstery(float id, vec2 uv, vec3 n, vec3 rgb, float px) {
     vec3 c = rgb * (0.9 + 0.12 * fbm(uv * 0.02) + 0.1 * (noise(uv / 12.0) - 0.5));
     return c * (1.0 - fine * (0.26 * (1.0 - loop) - 0.06));
 }
+// creature skins in one plane (uv mm): fish scales, reptile hide,
+// fur, feathers, chitin plates, slime
+vec2 cells2(vec2 g, float salt, out vec2 best) {
+    vec2 i = floor(g), f = fract(g);
+    float d = 9.0, d2 = 9.0; best = i;
+    for (int y = -1; y <= 1; y++)
+        for (int x = -1; x <= 1; x++) {
+            vec2 o = vec2(float(x), float(y));
+            float l = length(o + vec2(hash(i + o + salt),
+                                      hash(i + o + salt + 3.7)) - f);
+            if (l < d) { d2 = d; d = l; best = i + o; }
+            else if (l < d2) d2 = l;
+        }
+    return vec2(d, d2);
+}
+vec3 creature2(float id, vec2 uv, vec3 rgb, float px) {
+    if (id == 34.0) {                      // overlapping fish scales
+        vec2 s = vec2(6.0, 4.5);
+        float row = floor(uv.y / s.y);
+        float x = uv.x / s.x + 0.5 * mod(row, 2.0);
+        vec2 f = vec2(fract(x) - 0.5, fract(uv.y / s.y));
+        float d = length(vec2(f.x, f.y * 0.75));
+        float tone = 0.82 + 0.3 * hash(vec2(floor(x), row));
+        vec3 c = rgb * tone * (0.7 + 0.45 * (1.0 - f.y));   // lit edge
+        float rim = smoothstep(0.42 - px / s.x, 0.5, d);
+        return c * (1.0 - 0.45 * rim);
+    }
+    if (id == 35.0) {                      // reptile hide: bumpy plates
+        vec2 best;
+        vec2 dd = cells2(uv / 9.0, 0.0, best);
+        vec2 b2;
+        vec2 small = cells2(uv / 3.0, 11.0, b2);
+        float seam = 1.0 - smoothstep(0.0, 0.14 + px / 9.0, dd.y - dd.x);
+        float fine = 1.0 - smoothstep(0.0, 0.18 + px / 3.0,
+                                      small.y - small.x);
+        vec3 c = rgb * (0.78 + 0.32 * hash(best)) * (1.1 - 0.35 * dd.x);
+        c *= 1.0 - 0.18 * fine;
+        return c * (1.0 - 0.55 * seam);
+    }
+    if (id == 36.0) {                      // fur: strands in clumps
+        float clump = fbm(uv * 0.06);
+        vec2 p = vec2(uv.x * 1.6 + 6.0 * clump, uv.y * 0.18);
+        float strand = noise(p) * 0.6 + noise(p * vec2(2.3, 1.7)) * 0.4;
+        float tip = 0.82 + 0.3 * smoothstep(0.55, 0.9, strand);
+        return rgb * (0.55 + 0.5 * strand) * tip
+               * (0.85 + 0.3 * clump);
+    }
+    if (id == 37.0) {                      // feathers: rows with a quill
+        vec2 s = vec2(9.0, 14.0);
+        float row = floor(uv.y / s.y);
+        float x = uv.x / s.x + 0.5 * mod(row, 2.0);
+        vec2 f = vec2(fract(x) - 0.5, fract(uv.y / s.y));
+        float shape = length(vec2(f.x * 1.3, (f.y - 0.1) * 0.8));
+        float quill = joint(abs(f.x) * s.x, 0.35, px);
+        float barbs = 0.88 + 0.12 * sin((f.y * 1.6 + abs(f.x)) * 90.0);
+        vec3 c = rgb * (0.85 + 0.25 * hash(vec2(floor(x), row)))
+                 * barbs * (0.72 + 0.4 * (1.0 - f.y));
+        c = mix(c, rgb * 1.25 + 0.05, 0.6 * quill);
+        return c * (1.0 - 0.4 * smoothstep(0.44, 0.52, shape));
+    }
+    if (id == 38.0) {                      // chitin: glossy plates
+        vec2 best;
+        vec2 dd = cells2(uv / 16.0, 5.0, best);
+        float seam = 1.0 - smoothstep(0.0, 0.05 + px / 16.0, dd.y - dd.x);
+        float bands = 0.92 + 0.08 * sin(dd.x * 40.0);
+        vec3 c = rgb * (0.8 + 0.3 * hash(best)) * bands;
+        c *= 0.8 + 0.3 * smoothstep(0.0, 0.3, dd.y - dd.x);  // domed
+        return mix(c, rgb * 0.18, 0.8 * seam);
+    }
+    // slime: wet swirls, lighter streaks
+    float w = fbm(uv * 0.03 + 2.0 * fbm(uv * 0.012));
+    vec3 c = rgb * (0.7 + 0.5 * w);
+    return c + vec3(0.12) * smoothstep(0.62, 0.8, fbm(uv * 0.08 + 4.0));
+}
+vec3 creature(float id, vec3 n, vec3 rgb, float px) {
+    vec3 w = pow(abs(n), vec3(4.0));
+    w /= (w.x + w.y + w.z);
+    vec3 c = vec3(0.0);
+    if (w.x > 0.02) c += w.x * creature2(id, v_pos.yz, rgb, px);
+    if (w.y > 0.02) c += w.y * creature2(id, v_pos.xz, rgb, px);
+    if (w.z > 0.02) c += w.z * creature2(id, v_pos.xy, rgb, px);
+    return c / max(w.x * step(0.02, w.x) + w.y * step(0.02, w.y)
+                   + w.z * step(0.02, w.z), 1e-3);
+}
 vec3 surface(float id, vec3 n, vec3 rgb, float px) {
+    if (id >= 34.0) return creature(id, n, rgb, px);
     vec3 an = abs(n);
     vec2 uv;
     bool roof = id == 4.0 || id == 5.0 || (id >= 23.0 && id <= 26.0);
@@ -535,6 +627,9 @@ void main() {
                      (id == 18.0 || id == 22.0 || id == 23.0) ? 140.0 :
                      (id == 25.0) ? 500.0 : (id == 29.0) ? 1e6 :
                      (id == 32.0) ? 120.0 : (id == 33.0) ? 10.0 :
+                     (id == 34.0) ? 5.0 : (id == 35.0) ? 8.0 :
+                     (id == 36.0) ? 3.0 : (id == 37.0) ? 10.0 :
+                     (id == 38.0) ? 14.0 : (id == 39.0) ? 30.0 :
                      (id >= 28.0) ? 80.0 : 100.0;
         float px = length(fwidth(v_pos));
         float fade = smoothstep(feat * 0.5, feat * 1.2, px);

@@ -33,7 +33,9 @@ MATERIALS = ["Default", "Plastic", "Metal", "Matte", "Clay", "Glass",
              "Floorboards", "Parquet", "Carpet", "Plaster", "Cladding",
              "Shingles", "Thatch", "Standing seam", "Solar panels",
              "Panelling", "Fabric", "Velvet", "Leather", "Bouclé",
-             "Wood", "Grass"]
+             "Wood", "Grass",
+             # creature skins (glrender.creature)
+             "Scales", "Reptile", "Fur", "Feathers", "Chitin", "Slime"]
 
 #: 3D projections (view3d.PROJECTIONS — repeated here because this
 #: module must not import Qt).
