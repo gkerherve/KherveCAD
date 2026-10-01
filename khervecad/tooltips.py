@@ -350,22 +350,26 @@ TIPS = {
     "sculpt": (
         "Sculpt (brush strokes)",
         "Pushes the surface about with a brush — Blender's sculpt mode: "
-        "grab, inflate, smooth, flatten, pinch — for faces, muscles, "
-        "dents and every organic shape a primitive cannot give.",
+        "grab, inflate, smooth, flatten, pinch, and the creature brushes "
+        "— snake hook (horns, tentacles, spikes), draw, clay strips, "
+        "layer, elastic grab, pose (bend a limb) and mask.",
         [_SELECTION + " (a blend, a subdivided cage or an imported scan "
          "works best).",
-         "Click Sculpt: the panel opens and the 3D view asks for clicks.",
-         "Pick the brush, radius and strength, then click the surface "
-         "where the brush lands; Mirror repeats each stroke across the "
-         "part's middle so a face stays symmetric.",
-         "Crease and Ridge draw a line: click where it starts, then "
-         "where it ends — a wrinkle, a vein, a tendon, a scar.",
-         "Strokes are kept in Properties: edit or delete any of them "
-         "later, and the mesh recomputes. Skin roughness (Properties) "
+         "Click Sculpt: the panel opens and the brush is on the 3D view.",
+         "Pick the brush, radius and strength, then DRAG over the "
+         "surface: dabs follow the mouse. Grab, elastic grab and snake "
+         "hook pull where you drag — a snake hook dragged off the "
+         "surface pulls a horn out into the air.",
+         "Crease and Ridge draw a line along the drag — a wrinkle, a "
+         "vein, a tendon, a scar. Pose: click the joint, then drag the "
+         "limb round it. Mask freezes what it covers.",
+         "Shift while dragging smooths; [ and ] change the size; a press "
+         "off the model still orbits. Strokes are kept in Properties: "
+         "edit or delete any of them later. Skin roughness (Properties) "
          "adds pores and lumps over the whole surface."],
-        "Grab with a negative strength pulls the surface in; Inflate "
-        "with a small radius is a blob, a large one a cheek. Add "
-        "Weathering on top and every crease darkens by itself."),
+        "Mirror repeats each stroke across the part's middle, so one "
+        "horn makes two. Add Weathering on top and every crease darkens "
+        "by itself."),
     "bend": (
         "Bend",
         "Curves the selection along an arc — bananas, arches, curled "

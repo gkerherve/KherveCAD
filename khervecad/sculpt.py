@@ -41,7 +41,8 @@ from __future__ import annotations
 import math
 
 KINDS = ("grab", "inflate", "smooth", "flatten", "pinch", "crease",
-         "ridge")
+         "ridge", "snake_hook", "draw", "clay_strips", "layer",
+         "elastic_grab", "pose", "mask")
 #: brushes that run along a segment (point -> point + direction)
 LINES = frozenset({"crease", "ridge"})
 
@@ -52,12 +53,18 @@ except Exception:                       # pragma: no cover - numpy is a dep
 MIRRORS = ("none", "x", "y", "z")
 #: a stroke row: kind, centre, radius, strength, direction
 STROKE_LEN = 9
+#: a pose row adds a point on the part that moves (the limb's tip)
+POSE_LEN = 12
+ROW_LENS = (STROKE_LEN, POSE_LEN)
+#: the creature brushes (sculpt_brushes.py; numpy only)
+CREATURE = frozenset({"snake_hook", "draw", "clay_strips", "layer",
+                      "elastic_grab", "pose", "mask"})
 
 
 def kind_index(kind) -> int:
     """The KINDS index of *kind* (a name or an index), or -1."""
     if isinstance(kind, str):
-        name = kind.strip().lower()
+        name = kind.strip().lower().replace(" ", "_").replace("-", "_")
         return KINDS.index(name) if name in KINDS else -1
     try:
         i = int(kind)
@@ -213,7 +220,16 @@ def _apply_line(mesh, kind, centre, radius, strength, direction):
 def _mirrored(row, axis: int):
     row = list(row)
     row[1 + axis] = -row[1 + axis]
-    row[6 + axis] = -row[6 + axis]
+    if 0 <= int(row[0]) < len(KINDS) and KINDS[int(row[0])] == "pose":
+        # a rotation axis is a pseudo-vector: across a mirror the other
+        # two components turn round (and the turn keeps its angle)
+        for k in range(3):
+            if k != axis:
+                row[6 + k] = -row[6 + k]
+    else:
+        row[6 + axis] = -row[6 + axis]
+    if len(row) >= POSE_LEN:
+        row[9 + axis] = -row[9 + axis]
     return row
 
 
@@ -367,13 +383,21 @@ class _Fast:
         return [(vs[a], vs[b], vs[c]) for a, b, c in self.faces.tolist()]
 
 
-def _fast_stroke(mesh, kind, centre, radius, strength, direction):
+def _fast_stroke(mesh, kind, centre, radius, strength, direction,
+                 extra=None):
+    """One stroke on the _Fast *mesh*. Returns the mesh to carry on
+    with (a snake hook refines the skin it stretched into a new one)."""
     np = _np
+    name = KINDS[kind] if 0 <= kind < len(KINDS) else "grab"
+    if name in CREATURE:
+        from . import sculpt_brushes
+        return sculpt_brushes.apply(mesh, name, centre, radius, strength,
+                                    direction, extra)
     if radius <= 0.0 or strength == 0.0:
-        return 0
+        return mesh
     vs = mesh.verts
     c = np.asarray(centre, dtype=np.float64)
-    name = KINDS[kind] if 0 <= kind < len(KINDS) else "grab"
+    free = getattr(mesh, "mask", None)
     if name in LINES:
         d = np.asarray(direction, dtype=np.float64)
         length = float(np.linalg.norm(d))
@@ -386,23 +410,27 @@ def _fast_stroke(mesh, kind, centre, radius, strength, direction):
             dist = np.linalg.norm(rel - along[:, None] * u, axis=1)
         idx = np.nonzero(dist < radius)[0]
         if not len(idx):
-            return 0
+            return mesh
         w = line_weight(dist[idx] / radius, along[idx], length, radius)
+        if free is not None:
+            w = w * (1.0 - free[idx])
         sign = -1.0 if name == "crease" else 1.0
         vs[idx] += mesh.normals()[idx] * (sign * strength * w)[:, None]
         # a line moves the surface a hair: the next line may keep these
         # normals (hundreds of wrinkles would re-measure 200k faces each),
         # any other brush measures afresh
         mesh.stale = True
-        return len(idx)
+        return mesh
     if mesh.stale:
         mesh.moved()
     d2 = np.einsum("ij,ij->i", vs - c, vs - c)
     idx = np.nonzero(d2 < radius * radius)[0]
     if not len(idx):
-        return 0
+        return mesh
     t = np.sqrt(d2[idx]) / radius
     w = 1.0 - t * t * (3.0 - 2.0 * t)
+    if free is not None:
+        w = w * (1.0 - free[idx])
     if name == "grab":
         u = _unit(direction)
         if u is None:
@@ -431,7 +459,7 @@ def _fast_stroke(mesh, kind, centre, radius, strength, direction):
         amount = max(min(strength, 1.0), -1.0)
         vs[idx] += (c - vs[idx]) * (amount * w)[:, None]
     mesh.moved()
-    return len(idx)
+    return mesh
 
 
 def _rows(strokes, axis):
@@ -440,7 +468,7 @@ def _rows(strokes, axis):
             r = [float(v) for v in row]
         except (TypeError, ValueError):
             continue
-        if len(r) != STROKE_LEN:
+        if len(r) not in ROW_LENS:
             continue
         yield from ((r, _mirrored(r, axis)) if axis >= 0 else (r,))
 
@@ -457,8 +485,9 @@ def sculpt(tris, strokes, mirror: str = "none", noise: float = 0.0,
         if not len(fast.faces):
             return []
         for use in _rows(strokes, axis):
-            _fast_stroke(fast, int(use[0]), use[1:4], use[4], use[5],
-                         use[6:9])
+            fast = _fast_stroke(fast, int(use[0]), use[1:4], use[4],
+                                use[5], use[6:9],
+                                use[9:12] if len(use) >= POSE_LEN else None)
         if noise:
             fast.moved()
             n = value_noise(fast.verts, noise_scale, int(seed))
@@ -468,6 +497,8 @@ def sculpt(tris, strokes, mirror: str = "none", noise: float = 0.0,
     if not mesh.faces:
         return []
     for use in _rows(strokes, axis):
+        if KINDS[int(use[0])] in CREATURE:
+            continue                    # the creature brushes need numpy
         apply_stroke(mesh, int(use[0]), use[1:4], use[4], use[5], use[6:9])
     return mesh.triangles()
 

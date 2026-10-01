@@ -540,6 +540,21 @@ temple and forearm veins and the tendons on the back of a hand; creases \
 across every finger joint. `noise` (mm) and `noise_scale` roughen it \
 all (pores ~0.1 mm at 1.5 mm, lumps ~0.6 mm at 8 mm). sculpt_stroke \
 does the same from world points (`to` ends a crease / ridge).
+- CREATURE brushes (kinds 7-13): 7 snake_hook pulls a horn, tentacle, \
+spike or tail out of the surface along (dx, dy, dz) mm (strength \
+scales it; sculpt_stroke takes `to`), refining the stretched skin by \
+itself — pull from the forehead for horns, from the spine for spikes, \
+from the rump for a tail; 8 draw raises along the patch's own normal; \
+9 clay_strips lays square slabs of clay `strength` mm thick — build \
+shoulders, pecs, brow masses in overlapping strips; 10 layer raises an \
+even plate (a scale, a scute, an armour plate); 11 elastic_grab drags \
+with a soft falloff the whole body follows (a jaw jutting, a belly \
+sagging); 12 pose rows have 12 values [12, jx, jy, jz, blend radius, \
+angle °, ax, ay, az, tipx, tipy, tipz] — turn the limb that holds the \
+tip about the joint, the rest stays (bend an arm, droop a neck, curl a \
+tail; sculpt_stroke takes `tip`); 13 mask freezes the patch (strength \
+0-1, negative frees it) so later strokes leave it alone. Order \
+matters: mask first, then sculpt.
 - `kcad_weathering(cavity_color, cavity, edge_color, edge, depth, \
 reach, mottle_color, mottle, mottle_scale, spot_color, spots, \
 spot_size, seed, tints = [[x, y, z, radius, r, g, b, strength], ...])` \

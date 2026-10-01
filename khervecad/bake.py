@@ -243,10 +243,13 @@ NODE_TYPES = {
         params=dict(strokes=[], detail=0.0, mirror="none", region=[],
                     noise=0.0, noise_scale=4.0, seed=1),
         schema=[("strokes", "Strokes (kind 0 grab 1 inflate 2 smooth "
-                            "3 flatten 4 pinch 5 crease 6 ridge; "
-                            "centre; radius; strength; direction — a "
-                            "crease / ridge runs centre -> centre + "
-                            "direction)", "rows",
+                            "3 flatten 4 pinch 5 crease 6 ridge "
+                            "7 snake hook 8 draw 9 clay strips 10 layer "
+                            "11 elastic grab 12 pose 13 mask; centre; "
+                            "radius; strength; direction — a crease / "
+                            "ridge runs centre -> centre + direction, a "
+                            "pose turns about direction by strength ° "
+                            "and adds the limb's tip)", "rows",
                  ["Kind", "X", "Y", "Z", "Radius", "Strength",
                   "dX", "dY", "dZ"], None),
                 ("detail", "Refine to max edge (mm, 0 = as is)", "float",
@@ -667,7 +670,7 @@ def _compute(node, env) -> list:
         from . import sculpt
         rows = [[mesh.rv(v, env) for v in row]
                 for row in p.get("strokes") or []
-                if isinstance(row, list) and len(row) == sculpt.STROKE_LEN]
+                if isinstance(row, list) and len(row) in sculpt.ROW_LENS]
         return sculpt.sculpt(src, rows, str(p.get("mirror", "none")),
                              num("noise", 0.0), num("noise_scale", 4.0),
                              int(num("seed", 1.0)))
@@ -1120,8 +1123,9 @@ def _check_sculpt(p, env):
     if not isinstance(rows, list):
         return "sculpt: strokes are rows of kind, x, y, z, radius, strength, dx, dy, dz"
     for number, row in enumerate(rows):
-        if not isinstance(row, list) or len(row) != sculpt.STROKE_LEN:
-            return (f"stroke {number} needs {sculpt.STROKE_LEN} values: kind, "
+        if not isinstance(row, list) or len(row) not in sculpt.ROW_LENS:
+            return (f"stroke {number} needs {sculpt.STROKE_LEN} values "
+                    f"({sculpt.POSE_LEN} for a pose): kind, "
                     "x, y, z, radius, strength, dx, dy, dz")
         for value in row:
             if isinstance(value, str):

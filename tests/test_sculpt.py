@@ -106,10 +106,10 @@ def test_mirror_repeats_the_stroke_across_the_plane():
 
 
 def test_bad_rows_are_skipped_and_kinds_resolve():
-    out = sculpt.sculpt(_fine_cube(), [[1, 10, 10], "nonsense", [9, 1, 1, 1, 1, 1, 0, 0, 0]])
+    out = sculpt.sculpt(_fine_cube(), [[1, 10, 10], "nonsense", [99, 1, 1, 1, 1, 1, 0, 0, 0]])
     assert _top(out, 10, 10) == pytest.approx(20)
     assert sculpt.kind_index("Inflate") == 1 and sculpt.kind_index(4) == 4
-    assert sculpt.kind_index("dig") == -1 and sculpt.kind_index(7) == -1
+    assert sculpt.kind_index("dig") == -1 and sculpt.kind_index(99) == -1
     assert sculpt.sculpt([], [[1, 0, 0, 0, 1, 1, 0, 0, 0]]) == []
 
 
@@ -156,7 +156,7 @@ def test_the_sculpt_node_previews_bakes_and_round_trips(app, tmp_path):
 def test_sculpt_validation_names_the_bad_stroke(app):
     doc, node = _sculpted_cube(app)
     assert node.id not in validate(doc.root)
-    node.params["strokes"] = [[7, 1, 1, 1, 1, 1, 0, 0, 0]]
+    node.params["strokes"] = [[99, 1, 1, 1, 1, 1, 0, 0, 0]]
     assert "kind" in validate(doc.root)[node.id]
     node.params["strokes"] = [[1, 1, 1, 1, 0, 1, 0, 0, 0]]
     assert "radius" in validate(doc.root)[node.id]
@@ -183,28 +183,134 @@ def window(app):
     return win
 
 
-def test_the_panel_lands_a_stroke_per_click_in_the_local_frame(window):
-    from khervecad import sculpt_ui
+def _drag(view, points, modifiers=None):
+    """Press, move through and release over screen *points* with real
+    mouse events."""
+    from PyQt5.QtCore import QPoint, Qt
+    from PyQt5.QtGui import QMouseEvent
+    from PyQt5.QtCore import QEvent
+    mods = modifiers if modifiers is not None else Qt.NoModifier
+    pts = [QPoint(int(x), int(y)) for x, y in points]
+    view.mousePressEvent(QMouseEvent(QEvent.MouseButtonPress, pts[0],
+                                     Qt.LeftButton, Qt.LeftButton, mods))
+    for p in pts[1:]:
+        view.mouseMoveEvent(QMouseEvent(QEvent.MouseMove, p, Qt.NoButton,
+                                        Qt.LeftButton, mods))
+    view.mouseReleaseEvent(QMouseEvent(QEvent.MouseButtonRelease, pts[-1],
+                                       Qt.LeftButton, Qt.NoButton, mods))
+
+
+def _screen(view, point):
+    eye, right, up, fwd = view._camera()
+    return view._project(eye, right, up, fwd, point)[:2]
+
+
+def _sculpt_window(window, detail=2.0):
     doc = window.model
     move = doc.add_node("translate", dict(x=50.0))
     cube = doc.add_node("cube", parent=move)
     node = doc.wrap_nodes([cube], "sculpt")
-    node.params["detail"] = 2.0
+    node.params["detail"] = detail
+    window.view3d.yaw, window.view3d.pitch = 0.0, 89.0     # from above
+    window.view3d.distance = 120.0
+    window.view3d.target = [60.0, 10.0, 10.0]
+    window.view3d.projection = "Orthographic"
+    QApplication.processEvents()                 # its own undo step
+    import time
+    time.sleep(0.6)                              # past UNDO_MERGE_S
+    return node
+
+
+def test_a_drag_lays_dabs_along_the_path_in_the_local_frame(window):
+    from khervecad import sculpt_ui
+    node = _sculpt_window(window)
     panel = sculpt_ui.start(window, node)
-    assert window.view3d._pick_cb is not None
-    panel.radius.setValue(6.0)
-    panel.strength.setValue(2.0)
-    window.view3d._pick_cb(dict(kind="face", point=[60.0, 10.0, 20.0],
-                                normal=[0.0, 0.0, 1.0]), node)
+    view = window.view3d
+    assert view.edit_tool is panel.tool
+    panel.radius.setValue(3.0)
+    panel.strength.setValue(1.0)
+    a, b = _screen(view, [54.0, 10.0, 20.0]), _screen(view, [66.0, 10.0, 20.0])
+    path = [(a[0] + (b[0] - a[0]) * t / 10, a[1] + (b[1] - a[1]) * t / 10)
+            for t in range(11)]
+    _drag(view, path)
     rows = node.params["strokes"]
-    assert len(rows) == 1
-    assert rows[0][0] == 1 and rows[0][1:4] == pytest.approx([10, 10, 20])
-    assert rows[0][4:6] == [6.0, 2.0]
-    assert window.view3d._pick_cb is not None           # re-armed
-    panel.mirror.setCurrentText("x")
+    assert len(rows) >= 4                       # every ~0.9 mm along 12 mm
+    assert all(r[0] == 1 for r in rows)
+    xs = [r[1] for r in rows]
+    assert min(xs) == pytest.approx(4.0, abs=0.6)    # local: x - 50
+    assert max(xs) > 13.0
+    assert all(r[3] == pytest.approx(20.0, abs=0.01) for r in rows)
+    QApplication.processEvents()                 # the undo snapshot
+    window.model.undo_stack.undo()               # one stroke, one Ctrl+Z
+    QApplication.processEvents()
+    back = next(n for n in window.model.root.walk() if n.type == "sculpt")
+    assert not back.params.get("strokes")
+    window.model.undo_stack.redo()
+    QApplication.processEvents()
+    panel.node = next(n for n in window.model.root.walk()
+                      if n.type == "sculpt")
+    node = panel.node
+    panel.mirror.setCurrentIndex(panel.mirror.findData("x"))
     assert node.params["mirror"] == "x"
-    panel.undo_last()
-    assert node.params["strokes"] == []
+    panel.close()
+    assert view.edit_tool is None
+
+
+def test_shift_smooths_and_a_press_off_the_model_orbits(window):
+    from PyQt5.QtCore import Qt
+    from khervecad import sculpt_ui
+    node = _sculpt_window(window)
+    panel = sculpt_ui.start(window, node)
+    view = window.view3d
+    c = _screen(view, [60.0, 10.0, 20.0])
+    _drag(view, [c, (c[0] + 1, c[1])], Qt.ShiftModifier)
+    assert node.params["strokes"][0][0] == sculpt.kind_index("smooth")
+    yaw = view.yaw
+    _drag(view, [(3, 3), (60, 3)])              # empty corner
+    assert view.yaw != yaw
+    assert len(node.params["strokes"]) == 1
+    panel.close()
+
+
+def test_a_snake_hook_drag_pulls_a_horn_into_the_air(window):
+    from khervecad import sculpt_ui
+    node = _sculpt_window(window, detail=1.0)
+    window.view3d.yaw, window.view3d.pitch = -90.0, 0.0    # from the front
+    window.view3d.target = [60.0, 10.0, 10.0]
+    panel = sculpt_ui.start(window, node)
+    panel.kind.setCurrentIndex(panel.kind.findData("snake_hook"))
+    panel.radius.setValue(3.0)
+    view = window.view3d
+    eye, right, up, fwd = view._camera()
+    start = _screen(view, [60.0, 0.0, 15.0])     # the front face
+    end = _screen(view, [60.0, 0.0, 15.0 + 12.0])
+    # pull up and out of the front face: on the plane facing the camera
+    _drag(view, [start, ((start[0] + end[0]) / 2, (start[1] + end[1]) / 2),
+                 end])
+    rows = node.params["strokes"]
+    assert len(rows) == 1 and rows[0][0] == sculpt.kind_index("snake_hook")
+    assert rows[0][8] == pytest.approx(12.0, abs=0.5)
+    tris = mesh.tessellate(window.model.root)
+    assert max(v[2] for t in tris for v in t) > 24.0
+    panel.close()
+
+
+def test_pose_is_a_click_on_the_joint_then_a_swing(window):
+    from khervecad import sculpt_ui
+    node = _sculpt_window(window)
+    window.view3d.yaw, window.view3d.pitch = -90.0, 0.0
+    panel = sculpt_ui.start(window, node)
+    panel.kind.setCurrentIndex(panel.kind.findData("pose"))
+    view = window.view3d
+    joint = _screen(view, [60.0, 0.0, 10.0])
+    _drag(view, [joint])
+    assert node.params.get("strokes") in (None, [])
+    tip = _screen(view, [68.0, 0.0, 18.0])
+    swing = _screen(view, [52.0, 0.0, 18.0])
+    _drag(view, [tip, swing])
+    rows = node.params["strokes"]
+    assert len(rows) == 1 and len(rows[0]) == sculpt.POSE_LEN
+    assert abs(rows[0][5]) > 30.0
     panel.close()
 
 
@@ -236,3 +342,154 @@ def test_sculpt_stroke_tool_wraps_maps_and_batches(window):
         "node_id": node.id, "kind": "dig", "at": [0, 0, 0]})
     assert "error" in ex.execute("sculpt_stroke", {
         "node_id": node.id, "kind": "grab", "at": [0, 0]})
+
+
+# ── the creature brushes ───────────────────────────────────────────
+
+def _sphere(r=10.0, fn=48):
+    from khervecad.model import CadNode
+    mesh._set_fn(fn)
+    try:
+        return [t for t, _c, _s in mesh._tess(
+            CadNode("sphere", "", dict(radius=r)), {}, None, frozenset(), False)]
+    finally:
+        mesh._set_fn(None)
+
+
+def _cvol(tris):
+    import numpy as np
+    a = np.asarray(tris)
+    return float(np.einsum("ij,ij->i", a[:, 0],
+                           np.cross(a[:, 1], a[:, 2])).sum() / 6)
+
+
+def _cclosed(tris):
+    from khervecad import bake
+    points, faces = bake.to_polyhedron(tris)
+    return bake._check_polyhedron(dict(points=points, faces=faces)) is None
+
+
+def _ztop(tris):
+    return max(v[2] for t in tris for v in t)
+
+
+K = sculpt.kind_index
+
+
+def test_snake_hook_pulls_a_closed_horn_and_refines_it():
+    base = _sphere()
+    top = _ztop(base)
+    out = sculpt.sculpt(base, [[K("snake hook"), 0, 0, top, 4, 1, 0, 0, 15]])
+    assert _ztop(out) > top + 12.0
+    assert len(out) > len(base)                  # the stretch was refined
+    assert _cclosed(out)
+
+
+def test_draw_clay_and_layer_raise_the_patch():
+    base = _sphere()
+    top = _ztop(base)
+    for kind, lift in (("draw", 2.0), ("clay_strips", 2.0), ("layer", 1.0)):
+        out = sculpt.sculpt(base, [[K(kind), 0, 0, top, 5, lift, 0, 0, 0]])
+        assert _ztop(out) > top + 0.5 * lift, kind
+        assert _cvol(out) > _cvol(base), kind
+        assert _cclosed(out), kind
+
+
+def test_layer_has_a_flat_ztop():
+    import numpy as np
+    base = _sphere(fn=64)
+    top = _ztop(base)
+    out = sculpt.sculpt(base, [[K("layer"), 0, 0, top, 6, 2, 0, 0, 0]])
+    a = np.asarray(base).reshape(-1, 3)
+    b = np.asarray(out).reshape(-1, 3)
+    inner = np.linalg.norm(a - [0, 0, top], axis=1) < 3.0
+    moved = np.linalg.norm(b[inner] - a[inner], axis=1)
+    assert moved.min() == pytest.approx(2.0, abs=0.05)
+
+
+def test_elastic_grab_moves_far_vertices_a_little():
+    import numpy as np
+    base = _sphere()
+    out = sculpt.sculpt(base, [[K("elastic_grab"), 0, 0, -12, 4, 3,
+                                0, 0, -1]])
+    a = np.asarray(base).reshape(-1, 3)
+    b = np.asarray(out).reshape(-1, 3)
+    far = a[:, 2] > 8.0
+    assert 0.0 < np.abs(b[far] - a[far]).max() < 0.5
+    assert b[:, 2].min() < a[:, 2].min() - 2.0
+
+
+def test_mask_freezes_what_it_covers():
+    base = _sphere()
+    top = _ztop(base)
+    draw = [K("draw"), 0, 0, top, 5, 2, 0, 0, 0]
+    masked = sculpt.sculpt(base, [[K("mask"), 0, 0, top, 8, 4, 0, 0, 0],
+                                  draw])
+    assert _ztop(masked) == pytest.approx(top, abs=1e-6)
+    freed = sculpt.sculpt(base, [[K("mask"), 0, 0, top, 8, 4, 0, 0, 0],
+                                 [K("mask"), 0, 0, top, 8, -4, 0, 0, 0],
+                                 draw])
+    assert _ztop(freed) > top + 1.0
+
+
+def test_pose_turns_only_the_limb_holding_the_tip():
+    import numpy as np
+    # an upright capsule-ish column: pose its top about z = 0
+    from khervecad.model import CadNode
+    mesh._set_fn(24)
+    try:
+        col = [t for t, _c, _s in mesh._tess(
+            CadNode("cylinder", "", dict(height=40.0, radius_bottom=3.0, radius_top=3.0)), {},
+            None, frozenset(), False)]
+    finally:
+        mesh._set_fn(None)
+    col = deform.split_long_edges(col, 2.0)
+    out = sculpt.sculpt(col, [[K("pose"), 0, 0, 20, 4, 90, 0, 1, 0,
+                               0, 0, 40]])
+    b = np.asarray(out).reshape(-1, 3)
+    assert b[:, 2].max() < 26.0            # the top half now lies along x
+    assert abs(b[:, 0]).max() > 15.0
+    assert b[:, 2].min() == pytest.approx(0.0, abs=1e-6)   # base stays
+    assert _cclosed(out)
+
+
+def test_pose_rows_mirror_their_axis_as_a_pseudo_vector():
+    row = [K("pose"), 5, 0, 10, 3, 30, 0, 1, 0, 8, 0, 20]
+    m = sculpt._mirrored(row, 0)
+    assert m[1] == -5 and m[9] == -8
+    assert m[6:9] == [0, -1, 0]            # y-axis turn mirrored in x
+
+
+def test_creature_rows_validate_and_round_trip(app):
+    doc = DocumentModel()
+    cube = doc.add_node("cube")
+    node = doc.wrap_nodes([cube], "sculpt")
+    node.params["detail"] = 2.0
+    node.params["strokes"] = [[12, 10, 10, 10, 3, 30, 1, 0, 0, 10, 10, 20],
+                              [7, 10, 10, 20, 3, 1, 0, 0, 10]]
+    assert node.id not in validate(doc.root)
+    root, _warnings = scadparse.parse_scad(doc.to_scad())
+    back = next(n for n in root.walk() if n.type == "sculpt")
+    assert back.params["strokes"] == node.params["strokes"]
+
+
+def test_sculpt_stroke_takes_the_creature_brushes(window):
+    from khervecad.mcp_tools import McpToolExecutor
+    ex = McpToolExecutor(window)
+    doc = window.model
+    cube = doc.add_node("cube")
+    out = ex.execute("sculpt_stroke", {
+        "node_id": cube.id, "detail": 1.5,
+        "strokes": [{"kind": "snake hook", "at": [10, 10, 20],
+                     "to": [10, 10, 34], "radius": 3},
+                    {"kind": "pose", "at": [10, 10, 10], "radius": 3,
+                     "strength": 10, "direction": [1, 0, 0],
+                     "tip": [10, 10, 30]}]})
+    assert "error" not in out, out
+    node = next(n for n in doc.root.walk() if n.id == out["sculpt"])
+    rows = node.params["strokes"]
+    assert rows[0][0] == K("snake_hook") and rows[0][8] == pytest.approx(14)
+    assert len(rows[1]) == sculpt.POSE_LEN
+    assert "error" in ex.execute("sculpt_stroke", {
+        "node_id": node.id, "kind": "pose", "at": [0, 0, 0]})
+    assert max(v[2] for t in mesh.tessellate(doc.root) for v in t) > 30

@@ -664,7 +664,18 @@ TOOLS = [
             "(a vein, a tendon, a scar) — both taper at their ends, so "
             "short strokes in a row read as one line. `noise` (mm) with "
             "`noise_scale` (mm) roughens the whole surface — pores, old "
-            "lumpy skin. Give one stroke, or "
+            "lumpy skin. CREATURE brushes: snake_hook pulls a horn, "
+            "tentacle, spike or tail straight out — from `at` to `to` "
+            "(the skin it stretches is refined by itself); draw raises "
+            "along the patch's own normal; clay_strips lays square slabs "
+            "of clay `strength` mm thick (muscle masses, folds); layer "
+            "raises an even plate (a scale, a scute); elastic_grab drags "
+            "with a soft falloff the whole body follows (a jaw, a belly); "
+            "pose turns a limb about the joint `at` by `strength` degrees "
+            "round `direction`, `tip` being any point on the limb that "
+            "moves (the rest stays, `radius` blends the joint); mask "
+            "freezes where it lands (strength 0-1, negative unfreezes) "
+            "so later strokes leave it alone. Give one stroke, or "
             "several in `strokes` (one undo step). `node_id` is a "
             "sculpt node, or any solid — a blend, a subdivided cage, an "
             "imported scan — which is wrapped in one. Points are WORLD "
@@ -678,20 +689,26 @@ TOOLS = [
             "node_id": _ID,
             "kind": {"type": "string",
                      "enum": ["grab", "inflate", "smooth", "flatten",
-                              "pinch", "crease", "ridge"]},
+                              "pinch", "crease", "ridge", "snake_hook",
+                              "draw", "clay_strips", "layer",
+                              "elastic_grab", "pose", "mask"]},
             "at": _vec3("Brush centre [x, y, z] in world mm (a crease / "
                         "ridge: where it starts)."),
-            "to": _vec3("crease / ridge: where the line ends, world mm."),
+            "to": _vec3("crease / ridge: where the line ends; snake_hook: "
+                        "where the pull ends; grab / elastic_grab: where "
+                        "the surface is dragged to — world mm."),
+            "tip": _vec3("pose: a point on the limb that moves, world mm."),
             "radius": {"type": "number", "description": "mm."},
             "strength": {"type": "number",
                          "description": "mm for grab/inflate; 0-1 for "
                                         "smooth (more = passes), flatten "
                                         "and pinch."},
-            "direction": _vec3("grab only: which way to drag."),
+            "direction": _vec3("grab: which way to drag; pose: the "
+                               "rotation axis."),
             "strokes": {"type": "array",
                         "description": "Several strokes at once: "
                                        "[{kind, at, radius, strength, "
-                                       "direction, to}].",
+                                       "direction, to, tip}].",
                         "items": {"type": "object"}},
             "noise": {"type": "number",
                       "description": "Skin roughness over the whole "

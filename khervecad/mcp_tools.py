@@ -2824,6 +2824,7 @@ class McpToolExecutor:
             if sculpt.kind_index(kind) < 0:
                 raise ToolError(f"Unknown brush {kind!r}. Choose one of: "
                                 f"{', '.join(sculpt.KINDS)}.")
+            kind = sculpt.KINDS[sculpt.kind_index(kind)]
             at = self._vec3(spec, "at")
             if at is None:
                 raise ToolError("Each stroke needs 'at' [x, y, z].")
@@ -2835,18 +2836,40 @@ class McpToolExecutor:
                 raise ToolError("'strength' must be a number.")
             direction = self._vec3(spec, "direction")
             end = self._vec3(spec, "to")
+            tip = None
             if kind in sculpt.LINES:
                 if end is None and direction is None:
                     raise ToolError(f"A {kind} is a line: give 'to' "
                                     "[x, y, z], where it ends.")
                 if end is not None:
                     direction = [end[k] - at[k] for k in range(3)]
+            elif kind == "snake_hook" and end is not None:
+                # pulled to a point: the pull is the whole way there
+                direction = [end[k] - at[k] for k in range(3)]
+                if spec.get("strength") is None:
+                    strength = 1.0
+            elif kind in ("grab", "elastic_grab") and end is not None:
+                pull = [end[k] - at[k] for k in range(3)]
+                length = sum(c * c for c in pull) ** 0.5
+                direction = pull
+                if spec.get("strength") is None:
+                    strength = length
+            elif kind == "pose":
+                tip = self._vec3(spec, "tip")
+                if tip is None:
+                    raise ToolError("A pose turns a limb about the joint "
+                                    "'at': give 'tip' [x, y, z], a point "
+                                    "on the limb that moves, 'direction' "
+                                    "the rotation axis and 'strength' "
+                                    "the angle in degrees.")
             # a batch maps every stroke through the surface as it was:
             # re-baking after each one made 200 wrinkles take minutes
             row = sculpt_ui.stroke_row(kind, at, radius, strength,
-                                       direction, world=world, local=local) \
+                                       direction, world=world, local=local,
+                                       tip=tip) \
                 if world is not None else \
-                sculpt_ui.stroke_row(kind, at, radius, strength, direction)
+                sculpt_ui.stroke_row(kind, at, radius, strength, direction,
+                                     tip=tip)
             if row is None:
                 raise ToolError("That stroke could not be placed on the "
                                 "surface.")
