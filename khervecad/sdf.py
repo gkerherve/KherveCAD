@@ -513,10 +513,23 @@ def field_values(parts, k: float, pts, reach: float):
     np = _np
     big = 1e30
     d = np.full(len(pts), big)
+    if not len(pts):
+        return d
+    pmin, pmax = pts.min(axis=0), pts.max(axis=0)
+    xs, ys, zs = pts[:, 0], pts[:, 1], pts[:, 2]
     for leaf in parts:
         lo = np.asarray(leaf.lo) - reach
         hi = np.asarray(leaf.hi) + reach
-        idx = np.nonzero(np.all((pts >= lo) & (pts <= hi), axis=1))[0]
+        if np.any(hi < pmin) or np.any(lo > pmax):
+            continue                    # this slab is out of its reach
+        # narrow axis by axis: the first test is the expensive one
+        idx = np.nonzero((zs >= lo[2]) & (zs <= hi[2]))[0]
+        if len(idx):
+            sub = ys[idx]
+            idx = idx[(sub >= lo[1]) & (sub <= hi[1])]
+        if len(idx):
+            sub = xs[idx]
+            idx = idx[(sub >= lo[0]) & (sub <= hi[0])]
         if not len(idx):
             continue
         p = pts[idx]

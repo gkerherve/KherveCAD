@@ -402,6 +402,63 @@ class _Fast:
         return [(vs[a], vs[b], vs[c]) for a, b, c in self.faces.tolist()]
 
 
+#: grid cells across a sculpted part's longest side (the candidates a
+#: stroke measures: a wrinkle on a head reads ~0.1 % of its vertices)
+GRID_CELLS = 48
+
+
+def _candidates(mesh, lo, hi):
+    """Indices of the vertices that may lie in the box *lo*..*hi*: the
+    vertices of the grid cells it covers, grown by how far vertices have
+    moved since the grid was made (rebuilt past half a cell). None when
+    the box covers most of the part — then measure them all."""
+    np = _np
+    g = getattr(mesh, "_grid", None)
+    if g is None or g["n"] != len(mesh.verts) or \
+            g["drift"] > g["cell"] * 0.5:
+        vs = mesh.verts
+        origin = vs.min(axis=0)
+        span = float((vs.max(axis=0) - origin).max()) or 1.0
+        cell = span / GRID_CELLS
+        dims = np.floor((vs.max(axis=0) - origin) / cell).astype(np.int64) + 1
+        ijk = np.floor((vs - origin) / cell).astype(np.int64)
+        key = ijk[:, 0] + dims[0] * (ijk[:, 1] + dims[1] * ijk[:, 2])
+        order = np.argsort(key, kind="stable")
+        g = mesh._grid = dict(n=len(vs), origin=origin, cell=cell, dims=dims,
+                              order=order, keys=key[order], drift=0.0,
+                              moved=np.zeros(len(vs)))
+    pad = g["drift"]
+    a = np.floor((np.asarray(lo) - pad - g["origin"]) / g["cell"]).astype(int)
+    b = np.floor((np.asarray(hi) + pad - g["origin"]) / g["cell"]).astype(int)
+    dims = g["dims"]
+    a = np.clip(a, 0, dims - 1)
+    b = np.clip(b, 0, dims - 1)
+    count = int(np.prod(b - a + 1))
+    if count > 0.25 * int(np.prod(dims)):
+        return None
+    out = []
+    for kz in range(a[2], b[2] + 1):
+        for ky in range(a[1], b[1] + 1):
+            first = a[0] + dims[0] * (ky + dims[1] * kz)
+            last = b[0] + dims[0] * (ky + dims[1] * kz)
+            s0 = np.searchsorted(g["keys"], first, side="left")
+            s1 = np.searchsorted(g["keys"], last, side="right")
+            if s1 > s0:
+                out.append(g["order"][s0:s1])
+    return np.concatenate(out) if out else np.zeros(0, dtype=np.int64)
+
+
+def _moved_by(mesh, idx, amount):
+    """Remember that the vertices *idx* moved up to *amount* mm: the grid
+    pads its search by the most any ONE vertex has moved since it was
+    made (strokes far apart do not add up)."""
+    g = getattr(mesh, "_grid", None)
+    if g is not None and len(idx):
+        moved = g["moved"]
+        moved[idx] += float(abs(amount))
+        g["drift"] = max(g["drift"], float(moved[idx].max()))
+
+
 def _fast_stroke(mesh, kind, centre, radius, strength, direction,
                  extra=None):
     """One stroke on the _Fast *mesh*. Returns the mesh to carry on
@@ -420,17 +477,22 @@ def _fast_stroke(mesh, kind, centre, radius, strength, direction,
     if name in LINES:
         d = np.asarray(direction, dtype=np.float64)
         length = float(np.linalg.norm(d))
-        rel = vs - c
+        cand = _candidates(mesh, np.minimum(c, c + d) - radius,
+                           np.maximum(c, c + d) + radius)
+        rel = (vs if cand is None else vs[cand]) - c
         if length < 1e-9:
-            dist, along = np.linalg.norm(rel, axis=1), np.zeros(len(vs))
+            dist, along = np.linalg.norm(rel, axis=1), np.zeros(len(rel))
         else:
             u = d / length
             along = np.clip(rel @ u, 0.0, length)
             dist = np.linalg.norm(rel - along[:, None] * u, axis=1)
-        idx = np.nonzero(dist < radius)[0]
-        if not len(idx):
+        hit = np.nonzero(dist < radius)[0]
+        if not len(hit):
             return mesh
-        w = line_weight(dist[idx] / radius, along[idx], length, radius)
+        idx = hit if cand is None else cand[hit]
+        dist, along = dist[hit], along[hit]
+        _moved_by(mesh, idx, strength)
+        w = line_weight(dist / radius, along, length, radius)
         if free is not None:
             w = w * (1.0 - free[idx])
         sign = -1.0 if name == "crease" else 1.0
@@ -442,11 +504,18 @@ def _fast_stroke(mesh, kind, centre, radius, strength, direction,
         return mesh
     if mesh.stale:
         mesh.moved()
-    d2 = np.einsum("ij,ij->i", vs - c, vs - c)
-    idx = np.nonzero(d2 < radius * radius)[0]
-    if not len(idx):
+    cand = _candidates(mesh, c - radius, c + radius)
+    rel = (vs if cand is None else vs[cand]) - c
+    d2 = np.einsum("ij,ij->i", rel, rel)
+    hit = np.nonzero(d2 < radius * radius)[0]
+    if not len(hit):
         return mesh
-    t = np.sqrt(d2[idx]) / radius
+    idx = hit if cand is None else cand[hit]
+    d2 = d2[hit]
+    # how far this brush can move a vertex, for the grid's padding
+    _moved_by(mesh, idx, radius if name in ("smooth", "flatten", "pinch")
+              else strength)
+    t = np.sqrt(d2) / radius
     w = 1.0 - t * t * (3.0 - 2.0 * t)
     if free is not None:
         w = w * (1.0 - free[idx])
