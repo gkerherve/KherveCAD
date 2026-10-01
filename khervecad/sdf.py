@@ -28,8 +28,19 @@ import math
 
 INF = float("inf")
 
-#: most grid points one blend may sample; past it the cells grow
+#: most grid points one blend may sample; past it the cells grow. With
+#: numpy the field and the tetrahedra are vectorized and a grid ten
+#: times finer costs what the pure-Python one did — enough for skin
+#: detail (wrinkles, pores) at about a millimetre
 MAX_GRID_POINTS = 1_500_000
+MAX_GRID_POINTS_NP = 16_000_000
+#: grid points evaluated at once (memory: ~100 bytes a point)
+SLAB_POINTS = 1_000_000
+
+try:                                    # the fast path; pure Python without
+    import numpy as _np
+except Exception:                       # pragma: no cover - numpy is a dep
+    _np = None
 
 #: node types a blend can merge (see _PRIMITIVES) and the ones it walks
 #: through, carrying the transform
@@ -140,14 +151,111 @@ _PRIMITIVES = {"sphere": _sphere, "cube": _cube, "cylinder": _cylinder,
                "rounded_box": _rounded_box}
 
 
+# ------------------------------------------- the same, over numpy arrays
+# Each takes resolved params and returns fv(X, Y, Z) on arrays in the
+# node's own frame — the scalar builders above, line for line.
+
+def _v_sphere(p):
+    np = _np
+    cx, cy, cz, r = p["x"], p["y"], p["z"], abs(p["radius"])
+    return lambda x, y, z: np.sqrt((x - cx) ** 2 + (y - cy) ** 2
+                                   + (z - cz) ** 2) - r
+
+
+def _v_box(cx, cy, cz, hx, hy, hz, rr=0.0):
+    np = _np
+
+    def f(x, y, z):
+        qx = np.abs(x - cx) - hx
+        qy = np.abs(y - cy) - hy
+        qz = np.abs(z - cz) - hz
+        out = np.sqrt(np.maximum(qx, 0.0) ** 2 + np.maximum(qy, 0.0) ** 2
+                      + np.maximum(qz, 0.0) ** 2)
+        return out + np.minimum(np.maximum(np.maximum(qx, qy), qz),
+                                0.0) - rr
+    return f
+
+
+def _v_cube(p):
+    w, d, h = abs(p["width"]), abs(p["depth"]), abs(p["height"])
+    x0, y0, z0 = p["x"], p["y"], p["z"]
+    if p.get("center"):
+        x0, y0, z0 = x0 - w / 2, y0 - d / 2, z0 - h / 2
+    return _v_box(x0 + w / 2, y0 + d / 2, z0 + h / 2, w / 2, d / 2, h / 2)
+
+
+def _v_rounded_box(p):
+    w, d, h = abs(p["width"]), abs(p["depth"]), abs(p["height"])
+    x0, y0, z0 = p["x"], p["y"], p["z"]
+    if p.get("center", True):
+        x0, y0, z0 = x0 - w / 2, y0 - d / 2, z0 - h / 2
+    rr = max(min(p["radius"], w / 2, d / 2, h / 2), 0.0)
+    return _v_box(x0 + w / 2, y0 + d / 2, z0 + h / 2,
+                  w / 2 - rr, d / 2 - rr, h / 2 - rr, rr)
+
+
+def _v_cylinder(p):
+    np = _np
+    h = abs(p["height"])
+    r1, r2 = abs(p["radius_bottom"]), abs(p["radius_top"])
+    cx, cy = p["x"], p["y"]
+    z0 = p["z"] - (h / 2 if p.get("center") else 0.0)
+
+    def f(x, y, z):
+        t = np.clip((z - z0) / h, 0.0, 1.0) if h > 0 else 0.0
+        dr = np.sqrt((x - cx) ** 2 + (y - cy) ** 2) - (r1 + (r2 - r1) * t)
+        dz = np.maximum(z0 - z, z - (z0 + h))
+        return (np.sqrt(np.maximum(dr, 0.0) ** 2 + np.maximum(dz, 0.0) ** 2)
+                + np.minimum(np.maximum(dr, dz), 0.0))
+    return f
+
+
+def _v_capsule(p):
+    np = _np
+    ax, ay, az = p["x1"], p["y1"], p["z1"]
+    bx, by, bz = p["x2"], p["y2"], p["z2"]
+    r = abs(p["radius"])
+    ux, uy, uz = bx - ax, by - ay, bz - az
+    l2 = ux * ux + uy * uy + uz * uz
+
+    def f(x, y, z):
+        px, py, pz = x - ax, y - ay, z - az
+        t = 0.0 if l2 == 0 else np.clip((px * ux + py * uy + pz * uz) / l2,
+                                        0.0, 1.0)
+        dx, dy, dz = px - ux * t, py - uy * t, pz - uz * t
+        return np.sqrt(dx * dx + dy * dy + dz * dz) - r
+    return f
+
+
+def _v_ellipsoid(p):
+    np = _np
+    cx, cy, cz = p["x"], p["y"], p["z"]
+    rx, ry, rz = (max(abs(p[k]), 1e-9) for k in ("rx", "ry", "rz"))
+    smallest = min(rx, ry, rz)
+
+    def f(x, y, z):
+        qx, qy, qz = (x - cx) / rx, (y - cy) / ry, (z - cz) / rz
+        k0 = np.sqrt(qx * qx + qy * qy + qz * qz)
+        k1 = np.sqrt((qx / rx) ** 2 + (qy / ry) ** 2 + (qz / rz) ** 2)
+        safe = np.where(k1 > 1e-12, k1, 1.0)
+        return np.where(k1 > 1e-12, k0 * (k0 - 1.0) / safe, -smallest)
+    return f
+
+
+_VECTOR = {"sphere": _v_sphere, "cube": _v_cube, "cylinder": _v_cylinder,
+           "capsule": _v_capsule, "ellipsoid": _v_ellipsoid,
+           "rounded_box": _v_rounded_box}
+
+
 # -------------------------------------------------------------- the tree
 
 class _Leaf:
-    __slots__ = ("fn", "inv", "scale", "lo", "hi")
+    __slots__ = ("fn", "inv", "scale", "lo", "hi", "vfn")
 
-    def __init__(self, fn, inv, scale, lo, hi):
+    def __init__(self, fn, inv, scale, lo, hi, vfn=None):
         self.fn, self.inv, self.scale, self.lo, self.hi = \
             fn, inv, scale, lo, hi
+        self.vfn = vfn                  # the numpy twin of fn, or None
 
 
 def _inverse(m):
@@ -168,7 +276,9 @@ def _inverse(m):
 
 def _leaf(node, env, m):
     from . import mesh
-    fn, lo, hi = _PRIMITIVES[node.type](mesh.rp(node, env))
+    params = mesh.rp(node, env)
+    fn, lo, hi = _PRIMITIVES[node.type](params)
+    vfn = _VECTOR[node.type](params) if _np is not None else None
     inv = _inverse(m)
     if inv is None:                             # squashed flat: nothing
         return None
@@ -180,7 +290,7 @@ def _leaf(node, env, m):
                for y in (lo[1], hi[1]) for z in (lo[2], hi[2])]
     return _Leaf(fn, inv, scale,
                  tuple(min(c[i] for c in corners) for i in range(3)),
-                 tuple(max(c[i] for c in corners) for i in range(3)))
+                 tuple(max(c[i] for c in corners) for i in range(3)), vfn)
 
 
 def _walk_children(node, env, m, out):
@@ -393,6 +503,153 @@ def mesh_values(vals, xs, ys, zs) -> list:
     return tris
 
 
+# ------------------------------------------------------- the numpy path
+
+def field_values(parts, k: float, pts, reach: float):
+    """The smooth union of *parts* (blend radius *k*) at the points
+    *pts* (an (N, 3) array). A leaf is evaluated only within *reach* of
+    its box — beyond it its distance exceeds the blend, so it cannot
+    change the value; points no leaf reaches stay +1e30 (outside)."""
+    np = _np
+    big = 1e30
+    d = np.full(len(pts), big)
+    for leaf in parts:
+        lo = np.asarray(leaf.lo) - reach
+        hi = np.asarray(leaf.hi) + reach
+        idx = np.nonzero(np.all((pts >= lo) & (pts <= hi), axis=1))[0]
+        if not len(idx):
+            continue
+        p = pts[idx]
+        m = leaf.inv
+        x = m[0][0] * p[:, 0] + m[0][1] * p[:, 1] + m[0][2] * p[:, 2] + m[0][3]
+        y = m[1][0] * p[:, 0] + m[1][1] * p[:, 1] + m[1][2] * p[:, 2] + m[1][3]
+        z = m[2][0] * p[:, 0] + m[2][1] * p[:, 1] + m[2][2] * p[:, 2] + m[2][3]
+        v = leaf.vfn(x, y, z) * leaf.scale
+        dd = d[idx]
+        first = dd >= big * 0.5
+        if k > 0.0:
+            h = np.maximum(k - np.abs(dd - v), 0.0) / k
+            new = np.minimum(dd, v) - h * h * k * 0.25
+        else:
+            new = np.minimum(dd, v)
+        d[idx] = np.where(first, v, new)
+    return d
+
+
+def polygonize_np(parts, k, lo, hi, cell) -> list:
+    """polygonize() over the smooth union of *parts*, vectorized: the
+    grid sampled a slab of z planes at a time, then meshed by
+    mesh_values_np."""
+    np = _np
+    nx, ny, nz = (max(int(math.ceil((hi[i] - lo[i]) / cell)), 1) + 1
+                  for i in range(3))
+    xs = lo[0] + np.arange(nx) * cell
+    ys = lo[1] + np.arange(ny) * cell
+    zs = lo[2] + np.arange(nz) * cell
+    vals = np.empty(nx * ny * nz)
+    gx, gy = np.meshgrid(xs, ys)                  # (ny, nx), x fastest
+    plane = np.stack([gx.ravel(), gy.ravel()], axis=1)
+    per = max(1, SLAB_POINTS // (nx * ny))
+    reach = k + 2.0 * cell
+    for k0 in range(0, nz, per):
+        ks = range(k0, min(nz, k0 + per))
+        pts = np.concatenate([np.column_stack(
+            [plane, np.full(len(plane), zs[kk])]) for kk in ks])
+        v = field_values(parts, k, pts, reach)
+        vals[k0 * nx * ny:(ks[-1] + 1) * nx * ny] = v
+    vals[vals == 0.0] = 1e-12             # never a vertex on a grid corner
+    return mesh_values_np(vals, xs, ys, zs)
+
+
+def _tet_table():
+    """Case (inside bits over a tetrahedron's 4 corners) -> triangles as
+    three (a, b) corner pairs: the same cuts mesh_values makes."""
+    table = {}
+    for case in range(1, 15):
+        ins = [q for q in range(4) if case >> q & 1]
+        outs = [q for q in range(4) if not case >> q & 1]
+        if len(ins) == 1:
+            tris = [[(ins[0], o) for o in outs]]
+        elif len(ins) == 3:
+            tris = [[(c, outs[0]) for c in ins]]
+        else:
+            (i0, i1), (o0, o1) = ins, outs
+            q = [(i0, o0), (i0, o1), (i1, o1), (i1, o0)]
+            tris = [[q[0], q[1], q[2]], [q[0], q[2], q[3]]]
+        table[case] = (ins, outs, tris)
+    return table
+
+
+_TET_TABLE = _tet_table()
+
+
+def mesh_values_np(vals, xs, ys, zs) -> list:
+    """mesh_values() vectorized: the same tetrahedra, the same cuts
+    (an edge's vertex is shared by every face that crosses it, so the
+    surface is closed) and the same outward winding."""
+    np = _np
+    vals = np.asarray(vals, dtype=float)
+    xs, ys, zs = (np.asarray(a, dtype=float) for a in (xs, ys, zs))
+    nx, ny, nz = len(xs), len(ys), len(zs)
+    if min(nx, ny, nz) < 2:
+        return []
+    grid = vals.reshape(nz, ny, nx)
+    inside = grid < 0.0
+    count = np.zeros((nz - 1, ny - 1, nx - 1), dtype=np.int8)
+    for dx, dy, dz in _CORNERS:
+        count += inside[dz:nz - 1 + dz, dy:ny - 1 + dy, dx:nx - 1 + dx]
+    ka, ja, ia = np.nonzero((count > 0) & (count < 8))
+    if not len(ia):
+        return []
+    g0 = ia + nx * (ja + ny * ka)
+    offsets = np.array([dx + nx * (dy + ny * dz) for dx, dy, dz in _CORNERS])
+    gids = g0[:, None] + offsets[None, :]                     # (M, 8)
+    cvals = vals[gids]
+    cins = cvals < 0.0
+
+    def coords(g):
+        i = g % nx
+        j = (g // nx) % ny
+        k = g // (nx * ny)
+        return np.stack([xs[i], ys[j], zs[k]], axis=-1)
+
+    ea, eb, dirs = [], [], []
+    for tet in _TETS:
+        tc = np.array(tet)
+        bits = (cins[:, tc[0]].astype(np.int8) | cins[:, tc[1]] << 1
+                | cins[:, tc[2]] << 2 | cins[:, tc[3]] << 3)
+        for case, (ins, outs, tris) in _TET_TABLE.items():
+            rows = np.nonzero(bits == case)[0]
+            if not len(rows):
+                continue
+            tg = gids[rows][:, tc]                            # (R, 4)
+            ci = coords(tg[:, ins]).mean(axis=1)
+            co = coords(tg[:, outs]).mean(axis=1)
+            for tri in tris:
+                ea.append(np.stack([tg[:, a] for a, _b in tri], axis=1))
+                eb.append(np.stack([tg[:, b] for _a, b in tri], axis=1))
+                dirs.append(co - ci)
+    ea = np.concatenate(ea)                                   # (T, 3)
+    eb = np.concatenate(eb)
+    dirs = np.concatenate(dirs)
+    lo_g, hi_g = np.minimum(ea, eb), np.maximum(ea, eb)
+    total = np.int64(nx) * ny * nz
+    keys = lo_g.astype(np.int64) * total + hi_g
+    uniq, inverse = np.unique(keys.ravel(), return_inverse=True)
+    ga, gb = uniq // total, uniq % total
+    va, vb = vals[ga], vals[gb]
+    t = np.clip(va / (va - vb), 1e-3, 1.0 - 1e-3)
+    pa, pb = coords(ga), coords(gb)
+    points = pa + (pb - pa) * t[:, None]
+    tri_v = inverse.reshape(-1, 3)
+    a, b, c = (points[tri_v[:, q]] for q in range(3))
+    n = np.cross(b - a, c - a)
+    flip = np.einsum("ij,ij->i", n, dirs) < 0.0
+    tri_v[flip] = tri_v[flip][:, [0, 2, 1]]
+    pts = [tuple(p) for p in points.tolist()]
+    return [(pts[i], pts[j], pts[k]) for i, j, k in tri_v.tolist()]
+
+
 def blend(node, env, radius: float, detail: int) -> list:
     """Triangles of the smooth blend of everything under *node*."""
     parts = leaves(node, env)
@@ -403,12 +660,16 @@ def blend(node, env, radius: float, detail: int) -> list:
     hi = [max(p.hi[i] for p in parts) + k for i in range(3)]
     size = max(hi[i] - lo[i] for i in range(3))
     cell = size / max(int(detail), 4)
+    fast = _np is not None and all(p.vfn is not None for p in parts)
+    limit = MAX_GRID_POINTS_NP if fast else MAX_GRID_POINTS
     # a margin of two cells round the reach keeps the surface closed
     while True:
         counts = [(hi[i] - lo[i]) / cell + 5 for i in range(3)]
-        if counts[0] * counts[1] * counts[2] <= MAX_GRID_POINTS:
+        if counts[0] * counts[1] * counts[2] <= limit:
             break
         cell *= 1.25
     lo = [v - 2 * cell for v in lo]
     hi = [v + 2 * cell for v in hi]
+    if fast:
+        return polygonize_np(parts, k, lo, hi, cell)
     return polygonize(field(parts, k), lo, hi, cell)

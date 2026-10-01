@@ -2793,14 +2793,28 @@ class McpToolExecutor:
             target.params["mirror"] = params["mirror"]
         if params.get("detail") is not None:
             target.params["detail"] = max(0.0, float(params["detail"]))
+        for key in ("noise", "noise_scale"):
+            if params.get(key) is not None:
+                target.params[key] = float(params[key])
+        if params.get("seed") is not None:
+            target.params["seed"] = int(params["seed"])
         specs = list(params.get("strokes") or [])
         if params.get("kind") is not None or params.get("at") is not None:
             specs.append({k: params.get(k) for k in
-                          ("kind", "at", "radius", "strength", "direction")})
+                          ("kind", "at", "radius", "strength", "direction",
+                           "to")})
         if not specs:
+            if any(params.get(k) is not None
+                   for k in ("noise", "noise_scale", "seed")):
+                self._model.node_changed.emit(target)
+                return {"sculpt": target.id, "name": target.name,
+                        "added": 0,
+                        "strokes": len(target.params.get("strokes") or []),
+                        "noise": target.params.get("noise", 0.0)}
             raise ToolError("Give a stroke (kind, at, radius, strength) "
                             "or a list in 'strokes'.")
         world, local = sculpt_ui.meshes(self._w, target)
+        rows = [list(r) for r in (target.params.get("strokes") or [])]
         added = 0
         for spec in specs:
             if not isinstance(spec, dict):
@@ -2820,18 +2834,25 @@ class McpToolExecutor:
             except (TypeError, ValueError):
                 raise ToolError("'strength' must be a number.")
             direction = self._vec3(spec, "direction")
-            if world is not None:
-                ok = sculpt_ui.add_stroke(self._model, target, kind, at,
-                                          radius, strength, direction,
-                                          world=world, local=local)
-            else:
-                ok = sculpt_ui.add_stroke(self._model, target, kind, at,
-                                          radius, strength, direction)
-            if not ok:
+            end = self._vec3(spec, "to")
+            if kind in sculpt.LINES:
+                if end is None and direction is None:
+                    raise ToolError(f"A {kind} is a line: give 'to' "
+                                    "[x, y, z], where it ends.")
+                if end is not None:
+                    direction = [end[k] - at[k] for k in range(3)]
+            # a batch maps every stroke through the surface as it was:
+            # re-baking after each one made 200 wrinkles take minutes
+            row = sculpt_ui.stroke_row(kind, at, radius, strength,
+                                       direction, world=world, local=local) \
+                if world is not None else \
+                sculpt_ui.stroke_row(kind, at, radius, strength, direction)
+            if row is None:
                 raise ToolError("That stroke could not be placed on the "
                                 "surface.")
+            rows.append(row)
             added += 1
-            world, local = sculpt_ui.meshes(self._w, target)
+        self._model.set_param(target, "strokes", rows)
         errors = validate(self._model.root)
         out = {"sculpt": target.id, "name": target.name, "added": added,
                "strokes": len(target.params.get("strokes") or []),

@@ -74,7 +74,7 @@ NODE_TYPES = {
         label="Smooth blend", category=OPERATION, icon="mdi.blur-radial",
         params=dict(radius=4.0, detail=40),
         schema=[("radius", "Blend radius", "float", 0.0, 1e4),
-                ("detail", "Detail (cells across)", "int", 8, 160)]),
+                ("detail", "Detail (cells across)", "int", 8, 400)]),
     "bend": dict(
         label="Bend", category=OPERATION, icon="mdi.redo-variant",
         params=dict(axis="z", toward="x", angle=45.0, detail=2.0),
@@ -240,10 +240,13 @@ NODE_TYPES = {
     "sculpt": dict(
         label="Sculpt (brush strokes)", category=OPERATION,
         icon="mdi.brush",
-        params=dict(strokes=[], detail=0.0, mirror="none", region=[]),
+        params=dict(strokes=[], detail=0.0, mirror="none", region=[],
+                    noise=0.0, noise_scale=4.0, seed=1),
         schema=[("strokes", "Strokes (kind 0 grab 1 inflate 2 smooth "
-                            "3 flatten 4 pinch; centre; radius; "
-                            "strength; direction)", "rows",
+                            "3 flatten 4 pinch 5 crease 6 ridge; "
+                            "centre; radius; strength; direction — a "
+                            "crease / ridge runs centre -> centre + "
+                            "direction)", "rows",
                  ["Kind", "X", "Y", "Z", "Radius", "Strength",
                   "dX", "dY", "dZ"], None),
                 ("detail", "Refine to max edge (mm, 0 = as is)", "float",
@@ -251,7 +254,11 @@ NODE_TYPES = {
                 ("mirror", "Mirror strokes across", "choice",
                  ["none", "x", "y", "z"], None),
                 ("region", "Refine only inside (two corners, mm)", "rows",
-                 ["X", "Y", "Z"], None)]),
+                 ["X", "Y", "Z"], None),
+                ("noise", "Skin roughness (mm, 0 = smooth)", "float",
+                 -100.0, 100.0),
+                ("noise_scale", "Roughness size (mm)", "float", 0.05, 1e4),
+                ("seed", "Roughness seed", "int", 0, 1000000)]),
     "shell": dict(
         label="Shell (hollow)", category=OPERATION,
         icon="mdi.cup-outline",
@@ -308,7 +315,8 @@ _BAKED = {
     "shell": [("thickness", 2), ("open", "none"), ("open_angle", 30),
               ("detail", 2)],
     "sculpt": [("strokes", []), ("detail", 0), ("mirror", "none"),
-               ("region", [])],
+               ("region", []), ("noise", 0), ("noise_scale", 4),
+               ("seed", 1)],
     "hair_cap": [("thickness", 12), ("noise", 6), ("curl", 25), ("seed", 1),
                  ("within", []), ("clear", "-y"), ("clear_angle", 60)],
     "human": [("gender", 0), ("age", 0), ("weight", 0), ("height", 0),
@@ -660,7 +668,9 @@ def _compute(node, env) -> list:
         rows = [[mesh.rv(v, env) for v in row]
                 for row in p.get("strokes") or []
                 if isinstance(row, list) and len(row) == sculpt.STROKE_LEN]
-        return sculpt.sculpt(src, rows, str(p.get("mirror", "none")))
+        return sculpt.sculpt(src, rows, str(p.get("mirror", "none")),
+                             num("noise", 0.0), num("noise_scale", 4.0),
+                             int(num("seed", 1.0)))
     if t == "shell":
         from . import shell
         return shell.shell(src, num("thickness", 2.0),
@@ -854,6 +864,7 @@ def _b_baked(kind):
                                  ("wireframe", "sides"),
                                  ("cloth", "steps"),
                                  ("cloth", "substeps"),
+                                 ("sculpt", "seed"),
                                  ("sweep", "smooth"),
                                  ("section_loft", "smooth")):
                 try:
@@ -1119,7 +1130,7 @@ def _check_sculpt(p, env):
                 except expr.ExprError as exc:
                     return f"stroke {number}: {exc}"
         if sculpt.kind_index(mesh.rv(row[0], env, -1.0)) < 0:
-            return (f"stroke {number}: kind must be 0-4 "
+            return (f"stroke {number}: kind must be 0-{len(sculpt.KINDS) - 1} "
                     f"({', '.join(sculpt.KINDS)})")
         if mesh.rv(row[4], env, 0.0) <= 0:
             return f"stroke {number}: the radius must be more than 0"
@@ -1127,6 +1138,8 @@ def _check_sculpt(p, env):
     if region and (len(region) != 2 or any(
             not isinstance(r, list) or len(r) != 3 for r in region)):
         return "sculpt: 'region' is two corners [x, y, z], or empty"
+    if mesh.rv(p.get("noise_scale", 4.0), env, 4.0) <= 0:
+        return "sculpt: the roughness size must be more than 0"
     return None
 
 

@@ -10,6 +10,16 @@ draws it towards the centre. Every stroke falls off smoothly to zero
 at its radius, and ``mirror`` repeats each stroke across a plane so a
 face is sculpted symmetrically from one side.
 
+Two more brushes draw LINES rather than dabs — the detail that makes
+skin read as old: ``crease`` carves a groove ``strength`` mm deep from
+the point to point + (dx, dy, dz), ``radius`` mm either side of it
+(wrinkles, crow's feet, a frown, the fold of a knuckle), ``ridge``
+raises one (a vein, a tendon, a scar). Their profile is a soft bell that
+tapers at both ends, so a run of short strokes reads as one wrinkle.
+And ``noise`` (mm) roughens the whole surface along its normals with a
+seeded fractal of ``noise_scale`` mm — pores, lumpy old skin, a cast
+texture — after the strokes, so a smooth stroke cannot wipe it.
+
 Strokes are rows ``[kind, x, y, z, radius, strength, dx, dy, dz]`` in
 the frame of the node's children — a sculpted head keeps its strokes
 when the Object is placed — with *kind* an index into KINDS. The mesh
@@ -30,7 +40,15 @@ from __future__ import annotations
 
 import math
 
-KINDS = ("grab", "inflate", "smooth", "flatten", "pinch")
+KINDS = ("grab", "inflate", "smooth", "flatten", "pinch", "crease",
+         "ridge")
+#: brushes that run along a segment (point -> point + direction)
+LINES = frozenset({"crease", "ridge"})
+
+try:                                    # the fast path
+    import numpy as _np
+except Exception:                       # pragma: no cover - numpy is a dep
+    _np = None
 MIRRORS = ("none", "x", "y", "z")
 #: a stroke row: kind, centre, radius, strength, direction
 STROKE_LEN = 9
@@ -132,6 +150,8 @@ def apply_stroke(mesh, kind: int, centre, radius: float, strength: float,
     touched."""
     if radius <= 0.0 or strength == 0.0:
         return 0
+    if 0 <= kind < len(KINDS) and KINDS[kind] in LINES:
+        return _apply_line(mesh, kind, centre, radius, strength, direction)
     hits = _within(mesh, centre, radius)
     if not hits:
         return 0
@@ -185,6 +205,11 @@ def apply_stroke(mesh, kind: int, centre, radius: float, strength: float,
     return len(hits)
 
 
+def _apply_line(mesh, kind, centre, radius, strength, direction):
+    return _line_stroke(mesh, -1.0 if KINDS[kind] == "crease" else 1.0,
+                        centre, radius, strength, direction)
+
+
 def _mirrored(row, axis: int):
     row = list(row)
     row[1 + axis] = -row[1 + axis]
@@ -192,14 +217,224 @@ def _mirrored(row, axis: int):
     return row
 
 
-def sculpt(tris, strokes, mirror: str = "none") -> list:
-    """The triangles of *tris* after every stroke in *strokes* (rows
-    ``[kind, x, y, z, radius, strength, dx, dy, dz]``), each repeated
-    across the *mirror* plane through the origin when one is set."""
-    mesh = Mesh(tris)
-    if not mesh.faces:
-        return []
-    axis = MIRRORS.index(mirror) - 1 if mirror in MIRRORS else -1
+def line_weight(t, along, length, radius):
+    """The crease / ridge profile: a bell across the line (*t* = distance
+    / radius, 1 at the edge) that tapers over a radius at either end
+    (*along* = position on the segment, 0..*length*). Works on floats
+    and on numpy arrays."""
+    if _np is not None and not isinstance(t, float):
+        np = _np
+        across = np.clip(1.0 - t * t, 0.0, 1.0) ** 3
+        ends = np.clip(np.minimum(along, length - along) / max(radius, 1e-9)
+                       + 0.35, 0.0, 1.0)
+        return across * ends * ends * (3.0 - 2.0 * ends)
+    across = max(0.0, 1.0 - t * t) ** 3
+    e = min(max(min(along, length - along) / max(radius, 1e-9) + 0.35,
+                0.0), 1.0)
+    return across * e * e * (3.0 - 2.0 * e)
+
+
+def _segment(p, centre, direction):
+    """(distance to the segment, position along it, its length) for the
+    point *p* — the line brushes' geometry."""
+    d = direction
+    length = math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2])
+    rel = (p[0] - centre[0], p[1] - centre[1], p[2] - centre[2])
+    if length < 1e-9:
+        return math.sqrt(rel[0] ** 2 + rel[1] ** 2 + rel[2] ** 2), 0.0, 0.0
+    u = (d[0] / length, d[1] / length, d[2] / length)
+    along = min(max(rel[0] * u[0] + rel[1] * u[1] + rel[2] * u[2], 0.0),
+                length)
+    q = (rel[0] - u[0] * along, rel[1] - u[1] * along, rel[2] - u[2] * along)
+    return math.sqrt(q[0] ** 2 + q[1] ** 2 + q[2] ** 2), along, length
+
+
+def _line_stroke(mesh, sign, centre, radius, strength, direction):
+    normals = mesh.normals()
+    vs = mesh.verts
+    touched = 0
+    for i, v in enumerate(vs):
+        dist, along, length = _segment(v, centre, direction)
+        if dist >= radius:
+            continue
+        w = line_weight(dist / radius, along, length, radius)
+        if w <= 0.0:
+            continue
+        touched += 1
+        n = normals[i]
+        for k in range(3):
+            v[k] += n[k] * sign * strength * w
+    return touched
+
+
+# --------------------------------------------------------------- noise
+
+def _hash(ix, iy, iz, seed):
+    """A repeatable pseudo-random value in [-1, 1] per lattice point
+    (integer arrays in, float array out)."""
+    np = _np
+    h = (ix * 73856093) ^ (iy * 19349663) ^ (iz * 83492791) ^ (seed * 2654435761)
+    h = (h ^ (h >> 13)) * 1274126177
+    h = h ^ (h >> 16)
+    return (h & 0xFFFFFF).astype(np.float64) / 0x7FFFFF - 1.0
+
+
+def value_noise(points, scale: float, seed: int = 1, octaves: int = 3):
+    """Smooth fractal value noise in about [-1, 1] at the (N, 3) array
+    *points*, features *scale* mm across — the same everywhere the same
+    point is asked (no state), so a re-bake is identical."""
+    np = _np
+    out = np.zeros(len(points))
+    amp, total = 1.0, 0.0
+    freq = 1.0 / max(scale, 1e-6)
+    for octave in range(octaves):
+        q = points * freq + octave * 17.31
+        base = np.floor(q).astype(np.int64)
+        f = q - base
+        f = f * f * (3.0 - 2.0 * f)                         # smoothstep
+        acc = np.zeros(len(points))
+        for dx in (0, 1):
+            wx = f[:, 0] if dx else 1.0 - f[:, 0]
+            for dy in (0, 1):
+                wy = f[:, 1] if dy else 1.0 - f[:, 1]
+                for dz in (0, 1):
+                    wz = f[:, 2] if dz else 1.0 - f[:, 2]
+                    acc += wx * wy * wz * _hash(base[:, 0] + dx,
+                                                base[:, 1] + dy,
+                                                base[:, 2] + dz,
+                                                int(seed) + octave)
+        out += acc * amp
+        total += amp
+        amp *= 0.5
+        freq *= 2.0
+    return out / total
+
+
+# ----------------------------------------------------------- numpy path
+
+class _Fast:
+    """The welded mesh as numpy arrays: what the Python Mesh is, with
+    every brush applied to all vertices at once."""
+
+    def __init__(self, tris):
+        np = _np
+        arr = np.asarray(tris, dtype=np.float64).reshape(-1, 3)
+        keys = np.round(arr, 6)
+        uniq, inverse = np.unique(keys, axis=0, return_inverse=True)
+        faces = inverse.reshape(-1, 3)
+        ok = ((faces[:, 0] != faces[:, 1]) & (faces[:, 1] != faces[:, 2])
+              & (faces[:, 0] != faces[:, 2]))
+        self.faces = faces[ok]
+        self.verts = uniq.copy()
+        edges = np.concatenate([self.faces[:, [0, 1]], self.faces[:, [1, 2]],
+                                self.faces[:, [2, 0]]])
+        edges = np.sort(edges, axis=1)
+        edges = np.unique(edges, axis=0)
+        self.edges = edges
+        self.degree = np.bincount(edges.ravel(), minlength=len(self.verts))
+        self._normals = None
+        self.stale = False
+
+    def normals(self):
+        np = _np
+        if self._normals is None:
+            v, f = self.verts, self.faces
+            n = np.cross(v[f[:, 1]] - v[f[:, 0]], v[f[:, 2]] - v[f[:, 0]])
+            out = np.zeros_like(v)
+            for k in range(3):
+                np.add.at(out, f[:, k], n)
+            length = np.linalg.norm(out, axis=1)
+            out[length < 1e-12] = (0.0, 0.0, 1.0)
+            length[length < 1e-12] = 1.0
+            self._normals = out / length[:, None]
+        return self._normals
+
+    def moved(self):
+        self._normals = None
+        self.stale = False
+
+    def neighbour_mean(self):
+        np = _np
+        acc = np.zeros_like(self.verts)
+        a, b = self.edges[:, 0], self.edges[:, 1]
+        np.add.at(acc, a, self.verts[b])
+        np.add.at(acc, b, self.verts[a])
+        deg = np.maximum(self.degree, 1)[:, None]
+        return acc / deg
+
+    def triangles(self):
+        vs = [tuple(v) for v in self.verts.tolist()]
+        return [(vs[a], vs[b], vs[c]) for a, b, c in self.faces.tolist()]
+
+
+def _fast_stroke(mesh, kind, centre, radius, strength, direction):
+    np = _np
+    if radius <= 0.0 or strength == 0.0:
+        return 0
+    vs = mesh.verts
+    c = np.asarray(centre, dtype=np.float64)
+    name = KINDS[kind] if 0 <= kind < len(KINDS) else "grab"
+    if name in LINES:
+        d = np.asarray(direction, dtype=np.float64)
+        length = float(np.linalg.norm(d))
+        rel = vs - c
+        if length < 1e-9:
+            dist, along = np.linalg.norm(rel, axis=1), np.zeros(len(vs))
+        else:
+            u = d / length
+            along = np.clip(rel @ u, 0.0, length)
+            dist = np.linalg.norm(rel - along[:, None] * u, axis=1)
+        idx = np.nonzero(dist < radius)[0]
+        if not len(idx):
+            return 0
+        w = line_weight(dist[idx] / radius, along[idx], length, radius)
+        sign = -1.0 if name == "crease" else 1.0
+        vs[idx] += mesh.normals()[idx] * (sign * strength * w)[:, None]
+        # a line moves the surface a hair: the next line may keep these
+        # normals (hundreds of wrinkles would re-measure 200k faces each),
+        # any other brush measures afresh
+        mesh.stale = True
+        return len(idx)
+    if mesh.stale:
+        mesh.moved()
+    d2 = np.einsum("ij,ij->i", vs - c, vs - c)
+    idx = np.nonzero(d2 < radius * radius)[0]
+    if not len(idx):
+        return 0
+    t = np.sqrt(d2[idx]) / radius
+    w = 1.0 - t * t * (3.0 - 2.0 * t)
+    if name == "grab":
+        u = _unit(direction)
+        if u is None:
+            n = (mesh.normals()[idx] * w[:, None]).sum(axis=0)
+            u = _unit(n) or (0.0, 0.0, 1.0)
+        vs[idx] += np.asarray(u) * (strength * w)[:, None]
+    elif name == "inflate":
+        vs[idx] += mesh.normals()[idx] * (strength * w)[:, None]
+    elif name == "smooth":
+        passes = max(1, int(math.ceil(abs(strength))))
+        amount = min(abs(strength) / passes, 1.0)
+        for _ in range(passes):
+            m = mesh.neighbour_mean()[idx]
+            has = mesh.degree[idx] > 0
+            step = (m - vs[idx]) * (amount * w)[:, None]
+            vs[idx] += np.where(has[:, None], step, 0.0)
+    elif name == "flatten":
+        total = w.sum() or 1.0
+        n = _unit((mesh.normals()[idx] * w[:, None]).sum(axis=0)) \
+            or (0.0, 0.0, 1.0)
+        n = np.asarray(n)
+        cen = (vs[idx] * w[:, None]).sum(axis=0) / total
+        h = (vs[idx] - cen) @ n
+        vs[idx] -= n[None, :] * (h * min(abs(strength), 1.0) * w)[:, None]
+    elif name == "pinch":
+        amount = max(min(strength, 1.0), -1.0)
+        vs[idx] += (c - vs[idx]) * (amount * w)[:, None]
+    mesh.moved()
+    return len(idx)
+
+
+def _rows(strokes, axis):
     for row in strokes:
         try:
             r = [float(v) for v in row]
@@ -207,9 +442,33 @@ def sculpt(tris, strokes, mirror: str = "none") -> list:
             continue
         if len(r) != STROKE_LEN:
             continue
-        for use in ((r, _mirrored(r, axis)) if axis >= 0 else (r,)):
-            apply_stroke(mesh, int(use[0]), use[1:4], use[4], use[5],
+        yield from ((r, _mirrored(r, axis)) if axis >= 0 else (r,))
+
+
+def sculpt(tris, strokes, mirror: str = "none", noise: float = 0.0,
+           noise_scale: float = 4.0, seed: int = 1) -> list:
+    """The triangles of *tris* after every stroke in *strokes* (rows
+    ``[kind, x, y, z, radius, strength, dx, dy, dz]``), each repeated
+    across the *mirror* plane through the origin when one is set, then
+    roughened by *noise* mm of fractal noise *noise_scale* mm across."""
+    axis = MIRRORS.index(mirror) - 1 if mirror in MIRRORS else -1
+    if _np is not None:
+        fast = _Fast(tris)
+        if not len(fast.faces):
+            return []
+        for use in _rows(strokes, axis):
+            _fast_stroke(fast, int(use[0]), use[1:4], use[4], use[5],
                          use[6:9])
+        if noise:
+            fast.moved()
+            n = value_noise(fast.verts, noise_scale, int(seed))
+            fast.verts += fast.normals() * (n * noise)[:, None]
+        return fast.triangles()
+    mesh = Mesh(tris)
+    if not mesh.faces:
+        return []
+    for use in _rows(strokes, axis):
+        apply_stroke(mesh, int(use[0]), use[1:4], use[4], use[5], use[6:9])
     return mesh.triangles()
 
 
@@ -239,6 +498,18 @@ def _frame(tri):
     return [[e1[k], e2[k], n[k]] for k in range(3)]     # columns
 
 
+_WORLD = [None, None]                   # (the list it came from, its array)
+
+
+def _world_array(world_tris):
+    """The world triangles' vertices as an (N * 3, 3) array, kept for
+    the list it was made from (a batch of strokes maps through one)."""
+    if _WORLD[0] is not world_tris:
+        _WORLD[0] = world_tris
+        _WORLD[1] = _np.asarray(world_tris, dtype=float).reshape(-1, 3)
+    return _WORLD[1]
+
+
 def to_local(world_tris, local_tris, point, direction=None):
     """*point* (and *direction*) given in the frame *world_tris* are
     shown in, expressed in the frame of *local_tris* — the same
@@ -249,14 +520,20 @@ def to_local(world_tris, local_tris, point, direction=None):
     ``(None, None)`` when the meshes cannot be matched."""
     if not world_tris or len(world_tris) != len(local_tris):
         return None, None
-    best, best_d = None, float("inf")
-    for i, wt in enumerate(world_tris):
-        for k, v in enumerate(wt):
-            d = ((v[0] - point[0]) ** 2 + (v[1] - point[1]) ** 2
-                 + (v[2] - point[2]) ** 2)
-            if d < best_d:
-                best, best_d = (i, k), d
-    i, k = best
+    if _np is not None:
+        flat = _world_array(world_tris)
+        d = ((flat - _np.asarray(point, dtype=float)) ** 2).sum(axis=1)
+        j = int(d.argmin())
+        i, k = j // 3, j % 3
+    else:
+        best, best_d = None, float("inf")
+        for i, wt in enumerate(world_tris):
+            for k, v in enumerate(wt):
+                d = ((v[0] - point[0]) ** 2 + (v[1] - point[1]) ** 2
+                     + (v[2] - point[2]) ** 2)
+                if d < best_d:
+                    best, best_d = (i, k), d
+        i, k = best
     wt, lt = world_tris[i], local_tris[i]
     lin = None
     for j in range(len(world_tris)):

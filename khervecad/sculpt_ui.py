@@ -42,24 +42,46 @@ def meshes(window, node):
     return world, local
 
 
-def add_stroke(model, node, kind, point, radius, strength, direction=None,
-               world=None, local=None) -> bool:
-    """Append one stroke to *node* (a sculpt). *point*/*direction* are
+def stroke_row(kind, point, radius, strength, direction=None,
+               world=None, local=None):
+    """One stroke row for a sculpt, or None. *point*/*direction* are
     world coordinates when *world*/*local* are given, else local."""
     if world is not None:
         point, direction = sculpt.to_local(world, local, point, direction)
         if point is None:
-            return False
+            return None
     k = sculpt.kind_index(kind)
     if k < 0:
-        return False
+        return None
     d = list(direction) if direction is not None else [0.0, 0.0, 0.0]
-    row = [k] + [round(float(v), 3) for v in point] + [
+    return [k] + [round(float(v), 3) for v in point] + [
         round(float(radius), 3), round(float(strength), 3)] + [
         round(float(v), 4) for v in d]
+
+
+def add_stroke(model, node, kind, point, radius, strength, direction=None,
+               world=None, local=None) -> bool:
+    """Append one stroke to *node* (a sculpt). *point*/*direction* are
+    world coordinates when *world*/*local* are given, else local."""
+    row = stroke_row(kind, point, radius, strength, direction, world, local)
+    if row is None:
+        return False
     rows = [list(r) for r in (node.params.get("strokes") or [])]
     model.set_param(node, "strokes", rows + [row])
     return True
+
+
+def add_line(model, node, kind, start, end, radius, strength,
+             world=None, local=None) -> bool:
+    """Append a crease / ridge from *start* to *end* (world points when
+    *world*/*local* are given, else the node's own frame)."""
+    if world is not None:
+        start, _d = sculpt.to_local(world, local, start)
+        end, _d = sculpt.to_local(world, local, end)
+        if start is None or end is None:
+            return False
+    direction = [end[k] - start[k] for k in range(3)]
+    return add_stroke(model, node, kind, start, radius, strength, direction)
 
 
 class SculptPanel(QDialog):
@@ -74,6 +96,9 @@ class SculptPanel(QDialog):
         self.setAttribute(Qt.WA_DeleteOnClose, True)
         self.window_, self.node = window, node
         self._world = self._local = None
+        #: a crease / ridge is drawn with two clicks: where it starts
+        #: (world point, kept while the end is aimed)
+        self._line_start = None
         form = QFormLayout()
         self.kind = QComboBox()
         for name in sculpt.KINDS:
@@ -122,6 +147,17 @@ class SculptPanel(QDialog):
     # -- the pick -------------------------------------------------------
     def _banner(self):
         n = len(self.node.params.get("strokes") or [])
+        if self._line_start is not None:
+            return language.tr(
+                "Sculpt: {kind} — now click where it ends; Esc "
+                "cancels").format(
+                    kind=language.tr(self.kind.currentData().capitalize()))
+        if self.kind.currentData() in sculpt.LINES:
+            return language.tr(
+                "Sculpt: {kind} line, {radius:g} mm wide · {count} "
+                "stroke(s) · click where it starts").format(
+                    kind=language.tr(self.kind.currentData().capitalize()),
+                    radius=self.radius.value(), count=n)
         return language.tr(
             "Sculpt: {kind} brush, {radius:g} mm · {count} stroke(s) "
             "· click the surface; Esc or right-click when done").format(
@@ -143,9 +179,31 @@ class SculptPanel(QDialog):
 
     def _on_pick(self, desc, _key):
         if desc is None:                       # Esc / right-click
+            self._line_start = None
+            self.window_.view3d.set_pick_pinned(None)
             self.window_.statusBar().showMessage(language.tr(
                 "Sculpting paused — click a brush in the panel to "
                 "continue, or Done."), 5000)
+            return
+        if self.kind.currentData() in sculpt.LINES:
+            point = desc.get("point")
+            if self._line_start is None:       # first click: the start
+                self._line_start = list(point)
+                self.window_.view3d.set_pick_pinned(desc, language.tr(
+                    "start"))
+                self.arm()
+                return
+            start, self._line_start = self._line_start, None
+            self.window_.view3d.set_pick_pinned(None)
+            ok = add_line(self.window_.model, self.node,
+                          self.kind.currentData(), start, point,
+                          self.radius.value(), self.strength.value(),
+                          world=self._world, local=self._local)
+            if not ok:
+                self.window_.statusBar().showMessage(language.tr(
+                    "That line missed the sculpted surface."), 3000)
+            self._refresh_count()
+            self.arm()
             return
         ok = add_stroke(
             self.window_.model, self.node, self.kind.currentData(),

@@ -302,6 +302,22 @@ TIPS = {
         "A front photo projects straight through the part, so the back "
         "gets it mirrored — add a second Paint with a back photo on the "
         "same plane, inside the first, to paint the back properly."),
+    "weathering": (
+        "Weathering (age, dirt and wear)",
+        "Colours the selection by its own shape so it looks old: dirt "
+        "and shadow settle in every crease, crests rub pale, the "
+        "surface is blotched and spotted — aged skin, worn leather, a "
+        "weathered statue, a rusty casting. Like Blender's Dirty Vertex "
+        "Colors, plus blotches, spots and tints.",
+        [_SELECTION + " (best on a detailed surface: a sculpted head, "
+         "a blend at high detail).",
+         "Click Weathering; the part keeps its own colour as the base.",
+         "In Properties: crease and crest colours and strengths, the "
+         "depth that gives the full colour, blotches and spots, and "
+         "tints — a point, a radius and a colour (a red eye rim, a "
+         "darker nose)."],
+        "Sculpt creases and ridges first (Sculpt ▸ Crease / Ridge): "
+        "weathering darkens every wrinkle by itself."),
     "symmetry": (
         "Symmetry (mirror copy)",
         "Keeps its contents AND their mirror image: model one arm, one "
@@ -342,10 +358,14 @@ TIPS = {
          "Pick the brush, radius and strength, then click the surface "
          "where the brush lands; Mirror repeats each stroke across the "
          "part's middle so a face stays symmetric.",
+         "Crease and Ridge draw a line: click where it starts, then "
+         "where it ends — a wrinkle, a vein, a tendon, a scar.",
          "Strokes are kept in Properties: edit or delete any of them "
-         "later, and the mesh recomputes."],
+         "later, and the mesh recomputes. Skin roughness (Properties) "
+         "adds pores and lumps over the whole surface."],
         "Grab with a negative strength pulls the surface in; Inflate "
-        "with a small radius is a blob, a large one a cheek."),
+        "with a small radius is a blob, a large one a cheek. Add "
+        "Weathering on top and every crease darkens by itself."),
     "bend": (
         "Bend",
         "Curves the selection along an arc — bananas, arches, curled "

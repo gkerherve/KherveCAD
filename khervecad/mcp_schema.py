@@ -104,7 +104,7 @@ WRAP_TYPES = [
     "while_loop", "if_else", "component", "symmetry", "joint", "sweep",
     "section_loft", "blend", "bend", "twist", "taper", "lattice", "subdivide",
     "pattern", "shell", "sculpt", "decimate", "shrinkwrap", "bevel",
-    "remesh", "wireframe", "cloth", "push_pull", "bisect",
+    "remesh", "wireframe", "cloth", "push_pull", "bisect", "weathering",
 ]
 
 
@@ -658,7 +658,13 @@ TOOLS = [
             "`direction` by `strength` mm, inflate pushes it out along "
             "its normals (negative pulls in), smooth relaxes it, flatten "
             "presses it onto a plane, pinch draws it to the centre; each "
-            "falls off to nothing at `radius`. Give one stroke, or "
+            "falls off to nothing at `radius`. crease carves a groove "
+            "`strength` mm deep from `at` to `to`, `radius` mm either "
+            "side (a wrinkle, a frown, a knuckle fold); ridge raises one "
+            "(a vein, a tendon, a scar) — both taper at their ends, so "
+            "short strokes in a row read as one line. `noise` (mm) with "
+            "`noise_scale` (mm) roughens the whole surface — pores, old "
+            "lumpy skin. Give one stroke, or "
             "several in `strokes` (one undo step). `node_id` is a "
             "sculpt node, or any solid — a blend, a subdivided cage, an "
             "imported scan — which is wrapped in one. Points are WORLD "
@@ -672,8 +678,10 @@ TOOLS = [
             "node_id": _ID,
             "kind": {"type": "string",
                      "enum": ["grab", "inflate", "smooth", "flatten",
-                              "pinch"]},
-            "at": _vec3("Brush centre [x, y, z] in world mm."),
+                              "pinch", "crease", "ridge"]},
+            "at": _vec3("Brush centre [x, y, z] in world mm (a crease / "
+                        "ridge: where it starts)."),
+            "to": _vec3("crease / ridge: where the line ends, world mm."),
             "radius": {"type": "number", "description": "mm."},
             "strength": {"type": "number",
                          "description": "mm for grab/inflate; 0-1 for "
@@ -683,8 +691,17 @@ TOOLS = [
             "strokes": {"type": "array",
                         "description": "Several strokes at once: "
                                        "[{kind, at, radius, strength, "
-                                       "direction}].",
+                                       "direction, to}].",
                         "items": {"type": "object"}},
+            "noise": {"type": "number",
+                      "description": "Skin roughness over the whole "
+                                     "surface, mm along the normals "
+                                     "(set on the node; 0 = smooth)."},
+            "noise_scale": {"type": "number",
+                            "description": "Size of the roughness, mm "
+                                           "(pores ~1, lumps ~6)."},
+            "seed": {"type": "integer",
+                     "description": "Roughness seed."},
             "mirror": {"type": "string", "enum": ["none", "x", "y", "z"],
                        "description": "Repeat strokes across this plane "
                                       "of the part (set on the node)."},

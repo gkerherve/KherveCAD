@@ -519,6 +519,36 @@ a tool in a hand) is ordinary geometry you add beside the figure, \
 placed with face_landmarks and probe_surface. NEVER model a person \
 from spheres and capsules when build_character can.
 
+Detail, age and texture (creatures, faces, hands, worn things):
+- A smooth blend of primitives reads as plastic. Make the form with \
+`kcad_blend(radius, detail)` — detail is cells across the part, up to \
+400, so a 250 mm head at 250 is ~1 mm — then wrap it, innermost first: \
+`kcad_weathering(...) color("#6f8545") kcad_sculpt(strokes = [...], \
+noise = 0.12, noise_scale = 1.5, seed = 1) kcad_blend(...) { ... }`. \
+The COLOUR goes outside the sculpt (a baked node keeps only its shape) \
+and inside the weathering (its base).
+- Sculpt strokes are rows [kind, x, y, z, radius, strength, dx, dy, \
+dz] in the part's own frame (world mm when nothing above moves it); \
+kinds 0 grab, 1 inflate, 2 smooth, 3 flatten, 4 pinch, 5 CREASE, 6 \
+RIDGE. A crease carves a groove `strength` mm deep from (x, y, z) to \
+(x+dx, y+dy, z+dz), `radius` mm either side; a ridge raises one. Age a \
+face with them: 3-5 wavy forehead creases (each 3-4 short strokes, \
+0.4-0.8 mm deep), frown lines between the brows, crow's feet fanning \
+from each eye corner, a deep nasolabial fold nose -> mouth corner, \
+bags under the eyes (inflate + a crease below), neck rings; ridges for \
+temple and forearm veins and the tendons on the back of a hand; creases \
+across every finger joint. `noise` (mm) and `noise_scale` roughen it \
+all (pores ~0.1 mm at 1.5 mm, lumps ~0.6 mm at 8 mm). sculpt_stroke \
+does the same from world points (`to` ends a crease / ridge).
+- `kcad_weathering(cavity_color, cavity, edge_color, edge, depth, \
+reach, mottle_color, mottle, mottle_scale, spot_color, spots, \
+spot_size, seed, tints = [[x, y, z, radius, r, g, b, strength], ...])` \
+colours every face from the shape: creases deeper than `depth` mm get \
+the dark `cavity_color`, crests the pale `edge_color`, plus blotches, \
+age spots (`spots` 0-1) and tints (a red eye rim, a darker nose). Use \
+it on skin, leather, stone, rust; the preview and pictures show it, \
+OpenSCAD's own render is one colour.
+
 Creatures and monsters for the PlanetCraft game:
 - PlanetCraft (the user's voxel game) makes a model WALK when it arrives \
 as named parts: a group called Head (nods at its neck), Tail, Left wing \

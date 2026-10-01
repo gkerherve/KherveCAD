@@ -3129,6 +3129,49 @@ into a new module and import.
                        Manifold ray to the eye, cached per camera; X-ray
                        shows all). Tested in
                        `tests/test_meshedit.py` with real mouse events.
+  - **Surface age** (2026-10-01, the user, scoring a goblin: "the
+                       texture, the aging is not shown — add the tools to
+                       KherveCAD"). Three pieces. (1) `sdf.py` got a
+                       **numpy path**: every primitive has a vectorized
+                       twin (`_VECTOR`), `field_values` evaluates a leaf
+                       only within blend reach of its box (the same skip
+                       the scalar field makes), the grid is sampled in
+                       z slabs (`SLAB_POINTS`), and `mesh_values_np` is
+                       the same marching tetrahedra — same cuts, edge
+                       vertices shared through `np.unique` on edge keys,
+                       winding fixed per triangle by the in->out vector
+                       — so the result equals the Python one (a test pins
+                       count and volume) at ~10x the speed; the grid cap
+                       is `MAX_GRID_POINTS_NP` (16M) and a blend's detail
+                       goes to 400 (a 250 mm head at ~1 mm). (2) `sculpt`
+                       got two LINE brushes — `crease` (kind 5) and
+                       `ridge` (6) — a soft bell profile across the
+                       segment point -> point + direction that tapers at
+                       its ends (`line_weight`), for wrinkles, folds,
+                       veins and tendons, drawn in the Sculpt panel with
+                       two clicks and by MCP `sculpt_stroke` with `to`;
+                       node params `noise` / `noise_scale` / `seed` add
+                       fractal `value_noise` along the normals after the
+                       strokes (pores, lumps). The whole sculpt runs on
+                       numpy (`_Fast`: welded arrays, `np.add.at`
+                       normals and neighbour means; consecutive lines
+                       share normals — a hair — any other brush
+                       re-measures); Python stays as the fallback.
+                       MCP batches map every stroke through ONE surface
+                       and write the rows once (it re-baked per stroke).
+                       (3) `weathering.py` (feature module, `COLORED`,
+                       Character family): colours each face from the
+                       shape — depth below the surface Laplacian-smoothed
+                       over `reach`, minus that depth's own wider average
+                       (a head's curvature would read as one crest), full
+                       `cavity_color` at `depth` mm, `edge_color` on
+                       crests — plus `value_noise` blotches, spots by
+                       threshold and point `tints`; base = the face's own
+                       colour (so put `color()` OUTSIDE a sculpt — baked
+                       nodes keep only shape), cached by content hash.
+                       `kcad_weathering(...) { children }` renders the
+                       children unchanged in OpenSCAD. Tested in
+                       `tests/test_weathering.py`.
   - `photoreal.py` / `photoreal_ui.py` — **photoreal renders** through
                        Blender Cycles when installed (2026-09-19; nothing
                        bundled — found via KHERVECAD_BLENDER, PATH, the
