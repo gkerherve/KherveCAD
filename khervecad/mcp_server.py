@@ -262,7 +262,13 @@ operation open converts the part into a polyhedron (a cube is 8 \
 vertices, 6 quads) and lists its vertices in world mm; then move \
 (`delta`, `proportional` mm for a smooth pull, `mirror` for both \
 halves), extrude chosen faces out by `distance`, subdivide them for \
-more vertices, split_edge / poke to add one, merge, dissolve, smooth. \
+more vertices, split_edge / poke to add one, merge, dissolve, smooth; \
+box-model a creature with inset (a face border `thickness` mm, inner part \
+pushed `depth` — then extrude it into a horn or snout), loop_cut (`edge`: \
+an edge loop round a limb to bend it at), knife (a plane through `at` \
+with `normal`), bridge (two face regions joined by a tube: arm to body, \
+a handle) and spin (faces swept round an axis in `steps`, `taper` to a \
+point: a curling horn or tusk). \
 Choose vertices by index or a world box (`within`). Every call keeps \
 the solid closed. Start from a coarse cube or cylinder, not a fine \
 sphere — a few vertices are easy to place. \

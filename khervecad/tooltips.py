@@ -746,6 +746,11 @@ TIPS = {
          "Ctrl+click an edge or a face to add a vertex there; E extrudes "
          "the selected faces; right click or W for Subdivide, Merge, "
          "Dissolve and Smooth.",
+         "Box-model a creature: I insets the selected faces (then the "
+         "mouse sizes the inner ring), Ctrl+R cuts an edge loop through "
+         "the edge under the mouse, K draws a knife cut (two clicks); "
+         "right click for Bridge (two face regions joined by a tube) and "
+         "Spin (the faces extruded round in steps — a curling horn).",
          "Press Tab (or Esc) when done: the mesh stays an editable "
          "polyhedron, saved and written as OpenSCAD's polyhedron()."],
         "O turns on proportional editing so a move drags the "

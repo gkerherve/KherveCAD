@@ -28,7 +28,8 @@ import math
 from . import meshedit
 
 OPERATIONS = ("open", "move", "set", "subdivide", "extrude", "merge",
-              "dissolve", "smooth", "split_edge", "poke")
+              "dissolve", "smooth", "split_edge", "poke", "inset",
+              "loop_cut", "knife", "bridge", "spin")
 #: past this many vertices `open` lists none unless asked
 LIST_LIMIT = 3000
 
@@ -85,6 +86,59 @@ def _round(v):
     return [round(float(c), 4) for c in v]
 
 
+def _more(op, params, points, faces, sel, matrix, inverse, to_local_point):
+    """The box-modelling operations (meshedit_more.py)."""
+    from . import meshedit_more as more
+    try:
+        if op == "inset":
+            return more.inset(points, faces, sel,
+                              float(params.get("thickness", 1.0)),
+                              float(params.get("depth", 0.0)),
+                              bool(params.get("individual", False)))
+        if op == "loop_cut":
+            edge = params.get("edge")
+            try:
+                a, b = (int(v) for v in edge)
+            except (TypeError, ValueError):
+                raise EditError("'loop_cut' needs 'edge' [a, b]: any edge "
+                                "of the ring of quads to cut across.")
+            return more.loop_cut(points, faces, a, b,
+                                 float(params.get("t", 0.5)),
+                                 int(params.get("cuts", 1)))
+        if op == "knife":
+            at = _vec(params.get("at"), "at")
+            normal = _vec(params.get("normal"), "normal")
+            if at is None or normal is None:
+                raise EditError("'knife' needs 'at' (a point on the cut) "
+                                "and 'normal' (the cutting plane's "
+                                "normal), world mm.")
+            # a plane's normal maps by the transpose of the linear part
+            n_local = [sum(matrix[r][c] * normal[r] for r in range(3))
+                       for c in range(3)]
+            only = None
+            if sel:
+                only = meshedit.selected_faces(faces, sel) or None
+            return more.knife(points, faces, to_local_point(at), n_local,
+                              only)
+        if op == "bridge":
+            return more.bridge(points, faces, sel)
+        if op == "spin":
+            origin = _vec(params.get("origin"), "origin")
+            axis = _vec(params.get("axis"), "axis")
+            if origin is None or axis is None:
+                raise EditError("'spin' needs 'origin' (a point on the "
+                                "axis) and 'axis' (its direction), world "
+                                "mm.")
+            return more.spin(points, faces, sel, to_local_point(origin),
+                             list(meshedit.local_delta(inverse, axis)),
+                             float(params.get("angle", 90.0)),
+                             int(params.get("steps", 8)),
+                             float(params.get("taper", 1.0)))
+    except more.EditFailed as exc:
+        raise EditError(f"'{op}': {exc}")
+    raise EditError(f"unknown operation {op!r}")       # pragma: no cover
+
+
 def edit_mesh(window, node, params) -> dict:
     """Run one ``edit_mesh`` call on *node* (any part)."""
     model = window.model
@@ -113,7 +167,7 @@ def edit_mesh(window, node, params) -> dict:
     if op == "open":
         pass
     elif op in ("move", "set", "smooth", "merge", "dissolve", "subdivide",
-                "extrude") and not sel:
+                "extrude", "inset", "bridge", "spin") and not sel:
         raise EditError(f"'{op}' needs vertices: give 'vertices' "
                         "(indices from operation open), 'within' (a world "
                         "box) or 'all': true.")
@@ -197,6 +251,9 @@ def edit_mesh(window, node, params) -> dict:
         points, faces, new = meshedit.poke(
             points, faces, face, to_local_point(at) if at else None)
         new_sel = [new]
+    if op in ("inset", "loop_cut", "knife", "bridge", "spin"):
+        points, faces, new_sel = _more(op, params, points, faces, sel,
+                                       matrix, inverse, to_local_point)
     if op != "open":
         why = meshedit.check(points, faces)
         if why:

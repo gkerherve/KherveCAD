@@ -64,7 +64,12 @@ AXIS_COLORS = {"x": QColor("#d64545"), "y": QColor("#3f9e4d"),
 _KEYS = {Qt.Key_G, Qt.Key_S, Qt.Key_R, Qt.Key_E, Qt.Key_A, Qt.Key_B,
          Qt.Key_L, Qt.Key_M, Qt.Key_O, Qt.Key_W, Qt.Key_X, Qt.Key_Y,
          Qt.Key_Z, Qt.Key_Delete, Qt.Key_Backspace, Qt.Key_Escape,
-         Qt.Key_Return, Qt.Key_Enter}
+         Qt.Key_Return, Qt.Key_Enter, Qt.Key_I, Qt.Key_K}
+
+
+def _tools():
+    from . import meshedit_tools_ui
+    return meshedit_tools_ui
 
 
 def _vsub(a, b):
@@ -134,6 +139,8 @@ class EditSession(QObject):
         self._press = None             # what a left/right press began
         self._box = None               # (start, now, mode) screen rect
         self._box_armed = False        # B pressed: the next drag boxes
+        self._knife = None             # K: the knife's clicks so far
+        self._menu_at = (0, 0)         # where the context menu opened
         self._hover = None             # last mouse position in the view
         self._geometry_serial = 0      # bumps whenever the points move
         self._solid = None             # (serial, Manifold) for occlusion
@@ -742,7 +749,7 @@ class EditSession(QObject):
     # ------------------------------------------------- the view's hooks
     def wants_key(self, event):
         if event.modifiers() & (Qt.ControlModifier | Qt.MetaModifier):
-            return False                 # Ctrl+Z & co. stay the app's
+            return event.key() == Qt.Key_R   # Ctrl+R: loop cut
         return event.key() in _KEYS
 
     def key_press(self, event):
@@ -760,6 +767,21 @@ class EditSession(QObject):
             elif key == Qt.Key_O:
                 self.toggle_proportional()
                 self._update_xform(x["now"])
+            return True
+        from . import meshedit_tools_ui as tools
+        if key == Qt.Key_R and mods & (Qt.ControlModifier
+                                       | Qt.MetaModifier):
+            tools.loop_cut(self)
+            return True
+        if key == Qt.Key_Escape and self._knife is not None:
+            self._knife = None
+            self.view.update()
+            return True
+        if key == Qt.Key_I:
+            tools.inset(self)
+            return True
+        if key == Qt.Key_K:
+            tools.knife_start(self)
             return True
         if key == Qt.Key_Escape:
             if self._box is not None or self._box_armed:
@@ -807,6 +829,9 @@ class EditSession(QObject):
             else:
                 self.cancel()
             return True
+        if self._knife is not None and button == Qt.LeftButton:
+            from . import meshedit_tools_ui as tools
+            return tools.knife_click(self, pos)
         if button == Qt.RightButton:
             self._press = dict(kind="right", pos=QPointF(pos))
             return False                 # still pans if dragged
@@ -922,6 +947,8 @@ class EditSession(QObject):
 
     def context_menu(self, global_pos):
         """Blender's vertex context menu (right click, or W)."""
+        local = self.view.mapFromGlobal(global_pos)
+        self._menu_at = (local.x(), local.y())   # where Loop cut aims
         menu = QMenu(self.view)
         tr = language.tr
         for text, slot in (
@@ -930,6 +957,13 @@ class EditSession(QObject):
                 (tr("Merge at centre\tM"), self.merge),
                 (tr("Dissolve vertices\tX"), self.dissolve),
                 (tr("Smooth vertices"), self.smooth),
+                (tr("Inset faces\tI"), lambda: _tools().inset(self)),
+                (tr("Loop cut\tCtrl+R"), lambda: _tools().loop_cut(
+                    self, *self._menu_at)),
+                (tr("Knife\tK"), lambda: _tools().knife_start(self)),
+                (tr("Bridge two face regions"),
+                 lambda: _tools().bridge(self)),
+                (tr("Spin faces (horn)"), lambda: _tools().spin(self)),
                 (None, None),
                 (tr("Move\tG"), lambda: self.begin("grab")),
                 (tr("Scale\tS"), lambda: self.begin("scale")),
@@ -1010,6 +1044,7 @@ class EditSession(QObject):
             painter.setPen(pen)
             painter.setBrush(QColor(255, 255, 255, 25))
             painter.drawRect(QRectF(self._box[0], self._box[1]).normalized())
+        _tools().paint_knife(self, painter)
         self._paint_banner(painter)
         painter.restore()
 
@@ -1115,6 +1150,10 @@ class EditPanel(QDialog):
             (tr("Dissolve (X)"), session.dissolve),
             (tr("Smooth"), session.smooth),
             (tr("Move (G)"), lambda: session.begin("grab")),
+            (tr("Inset (I)"), lambda: _tools().inset(session)),
+            (tr("Knife (K)"), lambda: _tools().knife_start(session)),
+            (tr("Bridge"), lambda: _tools().bridge(session)),
+            (tr("Spin (horn)"), lambda: _tools().spin(session)),
         ]
         for k, (text, slot) in enumerate(buttons):
             b = QPushButton(text)

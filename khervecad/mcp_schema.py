@@ -871,7 +871,19 @@ TOOLS = [
             "(those faces pushed out `distance` mm, joined by side walls), "
             "merge (to the centre or `to`), dissolve, smooth (`factor`, "
             "`passes`), split_edge (`edge` [a, b] at `t`: a new vertex), "
-            "poke (a new vertex inside `face`, at `at`). Choose vertices "
+            "poke (a new vertex inside `face`, at `at`). Box-modelling a "
+            "creature from a cube: inset (the chosen faces get a border "
+            "`thickness` mm wide, the inner part pushed `depth` mm — a "
+            "horn's base, an eye socket; `individual` per face), "
+            "loop_cut (`edge` [a, b] of a ring of quads: a new edge loop "
+            "round a limb, `cuts` evenly), knife (split every face the "
+            "plane through `at` with `normal` crosses — or only the "
+            "chosen faces), bridge (two chosen face regions with equal "
+            "rims removed and joined by a tube: a handle, a tunnel, a "
+            "limb joined to a body), spin (the chosen faces extruded "
+            "`steps` times, turned `angle`° about the axis through "
+            "`origin` along `axis`, scaled to `taper` by the end — a "
+            "curving horn, a tusk, a coiled tail). Choose vertices "
             "by `vertices` (indices), `within` (a world box) or `all`. "
             "The solid always stays closed — an edit that would break "
             "it is refused and nothing changes. Each call is one undo "
@@ -885,7 +897,9 @@ TOOLS = [
             "operation": {"type": "string",
                           "enum": ["open", "move", "set", "subdivide",
                                    "extrude", "merge", "dissolve",
-                                   "smooth", "split_edge", "poke"]},
+                                   "smooth", "split_edge", "poke",
+                                   "inset", "loop_cut", "knife", "bridge",
+                                   "spin"]},
             "vertices": {"type": "array", "items": {"type": "integer"},
                          "description": "Vertex indices (from open)."},
             "within": {"type": "object",
@@ -922,6 +936,18 @@ TOOLS = [
                   "description": "split_edge: 0-1 from a (default 0.5)."},
             "face": {"type": "integer",
                      "description": "poke: face index."},
+            "thickness": {"type": "number",
+                          "description": "inset: border width, mm."},
+            "depth": {"type": "number",
+                      "description": "inset: push the inner part, mm."},
+            "individual": {"type": "boolean"},
+            "normal": _vec3("knife: the cutting plane's normal."),
+            "origin": _vec3("spin: a point on the axis, world mm."),
+            "axis": _vec3("spin: the axis direction."),
+            "angle": {"type": "number", "description": "spin: degrees."},
+            "steps": {"type": "integer"},
+            "taper": {"type": "number",
+                      "description": "spin: end size / start size."},
             "at": _vec3("poke: world point on the face (default its "
                         "centre)."),
             "include_points": {"type": "boolean",
