@@ -407,6 +407,20 @@ TIPS = {
          "direction, a region (Only inside), the colour and material."],
         "A mane reads best as locks: 40-80 locks, gathered 0.6-0.8, a "
         "little curl. Use the Fur material for short fur."),
+    "vertex_paint": (
+        "Vertex paint (hand painting)",
+        "Brush colour onto the model by hand — stripes, war paint, "
+        "blood, scars, a pale belly, the dark tip of a tail. Like "
+        "Blender's Vertex Paint.",
+        [_SELECTION + ".",
+         "Click Vertex paint: the paint panel opens and the brush is on "
+         "the 3D view.",
+         "Pick the colour, radius, strength and hardness, then drag over "
+         "the part. Tick Lines to paint a stripe along the drag.",
+         "Strokes are kept in Properties; Undo last stroke takes the "
+         "last drag back."],
+        "Paint first, then Weathering on top: the creases darken over "
+        "your paint too."),
     "symmetry": (
         "Symmetry (mirror copy)",
         "Keeps its contents AND their mirror image: model one arm, one "

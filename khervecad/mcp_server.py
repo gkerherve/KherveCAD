@@ -619,6 +619,12 @@ dense fur on a body: the Fur material on its colour is cheaper; strands \
 for tufts. In code `kcad_hair_strands(count = 1200, length = 40, ...) { \
 head }`.
 
+Creature colour — paint: stripes, war paint, blood, scars, a pale \
+belly are paint_stroke (world points from probe_surface; `to` for a \
+line), never extra solids laid on the skin. Order outermost first: \
+`kcad_weathering(...) kcad_vertex_paint(strokes = [...]) color(...) \
+kcad_displace(...) kcad_sculpt(...) { body }`.
+
 Creature detail — scatter: spikes, warts, scales, barnacles, teeth, \
 eye clusters are ONE scatter, not hand-placed copies. Model the piece at \
 the origin pointing up +Z (base at z = 0), then scatter_on_surface with \

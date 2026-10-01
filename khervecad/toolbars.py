@@ -72,7 +72,7 @@ OPERATION_GROUPS = [
                 "shrinkwrap"]),
     ("character", ["symmetry", "joint", "armature", "shape_keys", "paint",
                    "weathering",
-                   "hair_cap", "hair_strands",
+                   "hair_cap", "hair_strands", "vertex_paint",
                    "cloth"]),
     ("logic", ["for_loop", "while_loop", "if_else", "pattern", "scatter",
                "intersection_for", "let"]),

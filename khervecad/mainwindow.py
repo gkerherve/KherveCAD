@@ -775,6 +775,9 @@ class MainWindow(QMainWindow):
                 self.start_fillet_pick(wrapper)
             elif op == "sculpt":              # now: where to push?
                 self.start_sculpt(wrapper)
+            elif op == "vertex_paint":        # now: where to paint?
+                from . import paint_ui
+                paint_ui.start(self, wrapper)
             elif op == "push_pull":           # now: which faces?
                 from . import faceedit_ui
                 faceedit_ui.start(self, wrapper)

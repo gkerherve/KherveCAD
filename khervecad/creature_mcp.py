@@ -400,3 +400,55 @@ def grow_hair(window, params) -> dict:
     return {"hair": node.id, "name": node.name,
             "strands": int(node.params.get("count", 0)),
             "triangles": len(tris)}
+
+
+# ------------------------------------------------------- vertex paint
+
+def paint_stroke(window, params) -> dict:
+    """Brush colour onto a part: wrap it in vertex_paint (or reuse one)
+    and append strokes given in world mm."""
+    from PyQt5.QtGui import QColor
+    from . import paint_ui
+    from .model import validate
+    model = window.model
+    if params.get("node_id") is None:
+        raise CreatureError("Give 'node_id': the part to paint.")
+    target = _find(model, int(params["node_id"]))
+    if target.type == "vertex_paint":
+        node = target
+    elif target.parent is not None and target.parent.type == "vertex_paint":
+        node = target.parent
+    else:
+        if target.parent is None:
+            raise CreatureError("The document root cannot be painted.")
+        node = model.wrap_nodes([target], "vertex_paint")
+        node.name = "Paint"
+    specs = list(params.get("strokes") or [])
+    if params.get("at") is not None:
+        specs.append({k: params.get(k) for k in
+                      ("at", "to", "radius", "color", "strength",
+                       "hardness")})
+    if params.get("clear"):
+        node.params["strokes"] = []
+    out = []
+    for spec in specs:
+        if not isinstance(spec, dict):
+            raise CreatureError("Each stroke is {at, to, radius, color, "
+                                "strength, hardness}.")
+        at = _vec(spec.get("at"), "at")
+        to = _vec(spec["to"], "to") if spec.get("to") is not None else None
+        q = QColor(str(spec.get("color") or "#b01818"))
+        if not q.isValid():
+            raise CreatureError(f"{spec.get('color')!r} is not a colour.")
+        out.append((at, to, float(spec.get("radius") or 4.0),
+                    (q.red(), q.green(), q.blue()),
+                    float(spec.get("strength", 1.0)),
+                    float(spec.get("hardness", 0.5))))
+    rows = paint_ui.paint_rows(window, node, out)
+    old = [list(r) for r in (node.params.get("strokes") or [])]
+    model.set_param(node, "strokes", old + rows)
+    errors = validate(model.root)
+    if node.id in errors:
+        raise CreatureError(errors[node.id])
+    return {"paint": node.id, "added": len(rows),
+            "strokes": len(node.params["strokes"])}

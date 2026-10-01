@@ -108,6 +108,7 @@ WRAP_TYPES = [
     "pattern", "shell", "sculpt", "decimate", "shrinkwrap", "bevel",
     "remesh", "wireframe", "cloth", "push_pull", "bisect", "weathering",
     "scatter", "displace", "armature", "shape_keys", "hair_strands",
+    "vertex_paint",
 ]
 
 
@@ -897,6 +898,34 @@ TOOLS = [
             "clear_angle": {"type": "number"},
             "seed": {"type": "integer"},
             "color": {"type": "string"}, "material": {"type": "string"},
+        }, ["node_id"]),
+    },
+    {
+        "name": "paint_stroke",
+        "description": (
+            "Brush colour onto a part by hand — Blender's Vertex Paint: "
+            "stripes, war paint, blood, scars, a pale belly, the dark "
+            "tip of a tail, spots placed where you want them (weathering "
+            "colours by shape; this is your own brush). `node_id` is the "
+            "part (wrapped in vertex_paint, keeping its own colour "
+            "underneath) or a vertex_paint node. A stroke is {at, to, "
+            "radius, color, strength 0-1, hardness 0-1} in WORLD mm — "
+            "`to` makes it a line (a stripe, a scar), without it a dab; "
+            "points from probe_surface or sample_surface. Several in "
+            "`strokes` land as one undo step; later strokes paint over "
+            "earlier ones; `clear` wipes the old ones first. Put "
+            "weathering OUTSIDE it to dirty the paint too."
+        ),
+        "input_schema": _obj({
+            "node_id": _ID,
+            "at": _vec3("Dab centre / line start, world mm."),
+            "to": _vec3("Line end, world mm."),
+            "radius": {"type": "number"},
+            "color": {"type": "string"},
+            "strength": {"type": "number"},
+            "hardness": {"type": "number"},
+            "strokes": {"type": "array", "items": {"type": "object"}},
+            "clear": {"type": "boolean"},
         }, ["node_id"]),
     },
     {
