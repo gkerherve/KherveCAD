@@ -133,3 +133,100 @@ def scatter_on_surface(window, params) -> dict:
                      "Fewer were placed than asked when the surface is "
                      "full at that spacing.")
             if len(mats) < int(node.params.get("count", 0)) else ""}
+
+
+# ----------------------------------------------------------- armature
+
+def _armature_of(model, node):
+    if node.type == "armature":
+        return node
+    return next((n for n in node.walk() if n.type == "armature"), None)
+
+
+def rig_armature(window, params) -> dict:
+    """Give a part an armature (or change one): bones in WORLD mm,
+    automatic weights, an optional pose."""
+    from . import armature
+    from .model import validate
+    model = window.model
+    if params.get("node_id") is None:
+        raise CreatureError("Give 'node_id': the body to rig (a sculpt, "
+                            "blend, mesh — or an armature to change).")
+    target = _find(model, int(params["node_id"]))
+    node = _armature_of(model, target)
+    if node is None:
+        if target.parent is None:
+            raise CreatureError("The document root cannot be rigged.")
+        node = model.wrap_nodes([target], "armature")
+        node.name = str(params.get("name") or "Armature")
+    stop = _scope(window)
+    if params.get("from_skin") is not None:
+        skin_node = _find(model, int(params["from_skin"]))
+        if skin_node.type != "skin":
+            raise CreatureError(f"'{skin_node.name}' is not a skin node.")
+        node.params["bones"] = armature.bones_from_skin(
+            skin_node.params.get("nodes") or [])
+    if params.get("bones") is not None:
+        rows = []
+        for b in params["bones"]:
+            if not isinstance(b, dict) or not b.get("name"):
+                raise CreatureError("Each bone is {name, parent, head: "
+                                    "[x, y, z], tail: [x, y, z]} in world "
+                                    "mm.")
+            head, tail = to_local(node, [_vec(b.get("head"), "head"),
+                                         _vec(b.get("tail"), "tail")], stop)
+            rows.append([str(b["name"]), str(b.get("parent") or "")]
+                        + head + tail)
+        node.params["bones"] = rows
+    for key in ("falloff", "smooth", "detail"):
+        if params.get(key) is not None:
+            node.params[key] = params[key]
+    if params.get("pose") is not None:
+        set_armature_pose(node, params["pose"])
+    model.node_changed.emit(node)
+    errors = validate(model.root)
+    if node.id in errors:
+        raise CreatureError(errors[node.id])
+    return armature_report(node)
+
+
+def set_armature_pose(node, wanted):
+    """Merge {bone: {rx, ry, rz}} into the armature's pose rows."""
+    from . import armature
+    if not isinstance(wanted, dict):
+        raise CreatureError("'pose' is {\"<bone>\": {\"rx\": deg, \"ry\": "
+                            "deg, \"rz\": deg}}.")
+    names = [str(r[0]) for r in node.params.get("bones") or []
+             if isinstance(r, list) and r]
+    rows = armature.parse_pose(node.params.get("pose"))
+    for name, angles in wanted.items():
+        if name not in names:
+            raise CreatureError(f"No bone named {name!r}. Bones: "
+                                f"{', '.join(names) or 'none'}.")
+        if not isinstance(angles, dict) or set(angles) - {"rx", "ry", "rz"}:
+            raise CreatureError(f"The pose for {name} is an object of rx / "
+                                "ry / rz degrees.")
+        current = rows.get(name, [0.0, 0.0, 0.0])
+        for axis, value in angles.items():
+            try:
+                current["rx ry rz".split().index(axis)] = float(value)
+            except (TypeError, ValueError):
+                raise CreatureError(f"{name}.{axis} must be a number.")
+        rows[name] = current
+    node.params["pose"] = [[n] + a for n, a in rows.items() if any(a)]
+
+
+def armature_report(node) -> dict:
+    return {"armature": node.id, "name": node.name,
+            "bones": [{"name": r[0], "parent": r[1], "head": r[2:5],
+                       "tail": r[5:8]}
+                      for r in node.params.get("bones") or []
+                      if isinstance(r, list) and len(r) == 8],
+            "pose": node.params.get("pose") or [],
+            "note": ("Bones are in the part's own frame. A pose turns a "
+                     "bone about its head in the part's axes (rx, ry, rz "
+                     "like rotate([x, y, z])) and carries every bone below "
+                     "it; the skin follows by automatic weights. Name bones "
+                     "Head, Tail, Left wing, Front left leg … and "
+                     "send_to_planetcraft walks it. reach (IK) takes a bone "
+                     "name as its effector.")}

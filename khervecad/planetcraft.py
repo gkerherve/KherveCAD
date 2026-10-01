@@ -202,6 +202,49 @@ def _body_without(root, parts):
             n.visible = v
 
 
+class _BonePart:
+    """Stands in for a named node when a part comes from an armature's
+    bone (the creature's parts are keyed by node)."""
+
+    def __init__(self, name):
+        self.name = name
+
+
+def _rigged_parts(root):
+    """``(armature node, body triangles, {(part, role): triangles})``
+    when *root* holds a visible armature whose bones are named like
+    parts (Head, Tail, Left wing, Front left leg …): every triangle goes
+    with its strongest bone, so a rigged monster arrives as the game's
+    walking parts. None when there is no such armature."""
+    from . import armature
+    rig = next((n for n in root.walk() if n.type == "armature"
+                and n.visible), None)
+    if rig is None:
+        return None
+    try:
+        tris, owners = armature.node_parts(rig)
+    except Exception:
+        return None
+    roles = {b: role_of(b) for b in set(owners) if b}
+    if not any(roles.values()):
+        return None
+    m = mesh.ancestor_matrix(rig, stop=None)
+    colour = _inherited(rig) or next(
+        (_rgb(n.params.get("color")) for n in rig.walk()
+         if n.type == "color"), None) or DEFAULT_COLOUR
+    body, groups, keys = [], {}, {}
+    for tri, bone in zip(tris, owners):
+        placed = tuple(tuple(mesh.mat_apply(m, p)) for p in tri)
+        role = roles.get(bone)
+        if not role:
+            body.append((placed, colour))
+            continue
+        # every bone of one leg / the tail / the head joins one part
+        key = keys.setdefault(role, (_BonePart(bone), role))
+        groups.setdefault(key, []).append((placed, colour))
+    return rig, body, groups
+
+
 def _bbox(tris):
     xs = [p[0] for t, _c in tris for p in t]
     ys = [p[1] for t, _c in tris for p in t]
@@ -308,9 +351,15 @@ def build_creature(model, name, node=None, height=None, speed=None,
             f"{nature!r} is not a nature; use one of {', '.join(NATURES)}.")
     root = node or model.root
     named = _named_parts(root)
-    body = _body_without(root, named) if named else _coloured_world(
-        root, root, DEFAULT_COLOUR)
-    groups = {}
+    rigged = _rigged_parts(root) if not named else None
+    if rigged is not None:
+        rig, body_rig, rig_groups = rigged
+        body = _body_without(root, [(rig, None)]) + body_rig
+        groups = rig_groups
+    else:
+        body = _body_without(root, named) if named else _coloured_world(
+            root, root, DEFAULT_COLOUR)
+        groups = {}
     for n, r in named:
         groups.setdefault((n, r), _coloured_world(
             n, root, _inherited(n) or DEFAULT_COLOUR))

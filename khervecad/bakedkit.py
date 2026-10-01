@@ -269,9 +269,9 @@ def num(node, env, key, default=0.0):
     return mesh.rv(node.params.get(key, default), env, default)
 
 
-def rows(node, env, key, width=None):
+def rows(node, env, key, width=None, names=()):
     """A rows parameter with every numeric cell resolved (strings that
-    are not expressions — names — kept)."""
+    are not expressions — and the *names* columns — kept as text)."""
     from . import expr, mesh
     out = []
     for row in node.params.get(key) or []:
@@ -280,8 +280,10 @@ def rows(node, env, key, width=None):
                                           else (width,))):
             continue
         cells = []
-        for v in row:
-            if isinstance(v, str):
+        for i, v in enumerate(row):
+            if i in names:
+                cells.append(str(v))
+            elif isinstance(v, str):
                 try:
                     cells.append(float(expr.evaluate(v, env)))
                 except Exception:

@@ -1329,6 +1329,19 @@ class McpToolExecutor:
         from . import human
         if params.get("node_id") is None:
             raise ToolError("Posing a human figure needs its node_id.")
+        target = self._node(params["node_id"])
+        rig = next((n for n in target.walk() if n.type == "armature"),
+                   None)
+        if rig is not None and not any(n.type == "human"
+                                       for n in target.walk()):
+            from . import creature_mcp
+            try:
+                if params.get("bones"):
+                    creature_mcp.set_armature_pose(rig, params["bones"])
+                    self._model.node_changed.emit(rig)
+                return creature_mcp.armature_report(rig)
+            except creature_mcp.CreatureError as exc:
+                raise ToolError(str(exc))
         node = self._human_node(self._node(params["node_id"]))
         bones = human.skeleton()["bones"]
         wanted = params.get("bones")
@@ -2891,6 +2904,13 @@ class McpToolExecutor:
         from . import creature_mcp
         try:
             return creature_mcp.scatter_on_surface(self._w, params)
+        except creature_mcp.CreatureError as exc:
+            raise ToolError(str(exc))
+
+    def _t_rig_armature(self, params) -> dict:
+        from . import creature_mcp
+        try:
+            return creature_mcp.rig_armature(self._w, params)
         except creature_mcp.CreatureError as exc:
             raise ToolError(str(exc))
 

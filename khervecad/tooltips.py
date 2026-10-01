@@ -350,6 +350,21 @@ TIPS = {
          "them smaller towards the ends."],
         "Edit the piece and every copy follows. Sink a little so no gap "
         "shows under a copy on a curved body."),
+    "armature": (
+        "Armature (bones, auto weights)",
+        "Gives any body bones so it BENDS — a sculpted or blended "
+        "monster is one skin, and joints only turn rigid pieces. Like "
+        "Blender's armature with automatic weights.",
+        [_SELECTION + " (the whole body).",
+         "Click Armature, then add bones in Properties: a name, the bone "
+         "it hangs from, and its head and tail (mm) — a chain down each "
+         "limb, the spine, the neck and the tail, heads at the joints.",
+         "Pose rows turn a bone about its head (rx, ry, rz) and carry "
+         "everything below it; the skin follows smoothly.",
+         "Falloff makes joints stiffer or softer; smoothing passes make "
+         "the bend a sleeve instead of a crease."],
+        "Name bones Head, Tail, Left wing, Front left leg… and Send to "
+        "PlanetCraft walks the creature by its bones."),
     "symmetry": (
         "Symmetry (mirror copy)",
         "Keeps its contents AND their mirror image: model one arm, one "

@@ -578,6 +578,15 @@ OUTSIDE the sculpt and INSIDE color/weathering: `kcad_weathering(...) \
 color(...) kcad_displace(...) kcad_sculpt(...) kcad_blend(...) {...}` — \
 weathering then darkens every groove by itself.
 
+Creature rig — armature: to POSE a sculpted/blended creature (one \
+skin), never cut it into joint pieces: rig_armature with bones in world \
+mm ([{name, parent, head, tail}] — spine, neck, Head, each leg as 2-3 \
+bones, Tail as 2-4), then set_pose (node_id + bones) or reach (IK, a \
+bone name as effector). In code: `kcad_armature(bones = [["spine", "", \
+x, y, z, x, y, z], ["Head", "spine", ...]], pose = [["Head", 0, 20, \
+0]]) { body }`, OUTSIDE the sculpt/displace and inside the colour. Bone \
+names Head / Tail / Left wing / Front left leg make PlanetCraft walk it.
+
 Creature detail — scatter: spikes, warts, scales, barnacles, teeth, \
 eye clusters are ONE scatter, not hand-placed copies. Model the piece at \
 the origin pointing up +Z (base at z = 0), then scatter_on_surface with \

@@ -373,8 +373,17 @@ def reach(model, node, target, effector=None, chain=None, point=None,
     right_foot / head or a bone) or a part inside `joint` nodes (the
     effector is the part itself, *point* in its own frame, *chain* the
     number of joints to use)."""
+    from .armature import ArmatureRig, armature_in
     person = human_in(node)
-    if person is not None and not in_joint(node):
+    rigged = armature_in(node)
+    if rigged is not None and person is None and not in_joint(node):
+        rig = ArmatureRig(rigged, effector or "", chain, env)
+        res = solve(rig, target)
+        model.set_param(rigged, "pose", rig.pose_rows(res["angles"]))
+        posed = {b: [round(v, 2) for v in a]
+                 for b, a in res["angles"].items()}
+        kind = "armature"
+    elif person is not None and not in_joint(node):
         rig = HumanRig(person, effector or "left_hand", chain, env)
         res = solve(rig, target)
         model.set_param(person, "pose", rig.pose_rows(res["angles"]))

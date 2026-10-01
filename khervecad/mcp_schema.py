@@ -107,7 +107,7 @@ WRAP_TYPES = [
     "section_loft", "blend", "bend", "twist", "taper", "lattice", "subdivide",
     "pattern", "shell", "sculpt", "decimate", "shrinkwrap", "bevel",
     "remesh", "wireframe", "cloth", "push_pull", "bisect", "weathering",
-    "scatter", "displace",
+    "scatter", "displace", "armature",
 ]
 
 
@@ -790,6 +790,43 @@ TOOLS = [
         }),
     },
     {
+        "name": "rig_armature",
+        "description": (
+            "Give ANY body bones so it bends — Blender's armature with "
+            "automatic weights. A sculpted or blended monster is one skin: "
+            "joints only turn rigid pieces, an armature bends it at the "
+            "elbow. `node_id` is the body (it is wrapped in an armature) "
+            "or an armature to change. `bones`: [{name, parent, head: [x, "
+            "y, z], tail: [x, y, z]}] in WORLD mm — a chain down each "
+            "limb, the spine, the neck, the tail, heads at the joints; "
+            "every vertex is bound to the bones nearest it and the "
+            "weights are smoothed so joints bend as sleeves (`falloff` "
+            "higher = stiffer, `smooth` passes, `detail` mm refines a "
+            "coarse mesh first). `pose`: {bone: {rx, ry, rz}} degrees "
+            "about the bone's head in the part's axes, carried to every "
+            "bone below it. `from_skin` takes the bones from a skin "
+            "node's skeleton. Afterwards set_pose (node_id + bones) poses "
+            "it and reach (IK) moves a bone's tip to a point. Name bones "
+            "Head, Tail, Left wing, Front left leg … and "
+            "send_to_planetcraft cuts the body into the game's walking "
+            "parts by bone."
+        ),
+        "input_schema": _obj({
+            "node_id": _ID,
+            "name": {"type": "string"},
+            "bones": {"type": "array", "items": {"type": "object"},
+                      "description": "[{name, parent, head, tail}] world "
+                                     "mm."},
+            "pose": {"type": "object",
+                     "description": "{bone: {rx, ry, rz}} degrees."},
+            "from_skin": dict(_ID, description="A skin node: one bone per "
+                                               "skeleton edge."),
+            "falloff": {"type": "number"},
+            "smooth": {"type": "integer"},
+            "detail": {"type": "number"},
+        }, ["node_id"]),
+    },
+    {
         "name": "edit_mesh",
         "description": (
             "Edit a part vertex by vertex — Blender's Edit Mode (the user "
@@ -1100,8 +1137,9 @@ TOOLS = [
                                "axis left out keeps its angle.",
             },
             "node_id": dict(_ID, description=(
-                "A human figure (or the Object holding it): pose its "
-                "rig with `bones` instead of joint nodes.")),
+                "A human figure or an armature (or the Object holding "
+                "it): pose its rig with `bones` instead of joint "
+                "nodes.")),
             "bones": {
                 "type": "object",
                 "description": "For a human figure: {\"<bone>\": {\"rx\": "
