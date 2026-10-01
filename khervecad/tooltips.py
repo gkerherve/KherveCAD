@@ -318,6 +318,20 @@ TIPS = {
          "darker nose)."],
         "Sculpt creases and ridges first (Sculpt ▸ Crease / Ridge): "
         "weathering darkens every wrinkle by itself."),
+    "displace": (
+        "Displace (scales, cracks, warts)",
+        "Gives a surface real skin: every vertex moves along its normal "
+        "by a pattern — round scales, overlapping shingles, cracks, "
+        "warts, chitin plates, ridged wrinkles, lumpy noise or a "
+        "greyscale picture. Like Blender's Displace modifier.",
+        [_SELECTION + " (a sculpt, a blend, a body).",
+         "Click Displace, then pick the pattern in Properties.",
+         "Pattern size is how big one scale or wart is; height how far "
+         "it stands out (negative carves it in — cracks).",
+         "Within keeps it to a region (a belly, a back), fading out at "
+         "the edges; Shingles overlap towards the axis you choose."],
+        "The surface is refined first to an eighth of the pattern size; "
+        "set Refine to edge coarser if the part gets slow."),
     "scatter": (
         "Scatter on surface",
         "Copies one piece over a surface — spikes down a spine, warts, "

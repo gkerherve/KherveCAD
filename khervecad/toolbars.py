@@ -68,7 +68,7 @@ OPERATION_GROUPS = [
                 "minkowski"]),
     ("deform", ["blend", "bend", "twist", "taper", "lattice",
                 "subdivide", "decimate", "remesh", "wireframe", "shell",
-                "sculpt",
+                "sculpt", "displace",
                 "shrinkwrap"]),
     ("character", ["symmetry", "joint", "paint", "weathering", "hair_cap",
                    "cloth"]),

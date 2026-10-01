@@ -328,6 +328,24 @@ def value_noise(points, scale: float, seed: int = 1, octaves: int = 3):
 
 # ----------------------------------------------------------- numpy path
 
+def weld(arr, digits: int = 6):
+    """``(unique points, inverse)`` of the (N, 3) array *arr* after
+    rounding to *digits* — np.unique(axis=0) without its slow row
+    comparison: integer keys, one lexsort, a diff."""
+    np = _np
+    keys = np.round(arr * 10.0 ** digits).astype(np.int64)
+    order = np.lexsort((keys[:, 2], keys[:, 1], keys[:, 0]))
+    ordered = keys[order]
+    new = np.ones(len(ordered), dtype=bool)
+    if len(ordered) > 1:
+        new[1:] = np.any(ordered[1:] != ordered[:-1], axis=1)
+    group = np.cumsum(new) - 1
+    inverse = np.empty(len(arr), dtype=np.int64)
+    inverse[order] = group
+    uniq = ordered[new].astype(np.float64) / 10.0 ** digits
+    return uniq, inverse
+
+
 class _Fast:
     """The welded mesh as numpy arrays: what the Python Mesh is, with
     every brush applied to all vertices at once."""
@@ -335,8 +353,7 @@ class _Fast:
     def __init__(self, tris):
         np = _np
         arr = np.asarray(tris, dtype=np.float64).reshape(-1, 3)
-        keys = np.round(arr, 6)
-        uniq, inverse = np.unique(keys, axis=0, return_inverse=True)
+        uniq, inverse = weld(arr)
         faces = inverse.reshape(-1, 3)
         ok = ((faces[:, 0] != faces[:, 1]) & (faces[:, 1] != faces[:, 2])
               & (faces[:, 0] != faces[:, 2]))
@@ -345,7 +362,9 @@ class _Fast:
         edges = np.concatenate([self.faces[:, [0, 1]], self.faces[:, [1, 2]],
                                 self.faces[:, [2, 0]]])
         edges = np.sort(edges, axis=1)
-        edges = np.unique(edges, axis=0)
+        n = max(len(self.verts), 1)
+        key = np.unique(edges[:, 0].astype(np.int64) * n + edges[:, 1])
+        edges = np.stack([key // n, key % n], axis=1)
         self.edges = edges
         self.degree = np.bincount(edges.ravel(), minlength=len(self.verts))
         self._normals = None

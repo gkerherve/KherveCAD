@@ -564,6 +564,20 @@ age spots (`spots` 0-1) and tints (a red eye rim, a darker nose). Use \
 it on skin, leather, stone, rust; the preview and pictures show it, \
 OpenSCAD's own render is one colour.
 
+Creature skin — displace: real scales, cracked hide, warts, chitin \
+plates, wrinkled skin are a DISPLACE round the body, not painted \
+colour: `kcad_displace(pattern = "scales", strength = 0.8, scale = 5) \
+{ body }` — patterns scales (round plates + grooves), shingles \
+(overlapping toward `axis`, e.g. "-x" for a fish swimming +x), cracks \
+(use a negative strength), warts (`density` 0-1), chitin (flat plates, \
+bevelled seams), ridges (wrinkles), noise (lumps), image (a greyscale \
+picture on a plane). `scale` is one scale/wart in mm, `strength` its \
+height, `within` [[x,y,z],[x,y,z]] a region (a belly of finer scales, a \
+back of plates — stack two displaces with different regions). Put it \
+OUTSIDE the sculpt and INSIDE color/weathering: `kcad_weathering(...) \
+color(...) kcad_displace(...) kcad_sculpt(...) kcad_blend(...) {...}` — \
+weathering then darkens every groove by itself.
+
 Creature detail — scatter: spikes, warts, scales, barnacles, teeth, \
 eye clusters are ONE scatter, not hand-placed copies. Model the piece at \
 the origin pointing up +Z (base at z = 0), then scatter_on_surface with \

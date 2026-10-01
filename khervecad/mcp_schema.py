@@ -105,7 +105,7 @@ WRAP_TYPES = [
     "section_loft", "blend", "bend", "twist", "taper", "lattice", "subdivide",
     "pattern", "shell", "sculpt", "decimate", "shrinkwrap", "bevel",
     "remesh", "wireframe", "cloth", "push_pull", "bisect", "weathering",
-    "scatter",
+    "scatter", "displace",
 ]
 
 
