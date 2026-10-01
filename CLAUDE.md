@@ -3172,6 +3172,59 @@ into a new module and import.
                        `kcad_weathering(...) { children }` renders the
                        children unchanged in OpenSCAD. Tested in
                        `tests/test_weathering.py`.
+  - **Creature toolset** (2026-10-01, the user: "get all of that so
+                       creatures, monsters could be done on KherveCAD",
+                       from a Blender comparison). Ten tools, each a node
+                       + OpenSCAD code + MCP tool:
+                       (1) sculpt by DRAG (`sculpt_ui.SculptTool` is a
+                       `View3D.edit_tool`: dabs along the mouse, grab /
+                       elastic / snake hook pull on the plane facing the
+                       camera, pose = click the joint then swing, Shift
+                       smooths, [ ] size) and seven brushes in
+                       `sculpt_brushes.py` (kinds 7-13: snake_hook — pulls
+                       in steps and refines the stretched skin, so it
+                       REPLACES the _Fast mesh —, draw, clay_strips,
+                       layer, elastic_grab (Kelvinlet), pose (12-value
+                       rows + the limb's tip; the limb is the vertices
+                       joined to the tip without crossing back past the
+                       joint), mask (`_Fast.mask` weighs later strokes)).
+                       `sculpt.weld` replaced np.unique(axis=0) (3.4x).
+                       (2) `scatter.py`: copies of child 0 over the rest,
+                       by area + spacing (hash grid) or along a `path`;
+                       placements baked as matrices into `kcad_scatter`,
+                       whose helper is a real multmatrix loop.
+                       (3) `displace.py`: Voronoi scales / shingles /
+                       cracks / warts / chitin / ridges / noise / image
+                       along the normals, refined to scale/8 under
+                       MAX_TRIS. (4) creature shader surfaces
+                       (`glrender` ids 34-39: Scales, Reptile, Fur,
+                       Feathers, Chitin, Slime; TRIPLANAR `creature()`).
+                       (5) `armature.py`: bones [name, parent, head,
+                       tail], auto weights (inverse distance to the bone
+                       segment, 4 strongest, smoothed over edges), LBS,
+                       posed like the human rig; `ArmatureRig` for
+                       ik.reach; planetcraft `_rigged_parts` cuts a
+                       rigged body by bone name. (6) `shapekeys.py`:
+                       keys = sculpt strokes, displacement cached per key,
+                       value may be a variable (MCP `slider` makes a
+                       0-1 Customizer one). (7) `meshedit_more.py` +
+                       `meshedit_tools_ui.py`: inset (I), loop cut
+                       (Ctrl+R), knife (K), bridge, spin. (8)
+                       `strands.py`: hair as closed tapered tubes
+                       (gravity, curl, clumps, comb). (9) `skin.py`: a
+                       skeleton of round cones, smooth-min, marching
+                       tets; pose regrows the body. (10) `vpaint.py` +
+                       `paint_ui.py`: hand-painted dabs / lines.
+                       `bakedkit.py` is the shared table for BAKED
+                       feature nodes (codegen with points/faces welded
+                       only when asked, importer, loop/inexact
+                       validation, content cache; every kit type is
+                       COLORED so features.tess never caches it by
+                       params). MCP bodies live in `creature_mcp.py`:
+                       scatter_on_surface, rig_armature, shape_key,
+                       grow_hair, paint_stroke (+ sculpt_stroke kinds,
+                       set_pose / reach on armatures, edit_mesh inset /
+                       loop_cut / knife / bridge / spin).
   - `photoreal.py` / `photoreal_ui.py` — **photoreal renders** through
                        Blender Cycles when installed (2026-09-19; nothing
                        bundled — found via KHERVECAD_BLENDER, PATH, the
@@ -4488,7 +4541,7 @@ into a new module and import.
   the variable reaching it only through PLACEMENT, and NEVER into the
   geometry of a part (a cube's size, a gear's teeth, a polygon's
   points) — that re-cuts the solid every frame.
-- `docs/MCP.md` — how to connect an assistant, what the 81 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
