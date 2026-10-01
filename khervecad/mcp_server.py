@@ -584,6 +584,17 @@ OUTSIDE the sculpt and INSIDE color/weathering: `kcad_weathering(...) \
 color(...) kcad_displace(...) kcad_sculpt(...) kcad_blend(...) {...}` — \
 weathering then darkens every groove by itself.
 
+Creature body — skin: the fastest monster body is a SKIN: a stick \
+skeleton grown into one smooth body. `kcad_skin(nodes = [[x, y, z, \
+radius, parent], ...], pose = [[point, rx, ry, rz], ...], smooth = 8, \
+detail = 100);` — rows are skeleton points with the body's thickness \
+there, `parent` the row it joins (-1 for the root): pelvis, spine, \
+chest, neck, head, shoulders → elbows → hands, hips → knees → feet, \
+tail. Joints blend over `smooth` mm. Pose rows bend it and the body is \
+regrown whole. Then sculpt (muscle, brow, snout), displace (scales), \
+scatter (spikes), grow_hair, weathering; rig_armature from_skin when the \
+sculpted body must still pose.
+
 Creature rig — armature: to POSE a sculpted/blended creature (one \
 skin), never cut it into joint pieces: rig_armature with bones in world \
 mm ([{name, parent, head, tail}] — spine, neck, Head, each leg as 2-3 \

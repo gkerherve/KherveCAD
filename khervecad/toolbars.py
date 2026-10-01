@@ -53,7 +53,7 @@ MEASURE_TOOLS = [
 
 #: 3D primitives added with one click.
 PRIMITIVES = ["cube", "sphere", "cylinder", "capsule", "ellipsoid",
-              "rounded_box", "loft"]
+              "rounded_box", "loft", "skin"]
 
 #: the operation families of the horizontal bar, in order (applied to
 #: the selection — Group and the control-flow tools insert an empty

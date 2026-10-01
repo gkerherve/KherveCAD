@@ -186,6 +186,22 @@ TIPS = {
         ["Click to add it.",
          "Set Width, Depth, Height and the Edge radius (0 = sharp)."],
         None),
+    "skin": (
+        "Skin (body round a skeleton)",
+        "Draw a stick skeleton — points with a thickness, each joined to "
+        "its parent — and get one smooth body round it, limbs tapering "
+        "and joints blending like flesh. Like Blender's Skin modifier.",
+        ["Click Skin: a two-point stub appears.",
+         "In Properties, add skeleton rows: a point (x, y, z), the body's "
+         "radius there, and the row it joins to (-1 for the root) — a "
+         "spine, a neck and head, two arms, two legs, a tail.",
+         "Pose rows turn everything beyond a point (rx, ry, rz): the "
+         "body is grown again round the posed skeleton, so it stays "
+         "whole.",
+         "Blend joints over sets how soft armpits and hips are; Detail "
+         "how fine the surface is."],
+        "Then Sculpt it for muscle, Displace for scales — or Armature ▸ "
+        "from the skin's skeleton to pose it after sculpting."),
     "loft": (
         "Loft (tube through sections)",
         "A smooth tube that passes through a list of cross-sections — "
