@@ -81,6 +81,7 @@ SECTIONS = [
         ("Kitchen & tableware", "mdi.silverware-fork-knife",
          ["Kitchen & tableware"]),
         ("Musical instruments", "mdi.music", ["Musical instruments"]),
+        ("Art", "mdi.palette", ["Art"]),
         ("Custom objects", "mdi.shape-plus", ["Custom objects"]),
     ]),
 ]
