@@ -1,0 +1,377 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Keychain tag",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#9a6fd6",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "minkowski",
+            "name": "Minkowski",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 1.04
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 1.16,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "offset",
+                  "name": "Offset",
+                  "visible": true,
+                  "params": {
+                   "radius": 2.4,
+                   "chamfer": false
+                  },
+                  "children": [
+                   {
+                    "type": "rect",
+                    "name": "Rectangle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "width": 42.0,
+                     "height": 12.0
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "union",
+              "name": "pebble [Tag]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "assign",
+                "name": "r =",
+                "visible": true,
+                "params": {
+                 "variable": "r",
+                 "value": "0.8"
+                }
+               },
+               {
+                "type": "hull",
+                "name": "Hull",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "intersection",
+                  "name": "Intersection",
+                  "visible": true,
+                  "params": {},
+                  "children": [
+                   {
+                    "type": "sphere",
+                    "name": "Sphere",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "radius": "r",
+                     "segments": 16
+                    }
+                   },
+                   {
+                    "type": "cube",
+                    "name": "Cube",
+                    "visible": true,
+                    "params": {
+                     "x": "-r",
+                     "y": "-r",
+                     "z": 0.0,
+                     "width": "2 * r",
+                     "depth": "2 * r",
+                     "height": "r",
+                     "center": false
+                    }
+                   }
+                  ]
+                 },
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": "-1.3 * r",
+                   "height": 0.01,
+                   "radius_bottom": 0.05,
+                   "radius_top": 0.05,
+                   "segments": 8,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 2.8
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": 0.9,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "difference",
+                "name": "Difference",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "offset",
+                  "name": "Offset",
+                  "visible": true,
+                  "params": {
+                   "radius": 1.9,
+                   "chamfer": false
+                  },
+                  "children": [
+                   {
+                    "type": "rect",
+                    "name": "Rectangle",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "width": 42.0,
+                     "height": 12.0
+                    }
+                   }
+                  ]
+                 },
+                 {
+                  "type": "offset",
+                  "name": "Offset",
+                  "visible": true,
+                  "params": {
+                   "radius": 1.1,
+                   "chamfer": false
+                  },
+                  "children": [
+                   {
+                    "type": "rect",
+                    "name": "Rectangle [Raised border]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "width": 42.0,
+                     "height": 12.0
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Ring boss]",
+            "visible": true,
+            "params": {
+             "x": 1.5,
+             "y": 6.0,
+             "z": 2.8,
+             "height": 0.9,
+             "radius_bottom": 3.6,
+             "radius_top": 3.6,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 25.0,
+             "y": 6.0,
+             "z": 2.8
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": 1.0,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "offset",
+                "name": "Offset",
+                "visible": true,
+                "params": {
+                 "radius": 0.2,
+                 "chamfer": false
+                },
+                "children": [
+                 {
+                  "type": "text",
+                  "name": "Text [Raised name]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "text": "KHERVE",
+                   "size": 6.0,
+                   "halign": "center",
+                   "valign": "center"
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Key ring hole]",
+          "visible": true,
+          "params": {
+           "x": 1.5,
+           "y": 6.0,
+           "z": -1.0,
+           "height": 6.0,
+           "radius_bottom": 2.5,
+           "radius_top": 2.5,
+           "segments": 48,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

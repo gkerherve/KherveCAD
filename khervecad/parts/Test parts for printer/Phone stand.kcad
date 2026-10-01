@@ -1,0 +1,605 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Phone stand",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#7cc47f",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "minkowski",
+          "name": "Minkowski",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 1.56
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": 67.24,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "offset",
+                "name": "Offset",
+                "visible": true,
+                "params": {
+                 "radius": 0.6,
+                 "chamfer": false
+                },
+                "children": [
+                 {
+                  "type": "offset",
+                  "name": "Offset",
+                  "visible": true,
+                  "params": {
+                   "radius": -1.2,
+                   "chamfer": false
+                  },
+                  "children": [
+                   {
+                    "type": "offset",
+                    "name": "Offset",
+                    "visible": true,
+                    "params": {
+                     "radius": 0.6,
+                     "chamfer": false
+                    },
+                    "children": [
+                     {
+                      "type": "offset",
+                      "name": "Offset",
+                      "visible": true,
+                      "params": {
+                       "radius": -1.2,
+                       "chamfer": false
+                      },
+                      "children": [
+                       {
+                        "type": "polygon",
+                        "name": "Polygon",
+                        "visible": true,
+                        "params": {
+                         "x": 0.0,
+                         "y": 0.0,
+                         "points": [
+                          [
+                           0.0,
+                           0.0
+                          ],
+                          [
+                           80.0,
+                           0.0
+                          ],
+                          [
+                           80.0,
+                           16.0
+                          ],
+                          [
+                           75.0,
+                           16.0
+                          ],
+                          [
+                           75.0,
+                           5.0
+                          ],
+                          [
+                           67.0,
+                           5.0
+                          ],
+                          [
+                           36.0,
+                           72.0
+                          ],
+                          [
+                           28.0,
+                           72.0
+                          ],
+                          [
+                           57.0,
+                           5.0
+                          ],
+                          [
+                           0.0,
+                           5.0
+                          ]
+                         ]
+                        }
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "union",
+            "name": "pebble [Rounded profile, prints on its side]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "assign",
+              "name": "r =",
+              "visible": true,
+              "params": {
+               "variable": "r",
+               "value": "1.2"
+              }
+             },
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "intersection",
+                "name": "Intersection",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "sphere",
+                  "name": "Sphere",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "radius": "r",
+                   "segments": 16
+                  }
+                 },
+                 {
+                  "type": "cube",
+                  "name": "Cube",
+                  "visible": true,
+                  "params": {
+                   "x": "-r",
+                   "y": "-r",
+                   "z": 0.0,
+                   "width": "2 * r",
+                   "depth": "2 * r",
+                   "height": "r",
+                   "center": false
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": "-1.3 * r",
+                 "height": 0.01,
+                 "radius_bottom": 0.05,
+                 "radius_top": 0.05,
+                 "segments": 8,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For s",
+          "visible": true,
+          "params": {
+           "variable": "s",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "20, 36, 52"
+          },
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For z",
+            "visible": true,
+            "params": {
+             "variable": "z",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "17.5, 35, 52.5"
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "62 - 0.4087 * s",
+               "y": "5 + 0.9127 * s",
+               "z": "z"
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 24.12
+                },
+                "children": [
+                 {
+                  "type": "rotate",
+                  "name": "Rotate",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 90.0,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "linear_extrude",
+                    "name": "Linear extrude",
+                    "visible": true,
+                    "params": {
+                     "height": 20.0,
+                     "twist": 0.0,
+                     "scale": 1.0,
+                     "center": true,
+                     "segments": 0
+                    },
+                    "children": [
+                     {
+                      "type": "scale",
+                      "name": "Scale",
+                      "visible": true,
+                      "params": {
+                       "x": 1.25,
+                       "y": 1.0,
+                       "z": 1.0
+                      },
+                      "children": [
+                       {
+                        "type": "rotate",
+                        "name": "Rotate",
+                        "visible": true,
+                        "params": {
+                         "x": 0.0,
+                         "y": 0.0,
+                         "z": 45.0
+                        },
+                        "children": [
+                         {
+                          "type": "rect",
+                          "name": "Rectangle [Diamond windows]",
+                          "visible": true,
+                          "params": {
+                           "x": -3.5,
+                           "y": -3.5,
+                           "width": 7.0,
+                           "height": 7.0
+                          }
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 71.0,
+           "y": 2.5,
+           "z": 35.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": 9.0,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": true,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "hull",
+                "name": "Hull",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "circle",
+                  "name": "Circle",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "radius": 2.2,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 24
+                  }
+                 },
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 3.43,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "rect",
+                    "name": "Rectangle [Cable hole]",
+                    "visible": true,
+                    "params": {
+                     "x": -0.01,
+                     "y": -0.01,
+                     "width": 0.02,
+                     "height": 0.02
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -1.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 90.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": 73.0,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Polygon [Cable channel]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   -1.0,
+                   31.5
+                  ],
+                  [
+                   -1.0,
+                   38.5
+                  ],
+                  [
+                   2.2,
+                   35.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 79.5,
+           "y": 10.5,
+           "z": 35.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "minkowski",
+              "name": "Minkowski",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 0.01,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "text",
+                  "name": "Text",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "text": "KHERVE",
+                   "size": 5.0,
+                   "halign": "center",
+                   "valign": "center"
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Name on the lip]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 1.1,
+                 "radius_bottom": 0.0,
+                 "radius_top": 1.32,
+                 "segments": 8,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,1870 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Benchy-style submarine",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#f5d547",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "intersection",
+              "name": "Intersection",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 4.5
+                },
+                "children": [
+                 {
+                  "type": "hull",
+                  "name": "Hull",
+                  "visible": true,
+                  "params": {},
+                  "children": [
+                   {
+                    "type": "sphere",
+                    "name": "Sphere",
+                    "visible": true,
+                    "params": {
+                     "x": -20.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "radius": 7.0,
+                     "segments": 40
+                    }
+                   },
+                   {
+                    "type": "sphere",
+                    "name": "Sphere",
+                    "visible": true,
+                    "params": {
+                     "x": 12.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "radius": 9.0,
+                     "segments": 40
+                    }
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "cube",
+                "name": "Cube [Hull, flat bottom]",
+                "visible": true,
+                "params": {
+                 "x": -40.0,
+                 "y": -20.0,
+                 "z": 0.0,
+                 "width": 80.0,
+                 "depth": 40.0,
+                 "height": 40.0,
+                 "center": false
+                }
+               }
+              ]
+             },
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cube",
+                "name": "Cube",
+                "visible": true,
+                "params": {
+                 "x": -16.0,
+                 "y": -2.0,
+                 "z": 8.0,
+                 "width": 0.1,
+                 "depth": 4.0,
+                 "height": 5.35,
+                 "center": false
+                }
+               },
+               {
+                "type": "cube",
+                "name": "Cube",
+                "visible": true,
+                "params": {
+                 "x": 11.9,
+                 "y": -2.0,
+                 "z": 8.0,
+                 "width": 0.1,
+                 "depth": 4.0,
+                 "height": 7.1,
+                 "center": false
+                }
+               },
+               {
+                "type": "cube",
+                "name": "Cube [Deck casing]",
+                "visible": true,
+                "params": {
+                 "x": 14.0,
+                 "y": -2.0,
+                 "z": 8.0,
+                 "width": 0.1,
+                 "depth": 4.0,
+                 "height": 6.87,
+                 "center": false
+                }
+               }
+              ]
+             },
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 5.0,
+                 "y": 0.0,
+                 "z": 10.0,
+                 "height": 9.5,
+                 "radius_bottom": 3.2,
+                 "radius_top": 3.2,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": -4.0,
+                 "y": 0.0,
+                 "z": 10.0,
+                 "height": 9.5,
+                 "radius_bottom": 1.4,
+                 "radius_top": 1.4,
+                 "segments": 48,
+                 "center": false
+                }
+               },
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": 5.0,
+                 "y": 0.0,
+                 "z": 19.5
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 1.0,
+                   "y": 1.0,
+                   "z": 0.35
+                  },
+                  "children": [
+                   {
+                    "type": "sphere",
+                    "name": "Sphere",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "radius": 3.2,
+                     "segments": 24
+                    }
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": -4.0,
+                 "y": 0.0,
+                 "z": 19.5
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 1.0,
+                   "y": 1.0,
+                   "z": 0.35
+                  },
+                  "children": [
+                   {
+                    "type": "sphere",
+                    "name": "Sphere [Conning tower]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "radius": 1.4,
+                     "segments": 16
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cube",
+                "name": "Cube",
+                "visible": true,
+                "params": {
+                 "x": 1.0,
+                 "y": -2.4,
+                 "z": 12.5,
+                 "width": 4.0,
+                 "depth": 4.8,
+                 "height": 0.1,
+                 "center": false
+                }
+               },
+               {
+                "type": "cube",
+                "name": "Cube [Sail planes]",
+                "visible": true,
+                "params": {
+                 "x": 1.5,
+                 "y": -6.4,
+                 "z": 16.6,
+                 "width": 3.0,
+                 "depth": 12.8,
+                 "height": 0.6,
+                 "center": false
+                }
+               }
+              ]
+             },
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cube",
+                "name": "Cube",
+                "visible": true,
+                "params": {
+                 "x": 16.0,
+                 "y": -5.0,
+                 "z": 6.0,
+                 "width": 3.0,
+                 "depth": 10.0,
+                 "height": 0.1,
+                 "center": false
+                }
+               },
+               {
+                "type": "cube",
+                "name": "Cube [Bow planes]",
+                "visible": true,
+                "params": {
+                 "x": 16.5,
+                 "y": -9.0,
+                 "z": 10.4,
+                 "width": 2.0,
+                 "depth": 18.0,
+                 "height": 0.6,
+                 "center": false
+                }
+               }
+              ]
+             },
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cube",
+                "name": "Cube",
+                "visible": true,
+                "params": {
+                 "x": -23.0,
+                 "y": -4.5,
+                 "z": 6.0,
+                 "width": 3.0,
+                 "depth": 9.0,
+                 "height": 0.1,
+                 "center": false
+                }
+               },
+               {
+                "type": "cube",
+                "name": "Cube [Stern planes]",
+                "visible": true,
+                "params": {
+                 "x": -22.5,
+                 "y": -8.5,
+                 "z": 10.4,
+                 "width": 2.0,
+                 "depth": 17.0,
+                 "height": 0.6,
+                 "center": false
+                }
+               }
+              ]
+             },
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cube",
+                "name": "Cube",
+                "visible": true,
+                "params": {
+                 "x": -24.0,
+                 "y": -0.7,
+                 "z": 4.0,
+                 "width": 5.0,
+                 "depth": 1.4,
+                 "height": 0.1,
+                 "center": false
+                }
+               },
+               {
+                "type": "cube",
+                "name": "Cube [Rudder]",
+                "visible": true,
+                "params": {
+                 "x": -22.5,
+                 "y": -0.7,
+                 "z": 13.5,
+                 "width": 2.5,
+                 "depth": 1.4,
+                 "height": 0.1,
+                 "center": false
+                }
+               }
+              ]
+             },
+             {
+              "type": "cube",
+              "name": "Cube [Shaft skeg]",
+              "visible": true,
+              "params": {
+               "x": -27.6,
+               "y": -0.6,
+               "z": 0.0,
+               "width": 2.8,
+               "depth": 1.2,
+               "height": 2.0,
+               "center": false
+              }
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -26.2,
+               "y": 0.0,
+               "z": 4.5
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": -90.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "linear_extrude",
+                  "name": "Linear extrude",
+                  "visible": true,
+                  "params": {
+                   "height": 1.2,
+                   "twist": 0.0,
+                   "scale": 1.0,
+                   "center": false,
+                   "segments": 0
+                  },
+                  "children": [
+                   {
+                    "type": "hull",
+                    "name": "Hull",
+                    "visible": true,
+                    "params": {},
+                    "children": [
+                     {
+                      "type": "circle",
+                      "name": "Circle",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "radius": 2.2,
+                       "angle": 360.0,
+                       "start_angle": 0.0,
+                       "segments": 24
+                      }
+                     },
+                     {
+                      "type": "translate",
+                      "name": "Translate",
+                      "visible": true,
+                      "params": {
+                       "x": -3.2,
+                       "y": 0.0,
+                       "z": 0.0
+                      },
+                      "children": [
+                       {
+                        "type": "rect",
+                        "name": "Rectangle [Propeller hub]",
+                        "visible": true,
+                        "params": {
+                         "x": -0.05,
+                         "y": -0.05,
+                         "width": 0.1,
+                         "height": 0.1
+                        }
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -27.4,
+               "y": 0.0,
+               "z": 4.5
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": -90.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Hub cone]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 1.2,
+                   "radius_bottom": 2.2,
+                   "radius_top": 0.8,
+                   "segments": 24,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "intersection",
+              "name": "Intersection",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "union",
+                "name": "Group",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "rx": 0.0,
+                 "ry": 0.0,
+                 "rz": 0.0,
+                 "color": "",
+                 "alpha": 1.0
+                },
+                "children": [
+                 {
+                  "type": "for_loop",
+                  "name": "For a",
+                  "visible": true,
+                  "params": {
+                   "variable": "a",
+                   "start": 0.0,
+                   "end": 4.0,
+                   "step": 1.0,
+                   "values": "30, -30"
+                  },
+                  "children": [
+                   {
+                    "type": "translate",
+                    "name": "Translate",
+                    "visible": true,
+                    "params": {
+                     "x": -27.5,
+                     "y": 0.0,
+                     "z": 4.5
+                    },
+                    "children": [
+                     {
+                      "type": "rotate",
+                      "name": "Rotate",
+                      "visible": true,
+                      "params": {
+                       "x": "a",
+                       "y": 0.0,
+                       "z": 0.0
+                      },
+                      "children": [
+                       {
+                        "type": "hull",
+                        "name": "Hull",
+                        "visible": true,
+                        "params": {},
+                        "children": [
+                         {
+                          "type": "rotate",
+                          "name": "Rotate",
+                          "visible": true,
+                          "params": {
+                           "x": 0.0,
+                           "y": 90.0,
+                           "z": 0.0
+                          },
+                          "children": [
+                           {
+                            "type": "cylinder",
+                            "name": "Cylinder",
+                            "visible": true,
+                            "params": {
+                             "x": 0.0,
+                             "y": 0.0,
+                             "z": 0.0,
+                             "height": 1.0,
+                             "radius_bottom": 1.1,
+                             "radius_top": 1.1,
+                             "segments": 16,
+                             "center": true
+                            }
+                           }
+                          ]
+                         },
+                         {
+                          "type": "translate",
+                          "name": "Translate",
+                          "visible": true,
+                          "params": {
+                           "x": 0.0,
+                           "y": 0.0,
+                           "z": 4.6
+                          },
+                          "children": [
+                           {
+                            "type": "rotate",
+                            "name": "Rotate",
+                            "visible": true,
+                            "params": {
+                             "x": 0.0,
+                             "y": 90.0,
+                             "z": 0.0
+                            },
+                            "children": [
+                             {
+                              "type": "cylinder",
+                              "name": "Cylinder",
+                              "visible": true,
+                              "params": {
+                               "x": 0.0,
+                               "y": 0.0,
+                               "z": 0.0,
+                               "height": 1.0,
+                               "radius_bottom": 0.7,
+                               "radius_top": 0.7,
+                               "segments": 16,
+                               "center": true
+                              }
+                             }
+                            ]
+                           }
+                          ]
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "for_loop",
+                  "name": "For a",
+                  "visible": true,
+                  "params": {
+                   "variable": "a",
+                   "start": 0.0,
+                   "end": 4.0,
+                   "step": 1.0,
+                   "values": "150, -150"
+                  },
+                  "children": [
+                   {
+                    "type": "translate",
+                    "name": "Translate",
+                    "visible": true,
+                    "params": {
+                     "x": -27.5,
+                     "y": 0.0,
+                     "z": 4.5
+                    },
+                    "children": [
+                     {
+                      "type": "rotate",
+                      "name": "Rotate",
+                      "visible": true,
+                      "params": {
+                       "x": "a",
+                       "y": 0.0,
+                       "z": 0.0
+                      },
+                      "children": [
+                       {
+                        "type": "hull",
+                        "name": "Hull",
+                        "visible": true,
+                        "params": {},
+                        "children": [
+                         {
+                          "type": "rotate",
+                          "name": "Rotate",
+                          "visible": true,
+                          "params": {
+                           "x": 0.0,
+                           "y": 90.0,
+                           "z": 0.0
+                          },
+                          "children": [
+                           {
+                            "type": "cylinder",
+                            "name": "Cylinder",
+                            "visible": true,
+                            "params": {
+                             "x": 0.0,
+                             "y": 0.0,
+                             "z": 0.0,
+                             "height": 1.0,
+                             "radius_bottom": 1.1,
+                             "radius_top": 1.1,
+                             "segments": 16,
+                             "center": true
+                            }
+                           }
+                          ]
+                         },
+                         {
+                          "type": "translate",
+                          "name": "Translate",
+                          "visible": true,
+                          "params": {
+                           "x": 0.0,
+                           "y": 0.0,
+                           "z": 6.2
+                          },
+                          "children": [
+                           {
+                            "type": "rotate",
+                            "name": "Rotate",
+                            "visible": true,
+                            "params": {
+                             "x": 0.0,
+                             "y": 90.0,
+                             "z": 0.0
+                            },
+                            "children": [
+                             {
+                              "type": "cylinder",
+                              "name": "Cylinder",
+                              "visible": true,
+                              "params": {
+                               "x": 0.0,
+                               "y": 0.0,
+                               "z": 0.0,
+                               "height": 1.0,
+                               "radius_bottom": 0.7,
+                               "radius_top": 0.7,
+                               "segments": 16,
+                               "center": true
+                              }
+                             }
+                            ]
+                           }
+                          ]
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "cube",
+                "name": "Cube [Propeller blades]",
+                "visible": true,
+                "params": {
+                 "x": -35.0,
+                 "y": -10.0,
+                 "z": 0.0,
+                 "width": 10.0,
+                 "depth": 20.0,
+                 "height": 20.0,
+                 "center": false
+                }
+               }
+              ]
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Periscope]",
+              "visible": true,
+              "params": {
+               "x": 1.5,
+               "y": 0.0,
+               "z": 19.0,
+               "height": 7.5,
+               "radius_bottom": 0.7,
+               "radius_top": 0.7,
+               "segments": 16,
+               "center": false
+              }
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 1.5,
+               "y": 0.0,
+               "z": 26.5
+              },
+              "children": [
+               {
+                "type": "hull",
+                "name": "Hull",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.1,
+                   "radius_bottom": 0.7,
+                   "radius_top": 0.7,
+                   "segments": 16,
+                   "center": false
+                  }
+                 },
+                 {
+                  "type": "sphere",
+                  "name": "Sphere [Periscope head]",
+                  "visible": true,
+                  "params": {
+                   "x": 2.0,
+                   "y": 0.0,
+                   "z": 3.0,
+                   "radius": 0.7,
+                   "segments": 16
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Snorkel]",
+              "visible": true,
+              "params": {
+               "x": 4.5,
+               "y": 0.0,
+               "z": 19.0,
+               "height": 5.0,
+               "radius_bottom": 0.8,
+               "radius_top": 0.8,
+               "segments": 16,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Snorkel cap]",
+              "visible": true,
+              "params": {
+               "x": 4.5,
+               "y": 0.0,
+               "z": 23.95,
+               "height": 0.85,
+               "radius_bottom": 0.8,
+               "radius_top": 0.3,
+               "segments": 16,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Antenna]",
+              "visible": true,
+              "params": {
+               "x": -2.5,
+               "y": 0.0,
+               "z": 19.0,
+               "height": 6.0,
+               "radius_bottom": 0.4,
+               "radius_top": 0.4,
+               "segments": 12,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Antenna tip]",
+              "visible": true,
+              "params": {
+               "x": -2.5,
+               "y": 0.0,
+               "z": 24.95,
+               "height": 0.55,
+               "radius_bottom": 0.4,
+               "radius_top": 0.15,
+               "segments": 12,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For x",
+            "visible": true,
+            "params": {
+             "variable": "x",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "-14, -5, 5, 14"
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "x",
+               "y": 0.0,
+               "z": 6.0
+              },
+              "children": [
+               {
+                "type": "union",
+                "name": "tport [Portholes]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "rx": 0.0,
+                 "ry": 0.0,
+                 "rz": 0.0,
+                 "color": "",
+                 "alpha": 1.0
+                },
+                "children": [
+                 {
+                  "type": "assign",
+                  "name": "r =",
+                  "visible": true,
+                  "params": {
+                   "variable": "r",
+                   "value": "1.6"
+                  }
+                 },
+                 {
+                  "type": "assign",
+                  "name": "len =",
+                  "visible": true,
+                  "params": {
+                   "variable": "len",
+                   "value": "40"
+                  }
+                 },
+                 {
+                  "type": "rotate",
+                  "name": "Rotate",
+                  "visible": true,
+                  "params": {
+                   "x": 90.0,
+                   "y": 0.0,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "linear_extrude",
+                    "name": "Linear extrude",
+                    "visible": true,
+                    "params": {
+                     "height": "len",
+                     "twist": 0.0,
+                     "scale": 1.0,
+                     "center": true,
+                     "segments": 0
+                    },
+                    "children": [
+                     {
+                      "type": "hull",
+                      "name": "Hull",
+                      "visible": true,
+                      "params": {},
+                      "children": [
+                       {
+                        "type": "circle",
+                        "name": "Circle",
+                        "visible": true,
+                        "params": {
+                         "x": 0.0,
+                         "y": 0.0,
+                         "radius": "r",
+                         "angle": 360.0,
+                         "start_angle": 0.0,
+                         "segments": 24
+                        }
+                       },
+                       {
+                        "type": "translate",
+                        "name": "Translate",
+                        "visible": true,
+                        "params": {
+                         "x": 0.0,
+                         "y": "1.56 * r",
+                         "z": 0.0
+                        },
+                        "children": [
+                         {
+                          "type": "rect",
+                          "name": "Rectangle",
+                          "visible": true,
+                          "params": {
+                           "x": -0.01,
+                           "y": -0.01,
+                           "width": 0.02,
+                           "height": 0.02
+                          }
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For y",
+            "visible": true,
+            "params": {
+             "variable": "y",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "-3, 3"
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 20.0,
+               "y": "y",
+               "z": 5.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 90.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "tport [Torpedo tubes]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "assign",
+                    "name": "r =",
+                    "visible": true,
+                    "params": {
+                     "variable": "r",
+                     "value": "1"
+                    }
+                   },
+                   {
+                    "type": "assign",
+                    "name": "len =",
+                    "visible": true,
+                    "params": {
+                     "variable": "len",
+                     "value": "6"
+                    }
+                   },
+                   {
+                    "type": "rotate",
+                    "name": "Rotate",
+                    "visible": true,
+                    "params": {
+                     "x": 90.0,
+                     "y": 0.0,
+                     "z": 0.0
+                    },
+                    "children": [
+                     {
+                      "type": "linear_extrude",
+                      "name": "Linear extrude",
+                      "visible": true,
+                      "params": {
+                       "height": "len",
+                       "twist": 0.0,
+                       "scale": 1.0,
+                       "center": true,
+                       "segments": 0
+                      },
+                      "children": [
+                       {
+                        "type": "hull",
+                        "name": "Hull",
+                        "visible": true,
+                        "params": {},
+                        "children": [
+                         {
+                          "type": "circle",
+                          "name": "Circle",
+                          "visible": true,
+                          "params": {
+                           "x": 0.0,
+                           "y": 0.0,
+                           "radius": "r",
+                           "angle": 360.0,
+                           "start_angle": 0.0,
+                           "segments": 24
+                          }
+                         },
+                         {
+                          "type": "translate",
+                          "name": "Translate",
+                          "visible": true,
+                          "params": {
+                           "x": 0.0,
+                           "y": "1.56 * r",
+                           "z": 0.0
+                          },
+                          "children": [
+                           {
+                            "type": "rect",
+                            "name": "Rectangle",
+                            "visible": true,
+                            "params": {
+                             "x": -0.01,
+                             "y": -0.01,
+                             "width": 0.02,
+                             "height": 0.02
+                            }
+                           }
+                          ]
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For x",
+            "visible": true,
+            "params": {
+             "variable": "x",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "3, 5, 7"
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "x",
+               "y": 0.0,
+               "z": 17.5
+              },
+              "children": [
+               {
+                "type": "union",
+                "name": "tport [Bridge windows]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "rx": 0.0,
+                 "ry": 0.0,
+                 "rz": 0.0,
+                 "color": "",
+                 "alpha": 1.0
+                },
+                "children": [
+                 {
+                  "type": "assign",
+                  "name": "r =",
+                  "visible": true,
+                  "params": {
+                   "variable": "r",
+                   "value": "0.6"
+                  }
+                 },
+                 {
+                  "type": "assign",
+                  "name": "len =",
+                  "visible": true,
+                  "params": {
+                   "variable": "len",
+                   "value": "10"
+                  }
+                 },
+                 {
+                  "type": "rotate",
+                  "name": "Rotate",
+                  "visible": true,
+                  "params": {
+                   "x": 90.0,
+                   "y": 0.0,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "linear_extrude",
+                    "name": "Linear extrude",
+                    "visible": true,
+                    "params": {
+                     "height": "len",
+                     "twist": 0.0,
+                     "scale": 1.0,
+                     "center": true,
+                     "segments": 0
+                    },
+                    "children": [
+                     {
+                      "type": "hull",
+                      "name": "Hull",
+                      "visible": true,
+                      "params": {},
+                      "children": [
+                       {
+                        "type": "circle",
+                        "name": "Circle",
+                        "visible": true,
+                        "params": {
+                         "x": 0.0,
+                         "y": 0.0,
+                         "radius": "r",
+                         "angle": 360.0,
+                         "start_angle": 0.0,
+                         "segments": 24
+                        }
+                       },
+                       {
+                        "type": "translate",
+                        "name": "Translate",
+                        "visible": true,
+                        "params": {
+                         "x": 0.0,
+                         "y": "1.56 * r",
+                         "z": 0.0
+                        },
+                        "children": [
+                         {
+                          "type": "rect",
+                          "name": "Rectangle",
+                          "visible": true,
+                          "params": {
+                           "x": -0.01,
+                           "y": -0.01,
+                           "width": 0.02,
+                           "height": 0.02
+                          }
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": -1.53,
+             "y": 1.58,
+             "z": 15.5
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 11.54
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 90.0,
+                 "y": 0.0,
+                 "z": 180.0
+                },
+                "children": [
+                 {
+                  "type": "minkowski",
+                  "name": "Minkowski",
+                  "visible": true,
+                  "params": {},
+                  "children": [
+                   {
+                    "type": "linear_extrude",
+                    "name": "Linear extrude",
+                    "visible": true,
+                    "params": {
+                     "height": 0.01,
+                     "twist": 0.0,
+                     "scale": 1.0,
+                     "center": false,
+                     "segments": 0
+                    },
+                    "children": [
+                     {
+                      "type": "text",
+                      "name": "Text",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "text": "K1",
+                       "size": 2.6,
+                       "halign": "center",
+                       "valign": "center"
+                      }
+                     }
+                    ]
+                   },
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder [Hull number]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": 0.95,
+                     "radius_bottom": 0.0,
+                     "radius_top": 1.14,
+                     "segments": 8,
+                     "center": false
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": -1.53,
+             "y": -1.58,
+             "z": 15.5
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": -11.54
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 90.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "minkowski",
+                  "name": "Minkowski",
+                  "visible": true,
+                  "params": {},
+                  "children": [
+                   {
+                    "type": "linear_extrude",
+                    "name": "Linear extrude",
+                    "visible": true,
+                    "params": {
+                     "height": 0.01,
+                     "twist": 0.0,
+                     "scale": 1.0,
+                     "center": false,
+                     "segments": 0
+                    },
+                    "children": [
+                     {
+                      "type": "text",
+                      "name": "Text",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "text": "K1",
+                       "size": 2.6,
+                       "halign": "center",
+                       "valign": "center"
+                      }
+                     }
+                    ]
+                   },
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder [Hull number]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": 0.95,
+                     "radius_bottom": 0.0,
+                     "radius_top": 1.14,
+                     "segments": 8,
+                     "center": false
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For x",
+            "visible": true,
+            "params": {
+             "variable": "x",
+             "start": -15.0,
+             "end": -7.0,
+             "step": 1.2,
+             "values": ""
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Deck planks]",
+              "visible": true,
+              "params": {
+               "x": "x",
+               "y": -3.0,
+               "z": "13.05 + (x + 16) * 0.0627",
+               "width": 0.3,
+               "depth": 6.0,
+               "height": 2.0,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For x",
+            "visible": true,
+            "params": {
+             "variable": "x",
+             "start": 9.5,
+             "end": 11.5,
+             "step": 1.2,
+             "values": ""
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Deck planks]",
+              "visible": true,
+              "params": {
+               "x": "x",
+               "y": -3.0,
+               "z": "13.05 + (x + 16) * 0.0627",
+               "width": 0.3,
+               "depth": 6.0,
+               "height": 2.0,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Aft hatch]",
+          "visible": true,
+          "params": {
+           "x": -10.0,
+           "y": 0.0,
+           "z": 13.3,
+           "height": 0.9,
+           "radius_bottom": 1.3,
+           "radius_top": 1.3,
+           "segments": 24,
+           "center": false
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -10.7,
+           "y": -0.25,
+           "z": 14.2
+          },
+          "children": [
+           {
+            "type": "union",
+            "name": "cbox [Hatch handle]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "assign",
+              "name": "size =",
+              "visible": true,
+              "params": {
+               "variable": "size",
+               "value": "[1.4, 0.5, 0.5]"
+              }
+             },
+             {
+              "type": "assign",
+              "name": "r =",
+              "visible": true,
+              "params": {
+               "variable": "r",
+               "value": "0.2"
+              }
+             },
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For x",
+                "visible": true,
+                "params": {
+                 "variable": "x",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "r, size[0] - r"
+                },
+                "children": [
+                 {
+                  "type": "for_loop",
+                  "name": "For y",
+                  "visible": true,
+                  "params": {
+                   "variable": "y",
+                   "start": 0.0,
+                   "end": 4.0,
+                   "step": 1.0,
+                   "values": "r, size[1] - r"
+                  },
+                  "children": [
+                   {
+                    "type": "sphere",
+                    "name": "Sphere",
+                    "visible": true,
+                    "params": {
+                     "x": "x",
+                     "y": "y",
+                     "z": "size[2] - r",
+                     "radius": "r",
+                     "segments": 16
+                    }
+                   },
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": "x",
+                     "y": "y",
+                     "z": 0.0,
+                     "height": "1.3 * r",
+                     "radius_bottom": 0.05,
+                     "radius_top": "r",
+                     "segments": 16,
+                     "center": false
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Fore hatch]",
+          "visible": true,
+          "params": {
+           "x": 10.5,
+           "y": 0.0,
+           "z": 14.5,
+           "height": 1.0,
+           "radius_bottom": 1.3,
+           "radius_top": 1.3,
+           "segments": 24,
+           "center": false
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 9.8,
+           "y": -0.25,
+           "z": 15.5
+          },
+          "children": [
+           {
+            "type": "union",
+            "name": "cbox [Hatch handle]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "assign",
+              "name": "size =",
+              "visible": true,
+              "params": {
+               "variable": "size",
+               "value": "[1.4, 0.5, 0.5]"
+              }
+             },
+             {
+              "type": "assign",
+              "name": "r =",
+              "visible": true,
+              "params": {
+               "variable": "r",
+               "value": "0.2"
+              }
+             },
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For x",
+                "visible": true,
+                "params": {
+                 "variable": "x",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "r, size[0] - r"
+                },
+                "children": [
+                 {
+                  "type": "for_loop",
+                  "name": "For y",
+                  "visible": true,
+                  "params": {
+                   "variable": "y",
+                   "start": 0.0,
+                   "end": 4.0,
+                   "step": 1.0,
+                   "values": "r, size[1] - r"
+                  },
+                  "children": [
+                   {
+                    "type": "sphere",
+                    "name": "Sphere",
+                    "visible": true,
+                    "params": {
+                     "x": "x",
+                     "y": "y",
+                     "z": "size[2] - r",
+                     "radius": "r",
+                     "segments": 16
+                    }
+                   },
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": "x",
+                     "y": "y",
+                     "z": 0.0,
+                     "height": "1.3 * r",
+                     "radius_bottom": 0.05,
+                     "radius_top": "r",
+                     "segments": 16,
+                     "center": false
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

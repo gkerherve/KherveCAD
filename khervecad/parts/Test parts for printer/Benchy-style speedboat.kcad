@@ -1,0 +1,1832 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 48.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Benchy-style speedboat",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#4a7fd6",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "minkowski",
+              "name": "Minkowski",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "hull",
+                "name": "Hull",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "cube",
+                  "name": "Cube",
+                  "visible": true,
+                  "params": {
+                   "x": -24.0,
+                   "y": -9.0,
+                   "z": 1.3,
+                   "width": 2.0,
+                   "depth": 18.0,
+                   "height": 0.01,
+                   "center": false
+                  }
+                 },
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": 14.0,
+                   "y": 0.0,
+                   "z": 1.3
+                  },
+                  "children": [
+                   {
+                    "type": "scale",
+                    "name": "Scale",
+                    "visible": true,
+                    "params": {
+                     "x": 2.0,
+                     "y": 0.9,
+                     "z": 1.0
+                    },
+                    "children": [
+                     {
+                      "type": "cylinder",
+                      "name": "Cylinder",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "height": 0.01,
+                       "radius_bottom": 7.0,
+                       "radius_top": 7.0,
+                       "segments": 48,
+                       "center": false
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "cube",
+                  "name": "Cube",
+                  "visible": true,
+                  "params": {
+                   "x": -25.0,
+                   "y": -11.0,
+                   "z": 9.9,
+                   "width": 2.0,
+                   "depth": 22.0,
+                   "height": 0.01,
+                   "center": false
+                  }
+                 },
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": 16.0,
+                   "y": 0.0,
+                   "z": 9.9
+                  },
+                  "children": [
+                   {
+                    "type": "scale",
+                    "name": "Scale",
+                    "visible": true,
+                    "params": {
+                     "x": 2.1,
+                     "y": 1.0,
+                     "z": 1.0
+                    },
+                    "children": [
+                     {
+                      "type": "cylinder",
+                      "name": "Cylinder",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "height": 0.01,
+                       "radius_bottom": 9.0,
+                       "radius_top": 9.0,
+                       "segments": 48,
+                       "center": false
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "union",
+                "name": "pebble [Hull]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "rx": 0.0,
+                 "ry": 0.0,
+                 "rz": 0.0,
+                 "color": "",
+                 "alpha": 1.0
+                },
+                "children": [
+                 {
+                  "type": "assign",
+                  "name": "r =",
+                  "visible": true,
+                  "params": {
+                   "variable": "r",
+                   "value": "1"
+                  }
+                 },
+                 {
+                  "type": "hull",
+                  "name": "Hull",
+                  "visible": true,
+                  "params": {},
+                  "children": [
+                   {
+                    "type": "intersection",
+                    "name": "Intersection",
+                    "visible": true,
+                    "params": {},
+                    "children": [
+                     {
+                      "type": "sphere",
+                      "name": "Sphere",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "radius": "r",
+                       "segments": 16
+                      }
+                     },
+                     {
+                      "type": "cube",
+                      "name": "Cube",
+                      "visible": true,
+                      "params": {
+                       "x": "-r",
+                       "y": "-r",
+                       "z": 0.0,
+                       "width": "2 * r",
+                       "depth": "2 * r",
+                       "height": "r",
+                       "center": false
+                      }
+                     }
+                    ]
+                   },
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "-1.3 * r",
+                     "height": 0.01,
+                     "radius_bottom": 0.05,
+                     "radius_top": 0.05,
+                     "segments": 8,
+                     "center": false
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": -8.5,
+                 "z": 10.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "rbox",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "assign",
+                    "name": "size =",
+                    "visible": true,
+                    "params": {
+                     "variable": "size",
+                     "value": "[1.8, 17, 1.8]"
+                    }
+                   },
+                   {
+                    "type": "assign",
+                    "name": "r =",
+                    "visible": true,
+                    "params": {
+                     "variable": "r",
+                     "value": "0.7"
+                    }
+                   },
+                   {
+                    "type": "hull",
+                    "name": "Hull",
+                    "visible": true,
+                    "params": {},
+                    "children": [
+                     {
+                      "type": "for_loop",
+                      "name": "For x",
+                      "visible": true,
+                      "params": {
+                       "variable": "x",
+                       "start": 0.0,
+                       "end": 4.0,
+                       "step": 1.0,
+                       "values": "r, size[0] - r"
+                      },
+                      "children": [
+                       {
+                        "type": "for_loop",
+                        "name": "For y",
+                        "visible": true,
+                        "params": {
+                         "variable": "y",
+                         "start": 0.0,
+                         "end": 4.0,
+                         "step": 1.0,
+                         "values": "r, size[1] - r"
+                        },
+                        "children": [
+                         {
+                          "type": "for_loop",
+                          "name": "For z",
+                          "visible": true,
+                          "params": {
+                           "variable": "z",
+                           "start": 0.0,
+                           "end": 4.0,
+                           "step": 1.0,
+                           "values": "r, size[2] - r"
+                          },
+                          "children": [
+                           {
+                            "type": "sphere",
+                            "name": "Sphere",
+                            "visible": true,
+                            "params": {
+                             "x": "x",
+                             "y": "y",
+                             "z": "z",
+                             "radius": "r",
+                             "segments": 16
+                            }
+                           }
+                          ]
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": -3.4,
+                 "y": -8.0,
+                 "z": 15.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "rbox [Windscreen]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "assign",
+                    "name": "size =",
+                    "visible": true,
+                    "params": {
+                     "variable": "size",
+                     "value": "[1.6, 16, 1.6]"
+                    }
+                   },
+                   {
+                    "type": "assign",
+                    "name": "r =",
+                    "visible": true,
+                    "params": {
+                     "variable": "r",
+                     "value": "0.7"
+                    }
+                   },
+                   {
+                    "type": "hull",
+                    "name": "Hull",
+                    "visible": true,
+                    "params": {},
+                    "children": [
+                     {
+                      "type": "for_loop",
+                      "name": "For x",
+                      "visible": true,
+                      "params": {
+                       "variable": "x",
+                       "start": 0.0,
+                       "end": 4.0,
+                       "step": 1.0,
+                       "values": "r, size[0] - r"
+                      },
+                      "children": [
+                       {
+                        "type": "for_loop",
+                        "name": "For y",
+                        "visible": true,
+                        "params": {
+                         "variable": "y",
+                         "start": 0.0,
+                         "end": 4.0,
+                         "step": 1.0,
+                         "values": "r, size[1] - r"
+                        },
+                        "children": [
+                         {
+                          "type": "for_loop",
+                          "name": "For z",
+                          "visible": true,
+                          "params": {
+                           "variable": "z",
+                           "start": 0.0,
+                           "end": 4.0,
+                           "step": 1.0,
+                           "values": "r, size[2] - r"
+                          },
+                          "children": [
+                           {
+                            "type": "sphere",
+                            "name": "Sphere",
+                            "visible": true,
+                            "params": {
+                             "x": "x",
+                             "y": "y",
+                             "z": "z",
+                             "radius": "r",
+                             "segments": 16
+                            }
+                           }
+                          ]
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cube",
+                "name": "Cube",
+                "visible": true,
+                "params": {
+                 "x": -29.0,
+                 "y": -1.2,
+                 "z": 0.0,
+                 "width": 3.0,
+                 "depth": 2.4,
+                 "height": 4.0,
+                 "center": false
+                }
+               },
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": -30.5,
+                 "y": -3.0,
+                 "z": 8.5
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "rbox [Outboard motor]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "assign",
+                    "name": "size =",
+                    "visible": true,
+                    "params": {
+                     "variable": "size",
+                     "value": "[6, 6, 6.5]"
+                    }
+                   },
+                   {
+                    "type": "assign",
+                    "name": "r =",
+                    "visible": true,
+                    "params": {
+                     "variable": "r",
+                     "value": "1.5"
+                    }
+                   },
+                   {
+                    "type": "hull",
+                    "name": "Hull",
+                    "visible": true,
+                    "params": {},
+                    "children": [
+                     {
+                      "type": "for_loop",
+                      "name": "For x",
+                      "visible": true,
+                      "params": {
+                       "variable": "x",
+                       "start": 0.0,
+                       "end": 4.0,
+                       "step": 1.0,
+                       "values": "r, size[0] - r"
+                      },
+                      "children": [
+                       {
+                        "type": "for_loop",
+                        "name": "For y",
+                        "visible": true,
+                        "params": {
+                         "variable": "y",
+                         "start": 0.0,
+                         "end": 4.0,
+                         "step": 1.0,
+                         "values": "r, size[1] - r"
+                        },
+                        "children": [
+                         {
+                          "type": "for_loop",
+                          "name": "For z",
+                          "visible": true,
+                          "params": {
+                           "variable": "z",
+                           "start": 0.0,
+                           "end": 4.0,
+                           "step": 1.0,
+                           "values": "r, size[2] - r"
+                          },
+                          "children": [
+                           {
+                            "type": "sphere",
+                            "name": "Sphere",
+                            "visible": true,
+                            "params": {
+                             "x": "x",
+                             "y": "y",
+                             "z": "z",
+                             "radius": "r",
+                             "segments": 16
+                            }
+                           }
+                          ]
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": -19.0,
+             "y": -7.0,
+             "z": 6.0
+            },
+            "children": [
+             {
+              "type": "union",
+              "name": "rbox [Cockpit]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "assign",
+                "name": "size =",
+                "visible": true,
+                "params": {
+                 "variable": "size",
+                 "value": "[13, 14, 9]"
+                }
+               },
+               {
+                "type": "assign",
+                "name": "r =",
+                "visible": true,
+                "params": {
+                 "variable": "r",
+                 "value": "1.5"
+                }
+               },
+               {
+                "type": "hull",
+                "name": "Hull",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "for_loop",
+                  "name": "For x",
+                  "visible": true,
+                  "params": {
+                   "variable": "x",
+                   "start": 0.0,
+                   "end": 4.0,
+                   "step": 1.0,
+                   "values": "r, size[0] - r"
+                  },
+                  "children": [
+                   {
+                    "type": "for_loop",
+                    "name": "For y",
+                    "visible": true,
+                    "params": {
+                     "variable": "y",
+                     "start": 0.0,
+                     "end": 4.0,
+                     "step": 1.0,
+                     "values": "r, size[1] - r"
+                    },
+                    "children": [
+                     {
+                      "type": "for_loop",
+                      "name": "For z",
+                      "visible": true,
+                      "params": {
+                       "variable": "z",
+                       "start": 0.0,
+                       "end": 4.0,
+                       "step": 1.0,
+                       "values": "r, size[2] - r"
+                      },
+                      "children": [
+                       {
+                        "type": "sphere",
+                        "name": "Sphere",
+                        "visible": true,
+                        "params": {
+                         "x": "x",
+                         "y": "y",
+                         "z": "z",
+                         "radius": "r",
+                         "segments": 16
+                        }
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 19.0,
+             "y": 0.0,
+             "z": 10.4
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": 1.0,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "text",
+                "name": "Text [Deck name]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "text": "KHERVE",
+                 "size": 3.0,
+                 "halign": "center",
+                 "valign": "center"
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For z",
+            "visible": true,
+            "params": {
+             "variable": "z",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "11, 12.6"
+            },
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For y",
+              "visible": true,
+              "params": {
+               "variable": "y",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "-3, 3"
+              },
+              "children": [
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": -27.5,
+                 "y": "y",
+                 "z": "z"
+                },
+                "children": [
+                 {
+                  "type": "scale",
+                  "name": "Scale",
+                  "visible": true,
+                  "params": {
+                   "x": 1.0,
+                   "y": 1.0,
+                   "z": 1.3
+                  },
+                  "children": [
+                   {
+                    "type": "rotate",
+                    "name": "Rotate",
+                    "visible": true,
+                    "params": {
+                     "x": 45.0,
+                     "y": 0.0,
+                     "z": 0.0
+                    },
+                    "children": [
+                     {
+                      "type": "cube",
+                      "name": "Cube [Cowling vents]",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "width": 4.4,
+                       "depth": 0.6,
+                       "height": 0.6,
+                       "center": true
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -19.0,
+           "y": -7.0,
+           "z": 5.0
+          },
+          "children": [
+           {
+            "type": "union",
+            "name": "cbox [Rear bench]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "assign",
+              "name": "size =",
+              "visible": true,
+              "params": {
+               "variable": "size",
+               "value": "[3.5, 14, 4.5]"
+              }
+             },
+             {
+              "type": "assign",
+              "name": "r =",
+              "visible": true,
+              "params": {
+               "variable": "r",
+               "value": "1"
+              }
+             },
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For x",
+                "visible": true,
+                "params": {
+                 "variable": "x",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "r, size[0] - r"
+                },
+                "children": [
+                 {
+                  "type": "for_loop",
+                  "name": "For y",
+                  "visible": true,
+                  "params": {
+                   "variable": "y",
+                   "start": 0.0,
+                   "end": 4.0,
+                   "step": 1.0,
+                   "values": "r, size[1] - r"
+                  },
+                  "children": [
+                   {
+                    "type": "sphere",
+                    "name": "Sphere",
+                    "visible": true,
+                    "params": {
+                     "x": "x",
+                     "y": "y",
+                     "z": "size[2] - r",
+                     "radius": "r",
+                     "segments": 16
+                    }
+                   },
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": "x",
+                     "y": "y",
+                     "z": 0.0,
+                     "height": "1.3 * r",
+                     "radius_bottom": 0.05,
+                     "radius_top": "r",
+                     "segments": 16,
+                     "center": false
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For y",
+          "visible": true,
+          "params": {
+           "variable": "y",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-4.8, 1.2"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": -12.5,
+             "y": "y",
+             "z": 5.5
+            },
+            "children": [
+             {
+              "type": "union",
+              "name": "cbox [Seat bases]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "assign",
+                "name": "size =",
+                "visible": true,
+                "params": {
+                 "variable": "size",
+                 "value": "[3.5, 3.6, 2.5]"
+                }
+               },
+               {
+                "type": "assign",
+                "name": "r =",
+                "visible": true,
+                "params": {
+                 "variable": "r",
+                 "value": "0.8"
+                }
+               },
+               {
+                "type": "hull",
+                "name": "Hull",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "for_loop",
+                  "name": "For x",
+                  "visible": true,
+                  "params": {
+                   "variable": "x",
+                   "start": 0.0,
+                   "end": 4.0,
+                   "step": 1.0,
+                   "values": "r, size[0] - r"
+                  },
+                  "children": [
+                   {
+                    "type": "for_loop",
+                    "name": "For y",
+                    "visible": true,
+                    "params": {
+                     "variable": "y",
+                     "start": 0.0,
+                     "end": 4.0,
+                     "step": 1.0,
+                     "values": "r, size[1] - r"
+                    },
+                    "children": [
+                     {
+                      "type": "sphere",
+                      "name": "Sphere",
+                      "visible": true,
+                      "params": {
+                       "x": "x",
+                       "y": "y",
+                       "z": "size[2] - r",
+                       "radius": "r",
+                       "segments": 16
+                      }
+                     },
+                     {
+                      "type": "cylinder",
+                      "name": "Cylinder",
+                      "visible": true,
+                      "params": {
+                       "x": "x",
+                       "y": "y",
+                       "z": 0.0,
+                       "height": "1.3 * r",
+                       "radius_bottom": 0.05,
+                       "radius_top": "r",
+                       "segments": 16,
+                       "center": false
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For y",
+          "visible": true,
+          "params": {
+           "variable": "y",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-4.8, 1.2"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": -13.4,
+             "y": "y",
+             "z": 5.5
+            },
+            "children": [
+             {
+              "type": "union",
+              "name": "cbox [Seat backs]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "assign",
+                "name": "size =",
+                "visible": true,
+                "params": {
+                 "variable": "size",
+                 "value": "[1.4, 3.6, 5.6]"
+                }
+               },
+               {
+                "type": "assign",
+                "name": "r =",
+                "visible": true,
+                "params": {
+                 "variable": "r",
+                 "value": "0.6"
+                }
+               },
+               {
+                "type": "hull",
+                "name": "Hull",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "for_loop",
+                  "name": "For x",
+                  "visible": true,
+                  "params": {
+                   "variable": "x",
+                   "start": 0.0,
+                   "end": 4.0,
+                   "step": 1.0,
+                   "values": "r, size[0] - r"
+                  },
+                  "children": [
+                   {
+                    "type": "for_loop",
+                    "name": "For y",
+                    "visible": true,
+                    "params": {
+                     "variable": "y",
+                     "start": 0.0,
+                     "end": 4.0,
+                     "step": 1.0,
+                     "values": "r, size[1] - r"
+                    },
+                    "children": [
+                     {
+                      "type": "sphere",
+                      "name": "Sphere",
+                      "visible": true,
+                      "params": {
+                       "x": "x",
+                       "y": "y",
+                       "z": "size[2] - r",
+                       "radius": "r",
+                       "segments": 16
+                      }
+                     },
+                     {
+                      "type": "cylinder",
+                      "name": "Cylinder",
+                      "visible": true,
+                      "params": {
+                       "x": "x",
+                       "y": "y",
+                       "z": 0.0,
+                       "height": "1.3 * r",
+                       "radius_bottom": 0.05,
+                       "radius_top": "r",
+                       "segments": 16,
+                       "center": false
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -7.6,
+           "y": -6.0,
+           "z": 5.5
+          },
+          "children": [
+           {
+            "type": "union",
+            "name": "cbox [Console]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "assign",
+              "name": "size =",
+              "visible": true,
+              "params": {
+               "variable": "size",
+               "value": "[1.6, 4, 4]"
+              }
+             },
+             {
+              "type": "assign",
+              "name": "r =",
+              "visible": true,
+              "params": {
+               "variable": "r",
+               "value": "0.5"
+              }
+             },
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For x",
+                "visible": true,
+                "params": {
+                 "variable": "x",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "r, size[0] - r"
+                },
+                "children": [
+                 {
+                  "type": "for_loop",
+                  "name": "For y",
+                  "visible": true,
+                  "params": {
+                   "variable": "y",
+                   "start": 0.0,
+                   "end": 4.0,
+                   "step": 1.0,
+                   "values": "r, size[1] - r"
+                  },
+                  "children": [
+                   {
+                    "type": "sphere",
+                    "name": "Sphere",
+                    "visible": true,
+                    "params": {
+                     "x": "x",
+                     "y": "y",
+                     "z": "size[2] - r",
+                     "radius": "r",
+                     "segments": 16
+                    }
+                   },
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": "x",
+                     "y": "y",
+                     "z": 0.0,
+                     "height": "1.3 * r",
+                     "radius_bottom": 0.05,
+                     "radius_top": "r",
+                     "segments": 16,
+                     "center": false
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -7.0,
+           "y": -4.0,
+           "z": 10.79
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 90.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": 0.6,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": true,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "difference",
+                "name": "Difference",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "circle",
+                  "name": "Circle",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "radius": 1.6,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 6
+                  }
+                 },
+                 {
+                  "type": "circle",
+                  "name": "Circle [Steering wheel]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "radius": 0.9,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 6
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 5.0,
+           "y": -3.0,
+           "z": 10.3
+          },
+          "children": [
+           {
+            "type": "union",
+            "name": "cbox [Fore hatch]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "assign",
+              "name": "size =",
+              "visible": true,
+              "params": {
+               "variable": "size",
+               "value": "[5, 6, 1.3]"
+              }
+             },
+             {
+              "type": "assign",
+              "name": "r =",
+              "visible": true,
+              "params": {
+               "variable": "r",
+               "value": "0.5"
+              }
+             },
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For x",
+                "visible": true,
+                "params": {
+                 "variable": "x",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "r, size[0] - r"
+                },
+                "children": [
+                 {
+                  "type": "for_loop",
+                  "name": "For y",
+                  "visible": true,
+                  "params": {
+                   "variable": "y",
+                   "start": 0.0,
+                   "end": 4.0,
+                   "step": 1.0,
+                   "values": "r, size[1] - r"
+                  },
+                  "children": [
+                   {
+                    "type": "sphere",
+                    "name": "Sphere",
+                    "visible": true,
+                    "params": {
+                     "x": "x",
+                     "y": "y",
+                     "z": "size[2] - r",
+                     "radius": "r",
+                     "segments": 16
+                    }
+                   },
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": "x",
+                     "y": "y",
+                     "z": 0.0,
+                     "height": "1.3 * r",
+                     "radius_bottom": 0.05,
+                     "radius_top": "r",
+                     "segments": 16,
+                     "center": false
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 29.0,
+           "y": 0.6,
+           "z": 10.6
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": 1.2,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Polygon [Bow cleat]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   -1.0,
+                   0.0
+                  ],
+                  [
+                   1.0,
+                   0.0
+                  ],
+                  [
+                   1.0,
+                   0.6
+                  ],
+                  [
+                   2.2,
+                   1.9
+                  ],
+                  [
+                   2.2,
+                   2.4
+                  ],
+                  [
+                   0.0,
+                   2.0
+                  ],
+                  [
+                   -2.2,
+                   2.4
+                  ],
+                  [
+                   -2.2,
+                   1.9
+                  ],
+                  [
+                   -1.0,
+                   0.6
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For y",
+          "visible": true,
+          "params": {
+           "variable": "y",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-7.5, 7.5"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": -22.5,
+             "y": "y + 0.6",
+             "z": 10.6
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 1.2,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "polygon",
+                  "name": "Polygon [Stern cleats]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "points": [
+                    [
+                     -1.0,
+                     0.0
+                    ],
+                    [
+                     1.0,
+                     0.0
+                    ],
+                    [
+                     1.0,
+                     0.6
+                    ],
+                    [
+                     2.2,
+                     1.9
+                    ],
+                    [
+                     2.2,
+                     2.4
+                    ],
+                    [
+                     0.0,
+                     2.0
+                    ],
+                    [
+                     -2.2,
+                     2.4
+                    ],
+                    [
+                     -2.2,
+                     1.9
+                    ],
+                    [
+                     -1.0,
+                     0.6
+                    ]
+                   ]
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For p",
+          "visible": true,
+          "params": {
+           "variable": "p",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "[24, 7], [24, -7], [28, 5.8], [28, -5.8]"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "p[0]",
+             "y": "p[1]",
+             "z": 10.4
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 3.5,
+               "radius_bottom": 0.55,
+               "radius_top": 0.55,
+               "segments": 12,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Bow rail posts]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 3.45,
+               "height": 0.45,
+               "radius_bottom": 0.55,
+               "radius_top": 0.2,
+               "segments": 12,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 32.0,
+           "y": 0.0,
+           "z": 10.4
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 2.5,
+             "radius_bottom": 0.6,
+             "radius_top": 0.6,
+             "segments": 12,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 2.45,
+             "height": 0.85,
+             "radius_bottom": 0.6,
+             "radius_top": 1.0,
+             "segments": 12,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Nav light]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 3.25,
+             "height": 0.8,
+             "radius_bottom": 1.0,
+             "radius_top": 0.3,
+             "segments": 12,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

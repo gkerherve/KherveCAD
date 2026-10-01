@@ -34,7 +34,7 @@ SECTIONS = [
          ["Air conditioning"]),
         ("3D printing", "mdi.printer-3d",
          ["Printed joints & hinges", "Printed organisers", "Enclosures",
-          "Prusa"]),
+          "Prusa", "Test parts for printer"]),
     ]),
     ("Buildings & places", [
         ("House & home", "mdi.home-city-outline",

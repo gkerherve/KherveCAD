@@ -4033,6 +4033,26 @@ into a new module and import.
                        out. The test also checks the pin 6 mm short of
                        home DOES press on the bore — or it would never
                        hold.
+  - `tools/print_tests.py` — writes `parts/Test parts for printer/`
+                       (2026-10-01, the user: every print must work the
+                       first try): Benchy-style tug, sailboat, submarine
+                       and speedboat (original designs, not 3DBenchy),
+                       calibration cube, twisted planter + drip saucer,
+                       keychain tag, phone stand — Library ▸ Engineering
+                       ▸ 3D printing. The rules each part follows: flat
+                       on z = 0 with a CHAMFERED foot (`pebble`/`cbox`,
+                       never a rounded one), nothing facing down past
+                       45° (teardrop holes with a 40° roof — a 45° rotated
+                       square sits ON the limit — gabled ceilings,
+                       chamfered undersides, V-carved side text via
+                       minkowski with a cone), one closed solid (stacked
+                       pieces overlap 0.05 mm: a face-to-face touch
+                       decomposes into two). `printability` renders with
+                       OpenSCAD and measures pieces / bed area / area
+                       facing down past 45°; `test_print_tests` runs it on
+                       what each SHIPPED .kcad compiles to and pins the
+                       files to the generator (`python -m
+                       khervecad.tools.print_tests --check`).
   - `mcp_schema.py`  — the **MCP tool table**: 76 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
