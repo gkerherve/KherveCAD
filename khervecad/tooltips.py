@@ -645,6 +645,28 @@ TIPS = {
          "whole model."],
         "Orbit while it is cut: the red face is the section, the rest "
         "is the inside of the part."),
+    "edit_mesh": (
+        "Edit vertices (Edit Mode)",
+        "Blender's Edit Mode: the selected part's vertices and edges "
+        "appear over the 3D view and you shape it by hand — drag "
+        "vertices, add new ones on an edge or a face, extrude faces out, "
+        "subdivide, merge, smooth — for the difficult shapes no "
+        "primitive gives. A part that is not a polyhedron is converted "
+        "into one first (a cube opens as 8 vertices and 6 faces).",
+        ["Select one part, then press Tab over the 3D view (or click "
+         "Edit vertices).",
+         "Click a vertex (Shift adds), a face for its corners, Shift+drag "
+         "for a box; A selects all.",
+         "Drag a vertex to move it, or G / S / R to move, scale, rotate "
+         "the selection — X, Y or Z keeps it to an axis, Ctrl snaps.",
+         "Ctrl+click an edge or a face to add a vertex there; E extrudes "
+         "the selected faces; right click or W for Subdivide, Merge, "
+         "Dissolve and Smooth.",
+         "Press Tab (or Esc) when done: the mesh stays an editable "
+         "polyhedron, saved and written as OpenSCAD's polyhedron()."],
+        "O turns on proportional editing so a move drags the "
+        "neighbourhood smoothly (the wheel sizes it); the panel's Mirror "
+        "edits both sides of a symmetric shape at once."),
     "blueprint": (
         "Blueprint (2D drawing)",
         "Opens the engineering drawing of the model in its own window: "

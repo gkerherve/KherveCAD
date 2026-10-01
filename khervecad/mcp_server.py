@@ -255,6 +255,17 @@ rebuilding the part; to cut a part by a plane, wrap it in \
 "both", gap)`. To smooth a faceted part but keep its real edges — a \
 low-poly cage, a revolve with too few sides — `kcad_subdivide(levels = \
 2, sharp = 40) { … }`: edges sharper than 40° stay crisp. \
+To shape a part BY ITS VERTICES — a wedge, a nose cone, a hull, a \
+low-poly figure, the corner no primitive gives — use edit_mesh \
+(Blender's Edit Mode; the user has it as Tab over the 3D view): \
+operation open converts the part into a polyhedron (a cube is 8 \
+vertices, 6 quads) and lists its vertices in world mm; then move \
+(`delta`, `proportional` mm for a smooth pull, `mirror` for both \
+halves), extrude chosen faces out by `distance`, subdivide them for \
+more vertices, split_edge / poke to add one, merge, dissolve, smooth. \
+Choose vertices by index or a world box (`within`). Every call keeps \
+the solid closed. Start from a coarse cube or cylinder, not a fine \
+sphere — a few vertices are easy to place. \
 Prefer a sweep to a chain of hull()s. For a body whose cross-sections \
 have corners (a car, a boat hull), `kcad_section_loft(heights = [[z0], \
 [z1], ...], smooth = 0)` with one 2D child shape per section, in \

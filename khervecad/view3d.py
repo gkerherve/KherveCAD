@@ -18,7 +18,7 @@ the Free Software Foundation, either version 3 of the License, or
 import math
 import threading
 
-from PyQt5.QtCore import (QPointF, QRectF, QSettings, Qt, QTimer,
+from PyQt5.QtCore import (QEvent, QPointF, QRectF, QSettings, Qt, QTimer,
                           pyqtSignal)
 from PyQt5.QtGui import (QColor, QImage, QPainter, QPen, QPolygonF)
 from PyQt5.QtWidgets import (QGridLayout, QLabel, QSlider, QToolButton,
@@ -177,6 +177,9 @@ class View3D(QWidget):
     stage_toggled = pyqtSignal(bool)
     #: ("cavity" | "edges", on) — set_cavity / set_edges, for the menu
     look_toggled = pyqtSignal(str, bool)
+    #: Tab pressed over the view — Blender's Edit Mode toggle
+    #: (meshedit_ui.py)
+    tab_pressed = pyqtSignal()
 
     #: past this many triangles, orbiting/panning/zooming draws a
     #: decimated "draft" mesh for a snappy frame rate, then the full
@@ -308,6 +311,13 @@ class View3D(QWidget):
         self._highlight_full = []
         self.cut_bar = CutBar(self)
         self.cut_bar.hide()
+        #: Edit Mode (meshedit_ui.EditSession) while one is open: it sees
+        #: the mouse, keys and paint first, and whatever it declines
+        #: (orbit, pan, zoom) falls through to the view as usual
+        self.edit_tool = None
+        # a click gives the view the keyboard, so Tab (Edit Mode) and
+        # the Edit Mode keys reach it
+        self.setFocusPolicy(Qt.ClickFocus)
 
     # ------------------------------------------------------- lighting
     def set_light(self, key: str, value: float):
@@ -1361,7 +1371,7 @@ class View3D(QWidget):
             if sil is not None and self.edges and info is not None:
                 draw_edges(parent, mesh[index])
 
-        if hi_polys:
+        if hi_polys and self.edit_tool is None:   # Edit Mode draws its own
             self._tint_selection(painter, hi_polys)
         if self.overlay and self.reference_images:
             # the photo over the model: where the outline leaves the
@@ -1372,6 +1382,9 @@ class View3D(QWidget):
                                                      forward, v))
         self._draw_anchors(painter, eye, right, up, forward)
         self._draw_pick_overlays(painter, eye, right, up, forward)
+        if self.edit_tool is not None and not self._clean:
+            self.edit_tool.paint(painter, lambda v: self._project(
+                eye, right, up, forward, v))
         if self._clean:                  # an exported picture: model only
             painter.end()
             return
@@ -1716,7 +1729,23 @@ class View3D(QWidget):
                                  label)
 
     # ------------------------------------------------------------- mouse
+    def event(self, event):
+        kind = event.type()
+        if kind == QEvent.ShortcutOverride and self.edit_tool is not None \
+                and self.edit_tool.wants_key(event):
+            event.accept()            # Edit Mode's G / E / M beat the menus
+            return True
+        if kind == QEvent.KeyPress and event.key() == Qt.Key_Tab and \
+                not event.modifiers() & (Qt.ControlModifier
+                                         | Qt.AltModifier):
+            self.tab_pressed.emit()   # not a focus move: Edit Mode
+            return True
+        return super().event(event)
+
     def mousePressEvent(self, event):
+        if self.edit_tool is not None and self._pick_cb is None \
+                and self.edit_tool.mouse_press(event):
+            return
         if self._pick_cb is not None:
             if event.button() == Qt.LeftButton:
                 self._run_pick(event.pos().x(), event.pos().y())
@@ -1728,12 +1757,20 @@ class View3D(QWidget):
         self._begin_fast()
 
     def mouseReleaseEvent(self, event):
+        if self.edit_tool is not None and self._pick_cb is None \
+                and self.edit_tool.mouse_release(event):
+            self._last = None
+            self._mode = None
+            return
         self._last = None
         self._mode = None
         self._fast = False
         self.update()                     # repaint the final frame crisp
 
     def mouseMoveEvent(self, event):
+        if self.edit_tool is not None and self._pick_cb is None \
+                and self.edit_tool.mouse_move(event):
+            return
         if self._pick_cb is not None and self._last is None:
             self._queue_hover(event.pos())    # pre-highlight the target
             return
@@ -1757,6 +1794,8 @@ class View3D(QWidget):
         self.update()
 
     def wheelEvent(self, event):
+        if self.edit_tool is not None and self.edit_tool.wheel(event):
+            return
         self.user_moved = True
         factor = 0.87 if event.angleDelta().y() > 0 else 1.15
         self.distance = max(self.MIN_DISTANCE,
@@ -1766,10 +1805,17 @@ class View3D(QWidget):
         self.update()
 
     def mouseDoubleClickEvent(self, event):
+        if self.edit_tool is not None:
+            # a fast second click, not Fit (Qt sends no second press)
+            if not self.edit_tool.mouse_press(event):
+                self.mousePressEvent(event)
+            return
         self.fit()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape and self._pick_cb is not None:
             self.cancel_pick()
+            return
+        if self.edit_tool is not None and self.edit_tool.key_press(event):
             return
         super().keyPressEvent(event)

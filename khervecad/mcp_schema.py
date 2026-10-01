@@ -697,6 +697,80 @@ TOOLS = [
         }, ["node_id"]),
     },
     {
+        "name": "edit_mesh",
+        "description": (
+            "Edit a part vertex by vertex — Blender's Edit Mode (the user "
+            "has it too: Tab over the 3D view). `operation` open turns "
+            "the part into an editable polyhedron if it is not one (a "
+            "cube becomes 8 vertices and 6 quads; an Object keeps its "
+            "name, placement and colour) and lists its vertices in WORLD "
+            "mm with the faces; then move (`delta`, with `proportional` "
+            "mm to drag the neighbourhood smoothly and `mirror` x/y/z to "
+            "edit both halves), set (one vertex to `to`), subdivide "
+            "(the faces whose every corner is chosen; `cuts`), extrude "
+            "(those faces pushed out `distance` mm, joined by side walls), "
+            "merge (to the centre or `to`), dissolve, smooth (`factor`, "
+            "`passes`), split_edge (`edge` [a, b] at `t`: a new vertex), "
+            "poke (a new vertex inside `face`, at `at`). Choose vertices "
+            "by `vertices` (indices), `within` (a world box) or `all`. "
+            "The solid always stays closed — an edit that would break "
+            "it is refused and nothing changes. Each call is one undo "
+            "step and returns the new `selection` (e.g. the extruded "
+            "copy, ready to move). Use it for shapes no primitive gives "
+            "— a hull, a nose cone, a wedge, a low-poly figure — then "
+            "render_view."
+        ),
+        "input_schema": _obj({
+            "node_id": _ID,
+            "operation": {"type": "string",
+                          "enum": ["open", "move", "set", "subdivide",
+                                   "extrude", "merge", "dissolve",
+                                   "smooth", "split_edge", "poke"]},
+            "vertices": {"type": "array", "items": {"type": "integer"},
+                         "description": "Vertex indices (from open)."},
+            "within": {"type": "object",
+                       "description": "Choose every vertex in this world "
+                                      "box: {\"min\": [x, y, z], "
+                                      "\"max\": [x, y, z]}.",
+                       "properties": {"min": _vec3("Low corner."),
+                                      "max": _vec3("High corner.")}},
+            "all": {"type": "boolean", "description": "Every vertex."},
+            "delta": _vec3("move: world mm."),
+            "to": _vec3("set / merge: world position."),
+            "proportional": {"type": "number",
+                             "description": "move / set: radius (mm) "
+                                            "round the chosen vertices "
+                                            "that follows with a smooth "
+                                            "falloff (0: off)."},
+            "falloff": {"type": "string",
+                        "enum": ["smooth", "linear", "sharp", "root",
+                                 "sphere", "constant"]},
+            "mirror": {"type": "string", "enum": ["none", "x", "y", "z"],
+                       "description": "move / set: also move each "
+                                      "vertex's mirror image across the "
+                                      "part's own x, y or z = 0 plane."},
+            "distance": {"type": "number",
+                         "description": "extrude: mm along the normal."},
+            "cuts": {"type": "integer",
+                     "description": "subdivide: how many times."},
+            "factor": {"type": "number",
+                       "description": "smooth: 0-1 (default 0.5)."},
+            "passes": {"type": "integer"},
+            "edge": {"type": "array", "items": {"type": "integer"},
+                     "description": "split_edge: [a, b]."},
+            "t": {"type": "number",
+                  "description": "split_edge: 0-1 from a (default 0.5)."},
+            "face": {"type": "integer",
+                     "description": "poke: face index."},
+            "at": _vec3("poke: world point on the face (default its "
+                        "centre)."),
+            "include_points": {"type": "boolean",
+                               "description": "List every vertex's world "
+                                              "position in the result."},
+            "include_faces": {"type": "boolean"},
+        }, ["node_id"]),
+    },
+    {
         "name": "mesh_from_photo",
         "description": (
             "Turn ONE picture into a 3D surface with an image-to-3D "

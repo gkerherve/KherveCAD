@@ -304,6 +304,14 @@ def build_options_bar(win):
                                 checkable=True, bind=False)  # View menu's
     win._cut_tool_act.toggled.connect(lambda on: win.set_cut(bool(on)))
     bar.addAction(win._cut_tool_act)
+    # Blender's Edit Mode: Tab over the 3D view (View3D.tab_pressed)
+    win._edit_mesh_act = _action(win, "mdi.vector-polyline-edit",
+                                 "Edit vertices", "edit_mesh",
+                                 shortcut="Tab", checkable=True,
+                                 bind=False)
+    win._edit_mesh_act.toggled.connect(
+        lambda on: win.set_edit_mode(bool(on)))
+    bar.addAction(win._edit_mesh_act)
     bar.addSeparator()
 
     # -- the 3D-only layout for building with an assistant (the ChatBox

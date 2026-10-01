@@ -245,12 +245,24 @@ class McpToolExecutor:
             },
             "exact_preview_booleans": self._csg_info(),
             "blender": self._blender_info(),
+            "edit_mode": self._edit_mode_info(),
             "bounds": bounds,
             "bounds_mm": self._box_in_mm(bounds),
             "reference_images": self._references(),
             "errors": [{"id": nid, "message": msg}
                        for nid, msg in errors.items()],
         }
+
+    def _edit_mode_info(self):
+        """The user's open Edit Mode (Tab over the 3D view), if any: the
+        polyhedron and the vertices they have selected — so "move these
+        up a bit" means something to edit_mesh."""
+        session = getattr(self._w, "_edit_session", None)
+        if session is None:
+            return None
+        return {"node_id": session.node.id, "name": session.node.name,
+                "vertex_count": len(session.points),
+                "selected_vertices": sorted(session.selection)}
 
     def _t_list_node_types(self, params) -> dict:
         want = params.get("category")
@@ -2830,6 +2842,14 @@ class McpToolExecutor:
                        "render_view to see the result, probe_surface for "
                        "the next one.")
         return out
+
+    def _t_edit_mesh(self, params) -> dict:
+        from . import meshedit_mcp
+        node = self._node(params.get("node_id"))
+        try:
+            return meshedit_mcp.edit_mesh(self._w, node, params)
+        except meshedit_mcp.EditError as exc:
+            raise ToolError(str(exc))
 
     # ── Checking ────────────────────────────────────────────────
 

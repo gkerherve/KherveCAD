@@ -959,6 +959,10 @@ class ObjectTree(QTreeWidget):
         if sculpt is not None and hasattr(win, "start_sculpt"):
             menu.addAction(icons.icon("mdi.brush"), language.tr("Sculpt..."),
                            lambda: win.start_sculpt(sculpt))
+        if len(roots) == 1 and hasattr(win, "set_edit_mode"):
+            menu.addAction(icons.icon("mdi.vector-polyline-edit"),
+                           language.tr("Edit Vertices (Edit Mode)") + "\tTab",
+                           lambda: win.set_edit_mode(True, node=roots[0]))
         if hasattr(win, "view3d"):
             menu.addAction(
                 icons.icon("mdi.arrow-down-bold-box-outline"),
@@ -1065,6 +1069,10 @@ class ObjectTree(QTreeWidget):
         if sculpt is not None and hasattr(win, "start_sculpt"):
             menu.addAction(icons.icon("mdi.brush"), language.tr("Sculpt..."),
                            lambda: win.start_sculpt(sculpt))
+        if len(roots) == 1 and hasattr(win, "set_edit_mode"):
+            menu.addAction(icons.icon("mdi.vector-polyline-edit"),
+                           language.tr("Edit Vertices (Edit Mode)") + "\tTab",
+                           lambda: win.set_edit_mode(True, node=roots[0]))
         menu.addAction(icons.icon("mdi.palette-outline"),
                        language.tr("Color..."),
                        lambda: self._pick_color(nodes))

@@ -148,6 +148,7 @@ class MainWindow(QMainWindow):
         self.view2d.step_object.connect(
             lambda step: self._tree_command("step", step))
         self.model.structure_changed.connect(self._model_edited)
+        self.view3d.tab_pressed.connect(lambda: self.set_edit_mode(None))
         self.model.node_changed.connect(lambda _n: self._model_edited())
         self.model.references_changed.connect(self._model_edited)
         self.model.drawing_changed.connect(self._drawing_edited)
@@ -299,6 +300,10 @@ class MainWindow(QMainWindow):
             "union"), "Ctrl+G")
         edit_menu.addAction(self.tr("&Ungroup"), self._ungroup_selection,
                             "Ctrl+Shift+G")
+        edit_menu.addSeparator()
+        edit_menu.addAction(icons.icon("mdi.vector-polyline-edit"),
+                            self.tr("Edit &Vertices (Edit Mode)") + "\tTab",
+                            lambda: self.set_edit_mode(None))
         edit_menu.addSeparator()
         edit_menu.addAction(self.tr("Document &Units..."), self.choose_unit)
         edit_menu.addAction(self.tr("Document &Scale (1 : N)..."),
@@ -771,6 +776,16 @@ class MainWindow(QMainWindow):
             elif op == "push_pull":           # now: which faces?
                 from . import faceedit_ui
                 faceedit_ui.start(self, wrapper)
+
+    def set_edit_mode(self, on=None, node=None):
+        """Blender's Edit Mode (Tab over the 3D view): drag the selected
+        part's vertices, add more, extrude, subdivide (meshedit_ui.py).
+        *on* None toggles; a part that is not a polyhedron is converted
+        into one first."""
+        from . import meshedit_ui
+        if node is not None:
+            return meshedit_ui.start(self, node)
+        return meshedit_ui.toggle(self, on)
 
     def start_sculpt(self, node):
         """Open the sculpt panel for *node* (a sculpt): each click in

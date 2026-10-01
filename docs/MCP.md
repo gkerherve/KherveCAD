@@ -454,6 +454,17 @@ to the photo, repeat. Strokes stay on the node as parameters, so any of
 them can be edited or removed later, and `mirror` sculpts both halves
 of a face from one side.
 
+**`edit_mesh`** is Blender's Edit Mode for the assistant (the user has
+the same thing as Tab over the 3D view). `open` turns a part into an
+editable polyhedron — a cube becomes 8 vertices and 6 quads, an Object
+keeps its name, placement and colour — and lists its vertices in world
+millimetres. Then move vertices (with a proportional radius that drags
+the neighbourhood smoothly, and a mirror axis that edits both halves),
+set one exactly, extrude chosen faces out, subdivide them for more
+vertices, split an edge or poke a face to add one, merge, dissolve,
+smooth. Vertices are chosen by index or by a world box. An edit that
+would leave the solid open is refused and changes nothing.
+
 **`sample_surface`** does the same for details that come in numbers:
 it scatters N evenly spread points, each with its normal, over a
 part's surface — only the faces looking a given way, or inside a box

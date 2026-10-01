@@ -3067,6 +3067,53 @@ into a new module and import.
                        Manifold's smooth_out was tried first: it shrinks
                        even its own cube with every edge "sharp" (6667 of
                        8000 mm³).
+  - `meshedit.py` / `meshedit_ui.py` / `meshedit_mcp.py` — **Edit Mode**
+                       (2026-10-01, the user: "like Blender — vertices we
+                       drag with the mouse, and add more"). Tab over the 3D
+                       view (toolbar Edit vertices, Edit menu, tree
+                       right-click) opens the selected part's `polyhedron`
+                       — anything else is CONVERTED first
+                       (`meshedit.convert`, one undo step: the preview
+                       triangles welded, coplanar neighbours merged back
+                       into convex polygons, so a cube is 8 vertices and 6
+                       quads; an Object / Group keeps itself and its
+                       placement, its contents become the polyhedron, a
+                       single colour inside survives as a colour node;
+                       refused in a loop, for an instance, past
+                       `MAX_POINTS`). `find_editable` looks through
+                       single-child wrappers, so the Object opens again.
+                       Geometry (Qt-free, faces CLOCKWISE like the node):
+                       move with proportional falloff (`weights`, Blender's
+                       curves) and X-mirror (`displace`: the reflected
+                       offset to each vertex's twin, a vertex on the plane
+                       stays on it), `transform` (S / R), `split_edge`
+                       (into BOTH faces), `poke`, `subdivide` (triangle -> 4,
+                       polygon -> quads round a centre, the neighbour gets
+                       the border midpoints), `extrude` (region copied,
+                       rim bridged by side quads), `merge`, `dissolve`
+                       (the fan round a vertex -> one polygon), `smooth`,
+                       `select_linked`; every op is checked with the
+                       polyhedron validation and REFUSED if it opens the
+                       solid. `EditSession` is `View3D.edit_tool`: the view
+                       hands it mouse / keys / paint first and orbits /
+                       pans / zooms with whatever it declines (a press on
+                       empty space or a face orbits; a click there selects
+                       the face's corners). Keys are Blender's (G S R + X
+                       Y Z, E, A / Alt+A, B, L, M, X, O, Alt+Z, W / right
+                       click menu, Ctrl+click adds a vertex), taken from the
+                       menus by accepting ShortcutOverride; the view takes
+                       ClickFocus and emits `tab_pressed`. World <-> local
+                       through `mesh.ancestor_matrix(stop = the isolated
+                       Object)`. A move commits points + faces in ONE
+                       `set_param` at most every `COMMIT_MS`; an undo that
+                       rebuilds the tree is followed by node id, then tree
+                       path, else Edit Mode closes. The selection tint is
+                       off while it is open. MCP `edit_mesh` (open / move /
+                       set / subdivide / extrude / merge / dissolve /
+                       smooth / split_edge / poke, vertices by index,
+                       `within` box or `all`, world mm) and
+                       get_document_info `edit_mode`. Tested in
+                       `tests/test_meshedit.py` with real mouse events.
   - `photoreal.py` / `photoreal_ui.py` — **photoreal renders** through
                        Blender Cycles when installed (2026-09-19; nothing
                        bundled — found via KHERVECAD_BLENDER, PATH, the
@@ -4053,7 +4100,7 @@ into a new module and import.
                        what each SHIPPED .kcad compiles to and pins the
                        files to the generator (`python -m
                        khervecad.tools.print_tests --check`).
-  - `mcp_schema.py`  — the **MCP tool table**: 76 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 81 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -4383,7 +4430,7 @@ into a new module and import.
   the variable reaching it only through PLACEMENT, and NEVER into the
   geometry of a part (a cube's size, a gear's teeth, a polygon's
   points) — that re-cuts the solid every frame.
-- `docs/MCP.md` — how to connect an assistant, what the 76 tools do,
+- `docs/MCP.md` — how to connect an assistant, what the 81 tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).
 - `requirements.txt`, `LICENSE` (GPL-3.0).
@@ -4679,7 +4726,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **76 tools**: the object tree, OpenSCAD in
+client gets the whole app as **81 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.
