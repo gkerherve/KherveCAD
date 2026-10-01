@@ -42,15 +42,20 @@ def model_of(code):
 def test_named_head_and_found_legs(app):
     c = P.build_creature(model_of(HORSE), "Box horse")
     roles = {p["role"]: p for p in c["parts"]}
+    # four found legs, each cut at the knee into a leg and its shin
     assert set(roles) == {"body", "head", "legFL", "legFR", "legBL",
-                          "legBR"}
+                          "legBR", "shinFL", "shinFR", "shinBL", "shinBR"}
     assert c["auto_legs"] and c["kind"] == "kc_box_horse"
     # real size: 1150 mm tall -> 1.15 blocks, feet on 0
     assert c["height"] == pytest.approx(1.15)
     fl = roles["legFL"]
     # a front leg is at -Z (the front) and hinges at its top (0.5 block)
     assert fl["pivot"][2] < 0 and fl["pivot"][1] == pytest.approx(0.5)
-    assert fl["size"][1] == pytest.approx(0.5)
+    shin = roles["shinFL"]
+    # the shin hangs from the knee, half way down, under its own leg
+    assert shin["pivot"][1] == pytest.approx(0.25, abs=0.03)
+    assert shin["pivot"][0] == pytest.approx(fl["pivot"][0], abs=0.02)
+    assert fl["size"][1] + shin["size"][1] == pytest.approx(0.5, abs=0.02)
     # KherveCAD +x is the creature's left, which the game puts at -x
     assert fl["pivot"][0] < 0 < roles["legFR"]["pivot"][0]
     head = roles["head"]
@@ -185,3 +190,39 @@ def test_list_and_remove_what_the_game_has(app, tmp_path):
         == ["walker"]
     with pytest.raises(P.PlanetCraftError):
         P.remove("dragon", str(tmp_path))
+
+
+def test_a_shin_named_inside_a_leg_is_its_own_part(app):
+    from khervecad.model import DocumentModel
+    doc = DocumentModel()
+    body = doc.add_node("cube", dict(x=-20.0, y=-40.0, z=40.0, width=40.0,
+                                     depth=80.0, height=30.0))
+    assert body is not None
+    for name, x, y in (("Front left leg", 15.0, -30.0),
+                       ("Front right leg", -15.0, -30.0),
+                       ("Back left leg", 15.0, 30.0),
+                       ("Back right leg", -15.0, 30.0)):
+        thigh = doc.add_node("cylinder", dict(x=x, y=y, z=20.0, height=20.0,
+                                              radius_bottom=4.0,
+                                              radius_top=4.0))
+        lower = doc.add_node("cylinder", dict(x=x, y=y, height=20.0,
+                                              radius_bottom=3.0,
+                                              radius_top=3.0))
+        shin = doc.wrap_nodes([lower], "union")
+        shin.name = name.replace("leg", "shin")
+        leg = doc.wrap_nodes([thigh, shin], "union")
+        leg.name = name
+    c = P.build_creature(doc, "Knees")
+    roles = {p["role"]: p for p in c["parts"]}
+    assert {"legFL", "shinFL", "legBR", "shinBR"} <= set(roles)
+    # 70 mm tall, sent at 1.2 blocks: each 20 mm piece is 0.343
+    assert roles["legFL"]["size"][1] == pytest.approx(0.343, abs=0.01)
+    assert roles["shinFL"]["pivot"][1] == pytest.approx(0.343, abs=0.01)
+
+
+def test_shin_words_make_shins_and_leave_jaws_alone():
+    assert P.role_of("Front left shin") == "shinFL"
+    assert P.role_of("Back right leg lower") == "shinBR"
+    assert P.role_of("Left foot") == "shinL"
+    assert P.role_of("Upper leg left") == "legL"
+    assert P.role_of("Lower jaw") is None

@@ -48,7 +48,13 @@ MAX_TRIANGLES = 60000
 SEGMENTS = 16
 DEFAULT_COLOUR = (0.78, 0.78, 0.78)
 ROLES = ("head", "tail", "wingL", "wingR", "legFL", "legFR", "legBL",
-         "legBR")
+         "legBR", "shinFL", "shinFR", "shinBL", "shinBR")
+#: words that make a leg part its LOWER half — the game hangs it on a knee
+#: inside the leg and bends the knee as the leg swings
+SHIN_WORDS = {"shin", "shins", "calf", "calves", "shank", "lower", "foot",
+              "feet", "hoof", "hooves", "paw", "paws", "knee"}
+#: an automatic leg of a four-legged model is cut into thigh and shin here
+KNEE_FRACTION = 0.5
 # What the game makes of it: an animal grazes and bolts, a person walks about
 # and turns to look at you, a monster hunts you. "auto" leaves it to the game,
 # which reads a monster's name ("Troll", "Dragon"…) and a person's two legs.
@@ -95,6 +101,13 @@ def role_of(name):
         if words & {"right", "r"}:
             return "wingR"
         return "wing"
+    shin = bool(words & SHIN_WORDS) and not (words & {"upper", "thigh"})
+    if shin and (words & {"leg", "legs"} or words & (SHIN_WORDS - {"lower"})):
+        end = "F" if words & {"front", "fore", "fl", "fr"} else (
+            "B" if words & {"back", "hind", "rear", "bl", "br"} else "")
+        side = "L" if words & {"left", "l", "fl", "bl"} else (
+            "R" if words & {"right", "r", "fr", "br"} else "")
+        return "shin" + end + side
     if words & {"leg", "legs"}:
         end = "F" if words & {"front", "fore", "fl", "fr"} else (
             "B" if words & {"back", "hind", "rear", "bl", "br"} else "")
@@ -109,7 +122,7 @@ def role_of(name):
 
 
 def _family(role):
-    return "leg" if role.startswith("leg") else (
+    return "leg" if role.startswith(("leg", "shin")) else (
         "wing" if role.startswith("wing") else role)
 
 
@@ -140,6 +153,13 @@ def _named_parts(root):
             r = role_of(node.name)
             if r and not others(node, _family(r)):
                 found.append((node, r))
+                if r.startswith("leg"):
+                    # a leg holding a named shin: the shin is its own part,
+                    # hung on the knee
+                    found.extend((d, role_of(d.name)) for d in node.walk()
+                                 if d is not node and d.visible
+                                 and (role_of(d.name) or "").startswith(
+                                     "shin"))
                 return
         for ch in node.children:
             walk(ch, hidden)
@@ -252,6 +272,48 @@ def _bbox(tris):
     return min(xs), min(ys), min(zs), max(xs), max(ys), max(zs)
 
 
+def _ancestors(node):
+    p = node.parent
+    while p is not None:
+        yield p
+        p = p.parent
+
+
+def _without(node, root, hidden, default):
+    """*node*'s coloured world triangles with the *hidden* parts left out
+    (a leg without the shin it holds)."""
+    was = [(n, n.visible) for n, _r in hidden]
+    try:
+        for n, _r in hidden:
+            n.visible = False
+        return _coloured_world(node, root, default)
+    finally:
+        for n, v in was:
+            n.visible = v
+
+
+def _knees(legs):
+    """Cut every automatic leg at KNEE_FRACTION of its height: the upper
+    part stays the leg, the lower becomes its shin — four-legged models
+    get knees without naming anything."""
+    out_legs, out_shins = {}, {}
+    for role, tris in legs.items():
+        zs = [p[2] for t, _c in tris for p in t]
+        knee = min(zs) + (max(zs) - min(zs)) * KNEE_FRACTION
+        from .cutaway import clip
+        shapes, colours = [t for t, _c in tris], [c for _t, c in tris]
+        # cut, not sorted: a box leg's sides run its whole height
+        low_t, low_c = clip(shapes, colours, "z", knee)
+        up_t, up_c = clip(shapes, colours, "z", knee, flip=True)
+        upper, lower = list(zip(up_t, up_c)), list(zip(low_t, low_c))
+        if len(upper) < 4 or len(lower) < 4:
+            out_legs[role] = tris
+            continue
+        out_legs[role] = upper
+        out_shins["shin" + role[3:]] = lower
+    return out_legs, out_shins
+
+
 def _auto_legs(body, box):
     """Split low triangles into quadrant legs if the middle underneath is
     clear. Returns (body_rest, {role: tris}) — no legs when it does not
@@ -305,7 +367,7 @@ def _pivot(role, tris):
     bx0, bx1, by0, by1, bz0, bz1 = min(xs), max(xs), min(ys), max(ys), \
         min(zs), max(zs)
     mx, mz = (bx0 + bx1) / 2, (bz0 + bz1) / 2
-    if role.startswith("leg"):
+    if role.startswith(("leg", "shin")):
         return (mx, by1, mz)
     if role == "head":
         return (mx, by0 + (by1 - by0) * 0.3, bz1)
@@ -361,8 +423,15 @@ def build_creature(model, name, node=None, height=None, speed=None,
             root, root, DEFAULT_COLOUR)
         groups = {}
     for n, r in named:
-        groups.setdefault((n, r), _coloured_world(
-            n, root, _inherited(n) or DEFAULT_COLOUR))
+        if r.startswith("leg"):
+            inner = [(d, s) for d, s in named
+                     if s.startswith("shin") and d is not n
+                     and any(a is n for a in _ancestors(d))]
+            groups.setdefault((n, r), _without(
+                n, root, inner, _inherited(n) or DEFAULT_COLOUR))
+        else:
+            groups.setdefault((n, r), _coloured_world(
+                n, root, _inherited(n) or DEFAULT_COLOUR))
     everything = body + [t for tris in groups.values() for t in tris]
     if not everything:
         raise PlanetCraftError("There is nothing visible to send.")
@@ -384,8 +453,18 @@ def build_creature(model, name, node=None, height=None, speed=None,
 
     # legs: named ones, sided by position when the name did not say
     legs = {}
+    shins = {}
     others = []
     for (n, r), tris in groups.items():
+        if r.startswith("shin"):
+            bx0, by0, _bz0, bx1, by1, _bz1 = _bbox(tris)
+            rest = r[4:]
+            end = rest[:1] if rest[:1] in ("F", "B") else (
+                "F" if (by0 + by1) / 2 < cy else "B")
+            side = rest[-1:] if rest[-1:] in ("L", "R") else (
+                "L" if (bx0 + bx1) / 2 > cx else "R")
+            shins.setdefault("shin" + end + side, []).extend(tris)
+            continue
         if r.startswith("legs"):
             # a group of several legs, dealt out by where each triangle
             # stands; whatever the name said (an end, a side) holds
@@ -426,6 +505,8 @@ def build_creature(model, name, node=None, height=None, speed=None,
     if not legs and not legless:
         body, legs = _auto_legs(body, box)
         auto = bool(legs)
+        if auto and len({r[3] for r in legs}) == 2 and not shins:
+            legs, shins = _knees(legs)
 
     def game(tris):
         return [(tuple(_to_game(p, scale, cx, cy, z0) for p in tri), rgb)
@@ -437,6 +518,9 @@ def build_creature(model, name, node=None, height=None, speed=None,
     for role in ("legFL", "legFR", "legBL", "legBR"):
         if legs.get(role):
             parts.append(_part(role, role, game(legs[role])))
+    for role in ("shinFL", "shinFR", "shinBL", "shinBR"):
+        if shins.get(role):
+            parts.append(_part(role, role, game(shins[role])))
     seen = set()
     for pname, role, tris in others:
         role = role if role not in seen else "extra"

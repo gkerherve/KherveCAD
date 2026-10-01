@@ -1767,6 +1767,18 @@ into a new module and import.
                        `book_url` (the game's Creatures book,
                        creatures.html#kind) and `game_running` (port 8123);
                        the dialog offers "Show in PlanetCraft".
+                       **Knees** (2026-10-01): a part named for a leg's
+                       LOWER half (`SHIN_WORDS`: shin, lower, calf, foot,
+                       paw, hoof…; `role_of` -> `shinFL`..) is sent as
+                       that leg's shin — inside a leg group it is split
+                       out (`_without`), from an armature by bone name —
+                       and the found legs of a four-legged model are CUT
+                       at `KNEE_FRACTION` (`_knees`, cutaway.clip: a box
+                       leg's sides run its whole height, so sorting by
+                       centroid cut nothing). The game hangs each shin on
+                       a `knee` joint inside its leg and `poseKnees` folds
+                       it while the leg swings forward (KhervePlanet's
+                       CLAUDE.md).
                        `list_creatures` / `remove` read and prune the game's
                        creatures/ folder. A RUNNING game picks a send up
                        within seconds and puts it in front of the player.

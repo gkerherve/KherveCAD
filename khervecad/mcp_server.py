@@ -640,7 +640,11 @@ Creatures and monsters for the PlanetCraft game:
 as named parts: a group called Head (nods at its neck), Tail, Left wing \
 and Right wing, and each leg by end and side — Left leg / Right leg for \
 two, Front left leg … Back right leg for four. Everything else is the \
-body. Anything not in a named group does not move.
+body. Anything not in a named group does not move. KNEES: a group or bone \
+named for a leg's LOWER half — Front left shin, Back right leg lower, \
+Left foot, a paw, a hoof — becomes that leg's shin, hung on a knee that \
+bends as the leg swings (put it inside the leg's group or give it its own \
+bone); found legs of a four-legged model get knees by themselves.
 - For a monster, troll, dragon, beast or any creature for the game, use \
 build_creature: a preset (list_creature_options — Troll, Ogre, Goblin, \
 Orc, Minotaur, Yeti, Cyclops, Gargoyle, Imp, Dragon, Dire wolf, Cave \
