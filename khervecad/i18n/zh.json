@@ -1911,6 +1911,7 @@
   "Worm pitch diameter (mm)": "蜗杆节径（毫米）",
   "Wrap it in a Joint to pose it, or a Blend to melt it into a body.": "用关节包裹它以摆姿势，或用平滑融合将其融入身体。",
   "Wrap it in a Sculpt to shape the face, and clothe it with lofts and shells drawn over it.": "用雕刻工具包裹它以塑造面部，并用放样和外壳绘制衣物覆盖在其上。",
+  "Wrap long lines": "长行自动换行",
   "Wraps the selection in the tightest convex skin — two spheres become a capsule, four pillars a rounded plate.": "以最紧密的凸形表面包裹选中内容——两个球体变为胶囊体，四根立柱变为圆角平板。",
   "Wrings the selection around an axis, turning by Angle over its length — drills, twisted columns, horns.": "使选中内容绕一根轴扭转，沿其长度方向旋转指定角度——钻头、扭转立柱、号角。",
   "Write the Condition (wall >= 1.2) and a Message — an expression, so str(\"wall \", wall, \" is too thin\") works.": "编写条件（wall >= 1.2）和消息——消息是一个表达式，因此 str(\"wall \", wall, \" is too thin\") 也是有效的。",

@@ -1911,6 +1911,7 @@
   "Worm pitch diameter (mm)": "वर्म पिच व्यास (मिमी)",
   "Wrap it in a Joint to pose it, or a Blend to melt it into a body.": "इसे पोज़ देने के लिए एक जॉइंट में लपेटें, या इसे एक शरीर में पिघलाने के लिए एक ब्लेंड में।",
   "Wrap it in a Sculpt to shape the face, and clothe it with lofts and shells drawn over it.": "चेहरे को आकार देने के लिए इसे एक स्कल्प्ट में लपेटें, और इसके ऊपर बनाए गए लॉफ्ट और शेल से इसे कपड़े पहनाएं।",
+  "Wrap long lines": "लंबी पंक्तियाँ लपेटें",
   "Wraps the selection in the tightest convex skin — two spheres become a capsule, four pillars a rounded plate.": "चयन को सबसे तंग उत्तल त्वचा में लपेटता है — दो गोले एक कैप्सूल बनते हैं, चार खंभे एक गोल प्लेट।",
   "Wrings the selection around an axis, turning by Angle over its length — drills, twisted columns, horns.": "चयन को एक अक्ष के चारों ओर मरोड़ता है, इसकी लंबाई पर कोण से घुमाते हुए — ड्रिल, मुड़े हुए स्तंभ, सींग।",
   "Write the Condition (wall >= 1.2) and a Message — an expression, so str(\"wall \", wall, \" is too thin\") works.": "शर्त (wall >= 1.2) और एक संदेश टाइप करें — एक एक्सप्रेशन, इसलिए str(\"wall \", wall, \" is too thin\") काम करता है।",

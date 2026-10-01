@@ -33,7 +33,7 @@ import pytest  # noqa: E402
 #: session, then put back exactly as they were.
 _NEUTRAL_SETTINGS = ("render_stage", "render_style", "render_bg",
                      "render_projection", "render_cavity", "render_edges",
-                     "render_scale_bar", "render_grid",
+                     "render_scale_bar", "render_grid", "code_wrap",
                      # the Blueprint remembers the title block's material,
                      # company and author: a test choosing Aluminium once
                      # made every real sheet after it weigh aluminium

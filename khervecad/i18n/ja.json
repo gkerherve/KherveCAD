@@ -1911,6 +1911,7 @@
   "Worm pitch diameter (mm)": "ウォームピッチ径（mm）",
   "Wrap it in a Joint to pose it, or a Blend to melt it into a body.": "ポーズをつけるには関節で、体に溶け込ませるにはブレンドで包みます。",
   "Wrap it in a Sculpt to shape the face, and clothe it with lofts and shells drawn over it.": "顔を形作るにはスカルプトで包み、その上に描いたロフトやシェルで衣服を着せます。",
+  "Wrap long lines": "長い行を折り返す",
   "Wraps the selection in the tightest convex skin — two spheres become a capsule, four pillars a rounded plate.": "選択範囲を最もタイトな凸皮膜で包みます — 2つの球はカプセルに、4本の柱は角丸プレートになります。",
   "Wrings the selection around an axis, turning by Angle over its length — drills, twisted columns, horns.": "選択範囲を軸周りにねじり、長さ全体にわたって角度分回転させます — ドリル、ねじれた柱、角。",
   "Write the Condition (wall >= 1.2) and a Message — an expression, so str(\"wall \", wall, \" is too thin\") works.": "条件（wall >= 1.2）とメッセージを入力します — 式なので str(\"wall \", wall, \" is too thin\") が使えます。",

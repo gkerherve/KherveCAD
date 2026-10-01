@@ -1911,6 +1911,7 @@
   "Worm pitch diameter (mm)": "Diamètre primitif de la vis sans fin (mm)",
   "Wrap it in a Joint to pose it, or a Blend to melt it into a body.": "Enveloppez-la dans une Articulation pour la poser, ou un Fondu pour la fondre dans un corps.",
   "Wrap it in a Sculpt to shape the face, and clothe it with lofts and shells drawn over it.": "Enveloppez-la dans un Sculptage pour façonner le visage, et habillez-la avec des loftings et des coques dessinés par-dessus.",
+  "Wrap long lines": "Renvoyer les lignes longues à la ligne",
   "Wraps the selection in the tightest convex skin — two spheres become a capsule, four pillars a rounded plate.": "Enveloppe la sélection dans la peau convexe la plus serrée — deux sphères deviennent une capsule, quatre piliers une plaque arrondie.",
   "Wrings the selection around an axis, turning by Angle over its length — drills, twisted columns, horns.": "Tord la sélection autour d'un axe, en tournant de l'Angle sur sa longueur — forets, colonnes torsadées, cornes.",
   "Write the Condition (wall >= 1.2) and a Message — an expression, so str(\"wall \", wall, \" is too thin\") works.": "Écrivez la Condition (wall >= 1.2) et un Message — une expression, donc str(\"wall \", wall, \" is too thin\") fonctionne.",

@@ -17,11 +17,11 @@ the Free Software Foundation, either version 3 of the License, or
 import json
 import re
 
-from PyQt5.QtCore import (QEvent, QRect, QRectF, QSize, Qt,
+from PyQt5.QtCore import (QEvent, QRect, QRectF, QSettings, QSize, Qt,
                           pyqtSignal)
 from PyQt5.QtGui import (QBrush, QColor, QFont, QIcon, QKeySequence,
                          QPainter, QPen, QPixmap, QSyntaxHighlighter,
-                         QTextCharFormat, QTextCursor)
+                         QTextCharFormat, QTextCursor, QTextOption)
 from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QCheckBox,
                              QHBoxLayout, QMenu, QMessageBox,
                              QPlainTextEdit, QPushButton, QSpinBox,
@@ -1263,6 +1263,8 @@ class CodeView(QPlainTextEdit):
 
     #: spaces inserted per Tab / indent step.
     INDENT = "    "
+    #: wrapping switched (toolbar button or right-click menu)
+    wrap_changed = pyqtSignal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1279,6 +1281,8 @@ class CodeView(QPlainTextEdit):
         self.blockCountChanged.connect(self._update_gutter_width)
         self.updateRequest.connect(self._update_gutter)
         self._update_gutter_width(0)
+        self.set_wrapping(QSettings("Kherve", "KherveCAD").value(
+            self.WRAP_KEY, False, type=bool), remember=False)
         self.refresh_theme()
 
     # ----------------------------------------------------- line numbers
@@ -1371,6 +1375,35 @@ class CodeView(QPlainTextEdit):
                 self.insertPlainText(self.INDENT)
             return
         super().keyPressEvent(event)
+
+    #: QSettings key of the wrap choice (Code tab toolbar)
+    WRAP_KEY = "code_wrap"
+
+    def wrapping(self) -> bool:
+        return self.lineWrapMode() != QPlainTextEdit.NoWrap
+
+    def set_wrapping(self, on: bool, remember: bool = True):
+        """Wrap long lines at the panel's width (between words, or
+        anywhere in a line with no spaces) or let them run on with a
+        horizontal scroll bar. The gutter numbers each line once."""
+        self.setLineWrapMode(QPlainTextEdit.WidgetWidth if on
+                             else QPlainTextEdit.NoWrap)
+        self.setWordWrapMode(QTextOption.WrapAtWordBoundaryOrAnywhere)
+        self._gutter.update()
+        self.wrap_changed.emit(bool(on))
+        if remember:
+            QSettings("Kherve", "KherveCAD").setValue(self.WRAP_KEY,
+                                                      bool(on))
+
+    def contextMenuEvent(self, event):
+        menu = self.createStandardContextMenu()
+        menu.addSeparator()
+        act = menu.addAction(language.tr("Wrap long lines"))
+        act.setCheckable(True)
+        act.setChecked(self.wrapping())
+        act.toggled.connect(self.set_wrapping)
+        menu.exec_(event.globalPos())
+        menu.deleteLater()
 
     def refresh_theme(self):
         from .style import tokens
@@ -2038,6 +2071,14 @@ class BuilderPanel(QTabWidget):
                      language.tr("Indent (Tab)"), c.indent_selection)
         tb.addAction(icons.icon("mdi.format-indent-decrease"),
                      language.tr("Dedent (Shift+Tab)"), c.dedent_selection)
+        tb.addSeparator()
+        # long lines (a polyhedron's points) wrap or run on — remembered
+        self.wrap_act = tb.addAction(icons.icon("mdi.wrap"),
+                                     language.tr("Wrap long lines"))
+        self.wrap_act.setCheckable(True)
+        self.wrap_act.setChecked(c.wrapping())
+        self.wrap_act.toggled.connect(c.set_wrapping)
+        c.wrap_changed.connect(self.wrap_act.setChecked)
         return tb
 
     def refresh_theme(self):

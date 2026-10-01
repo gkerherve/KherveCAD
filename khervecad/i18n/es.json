@@ -1911,6 +1911,7 @@
   "Worm pitch diameter (mm)": "Diámetro primitivo del sinfín (mm)",
   "Wrap it in a Joint to pose it, or a Blend to melt it into a body.": "Envuélvela en una Articulación para posarla, o en una Fusión suave para fundirla en un cuerpo.",
   "Wrap it in a Sculpt to shape the face, and clothe it with lofts and shells drawn over it.": "Envuélvela en un Esculpido para dar forma al rostro, y vístela con lofts y carcasas dibujados sobre ella.",
+  "Wrap long lines": "Ajustar las líneas largas",
   "Wraps the selection in the tightest convex skin — two spheres become a capsule, four pillars a rounded plate.": "Envuelve la selección en la piel convexa más ajustada: dos esferas se convierten en una cápsula, cuatro pilares en una placa redondeada.",
   "Wrings the selection around an axis, turning by Angle over its length — drills, twisted columns, horns.": "Retuerce la selección alrededor de un eje, girando el Ángulo a lo largo de su longitud: brocas, columnas retorcidas, cuernos.",
   "Write the Condition (wall >= 1.2) and a Message — an expression, so str(\"wall \", wall, \" is too thin\") works.": "Escribe la Condición (wall >= 1.2) y un Mensaje: una expresión, así que str(\"wall \", wall, \" is too thin\") funciona.",

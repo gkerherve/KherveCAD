@@ -378,3 +378,19 @@ def test_mcp_edit_mesh_open_move_and_extrude(window):
         window.model.find(poly).params["faces"]) is None
     info = ex.execute("get_document_info", {})
     assert "edit_mode" in info
+
+
+# ------------------------------------------------- Code tab wrapping
+
+def test_code_tab_wraps_on_request_and_remembers(window):
+    from PyQt5.QtCore import QSettings
+    from PyQt5.QtWidgets import QPlainTextEdit
+    code, act = window.builder.code, window.builder.wrap_act
+    assert not code.wrapping() and not act.isChecked()     # default
+    act.trigger()                                  # the toolbar button
+    assert code.lineWrapMode() == QPlainTextEdit.WidgetWidth
+    assert QSettings("Kherve", "KherveCAD").value("code_wrap",
+                                                  type=bool) is True
+    code.set_wrapping(False)                       # the right-click menu
+    assert not act.isChecked() and not code.wrapping()
+    QSettings("Kherve", "KherveCAD").remove("code_wrap")
