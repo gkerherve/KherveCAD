@@ -2039,12 +2039,13 @@ class McpToolExecutor:
             win.view3d.set_stage(bool(params["stage"]))
         heat = None
         if any(params.get(k) is not None for k in
-               ("heatmap", "heat_min_wall", "heat_overhang")):
+               ("heatmap", "heat_min_wall", "heat_overhang",
+                "heat_draft")):
             from . import heatmap_ui
             try:
                 heat = heatmap_ui.set_heatmap(
                     win, params.get("heatmap"), params.get("heat_min_wall"),
-                    params.get("heat_overhang"))
+                    params.get("heat_overhang"), params.get("heat_draft"))
             except (TypeError, ValueError) as exc:
                 raise ToolError(str(exc))
         if params.get("cavity") is not None:

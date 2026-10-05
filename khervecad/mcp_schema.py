@@ -2445,14 +2445,21 @@ TOOLS = [
                                      "ground grid (also what "
                                      "render_view shows)."},
             "heatmap": {"type": "string",
-                        "enum": ["off", "thickness", "overhang"],
+                        "enum": ["off", "thickness", "overhang", "draft",
+                                 "curvature", "zebra"],
                         "description": "Paint the print check ON the "
                                        "part, in the view and in every "
                                        "render_view: 'thickness' colours "
                                        "each face by the wall behind it "
                                        "(red = thinner than heat_min_wall), "
                                        "'overhang' by how far it looks "
-                                       "down (red = needs support). The "
+                                       "down (red = needs support), "
+                                       "'draft' by its draft against +Z "
+                                       "for moulding (red = vertical, "
+                                       "heat_draft degrees wanted), "
+                                       "'curvature' (red bulges, blue "
+                                       "dips), 'zebra' reflected stripes "
+                                       "(a kink = a crease). The "
                                        "result carries the legend and "
                                        "stats (thinnest wall, fraction "
                                        "red). Turn it 'off' after."},
@@ -2460,6 +2467,9 @@ TOOLS = [
                               "description": "Minimum printable wall for "
                                              "the thickness map (document "
                                              "units, default 0.8)."},
+            "heat_draft": {"type": "number",
+                           "description": "Wanted draft angle in degrees "
+                                          "for the draft map (default 2)."},
             "heat_overhang": {"type": "number",
                               "description": "Overhang limit in degrees "
                                              "for the overhang map "

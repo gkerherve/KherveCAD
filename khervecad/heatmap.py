@@ -27,7 +27,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 import math
 
-KINDS = ("off", "thickness", "overhang")
+KINDS = ("off", "thickness", "overhang", "draft", "curvature", "zebra")
 
 RED, ORANGE, YELLOW = "#e53935", "#fb8c00", "#fdd835"
 GREEN, TEAL, BLUE, GREY = "#43a047", "#00897b", "#1e88e5", "#9e9e9e"
@@ -141,9 +141,18 @@ def overhang_colours(tris, limit: float):
 
 
 def colours(tris, kind: str, min_wall: float = 0.8,
-            overhang: float = 45.0):
+            overhang: float = 45.0, draft: float = 2.0, view=None):
     """(per-face preview colours, stats dict) for heat map *kind*."""
     tris = list(tris)
+    if kind in ("draft", "curvature", "zebra"):
+        from . import surface_analysis as sa
+        if kind == "draft":
+            cols, stats = sa.draft(tris, draft)
+        elif kind == "curvature":
+            cols, stats = sa.curvature(tris)
+        else:
+            cols, stats = sa.zebra(tris, view=view or (0.0, -1.0, 0.3))
+        return [(c, 1.0, "Matte") for c in cols], stats
     if kind == "thickness":
         reach = max(min_wall * 12, 1e-3)
         values = thickness(tris, reach)

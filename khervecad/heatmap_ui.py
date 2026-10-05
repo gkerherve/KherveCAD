@@ -23,12 +23,15 @@ def state(window) -> dict:
     st = getattr(window, "_heatmap", None)
     if st is None:
         st = window._heatmap = dict(kind="off", min_wall=0.8,
-                                    overhang=45.0)
+                                    overhang=45.0, draft=2.0)
     return st
 
 
-def set_heatmap(window, kind=None, min_wall=None, overhang=None):
+def set_heatmap(window, kind=None, min_wall=None, overhang=None,
+                draft=None):
     st = state(window)
+    if draft is not None:
+        st["draft"] = min(max(float(draft), 0.0), 45.0)
     if kind is not None:
         if kind not in heatmap.KINDS:
             raise ValueError("heatmap must be one of "
@@ -52,7 +55,8 @@ def apply(window, tris, colors, label):
         return colors, label
     from . import units
     wall = st["min_wall"]
-    cols, stats = heatmap.colours(tris, st["kind"], wall, st["overhang"])
+    cols, stats = heatmap.colours(tris, st["kind"], wall, st["overhang"],
+                                  st.get("draft", 2.0), _view_dir(window))
     window._heat_stats = stats
     if cols is None:
         return colors, label
@@ -66,6 +70,19 @@ def apply(window, tris, colors, label):
             suffix += ", " + language.tr(
                 "thinnest {thin:.2f}").format(thin=thin)
         label += " " + suffix
+    elif st["kind"] == "draft":
+        label += " " + language.tr(
+            "— draft angle, red = no draft ({fraction:.0f} %), green at "
+            "least {angle:g}°").format(
+                angle=st.get("draft", 2.0),
+                fraction=stats["no_draft_fraction"] * 100)
+    elif st["kind"] == "curvature":
+        label += " " + language.tr(
+            "— curvature: red bulges out, blue dips in")
+    elif st["kind"] == "zebra":
+        label += " " + language.tr(
+            "— zebra: unbroken stripes = smooth; turn the view and press "
+            "Redraw to re-reflect")
     else:
         label += " " + language.tr(
             "— heat map: overhang, red past {angle:g}° "
@@ -75,6 +92,16 @@ def apply(window, tris, colors, label):
     return cols, label
 
 
+def _view_dir(window):
+    """Towards the eye, for the zebra's reflection."""
+    view = getattr(window, "view3d", None)
+    try:
+        _eye, _r, _u, forward = view._camera()
+        return (-forward[0], -forward[1], -forward[2])
+    except Exception:
+        return None
+
+
 def add_menu(window, menu):
     sub = menu.addMenu(icons.icon("mdi.thermometer"),
                        language.tr("&Heat Map"))
@@ -82,7 +109,11 @@ def add_menu(window, menu):
     window._heat_actions = {}
     for kind, text in (("off", language.tr("&Off")),
                        ("thickness", language.tr("&Wall thickness")),
-                       ("overhang", language.tr("Over&hangs"))):
+                       ("overhang", language.tr("Over&hangs")),
+                       ("draft", language.tr("&Draft angle (moulding)")),
+                       ("curvature", language.tr("&Curvature")),
+                       ("zebra", language.tr("&Zebra stripes "
+                                             "(smoothness)"))):
         act = QAction(text, window, checkable=True)
         act.setData(kind)
         act.setChecked(state(window)["kind"] == kind)
