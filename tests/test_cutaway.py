@@ -168,3 +168,38 @@ def test_an_error_in_a_callback_is_logged_not_fatal(tmp_path, app):
         assert "a tool broke" in log.read_text()
     finally:
         sys.excepthook = saved
+
+
+def test_each_colour_is_capped_in_its_own_colour():
+    """A steel shell round a PTFE core: the section shows a steel ring
+    and a PTFE disc, each in its part's colour (matte), not one colour."""
+    outer = mesh.tessellate(scadparse.parse_scad(
+        "difference() { cube(20, center=true); cube(10, center=true); }")[0])
+    inner = mesh.tessellate(scadparse.parse_scad(
+        "cube(10, center=true);")[0])
+    steel, ptfe = ("#c0c4c8", 1.0, "Metal"), ("#ffffff", 1.0, None)
+    tris = outer + inner
+    colors = [steel] * len(outer) + [ptfe] * len(inner)
+    shown, shown_colors, _ = cutaway.apply(tris, colors, "y", 0.5)
+    caps = [c for c in shown_colors[len(shown) - len(shown_colors):]
+            if c and c[2] == "Matte"]
+    assert {c[0] for c in caps} == {"#c0c4c8", "#ffffff"}
+    area = {}
+    for tri, c in zip(shown, shown_colors):
+        if c and c[2] == "Matte":
+            (a, b, d) = tri
+            u = [b[i] - a[i] for i in range(3)]
+            v = [d[i] - a[i] for i in range(3)]
+            n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2],
+                 u[0] * v[1] - u[1] * v[0]]
+            area[c[0]] = area.get(c[0], 0.0) + math.sqrt(
+                sum(x * x for x in n)) / 2.0
+    assert area["#ffffff"] == pytest.approx(100.0, rel=1e-6)
+    assert area["#c0c4c8"] == pytest.approx(300.0, rel=1e-6)
+
+
+def test_an_uncoloured_cut_keeps_the_section_colour():
+    tris = mesh.tessellate(scadparse.parse_scad(
+        "cube(10, center=true);")[0])
+    shown, colors, _ = cutaway.apply(tris, None, "x", 0.5)
+    assert cutaway.CAP_COLOR in colors

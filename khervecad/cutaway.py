@@ -10,9 +10,10 @@ sweep — even-odd, so holes stay open without bridging, and linear in
 the outline size, where ear clipping went quadratic on a thread's
 thousand-point section and could not follow a slider.
 
-The cap faces the removed side (towards whoever is looking in), wears
-`CAP_COLOR` in a matte finish — the CAD convention of a coloured
-section — and together with the clipped surface makes a closed solid
+The cap faces the removed side (towards whoever is looking in). Each
+colour is capped on its own and its cap wears that colour, matte, so an
+assembly's section tells its parts apart; an uncoloured model wears
+`CAP_COLOR` — the CAD convention of a coloured section — and together with the clipped surface makes a closed solid
 again, so a mass check of what is shown still adds up.
 
 Copyright (C) 2026 Gwilherm Kerherve
@@ -151,8 +152,33 @@ def apply(tris, colors, axis, position, flip=False):
     cap was added (the cap is always coloured)."""
     offset = offset_at(tris, axis, position)
     kept, kept_colors = clip(tris, colors, axis, offset, flip)
-    cap = caps(tris, axis, offset, flip)
+    cap, cap_colors = [], []
+    for color, group in _by_colour(tris, colors):
+        piece = caps(group, axis, offset, flip)
+        cap += piece
+        cap_colors += [cap_color(color)] * len(piece)
     if not cap:
         return kept, kept_colors, offset
     base = kept_colors if kept_colors is not None else [None] * len(kept)
-    return kept + cap, base + [CAP_COLOR] * len(cap), offset
+    return kept + cap, base + cap_colors, offset
+
+
+def _by_colour(tris, colors):
+    """[(colour, triangles)]: each colour capped on its own, so a steel
+    body round a PTFE liner round a liquid shows three sections, not one
+    even-odd tangle in a single colour."""
+    if not colors:
+        return [(None, tris)]
+    groups = {}
+    for tri, color in zip(tris, colors):
+        groups.setdefault(color, []).append(tri)
+    return list(groups.items())
+
+
+def cap_color(color):
+    """A part's cut face: its own colour and opacity, matte (a section
+    is a sawn face, not a polished one) — `CAP_COLOR` when uncoloured."""
+    if not color or not color[0]:
+        return CAP_COLOR
+    alpha = color[1] if len(color) > 1 else 1.0
+    return (color[0], alpha, "Matte")
