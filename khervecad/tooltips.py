@@ -966,6 +966,19 @@ TIPS = {
          "gives the plain polygon.",
          "Extrude it for a solid."],
         "Turn° sets where the first tip points (90 = up)."),
+    "curve_surface": (
+        "Surface from curves",
+        "An exact surface made from 3D curves — Rhino's Loft, Sweep, "
+        "Sweep along two rails, Patch, Revolve and Extrude. Open "
+        "surfaces are thickened into a solid you can print; STEP export "
+        "keeps the exact surface.",
+        ["Draw the curves (Insert ▸ Draw 3D Curve), or add 3D curves.",
+         "Select them in the tree, in order — Ctrl+click for several.",
+         "Tools ▸ Surface from Curves (or right-click) and pick the kind.",
+         "Change Make, Wall thickness, Ruled and the rest in Properties; "
+         "editing a curve inside it reshapes the surface."],
+        "For a sweep the FIRST curve is the rail; for a patch the first "
+        "is the closed boundary."),
     "draw_curve": (
         "Draw 3D curve",
         "Click points in the 3D view to draw a smooth curve through "

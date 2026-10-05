@@ -268,20 +268,11 @@ def exact_shape(node, env):
         return None
     if style == "straight":
         return _straight_exact(polyline(pts, style, closed), thick / 2.0)
-    # through the same Catmull-Rom points the preview and OpenSCAD draw,
-    # so the exact pipe IS the shape on screen, only smooth
     dense = polyline(pts, style, closed, smooth)
     periodic = bool(closed and len(pts) > 2)
-    if periodic:
-        dense = dense[:-1]
-    arr = _pnt_array(len(dense))
-    for i, p in enumerate(dense, 1):
-        arr.SetValue(i, gp_Pnt(*p))
-    interp = GeomAPI_Interpolate(arr, periodic, 1e-7)
-    interp.Perform()
-    if not interp.IsDone():
+    curve = bspline(pts, closed, smooth)
+    if curve is None:
         return None
-    curve = interp.Curve()
     spine = BRepBuilderAPI_MakeWire(
         BRepBuilderAPI_MakeEdge(curve).Edge()).Wire()
     start = curve.Value(curve.FirstParameter())
@@ -308,6 +299,52 @@ def exact_shape(node, env):
     for p in (dense[0], dense[-1]):
         bld.Add(comp, BRepPrimAPI_MakeSphere(gp_Pnt(*p), thick / 2.0).Shape())
     return comp
+
+
+def bspline(points, closed=False, smooth=8):
+    """The exact B-spline through the SAME Catmull-Rom points the
+    preview and OpenSCAD draw (so the exact curve IS the one on screen,
+    only smooth), or None."""
+    from OCP.gp import gp_Pnt
+    from OCP.GeomAPI import GeomAPI_Interpolate
+    pts = list(points)
+    if len(pts) < 2:
+        return None
+    dense = polyline(pts, "smooth", closed, smooth)
+    periodic = bool(closed and len(pts) > 2)
+    if periodic:
+        dense = dense[:-1]
+    arr = _pnt_array(len(dense))
+    for i, p in enumerate(dense, 1):
+        arr.SetValue(i, gp_Pnt(*p))
+    interp = GeomAPI_Interpolate(arr, periodic, 1e-7)
+    interp.Perform()
+    return interp.Curve() if interp.IsDone() else None
+
+
+def wire_of(node, env=None):
+    """A curve node as an exact OCC wire: B-spline when smooth, lines
+    when straight. None when it cannot be built."""
+    from OCP.gp import gp_Pnt
+    from OCP.BRepBuilderAPI import (BRepBuilderAPI_MakeEdge,
+                                    BRepBuilderAPI_MakeWire,
+                                    BRepBuilderAPI_MakePolygon)
+    style, closed, smooth, _thick = _resolved(node, env or {})
+    pts = control_points(node, env)
+    if len(pts) < 2:
+        return None
+    if style == "straight":
+        poly = BRepBuilderAPI_MakePolygon()
+        for p in pts:
+            poly.Add(gp_Pnt(*p))
+        if closed and len(pts) > 2:
+            poly.Close()
+        return poly.Wire() if poly.IsDone() else None
+    curve = bspline(pts, closed, smooth)
+    if curve is None:
+        return None
+    return BRepBuilderAPI_MakeWire(
+        BRepBuilderAPI_MakeEdge(curve).Edge()).Wire()
 
 
 def _straight_exact(pts, r):

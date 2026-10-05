@@ -24,13 +24,13 @@ the Free Software Foundation, either version 3 of the License, or
 
 from __future__ import annotations
 
-from . import (armature, curve3d, curves2d, displace, gears, holes, outfit,
+from . import (armature, curve3d, curve_surface, curves2d, displace, gears, holes, outfit,
                scatter, shapekeys, skin, solids, strands, textured,
                textures, threads, vpaint, weathering)
 
 MODULES = [gears, threads, holes, solids, curves2d, curve3d, textures,
            textured, outfit, weathering, scatter, displace.KIT,
-           armature.KIT, shapekeys.KIT, strands.KIT, skin.KIT, vpaint]
+           armature.KIT, curve_surface.KIT, shapekeys.KIT, strands.KIT, skin.KIT, vpaint]
 
 NODE_TYPES = {}
 LEAVES = frozenset()

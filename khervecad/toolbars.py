@@ -425,6 +425,14 @@ def build_tools_menu(win, menu):
                    bind=False)
     edit.setText(edit.text() + "\tTab")       # shown, the view owns Tab
     menu.addAction(edit)
+    surf = menu.addMenu(icons.icon("mdi.vector-curve"),
+                        language.tr("Surface from &Curves"))
+    surf.setToolTipsVisible(True)
+    from . import curve_surface, curve_surface_ui
+    for kind, label in curve_surface.KIND_LABELS:
+        surf.addAction(_action(
+            win, "mdi.vector-curve", label, "curve_surface",
+            lambda _=False, k=kind: curve_surface_ui.from_selection(win, k)))
     menu.addAction(_action(win, "mdi.magnet-on", "Snap objects",
                            "snap_objects", win._start_snap, "J",
                            bind=False))

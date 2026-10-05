@@ -1135,6 +1135,10 @@ class ObjectTree(QTreeWidget):
                            lambda: self.select_nodes([
                                curve3d.sweep_from_curve(self.model,
                                                         roots[0])]))
+        if hasattr(win, "statusBar"):
+            from . import curve_surface_ui
+            menu.addSeparator()
+            curve_surface_ui.add_menu(menu, win, roots)
         if hasattr(win, "view3d") and len(roots) == 1:     # lego_convert
             from . import lego_convert
             menu.addSeparator()

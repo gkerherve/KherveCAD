@@ -192,6 +192,13 @@ def _unique_names(parts):
 
 def _mesh_shape(shape, quality):
     """Triangles of an OCC shape at *quality*, outward wound."""
+    lin, ang = QUALITY.get(quality, QUALITY["Normal"])
+    return _mesh_shape_rel(shape, lin, ang)
+
+
+def _mesh_shape_rel(shape, lin, ang):
+    """Triangles of an OCC shape, the deflection *lin* a fraction of its
+    size and *ang* degrees, outward wound."""
     from OCP.BRepMesh import BRepMesh_IncrementalMesh
     from OCP.Bnd import Bnd_Box
     from OCP.BRepBndLib import BRepBndLib
@@ -208,7 +215,6 @@ def _mesh_shape(shape, quality):
     lo, hi = box.CornerMin(), box.CornerMax()
     x0, y0, z0, x1, y1, z1 = lo.X(), lo.Y(), lo.Z(), hi.X(), hi.Y(), hi.Z()
     size = max(x1 - x0, y1 - y0, z1 - z0, 1e-6)
-    lin, ang = QUALITY.get(quality, QUALITY["Normal"])
     BRepMesh_IncrementalMesh(shape, size * lin, False,
                              math.radians(ang), True)
     tris = []
@@ -652,6 +658,15 @@ class Compiler:
             from . import curve3d
             try:
                 got = curve3d.exact_shape(node, env)
+            except Exception:
+                got = None
+            if got is not None:
+                self._leaf()
+                return got
+        if t == "curve_surface":
+            from . import curve_surface
+            try:
+                got = curve_surface.shape(node, env)
             except Exception:
                 got = None
             if got is not None:

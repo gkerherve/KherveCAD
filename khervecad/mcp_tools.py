@@ -2971,6 +2971,29 @@ class McpToolExecutor:
         except creature_mcp.CreatureError as exc:
             raise ToolError(str(exc))
 
+    def _t_make_surface(self, params) -> dict:
+        from . import curve_surface
+        from .model import validate
+        nodes = [self._node(i) for i in params.get("curve_ids") or []]
+        kind = str(params.get("kind", "loft"))
+        if kind not in curve_surface.KINDS:
+            raise ToolError("kind must be one of "
+                            + ", ".join(curve_surface.KINDS))
+        try:
+            surf = curve_surface.make_surface(self._model, nodes, kind)
+        except ValueError as exc:
+            raise ToolError(str(exc))
+        for key in ("thickness", "ruled", "capped", "angle", "height"):
+            if key in params:
+                surf.params[key] = params[key]
+        self._model.node_changed.emit(surf)
+        out = {"created": surf.id, "kind": kind,
+               "curves": [c.id for c in curve_surface.curves(surf)]}
+        problem = validate(self._model.root).get(surf.id)
+        if problem:
+            out["problem"] = problem
+        return out
+
     def _t_edit_mesh(self, params) -> dict:
         from . import meshedit_mcp
         node = self._node(params.get("node_id"))

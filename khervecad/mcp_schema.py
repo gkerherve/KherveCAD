@@ -2635,6 +2635,38 @@ TOOLS = [
         }, ["path"]),
     },
     {
+        "name": "make_surface",
+        "description": (
+            "Make an EXACT surface from 3D curves — Rhino's Loft, Sweep, "
+            "Sweep2, Patch, Revolve, Extrude. Draw the curves first "
+            "(add_node type curve with points [[x, y, z], …], style "
+            "smooth | straight, closed; or kcad_curve(...) in "
+            "apply_code), then pass their ids IN ORDER: `loft` skins "
+            "through them (closed curves are capped into a solid unless "
+            "capped is false); `sweep` — the first is the rail, the rest "
+            "profiles; `sweep2` — the first two are rails; `patch` — "
+            "the first is a CLOSED boundary, the others curves the "
+            "surface passes through; `revolve` turns the first about Z "
+            "by `angle`; `extrude` pushes it up by `height`. An open "
+            "surface is thickened by `thickness` mm (default 1) into a "
+            "solid. The curves move inside the new node, so editing one "
+            "reshapes the surface; STEP export keeps the surface exact."
+        ),
+        "input_schema": _obj({
+            "curve_ids": {"type": "array", "items": {"type": "string"},
+                          "description": "Curve node ids (or Objects "
+                                         "holding curves), in order."},
+            "kind": {"type": "string",
+                     "enum": ["loft", "sweep", "sweep2", "patch",
+                              "revolve", "extrude"]},
+            "thickness": {"type": "number"},
+            "ruled": {"type": "boolean"},
+            "capped": {"type": "boolean"},
+            "angle": {"type": "number"},
+            "height": {"type": "number"},
+        }, ["curve_ids", "kind"]),
+    },
+    {
         "name": "export_document",
         "description": (
             "Export by the path's extension: .scad writes the program, "
