@@ -2618,7 +2618,11 @@ TOOLS = [
             "views": {"type": "array", "items": {"type": "string"},
                       "description": "Any of Front, Top, Right, Left, "
                                      "Back, Bottom, Isometric (default "
-                                     "Front, Top, Right, Isometric)."},
+                                     "Front, Top, Right, Isometric) — or "
+                                     "['Current'] alone for Make2D: a "
+                                     "line drawing from the 3D view's "
+                                     "own camera, hidden edges off "
+                                     "unless hidden_lines."},
             "dimensions": {"type": "boolean",
                            "description": "Overall width/height "
                                           "dimensions on the three "

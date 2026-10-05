@@ -2305,6 +2305,17 @@ class McpToolExecutor:
                     "views": [v.label_text() for v in scene.views.values()],
                     "annotations": len(scene.notes())}
         views = tuple(params.get("views") or drawing_dialog.STANDARD)
+        if any(str(v).lower() in ("current", "current view")
+               for v in views):
+            from . import make2d
+            try:
+                make2d.make(self._w, path, hidden=bool(
+                    params.get("hidden_lines", False)),
+                    sheet=params.get("sheet") or "A4")
+            except (ValueError, OSError) as exc:
+                raise ToolError(str(exc))
+            return {"exported": path, "format": suffix[1:],
+                    "views": ["Current view (Make2D)"]}
         bad = [v for v in views if v not in drawing.VIEWS]
         if bad:
             raise ToolError(f"Unknown view(s) {', '.join(bad)}: choose "

@@ -253,6 +253,10 @@ class MainWindow(QMainWindow):
         file_menu.addAction(icons.icon("mdi.drawing-box"),
                             self.tr("&Blueprint (2D Drawing)..."),
                             self.open_blueprint, "Ctrl+Shift+D")
+        from . import make2d
+        file_menu.addAction(icons.icon("mdi.vector-square"),
+                            self.tr("&Make 2D Drawing of This View..."),
+                            lambda: make2d.open_dialog(self))
         file_menu.addSeparator()
         file_menu.addAction(icons.icon("mdi.cloud-upload-outline"),
                             self.tr("&Publish to Printables..."),
