@@ -95,7 +95,7 @@ def set_scale(model, node, factor: float):
 # ------------------------------------------------------------------ paths
 
 #: node type -> the parameter holding a file path the document refers to
-PATH_PARAMS = {"stl_import": ("path",), "paint": ("image", "image2"),
+PATH_PARAMS = {"stl_import": ("path", "cad_source"), "paint": ("image", "image2"),
                "displace": ("image",),
                "surface": ("file",), "import_2d": ("path",)}
 

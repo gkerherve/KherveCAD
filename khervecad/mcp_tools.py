@@ -2195,6 +2195,7 @@ class McpToolExecutor:
     def _t_open_document(self, params) -> dict:
         from . import scadparse
         from .engine import MESH_EXTS
+        from . import cadexchange
         path = Path(str(params.get("path", ""))).expanduser()
         if not path.is_file():
             raise ToolError(f"No such file: {path}")
@@ -2227,11 +2228,30 @@ class McpToolExecutor:
         elif suffix == ".dat":
             self._w._import_surface_path(str(path))
             self._fresh(dirty=True)
+        elif suffix in cadexchange.CAD_EXTS:
+            problem = cadexchange.missing(suffix)
+            if problem:
+                raise ToolError(problem)
+            quality = str(params.get("quality") or "Normal")
+            if quality not in cadexchange.QUALITY:
+                raise ToolError("quality must be Draft, Normal or Fine.")
+            try:
+                parts = cadexchange.read_parts(str(path), quality)
+            except (ValueError, OSError, RuntimeError) as exc:
+                raise ToolError(str(exc))
+            from . import cadexchange_ui
+            node = cadexchange_ui.place_parts(
+                self._model, str(path), parts, units.to_mm(self._unit()))
+            self._fresh(dirty=True)
+            extra["object_id"] = node.id
+            extra["parts"] = [{"name": p.name, "color": p.color,
+                               "triangles": len(p.tris)} for p in parts]
         else:
             raise ToolError(
                 f"{suffix or 'That file'} is not something KherveCAD "
                 "opens — use .kcad, .scad, .csg, a 2D drawing (.svg, "
-                f".dxf), a height map (.dat) or a mesh "
+                ".dxf), a height map (.dat), a CAD file (.step, .iges, "
+                f".3dm, .brep) or a mesh "
                 f"({', '.join(MESH_EXTS)}).")
         self._w._add_recent(str(path))
         info = self._t_get_document_info({})
@@ -2334,11 +2354,27 @@ class McpToolExecutor:
                 raise ToolError(str(exc))
             result["render_complete"] = complete
             return result
+        from . import cadexchange
+        if suffix in cadexchange.CAD_EXTS:
+            try:
+                report = cadexchange.export_model(
+                    self._model.root, path, fn=self._fn(),
+                    unit_mm=units.to_mm(self._unit()))
+            except (ValueError, OSError, RuntimeError) as exc:
+                raise ToolError(str(exc))
+            fmt = cadexchange.FORMAT_NAMES[suffix]
+            return {"exported": path, "format": fmt,
+                    "parts": report.parts,
+                    "exact_shapes": report.exact,
+                    "faceted_shapes": report.faceted,
+                    "faceted_parts": sorted(set(report.faceted_names)),
+                    "note": report.sentence(fmt)}
         if suffix not in (".stl", ".3mf", ".off", ".amf", ".csg", ".svg",
                           ".dxf"):
             raise ToolError(
                 "Export path must end in .scad, .stl, .3mf, .off, .amf, "
-                ".csg, .png, or .svg / .dxf for a 2D document.")
+                ".csg, .png, .step, .iges, .brep, .3dm, or .svg / .dxf "
+                "for a 2D document.")
         if suffix != ".stl" and not self._w.engine.available:
             raise ToolError(
                 f"{suffix[1:].upper()} is written by OpenSCAD and it was "

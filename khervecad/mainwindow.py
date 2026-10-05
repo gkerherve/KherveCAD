@@ -221,6 +221,10 @@ class MainWindow(QMainWindow):
                             "Ctrl+I")
         file_menu.addAction(self.tr("Import &Mesh (STL/OBJ/OFF/3MF)..."),
                             self.import_stl, "Ctrl+Shift+I")
+        from . import cadexchange_ui
+        file_menu.addAction(icons.icon("mdi.cube-scan"),
+                            self.tr("Import &CAD File (STEP/IGES/Rhino)..."),
+                            lambda: cadexchange_ui.import_cad_dialog(self))
         file_menu.addAction(icons.icon("mdi.svg"),
                             self.tr("Import 2D &Drawing (SVG/DXF)..."),
                             self.import_drawing)
@@ -232,6 +236,11 @@ class MainWindow(QMainWindow):
                             "Ctrl+E")
         file_menu.addAction(self.tr("Export S&TL..."), self.export_stl,
                             "Ctrl+Shift+E")
+        file_menu.addAction(icons.icon("mdi.cube-send"),
+                            self.tr("Export for &Other CAD (STEP/IGES/"
+                                    "Rhino)..."),
+                            lambda: cadexchange_ui.export_cad_dialog(self),
+                            "Ctrl+Alt+S")
         from .pngexport import open_dialog as export_png_dialog
         file_menu.addAction(icons.icon("mdi.image-outline"),
                             self.tr("Export PN&G..."),
@@ -1813,8 +1822,10 @@ class MainWindow(QMainWindow):
             self, language.tr("Open"), start,
             language.tr(
                 "All supported (*.kcad *.scad *.stl *.obj *.off "
-                "*.3mf);;KherveCAD document (*.kcad);;OpenSCAD program "
-                "(*.scad);;Mesh (*.stl *.obj *.off *.3mf)"))
+                "*.3mf *.step *.stp *.iges *.igs *.3dm *.brep);;"
+                "KherveCAD document (*.kcad);;OpenSCAD program "
+                "(*.scad);;Mesh (*.stl *.obj *.off *.3mf);;"
+                "CAD file (*.step *.stp *.iges *.igs *.3dm *.brep)"))
         if not path:
             return
         self.open_any(path)
@@ -1825,6 +1836,7 @@ class MainWindow(QMainWindow):
         (.stl/.obj/.off/.3mf) import as a mesh. Used by File > Open and
         by drag-and-drop."""
         from .engine import MESH_EXTS
+        from . import cadexchange
         ext = Path(path).suffix.lower()
         if ext == ".kcad":
             self._open_path(path)
@@ -1838,18 +1850,23 @@ class MainWindow(QMainWindow):
             self._import_drawing_path(path)
         elif ext == ".dat":
             self._import_surface_path(path)
+        elif ext in cadexchange.CAD_EXTS:
+            from . import cadexchange_ui
+            cadexchange_ui.import_cad(self, path)
         else:
             QMessageBox.warning(
                 self, APP_NAME,
                 language.tr(
                     "KherveCAD can open .kcad, .scad, .csg, mesh files "
-                    "(.stl/.obj/.off/.3mf/.amf/.glb), 2D drawings "
+                    "(.stl/.obj/.off/.3mf/.amf/.glb), CAD files "
+                    "(.step/.iges/.3dm/.brep), 2D drawings "
                     "(.svg/.dxf) and height maps (.dat) — not "
                     "{ext}.").format(ext=ext or language.tr("this type")))
 
     # ------------------------------------------------------ drag & drop
     _DROP_EXTS = (".kcad", ".scad", ".csg", ".stl", ".obj", ".off", ".3mf",
-                  ".amf", ".svg", ".dxf", ".dat")
+                  ".amf", ".svg", ".dxf", ".dat", ".step", ".stp",
+                  ".iges", ".igs", ".3dm", ".brep")
 
     def _dropped_file(self, event):
         """The first supported local file in a file drag, or None."""

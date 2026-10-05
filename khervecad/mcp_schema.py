@@ -2554,13 +2554,20 @@ TOOLS = [
             "Open a .kcad document, import a .scad (or OpenSCAD .csg) "
             "program as objects, import a mesh (.stl/.obj/.off/.3mf/.amf/"
             ".glb) as one part, a 2D drawing (.svg/.dxf) as an extruded "
-            "import_2d part, or a height map (.dat) as a surface part. "
-            "Refuses to discard unsaved work unless "
+            "import_2d part, a height map (.dat) as a surface part, or "
+            "a CAD file from another program — STEP (.step/.stp), IGES "
+            "(.iges/.igs), Rhino (.3dm) or OpenCascade .brep — as one "
+            "Object named after the file holding one named, coloured "
+            "group per part (`quality` Draft / Normal / Fine sets how "
+            "finely curved surfaces are faceted). Refuses to discard unsaved work unless "
             "discard_unsaved_changes is set."
         ),
         "input_schema": _obj({
             "path": {"type": "string", "description": "Absolute path."},
             "discard_unsaved_changes": {"type": "boolean"},
+            "quality": {"type": "string",
+                        "enum": ["Draft", "Normal", "Fine"],
+                        "description": "CAD files only. Default Normal."},
         }, ["path"]),
     },
     {
@@ -2643,13 +2650,23 @@ TOOLS = [
             "lighting: `view` 'current' keeps the user's camera, a "
             "preset name frames the whole model from that side, and "
             "'all' writes one numbered file per standard view beside "
-            "the path, the front-right isometric first."
+            "the path, the front-right isometric first. "
+            ".step / .stp / .iges / .igs / .brep write a file other CAD "
+            "programs (Fusion, SolidWorks, Onshape, FreeCAD, Rhino) open "
+            "with EXACT surfaces where the model has them — cubes, "
+            "spheres, cylinders, extrusions, revolves, transforms, "
+            "booleans, loops — one named, coloured part per top-level "
+            "object, always in real millimetres; anything without an "
+            "exact form (a blend, sculpt, gear, imported mesh) is a "
+            "faceted solid, and the result lists those parts. .3dm "
+            "writes a Rhino file of meshes, one named layer per part."
         ),
         "input_schema": _obj({
             "path": {"type": "string",
                      "description": "Absolute path ending in .scad, "
-                                    ".stl, .3mf (3MF needs OpenSCAD) "
-                                    "or .png."},
+                                    ".stl, .3mf (3MF needs OpenSCAD), "
+                                    ".png, .step, .iges, .brep or "
+                                    ".3dm."},
             "view": {"type": "string",
                      "enum": ["current", *STILL_VIEWS, "all"],
                      "description": "PNG only: which camera. Default "

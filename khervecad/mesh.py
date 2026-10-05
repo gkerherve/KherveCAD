@@ -33,7 +33,7 @@ _TEXT_PARAMS = {"text", "path", "variable", "condition", "update",
                 "material", "bindings", "args", "message", "file",
                 "layer", "id", "font", "halign", "valign", "direction",
                 "modifier", "options", "description", "group",
-                "collection", "library", "library_part"}
+                "collection", "library", "library_part", "cad_source"}
 
 #: ops the fallback can only approximate (engine renders exactly).
 APPROXIMATED = {"difference", "intersection", "minkowski", "hull",
