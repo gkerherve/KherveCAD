@@ -104,7 +104,16 @@ class LightingBar(QWidget):
             ("contrast", language.tr("Contrast"),
              language.tr(
                  "Spread or flatten the shading between the lit and "
-                 "unlit faces, about mid-grey.")))
+                 "unlit faces, about mid-grey.")),
+            ("light_turn", language.tr("Light ↻"),
+             language.tr(
+                 "Swing the light round the model (up to half a turn "
+                 "either way): the shading and, on metal, the "
+                 "reflected highlights move with it.")),
+            ("light_height", language.tr("Height"),
+             language.tr(
+                 "Raise the light towards overhead or lower it towards "
+                 "the horizon.")))
 
     def __init__(self, view):
         super().__init__(view)
@@ -139,7 +148,7 @@ class LightingBar(QWidget):
             self._button("mdi.backup-restore", "⟲",
                          language.tr("Back to the default lighting"),
                          self.reset),
-            0, 2, 2, 1)
+            0, 2, len(self._rows()), 1)
         grid.addWidget(
             self._button("mdi.refresh", "⟳",
                          language.tr(
@@ -149,7 +158,7 @@ class LightingBar(QWidget):
                              "exact drawing order by itself a moment "
                              "after each change."),
                          self.refresh_requested.emit),
-            0, 3, 2, 1)
+            0, 3, len(self._rows()), 1)
 
     def _button(self, glyph, fallback, tip, slot):
         from . import icons
@@ -271,6 +280,11 @@ class View3D(QWidget):
         self.projection = proj if proj in PROJECTIONS else "Perspective"
         self.brightness = _clamp_light(settings.value("render_brightness"))
         self.contrast = _clamp_light(settings.value("render_contrast"))
+        #: the light's direction: -1..1 swings it half a turn either way
+        #: about z / lowers it to the horizon or raises it overhead
+        self.light_turn = _clamp_light(settings.value("render_light_turn"))
+        self.light_height = _clamp_light(
+            settings.value("render_light_height"))
         #: platform & shadow instead of the grid (stage.py) — on by
         #: default, like edge lines and OpenGL: the look users settle on
         self.stage = settings.value("render_stage", True, type=bool)
@@ -330,7 +344,8 @@ class View3D(QWidget):
     def set_light(self, key: str, value: float):
         """Move one of the floating lighting sliders (brightness /
         contrast), persist it and repaint."""
-        if key not in ("brightness", "contrast"):
+        if key not in ("brightness", "contrast", "light_turn",
+                       "light_height"):
             return
         setattr(self, key, _clamp_light(value))
         QSettings(*_SETTINGS).setValue(f"render_{key}",
@@ -344,6 +359,18 @@ class View3D(QWidget):
         if not self.brightness and not self.contrast:
             return None
         return 2.0 ** self.contrast, self.brightness * LIGHT_RANGE
+
+    def light_vector(self):
+        """The unit light direction the faces are shaded from: the
+        default key light (0.35, -0.5, 0.75) turned about z by
+        light_turn and raised or lowered by light_height."""
+        az = math.atan2(-0.5, 0.35) + self.light_turn * math.pi
+        base = math.atan2(0.75, math.hypot(0.35, -0.5))
+        h = self.light_height
+        el = base + h * ((math.radians(85) - base) if h > 0
+                         else (base - math.radians(5)))
+        return (math.cos(el) * math.cos(az), math.cos(el) * math.sin(az),
+                math.sin(el))
 
     @staticmethod
     def _adjust(color, gain, offset):
@@ -1073,9 +1100,7 @@ class View3D(QWidget):
                                                      forward, v))
 
         base = QColor(t["select"])
-        light = (0.35, -0.5, 0.75)
-        norm = math.sqrt(sum(c * c for c in light))
-        light = tuple(c / norm for c in light)
+        light = self.light_vector()
         to_eye = (-forward[0], -forward[1], -forward[2])
         half = (light[0] + to_eye[0], light[1] + to_eye[1],
                 light[2] + to_eye[2])

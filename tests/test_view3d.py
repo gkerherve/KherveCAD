@@ -442,7 +442,8 @@ def neutral_light():
     from PyQt5.QtCore import QSettings
 
     from khervecad.view3d import _SETTINGS
-    keys = ("render_brightness", "render_contrast")
+    keys = ("render_brightness", "render_contrast", "render_light_turn",
+            "render_light_height")
     settings = QSettings(*_SETTINGS)
     saved = [settings.value(k) for k in keys]
     for key in keys:

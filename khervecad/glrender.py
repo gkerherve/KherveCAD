@@ -145,6 +145,7 @@ void main() {
 FRAGMENT = """
 #version 120
 uniform vec3 u_light;
+uniform vec3 u_right, u_fwd;
 uniform float u_gain, u_offset, u_cavity, u_toon;
 varying vec3 v_nrm;
 varying vec3 v_rgb;
@@ -600,6 +601,31 @@ vec3 surface(float id, vec3 n, vec3 rgb, float px) {
     return rgb;
 }
 
+// Metals (gloss power >= 1000): a polished surface is mostly the room
+// it reflects, so shade it from a procedural photo studio — bright
+// sky, two soft boxes, a dark floor and a sharp horizon — seen along
+// the reflected ray. The soft boxes sit relative to the camera so the
+// part always catches them; up stays world +z.
+vec3 studio(vec3 r) {
+    float z = r.z;
+    vec3 sky = mix(vec3(0.62, 0.65, 0.70), vec3(0.98, 0.99, 1.0),
+                   smoothstep(0.0, 0.85, z));
+    vec3 ground = mix(vec3(0.20, 0.20, 0.21), vec3(0.50, 0.50, 0.52),
+                      smoothstep(-0.9, -0.02, z));
+    vec3 c = mix(ground, sky, smoothstep(-0.015, 0.015, z));
+    float az = atan(dot(r, u_right), -dot(r, u_fwd));
+    // the key soft box hangs where the light is, so turning the light
+    // slides the reflected highlights round the part
+    float key = atan(dot(u_light, u_right), -dot(u_light, u_fwd));
+    az = mod(az - key + 0.9 + 3.14159265, 6.2831853) - 3.14159265;
+    c *= 0.78 + 0.3 * (0.5 + 0.5 * cos(az - 0.9));  // room lit from the key side
+    float band = smoothstep(-0.75, -0.5, z) * (1.0 - smoothstep(0.7, 0.95, z));
+    c += 1.1 * (1.0 - smoothstep(0.06, 0.32, abs(az - 0.9))) * band;
+    c += 0.7 * (1.0 - smoothstep(0.04, 0.22, abs(az + 1.5))) * band;
+    c += 0.5 * smoothstep(0.8, 0.97, z);
+    return c;
+}
+
 void main() {
     vec3 n = normalize(v_nrm);
     float shade = abs(dot(n, u_light));
@@ -639,6 +665,23 @@ void main() {
         base = mix(surface(id, n, v_rgb, px), mean, fade);
     }
     vec3 rgb = clamp(base * v + vec3(gloss), 0.0, 1.0);
+    if (v_mat.w >= 1000.0) {
+        vec3 nn = (dot(n, v_to_eye) < 0.0) ? -n : n;
+        vec3 r = reflect(-v_to_eye, nn);
+        // brushed grain: fine lines running round the part (a flat
+        // face, whose normal has no xy, takes rings about the origin)
+        float rad = length(v_pos.xy);
+        float along = (abs(nn.z) > 0.9) ? rad : v_pos.z;
+        float grain = 1.0 + 0.07 * (noise(vec2(along * 6.0, 0.5)) - 0.5)
+                      + 0.04 * (hash(vec2(floor(along * 20.0), 0.0)) - 0.5);
+        float fres = pow(1.0 - max(dot(nn, v_to_eye), 0.0), 5.0);
+        vec3 tint = mix(v_rgb, vec3(1.0), fres);
+        vec3 mc = tint * studio(r) * grain * (0.82 + 0.18 * shade);
+        mc += vec3(0.9) * pow(spec, 80.0);
+        mc = (mc - 0.5) * u_gain + 0.5 + u_offset;
+        if (u_cavity > 0.5) mc *= v_cav;
+        rgb = clamp(mc, 0.0, 1.0);
+    }
     float a = v_alpha;
     if (v_alpha < 0.99) a = clamp(v_alpha + 0.4 * gloss, 0.0, 1.0);
     gl_FragColor = vec4(rgb, a);
@@ -683,9 +726,9 @@ def material(style):
         "Matte": (0.62, 0.30, 0.0, 1.0, 0.5, 1.0),
         "Clay": (0.50, 0.45, 0.0, 1.0, 0.0, 1.0),
         "Toon": (0.45, 0.55, 0.0, 1.0, 0.95, 1.0),
-        "Brushed metal": (0.28, 0.45, 0.70, 16.0, 0.22, 1.0),
-        "Gold": (0.32, 0.50, 0.65, 20.0, 0.0, 1.0),
-        "Copper": (0.30, 0.50, 0.65, 20.0, 0.0, 1.0),
+        "Brushed metal": (0.28, 0.45, 0.70, 1000.0, 0.22, 1.0),
+        "Gold": (0.32, 0.50, 0.65, 1000.0, 0.0, 1.0),
+        "Copper": (0.30, 0.50, 0.65, 1000.0, 0.0, 1.0),
         "Glass": (0.55, 0.35, 0.60, 24.0, 0.55, 1.0),
         "Rubber": (0.12, 0.38, 0.0, 1.0, 0.85, 1.0),
         "Skin": (0.58, 0.32, 0.08, 4.0, 0.9, 1.0),
