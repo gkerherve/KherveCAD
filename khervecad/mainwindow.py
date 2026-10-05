@@ -497,6 +497,14 @@ class MainWindow(QMainWindow):
         view_menu.addAction(self._smooth_act)
         view_menu.addAction(self._overlay_act)
         view_menu.addAction(self._gl_act)
+        from . import gumball
+        self._gumball_act = QAction(icons.icon("mdi.axis-arrow"),
+                                    self.tr("&Gumball (move / turn handles)"),
+                                    self, checkable=True)
+        self._gumball_act.setShortcut("Ctrl+Alt+G")
+        self._gumball_act.toggled.connect(
+            lambda on: gumball.toggle(self, on))
+        view_menu.addAction(self._gumball_act)
         self._build_explode_menu(view_menu)
         self._build_cut_menu(view_menu)
         self._add_view_toggles()

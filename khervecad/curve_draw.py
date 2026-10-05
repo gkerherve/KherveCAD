@@ -425,8 +425,8 @@ class CurveTool:
         return SNAP_PX * max(depth, 1e-6) / self.view._focal()
 
     def _grid(self):
-        v2 = getattr(self.window, "view2d", None)
-        step = getattr(v2, "grid_size", None) or getattr(v2, "grid", None)
+        scene = getattr(self.window, "scene", None)
+        step = getattr(scene, "grid_size", None)
         try:
             step = float(step)
         except (TypeError, ValueError):
