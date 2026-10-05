@@ -1367,6 +1367,79 @@ pieza con una Diferencia muestra sus agujeros sin recortar, y los
 resultados lo indican.</p>
 """),
 
+        ("rhino", "Curvas, superficies y otros CAD", f"""
+<p>Las herramientas de Rhino y de los demás modeladores de superficies:
+intercambiar archivos con otros programas CAD, dibujar curvas 3D y sacar
+superficies de ellas, modelar formas suaves con una jaula, mover piezas
+con manijas, comprobar superficies y dibujar lo que ves.</p>
+<h3>Archivos de otros programas CAD</h3>
+<ul>
+<li><b>Abre</b> un archivo STEP, IGES, Rhino (.3dm) o .brep, o suéltalo
+sobre la ventana. Llega como un solo Objeto con el nombre del archivo,
+cada pieza un grupo con su propio nombre y color, a su tamaño real.
+<b>Archivo &rsaquo; Importar archivo CAD</b> pregunta una sola cosa más:
+qué tan suaves mostrar las superficies curvas (Borrador para ensamblajes
+grandes, Fino para renders).</li>
+<li><b>Archivo &rsaquo; Exportar para otro CAD</b> {K("Ctrl+Alt+S")}
+escribe <b>STEP</b> (Fusion, SolidWorks, Onshape, FreeCAD, Rhino),
+<b>IGES</b> o <b>.3dm</b>. Cubos, cilindros, extrusiones, revoluciones,
+booleanas, curvas, superficies y piezas importadas salen con superficies
+<b>exactas</b>, cada pieza con nombre y color, en milímetros reales. Las
+formas sin forma exacta salen como sólidos facetados, y el mensaje tras
+guardar las nombra.</li>
+<li>Clic derecho sobre una pieza importada &rsaquo; <b>Hacer exacta</b>
+la conserva con sus superficies reales; luego <b>Redondear aristas</b> o
+<b>Achaflanar aristas</b>: escribe el tamaño y haz clic en las aristas de
+la pieza, Esc para terminar.</li>
+</ul>
+<h3>Curvas 3D</h3>
+<p><b>Insertar &rsaquo; Dibujar curva 3D</b> {K("Ctrl+Alt+C")}: haz clic
+en puntos de la vista 3D. Cada punto <b>se ajusta</b>, y el marcador dice
+a qué: Esquina, Punto medio de arista, En la arista, En la superficie o
+la cuadrícula del suelo. Mantén <b>Mayús</b> para subir o bajar en
+vertical desde el último punto, <b>Alt</b> para desactivar el ajuste, o
+escribe un punto (<i>10, 20, 5</i>, o <i>@0, 0, 15</i> para 15 por encima
+del último). <b>Intro</b> o un clic derecho termina, <b>Retroceso</b>
+quita un punto, <b>C</b> cierra un lazo. Una curva es un hilo redondo;
+sus puntos y su grosor están en Propiedades.</p>
+<h3>Superficies a partir de curvas</h3>
+<p>Selecciona curvas en el árbol, en orden, y elige <b>Herramientas
+&rsaquo; Superficie a partir de curvas</b> (o clic derecho): <b>Loft</b>
+a través de ellas, <b>Barrido</b> de perfiles a lo largo de un carril (la
+primera curva), <b>Barrido sobre dos carriles</b>, <b>Parche</b> dentro
+de una curva cerrada, <b>Revolución</b> alrededor de Z o <b>Extrusión</b>
+hacia arriba. La superficie es exacta; una abierta se engrosa con su
+<b>Grosor de pared</b> para poder imprimirla. Las curvas pasan dentro de
+ella, así que editar una curva cambia la superficie.</p>
+<h3>SubD: formas suaves a partir de una jaula</h3>
+<p><b>Insertar &rsaquo; Caja SubD</b>, o selecciona un sólido y
+<b>Herramientas &rsaquo; Convertir en SubD</b>. Pulsa <b>Tab</b> sobre la
+vista 3D y el modo Edición abre la <b>jaula</b>: arrastra sus puntos,
+<b>E</b> extruye una cara, y la superficie suave la sigue. La
+<b>suavidad</b>, un ángulo de pliegue y las aristas plegadas están en
+Propiedades.</p>
+<h3>El Gumball</h3>
+<p><b>Ver &rsaquo; Gumball</b> {K("Ctrl+Alt+G")} pone flechas y anillos
+sobre la pieza seleccionada. Arrastra una <b>flecha</b> para deslizarla
+por ese eje, un <b>anillo</b> para girarla alrededor de su centro;
+mantén <b>Ctrl</b> para ajustar a la cuadrícula o a 15°, y pulsa
+<b>Esc</b> durante el arrastre para devolverla. Arrastrar en cualquier
+otro sitio sigue girando la vista.</p>
+<h3>Comprobar superficies</h3>
+<p><b>Analizar &rsaquo; Mapa de calor</b> tiene tres comprobaciones de
+superficie además de las de impresión: <b>Ángulo de desmoldeo</b> (las
+caras rojas son verticales y se pegarían en un molde), <b>Curvatura</b>
+(rojo abombado, azul hundido) y <b>Rayas de cebra</b> (rayas que siguen
+sin cortarse sobre una unión indican un empalme suave; un quiebre es una
+arista &mdash; gira la vista y pulsa Redibujar para verlas de nuevo).</p>
+<h3>Make 2D</h3>
+<p><b>Archivo &rsaquo; Dibujo 2D de esta vista</b> guarda el modelo como
+líneas limpias tal como lo muestra la vista 3D &mdash; SVG, DXF para corte
+láser, PDF o PNG &mdash; con cajetín y escala normalizada. Marca
+<b>Mostrar aristas ocultas discontinuas</b> para ver lo que hay
+detrás.</p>
+"""),
+
         ("shortcuts", "Atajos de teclado", f"""
 <p>En Mac, {K("Ctrl")} es la tecla {K("&#8984; Cmd")}.</p>
 <table>

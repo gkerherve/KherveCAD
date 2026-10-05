@@ -1225,6 +1225,73 @@ shows. Until the exact render lands, a part with a Difference shows its
 holes uncut and the figures say so.</p>
 """),
 
+        ("rhino", "Curves, surfaces and other CAD", f"""
+<p>Tools from Rhino and the other surface modellers: work with other CAD
+programs' files, draw 3D curves and make surfaces from them, shape
+smooth forms with a cage, move parts with handles, check surfaces, and
+draw what you see.</p>
+<h3>Files from other CAD programs</h3>
+<ul>
+<li><b>Open</b> a STEP, IGES, Rhino (.3dm) or .brep file, or drop it on
+the window. It arrives as one Object named after the file, every part a
+group with its own name and colour, at its real size. <b>File &rsaquo;
+Import CAD File</b> asks one thing more: how smooth to show curved
+surfaces (Draft for big assemblies, Fine for renders).</li>
+<li><b>File &rsaquo; Export for Other CAD</b> {K("Ctrl+Alt+S")} writes
+<b>STEP</b> (Fusion, SolidWorks, Onshape, FreeCAD, Rhino), <b>IGES</b>
+or <b>.3dm</b>. Boxes, cylinders, extrusions, revolves, booleans,
+curves, surfaces and imported parts go out with <b>exact</b> surfaces,
+each part named and coloured, in real millimetres. Shapes with no exact
+form go in as faceted solids, and the message after saving names
+them.</li>
+<li>Right-click an imported part &rsaquo; <b>Make Exact</b> keeps it as
+its true surfaces; then <b>Fillet Edges</b> or <b>Chamfer Edges</b>:
+type the size and click the edges on the part, Esc when done.</li>
+</ul>
+<h3>3D curves</h3>
+<p><b>Insert &rsaquo; Draw 3D Curve</b> {K("Ctrl+Alt+C")}: click points
+in the 3D view. Each point <b>snaps</b>, and the marker says to what
+&mdash; Corner, Middle of edge, On edge, On surface, or the ground grid.
+Hold <b>Shift</b> to go straight up or down from the last point,
+<b>Alt</b> to switch snapping off, or type a point (<i>10, 20, 5</i>,
+or <i>@0, 0, 15</i> for 15 above the last). <b>Enter</b> or a
+right-click finishes, <b>Backspace</b> takes a point back, <b>C</b>
+closes a loop. A curve is a round wire; its points and thickness are in
+Properties.</p>
+<h3>Surfaces from curves</h3>
+<p>Select curves in the tree, in order, and pick <b>Tools &rsaquo;
+Surface from Curves</b> (or right-click): <b>Loft</b> through them,
+<b>Sweep</b> profiles along a rail (the first curve), <b>Sweep along two
+rails</b>, <b>Patch</b> inside a closed curve, <b>Revolve</b> about Z or
+<b>Extrude</b> upwards. The surface is exact; an open one is thickened
+by its <b>Wall thickness</b> so it prints. The curves move inside it,
+so editing a curve reshapes the surface.</p>
+<h3>SubD: smooth shapes from a cage</h3>
+<p><b>Insert &rsaquo; SubD Box</b>, or select a solid and <b>Tools
+&rsaquo; Convert to SubD</b>. Press <b>Tab</b> over the 3D view and Edit
+Mode opens the <b>cage</b>: drag its points, <b>E</b> extrudes a face,
+and the smooth surface follows. <b>Smoothness</b>, a crease angle and
+creased edges are in Properties.</p>
+<h3>The Gumball</h3>
+<p><b>View &rsaquo; Gumball</b> {K("Ctrl+Alt+G")} puts arrows and rings
+on the selected part. Drag an <b>arrow</b> to slide it along that axis,
+a <b>ring</b> to turn it about its centre; hold <b>Ctrl</b> to snap to
+the grid or to 15°, and press <b>Esc</b> during a drag to put it back.
+A drag anywhere else still turns the view.</p>
+<h3>Checking surfaces</h3>
+<p><b>Analyse &rsaquo; Heat Map</b> has three surface checks besides the
+printing ones: <b>Draft angle</b> (red faces are vertical and would
+stick in a mould), <b>Curvature</b> (red bulges out, blue dips in) and
+<b>Zebra stripes</b> (stripes that run on unbroken across a seam mean a
+smooth join; a kink is a crease &mdash; turn the view and press Redraw
+to see them again).</p>
+<h3>Make 2D</h3>
+<p><b>File &rsaquo; Make 2D Drawing of This View</b> saves the model as
+clean lines exactly as the 3D view shows it &mdash; SVG, DXF for a laser
+cutter, PDF or PNG &mdash; with a title block and a standard scale. Tick
+<b>Show hidden edges dashed</b> to see what is behind.</p>
+"""),
+
         ("shortcuts", "Keyboard shortcuts", f"""
 <p>On a Mac, {K("Ctrl")} is the {K("&#8984; Cmd")} key.</p>
 <table>

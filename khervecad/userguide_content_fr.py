@@ -1384,6 +1384,83 @@ arrivé, une pièce avec une Différence montre ses trous non découpés,
 et les résultats le signalent.</p>
 """),
 
+        ("rhino", "Courbes, surfaces et autres CAO", f"""
+<p>Les outils de Rhino et des autres modeleurs de surfaces : échanger
+des fichiers avec les autres logiciels de CAO, dessiner des courbes 3D et
+en tirer des surfaces, modeler des formes lisses avec une cage, déplacer
+les pièces avec des poignées, vérifier les surfaces et dessiner ce que
+vous voyez.</p>
+<h3>Fichiers des autres logiciels de CAO</h3>
+<ul>
+<li><b>Ouvrez</b> un fichier STEP, IGES, Rhino (.3dm) ou .brep, ou
+déposez-le sur la fenêtre. Il arrive en un seul Objet au nom du fichier,
+chaque pièce étant un groupe avec son nom et sa couleur, à sa taille
+réelle. <b>Fichier &rsaquo; Importer un fichier CAO</b> demande une seule
+chose de plus : le lissé des surfaces courbes (Brouillon pour les gros
+assemblages, Fin pour les rendus).</li>
+<li><b>Fichier &rsaquo; Exporter vers une autre CAO</b> {K("Ctrl+Alt+S")}
+écrit du <b>STEP</b> (Fusion, SolidWorks, Onshape, FreeCAD, Rhino), de
+l'<b>IGES</b> ou du <b>.3dm</b>. Cubes, cylindres, extrusions,
+révolutions, booléens, courbes, surfaces et pièces importées partent avec
+des surfaces <b>exactes</b>, chaque pièce nommée et colorée, en
+millimètres réels. Les formes sans forme exacte partent en solides à
+facettes, et le message après l'enregistrement les nomme.</li>
+<li>Clic droit sur une pièce importée &rsaquo; <b>Rendre exacte</b> la
+garde avec ses vraies surfaces ; puis <b>Congés sur arêtes</b> ou
+<b>Chanfreins sur arêtes</b> : tapez la taille et cliquez les arêtes sur
+la pièce, Échap pour finir.</li>
+</ul>
+<h3>Courbes 3D</h3>
+<p><b>Insertion &rsaquo; Dessiner une courbe 3D</b> {K("Ctrl+Alt+C")} :
+cliquez des points dans la vue 3D. Chaque point <b>s'accroche</b>, et le
+repère dit à quoi &mdash; Coin, Milieu d'arête, Sur l'arête, Sur la
+surface, ou la grille du sol. Maintenez <b>Maj</b> pour monter ou
+descendre à la verticale du dernier point, <b>Alt</b> pour couper
+l'accrochage, ou tapez un point (<i>10, 20, 5</i>, ou <i>@0, 0, 15</i>
+pour 15 au-dessus du dernier). <b>Entrée</b> ou un clic droit termine,
+<b>Retour arrière</b> retire un point, <b>C</b> ferme une boucle. Une
+courbe est un fil rond ; ses points et son épaisseur sont dans
+Propriétés.</p>
+<h3>Surfaces à partir de courbes</h3>
+<p>Sélectionnez des courbes dans l'arbre, dans l'ordre, et choisissez
+<b>Outils &rsaquo; Surface à partir de courbes</b> (ou clic droit) :
+<b>Lissage</b> à travers elles, <b>Balayage</b> de profils le long d'un
+rail (la première courbe), <b>Balayage sur deux rails</b>, <b>Raccord</b>
+à l'intérieur d'une courbe fermée, <b>Révolution</b> autour de Z ou
+<b>Extrusion</b> vers le haut. La surface est exacte ; une surface
+ouverte est épaissie de son <b>Épaisseur de paroi</b> pour être
+imprimable. Les courbes passent à l'intérieur : modifier une courbe
+remodèle la surface.</p>
+<h3>SubD : des formes lisses à partir d'une cage</h3>
+<p><b>Insertion &rsaquo; Boîte SubD</b>, ou sélectionnez un solide puis
+<b>Outils &rsaquo; Convertir en SubD</b>. Appuyez sur <b>Tab</b> dans la
+vue 3D et le mode Édition ouvre la <b>cage</b> : faites glisser ses
+points, <b>E</b> extrude une face, et la surface lisse suit. Le
+<b>lissé</b>, un angle d'arête vive et les arêtes vives sont dans
+Propriétés.</p>
+<h3>Le Gumball</h3>
+<p><b>Affichage &rsaquo; Gumball</b> {K("Ctrl+Alt+G")} place des flèches
+et des anneaux sur la pièce sélectionnée. Faites glisser une
+<b>flèche</b> pour la déplacer le long de cet axe, un <b>anneau</b> pour
+la tourner autour de son centre ; maintenez <b>Ctrl</b> pour s'accrocher
+à la grille ou à 15°, et <b>Échap</b> pendant le glissement la remet en
+place. Un glissement ailleurs tourne toujours la vue.</p>
+<h3>Vérifier les surfaces</h3>
+<p><b>Analyse &rsaquo; Carte thermique</b> propose trois vérifications de
+surface en plus de celles d'impression : <b>Angle de dépouille</b> (les
+faces rouges sont verticales et colleraient dans un moule),
+<b>Courbure</b> (rouge bombé, bleu creux) et <b>Zébrures</b> (des rayures
+qui continuent sans rupture sur une jonction indiquent un raccord lisse ;
+une cassure est une arête &mdash; tournez la vue et cliquez Redessiner
+pour les revoir).</p>
+<h3>Make 2D</h3>
+<p><b>Fichier &rsaquo; Dessin 2D de cette vue</b> enregistre le modèle en
+traits nets exactement comme la vue 3D le montre &mdash; SVG, DXF pour une
+découpe laser, PDF ou PNG &mdash; avec un cartouche et une échelle
+normalisée. Cochez <b>Afficher les arêtes cachées en pointillés</b> pour
+voir ce qui est derrière.</p>
+"""),
+
         ("shortcuts", "Raccourcis clavier", f"""
 <p>Sur Mac, {K("Ctrl")} correspond à la touche {K("&#8984; Cmd")}.</p>
 <table>

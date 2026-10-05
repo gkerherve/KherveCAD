@@ -208,7 +208,14 @@ through the points, exported to STEP as an exact B-spline pipe.
 .step / .iges with EXACT surfaces for primitives, extrusions, revolves, \
 booleans and curves (others faceted, listed in the result) and .3dm as \
 meshes. Send STEP when the user wants to continue in Fusion, \
-SolidWorks, Onshape, FreeCAD or Rhino.
+SolidWorks, Onshape, FreeCAD or Rhino. exact_part fillets / chamfers \
+an imported STEP part's TRUE edges (world points on them).
+- Rhino-style surfaces: draw curves, then make_surface (loft / sweep / \
+sweep2 / patch / revolve / extrude) — exact, thickened into a solid \
+when open. Smooth organic forms: add_node type subd with a polyhedron \
+cage inside (or kcad_subd), shaped by edit_mesh on the cage. Surface \
+checks: set_render_options heatmap draft / curvature / zebra. A line \
+drawing from the current camera: export_drawing views ["Current"].
 - Beyond OpenSCAD's own shapes, apply_code understands KherveCAD's \
 helpers, which parse into editable nodes: `kcad_sweep(path = [[x, y, \
 z], ...], smooth = 3, twist = 0, scale = 1, wall = 0, closed = false) \

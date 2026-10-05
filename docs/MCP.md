@@ -56,6 +56,12 @@ and a **picture of the 3D preview**.
   community libraries are installed and `install_scad_library` fetches
   one from its GitHub project into the OpenSCAD library folder (a file
   tool: full access — ask the user first).
+- **Surfaces and exact parts** — `make_surface` (loft, sweep, two-rail
+  sweep, patch, revolve, extrude from 3D curves, exact and thickened)
+  and `exact_part` (an imported STEP part kept exact, its edges filleted
+  or chamfered by world points). `set_render_options heatmap` also takes
+  `draft`, `curvature` and `zebra`; `export_drawing` with `views:
+  ["Current"]` is Make2D, the line drawing of the current camera.
 - **Documents** — `set_render_options`, `load_example`,
   `new_document`, `open_document` (.kcad, .scad, a mesh, or a CAD
   file from another program — .step, .iges, .3dm, .brep, with an

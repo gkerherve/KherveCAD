@@ -3626,6 +3626,73 @@ into a new module and import.
                        through and only a still release is a click). The
                        curve lands where new geometry goes
                        (`create_curve`).
+  - `curve_surface.py` / `curve_surface_ui.py` — **surfaces from curves**
+                       (2026-10-05, the Rhino list): the `curve_surface`
+                       bakedkit wrapper holds `curve` children and makes an
+                       EXACT OCC surface — loft (BRepOffsetAPI_ThruSections,
+                       `ruled`, closed curves `capped` into a solid), sweep
+                       (first curve the rail, MakePipeShell), sweep2 (two
+                       rails: SetMode(auxiliary)), patch (MakeFilling: the
+                       closed boundary + curves it passes through), revolve
+                       (about Z, `angle`), extrude (`height`; a closed curve
+                       extrudes solid). An open result is thickened by
+                       `thickness` (MakeThickSolidBySimple) — one closed
+                       solid every time (a test counts open edges per kind).
+                       Preview/OpenSCAD = the shape meshed by
+                       `cadexchange._mesh_shape_rel` and baked; STEP = the
+                       shape. `make_surface` gathers curves from selected
+                       Objects too, maps their points into the first one's
+                       frame and removes Objects left empty. Tools ▸ Surface
+                       from Curves, the tree's right-click, MCP
+                       `make_surface`. `curve3d.wire_of` / `bspline` are the
+                       shared exact wires.
+  - `surface_analysis.py` — **draft, curvature, zebra** heat maps
+                       (heatmap.KINDS, Analyse ▸ Heat Map, MCP
+                       `heatmap` + `heat_draft`): draft against +Z (red
+                       vertical, blue flat), umbrella mean curvature scaled
+                       to the part's 90th percentile, zebra bands of a
+                       striped sky reflected off SMOOTHED face normals from
+                       the camera direction (flat facet normals gave a
+                       chequerboard); per face, so a coarse mesh shows
+                       jagged bands.
+  - `gumball.py`     — View ▸ **Gumball** (Ctrl+Alt+G), a persistent
+                       `View3D.edit_tool`: arrows and rings at the
+                       selection's bbox centre (`view3d.highlight_mesh`),
+                       SIZE_PX on screen; a press on a handle drags (Ctrl
+                       snaps to `scene.grid_size` / 15°, Esc restores),
+                       anything else is declined so the view orbits. The
+                       move goes through `physics.placement` (world move ->
+                       the part's own x..rz), `mates.ensure_part` first;
+                       one `set_param` per move so a mate is released once.
+  - `make2d.py`      — File ▸ **Make 2D Drawing of This View**: a temporary
+                       `drawing.VIEWS["Current view"]` from the camera's
+                       right / up / forward, `drawing_dialog.make_layout`
+                       and the drawing exporters (SVG / DXF / PDF / PNG),
+                       hidden edges off by default. MCP export_drawing
+                       views ["Current"].
+  - `subd.py`        — **SubD**: the `subd` bakedkit wrapper runs
+                       Catmull-Clark (any polygon, creases: sharp edges,
+                       one-face edges, `creases` point pairs, `sharp`
+                       angle; crease vertex rule, corners stay) `levels`
+                       times over the polyhedron cage inside it.
+                       `meshedit.TRANSPARENT` includes subd, so Tab (Edit
+                       Mode) opens the CAGE and the smooth surface follows
+                       each commit. Insert ▸ SubD Box (`insert_box`), Tools
+                       ▸ Convert to SubD (`convert`: meshedit.convert then
+                       wrap the polyhedron, a kept colour stays outside).
+  - `brep.py` / `brep_ui.py` — **exact parts**: the `brep` bakedkit leaf
+                       (source file + part index + x..rz / scale) rebuilt
+                       from `cadexchange.exact_shapes`, with `fillets` /
+                       `chamfers` rows [x, y, z, size] in the FILE frame —
+                       each the edge nearest the point (BRepExtrema), a
+                       miss beyond REACH is a red message. Right-click an
+                       imported STEP part ▸ Make Exact (`make_exact`
+                       replaces its stl_import, scale / unit kept), then
+                       Fillet / Chamfer Edges (size asked once, then
+                       `view3d.start_pick` until Esc, `to_local` maps the
+                       picked edge's middle). STEP export keeps the
+                       filleted shape exact. MCP `exact_part` (world
+                       points). PATH_PARAMS saves `source` relative.
   - `section_loft.py`— **loft through sections** (Qt-free): the
                        node's 2D children are the cross-sections, one
                        per `heights` row, joined in order — so a body
@@ -4299,7 +4366,7 @@ into a new module and import.
                        what each SHIPPED .kcad compiles to and pins the
                        files to the generator (`python -m
                        khervecad.tools.print_tests --check`).
-  - `mcp_schema.py`  — the **MCP tool table**: 81 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 88 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -4925,7 +4992,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **81 tools**: the object tree, OpenSCAD in
+client gets the whole app as **88 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.
@@ -4976,15 +5043,17 @@ half-added tool fails the suite.
 
 ## Roadmap
 
-**Rhino 8 gap list** (asked 2026-10-05). Landed the same day: STEP /
-IGES / BREP / .3dm import and export with exact surfaces
-(`cadexchange.py`), 3D curves (`curve3d.py`) and drawing them with
-object snaps and typed coordinates (`curve_draw.py`). Still open, in
-order: **surfaces from curves** (loft / sweep-2-rails / network / patch
-as exact OCC surfaces — the kernel is now there), a **B-rep node** that
-keeps an imported STEP part editable as faces rather than a mesh,
-**SubD** cages, a **Gumball** in the 3D view, **surface analysis**
-(zebra, curvature, draft angle), **Make2D** into the Blueprint.
+**Rhino 8 gap list** (asked 2026-10-05). All of it landed that day:
+STEP / IGES / BREP / .3dm exchange with exact surfaces
+(`cadexchange.py`), 3D curves with snaps and typed points
+(`curve3d.py`, `curve_draw.py`), surfaces from curves
+(`curve_surface.py`), exact parts with exact fillets / chamfers
+(`brep.py`), SubD (`subd.py`), the Gumball (`gumball.py`), draft /
+curvature / zebra analysis (`surface_analysis.py`) and Make2D
+(`make2d.py`). What would grow next: a Grasshopper-like node editor over
+the tree, network surfaces with G1/G2 continuity, SubD -> NURBS export,
+object snaps and a construction plane for EVERY tool (today they serve
+curve drawing), push/pull on exact faces, layers in Rhino's sense.
 
 **SolidWorks gap list** (asked 2026-09-12). Landed the same day: the
 OpenGL viewer (`glrender.py`), the other mates (flush / concentric /
