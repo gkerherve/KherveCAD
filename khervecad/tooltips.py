@@ -966,6 +966,34 @@ TIPS = {
          "gives the plain polygon.",
          "Extrude it for a solid."],
         "Turn° sets where the first tip points (90 = up)."),
+    "draw_curve": (
+        "Draw 3D curve",
+        "Click points in the 3D view to draw a smooth curve through "
+        "them. Points SNAP to corners, the middle of edges, edges and "
+        "surfaces — the marker says which — or land on the ground grid "
+        "in empty space.",
+        ["Insert ▸ Draw 3D Curve, or Ctrl+Alt+C.",
+         "Click each point. Hold Shift to go straight up or down from "
+         "the last point; hold Alt to switch snapping off.",
+         "Or just type a point — 10, 20, 5 — or @0, 0, 15 for 15 above "
+         "the last one, then Enter.",
+         "Enter, right-click or double-click finishes; Backspace takes "
+         "a point back; C (or clicking the first point) closes a loop."],
+        "Dragging still turns the view, so you can look round between "
+        "clicks."),
+    "curve": (
+        "3D curve",
+        "A smooth (or straight) line through points in space, drawn as a "
+        "round wire — a cable, a handrail, a bent rod, a coil, the rail "
+        "for a sweep. Exported to STEP as an exact B-spline pipe.",
+        ["Insert ▸ Shapes & patterns ▸ 3D curve.",
+         "Edit the Points table: one row per point it passes through "
+         "(X, Y, Z). Add rows to add bends.",
+         "Pick Smooth or Straight, tick Closed loop for a ring, and set "
+         "the Wire thickness.",
+         "Right-click ▸ Make a Sweep Along This Curve to give it any "
+         "profile."],
+        "Thin it right down and hide it to keep it as a guide."),
     "rounded_polygon": (
         "Rounded polygon (radius per corner)",
         "A 2D outline whose every corner has its own fillet radius — a "

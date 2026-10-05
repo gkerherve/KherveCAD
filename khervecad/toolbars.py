@@ -338,7 +338,7 @@ INSERT_EXTRAS = [
                        "scad_raw", "sheet_metal"]),
     ("&Mechanical features", ["gear", "thread", "hole", "knurl",
                               "textured"]),
-    ("Shapes && &patterns", ["polyhedron_solid", "star",
+    ("Shapes && &patterns", ["curve", "polyhedron_solid", "star",
                              "rounded_polygon", "bezier_shape", "svg_path",
                              "honeycomb"]),
 ]
@@ -390,6 +390,13 @@ def build_insert_menu(win, menu):
         solids.addAction(_action(
             win, spec["icon"], spec["label"], prim,
             lambda _=False, t=prim: win._add_primitive(t)))
+
+    def _draw_curve():
+        from . import curve_draw
+        curve_draw.start(win)
+    menu.addAction(_action(win, "mdi.vector-curve",
+                           "Draw 3D &Curve (click points)", "draw_curve",
+                           _draw_curve, "Ctrl+Alt+C"))
     menu.addSeparator()
     _family_menus(win, menu, [k for k, _ops in OPERATION_GROUPS
                               if k not in TOOL_FAMILIES])

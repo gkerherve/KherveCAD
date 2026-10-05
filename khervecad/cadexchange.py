@@ -487,26 +487,29 @@ class Report:
     faceted_names: list = field(default_factory=list)
 
     def sentence(self, fmt: str) -> str:
+        from .language import tr
         if fmt.startswith("Rhino"):
-            return (f"Saved {self.parts} part(s) for Rhino, each on its "
-                    "own named, coloured layer as a mesh. For editable "
-                    "surfaces in Rhino, export STEP instead — Rhino "
-                    "opens it as true NURBS.")
+            return tr("Saved {n} part(s) for Rhino, each on its own "
+                      "named, coloured layer as a mesh. For editable "
+                      "surfaces in Rhino, export STEP instead — Rhino "
+                      "opens it as true NURBS.").format(n=self.parts)
         if not self.faceted:
-            return (f"Saved {self.parts} part(s) as {fmt} with exact "
-                    "surfaces — every hole and curve opens as true "
-                    "geometry in other CAD programs.")
+            return tr("Saved {n} part(s) as {fmt} with exact surfaces — "
+                      "every hole and curve opens as true geometry in "
+                      "other CAD programs.").format(n=self.parts, fmt=fmt)
         names = ", ".join(sorted(set(self.faceted_names))[:5])
-        more = "…" if len(set(self.faceted_names)) > 5 else ""
+        if len(set(self.faceted_names)) > 5:
+            names += "…"
         if not self.exact:
-            return (f"Saved {self.parts} part(s) as {fmt}. They are "
-                    "made of shapes with no exact form (" + names + more
-                    + "), so they were written as faceted solids — "
-                    "fine for viewing and printing, but faces will be "
-                    "triangles in other CAD programs.")
-        return (f"Saved {self.parts} part(s) as {fmt}. Most of it is "
-                "exact; " + names + more + " had no exact form and "
-                "went in as faceted solids.")
+            return tr("Saved {n} part(s) as {fmt}. They are made of shapes "
+                      "with no exact form ({names}), so they were written "
+                      "as faceted solids — fine for viewing and printing, "
+                      "but faces will be triangles in other CAD "
+                      "programs.").format(n=self.parts, fmt=fmt,
+                                          names=names)
+        return tr("Saved {n} part(s) as {fmt}. Most of it is exact; "
+                  "{names} had no exact form and went in as faceted "
+                  "solids.").format(n=self.parts, fmt=fmt, names=names)
 
 
 class Compiler:

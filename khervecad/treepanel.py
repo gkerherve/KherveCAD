@@ -1127,6 +1127,14 @@ class ObjectTree(QTreeWidget):
                            language.tr("Export flat pattern DXF..."),
                            lambda: sheetmetal_ui.export_flat(
                                self.window(), roots[0]))
+        if len(roots) == 1 and roots[0].type == "curve":
+            from . import curve3d
+            menu.addSeparator()
+            menu.addAction(icons.icon("mdi.pipe"),
+                           language.tr("Make a Sweep Along This Curve"),
+                           lambda: self.select_nodes([
+                               curve3d.sweep_from_curve(self.model,
+                                                        roots[0])]))
         if hasattr(win, "view3d") and len(roots) == 1:     # lego_convert
             from . import lego_convert
             menu.addSeparator()
