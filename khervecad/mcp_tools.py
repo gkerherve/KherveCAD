@@ -2983,6 +2983,34 @@ class McpToolExecutor:
         except creature_mcp.CreatureError as exc:
             raise ToolError(str(exc))
 
+    def _t_exact_part(self, params) -> dict:
+        from . import brep
+        from .model import validate
+        node = self._node(params.get("node_id"))
+        exact = next((n for n in node.walk() if n.type == "brep"), None)
+        if exact is None:
+            try:
+                exact = brep.make_exact(self._model, node)
+            except ValueError as exc:
+                raise ToolError(str(exc))
+        for key in ("fillets", "chamfers"):
+            rows = [] if params.get("clear") else \
+                [list(r) for r in exact.params.get(key) or []]
+            for row in params.get(key) or []:
+                if len(row) < 4:
+                    raise ToolError(f"{key} rows are [x, y, z, size]")
+                rows.append(brep.to_local(exact, row[:3])
+                            + [float(row[3])])
+            if params.get(key) is not None or params.get("clear"):
+                self._model.set_param(exact, key, rows)
+        out = {"node_id": exact.id,
+               "fillets": exact.params.get("fillets"),
+               "chamfers": exact.params.get("chamfers")}
+        problem = validate(self._model.root).get(exact.id)
+        if problem:
+            raise ToolError(problem)
+        return out
+
     def _t_make_surface(self, params) -> dict:
         from . import curve_surface
         from .model import validate

@@ -1136,6 +1136,9 @@ class ObjectTree(QTreeWidget):
                                curve3d.sweep_from_curve(self.model,
                                                         roots[0])]))
         if hasattr(win, "statusBar"):
+            from . import brep_ui
+            brep_ui.add_menu(menu, win, roots)
+        if hasattr(win, "statusBar"):
             from . import curve_surface_ui
             menu.addSeparator()
             curve_surface_ui.add_menu(menu, win, roots)

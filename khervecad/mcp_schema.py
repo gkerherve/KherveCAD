@@ -2681,6 +2681,31 @@ TOOLS = [
         }, ["curve_ids", "kind"]),
     },
     {
+        "name": "exact_part",
+        "description": (
+            "Edit a part imported from STEP / IGES as its EXACT surfaces. "
+            "`node_id` an imported part (its Object or the mesh): it is "
+            "turned into an exact B-rep part first (same place and "
+            "name). `fillets` rows [x, y, z, radius] round the edge "
+            "nearest each WORLD point (pick a point on the edge — "
+            "probe_surface or list_edges give them), `chamfers` rows "
+            "[x, y, z, size] cut edges back. Rows are added to the "
+            "part's own; `clear` true removes the old ones first. The "
+            "fillets are OpenCascade's rolling-ball fillets, kept exact "
+            "in a STEP export."
+        ),
+        "input_schema": _obj({
+            "node_id": {"type": "string"},
+            "fillets": {"type": "array", "items": {"type": "array",
+                                                   "items": {"type":
+                                                             "number"}}},
+            "chamfers": {"type": "array", "items": {"type": "array",
+                                                    "items": {"type":
+                                                              "number"}}},
+            "clear": {"type": "boolean"},
+        }, ["node_id"]),
+    },
+    {
         "name": "export_document",
         "description": (
             "Export by the path's extension: .scad writes the program, "

@@ -672,6 +672,15 @@ class Compiler:
             if got is not None:
                 self._leaf()
                 return got
+        if t == "brep":
+            from . import brep
+            try:
+                got = brep.shape(node, env)
+            except Exception:
+                got = None
+            if got is not None:
+                self._leaf()
+                return got
         if t == "stl_import":
             got = self._imported(node, env)
             if got is not None:
