@@ -98,7 +98,12 @@ hiddenimports += collect_submodules(
     "khervecad", filter=lambda name: not name.startswith("khervecad.tools"))
 
 # Dependencies that ship data files or dynamically-imported submodules.
-for _pkg in ("qtawesome", "manifold3d"):
+# OCP (OpenCascade: STEP / IGES, surfaces from curves, exact parts) and
+# rhino3dm are imported inside functions, so nothing static finds them;
+# OCP is large (~300 MB of OCCT libraries) but without it a frozen build
+# could only tell the user to "pip install" — which an installed app
+# cannot do.
+for _pkg in ("qtawesome", "manifold3d", "OCP", "rhino3dm"):
     try:
         d, b, h = collect_all(_pkg)
         datas += d
