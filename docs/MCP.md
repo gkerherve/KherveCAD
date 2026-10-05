@@ -57,8 +57,11 @@ and a **picture of the 3D preview**.
   one from its GitHub project into the OpenSCAD library folder (a file
   tool: full access — ask the user first).
 - **Documents** — `set_render_options`, `load_example`,
-  `new_document`, `open_document` (.kcad, .scad, or a mesh),
-  `save_document` and `export_document` (.scad, .stl, .3mf, or a
+  `new_document`, `open_document` (.kcad, .scad, a mesh, or a CAD
+  file from another program — .step, .iges, .3dm, .brep, with an
+  optional `quality` Draft / Normal / Fine),
+  `save_document` and `export_document` (.scad, .stl, .3mf, .step /
+  .iges / .brep with exact surfaces where the model has them, .3dm, or a
   .png of the 3D view: `view` is `current` — the user's camera — one
   of the standard views, or `all`, one numbered file per view with
   the front-right isometric first; optional `width`, `height`,

@@ -3550,6 +3550,82 @@ into a new module and import.
                        inside a loop and its profile cannot hold a 2D
                        difference (use wall). Extrude toolbar group;
                        Examples ▸ Mechanical ▸ Pipe run & handrail.
+  - `cadexchange.py` — **STEP / IGES / BREP / Rhino .3dm in and out**
+                       (2026-10-05, the user's Rhino comparison: "make it
+                       compete", as user friendly as possible). Qt-free;
+                       OpenCascade (`cadquery-ocp`, LGPL) and `rhino3dm`
+                       (MIT) are OPTIONAL — `missing(ext)` is the sentence
+                       naming the pip command. Import (`read_parts`): the
+                       XCAF document, so an assembly arrives as its parts
+                       with their names, colours and placements, meshed at
+                       Draft / Normal / Fine (`QUALITY`, deflection
+                       relative to the part); a .3dm is read from Rhino's
+                       saved render meshes (a surface saved "small" has
+                       none, and the error says how to fix it). Export
+                       (`export_model`): `Compiler` walks the tree and
+                       builds a TRUE B-rep for cube / sphere / cylinder /
+                       cone, linear (no twist/scale) and rotate extrusions
+                       of 2D content (a circle or rect, or a 2D difference
+                       of them, stays a circle — `_exact_2d`), transforms
+                       (rigid kept exact, a stretch through GTransform),
+                       difference / intersection, loops, ifs, variables,
+                       Objects, instances, `curve` and imported STEP parts
+                       (an `stl_import` carrying `cad_source` + `cad_part`
+                       re-reads the file's own shape, `exact_shapes`,
+                       cached); anything else is the preview mesh sewn by
+                       `solid_from_tris` (BRepBuilderAPI_MakeShapeOnMesh)
+                       and COUNTED in the `Report`, whose `sentence` names
+                       the faceted parts. Unions are COMPOUNDS, never
+                       BRepAlgoAPI_Fuse: fusing three imported meshes took
+                       minutes and gains nothing in an exchange file. One
+                       named, coloured product per top-level part
+                       (`_display_name`: a "// Label" tag, else a typed
+                       name, looking through placement wrappers and into a
+                       boolean's first operand); always real millimetres
+                       (`unit_mm`). OCP 7.8+ renamed things: `_topods`,
+                       `_label_seq`, `_pnt_array` cover both spellings,
+                       and `_quiet` silences OCC's transfer statistics.
+                       IGES of a big faceted solid is slow in OCC itself
+                       (7k triangles ~45 s) — exact parts are instant.
+  - `cadexchange_ui.py` — the window's half: File ▸ Import CAD File
+                       (asks only the smoothness, remembered), File ▸
+                       Export for Other CAD (Ctrl+Alt+S; the format follows
+                       the filter, then ONE sentence + Show in Folder);
+                       File ▸ Open and drag-and-drop import with no dialog.
+                       `place_parts` writes each part's mesh to "<stem>
+                       parts/<name>.stl" beside the file (the cache folder
+                       when that is read-only) so OpenSCAD renders the
+                       same triangles, and builds one Object named after
+                       the file, one coloured group per part. MCP:
+                       open_document (`quality`) and export_document take
+                       the same paths.
+  - `curve3d.py`     — the **`curve`** node (feature module, Insert ▸
+                       Shapes & patterns ▸ 3D curve): points [X, Y, Z],
+                       style smooth (Catmull-Rom, `sweep.densify`) or
+                       straight, closed, wire `thickness`. OpenSCAD: a
+                       chain of hulled spheres (`kcad_curve`, the same
+                       Catmull-Rom in OpenSCAD functions); preview: tubes
+                       + balls; STEP: a B-spline interpolated through the
+                       SAME dense points swept by a circle (balls on open
+                       ends), or cylinders + balls when straight.
+                       `sweep_from_curve` (tree right-click) replaces it by
+                       a Sweep along the same points with a circle profile.
+  - `curve_draw.py`  — **Draw 3D Curve** (Insert, Ctrl+Alt+C), a
+                       `View3D.edit_tool`: clicks place points that SNAP
+                       (`Snapper`: crease edges and their corners only —
+                       a box has 12 edges, a cylinder's facets none —
+                       priority start point > corner > middle of edge > on
+                       edge > on surface > the ground grid at the working
+                       height, `view2d.grid_size`), each named beside a
+                       coloured marker; Shift = straight up/down from the
+                       last point, Alt = no snapping; typing a digit opens
+                       the coordinate box (`parse_coords`: "x, y, z",
+                       "x, y", "@dx, dy, dz"); Enter / right-click /
+                       double-click finish, Backspace, C closes, Esc
+                       cancels; a drag still orbits (the press is let
+                       through and only a still release is a click). The
+                       curve lands where new geometry goes
+                       (`create_curve`).
   - `section_loft.py`— **loft through sections** (Qt-free): the
                        node's 2D children are the cross-sections, one
                        per `heights` row, joined in order — so a body
@@ -4899,6 +4975,16 @@ modules assert the schema and the implementations stay in step, so a
 half-added tool fails the suite.
 
 ## Roadmap
+
+**Rhino 8 gap list** (asked 2026-10-05). Landed the same day: STEP /
+IGES / BREP / .3dm import and export with exact surfaces
+(`cadexchange.py`), 3D curves (`curve3d.py`) and drawing them with
+object snaps and typed coordinates (`curve_draw.py`). Still open, in
+order: **surfaces from curves** (loft / sweep-2-rails / network / patch
+as exact OCC surfaces — the kernel is now there), a **B-rep node** that
+keeps an imported STEP part editable as faces rather than a mesh,
+**SubD** cages, a **Gumball** in the 3D view, **surface analysis**
+(zebra, curvature, draft angle), **Make2D** into the Blueprint.
 
 **SolidWorks gap list** (asked 2026-09-12). Landed the same day: the
 OpenGL viewer (`glrender.py`), the other mates (flush / concentric /

@@ -199,7 +199,16 @@ curve), `kcad_honeycomb(size = [w, h], cell, wall, margin)`, \
 `kcad_textured(shape = "cylinder" | "panel", pattern = "diamonds" | \
 "ribs" | "waves" | "bricks" | "hexes" | "dimples" | "checkers", diameter, \
 height, period, relief)`; to add an svg_path shape use add_node with \
-d = "M 0 0 L 40 0 A 10 10 0 0 1 40 20 Z" (y up).
+d = "M 0 0 L 40 0 A 10 10 0 0 1 40 20 Z" (y up). A wire, cable, \
+handrail or bent rod is `kcad_curve(points = [[x, y, z], …], style = \
+"smooth" | "straight", closed = false, thickness = 2)` — a 3D curve \
+through the points, exported to STEP as an exact B-spline pipe.
+- Other CAD programs: open_document reads STEP / IGES / Rhino .3dm / \
+.brep (named, coloured parts, one Object); export_document writes \
+.step / .iges with EXACT surfaces for primitives, extrusions, revolves, \
+booleans and curves (others faceted, listed in the result) and .3dm as \
+meshes. Send STEP when the user wants to continue in Fusion, \
+SolidWorks, Onshape, FreeCAD or Rhino.
 - Beyond OpenSCAD's own shapes, apply_code understands KherveCAD's \
 helpers, which parse into editable nodes: `kcad_sweep(path = [[x, y, \
 z], ...], smooth = 3, twist = 0, scale = 1, wall = 0, closed = false) \

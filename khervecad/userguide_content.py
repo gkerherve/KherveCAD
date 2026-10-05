@@ -411,9 +411,31 @@ subtract it from a block (the OpenSCAD render cuts it exactly) to make a
 holder that fits it. Keep the mesh inside the document's folder and the
 .kcad stores it by a relative path, so the folder can be moved or shared
 as a whole.</li>
+<li><b>File &rsaquo; Import CAD File</b> &mdash; a STEP, IGES, Rhino
+(.3dm) or .brep file from Fusion, SolidWorks, Onshape, FreeCAD or Rhino,
+or simply open or drop one. It arrives as one Object named after the
+file, every part a named group in its own colour, at its real size.
+Pick <b>Draft</b> for a big assembly and <b>Fine</b> for a render; Open
+and dropping use Normal. Move it as you like: exporting it again writes
+the file's own exact surfaces, not the triangles on screen.</li>
 <li><b>Insert &rsaquo; OpenSCAD code</b> &mdash; a block of raw OpenSCAD
 (e.g. a BOSL2 call) that the engine renders.</li>
 </ul>
+<h3>3D curves</h3>
+<p><b>Insert &rsaquo; Draw 3D Curve</b> {K("Ctrl+Alt+C")} draws a smooth
+curve by clicking points in the 3D view &mdash; a cable, a handrail, a
+bent rod, the path for a sweep. Each point <b>snaps</b>, and the marker
+says to what: a <b>Corner</b>, the <b>Middle of edge</b>, <b>On edge</b>,
+<b>On surface</b>, or, in empty space, <b>On the ground grid</b>. Hold
+<b>Shift</b> to go straight up or down from the last point, hold
+<b>Alt</b> to switch snapping off, or just <b>type</b> a point &mdash;
+<i>10, 20, 5</i>, or <i>@0, 0, 15</i> for 15 above the last one &mdash;
+and press Enter. <b>Enter</b>, a right-click or a double-click finishes;
+<b>Backspace</b> takes a point back; <b>C</b>, or clicking the first
+point, closes a loop. Dragging still turns the view between clicks.</p>
+<p>The curve is drawn as a round wire; its points, smoothness and wire
+thickness are in Properties. Right-click it &rsaquo; <b>Make a Sweep
+Along This Curve</b> to give it any profile.</p>
 """),
 
         ("combine", "Moving and combining", f"""
@@ -1051,10 +1073,23 @@ its commands.</p>
 <li><b>.kcad</b> is KherveCAD's own format: every object, colour,
 variable, part and snap. Save {K("Ctrl+S")}, Save As
 {K("Ctrl+Shift+S")}, Open {K("Ctrl+O")}, Open Recent.</li>
-<li><b>Open</b> also accepts .scad programs and meshes (.stl, .obj, .off,
-.3mf); so does dragging a file onto the window.</li>
+<li><b>Open</b> also accepts .scad programs, meshes (.stl, .obj, .off,
+.3mf) and CAD files (.step, .iges, .3dm, .brep); so does dragging a file
+onto the window.</li>
 <li><b>Export STL</b> {K("Ctrl+Shift+E")} for 3D printing (exact when
 OpenSCAD is installed); <b>Export OpenSCAD</b> {K("Ctrl+E")}.</li>
+<li><b>Export for Other CAD</b> {K("Ctrl+Alt+S")} writes <b>STEP</b>
+(Fusion, SolidWorks, Onshape, FreeCAD, Rhino), <b>IGES</b> or a Rhino
+<b>.3dm</b>. In STEP and IGES the surfaces are <b>exact</b> wherever the
+model has an exact form &mdash; boxes, spheres, cylinders and cones,
+extrusions, revolves, booleans, loops, 3D curves and imported STEP parts
+&mdash; so a hole opens in the other program as a real cylinder. Each
+part keeps its name and colour, and the file is always in real
+millimetres. Shapes with no exact form (a blend, a sculpt, a gear) go in
+as faceted solids, and the message after saving names them. The .3dm is
+meshes, one named layer per part; for editable surfaces in Rhino send
+STEP. These formats need <i>cadquery-ocp</i> (and <i>rhino3dm</i> for
+.3dm); if one is missing the message says what to install.</li>
 <li><b>Export PNG</b> {K("Ctrl+Alt+E")} saves a picture of the 3D view in
 its colours, style and lighting: the <b>current view</b> exactly as the
 camera shows it, or <b>all standard views</b> (the isometric from all
