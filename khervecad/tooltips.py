@@ -966,6 +966,18 @@ TIPS = {
          "gives the plain polygon.",
          "Extrude it for a solid."],
         "Turn° sets where the first tip points (90 = up)."),
+    "subd": (
+        "SubD (smooth cage)",
+        "A smooth surface shaped by a coarse cage — Rhino's SubD. Eight "
+        "cage points make a pebble; a few dozen make a shoe, a car body, "
+        "a head.",
+        ["Insert ▸ SubD Box, or select a solid and Tools ▸ Convert to "
+         "SubD.",
+         "Press Tab over the 3D view: Edit Mode opens the CAGE. Drag "
+         "points, E extrudes a face, the surface follows.",
+         "Smoothness, crease angle and creased edges are in Properties."],
+        "Tick Show the cage too to see it while you work outside Edit "
+        "Mode."),
     "curve_surface": (
         "Surface from curves",
         "An exact surface made from 3D curves — Rhino's Loft, Sweep, "

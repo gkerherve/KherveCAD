@@ -391,6 +391,20 @@ def build_insert_menu(win, menu):
             win, spec["icon"], spec["label"], prim,
             lambda _=False, t=prim: win._add_primitive(t)))
 
+    def _subd_box():
+        from . import subd
+        parent = win.builder.isolated_component()
+        node = subd.insert_box(win.model, parent)
+        if parent is None:
+            win._geometry_created_in_main(node)
+        win.statusBar().showMessage(language.tr(
+            "SubD box: press Tab over the 3D view to edit its cage — drag "
+            "points, E to extrude a face — and the smooth surface "
+            "follows."), 12000)
+    menu.addAction(_action(win, "mdi.circle-box-outline",
+                           "SubD &Box (smooth, edit its cage)", "subd",
+                           _subd_box))
+
     def _draw_curve():
         from . import curve_draw
         curve_draw.start(win)
@@ -425,6 +439,26 @@ def build_tools_menu(win, menu):
                    bind=False)
     edit.setText(edit.text() + "\tTab")       # shown, the view owns Tab
     menu.addAction(edit)
+    def _to_subd():
+        from . import subd
+        nodes = win.builder.active_tree().selected_nodes()
+        if len(nodes) != 1:
+            win.statusBar().showMessage(language.tr(
+                "Convert to SubD: select one solid first."), 6000)
+            return
+        try:
+            node = subd.convert(win.model, nodes[0],
+                                win.model.effective_fn())
+        except ValueError as exc:
+            win.statusBar().showMessage(language.tr(str(exc)), 8000)
+            return
+        win.builder.active_tree().select_nodes([node])
+        win.statusBar().showMessage(language.tr(
+            "Now a SubD: Tab edits its cage; Smoothness and creases are "
+            "in Properties."), 10000)
+    menu.addAction(_action(win, "mdi.circle-box-outline",
+                           "Convert to &SubD (smooth cage)", "subd",
+                           _to_subd))
     surf = menu.addMenu(icons.icon("mdi.vector-curve"),
                         language.tr("Surface from &Curves"))
     surf.setToolTipsVisible(True)

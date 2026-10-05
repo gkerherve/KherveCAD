@@ -666,7 +666,7 @@ def poke(points, faces, face_index, at=None):
 #: wrappers Edit Mode looks through to find the polyhedron inside —
 #: what converting an Object or a coloured part leaves round it
 TRANSPARENT = frozenset({"color", "translate", "rotate", "scale", "mirror",
-                         "multmatrix", "union", "component"})
+                         "multmatrix", "union", "component", "subd"})
 #: a part placed per iteration cannot be one mesh
 _LOOPS = frozenset({"for_loop", "while_loop", "pattern", "intersection_for"})
 
