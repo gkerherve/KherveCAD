@@ -58,7 +58,7 @@ _HINTS = {
 
 
 def _settings():
-    return QSettings("KherveCAD", "KherveCAD")
+    return QSettings("Kherve", "KherveCAD")
 
 
 def quality_setting() -> str:
