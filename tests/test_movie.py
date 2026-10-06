@@ -1,0 +1,90 @@
+"""File ▸ Export Turntable Movie: frames round the model and the encode.
+
+Run with: python -m pytest tests/  (offscreen Qt).
+
+Copyright (C) 2026 Gwilherm Kerherve
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+"""
+
+import os
+import sys
+from pathlib import Path
+
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+os.environ.setdefault("KHERVECAD_DISABLE_ENGINE", "1")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import pytest
+from PyQt5.QtGui import QImage
+from PyQt5.QtWidgets import QApplication
+
+from khervecad import movie, scadparse
+
+
+@pytest.fixture(scope="session")
+def app():
+    return QApplication.instance() or QApplication([])
+
+
+@pytest.fixture
+def window(app):
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    win.resize(900, 650)
+    win._confirm_discard = lambda: True
+    root, _w = scadparse.parse_scad("cube([60, 20, 10]);")
+    win.model.root = root
+    win.model.structure_changed.emit()
+    win._refresh_preview()
+    yield win
+    win._dirty = False
+    win.close()
+
+
+def test_the_loop_joins_without_repeating_a_frame():
+    yaws = movie.frame_yaws(8, turns=1, start=10, clockwise=False)
+    assert yaws[0] == 10 and yaws[1] == 55 and yaws[-1] == 325
+    assert movie.frame_yaws(4, clockwise=True)[1] == -90
+
+
+def test_requests_are_checked():
+    with pytest.raises(movie.MovieError):
+        movie.check("/tmp/a.avi", 8, 30, 1, 640, 480)
+    with pytest.raises(movie.MovieError):
+        movie.check("/tmp/a.mp4", 200, 60, 1, 640, 480)
+    with pytest.raises(movie.MovieError):
+        movie.check("/tmp/a.mp4", 8, 30, 0, 640, 480)
+
+
+def test_frames_keep_one_distance_round_the_turn(window, tmp_path):
+    """A long thin bar fits differently side-on and end-on; the movie
+    must not zoom as it turns, so every frame uses the widest fit."""
+    count = movie.render_frames(window.view3d, tmp_path, seconds=1, fps=6,
+                                turns=1, width=96, height=64)
+    assert count == 6
+    files = sorted(tmp_path.glob("frame_*.png"))
+    assert len(files) == 6
+    images = [QImage(str(f)) for f in files]
+    assert all(img.width() == 96 and img.height() == 64 for img in images)
+    # the turn changes the picture
+    assert images[0] != images[1]
+
+
+@pytest.mark.skipif(movie.ffmpeg_exe() is None, reason="no ffmpeg")
+@pytest.mark.parametrize("suffix", [".mp4", ".gif"])
+def test_exports_a_movie(window, tmp_path, suffix):
+    out = tmp_path / f"turn{suffix}"
+    result = movie.export(window.view3d, out, seconds=0.5, fps=8,
+                          width=96, height=64)
+    assert out.is_file() and out.stat().st_size > 500
+    assert result["frames"] == 4 and result["format"] == suffix[1:]
+
+
+def test_mcp_tool_is_registered():
+    from khervecad import mcp_schema, mcp_tools
+    assert any(t["name"] == "export_movie" for t in mcp_schema.TOOLS)
+    assert hasattr(mcp_tools.McpToolExecutor, "_t_export_movie")

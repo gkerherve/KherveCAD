@@ -71,7 +71,7 @@ _READ_ONLY_TOOLS = frozenset({
 #: leaves an edit behind).
 _NO_SNAPSHOT_TOOLS = _READ_ONLY_TOOLS | {
     "save_document", "export_document", "export_drawing",
-    "publish_to_printables", "install_scad_library",
+    "export_movie", "publish_to_printables", "install_scad_library",
     "save_to_library",      # writes a file, the document is unchanged
     "remove_from_planetcraft",  # the game's folder, not the document
 }
@@ -82,7 +82,7 @@ _NO_SNAPSHOT_TOOLS = _READ_ONLY_TOOLS | {
 #: back until the user raises the access level.
 _FILE_TOOLS = frozenset({
     "open_document", "save_document", "export_document",
-    "export_drawing", "publish_to_printables", "set_reference_image",
+    "export_drawing", "export_movie", "publish_to_printables", "set_reference_image",
     "mesh_from_photo", "build_city", "import_map", "send_to_planetcraft",
     "build_creature", "list_planetcraft_creatures", "remove_from_planetcraft",
     "install_scad_library", "build_protein", "render_photo",

@@ -216,6 +216,10 @@ when open. Smooth organic forms: add_node type subd with a polyhedron \
 cage inside (or kcad_subd), shaped by edit_mesh on the cage. Surface \
 checks: set_render_options heatmap draft / curvature / zebra. A line \
 drawing from the current camera: export_drawing views ["Current"].
+- A turntable movie / video / advert / GIF of the model turning: \
+export_movie path ".mp4" or ".gif" (seconds, fps, turns, size, \
+elevation) — set up the look first (colours, materials, a Cut \
+Through, the platform); every frame is the 3D view as the user sees it.
 - Beyond OpenSCAD's own shapes, apply_code understands KherveCAD's \
 helpers, which parse into editable nodes: `kcad_sweep(path = [[x, y, \
 z], ...], smooth = 3, twist = 0, scale = 1, wall = 0, closed = false) \

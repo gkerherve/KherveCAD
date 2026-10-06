@@ -2593,6 +2593,45 @@ TOOLS = [
         }),
     },
     {
+        "name": "export_movie",
+        "description": (
+            "A turntable movie for a product page or an advert: the "
+            "camera circles the model at a fixed height and distance "
+            "(fitted so the whole model stays in frame from every side) "
+            "and each frame is painted by the 3D view — the user's "
+            "colours, materials, lighting, platform and any Cut Through. "
+            ".mp4 (H.264, plays everywhere) or .gif (looping). The loop "
+            "joins without a stutter. Needs ffmpeg (bundled by the "
+            "imageio-ffmpeg package); 8 s at 30 fps is 240 snapshots, "
+            "so allow a minute or two."
+        ),
+        "input_schema": _obj({
+            "path": {"type": "string",
+                     "description": "Absolute path ending in .mp4 or "
+                                    ".gif."},
+            "seconds": {"type": "number",
+                        "description": "Length, 0.5-120. Default 8."},
+            "fps": {"type": "integer",
+                    "description": "Frames per second, 5-60. Default 30 "
+                                   "(use 15 for a GIF)."},
+            "turns": {"type": "number",
+                      "description": "Full turns over the movie. "
+                                     "Default 1."},
+            "width": {"type": "integer",
+                      "description": "Pixels wide. Default 1280."},
+            "height": {"type": "integer",
+                       "description": "Pixels high. Default 720."},
+            "elevation": {"type": "number",
+                          "description": "Camera height in degrees "
+                                         "above the ground plane. "
+                                         "Default: the user's view."},
+            "direction": {"type": "string",
+                          "enum": ["clockwise", "anticlockwise"],
+                          "description": "Seen from above. Default "
+                                         "clockwise."},
+        }, ["path"]),
+    },
+    {
         "name": "export_drawing",
         "description": (
             "A 2D engineering drawing of the model (or the selection): "

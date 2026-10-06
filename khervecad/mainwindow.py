@@ -246,6 +246,10 @@ class MainWindow(QMainWindow):
                             self.tr("Export PN&G..."),
                             lambda: export_png_dialog(self),
                             "Ctrl+Alt+E")
+        from . import movie
+        file_menu.addAction(icons.icon("mdi.movie-open-outline"),
+                            self.tr("Export Turntable &Movie..."),
+                            lambda: movie.open_dialog(self))
         from . import photoreal_ui
         file_menu.addAction(icons.icon("mdi.camera-iris"),
                             self.tr("Render P&hoto (Blender)..."),

@@ -2,6 +2,7 @@ PyQt5>=5.15
 qtawesome>=1.3
 numpy>=1.26         # runtime: Cloth, Remesh, Shrinkwrap, push/pull, and the manifold3d bridge
 manifold3d>=3.0     # exact booleans, Bevel, Wireframe, push/pull (csg.py); approximated if absent
+imageio-ffmpeg>=0.5   # File > Export Turntable Movie (bundles ffmpeg); optional
 pygit2>=1.14        # optional: per-document Git (commit/push); degrades if absent
 cadquery-ocp>=7.7    # optional: STEP / IGES / BREP import and export (cadexchange.py)
 rhino3dm>=8.0       # optional: Rhino .3dm import and export

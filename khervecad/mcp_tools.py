@@ -2286,6 +2286,13 @@ class McpToolExecutor:
             result["my_library"] = kept
         return result
 
+    def _t_export_movie(self, params) -> dict:
+        from . import movie
+        try:
+            return movie.export_request(self._w, params)
+        except movie.MovieError as exc:
+            raise ToolError(str(exc))
+
     def _t_export_drawing(self, params) -> dict:
         from . import drawing, drawing_dialog, drawing_export
         path = str(Path(str(params.get("path", ""))).expanduser())
