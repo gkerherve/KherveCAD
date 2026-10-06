@@ -632,6 +632,8 @@ class View3D(QWidget):
                     max(int(round(height / ratio)), 2))
         twin.style, twin.background = self.style, self.background
         twin.brightness, twin.contrast = self.brightness, self.contrast
+        twin.light_turn, twin.light_height = self.light_turn, \
+            self.light_height
         # the stage, and its per-mesh cache (the twin gets the same list)
         twin.stage, twin._stage_cache = self.stage, self._stage_cache
         twin.cavity, twin.edges = self.cavity, self.edges

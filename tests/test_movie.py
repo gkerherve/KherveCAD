@@ -88,3 +88,40 @@ def test_mcp_tool_is_registered():
     from khervecad import mcp_schema, mcp_tools
     assert any(t["name"] == "export_movie" for t in mcp_schema.TOOLS)
     assert hasattr(mcp_tools.McpToolExecutor, "_t_export_movie")
+
+
+def test_material_survives_a_coloured_object_call():
+    """`kcad_material("Metal") color(c) Part();` imports with the
+    colour AND the material on one wrapper — the Object's own colour
+    used to win and the steel came back flat grey."""
+    root, _w = scadparse.parse_scad(
+        'module Part() { cube(10); }\n'
+        'kcad_material("Metal") color("#f4f6f8") { Part(); }\n')
+    stack, wrappers = [root], []
+    while stack:
+        n = stack.pop()
+        stack.extend(n.children)
+        if n.type == "color":
+            wrappers.append(n)
+    assert len(wrappers) == 1
+    w = wrappers[0]
+    assert w.params["material"] == "Metal"
+    assert w.params["color"] == "#f4f6f8"
+    part = w.children[0]
+    assert part.type == "component" and not part.params.get("color")
+
+
+def test_light_sweep_wraps_into_the_bar_range():
+    lights = movie.light_turns(4, turns=1, start=0.0)
+    assert lights == [0.0, 0.5, -1.0, -0.5]
+
+
+def test_light_motion_keeps_the_camera_and_moves_the_light(window,
+                                                          tmp_path):
+    view = window.view3d
+    yaw, light = view.yaw, view.light_turn
+    movie.render_frames(view, tmp_path, seconds=1, fps=4, turns=1,
+                        width=96, height=64, motion="light")
+    assert view.yaw == yaw and view.light_turn == light   # restored
+    a, b = (QImage(str(f)) for f in sorted(tmp_path.glob("*.png"))[:2])
+    assert a != b                      # the shading moved

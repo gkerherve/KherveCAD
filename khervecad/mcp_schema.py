@@ -2625,6 +2625,12 @@ TOOLS = [
                           "description": "Camera height in degrees "
                                          "above the ground plane. "
                                          "Default: the user's view."},
+            "motion": {"type": "string",
+                       "enum": ["turntable", "light", "both"],
+                       "description": "What moves: the camera round the "
+                                      "model (default), the light round "
+                                      "a still model (reflections sweep "
+                                      "across it), or both."},
             "direction": {"type": "string",
                           "enum": ["clockwise", "anticlockwise"],
                           "description": "Seen from above. Default "

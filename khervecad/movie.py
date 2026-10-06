@@ -15,6 +15,11 @@ GIF (two-pass palette, for chats and slides). ffmpeg is found on
 $KHERVECAD_FFMPEG, PATH, or the `imageio-ffmpeg` package's own binary;
 without one the frames are kept and the error says how to get it.
 
+`motion` "light" keeps the model and camera still and swings the key
+light round instead (the lighting bar's Light turn, frame by frame), so
+the shading and the metal's reflected soft boxes sweep across a part
+that stands still; "both" does the two at once.
+
 `export_request` is the `export_movie` MCP tool's body.
 
 Copyright (C) 2026 Gwilherm Kerherve
@@ -34,6 +39,9 @@ import tempfile
 from pathlib import Path
 
 FORMATS = (".mp4", ".gif")
+#: what moves: the camera round the model, the light round a still
+#: model (its reflections and shading sweep across it), or both
+MOTIONS = ("turntable", "light", "both")
 #: (key, label, (width, height))
 SIZES = (
     ("1280x720", "1280 × 720 (HD)", (1280, 720)),
@@ -99,8 +107,19 @@ def turntable_frame(view3d, width, height, pitch):
     return best, target
 
 
+def light_turns(count, turns=1.0, start=0.0):
+    """The lighting bar's light_turn (-1..1 = half a turn either way)
+    for every frame of *turns* sweeps, wrapped into that range."""
+    out = []
+    for i in range(int(count)):
+        t = start + 2.0 * float(turns) * i / max(int(count), 1)
+        out.append(((t + 1.0) % 2.0) - 1.0)
+    return out
+
+
 def render_frames(view3d, folder, *, seconds, fps, turns, width, height,
-                  pitch=None, clockwise=True, progress=None):
+                  pitch=None, clockwise=True, progress=None,
+                  motion="turntable"):
     """Write ``frame_00000.png`` … into *folder*; returns the count.
     *progress(i, n)* may return False to cancel (MovieError)."""
     from . import pngexport
@@ -110,15 +129,32 @@ def render_frames(view3d, folder, *, seconds, fps, turns, width, height,
     pitch = view3d.pitch if pitch is None else float(pitch)
     distance, target = turntable_frame(view3d, width, height, pitch)
     ratio = pngexport.pixel_ratio(view3d, width, height)
-    for i, yaw in enumerate(frame_yaws(count, turns, view3d.yaw,
-                                       clockwise)):
-        if progress is not None and progress(i, count) is False:
-            raise MovieError("Cancelled.")
-        image, _cam = view3d.snapshot(width, height, yaw=yaw, pitch=pitch,
-                                      distance=distance, target=target,
-                                      clean=True, pixel_ratio=ratio)
-        if not image.save(str(Path(folder) / f"frame_{i:05d}.png"), "PNG"):
-            raise OSError(f"Could not write frame {i} into {folder}.")
+    if motion not in MOTIONS:
+        raise MovieError(f"motion is one of {', '.join(MOTIONS)}.")
+    yaws = frame_yaws(count, turns if motion != "light" else 0,
+                      view3d.yaw, clockwise)
+    if motion == "turntable":
+        lights = [view3d.light_turn] * count
+    else:
+        lights = light_turns(count, turns if clockwise else -turns,
+                             view3d.light_turn)
+    if motion == "light":
+        # the user's own framing: a still model is shot as it is seen
+        distance, target = view3d.distance, list(view3d.target)
+    saved = view3d.light_turn
+    try:
+        for i, (yaw, light) in enumerate(zip(yaws, lights)):
+            if progress is not None and progress(i, count) is False:
+                raise MovieError("Cancelled.")
+            view3d.light_turn = light      # copied by the snapshot twin
+            image, _cam = view3d.snapshot(
+                width, height, yaw=yaw, pitch=pitch, distance=distance,
+                target=target, clean=True, pixel_ratio=ratio)
+            if not image.save(str(Path(folder) / f"frame_{i:05d}.png"),
+                              "PNG"):
+                raise OSError(f"Could not write frame {i} into {folder}.")
+    finally:
+        view3d.light_turn = saved
     return count
 
 
@@ -177,7 +213,7 @@ def check(path, seconds, fps, turns, width, height):
 def export(view3d, path, *, seconds=DEFAULT["seconds"], fps=DEFAULT["fps"],
            turns=DEFAULT["turns"], width=DEFAULT["width"],
            height=DEFAULT["height"], pitch=None, clockwise=True,
-           progress=None) -> dict:
+           progress=None, motion="turntable") -> dict:
     """Film the turntable into *path*. Returns what was written."""
     path, seconds, fps, turns, width, height = check(
         path, seconds, fps, turns, width, height)
@@ -189,11 +225,12 @@ def export(view3d, path, *, seconds=DEFAULT["seconds"], fps=DEFAULT["fps"],
         count = render_frames(view3d, folder, seconds=seconds, fps=fps,
                               turns=turns, width=width, height=height,
                               pitch=pitch, clockwise=clockwise,
-                              progress=progress)
+                              progress=progress, motion=motion)
         encode(folder, path, fps, exe)
     return {"exported": str(path), "format": path.suffix[1:],
             "frames": count, "seconds": seconds, "fps": fps,
-            "turns": turns, "width": width, "height": height,
+            "turns": turns, "motion": motion, "width": width,
+            "height": height,
             "bytes": path.stat().st_size}
 
 
@@ -209,7 +246,8 @@ def export_request(window, params) -> dict:
                   width=params.get("width", DEFAULT["width"]),
                   height=params.get("height", DEFAULT["height"]),
                   pitch=params.get("elevation"),
-                  clockwise=direction == "clockwise")
+                  clockwise=direction == "clockwise",
+                  motion=str(params.get("motion", "turntable")))
 
 
 # ── dialog ─────────────────────────────────────────────────────────
@@ -247,6 +285,13 @@ def open_dialog(window):
     pitch.setRange(-89, 89)
     pitch.setSuffix("°")
     pitch.setValue(round(view.pitch, 1))
+    motion = QComboBox()
+    motion.addItem(window.tr("Camera turns round the model"), "turntable")
+    motion.addItem(window.tr("Model still, light turns round it"),
+                   "light")
+    motion.addItem(window.tr("Both turn"), "both")
+    motion.setCurrentIndex(max(motion.findData(
+        settings.value("movie/motion", "turntable")), 0))
     direction = QComboBox()
     direction.addItem(window.tr("Clockwise (seen from above)"), True)
     direction.addItem(window.tr("Anticlockwise"), False)
@@ -268,6 +313,7 @@ def open_dialog(window):
             path.setText(name)
     browse.clicked.connect(_browse)
     form.addRow(window.tr("Size"), size)
+    form.addRow(window.tr("What moves"), motion)
     form.addRow(window.tr("Length"), seconds)
     form.addRow(window.tr("Frames per second"), fps)
     form.addRow(window.tr("Turns"), turns)
@@ -286,6 +332,7 @@ def open_dialog(window):
     settings.setValue("movie/seconds", seconds.value())
     settings.setValue("movie/fps", fps.value())
     settings.setValue("movie/turns", turns.value())
+    settings.setValue("movie/motion", motion.currentData())
     settings.setValue("movie/folder", str(Path(path.text()).parent))
     total = int(round(seconds.value() * fps.value()))
     bar = QProgressDialog(window.tr("Filming the turntable…"),
@@ -302,7 +349,7 @@ def open_dialog(window):
                         fps=fps.value(), turns=turns.value(), width=w,
                         height=h, pitch=pitch.value(),
                         clockwise=bool(direction.currentData()),
-                        progress=_tick)
+                        progress=_tick, motion=motion.currentData())
     except (MovieError, OSError) as exc:
         bar.close()
         if str(exc) != "Cancelled.":
