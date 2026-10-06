@@ -179,6 +179,7 @@ def test_the_overlay_draws_the_picture_over_the_model(app, red_png):
     view = View3D()
     view.resize(160, 160)
     view.hardware = False
+    view.lighting_bar.hide()     # four rows now: it covers the probe pixel
     view.set_mesh(tris, "test", None)
     view.set_reference_images([_ref(red_png, x=-50.0, y=-25.0,
                                     width=100.0, height=50.0, offset=20.0)])
