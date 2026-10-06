@@ -457,6 +457,17 @@ def fold_material(node):
         node.remove(child)
         child.visible = node.visible and child.visible
         return child
+    if len(node.children) == 1 and \
+            node.children[0].type in ("component", "reference") and \
+            str(node.children[0].params.get("color", "")).strip():
+        # `kcad_material("Metal") color(c) Part();` — the colour was
+        # already folded onto the Object (innermost first); take it back
+        # onto this wrapper, or the Object's own colour hides the
+        # material and a steel part imports flat grey
+        p = node.children[0].params
+        node.params["color"], p["color"] = p["color"], ""
+        node.params["alpha"], p["alpha"] = p.get("alpha", 1.0), 1.0
+        return node             # final: no further colour folding
     return None
 
 
