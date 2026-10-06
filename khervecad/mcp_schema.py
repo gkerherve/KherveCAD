@@ -2634,6 +2634,11 @@ TOOLS = [
                                       "across it), both, or sequence — "
                                       "light sweep, then a turn, then "
                                       "light again, a third each."},
+            "light_seconds": {"type": "number",
+                              "description": "Sequence only: length of "
+                                             "EACH light swing; the turn "
+                                             "gets the rest. Default a "
+                                             "third of the movie each."},
             "direction": {"type": "string",
                           "enum": ["clockwise", "anticlockwise"],
                           "description": "Seen from above. Default "

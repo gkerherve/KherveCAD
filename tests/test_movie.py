@@ -133,3 +133,19 @@ def test_sequence_is_light_then_turn_then_light():
     assert lights[:4] == lights[8:] and len(set(lights[:4])) == 4
     assert lights[4:8] == [0.0] * 4 and len(set(yaws[4:8])) == 4
     assert yaws[4] == 0.0 and lights[4] == 0.0   # each act joins
+
+
+def test_light_swing_length_is_chosen():
+    yaws, lights = movie.motion_path("sequence", 20, 1, 0.0, 0.0,
+                                     light_frames=3)
+    still = [i for i, y in enumerate(yaws) if y == 0.0]
+    assert lights[3:17] == [0.0] * 14          # 14-frame turn
+    assert len(set(lights[:3])) == 3 and lights[:3] == lights[17:]
+    assert yaws[:3] == [0.0] * 3 and len(set(yaws[3:17])) == 14
+    assert still[:3] == [0, 1, 2]
+
+
+def test_light_swings_must_leave_time_for_the_turn(window, tmp_path):
+    with pytest.raises(movie.MovieError):
+        movie.export(window.view3d, tmp_path / "a.mp4", seconds=4,
+                     motion="sequence", light_seconds=2)

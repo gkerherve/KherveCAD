@@ -19,8 +19,9 @@ without one the frames are kept and the error says how to get it.
 light round instead (the lighting bar's Light turn, frame by frame), so
 the shading and the metal's reflected soft boxes sweep across a part
 that stands still; "both" does the two at once; "sequence" is an advert
-in three equal acts — the light sweeps round the still model, the
-camera turns round it, the light sweeps again — each act a whole turn,
+in three acts — the light sweeps round the still model, the
+camera turns round it, the light sweeps again (`light_seconds` each
+swing, the turn the rest; a third each by default) — each a whole turn,
 so every act ends where the next begins and the movie loops.
 
 `export_request` is the `export_movie` MCP tool's body.
@@ -126,11 +127,14 @@ def light_turns(count, turns=1.0, start=0.0):
     return out
 
 
-def motion_path(motion, count, turns, yaw, light, clockwise=True):
-    """(yaws, light_turns) for every frame of *motion*."""
+def motion_path(motion, count, turns, yaw, light, clockwise=True,
+                light_frames=None):
+    """(yaws, light_turns) for every frame of *motion*. In a sequence
+    each light swing lasts *light_frames* (default a third each)."""
     sweep = turns if clockwise else -turns
     if motion == "sequence":
-        act = max(count // 3, 1)
+        act = max(count // 3, 1) if not light_frames else \
+            max(min(int(light_frames), (count - 1) // 2), 1)
         mid = count - 2 * act
         sweep_y, sweep_l = [yaw] * act, light_turns(act, sweep, light)
         yaws = sweep_y + frame_yaws(mid, turns, yaw, clockwise) + sweep_y
@@ -145,7 +149,7 @@ def motion_path(motion, count, turns, yaw, light, clockwise=True):
 
 def render_frames(view3d, folder, *, seconds, fps, turns, width, height,
                   pitch=None, clockwise=True, progress=None,
-                  motion="turntable"):
+                  motion="turntable", light_seconds=None):
     """Write ``frame_00000.png`` … into *folder*; returns the count.
     *progress(i, n)* may return False to cancel (MovieError)."""
     from . import pngexport
@@ -157,8 +161,10 @@ def render_frames(view3d, folder, *, seconds, fps, turns, width, height,
     ratio = pngexport.pixel_ratio(view3d, width, height)
     if motion not in MOTIONS:
         raise MovieError(f"motion is one of {', '.join(MOTIONS)}.")
+    light_frames = None if not light_seconds else \
+        int(round(float(light_seconds) * int(fps)))
     yaws, lights = motion_path(motion, count, turns, view3d.yaw,
-                               view3d.light_turn, clockwise)
+                               view3d.light_turn, clockwise, light_frames)
     saved = view3d.light_turn
     try:
         for i, (yaw, light) in enumerate(zip(yaws, lights)):
@@ -231,10 +237,16 @@ def check(path, seconds, fps, turns, width, height):
 def export(view3d, path, *, seconds=DEFAULT["seconds"], fps=DEFAULT["fps"],
            turns=DEFAULT["turns"], width=DEFAULT["width"],
            height=DEFAULT["height"], pitch=None, clockwise=True,
-           progress=None, motion="turntable") -> dict:
+           progress=None, motion="turntable", light_seconds=None) -> dict:
     """Film the turntable into *path*. Returns what was written."""
     path, seconds, fps, turns, width, height = check(
         path, seconds, fps, turns, width, height)
+    if motion == "sequence" and light_seconds:
+        light_seconds = float(light_seconds)
+        if light_seconds <= 0 or 2 * light_seconds >= seconds:
+            raise MovieError(
+                f"Each light swing must be shorter than half the movie "
+                f"({seconds / 2:g} s), so the turn has time between them.")
     exe = ffmpeg_exe()
     if not exe:
         raise MovieError(MISSING)
@@ -243,7 +255,8 @@ def export(view3d, path, *, seconds=DEFAULT["seconds"], fps=DEFAULT["fps"],
         count = render_frames(view3d, folder, seconds=seconds, fps=fps,
                               turns=turns, width=width, height=height,
                               pitch=pitch, clockwise=clockwise,
-                              progress=progress, motion=motion)
+                              progress=progress, motion=motion,
+                              light_seconds=light_seconds)
         encode(folder, path, fps, exe)
     return {"exported": str(path), "format": path.suffix[1:],
             "frames": count, "seconds": seconds, "fps": fps,
@@ -265,7 +278,8 @@ def export_request(window, params) -> dict:
                   height=params.get("height", DEFAULT["height"]),
                   pitch=params.get("elevation"),
                   clockwise=direction == "clockwise",
-                  motion=str(params.get("motion", "turntable")))
+                  motion=str(params.get("motion", "turntable")),
+                  light_seconds=params.get("light_seconds"))
 
 
 # ── dialog ─────────────────────────────────────────────────────────
@@ -311,6 +325,18 @@ def open_dialog(window):
     motion.addItem(window.tr("Light, then turn, then light"), "sequence")
     motion.setCurrentIndex(max(motion.findData(
         settings.value("movie/motion", "turntable")), 0))
+    light_secs = QDoubleSpinBox()
+    light_secs.setRange(0.5, 60)
+    light_secs.setSuffix(" s")
+    light_secs.setValue(float(settings.value("movie/light_seconds", 4.0)))
+    light_secs.setToolTip(window.tr(
+        "Sequence only: how long each light swing lasts. The camera "
+        "turn gets the rest of the movie."))
+
+    def _sequence_only():
+        light_secs.setEnabled(motion.currentData() == "sequence")
+    motion.currentIndexChanged.connect(_sequence_only)
+    _sequence_only()
     direction = QComboBox()
     direction.addItem(window.tr("Clockwise (seen from above)"), True)
     direction.addItem(window.tr("Anticlockwise"), False)
@@ -334,6 +360,7 @@ def open_dialog(window):
     form.addRow(window.tr("Size"), size)
     form.addRow(window.tr("What moves"), motion)
     form.addRow(window.tr("Length"), seconds)
+    form.addRow(window.tr("Each light swing"), light_secs)
     form.addRow(window.tr("Frames per second"), fps)
     form.addRow(window.tr("Turns"), turns)
     form.addRow(window.tr("Camera height"), pitch)
@@ -352,6 +379,7 @@ def open_dialog(window):
     settings.setValue("movie/fps", fps.value())
     settings.setValue("movie/turns", turns.value())
     settings.setValue("movie/motion", motion.currentData())
+    settings.setValue("movie/light_seconds", light_secs.value())
     settings.setValue("movie/folder", str(Path(path.text()).parent))
     total = int(round(seconds.value() * fps.value()))
     bar = QProgressDialog(window.tr("Filming the turntable…"),
@@ -368,7 +396,8 @@ def open_dialog(window):
                         fps=fps.value(), turns=turns.value(), width=w,
                         height=h, pitch=pitch.value(),
                         clockwise=bool(direction.currentData()),
-                        progress=_tick, motion=motion.currentData())
+                        progress=_tick, motion=motion.currentData(),
+                        light_seconds=light_secs.value())
     except (MovieError, OSError) as exc:
         bar.close()
         if str(exc) != "Cancelled.":
