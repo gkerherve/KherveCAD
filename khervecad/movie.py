@@ -95,11 +95,17 @@ def turntable_frame(view3d, width, height, pitch):
     """(distance, target) that frame the whole model from every side at
     this *pitch* — the largest fitted distance, the model's centre."""
     best, target = 0.0, None
+    # the model's own points: the on-screen fit takes the platform in
+    # as well, and the model came out small in the middle of a big disc
+    verts = [v for tri in view3d.mesh for v in tri]
+    if len(verts) > 3000:
+        verts = verts[::len(verts) // 3000]
     for i in range(FIT_SAMPLES):
         yaw = 360.0 * i / FIT_SAMPLES
         _img, cam = view3d.snapshot(max(width // 8, 16),
                                     max(height // 8, 16), yaw=yaw,
-                                    pitch=pitch, frame=True, clean=True)
+                                    pitch=pitch, frame=verts or True,
+                                    clean=True)
         if cam["distance"] > best:
             best = cam["distance"]
         if target is None:
@@ -138,9 +144,6 @@ def render_frames(view3d, folder, *, seconds, fps, turns, width, height,
     else:
         lights = light_turns(count, turns if clockwise else -turns,
                              view3d.light_turn)
-    if motion == "light":
-        # the user's own framing: a still model is shot as it is seen
-        distance, target = view3d.distance, list(view3d.target)
     saved = view3d.light_turn
     try:
         for i, (yaw, light) in enumerate(zip(yaws, lights)):
