@@ -125,3 +125,11 @@ def test_light_motion_keeps_the_camera_and_moves_the_light(window,
     assert view.yaw == yaw and view.light_turn == light   # restored
     a, b = (QImage(str(f)) for f in sorted(tmp_path.glob("*.png"))[:2])
     assert a != b                      # the shading moved
+
+
+def test_sequence_is_light_then_turn_then_light():
+    yaws, lights = movie.motion_path("sequence", 12, 1, 0.0, 0.0)
+    assert yaws[:4] == [0.0] * 4 and yaws[8:] == [0.0] * 4   # still
+    assert lights[:4] == lights[8:] and len(set(lights[:4])) == 4
+    assert lights[4:8] == [0.0] * 4 and len(set(yaws[4:8])) == 4
+    assert yaws[4] == 0.0 and lights[4] == 0.0   # each act joins

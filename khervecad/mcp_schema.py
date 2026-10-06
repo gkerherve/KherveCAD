@@ -2626,11 +2626,14 @@ TOOLS = [
                                          "above the ground plane. "
                                          "Default: the user's view."},
             "motion": {"type": "string",
-                       "enum": ["turntable", "light", "both"],
+                       "enum": ["turntable", "light", "both",
+                                "sequence"],
                        "description": "What moves: the camera round the "
                                       "model (default), the light round "
                                       "a still model (reflections sweep "
-                                      "across it), or both."},
+                                      "across it), both, or sequence — "
+                                      "light sweep, then a turn, then "
+                                      "light again, a third each."},
             "direction": {"type": "string",
                           "enum": ["clockwise", "anticlockwise"],
                           "description": "Seen from above. Default "

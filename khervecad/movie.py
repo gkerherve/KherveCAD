@@ -18,7 +18,10 @@ without one the frames are kept and the error says how to get it.
 `motion` "light" keeps the model and camera still and swings the key
 light round instead (the lighting bar's Light turn, frame by frame), so
 the shading and the metal's reflected soft boxes sweep across a part
-that stands still; "both" does the two at once.
+that stands still; "both" does the two at once; "sequence" is an advert
+in three equal acts — the light sweeps round the still model, the
+camera turns round it, the light sweeps again — each act a whole turn,
+so every act ends where the next begins and the movie loops.
 
 `export_request` is the `export_movie` MCP tool's body.
 
@@ -41,7 +44,7 @@ from pathlib import Path
 FORMATS = (".mp4", ".gif")
 #: what moves: the camera round the model, the light round a still
 #: model (its reflections and shading sweep across it), or both
-MOTIONS = ("turntable", "light", "both")
+MOTIONS = ("turntable", "light", "both", "sequence")
 #: (key, label, (width, height))
 SIZES = (
     ("1280x720", "1280 × 720 (HD)", (1280, 720)),
@@ -123,6 +126,23 @@ def light_turns(count, turns=1.0, start=0.0):
     return out
 
 
+def motion_path(motion, count, turns, yaw, light, clockwise=True):
+    """(yaws, light_turns) for every frame of *motion*."""
+    sweep = turns if clockwise else -turns
+    if motion == "sequence":
+        act = max(count // 3, 1)
+        mid = count - 2 * act
+        sweep_y, sweep_l = [yaw] * act, light_turns(act, sweep, light)
+        yaws = sweep_y + frame_yaws(mid, turns, yaw, clockwise) + sweep_y
+        lights = sweep_l + [light] * mid + sweep_l
+        return yaws, lights
+    yaws = frame_yaws(count, turns if motion != "light" else 0, yaw,
+                      clockwise)
+    if motion == "turntable":
+        return yaws, [light] * count
+    return yaws, light_turns(count, sweep, light)
+
+
 def render_frames(view3d, folder, *, seconds, fps, turns, width, height,
                   pitch=None, clockwise=True, progress=None,
                   motion="turntable"):
@@ -137,13 +157,8 @@ def render_frames(view3d, folder, *, seconds, fps, turns, width, height,
     ratio = pngexport.pixel_ratio(view3d, width, height)
     if motion not in MOTIONS:
         raise MovieError(f"motion is one of {', '.join(MOTIONS)}.")
-    yaws = frame_yaws(count, turns if motion != "light" else 0,
-                      view3d.yaw, clockwise)
-    if motion == "turntable":
-        lights = [view3d.light_turn] * count
-    else:
-        lights = light_turns(count, turns if clockwise else -turns,
-                             view3d.light_turn)
+    yaws, lights = motion_path(motion, count, turns, view3d.yaw,
+                               view3d.light_turn, clockwise)
     saved = view3d.light_turn
     try:
         for i, (yaw, light) in enumerate(zip(yaws, lights)):
@@ -293,6 +308,7 @@ def open_dialog(window):
     motion.addItem(window.tr("Model still, light turns round it"),
                    "light")
     motion.addItem(window.tr("Both turn"), "both")
+    motion.addItem(window.tr("Light, then turn, then light"), "sequence")
     motion.setCurrentIndex(max(motion.findData(
         settings.value("movie/motion", "turntable")), 0))
     direction = QComboBox()
