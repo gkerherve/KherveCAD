@@ -200,6 +200,17 @@ def test_list_comprehension_with_let(app):
     assert poly.params["points"] == [[0, 0], [1, 1], [2, 4]]
 
 
+def test_inline_list_comprehension_points(app):
+    """A comprehension written straight into polygon(...) resolves too
+    (it used to become the placeholder triangle)."""
+    root, w = _parse(
+        "n = 2; polygon([for (i = [0 : 2 * n - 1]) "
+        "let(r = i % 2 ? 2 : 1) [r * i, i]]);")
+    poly = next(n for n in root.walk() if n.type == "polygon")
+    assert poly.params["points"] == [[0, 0], [2, 1], [2, 2], [6, 3]]
+    assert not w
+
+
 def test_polygon_from_vector_variables(app):
     """points = [p0, p1, ...] where each p is a vector variable."""
     root, _w = _parse(

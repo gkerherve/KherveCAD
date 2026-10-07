@@ -179,6 +179,20 @@ class Parser:
             return None
         pts = []
         for element in value:
+            if isinstance(element, str) and \
+                    re.match(r"(for|let|each|if)\b", element.strip()):
+                # a list literal holding a comprehension arrives as
+                # [ "for (i = ...) ..." ]: it yields many points
+                try:
+                    produced = expr.evaluate(f"[{element}]", self.scope)
+                except Exception:
+                    return None
+                for item in produced:
+                    if not (isinstance(item, (list, tuple))
+                            and len(item) >= 2):
+                        return None
+                    pts.append([float(item[0]), float(item[1])])
+                continue
             if isinstance(element, str):
                 try:
                     element = expr.evaluate(element, self.scope)
