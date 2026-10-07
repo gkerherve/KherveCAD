@@ -78,8 +78,14 @@ module Shift_badge() {
     color("#f2f2f2") translate([0, 0, 1.99]) linear_extrude(0.8) {
         translate([-9.6, -0.8]) square([19.2, 1.6]);  // Gate
         for (x = [-9, -3, 3, 9]) translate([x - 0.8, -6.2]) square([1.6, 12.4]);  // Lanes
-        for (g = [[-9, 1], [-3, 3], [3, 5], [9, 7]]) translate([g[0], 9.0]) text(str(g[1]), size = 3.2, font = "Liberation Sans:style=Bold", halign = "center", valign = "center");  // Top gears
-        for (g = [[-9, "2"], [-3, "4"], [3, "6"], [9, "R"]]) translate([g[0], -9.0]) text(g[1], size = 3.2, font = "Liberation Sans:style=Bold", halign = "center", valign = "center");  // Bottom gears
+        translate([-9, 9]) text("1", size = 3.2, font = "Liberation Sans:style=Bold", halign = "center", valign = "center");  // Gear 1
+        translate([-3, 9]) text("3", size = 3.2, font = "Liberation Sans:style=Bold", halign = "center", valign = "center");  // Gear 3
+        translate([3, 9]) text("5", size = 3.2, font = "Liberation Sans:style=Bold", halign = "center", valign = "center");  // Gear 5
+        translate([9, 9]) text("7", size = 3.2, font = "Liberation Sans:style=Bold", halign = "center", valign = "center");  // Gear 7
+        translate([-9, -9]) text("2", size = 3.2, font = "Liberation Sans:style=Bold", halign = "center", valign = "center");  // Gear 2
+        translate([-3, -9]) text("4", size = 3.2, font = "Liberation Sans:style=Bold", halign = "center", valign = "center");  // Gear 4
+        translate([3, -9]) text("6", size = 3.2, font = "Liberation Sans:style=Bold", halign = "center", valign = "center");  // Gear 6
+        translate([9, -9]) text("R", size = 3.2, font = "Liberation Sans:style=Bold", halign = "center", valign = "center");  // Gear R
     }
 }
 """
