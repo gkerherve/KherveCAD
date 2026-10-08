@@ -3,19 +3,22 @@ Thrustmaster TH8S Custom Shifter Knob contest (Oct-Nov 2026).
 
 A palm-shaped knob for the Thrustmaster TH8S: a 39 deg flare (prints
 with no support), a diamond-knurled grip band between two grooves, a
-shallow thumb pad on the driver's side (`thumb_side`), a weight pocket
-for a 22 mm steel ball or stacked nuts, and a press-fit badge carrying
+shallow thumb pad on each side (either hand), a weight pocket
+for a 19 mm steel ball or stacked nuts, and a press-fit badge carrying
 the TH8S's 7+R H-pattern, printed in a second colour and clocked to
 any angle after the knob is screwed on.
 
-THE MOUNT IS A PLACEHOLDER (`adapter_d`, `adapter_depth`): the
-interface must come from Thrustmaster's official adapter files
-(printables.com/model/1825116), which Printables would not serve to
-an automated download. Merge them before printing or entering.
+The mount is Thrustmaster's official "Design piece" (printables.com/
+model/1825116): a 22.5 x 42.6 mm sleeve holding the female thread that
+screws onto their printed adapter. `design_piece_stl` turns the STEP
+into an STL stood axis-up, open end at z = 0, and the knob imports it
+into a hole of its own size. Thrustmaster's files are not shipped here:
+pass the folder they were downloaded to.
 
 `python -m khervecad.tools.shifter_knob [OUT_DIR]` writes the .scad,
 the .kcad (two Objects: Knob body, Shift badge), one STL per part at
-its print pose, and prints the support-free check of each.
+its print pose (plus an 11 mm thread fit test), and prints the
+support-free check of each.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -40,13 +43,13 @@ DOME = [(28.3, 24.5), (29.3, 27.5), (29.5, 30), (29.5, 37), (29.5, 44),
 
 HEADER = """$fn = 96;
 // TH8S "Monoposto" shifter knob
-adapter_d = 18.4;       // socket bore: PLACEHOLDER until the official TH8S adapter is merged
-adapter_depth = 24;     // socket depth: PLACEHOLDER
+sleeve_d = 22.48;       // Thrustmaster's Design piece: outside diameter
+sleeve_h = 42.64;       // and height (thread opening at z = 0)
 knurl_teeth = 40;
-thumb_side = -1;        // -1 = right-hand shifter (thumb pad on the left), 1 = left-hand
+sleeve_turn = 276;      // the official thread seats the knob turned this far: square to the adapter's flange when tight
 badge_d = 30;
 fit = 0.15;
-weight_d = 23;          // pocket for a 22 mm steel ball or stacked M12 nuts, sealed by the badge
+weight_d = 23;          // pocket for a 19 mm steel ball or stacked M12 nuts, sealed by the badge
 """
 
 BODY = r"""module profile_body() { rotate_extrude() polygon(@PROFILE@); }
@@ -54,19 +57,28 @@ module knurl_star(tw) { linear_extrude(height = 26, twist = tw, slices = 40) pol
 module knurl_zone() { difference() { translate([0, 0, -1]) cylinder(h = 80, r = 60); rotate_extrude() polygon([[28.6, 30.2], [60, 30.2 - 1.3 * 31.4], [60, 43.8 + 1.3 * 31.4], [28.6, 43.8]]); } }
 
 module Knob_body() {
-    color("#1d1f24") difference() {
+    color("#1d1f24") union() {
+    rotate([0, 0, sleeve_turn]) import("TH8S design piece.stl");  // Official TH8S sleeve (Thrustmaster)
+    difference() {
         intersection() {
             profile_body();  // Body
             union() { knurl_zone(); translate([0, 0, 24]) intersection() { knurl_star(38); knurl_star(-38); } }  // Diamond knurl
         }
-        translate([thumb_side * 97, 3, 41]) scale([1, 1, 1.25]) sphere(r = 70, $fn = 200);  // Thumb rest
-        translate([0, 0, -0.01]) cylinder(h = adapter_depth, d = adapter_d);  // Adapter socket
-        translate([0, 0, adapter_depth - 0.02]) cylinder(h = adapter_d / 2, d1 = adapter_d, d2 = 0);  // Socket roof, 45 deg
-        translate([0, 0, -0.01]) cylinder(h = 1.2, d1 = adapter_d + 2.4, d2 = adapter_d);  // Socket lead-in
-        translate([0, 0, adapter_depth + adapter_d / 2 + 1.6]) cylinder(h = 40, d = weight_d);  // Weight pocket
+        translate([0, 97, 41]) scale([1, 1, 1.25]) sphere(r = 70, $fn = 200);  // Thumb pad, left
+        translate([0, -97, 41]) scale([1, 1, 1.25]) sphere(r = 70, $fn = 200);  // Thumb pad, right
+        translate([0, 0, -0.01]) cylinder(h = sleeve_h - 0.2, d = sleeve_d - 0.2);  // Seat for the official sleeve (overlaps it)
+        translate([0, 0, sleeve_h + 1.6]) cylinder(h = 40, d = weight_d);  // Weight pocket
         rotate_extrude() polygon([[28.3, 30.2], [29.7, 28.8], [29.7, 32.1]]);  // Lower band groove
         rotate_extrude() polygon([[28.3, 43.8], [29.7, 42.4], [29.7, 45.7]]);  // Upper band groove
         translate([0, 0, 59.4]) cylinder(h = 5, d = badge_d + 2 * fit);  // Badge seat
+    }
+    }
+}
+
+module Fit_test() {
+    color("#1d1f24") union() {
+        intersection() { import("TH8S design piece.stl"); translate([0, 0, -1]) cylinder(h = 12, d = 30); }  // First 11 mm of the official thread
+        difference() { cylinder(h = 11, d = 30, $fn = 8); translate([0, 0, -1]) cylinder(h = 13, d = sleeve_d - 0.01); }  // Grip ring
     }
 }
 
@@ -115,25 +127,53 @@ def profile():
     return "[" + ", ".join(f"[{r:.2f}, {z:.2f}]" for r, z in pts) + "]"
 
 
-def program(parts=("assembly",)):
+SLEEVE = "TH8S design piece.stl"
+
+#: where the Design piece's axis runs in Thrustmaster's STEP (along -Y,
+#: thread opening at y = -0.95)
+STEP_AXIS = (773.28, 0.505, -0.95)
+
+
+def program(parts=("assembly",), sleeve=SLEEVE):
     """The whole OpenSCAD text; *parts* picks what is placed: the
-    assembly (badge seated), or "body" / "badge" alone at print pose."""
+    assembly (badge seated), or "body" / "badge" / "fit" alone at print
+    pose. *sleeve* is the path the official sleeve STL is imported from."""
     text = HEADER + BODY.replace("@PROFILE@", profile())
+    text = text.replace(f'import("{SLEEVE}")', f'import("{sleeve}")')
     calls = {"assembly": "Knob_body();  // Knob body\n"
-                         "translate([0, 0, 59.6]) Shift_badge();  // Shift badge\n",
-             "body": "Knob_body();\n", "badge": "Shift_badge();\n"}
+                         "translate([0, 0, 59.6]) rotate([0, 0, -90]) Shift_badge();  // Shift badge\n",
+             "body": "Knob_body();\n", "badge": "Shift_badge();\n",
+             "fit": "Fit_test();\n"}
     return text + "".join(calls[p] for p in parts)
+
+
+def design_piece_stl(step, out):
+    """Thrustmaster's Design piece STEP -> an STL stood axis-up, the
+    thread opening at z = 0, centred on the z axis."""
+    from khervecad import cadexchange, engine
+    cx, cz, y0 = STEP_AXIS
+    tris = [tuple((x - cx, z - cz, y0 - y) for x, y, z in tri)
+            for p in cadexchange.read_parts(step, "Fine") for tri in p.tris]
+    engine.write_stl(tris, str(out))
+    return out
 
 
 def main(argv=None):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     os.environ.setdefault("KHERVECAD_DISABLE_ENGINE", "1")
+    import argparse
     from khervecad.tools import print_tests
-    argv = sys.argv[1:] if argv is None else argv
-    out = Path(argv[0] if argv else
-               Path.home() / "Documents" / STEM).expanduser()
+    ap = argparse.ArgumentParser(description="Write the TH8S knob.")
+    ap.add_argument("out", nargs="?",
+                    default=str(Path.home() / "Documents" / STEM))
+    ap.add_argument("--thrustmaster", default=str(Path.home() / "Downloads"),
+                    help="folder holding Thrustmaster's 'Design piece.stp'")
+    args = ap.parse_args(argv)
+    out = Path(args.out).expanduser()
     out.mkdir(parents=True, exist_ok=True)
+    sleeve = design_piece_stl(Path(args.thrustmaster).expanduser()
+                              / "Design piece.stp", out / SLEEVE)
     text = program()
     (out / f"{STEM}.scad").write_text(text)
     warnings = print_tests.write(STEM, text, out / f"{STEM}.kcad")
@@ -144,15 +184,15 @@ def main(argv=None):
         print("OpenSCAD not found: no STL or check")
         return 0
     from khervecad import engine
-    for part in ("body", "badge"):
+    for part in ("body", "badge", "fit"):
+        code = program((part,), sleeve=str(sleeve))
         src = out / f".{part}.scad"
-        src.write_text(program((part,)))
+        src.write_text(code)
         stl = out / f"{STEM} - {part}.stl"
         subprocess.run([openscad, *engine.backend_args(openscad), "-o",
                         str(stl), str(src)], capture_output=True, check=True)
         src.unlink()
-        print(f"  {stl.name}:", print_tests.printability(
-            program((part,)), openscad))
+        print(f"  {stl.name}:", print_tests.printability(code, openscad))
     return 0
 
 
