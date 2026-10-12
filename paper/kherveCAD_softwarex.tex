@@ -56,24 +56,19 @@ Scientists often need small custom parts: a sample holder, a flange adapter, a b
 
 Language models have changed this picture somewhat. Several groups have shown that an LLM can produce CAD from a description, either as sketch-and-extrude sequences~\cite{wu2023cadllm,khan2024text2cad} or as scripts in CadQuery and similar languages~\cite{xie2025textcadquery,guan2025cadcoder}. In practice the code often compiles but the part is wrong --- a hole on the wrong face, two pieces that overlap, a wall too thin to print --- and the model has no way of knowing. Alrashedy et al.~\cite{alrashedy2025cadcodeverify} showed that letting a vision-language model inspect renders of its output and revise the code improves results, and Sadik and Bujny~\cite{sadik2025hitl} argue that geometric metrics are needed to judge such output at all.
 
-KherveCAD was built to close both gaps. On the human side it gives OpenSCAD a graphical editor in which shapes are drawn, moved and combined by hand, while the program stays visible and editable in a code tab. Fig.~\ref{fig:window} shows a flange joint built this way, one node at a time, and Fig.~\ref{fig:flangefinal} the finished part. On the machine side it offers the same editor to an AI assistant through the Model Context Protocol~\cite{mcp}, an open standard for connecting assistants to tools. The assistant gets the operations a person would use, plus the means to inspect the result. Our view is that this inspection step, more than code generation itself, is what makes AI-assisted design dependable enough for laboratory work.
+KherveCAD was built to close both gaps. On the human side it gives OpenSCAD a graphical editor in which shapes are drawn, moved and combined by hand, while the program stays visible and editable in a code tab. Fig.~\ref{fig:window} shows a flange joint built this way, one node at a time, ending with the finished part. On the machine side it offers the same editor to an AI assistant through the Model Context Protocol~\cite{mcp}, an open standard for connecting assistants to tools. The assistant gets the operations a person would use, plus the means to inspect the result. Our view is that this inspection step, more than code generation itself, is what makes AI-assisted design dependable enough for laboratory work.
 
 \begin{figure}[t]
 \centering
 \begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{figures/flange_1_discs.png}\caption{Two discs grouped as \emph{Flanges}.}\end{subfigure}\hfill
 \begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{figures/flange_2_bore.png}\caption{A \emph{Bore} added to the difference.}\end{subfigure}\\[4pt]
 \begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{figures/flange_3_holes.png}\caption{A \texttt{for} loop places six bolt holes.}\end{subfigure}\hfill
-\begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{figures/flange_4_bolts.png}\caption{Bolts and nuts, two more loops.}\end{subfigure}
+\begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{figures/flange_4_bolts.png}\caption{Bolts and nuts, two more loops.}\end{subfigure}\\[4pt]
+\begin{subfigure}{0.6\linewidth}\includegraphics[width=\linewidth]{figures/flange_final.png}\caption{The finished joint, rendered exactly by OpenSCAD.}\end{subfigure}
 \caption{Building a bolted flange joint in the main window. Each step adds one node to the tree on the left. The selected node is tinted red in the 3D view, so in (b) and (c) the red solids are the material the difference removes.}
 \label{fig:window}
 \end{figure}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.6\linewidth]{figures/flange_final.png}
-\caption{The finished flange joint, rendered exactly by OpenSCAD.}
-\label{fig:flangefinal}
-\end{figure}
 
 
 \section{Software description}
@@ -157,7 +152,7 @@ module Bolt() {
 color("#a8843f") translate([0, 0, 4.4]) Bolt();
 \end{lstlisting}
 
-\paragraph{An ultra-high-vacuum chamber} The Chamber Designer takes a chamber body and a list of ports, each aimed at a focal point on the axis, and fills them with flanges and instruments from the library (Fig.~\ref{fig:chamber}). It reports clashes between ports in 3D before anything is ordered. All port-mounted parts follow one convention --- sealing face at $z = 0$, vacuum side down --- so any instrument fits any port of the right flange size.
+\paragraph{An ultra-high-vacuum chamber} The Chamber Designer takes a chamber body and a list of ports, each aimed at a focal point on the axis, and fills them with flanges and instruments from the library (Fig.~\ref{fig:chamber}). It reports clashes between ports in 3D before anything is ordered. We used it to build a full-size mock-up of a chamber and check how it would fit in the space available in our laboratory. All port-mounted parts follow one convention --- sealing face at $z = 0$, vacuum side down --- so any instrument fits any port of the right flange size.
 
 \begin{figure}[t]
 \centering
@@ -177,7 +172,17 @@ color("#a8843f") translate([0, 0, 4.4]) Bolt();
 
 \section{Impact}
 
-The first use was in our own laboratory, where chambers, sample holders and adapters had been drawn in a mix of commercial CAD and hand sketches. Keeping them as short programs in one repository made them easier to revise when a port moved or a flange size changed. [Add concrete cases.]
+The first use was in our own laboratory. Before committing to a new ultra-high-vacuum system, we modelled it at true size with the Chamber Designer and placed it in a model of the room, to check clearances around the frame, the manipulator travel and access to the ports. The model is a short program, so moving a port or changing a flange size took minutes rather than a new drawing.
+
+The same parametric approach scales from the nanometre to the architectural. Fig.~\ref{fig:showcase} shows two models at real scale: the Eiffel Tower from its published dimensions, and a Regency town house of the kind found along the Sussex coast at Hastings, white stucco with a Doric portico, built with the House Builder. Both remain editable trees, and the house is furnished inside.
+
+\begin{figure}[t]
+\centering
+\begin{subfigure}{0.36\linewidth}\includegraphics[width=\linewidth]{figures/showcase_eiffel.png}\caption{Eiffel Tower, 330\,m, true size.}\end{subfigure}\hfill
+\begin{subfigure}{0.6\linewidth}\includegraphics[width=\linewidth]{figures/showcase_regency.png}\caption{Regency house with Doric portico.}\end{subfigure}
+\caption{Models at architectural scale.}
+\label{fig:showcase}
+\end{figure}
 
 The second use is teaching. The 21 tutorials included in the application take a student from a single cube to loops and modules, and because the code tab follows every click, students see the program grow as they draw. [Add course, number of students, feedback.]
 
