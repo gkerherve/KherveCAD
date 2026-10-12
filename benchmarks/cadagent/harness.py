@@ -210,7 +210,7 @@ def chat(model, messages, tools, seed):
     body = json.dumps({"model": model, "messages": messages,
                        "tools": tools, "stream": False, "think": False,
                        "options": {"temperature": 0.2, "seed": seed,
-                                   "num_ctx": 16384}}).encode()
+                                   "num_ctx": 8192}}).encode()
     req = urllib.request.Request(OLLAMA, body,
                                  {"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=900) as r:

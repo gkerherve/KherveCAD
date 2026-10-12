@@ -57,29 +57,30 @@ Every KherveCAD document is a tree. Two-dimensional shapes, primitives, extrusio
 
 Figure~\ref{fig:flange} shows a bolted flange joint being built this way: each step adds one node, and the 3D view updates at once.
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{flange_1_discs.png}\caption{}\end{subfigure}\hfill
-\begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{flange_2_bore.png}\caption{}\end{subfigure}\\[3pt]
-\begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{flange_3_holes.png}\caption{}\end{subfigure}\hfill
-\begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{flange_4_bolts.png}\caption{}\end{subfigure}\\[3pt]
-\begin{subfigure}{0.55\linewidth}\includegraphics[width=\linewidth]{flange_final.png}\caption{}\end{subfigure}
+\begin{subfigure}{0.32\linewidth}\includegraphics[width=\linewidth]{flange_1_discs.png}\caption{}\end{subfigure}\hfill
+\begin{subfigure}{0.32\linewidth}\includegraphics[width=\linewidth]{flange_2_bore.png}\caption{}\end{subfigure}\hfill
+\begin{subfigure}{0.32\linewidth}\includegraphics[width=\linewidth]{flange_3_holes.png}\caption{}\end{subfigure}\\[3pt]
+\begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{flange_4_bolts.png}\caption{}\end{subfigure}\hfill
+\begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{flange_final.png}\caption{}\end{subfigure}
 \caption{A bolted flange joint built node by node: (a) two discs, (b) the bore added to a difference, (c) six bolt holes from one loop, (d) bolts and nuts, (e) the exact OpenSCAD render. The selected node is tinted red.}
 \label{fig:flange}
-\end{figure}
+\end{figure*}
 
 \subsection{Parts and Assemblies}
 An \emph{Object} is a part definition that compiles to an OpenSCAD \texttt{module}; the main tab holds placed instances of Objects. Instances can be mated face to face, concentrically, as a hinge or through a gear ratio, and the mates are solved into ordinary placement parameters, so the program stays plain OpenSCAD. Figure~\ref{fig:hinge} shows a printable butt hinge as three Objects, and Listing~\ref{lst:hinge} the program they produce.
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\begin{subfigure}{\linewidth}\includegraphics[width=\linewidth]{hinge_tree.png}\caption{}\end{subfigure}\\[3pt]
+\begin{subfigure}{0.6\linewidth}\includegraphics[width=\linewidth]{hinge_tree.png}\caption{}\end{subfigure}\hfill
+\begin{subfigure}{0.38\linewidth}\includegraphics[width=\linewidth]{hinge_assembled.png}\caption{}\end{subfigure}\\[3pt]
 \begin{subfigure}{0.32\linewidth}\includegraphics[width=\linewidth]{hinge_Leaf_A.png}\caption{}\end{subfigure}\hfill
 \begin{subfigure}{0.32\linewidth}\includegraphics[width=\linewidth]{hinge_Leaf_B.png}\caption{}\end{subfigure}\hfill
 \begin{subfigure}{0.32\linewidth}\includegraphics[width=\linewidth]{hinge_Bolt.png}\caption{}\end{subfigure}
-\caption{Butt hinge in three printable Objects: (a) the tree, (b) Leaf A, (c) Leaf B, (d) the removable threaded pin.}
+\caption{Butt hinge in three printable Objects: (a) the tree, (b) assembled, (c) Leaf A, (d) Leaf B, (e) the removable threaded pin.}
 \label{fig:hinge}
-\end{figure}
+\end{figure*}
 
 \begin{lstlisting}[float=t,caption={Outline of the program generated for the hinge. Each Object is a module and one placed call.},label=lst:hinge]
 module Leaf_A() { ... }                                // 97 lines
@@ -192,14 +193,14 @@ C2 + measurements & -- & -- & -- & -- \\
 
 KherveCAD is used to teach CAD modelling: 21 graded tutorials take a student from a single cube to loops and modules, and the code tab shows the program growing with each click. PhD students use its crystal and surface builders to prepare unit cells and slabs; a bulk-terminated surface along any $(hkl)$ is one call and stays an editable program (Fig.~\ref{fig:range}a). The same representation holds a full-size ultra-high-vacuum chamber, which we used to check how a new system would fit in our laboratory, and architectural models such as a Regency town house built with the House Builder (Fig.~\ref{fig:range}).
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\begin{subfigure}{0.3\linewidth}\includegraphics[width=\linewidth]{fig4_nanotube.png}\caption{}\end{subfigure}\hfill
-\begin{subfigure}{0.3\linewidth}\includegraphics[width=\linewidth]{fig3_chamber.png}\caption{}\end{subfigure}\hfill
-\begin{subfigure}{0.36\linewidth}\includegraphics[width=\linewidth]{showcase_regency.png}\caption{}\end{subfigure}
+\begin{subfigure}[b]{0.14\linewidth}\centering\includegraphics[height=6.5cm]{fig4_nanotube.png}\caption{}\end{subfigure}\hfill
+\begin{subfigure}[b]{0.36\linewidth}\centering\includegraphics[height=6.5cm]{fig3_chamber.png}\caption{}\end{subfigure}\hfill
+\begin{subfigure}[b]{0.46\linewidth}\centering\includegraphics[height=6.5cm]{showcase_regency.png}\caption{}\end{subfigure}
 \caption{One representation across scales: (a) a carbon nanotube, (b) a UHV chamber mock-up, (c) a Regency house.}
 \label{fig:range}
-\end{figure}
+\end{figure*}
 
 KherveCAD is part of KherveTools~\cite{khervetools}, a family of free, open-source applications for scientists that includes KherveFitting~\cite{kerherve2026khervefitting}.
 
@@ -213,9 +214,6 @@ Giving an agent a CAD system rather than a code box means giving it the same act
 
 \section*{Software Availability}
 KherveCAD is released under GPL-3.0 at \url{https://github.com/gkerherve/KherveCAD} and archived on Zenodo~\cite{kherveCADzenodo}.
-
-\section*{Acknowledgment}
-[To fill in.]
 
 \section*{Declaration of Generative AI Use}
 The author used Claude (Anthropic) to help write code and draft text, and reviewed and edited all content.
