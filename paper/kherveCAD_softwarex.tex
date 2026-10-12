@@ -38,9 +38,9 @@ computer-aided design \sep OpenSCAD \sep Model Context Protocol \sep large langu
 \begin{tabular}{|l|p{6.2cm}|p{6.2cm}|}
 \hline
 \textbf{Nr} & \textbf{Code metadata description} & \textbf{Value} \\ \hline
-C1 & Current code version & v0.1.546 \\ \hline
+C1 & Current code version & v0.1.535~\cite{kherveCADzenodo} \\ \hline
 C2 & Permanent link to code/repository & \url{https://github.com/gkerherve/KherveCAD} \\ \hline
-C3 & Permanent link to reproducible capsule & [Zenodo DOI] \\ \hline
+C3 & Permanent link to reproducible capsule & \url{https://doi.org/10.5281/zenodo.23305286} \\ \hline
 C4 & Legal code licence & GPL-3.0 \\ \hline
 C5 & Code versioning system used & git \\ \hline
 C6 & Software code languages, tools and services used & Python 3.11+, PyQt5, OpenSCAD (optional), manifold3d, numpy \\ \hline
@@ -57,6 +57,8 @@ Scientists often need small custom parts: a sample holder, a flange adapter, a b
 Language models have changed this picture somewhat. Several groups have shown that an LLM can produce CAD from a description, either as sketch-and-extrude sequences~\cite{wu2023cadllm,khan2024text2cad} or as scripts in CadQuery and similar languages~\cite{xie2025textcadquery,guan2025cadcoder}. In practice the code often compiles but the part is wrong --- a hole on the wrong face, two pieces that overlap, a wall too thin to print --- and the model has no way of knowing. Alrashedy et al.~\cite{alrashedy2025cadcodeverify} showed that letting a vision-language model inspect renders of its output and revise the code improves results, and Sadik and Bujny~\cite{sadik2025hitl} argue that geometric metrics are needed to judge such output at all.
 
 KherveCAD was built to close both gaps. On the human side it gives OpenSCAD a graphical editor in which shapes are drawn, moved and combined by hand, while the program stays visible and editable in a code tab. Fig.~\ref{fig:window} shows a flange joint built this way, one node at a time, ending with the finished part. On the machine side it offers the same editor to an AI assistant through the Model Context Protocol~\cite{mcp}, an open standard for connecting assistants to tools. The assistant gets the operations a person would use, plus the means to inspect the result. Our view is that this inspection step, more than code generation itself, is what makes AI-assisted design dependable enough for laboratory work.
+
+KherveCAD belongs to KherveTools~\cite{khervetools}, a family of free, open-source desktop applications written by a working scientist for other scientists. The family includes KherveFitting for X-ray photoelectron spectroscopy~\cite{kerherve2026khervefitting}, a molecule and crystal builder~\cite{kherveMolzenodo}, and tools for plotting, notebooks and references. They share one approach: a native application that works offline, keeps its documents in plain formats under version control, and can be driven by an AI assistant. KherveFitting showed that researchers will adopt such a tool when it lowers the barrier to a routine task, and KherveCAD applies the same idea to design.
 
 \begin{figure}[t]
 \centering
@@ -161,7 +163,7 @@ color("#a8843f") translate([0, 0, 4.4]) Bolt();
 \label{fig:chamber}
 \end{figure}
 
-\paragraph{A carbon nanotube} Carbon nanostructures are built on their lattice rather than from a list of coordinates. An $(n, m)$ nanotube is rolled from a graphene strip along the chiral vector, so the seam closes exactly and the axis stays on $z$; graphene sheets, nanoribbons and fullerenes come from the same module. Fig.~\ref{fig:cnt} shows an $(8, 8)$ armchair tube 4\,nm long in ball-and-stick style. The document switches to nanometres on insertion, and the structure remains an editable group of atoms and bonds. The same structures are available to an assistant through \texttt{insert\_part}. [Describe here a real assistant session: the request, the tool calls and any correction it made after looking at the render.]
+\paragraph{A carbon nanotube} Carbon nanostructures are built on their lattice rather than from a list of coordinates. An $(n, m)$ nanotube is rolled from a graphene strip along the chiral vector, so the seam closes exactly and the axis stays on $z$; graphene sheets, nanoribbons and fullerenes come from the same module. Fig.~\ref{fig:cnt} shows an $(8, 8)$ armchair tube 4\,nm long in ball-and-stick style. The document switches to nanometres on insertion, and the structure remains an editable group of atoms and bonds. The same structures are available to an assistant through \texttt{insert\_part}. 
 
 \begin{figure}[t]
 \centering
@@ -184,11 +186,11 @@ The same parametric approach scales from the nanometre to the architectural. Fig
 \label{fig:showcase}
 \end{figure}
 
-The second use is teaching. The 21 tutorials included in the application take a student from a single cube to loops and modules, and because the code tab follows every click, students see the program grow as they draw. [Add course, number of students, feedback.]
+The second use is teaching. The 21 tutorials included in the application take a student from a single cube to loops and modules, and because the code tab follows every click, students see the program grow as they draw. KherveCAD is used to teach the making of CAD models, and PhD students use its crystal and surface builders to prepare unit cells and surface slabs for their own work: a bulk-terminated Si(111) or rutile (110) slab is one call, and the result is a short program they can edit rather than a fixed list of coordinates.
 
 The third, and probably the most interesting for other researchers, is as a test bed for AI-assisted design. Most published text-to-CAD work evaluates code that was generated once and then compiled~\cite{khan2024text2cad,guan2025cadcoder}. KherveCAD makes it possible to study the loop instead: an agent that builds, looks, measures and corrects, in the spirit of~\cite{alrashedy2025cadcodeverify} but with checks that go beyond the image. The same tools are available to any MCP client, so different models can be compared on identical tasks without writing a new harness for each.
 
-The software has been publicly available since [date]. [Add downloads, stars, external users.]
+The software is distributed as installers for Windows and macOS through GitHub and KherveTools, and each release is archived on Zenodo.
 
 \paragraph{Limitations} The built-in preview approximates some operations until OpenSCAD has rendered them. Sketches have no geometric constraint solver yet. The assistant's results also depend on the language model behind it; the tools make errors visible but do not prevent them.
 
