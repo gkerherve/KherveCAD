@@ -9,6 +9,8 @@
 
 \JourName{Computing and Information Science in Engineering}
 
+\begin{document}
+
 \title{Parametric CAD as an Action Space for Language-Model Agents: Design Tools That Can Check Their Own Work}
 
 \SetAuthorBlock{Gwilherm Kerherve\CorrespondingAuthor}{%
@@ -23,8 +25,6 @@
 \begin{abstract}
 Language models can now write CAD scripts from a description, but they write blind: a script that compiles may still put a hole on the wrong face, leave two parts overlapping or produce a wall too thin to print, and the model has no way of finding out. We argue that the useful unit is not the generated script but the loop in which an agent builds, inspects and corrects. We present KherveCAD, an open-source modeller in which every design is a tree of objects that maps one-to-one onto an OpenSCAD program, so that edits made by a person with the mouse and edits made by an agent as code act on the same document. The application exposes its operations to agents through the Model Context Protocol: tree edits, code that is parsed back into editable objects, rendered views the agent can look at, and measurements --- mass properties, printability, interference and surface probes --- it can compare against the brief. We describe the representation, the tool interface and the safety model, and set out an evaluation on a benchmark of design tasks that compares an agent writing code once, an agent that can see renders, and an agent that can also measure. [Summarise the measured outcome here in one sentence.]
 \end{abstract}
-
-\begin{document}
 
 \maketitle
 
