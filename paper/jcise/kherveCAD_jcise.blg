@@ -1,0 +1,62 @@
+This is BibTeX, Version 0.99d (TeX Live 2024)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: kherveCAD_jcise.aux
+The style file: asmejour.bst
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Database file #1: references.bib
+Warning--empty venue in wu2023cadllm
+Warning--empty eventdate in wu2023cadllm
+Warning--empty pages in wu2023cadllm
+Warning--empty venue in khan2024text2cad
+Warning--empty eventdate in khan2024text2cad
+Warning--empty pages in khan2024text2cad
+Warning--there's an eprint but no archive in xie2025textcadquery
+Warning--empty venue in guan2025cadcoder
+Warning--empty eventdate in guan2025cadcoder
+Warning--empty pages in guan2025cadcoder
+Warning--empty venue in alrashedy2025cadcodeverify
+Warning--empty eventdate in alrashedy2025cadcodeverify
+Warning--empty pages in alrashedy2025cadcodeverify
+Warning--there's an eprint but no archive in sadik2025hitl
+You've used 14 entries,
+            3520 wiz_defined-function locations,
+            855 strings with 8966 characters,
+and the built_in function-call counts, 4317 in all, are:
+= -- 183
+> -- 155
+< -- 2
++ -- 58
+- -- 44
+* -- 275
+:= -- 426
+add.period$ -- 26
+call.type$ -- 14
+change.case$ -- 8
+chr.to.int$ -- 0
+cite$ -- 28
+duplicate$ -- 513
+empty$ -- 512
+format.name$ -- 53
+if$ -- 927
+int.to.chr$ -- 0
+int.to.str$ -- 14
+missing$ -- 126
+newline$ -- 53
+num.names$ -- 14
+pop$ -- 276
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 106
+stack$ -- 0
+substring$ -- 54
+swap$ -- 273
+text.length$ -- 2
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 14
+while$ -- 17
+width$ -- 16
+write$ -- 127
+(There were 14 warnings)
