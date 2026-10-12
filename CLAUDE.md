@@ -796,6 +796,23 @@ into a new module and import.
                        enforces it. The sync tool takes `--into SECTION`
                        (always pass it) and keeps a relative mesh's
                        subfolder when copying.
+  - My Library sync (2026-10-12, the user: "check which are already in
+                       KherveCAD, remove them, add the rest — only my house,
+                       shed and so on stay"): 70 of the user's designs moved
+                       into new or existing `parts/` sections — Washing
+                       machine trays, Bag clips, Printables (3D printing),
+                       Server racks, RPi enclosures (Electronics), Lab
+                       equipment (Chemistry lab), Crystals (custom) ("Your
+                       crystals": UiO-66, UiO-66 + hematite, hematite, YIG,
+                       LaNb0.9Mo0.1O4, Ni3S2, delta-MnO2), Characters,
+                       Houses, Vehicles (its own Toys & models menu), Lego
+                       builds — placed in `library_groups.SECTIONS`.
+                       Autosaved Objects lose the document's variables, so
+                       several needed their globals written back in (trays:
+                       T, F and guessed W = D = 640, H = 40; the calendering
+                       line: its design's globals; surface slabs:
+                       Custom_surf_nx/ny); the Queen's paint photo is not
+                       shipped (the paint wrapper was dropped).
   - `examples.py` Showcase: `_showcase(stem)` loads a finished model from
                        `khervecad/showcase/` (the Ferrari 288 GTO, 1138
                        objects; the spec ships the folder).

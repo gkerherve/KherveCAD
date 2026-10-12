@@ -1,0 +1,174 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "05 Squeeze peg",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": -60.0,
+       "z": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#47b5c9",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 6.0,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "line",
+            "name": "Line",
+            "visible": true,
+            "params": {
+             "x1": 0.0,
+             "y1": 1.2,
+             "x2": 18.0,
+             "y2": 1.9,
+             "width": 1.6
+            }
+           },
+           {
+            "type": "line",
+            "name": "Line",
+            "visible": true,
+            "params": {
+             "x1": 18.0,
+             "y1": 1.9,
+             "x2": 40.0,
+             "y2": 6.5,
+             "width": 1.6
+            }
+           },
+           {
+            "type": "line",
+            "name": "Line",
+            "visible": true,
+            "params": {
+             "x1": 0.0,
+             "y1": -1.2,
+             "x2": 18.0,
+             "y2": -1.9,
+             "width": 1.6
+            }
+           },
+           {
+            "type": "line",
+            "name": "Line",
+            "visible": true,
+            "params": {
+             "x1": 18.0,
+             "y1": -1.9,
+             "x2": 40.0,
+             "y2": -6.5,
+             "width": 1.6
+            }
+           },
+           {
+            "type": "line",
+            "name": "Line",
+            "visible": true,
+            "params": {
+             "x1": 20.0,
+             "y1": 0.0,
+             "x2": 24.0,
+             "y2": 3.1,
+             "width": 1.0
+            }
+           },
+           {
+            "type": "line",
+            "name": "Line",
+            "visible": true,
+            "params": {
+             "x1": 24.0,
+             "y1": 3.1,
+             "x2": 28.0,
+             "y2": 0.0,
+             "width": 1.0
+            }
+           },
+           {
+            "type": "line",
+            "name": "Line",
+            "visible": true,
+            "params": {
+             "x1": 28.0,
+             "y1": 0.0,
+             "x2": 24.0,
+             "y2": -3.1,
+             "width": 1.0
+            }
+           },
+           {
+            "type": "line",
+            "name": "Line",
+            "visible": true,
+            "params": {
+             "x1": 24.0,
+             "y1": -3.1,
+             "x2": 20.0,
+             "y2": 0.0,
+             "width": 1.0
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "05 Squeeze peg",
+  "description": "05 Squeeze peg. Overall size 42 x 15 x 6 (document units). Built from 8 line, 1 translate, 1 color, 1 linear_extrude. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "b008f5fcd1024286819d96db02c6e59f",
+  "created": "2026-09-30T21:57:50"
+ }
+}

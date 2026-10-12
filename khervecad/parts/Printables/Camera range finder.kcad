@@ -1,0 +1,808 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#1f1f1f",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "hull",
+      "name": "Hull",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-62, 62"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For z",
+          "visible": true,
+          "params": {
+           "variable": "z",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "6, 74"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": 0.0,
+             "z": "z"
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Body]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 36.0,
+                 "radius_bottom": 6.0,
+                 "radius_top": 6.0,
+                 "segments": 32,
+                 "center": true
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "hull",
+      "name": "Hull",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 40.0,
+         "y": -19.0,
+         "z": 10.0,
+         "width": 20.0,
+         "depth": 4.0,
+         "height": 52.0,
+         "center": false
+        }
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 50.0,
+         "y": -23.0,
+         "z": 36.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 1.0,
+           "y": 0.5,
+           "z": 1.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Grip]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 50.0,
+             "radius_bottom": 9.0,
+             "radius_top": 9.0,
+             "segments": 32,
+             "center": true
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "cube",
+      "name": "Cube [Rear screen housing]",
+      "visible": true,
+      "params": {
+       "x": -66.0,
+       "y": 14.0,
+       "z": 12.0,
+       "width": 132.0,
+       "depth": 6.0,
+       "height": 50.0,
+       "center": false
+      }
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#b8b8b2",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "cube",
+      "name": "Cube [Top plate]",
+      "visible": true,
+      "params": {
+       "x": -67.0,
+       "y": -18.5,
+       "z": 62.0,
+       "width": 134.0,
+       "depth": 37.0,
+       "height": 18.0,
+       "center": false
+      }
+     },
+     {
+      "type": "cube",
+      "name": "Cube [Base plate]",
+      "visible": true,
+      "params": {
+       "x": -67.0,
+       "y": -18.5,
+       "z": 0.0,
+       "width": 134.0,
+       "depth": 37.0,
+       "height": 4.0,
+       "center": false
+      }
+     },
+     {
+      "type": "cylinder",
+      "name": "Cylinder [Shutter speed dial]",
+      "visible": true,
+      "params": {
+       "x": 50.0,
+       "y": 0.0,
+       "z": 80.0,
+       "height": 7.0,
+       "radius_bottom": 11.0,
+       "radius_top": 11.0,
+       "segments": 48,
+       "center": false
+      }
+     },
+     {
+      "type": "cylinder",
+      "name": "Cylinder [Exposure comp dial]",
+      "visible": true,
+      "params": {
+       "x": 30.0,
+       "y": 2.0,
+       "z": 80.0,
+       "height": 6.0,
+       "radius_bottom": 9.0,
+       "radius_top": 9.0,
+       "segments": 48,
+       "center": false
+      }
+     },
+     {
+      "type": "cylinder",
+      "name": "Cylinder [Shutter button]",
+      "visible": true,
+      "params": {
+       "x": 50.0,
+       "y": -8.0,
+       "z": 87.0,
+       "height": 3.0,
+       "radius_bottom": 4.0,
+       "radius_top": 4.0,
+       "segments": 32,
+       "center": false
+      }
+     },
+     {
+      "type": "cylinder",
+      "name": "Cylinder [Mode dial]",
+      "visible": true,
+      "params": {
+       "x": -50.0,
+       "y": 0.0,
+       "z": 80.0,
+       "height": 5.0,
+       "radius_bottom": 8.0,
+       "radius_top": 8.0,
+       "segments": 48,
+       "center": false
+      }
+     },
+     {
+      "type": "cube",
+      "name": "Cube [Hot shoe]",
+      "visible": true,
+      "params": {
+       "x": -11.0,
+       "y": -4.0,
+       "z": 80.0,
+       "width": 22.0,
+       "depth": 16.0,
+       "height": 4.0,
+       "center": false
+      }
+     },
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 8.0,
+       "y": -32.0,
+       "z": 38.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 90.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Aperture ring trim]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 1.5,
+           "radius_bottom": 31.5,
+           "radius_top": 31.5,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#0d0d0d",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "cube",
+      "name": "Cube [Viewfinder window]",
+      "visible": true,
+      "params": {
+       "x": -63.0,
+       "y": -19.0,
+       "z": 65.0,
+       "width": 20.0,
+       "depth": 1.0,
+       "height": 11.0,
+       "center": false
+      }
+     },
+     {
+      "type": "cube",
+      "name": "Cube [Eyepiece]",
+      "visible": true,
+      "params": {
+       "x": -60.0,
+       "y": 18.0,
+       "z": 64.0,
+       "width": 16.0,
+       "depth": 3.0,
+       "height": 12.0,
+       "center": false
+      }
+     },
+     {
+      "type": "cube",
+      "name": "Cube [Rear screen]",
+      "visible": true,
+      "params": {
+       "x": -62.0,
+       "y": 20.0,
+       "z": 16.0,
+       "width": 96.0,
+       "depth": 1.0,
+       "height": 44.0,
+       "center": false
+      }
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#4c4c4c",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "cube",
+      "name": "Cube [Focus-assist window]",
+      "visible": true,
+      "params": {
+       "x": 44.0,
+       "y": -19.5,
+       "z": 66.0,
+       "width": 8.0,
+       "depth": 1.0,
+       "height": 8.0,
+       "center": false
+      }
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#1a1a1a",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 8.0,
+       "y": -18.0,
+       "z": 38.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 90.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [RF mount ring]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 4.0,
+           "radius_bottom": 30.0,
+           "radius_top": 30.0,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 8.0,
+       "y": -22.0,
+       "z": 38.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 90.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Lens mount barrel]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 10.0,
+           "radius_bottom": 31.0,
+           "radius_top": 31.0,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 8.0,
+       "y": -33.5,
+       "z": 38.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 90.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Focus ring]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 16.5,
+           "radius_bottom": 29.0,
+           "radius_top": 29.0,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For a",
+      "visible": true,
+      "params": {
+       "variable": "a",
+       "start": 0.0,
+       "end": 350.0,
+       "step": 10.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": "8 + 29 * cos(a)",
+         "y": -42.0,
+         "z": "38 + 29 * sin(a)"
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Focus grip ridge]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 14.0,
+             "radius_bottom": 1.2,
+             "radius_top": 1.2,
+             "segments": 8,
+             "center": true
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 8.0,
+       "y": -50.0,
+       "z": 38.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 90.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Lens front]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 8.0,
+           "radius_bottom": 27.0,
+           "radius_top": 27.0,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "#404c73",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 8.0,
+       "y": -57.5,
+       "z": 38.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 90.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Front element]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 1.0,
+           "radius_bottom": 20.0,
+           "radius_top": 20.0,
+           "segments": 64,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "red",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": -45.0,
+       "y": -19.2,
+       "z": 50.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 90.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Red dot]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 0.5,
+           "radius_bottom": 2.5,
+           "radius_top": 2.5,
+           "segments": 24,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "white",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": -39.0,
+       "y": -19.2,
+       "z": 67.0
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 90.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 0.4,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "text",
+            "name": "Text [Logo]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "text": "Canon",
+             "size": 7.0,
+             "font": "Liberation Serif:style=Bold Italic"
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Camera range finder",
+  "description": "Camera range finder: a whole design (every part of the document Camera range finder .kcad). Parts: loose geometry. Units: mm. (Added to the library from Documents.)",
+  "tags": [
+   "printables & gadgets"
+  ],
+  "source": "design",
+  "uid": "doc-270e2cca8c1b6691",
+  "document": "/Users/gkerherv/Documents/Camera range finder .kcad",
+  "created": "2026-09-24T16:05:47"
+ }
+}

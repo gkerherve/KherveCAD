@@ -1,0 +1,4692 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "variables",
+    "name": "Variables",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "assign",
+      "name": "$fn =",
+      "visible": true,
+      "params": {
+       "variable": "$fn",
+       "value": 96.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "port_r =",
+      "visible": true,
+      "params": {
+       "variable": "port_r",
+       "value": 22.0
+      }
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 1",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Stainless body 100 OD",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "1a44d66967ba4b47acd6f9413430dbe4",
+        "title": "Stainless body 100 OD",
+        "area": "General",
+        "named": "Stainless body 100 OD"
+       }
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 80.0,
+             "radius_bottom": 50.0,
+             "radius_top": 50.0,
+             "segments": 96,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 80.0,
+             "height": 20.0,
+             "radius_bottom": 45.0,
+             "radius_top": 45.0,
+             "segments": 96,
+             "center": false
+            }
+           },
+           {
+            "type": "for_loop",
+            "name": "For i",
+            "visible": true,
+            "params": {
+             "variable": "i",
+             "start": 0.0,
+             "end": 5.0,
+             "step": 1.0,
+             "values": ""
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": "82+i*3",
+               "height": 1.5,
+               "radius_bottom": 45.0,
+               "radius_top": 46.0,
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 12.0,
+           "height": 100.0,
+           "radius_bottom": 35.2,
+           "radius_top": 35.2,
+           "segments": 96,
+           "center": false
+          }
+         },
+         {
+          "type": "for_loop",
+          "name": "For a",
+          "visible": true,
+          "params": {
+           "variable": "a",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "0, 180"
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": "a"
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 40.0,
+               "y": 0.0,
+               "z": 40.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 20.0,
+                   "radius_bottom": 4.0,
+                   "radius_top": 4.0,
+                   "segments": 24,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 2",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Stainless bottom disc",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 12.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "b6b8ce5446f74fd5b43705040ac6fbea",
+        "title": "Stainless bottom disc",
+        "area": "General",
+        "named": "Stainless bottom disc"
+       }
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "height": 2.0,
+         "radius_bottom": 35.0,
+         "radius_top": 35.0,
+         "segments": 96,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 13",
+    "visible": true,
+    "params": {
+     "color": "#f2f0ea",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "PTFE liner 200 mL",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 14.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "a6194ef8ec254c9bbc5e6c41ab2dcbe6",
+        "title": "PTFE liner 200 mL",
+        "area": "General",
+        "named": "PTFE liner 200 mL"
+       }
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 78.0,
+           "radius_bottom": 35.0,
+           "radius_top": 35.0,
+           "segments": 96,
+           "center": false
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 5.0,
+           "height": 80.0,
+           "radius_bottom": 30.0,
+           "radius_top": 30.0,
+           "segments": 96,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 16",
+    "visible": true,
+    "params": {
+     "color": "#3d8fd6",
+     "alpha": 0.55,
+     "material": "Glass"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Solution 140 mL (70 % fill)",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 19.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "0c9c77e0e4054e08916b3aec576895a1",
+        "title": "Solution 140 mL (70 % fill)",
+        "area": "General",
+        "named": "Solution 140 mL (70 % fill)"
+       }
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "height": 49.5,
+         "radius_bottom": 29.8,
+         "radius_top": 29.8,
+         "segments": 96,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 14",
+    "visible": true,
+    "params": {
+     "color": "#f2f0ea",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "PTFE stir bar",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 22.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "52328f2727564da1a41d0b992ae205b1",
+        "title": "PTFE stir bar",
+        "area": "General",
+        "named": "PTFE stir bar"
+       }
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 90.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": -12.0,
+             "radius": 3.0,
+             "segments": 24
+            }
+           },
+           {
+            "type": "sphere",
+            "name": "Sphere",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 12.0,
+             "radius": 3.0,
+             "segments": 24
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 15",
+    "visible": true,
+    "params": {
+     "color": "#f2f0ea",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "PTFE lid",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 92.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "8887919b87d24d26b3e70e02bdee85ca",
+        "title": "PTFE lid",
+        "area": "General",
+        "named": "PTFE lid"
+       }
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 4.0,
+             "radius_bottom": 35.0,
+             "radius_top": 35.0,
+             "segments": 96,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": -4.0,
+             "height": 4.0,
+             "radius_bottom": 29.8,
+             "radius_top": 29.8,
+             "segments": 96,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "union",
+          "name": "ports",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "assign",
+            "name": "d =",
+            "visible": true,
+            "params": {
+             "variable": "d",
+             "value": "3.4"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "h =",
+            "visible": true,
+            "params": {
+             "variable": "h",
+             "value": "10"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "z0 =",
+            "visible": true,
+            "params": {
+             "variable": "z0",
+             "value": "-5"
+            }
+           },
+           {
+            "type": "for_loop",
+            "name": "For a",
+            "visible": true,
+            "params": {
+             "variable": "a",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "0, 90, 180, 270"
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": "a"
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": "port_r",
+                 "y": 0.0,
+                 "z": "z0",
+                 "height": "h",
+                 "radius_bottom": "(d) / 2",
+                 "radius_top": "(d) / 2",
+                 "segments": 24,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 3",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Stainless pressure plate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 96.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "29d1620c203245068f65f0ef4f4cdfe8",
+        "title": "Stainless pressure plate",
+        "area": "Kitchen & tableware",
+        "named": "Stainless pressure plate"
+       }
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 4.0,
+           "radius_bottom": 34.5,
+           "radius_top": 34.5,
+           "segments": 96,
+           "center": false
+          }
+         },
+         {
+          "type": "union",
+          "name": "ports",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "assign",
+            "name": "d =",
+            "visible": true,
+            "params": {
+             "variable": "d",
+             "value": "3.4"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "h =",
+            "visible": true,
+            "params": {
+             "variable": "h",
+             "value": "6"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "z0 =",
+            "visible": true,
+            "params": {
+             "variable": "z0",
+             "value": "-1"
+            }
+           },
+           {
+            "type": "for_loop",
+            "name": "For a",
+            "visible": true,
+            "params": {
+             "variable": "a",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "0, 90, 180, 270"
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": "a"
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": "port_r",
+                 "y": 0.0,
+                 "z": "z0",
+                 "height": "h",
+                 "radius_bottom": "(d) / 2",
+                 "radius_top": "(d) / 2",
+                 "segments": 24,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 4",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Stainless screw cap",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 80.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "f36aee12424f482cb9e440eb2538bdfe",
+        "title": "Stainless screw cap",
+        "area": "Fasteners & brackets",
+        "named": "Stainless screw cap"
+       }
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 32.0,
+           "radius_bottom": 56.0,
+           "radius_top": 56.0,
+           "segments": 6,
+           "center": false
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": -1.0,
+           "height": 21.0,
+           "radius_bottom": 45.25,
+           "radius_top": 45.25,
+           "segments": 96,
+           "center": false
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": -1.0,
+           "height": 40.0,
+           "radius_bottom": 6.0,
+           "radius_top": 6.0,
+           "segments": 96,
+           "center": false
+          }
+         },
+         {
+          "type": "union",
+          "name": "ports",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "assign",
+            "name": "d =",
+            "visible": true,
+            "params": {
+             "variable": "d",
+             "value": "3.4"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "h =",
+            "visible": true,
+            "params": {
+             "variable": "h",
+             "value": "40"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "z0 =",
+            "visible": true,
+            "params": {
+             "variable": "z0",
+             "value": "-1"
+            }
+           },
+           {
+            "type": "for_loop",
+            "name": "For a",
+            "visible": true,
+            "params": {
+             "variable": "a",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "0, 90, 180, 270"
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": "a"
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": "port_r",
+                 "y": 0.0,
+                 "z": "z0",
+                 "height": "h",
+                 "radius_bottom": "(d) / 2",
+                 "radius_top": "(d) / 2",
+                 "segments": 24,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For a",
+          "visible": true,
+          "params": {
+           "variable": "a",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "30, 210"
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": "a"
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 40.0,
+               "y": 0.0,
+               "z": 26.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 20.0,
+                   "radius_bottom": 4.0,
+                   "radius_top": 4.0,
+                   "segments": 24,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 5",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Pressure screw M12",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 100.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "386a644b2dce420b8e0cf08f7c84617e",
+        "title": "Pressure screw M12",
+        "area": "Fasteners & brackets",
+        "named": "Pressure screw M12"
+       }
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "height": 30.0,
+         "radius_bottom": 6.0,
+         "radius_top": 6.0,
+         "segments": 96,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 26.0,
+         "height": 8.0,
+         "radius_bottom": 10.0,
+         "radius_top": 10.0,
+         "segments": 6,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 6",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Thermocouple 3 mm, K type",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "50fc175223f44deea05892d90a391a3c",
+        "title": "Thermocouple 3 mm, K type",
+        "area": "General",
+        "named": "Thermocouple 3 mm, K type"
+       }
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": "port_r",
+         "y": 0.0,
+         "z": 30.0,
+         "height": 104.0,
+         "radius_bottom": 1.5,
+         "radius_top": 1.5,
+         "segments": 24,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": "port_r",
+         "y": 0.0,
+         "z": 112.0,
+         "height": 8.0,
+         "radius_bottom": 5.0,
+         "radius_top": 5.0,
+         "segments": 6,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": "port_r",
+         "y": 0.0,
+         "z": 128.0,
+         "height": 14.0,
+         "radius_bottom": 4.0,
+         "radius_top": 4.0,
+         "segments": 24,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": "port_r",
+         "y": 0.0,
+         "z": 142.0,
+         "height": 10.0,
+         "radius_bottom": 2.0,
+         "radius_top": 2.0,
+         "segments": 16,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 7",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Pressure gauge fitting",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "ba7fe96511884f97bfc3c95a61bfe5b0",
+        "title": "Pressure gauge fitting",
+        "area": "General",
+        "named": "Pressure gauge fitting"
+       }
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": "-port_r",
+         "y": 0.0,
+         "z": 92.0,
+         "height": 56,
+         "radius_bottom": 1.5,
+         "radius_top": 1.5,
+         "segments": 24,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": "-port_r",
+         "y": 0.0,
+         "z": 112.0,
+         "height": 8.0,
+         "radius_bottom": 5.0,
+         "radius_top": 5.0,
+         "segments": 6,
+         "center": false
+        }
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": "-port_r",
+         "y": 0.0,
+         "z": 148
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 14.0,
+             "radius_bottom": 3.0,
+             "radius_top": 3.0,
+             "segments": 24,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 8",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Pressure gauge case 0-100 bar",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 22,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "4b67f2c50ff14b98b2e5f031996659c8",
+        "title": "Pressure gauge case 0-100 bar",
+        "area": "General",
+        "named": "Pressure gauge case 0-100 bar"
+       }
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": "-port_r-14",
+         "y": 0.0,
+         "z": 126.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 14.0,
+               "radius_bottom": 25.0,
+               "radius_top": 25.0,
+               "segments": 96,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 12.0,
+               "height": 3.0,
+               "radius_bottom": 22.0,
+               "radius_top": 22.0,
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 18",
+    "visible": true,
+    "params": {
+     "color": "#ffffff",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Gauge dial",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 22,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "c6a7ae794cbb4d53beab307668f44bef",
+        "title": "Gauge dial",
+        "area": "General",
+        "named": "Gauge dial"
+       }
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": "-port_r-25.5",
+         "y": 0.0,
+         "z": 126.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 0.6,
+             "radius_bottom": 21.5,
+             "radius_top": 21.5,
+             "segments": 96,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 19",
+    "visible": false,
+    "params": {
+     "color": "#c62828",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Gauge needle",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 22,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "caeb6f1d8cc8494ca37292b99169a92a",
+        "title": "Gauge needle",
+        "area": "Trees & plants",
+        "named": "Gauge needle"
+       }
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": "-port_r-26.3",
+         "y": 0.0,
+         "z": 126.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 30.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -0.8,
+             "z": 0.0,
+             "width": 0.6,
+             "depth": 1.6,
+             "height": 17.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 21",
+    "visible": true,
+    "params": {
+     "color": "#dfefff",
+     "alpha": 0.3,
+     "material": "Glass"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Gauge glass",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 22,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "b8d0fbb96b34408d823e86c8c6dcc60d",
+        "title": "Gauge glass",
+        "area": "Kitchen & tableware",
+        "named": "Gauge glass"
+       }
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": "-port_r-26",
+         "y": 0.0,
+         "z": 126.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 1.0,
+             "radius_bottom": 22.0,
+             "radius_top": 22.0,
+             "segments": 96,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 9",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Gas inlet and vent needle valve",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "82fcdd779c704e278b54e1537be8652c",
+        "title": "Gas inlet and vent needle valve",
+        "area": "Trees & plants",
+        "named": "Gas inlet and vent needle valve"
+       }
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "-port_r",
+             "z": 92.0,
+             "height": 26.0,
+             "radius_bottom": 1.5,
+             "radius_top": 1.5,
+             "segments": 24,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "-port_r",
+             "z": 112.0,
+             "height": 8.0,
+             "radius_bottom": 5.0,
+             "radius_top": 5.0,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "-port_r",
+             "z": 124.0,
+             "width": 16.0,
+             "depth": 12.0,
+             "height": 10.0,
+             "center": true
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 8.0,
+             "y": "-port_r",
+             "z": 124.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 30.0,
+                 "radius_bottom": 1.5875,
+                 "radius_top": 1.5875,
+                 "segments": 16,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "-port_r",
+             "z": 129.0,
+             "height": 14.0,
+             "radius_bottom": 3.0,
+             "radius_top": 3.0,
+             "segments": 24,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Inlet bore]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": "-port_r",
+           "z": 91.0,
+           "height": 33.0,
+           "radius_bottom": 0.8,
+           "radius_top": 0.8,
+           "segments": 12,
+           "center": false
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -9.0,
+           "y": "-port_r",
+           "z": 124.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Outlet bore]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 48.0,
+               "radius_bottom": 0.9,
+               "radius_top": 0.9,
+               "segments": 12,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Needle seat]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": "-port_r",
+           "z": 121.0,
+           "height": 6.0,
+           "radius_bottom": 0.8,
+           "radius_top": 2.2,
+           "segments": 16,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 20",
+    "visible": true,
+    "params": {
+     "color": "#c62828",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Needle valve handle",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "051e6ba660b641ff8296c2d3a78b9134",
+        "title": "Needle valve handle",
+        "area": "Trees & plants",
+        "named": "Needle valve handle"
+       }
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": "-port_r",
+         "z": 143.0,
+         "height": 6.0,
+         "radius_bottom": 9.0,
+         "radius_top": 9.0,
+         "segments": 24,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 10",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Dip tube 1/8 in",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "3f9a6ac02d9846409087b0e2eabd7bcd",
+        "title": "Dip tube 1/8 in",
+        "area": "General",
+        "named": "Dip tube 1/8 in"
+       }
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": "-port_r",
+           "z": 24.0,
+           "height": 72.0,
+           "radius_bottom": 1.5875,
+           "radius_top": 1.5875,
+           "segments": 16,
+           "center": false
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Dip tube bore]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": "-port_r",
+           "z": 23.0,
+           "height": 74.0,
+           "radius_bottom": 0.9,
+           "radius_top": 0.9,
+           "segments": 12,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 11",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Rupture disc safety fitting",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "42064a484bde45ba87cf7e256744aa7e",
+        "title": "Rupture disc safety fitting",
+        "area": "General",
+        "named": "Rupture disc safety fitting"
+       }
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "port_r",
+             "z": 92.0,
+             "height": 26.0,
+             "radius_bottom": 1.5,
+             "radius_top": 1.5,
+             "segments": 24,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "port_r",
+             "z": 112.0,
+             "height": 8.0,
+             "radius_bottom": 5.0,
+             "radius_top": 5.0,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "port_r",
+             "z": 120.0,
+             "height": 10.0,
+             "radius_bottom": 7.0,
+             "radius_top": 7.0,
+             "segments": 6,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "port_r",
+             "z": 130.0,
+             "height": 6.0,
+             "radius_bottom": 5.0,
+             "radius_top": 5.0,
+             "segments": 24,
+             "center": false
+            }
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": "port_r",
+             "z": 133.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 14.0,
+                 "radius_bottom": 3.0,
+                 "radius_top": 3.0,
+                 "segments": 24,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Pressure bore]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": "port_r",
+           "z": 91.0,
+           "height": 34.0,
+           "radius_bottom": 0.8,
+           "radius_top": 0.8,
+           "segments": 12,
+           "center": false
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Burst disc seat]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": "port_r",
+           "z": 124.6,
+           "height": 0.25,
+           "radius_bottom": 5.0,
+           "radius_top": 5.0,
+           "segments": 32,
+           "center": false
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Vent chamber]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": "port_r",
+           "z": 125.0,
+           "height": 8.6,
+           "radius_bottom": 1.1,
+           "radius_top": 1.1,
+           "segments": 12,
+           "center": false
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": "port_r",
+           "z": 133.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Vent outlet bore]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 15.0,
+               "radius_bottom": 1.1,
+               "radius_top": 1.1,
+               "segments": 16,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 17",
+    "visible": true,
+    "params": {
+     "color": "#c8793f",
+     "alpha": 1.0,
+     "material": "Copper"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Copper cooling coil 1/8 in, 3 turns",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "f983665c88544d8aa5f09af50455cd0c",
+        "title": "Copper cooling coil 1/8 in, 3 turns",
+        "area": "General",
+        "named": "Copper cooling coil 1/8 in, 3 turns"
+       }
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 71.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": "i*15"
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere",
+              "visible": true,
+              "params": {
+               "x": 51.8,
+               "y": 0.0,
+               "z": "18+i*0.75",
+               "radius": 1.5875,
+               "segments": 12
+              }
+             }
+            ]
+           },
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": "(i+1)*15"
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere",
+              "visible": true,
+              "params": {
+               "x": 51.8,
+               "y": 0.0,
+               "z": "18+(i+1)*0.75",
+               "radius": 1.5875,
+               "segments": 12
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 51.8,
+         "y": 0.0,
+         "z": 18.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 40.0,
+             "radius_bottom": 1.5875,
+             "radius_top": 1.5875,
+             "segments": 12,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 51.8,
+         "y": 0.0,
+         "z": 72.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 40.0,
+             "radius_bottom": 1.5875,
+             "radius_top": 1.5875,
+             "segments": 12,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 12",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Coil clips",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "7d6ddb1ab6fb42929a04b111697a0626",
+        "title": "Coil clips",
+        "area": "Fasteners & brackets",
+        "named": "Coil clips"
+       }
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For a",
+        "visible": true,
+        "params": {
+         "variable": "a",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "45, 165, 285"
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": "a"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube",
+            "visible": true,
+            "params": {
+             "x": 50.0,
+             "y": -3.0,
+             "z": 14.0,
+             "width": 5.5,
+             "depth": 6.0,
+             "height": 62.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 22",
+    "visible": true,
+    "params": {
+     "color": "#2b2f33",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Base stand",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "66c52d8c639c4c17b1bc279b0f815420",
+        "title": "Base stand",
+        "area": "General",
+        "named": "Base stand"
+       }
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": -12.0
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 12.0,
+             "radius_bottom": 65.0,
+             "radius_top": 65.0,
+             "segments": 96,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 8.0,
+             "height": 5.0,
+             "radius_bottom": 50.3,
+             "radius_top": 50.3,
+             "segments": 96,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For a",
+        "visible": true,
+        "params": {
+         "variable": "a",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "0, 120, 240"
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": "a"
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 55.0,
+             "y": 0.0,
+             "z": -22.0,
+             "height": 10.0,
+             "radius_bottom": 7.0,
+             "radius_top": 7.0,
+             "segments": 24,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 23",
+    "visible": true,
+    "params": {
+     "color": "#151515",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Gauge ticks and numbers",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "eb7743f055cf45d6806306c3ccef0232",
+        "title": "Gauge ticks and numbers",
+        "area": "General",
+        "named": "Gauge ticks and numbers"
+       }
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -48.1,
+         "y": 0.0,
+         "z": 148.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": -90.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.3,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "union",
+              "name": "Group",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 135.0
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.35,
+                   "y": 15.5,
+                   "width": 0.7,
+                   "height": 5.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 121.5
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.2,
+                   "y": 17.5,
+                   "width": 0.4,
+                   "height": 3.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 108.0
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.35,
+                   "y": 15.5,
+                   "width": 0.7,
+                   "height": 5.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 94.5
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.2,
+                   "y": 17.5,
+                   "width": 0.4,
+                   "height": 3.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 81.0
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.35,
+                   "y": 15.5,
+                   "width": 0.7,
+                   "height": 5.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 67.5
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.2,
+                   "y": 17.5,
+                   "width": 0.4,
+                   "height": 3.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 54.0
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.35,
+                   "y": 15.5,
+                   "width": 0.7,
+                   "height": 5.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 40.5
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.2,
+                   "y": 17.5,
+                   "width": 0.4,
+                   "height": 3.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 27.0
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.35,
+                   "y": 15.5,
+                   "width": 0.7,
+                   "height": 5.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 13.5
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.2,
+                   "y": 17.5,
+                   "width": 0.4,
+                   "height": 3.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.35,
+                   "y": 15.5,
+                   "width": 0.7,
+                   "height": 5.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -13.5
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.2,
+                   "y": 17.5,
+                   "width": 0.4,
+                   "height": 3.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -27.0
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.35,
+                   "y": 15.5,
+                   "width": 0.7,
+                   "height": 5.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -40.5
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.2,
+                   "y": 17.5,
+                   "width": 0.4,
+                   "height": 3.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -54.0
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.35,
+                   "y": 15.5,
+                   "width": 0.7,
+                   "height": 5.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -67.5
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.2,
+                   "y": 17.5,
+                   "width": 0.4,
+                   "height": 3.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -81.0
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.35,
+                   "y": 15.5,
+                   "width": 0.7,
+                   "height": 5.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -94.5
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.2,
+                   "y": 17.5,
+                   "width": 0.4,
+                   "height": 3.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -108.0
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.35,
+                   "y": 15.5,
+                   "width": 0.7,
+                   "height": 5.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -121.5
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.2,
+                   "y": 17.5,
+                   "width": 0.4,
+                   "height": 3.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": -135.0
+                },
+                "children": [
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.35,
+                   "y": 15.5,
+                   "width": 0.7,
+                   "height": 5.0
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "text",
+                "name": "Text",
+                "visible": true,
+                "params": {
+                 "x": -8.13,
+                 "y": -8.13,
+                 "text": "0",
+                 "size": 2.6,
+                 "halign": "center",
+                 "valign": "center"
+                }
+               },
+               {
+                "type": "text",
+                "name": "Text",
+                "visible": true,
+                "params": {
+                 "x": -11.36,
+                 "y": 1.8,
+                 "text": "20",
+                 "size": 2.6,
+                 "halign": "center",
+                 "valign": "center"
+                }
+               },
+               {
+                "type": "text",
+                "name": "Text",
+                "visible": true,
+                "params": {
+                 "x": -5.22,
+                 "y": 10.25,
+                 "text": "40",
+                 "size": 2.6,
+                 "halign": "center",
+                 "valign": "center"
+                }
+               },
+               {
+                "type": "text",
+                "name": "Text",
+                "visible": true,
+                "params": {
+                 "x": 5.22,
+                 "y": 10.25,
+                 "text": "60",
+                 "size": 2.6,
+                 "halign": "center",
+                 "valign": "center"
+                }
+               },
+               {
+                "type": "text",
+                "name": "Text",
+                "visible": true,
+                "params": {
+                 "x": 11.36,
+                 "y": 1.8,
+                 "text": "80",
+                 "size": 2.6,
+                 "halign": "center",
+                 "valign": "center"
+                }
+               },
+               {
+                "type": "text",
+                "name": "Text",
+                "visible": true,
+                "params": {
+                 "x": 8.13,
+                 "y": -8.13,
+                 "text": "100",
+                 "size": 2.6,
+                 "halign": "center",
+                 "valign": "center"
+                }
+               },
+               {
+                "type": "text",
+                "name": "Text",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": -9.0,
+                 "text": "bar",
+                 "size": 2.4,
+                 "halign": "center",
+                 "valign": "center"
+                }
+               },
+               {
+                "type": "text",
+                "name": "Text",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": -15.5,
+                 "text": "0-100",
+                 "size": 1.6,
+                 "halign": "center",
+                 "valign": "center"
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 25",
+    "visible": true,
+    "params": {
+     "color": "#c62828",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Gauge red zone 80-100 bar",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "056ef89afc7b4f87bf5655de716fba9c",
+        "title": "Gauge red zone 80-100 bar",
+        "area": "General",
+        "named": "Gauge red zone 80-100 bar"
+       }
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -48.1,
+         "y": 0.0,
+         "z": 148.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": -90.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.32,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "union",
+              "name": "Group",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For t",
+                "visible": true,
+                "params": {
+                 "variable": "t",
+                 "start": 81.0,
+                 "end": 135.0,
+                 "step": 4.5,
+                 "values": ""
+                },
+                "children": [
+                 {
+                  "type": "rotate",
+                  "name": "Rotate",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": "-t"
+                  },
+                  "children": [
+                   {
+                    "type": "rect",
+                    "name": "Rectangle",
+                    "visible": true,
+                    "params": {
+                     "x": -0.9,
+                     "y": 19.6,
+                     "width": 1.8,
+                     "height": 1.6
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 26",
+    "visible": true,
+    "params": {
+     "color": "#c62828",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Gauge pointer at 30 bar",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "efc4b083db074e5fa97d5c5e623924e5",
+        "title": "Gauge pointer at 30 bar",
+        "area": "General",
+        "named": "Gauge pointer at 30 bar"
+       }
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -48.6,
+         "y": 0.0,
+         "z": 148.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": -90.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 54.0
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": 0.4,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Polygon",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   -0.9,
+                   -4.0
+                  ],
+                  [
+                   0.9,
+                   -4.0
+                  ],
+                  [
+                   0.25,
+                   18.0
+                  ],
+                  [
+                   -0.25,
+                   18.0
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 0.8,
+             "radius_bottom": 1.75,
+             "radius_top": 1.75,
+             "segments": 24,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 27",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Gauge chrome bezel",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "5769a8c952344836a907d9cd0bc71af6",
+        "title": "Gauge chrome bezel",
+        "area": "General",
+        "named": "Gauge chrome bezel"
+       }
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -49.5,
+         "y": 0.0,
+         "z": 148.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 1.6,
+               "radius_bottom": 26.0,
+               "radius_top": 26.0,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": -1.0,
+               "height": 4.0,
+               "radius_bottom": 22.0,
+               "radius_top": 22.0,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 28",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Valve bonnet and packing nut",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "a6736db667794375a7b2b3950481bd78",
+        "title": "Valve bonnet and packing nut",
+        "area": "Fasteners & brackets",
+        "named": "Valve bonnet and packing nut"
+       }
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -22.0,
+         "z": 129.0,
+         "height": 3.0,
+         "radius_bottom": 5.0,
+         "radius_top": 5.0,
+         "segments": 6,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -22.0,
+         "z": 132.0,
+         "height": 4.0,
+         "radius_bottom": 4.0,
+         "radius_top": 4.0,
+         "segments": 6,
+         "center": false
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 3.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -22.0,
+           "z": "136.5+i*1.4",
+           "height": 0.7,
+           "radius_bottom": 2.4,
+           "radius_top": 2.4,
+           "segments": 20,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 34",
+    "visible": true,
+    "params": {
+     "color": "#8e1c1c",
+     "alpha": 1.0,
+     "material": "Plastic"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Valve handle knurl",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "ddf3c16b24504b6f81ef517371569f44",
+        "title": "Valve handle knurl",
+        "area": "Vacuum & UHV",
+        "named": "Valve handle knurl"
+       }
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For a",
+        "visible": true,
+        "params": {
+         "variable": "a",
+         "start": 0.0,
+         "end": 340.0,
+         "step": 20.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -22.0,
+           "z": 143.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": "a"
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 9.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 6.0,
+               "radius_bottom": 0.8,
+               "radius_top": 0.8,
+               "segments": 8,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 29",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Valve outlet compression fitting",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "afb476615d5c47039994bd5992511c09",
+        "title": "Valve outlet compression fitting",
+        "area": "Vacuum & UHV",
+        "named": "Valve outlet compression fitting"
+       }
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 18.0,
+         "y": -22.0,
+         "z": 124.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 6.0,
+             "radius_bottom": 4.5,
+             "radius_top": 4.5,
+             "segments": 6,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 24.0,
+         "y": -22.0,
+         "z": 124.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 3.0,
+             "radius_bottom": 3.5,
+             "radius_top": 3.5,
+             "segments": 24,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 27.0,
+         "y": -22.0,
+         "z": 124.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 5.0,
+             "radius_bottom": 4.0,
+             "radius_top": 4.0,
+             "segments": 6,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 30",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Valve gas inlet fitting",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "4de9d34ed4e549f7b8f1d107b59b6367",
+        "title": "Valve gas inlet fitting",
+        "area": "Vacuum & UHV",
+        "named": "Valve gas inlet fitting"
+       }
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -8.0,
+         "y": -22.0,
+         "z": 124.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 6.0,
+             "radius_bottom": 4.5,
+             "radius_top": 4.5,
+             "segments": 6,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -14.0,
+         "y": -22.0,
+         "z": 124.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 4.0,
+             "radius_bottom": 3.0,
+             "radius_top": 3.0,
+             "segments": 24,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 31",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Rupture disc union nut",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "ab8620f49904446591b245679bd76eda",
+        "title": "Rupture disc union nut",
+        "area": "Fasteners & brackets",
+        "named": "Rupture disc union nut"
+       }
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 36.0,
+             "z": 133.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 5.0,
+                 "radius_bottom": 5.0,
+                 "radius_top": 5.0,
+                 "segments": 6,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 41.0,
+             "z": 133.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 3.0,
+                 "radius_bottom": 3.5,
+                 "radius_top": 3.5,
+                 "segments": 24,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 35.0,
+           "z": 133.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Nut bore]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 10.0,
+               "radius_bottom": 1.1,
+               "radius_top": 1.1,
+               "segments": 16,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 32",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Vent line 1/8 in",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "1a25c1ada72544af8eec944fa79d5a7e",
+        "title": "Vent line 1/8 in",
+        "area": "General",
+        "named": "Vent line 1/8 in"
+       }
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 44.0,
+             "z": 133.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 16.0,
+                 "radius_bottom": 2.0,
+                 "radius_top": 2.0,
+                 "segments": 24,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "sphere",
+            "name": "Sphere",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 60.0,
+             "z": 133.0,
+             "radius": 2.0,
+             "segments": 24
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 60.0,
+             "z": 133.0,
+             "height": 22.0,
+             "radius_bottom": 2.0,
+             "radius_top": 2.0,
+             "segments": 24,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 43.0,
+           "z": 133.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Vent bore]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 17.0,
+               "radius_bottom": 1.1,
+               "radius_top": 1.1,
+               "segments": 16,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "sphere",
+          "name": "Sphere",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 60.0,
+           "z": 133.0,
+           "radius": 1.1,
+           "segments": 16
+          }
+         },
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 60.0,
+           "z": 133.0,
+           "height": 23.0,
+           "radius_bottom": 1.1,
+           "radius_top": 1.1,
+           "segments": 16,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 33",
+    "visible": true,
+    "params": {
+     "color": "#f4f6f8",
+     "alpha": 1.0,
+     "material": "Metal"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Vent deflector cap",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "37c7e57bd85448119ea699b81eddc3b3",
+        "title": "Vent deflector cap",
+        "area": "General",
+        "named": "Vent deflector cap"
+       }
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 60.0,
+         "z": 155.0,
+         "height": 4.0,
+         "radius_bottom": 2.0,
+         "radius_top": 6.0,
+         "segments": 24,
+         "center": false
+        }
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 60.0,
+         "z": 159.0,
+         "height": 1.0,
+         "radius_bottom": 6.0,
+         "radius_top": 6.0,
+         "segments": 24,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 35",
+    "visible": true,
+    "params": {
+     "color": "#d4b14a",
+     "alpha": 1.0,
+     "material": "Gold"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Burst disc rating tag",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "5ed0275e3ad9489cbc28b1c4b5e6dbf2",
+        "title": "Burst disc rating tag",
+        "area": "General",
+        "named": "Burst disc rating tag"
+       }
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": -5.0,
+         "y": 29.0,
+         "z": 120.5,
+         "width": 10.0,
+         "depth": 0.8,
+         "height": 7.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color 24",
+    "visible": true,
+    "params": {
+     "color": "#151515",
+     "alpha": 1.0,
+     "material": "Matte"
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Burst disc rating text",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "50dcfaf53954406698fa6b0361cf1157",
+        "title": "Burst disc rating text",
+        "area": "General",
+        "named": "Burst disc rating text"
+       }
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 29.8,
+         "z": 124.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 180.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.3,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "union",
+              "name": "Group",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "text",
+                "name": "Text",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "text": "BURST",
+                 "size": 1.6,
+                 "halign": "center",
+                 "valign": "center"
+                }
+               },
+               {
+                "type": "text",
+                "name": "Text",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": -2.2,
+                 "text": "150 bar",
+                 "size": 1.5,
+                 "halign": "center",
+                 "valign": "center"
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Hydrothermal_autoclave_200mL",
+  "description": "Hydrothermal_autoclave_200mL: a whole design (every part of the document). Plus 35 loose pieces of geometry. Overall size 157 x 131 x 196 mm. (Description generated automatically.)",
+  "tags": [],
+  "source": "design",
+  "uid": "doc-4a3ea8ec7d1e867d",
+  "document": "/Users/gkerherv/Documents/Hydrothermal_autoclave_200mL.kcad",
+  "created": "2026-10-06T17:46:04"
+ }
+}

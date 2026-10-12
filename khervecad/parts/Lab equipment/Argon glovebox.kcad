@@ -1,0 +1,266 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Glovebox 1 (Ar)",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "f5109807a27648cdaf106404f3e3e3ec",
+      "title": "Glovebox 1 (Ar)",
+      "area": "Science & space",
+      "named": "Glovebox 1 (Ar)"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#9aa3ab",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Stand]",
+        "visible": true,
+        "params": {
+         "x": -900.0,
+         "y": -400.0,
+         "z": 0.0,
+         "width": 1800.0,
+         "depth": 800.0,
+         "height": 850.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#dfe3e8",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Box body]",
+        "visible": true,
+        "params": {
+         "x": -900.0,
+         "y": -400.0,
+         "z": 850.0,
+         "width": 1800.0,
+         "depth": 800.0,
+         "height": 950.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#a8d4f0",
+       "alpha": 0.5,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Window]",
+        "visible": true,
+        "params": {
+         "x": -880.0,
+         "y": -410.0,
+         "z": 950.0,
+         "width": 1760.0,
+         "depth": 10.0,
+         "height": 700.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#222",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-450, 450"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -410.0,
+           "z": 1200.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Glove ports]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 60.0,
+               "radius_bottom": 110.0,
+               "radius_top": 110.0,
+               "segments": 40,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#c9ced4",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 900.0,
+         "y": 0.0,
+         "z": 1250.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Antechamber]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 550.0,
+             "radius_bottom": 200.0,
+             "radius_top": 200.0,
+             "segments": 40,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#6d757d",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Purifier]",
+        "visible": true,
+        "params": {
+         "x": -900.0,
+         "y": 50.0,
+         "z": 1800.0,
+         "width": 700.0,
+         "depth": 350.0,
+         "height": 450.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Glovebox 1 (Ar)",
+  "description": "Glovebox 1 (Ar). Overall size 2350 x 870 x 2250 (document units). Built from 6 color, 4 cube, 2 translate, 2 rotate, 2 cylinder, 1 for_loop. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "f5109807a27648cdaf106404f3e3e3ec",
+  "created": "2026-09-23T16:14:54"
+ }
+}

@@ -1,0 +1,145 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Planetary vacuum mixer",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#e3e6ea",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Cabinet]",
+        "visible": true,
+        "params": {
+         "x": -400.0,
+         "y": -400.0,
+         "z": 0.0,
+         "width": 800.0,
+         "depth": 800.0,
+         "height": 1100.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#c9ced4",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Vacuum bowl]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 1100.0,
+         "height": 300.0,
+         "radius_bottom": 250.0,
+         "radius_top": 250.0,
+         "segments": 48,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#6d757d",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Column]",
+        "visible": true,
+        "params": {
+         "x": -150.0,
+         "y": 150.0,
+         "z": 1100.0,
+         "width": 300.0,
+         "depth": 250.0,
+         "height": 700.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#20252b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Screen]",
+        "visible": true,
+        "params": {
+         "x": -300.0,
+         "y": -410.0,
+         "z": 700.0,
+         "width": 600.0,
+         "depth": 10.0,
+         "height": 300.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Planetary vacuum mixer",
+  "description": "Planetary vacuum mixer. Overall size 800 x 810 x 1800 (document units). Built from 4 color, 3 cube, 1 cylinder. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "594dcdd971f74089b073af736d421313",
+  "created": "2026-09-23T16:14:33"
+ }
+}

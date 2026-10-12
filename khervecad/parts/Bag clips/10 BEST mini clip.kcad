@@ -1,0 +1,375 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "10 BEST mini clip",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 70.0,
+       "y": -120.0,
+       "z": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#2f9e6e",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": 6.0,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "rect",
+                "name": "Rectangle",
+                "visible": true,
+                "params": {
+                 "x": -0.5,
+                 "y": 0.0,
+                 "width": 40.5,
+                 "height": 2.2
+                }
+               },
+               {
+                "type": "rect",
+                "name": "Rectangle",
+                "visible": true,
+                "params": {
+                 "x": -0.5,
+                 "y": -0.7,
+                 "width": 0.6,
+                 "height": 2.9
+                }
+               },
+               {
+                "type": "rect",
+                "name": "Rectangle",
+                "visible": true,
+                "params": {
+                 "x": 40.0,
+                 "y": 0.0,
+                 "width": 1.8,
+                 "height": 7.2
+                }
+               },
+               {
+                "type": "polygon",
+                "name": "Polygon",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   40.0,
+                   5.15
+                  ],
+                  [
+                   38.9,
+                   5.15
+                  ],
+                  [
+                   38.9,
+                   5.45
+                  ],
+                  [
+                   40.0,
+                   7.2
+                  ]
+                 ]
+                }
+               },
+               {
+                "type": "difference",
+                "name": "Difference",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "circle",
+                  "name": "Circle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.5,
+                   "y": 2.6,
+                   "radius": 3.3,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 48
+                  }
+                 },
+                 {
+                  "type": "circle",
+                  "name": "Circle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.5,
+                   "y": 2.6,
+                   "radius": 2.4,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 48
+                  }
+                 },
+                 {
+                  "type": "rect",
+                  "name": "Rectangle",
+                  "visible": true,
+                  "params": {
+                   "x": -0.5,
+                   "y": -1.7,
+                   "width": 5.3,
+                   "height": 8.6
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 2.5,
+               "y": 2.2,
+               "z": 3.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 35.0,
+                   "radius_bottom": 1.3,
+                   "radius_top": 1.3,
+                   "segments": 4,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": -0.5,
+             "y": 2.6,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 14.0
+              },
+              "children": [
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": 0.5,
+                 "y": -2.6,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Group",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "linear_extrude",
+                    "name": "Linear extrude",
+                    "visible": true,
+                    "params": {
+                     "height": 6.0,
+                     "twist": 0.0,
+                     "scale": 1.0,
+                     "center": false,
+                     "segments": 0
+                    },
+                    "children": [
+                     {
+                      "type": "rect",
+                      "name": "Rectangle",
+                      "visible": true,
+                      "params": {
+                       "x": -0.5,
+                       "y": 3.0,
+                       "width": 40.0,
+                       "height": 2.0
+                      }
+                     },
+                     {
+                      "type": "rect",
+                      "name": "Rectangle",
+                      "visible": true,
+                      "params": {
+                       "x": -0.5,
+                       "y": 3.0,
+                       "width": 0.6,
+                       "height": 2.9
+                      }
+                     }
+                    ]
+                   },
+                   {
+                    "type": "translate",
+                    "name": "Translate",
+                    "visible": true,
+                    "params": {
+                     "x": 3.0,
+                     "y": 3.0,
+                     "z": 3.0
+                    },
+                    "children": [
+                     {
+                      "type": "rotate",
+                      "name": "Rotate",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 90.0,
+                       "z": 0.0
+                      },
+                      "children": [
+                       {
+                        "type": "cylinder",
+                        "name": "Cylinder",
+                        "visible": true,
+                        "params": {
+                         "x": 0.0,
+                         "y": 0.0,
+                         "z": 0.0,
+                         "height": 34.0,
+                         "radius_bottom": 1.0,
+                         "radius_top": 1.0,
+                         "segments": 4,
+                         "center": false
+                        }
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "10 BEST mini clip",
+  "description": "10 BEST mini clip. Overall size 46 x 16 x 6 (document units). Built from 6 rect, 5 translate, 3 rotate, 2 union, 2 difference, 2 linear_extrude. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "8cefc7685bd74d34b5be9fc93691a2ce",
+  "created": "2026-09-30T21:57:46"
+ }
+}

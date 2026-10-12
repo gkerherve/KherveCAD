@@ -1,0 +1,2559 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "nm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "Custom_surf_nx =",
+    "visible": true,
+    "params": {
+     "variable": "Custom_surf_nx",
+     "value": 1.0
+    },
+    "children": []
+   },
+   {
+    "type": "assign",
+    "name": "Custom_surf_ny =",
+    "visible": true,
+    "params": {
+     "variable": "Custom_surf_ny",
+     "value": 5.0
+    },
+    "children": []
+   },
+   {
+    "type": "component",
+    "name": "LaNb0.9Mo0.1O4 scheelite (001)",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "6b7f0b72ce0e46a3969975c2cdc723e8",
+      "title": "LaNb0.9Mo0.1O4 scheelite (001)",
+      "area": "General",
+      "named": "LaNb0.9Mo0.1O4 scheelite (001)"
+     }
+    },
+    "children": [
+     {
+      "type": "for_loop",
+      "name": "For i",
+      "visible": true,
+      "params": {
+       "variable": "i",
+       "start": 0.0,
+       "end": "Custom_surf_nx - 1",
+       "step": 1.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For j",
+        "visible": true,
+        "params": {
+         "variable": "j",
+         "start": 0.0,
+         "end": "Custom_surf_ny - 1",
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "component",
+          "name": "Custom_surf_cell",
+          "visible": true,
+          "params": {
+           "x": "2.7 * i",
+           "y": "0.54 * j",
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "color",
+            "name": "Color [La atoms]",
+            "visible": true,
+            "params": {
+             "color": "#70D4FF",
+             "alpha": 1.0,
+             "material": "Default"
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 1.6875,
+               "y": 0.2025,
+               "z": -0.04536,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 0.3375,
+               "y": 0.4725,
+               "z": -0.62836,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 1.0125,
+               "y": 0.3375,
+               "z": -0.33686,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 2.3625,
+               "y": 0.0675,
+               "z": -0.91986,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 2.0925,
+               "y": 0.3375,
+               "z": -0.33686,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 0.7425,
+               "y": 0.0675,
+               "z": -0.91986,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 0.0675,
+               "y": 0.2025,
+               "z": -0.04536,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 1.4175,
+               "y": 0.4725,
+               "z": -0.62836,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 1.1475,
+               "y": 0.2025,
+               "z": -0.04536,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 2.4975,
+               "y": 0.4725,
+               "z": -0.62836,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 0.4725,
+               "y": 0.3375,
+               "z": -0.33686,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 1.8225,
+               "y": 0.0675,
+               "z": -0.91986,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 1.5525,
+               "y": 0.3375,
+               "z": -0.33686,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 0.2025,
+               "y": 0.0675,
+               "z": -0.91986,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 2.2275,
+               "y": 0.2025,
+               "z": -0.04536,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 0.8775,
+               "y": 0.4725,
+               "z": -0.62836,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 0.6075,
+               "y": 0.2025,
+               "z": -0.04536,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 1.9575,
+               "y": 0.4725,
+               "z": -0.62836,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 2.6325,
+               "y": 0.3375,
+               "z": -0.33686,
+               "radius": 0.1,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [La]",
+              "visible": true,
+              "params": {
+               "x": 1.2825,
+               "y": 0.0675,
+               "z": -0.91986,
+               "radius": 0.1,
+               "segments": 32
+              }
+             }
+            ]
+           },
+           {
+            "type": "color",
+            "name": "Color [O atoms]",
+            "visible": true,
+            "params": {
+             "color": "#FF0D0D",
+             "alpha": 1.0,
+             "material": "Default"
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.17906,
+               "y": 0.32119,
+               "z": 0.0,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.52906,
+               "y": 0.05119,
+               "z": -0.583,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.41412,
+               "y": 0.4982,
+               "z": -0.38221,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.06412,
+               "y": 0.2282,
+               "z": -0.96521,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.31223,
+               "y": 0.00691,
+               "z": -0.09071,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.66223,
+               "y": 0.27691,
+               "z": -0.67371,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.12717,
+               "y": 0.0999,
+               "z": -0.2915,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.77717,
+               "y": 0.3699,
+               "z": -0.8745,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.76777,
+               "y": 0.53309,
+               "z": -0.2915,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.11777,
+               "y": 0.26309,
+               "z": -0.8745,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.65283,
+               "y": 0.4401,
+               "z": -0.09071,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.30283,
+               "y": 0.1701,
+               "z": -0.67371,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.90094,
+               "y": 0.21881,
+               "z": -0.38221,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.25094,
+               "y": 0.48881,
+               "z": -0.96521,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.36588,
+               "y": 0.0418,
+               "z": 0.0,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.01588,
+               "y": 0.3118,
+               "z": -0.583,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.79412,
+               "y": 0.4982,
+               "z": -0.38221,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.14412,
+               "y": 0.2282,
+               "z": -0.96521,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.25906,
+               "y": 0.32119,
+               "z": 0.0,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.60906,
+               "y": 0.05119,
+               "z": -0.583,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.50717,
+               "y": 0.0999,
+               "z": -0.2915,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.85717,
+               "y": 0.3699,
+               "z": -0.8745,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.39223,
+               "y": 0.00691,
+               "z": -0.09071,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.04223,
+               "y": 0.27691,
+               "z": -0.67371,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.03283,
+               "y": 0.4401,
+               "z": -0.09071,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.38283,
+               "y": 0.1701,
+               "z": -0.67371,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.84777,
+               "y": 0.53309,
+               "z": -0.2915,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.49777,
+               "y": 0.26309,
+               "z": -0.8745,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.44588,
+               "y": 0.0418,
+               "z": 0.0,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.09588,
+               "y": 0.3118,
+               "z": -0.583,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.98094,
+               "y": 0.21881,
+               "z": -0.38221,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.63094,
+               "y": 0.48881,
+               "z": -0.96521,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.33906,
+               "y": 0.32119,
+               "z": 0.0,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.98906,
+               "y": 0.05119,
+               "z": -0.583,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.87412,
+               "y": 0.4982,
+               "z": -0.38221,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.52412,
+               "y": 0.2282,
+               "z": -0.96521,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.47223,
+               "y": 0.00691,
+               "z": -0.09071,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.12223,
+               "y": 0.27691,
+               "z": -0.67371,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.58717,
+               "y": 0.0999,
+               "z": -0.2915,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.23717,
+               "y": 0.3699,
+               "z": -0.8745,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.22777,
+               "y": 0.53309,
+               "z": -0.2915,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.57777,
+               "y": 0.26309,
+               "z": -0.8745,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.11283,
+               "y": 0.4401,
+               "z": -0.09071,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.46283,
+               "y": 0.1701,
+               "z": -0.67371,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.36094,
+               "y": 0.21881,
+               "z": -0.38221,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.71094,
+               "y": 0.48881,
+               "z": -0.96521,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.82588,
+               "y": 0.0418,
+               "z": 0.0,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.17588,
+               "y": 0.3118,
+               "z": -0.583,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.25412,
+               "y": 0.4982,
+               "z": -0.38221,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.60412,
+               "y": 0.2282,
+               "z": -0.96521,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.71906,
+               "y": 0.32119,
+               "z": 0.0,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.06906,
+               "y": 0.05119,
+               "z": -0.583,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.66717,
+               "y": 0.0999,
+               "z": -0.2915,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.31717,
+               "y": 0.3699,
+               "z": -0.8745,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.85223,
+               "y": 0.00691,
+               "z": -0.09071,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.20223,
+               "y": 0.27691,
+               "z": -0.67371,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.19283,
+               "y": 0.4401,
+               "z": -0.09071,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.84283,
+               "y": 0.1701,
+               "z": -0.67371,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.30777,
+               "y": 0.53309,
+               "z": -0.2915,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.65777,
+               "y": 0.26309,
+               "z": -0.8745,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.90588,
+               "y": 0.0418,
+               "z": 0.0,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.55588,
+               "y": 0.3118,
+               "z": -0.583,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.44094,
+               "y": 0.21881,
+               "z": -0.38221,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.09094,
+               "y": 0.48881,
+               "z": -0.96521,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.79906,
+               "y": 0.32119,
+               "z": 0.0,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.44906,
+               "y": 0.05119,
+               "z": -0.583,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.33412,
+               "y": 0.4982,
+               "z": -0.38221,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.68412,
+               "y": 0.2282,
+               "z": -0.96521,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.93223,
+               "y": 0.00691,
+               "z": -0.09071,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.58223,
+               "y": 0.27691,
+               "z": -0.67371,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.04717,
+               "y": 0.0999,
+               "z": -0.2915,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.39717,
+               "y": 0.3699,
+               "z": -0.8745,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.38777,
+               "y": 0.53309,
+               "z": -0.2915,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.03777,
+               "y": 0.26309,
+               "z": -0.8745,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.57283,
+               "y": 0.4401,
+               "z": -0.09071,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.92283,
+               "y": 0.1701,
+               "z": -0.67371,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 2.52094,
+               "y": 0.21881,
+               "z": -0.38221,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.17094,
+               "y": 0.48881,
+               "z": -0.96521,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 0.28588,
+               "y": 0.0418,
+               "z": 0.0,
+               "radius": 0.075,
+               "segments": 32
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [O]",
+              "visible": true,
+              "params": {
+               "x": 1.63588,
+               "y": 0.3118,
+               "z": -0.583,
+               "radius": 0.075,
+               "segments": 32
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Nb atoms]",
+      "visible": true,
+      "params": {
+       "color": "#2E8B57",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.3375,
+         "y": 0.4725,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.6875,
+         "y": 0.2025,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.3625,
+         "y": 0.0675,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.0125,
+         "y": 0.3375,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.4175,
+         "y": 0.4725,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.0675,
+         "y": 0.2025,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.1475,
+         "y": 0.2025,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.8225,
+         "y": 0.0675,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.2025,
+         "y": 0.0675,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.5525,
+         "y": 0.3375,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.2275,
+         "y": 0.2025,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.9575,
+         "y": 0.4725,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.6075,
+         "y": 0.2025,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.2825,
+         "y": 0.0675,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.6325,
+         "y": 0.3375,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.7425,
+         "y": 0.0675,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.3375,
+         "y": 1.0125,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.6875,
+         "y": 0.7425,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.3625,
+         "y": 0.6075,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.0125,
+         "y": 0.8775,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.4175,
+         "y": 1.0125,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.0675,
+         "y": 0.7425,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.4975,
+         "y": 1.0125,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.1475,
+         "y": 0.7425,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.8225,
+         "y": 0.6075,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.4725,
+         "y": 0.8775,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.2025,
+         "y": 0.6075,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.5525,
+         "y": 0.8775,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.8775,
+         "y": 1.0125,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.2275,
+         "y": 0.7425,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.9575,
+         "y": 1.0125,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.6075,
+         "y": 0.7425,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.2825,
+         "y": 0.6075,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.6325,
+         "y": 0.8775,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.7425,
+         "y": 0.6075,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.0925,
+         "y": 0.8775,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.3375,
+         "y": 1.5525,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.3625,
+         "y": 1.1475,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.0125,
+         "y": 1.4175,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.4175,
+         "y": 1.5525,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.0675,
+         "y": 1.2825,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.1475,
+         "y": 1.2825,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.8225,
+         "y": 1.1475,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.4725,
+         "y": 1.4175,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.5525,
+         "y": 1.4175,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.8775,
+         "y": 1.5525,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.2275,
+         "y": 1.2825,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.9575,
+         "y": 1.5525,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.6075,
+         "y": 1.2825,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.2825,
+         "y": 1.1475,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.6325,
+         "y": 1.4175,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.7425,
+         "y": 1.1475,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.0925,
+         "y": 1.4175,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.3375,
+         "y": 2.0925,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.6875,
+         "y": 1.8225,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.3625,
+         "y": 1.6875,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.0125,
+         "y": 1.9575,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.4175,
+         "y": 2.0925,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.0675,
+         "y": 1.8225,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.4975,
+         "y": 2.0925,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.1475,
+         "y": 1.8225,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.4725,
+         "y": 1.9575,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.2025,
+         "y": 1.6875,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.5525,
+         "y": 1.9575,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.8775,
+         "y": 2.0925,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.2275,
+         "y": 1.8225,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.6075,
+         "y": 1.8225,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.2825,
+         "y": 1.6875,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.6325,
+         "y": 1.9575,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.7425,
+         "y": 1.6875,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.0925,
+         "y": 1.9575,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.3375,
+         "y": 2.6325,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.6875,
+         "y": 2.3625,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.3625,
+         "y": 2.2275,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.4175,
+         "y": 2.6325,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.0675,
+         "y": 2.3625,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.4975,
+         "y": 2.6325,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.1475,
+         "y": 2.3625,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.8225,
+         "y": 2.2275,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.4725,
+         "y": 2.4975,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.2025,
+         "y": 2.2275,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.5525,
+         "y": 2.4975,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.8775,
+         "y": 2.6325,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.2275,
+         "y": 2.3625,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.9575,
+         "y": 2.6325,
+         "z": -0.04536,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.6075,
+         "y": 2.3625,
+         "z": -0.62836,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 1.2825,
+         "y": 2.2275,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.6325,
+         "y": 2.4975,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 0.7425,
+         "y": 2.2275,
+         "z": -0.33686,
+         "radius": 0.06,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Nb]",
+        "visible": true,
+        "params": {
+         "x": 2.0925,
+         "y": 2.4975,
+         "z": -0.91986,
+         "radius": 0.06,
+         "segments": 32
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Mo atoms]",
+      "visible": true,
+      "params": {
+       "color": "#FFB000",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "sphere",
+        "name": "Sphere [Mo]",
+        "visible": true,
+        "params": {
+         "x": 2.4975,
+         "y": 0.4725,
+         "z": -0.04536,
+         "radius": 0.055,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Mo]",
+        "visible": true,
+        "params": {
+         "x": 0.4725,
+         "y": 0.3375,
+         "z": -0.91986,
+         "radius": 0.055,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Mo]",
+        "visible": true,
+        "params": {
+         "x": 0.8775,
+         "y": 0.4725,
+         "z": -0.04536,
+         "radius": 0.055,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Mo]",
+        "visible": true,
+        "params": {
+         "x": 2.0925,
+         "y": 0.3375,
+         "z": -0.91986,
+         "radius": 0.055,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Mo]",
+        "visible": true,
+        "params": {
+         "x": 1.6875,
+         "y": 1.2825,
+         "z": -0.62836,
+         "radius": 0.055,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Mo]",
+        "visible": true,
+        "params": {
+         "x": 2.4975,
+         "y": 1.5525,
+         "z": -0.04536,
+         "radius": 0.055,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Mo]",
+        "visible": true,
+        "params": {
+         "x": 0.2025,
+         "y": 1.1475,
+         "z": -0.33686,
+         "radius": 0.055,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Mo]",
+        "visible": true,
+        "params": {
+         "x": 1.8225,
+         "y": 1.6875,
+         "z": -0.33686,
+         "radius": 0.055,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Mo]",
+        "visible": true,
+        "params": {
+         "x": 1.9575,
+         "y": 2.0925,
+         "z": -0.04536,
+         "radius": 0.055,
+         "segments": 32
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Mo]",
+        "visible": true,
+        "params": {
+         "x": 1.0125,
+         "y": 2.4975,
+         "z": -0.91986,
+         "radius": 0.055,
+         "segments": 32
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "LaNb0.9Mo0.1O4 scheelite (001)",
+  "description": "LaNb0.9Mo0.1O4 scheelite (001). Overall size 3 x 3 x 1 (document units). Built from 200 sphere, 4 color, 2 for_loop, 1 component. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "6b7f0b72ce0e46a3969975c2cdc723e8",
+  "created": "2026-09-28T15:46:11"
+ }
+}

@@ -1,0 +1,4075 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "nm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Ni3S2 Ni-S bonds",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "for_loop",
+      "name": "For i",
+      "visible": true,
+      "params": {
+       "variable": "i",
+       "start": 0.0,
+       "end": 9.0,
+       "step": 1.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For j",
+        "visible": true,
+        "params": {
+         "variable": "j",
+         "start": 0.0,
+         "end": 9.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "component",
+          "name": "Ni3S2_bond_cell",
+          "visible": true,
+          "params": {
+           "x": "0.57454 * i - 0.28727 * j",
+           "y": "0.49757 * j",
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "color",
+            "name": "Color",
+            "visible": true,
+            "params": {
+             "color": "#B0B0B0",
+             "alpha": 1.0,
+             "material": "Default"
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.4309,
+               "y": 0.0,
+               "z": -0.5355
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.1,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.4309,
+               "y": 0.0,
+               "z": -0.5355
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.9,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.4309,
+               "y": 0.0,
+               "z": -0.5355
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.75,
+                 "z": -130.89
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.4309,
+               "y": 0.0,
+               "z": -0.5355
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.25,
+                 "z": 130.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2273,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.4309,
+               "y": 0.0,
+               "z": -1.249
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.1,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.4309,
+               "y": 0.0,
+               "z": -1.249
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.9,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.4309,
+               "y": 0.0,
+               "z": -1.249
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.75,
+                 "z": -130.89
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.4309,
+               "y": 0.0,
+               "z": -1.249
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.25,
+                 "z": 130.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2273,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.4309,
+               "y": 0.0,
+               "z": -1.9625
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.9,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.4309,
+               "y": 0.0,
+               "z": -1.9625
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.75,
+                 "z": -130.89
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.4309,
+               "y": 0.0,
+               "z": -1.9625
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.25,
+                 "z": 130.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2273,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.2155,
+               "y": 0.3732,
+               "z": -0.5355
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.11,
+                 "z": 119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.2155,
+               "y": 0.3732,
+               "z": -0.5355
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.89,
+                 "z": 119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.2155,
+               "y": 0.3732,
+               "z": -0.5355
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.76,
+                 "z": -10.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.2155,
+               "y": 0.3732,
+               "z": -0.5355
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.24,
+                 "z": -109.08
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.2155,
+               "y": 0.3732,
+               "z": -1.249
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.11,
+                 "z": 119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.2155,
+               "y": 0.3732,
+               "z": -1.249
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.89,
+                 "z": 119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.2155,
+               "y": 0.3732,
+               "z": -1.249
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.76,
+                 "z": -10.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.2155,
+               "y": 0.3732,
+               "z": -1.249
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.24,
+                 "z": -109.08
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.2155,
+               "y": 0.3732,
+               "z": -1.9625
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.89,
+                 "z": 119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.2155,
+               "y": 0.3732,
+               "z": -1.9625
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.76,
+                 "z": -10.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.2155,
+               "y": 0.3732,
+               "z": -1.9625
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.24,
+                 "z": -109.08
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.1244,
+               "z": -0.5355
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.1,
+                 "z": -119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.1244,
+               "z": -0.5355
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.9,
+                 "z": -119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.1244,
+               "z": -0.5355
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.75,
+                 "z": 109.1
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.1244,
+               "z": -0.5355
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.24,
+                 "z": 10.87
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.1244,
+               "z": -1.249
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.1,
+                 "z": -119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.1244,
+               "z": -1.249
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.9,
+                 "z": -119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.1244,
+               "z": -1.249
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.75,
+                 "z": 109.1
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.1244,
+               "z": -1.249
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.24,
+                 "z": 10.87
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.1244,
+               "z": -1.9625
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.9,
+                 "z": -119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.1244,
+               "z": -1.9625
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.75,
+                 "z": 109.1
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.1244,
+               "z": -1.9625
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.24,
+                 "z": 10.87
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.1437,
+               "y": 0.3317,
+               "z": -0.2977
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.25,
+                 "z": 130.88
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.1437,
+               "y": 0.3317,
+               "z": -0.2977
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.09,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2288,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.1437,
+               "y": 0.3317,
+               "z": -0.2977
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.91,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2288,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.1437,
+               "y": 0.3317,
+               "z": -0.2977
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.73,
+                 "z": -130.87
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.1437,
+               "y": 0.3317,
+               "z": -1.0112
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.25,
+                 "z": 130.88
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.1437,
+               "y": 0.3317,
+               "z": -1.0112
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.09,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2288,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.1437,
+               "y": 0.3317,
+               "z": -1.0112
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.91,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2288,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.1437,
+               "y": 0.3317,
+               "z": -1.0112
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.73,
+                 "z": -130.87
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.1437,
+               "y": 0.3317,
+               "z": -1.7247
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.25,
+                 "z": 130.88
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.1437,
+               "y": 0.3317,
+               "z": -1.7247
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.09,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2288,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.1437,
+               "y": 0.3317,
+               "z": -1.7247
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.91,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2288,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": -0.1437,
+               "y": 0.3317,
+               "z": -1.7247
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.73,
+                 "z": -130.87
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.2073,
+               "z": -0.2977
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.25,
+                 "z": -109.1
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.2073,
+               "z": -0.2977
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.1,
+                 "z": 119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.2073,
+               "z": -0.2977
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.9,
+                 "z": 119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.2073,
+               "z": -0.2977
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.73,
+                 "z": -10.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.2073,
+               "z": -1.0112
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.25,
+                 "z": -109.1
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.2073,
+               "z": -1.0112
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.1,
+                 "z": 119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.2073,
+               "z": -1.0112
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.9,
+                 "z": 119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.2073,
+               "z": -1.0112
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.73,
+                 "z": -10.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.2073,
+               "z": -1.7247
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.25,
+                 "z": -109.1
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.2073,
+               "z": -1.7247
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.1,
+                 "z": 119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.2073,
+               "z": -1.7247
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.9,
+                 "z": 119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.2073,
+               "z": -1.7247
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.73,
+                 "z": -10.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.4561,
+               "z": -0.2977
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.24,
+                 "z": 10.89
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.4561,
+               "z": -0.2977
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.1,
+                 "z": -119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.4561,
+               "z": -0.2977
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.9,
+                 "z": -119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.4561,
+               "z": -0.2977
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.73,
+                 "z": 109.1
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.4561,
+               "z": -1.0112
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.24,
+                 "z": 10.89
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.4561,
+               "z": -1.0112
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.1,
+                 "z": -119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.4561,
+               "z": -1.0112
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.9,
+                 "z": -119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.4561,
+               "z": -1.0112
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.73,
+                 "z": 109.1
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.4561,
+               "z": -1.7247
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.24,
+                 "z": 10.89
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.4561,
+               "z": -1.7247
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.1,
+                 "z": -119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.4561,
+               "z": -1.7247
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.9,
+                 "z": -119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0718,
+               "y": 0.4561,
+               "z": -1.7247
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.73,
+                 "z": 109.1
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.1437,
+               "y": 0.1658,
+               "z": -0.0598
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.75,
+                 "z": -130.92
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.1437,
+               "y": 0.1658,
+               "z": -0.0598
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.27,
+                 "z": 130.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.1437,
+               "y": 0.1658,
+               "z": -0.0598
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.11,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.1437,
+               "y": 0.1658,
+               "z": -0.7733
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.75,
+                 "z": -130.92
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.1437,
+               "y": 0.1658,
+               "z": -0.7733
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.27,
+                 "z": 130.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.1437,
+               "y": 0.1658,
+               "z": -0.7733
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.11,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.1437,
+               "y": 0.1658,
+               "z": -0.7733
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.89,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.1437,
+               "y": 0.1658,
+               "z": -1.4868
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.75,
+                 "z": -130.92
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.1437,
+               "y": 0.1658,
+               "z": -1.4868
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.27,
+                 "z": 130.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.1437,
+               "y": 0.1658,
+               "z": -1.4868
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.11,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.1437,
+               "y": 0.1658,
+               "z": -1.4868
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.89,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.0415,
+               "z": -0.0598
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.75,
+                 "z": -10.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.0415,
+               "z": -0.0598
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.27,
+                 "z": -109.11
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.0415,
+               "z": -0.0598
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.12,
+                 "z": 120.01
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.0415,
+               "z": -0.7733
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.75,
+                 "z": -10.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.0415,
+               "z": -0.7733
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.27,
+                 "z": -109.11
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.0415,
+               "z": -0.7733
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.12,
+                 "z": 120.01
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.0415,
+               "z": -0.7733
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.88,
+                 "z": 120.01
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.0415,
+               "z": -1.4868
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.75,
+                 "z": -10.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.0415,
+               "z": -1.4868
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.27,
+                 "z": -109.11
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.0415,
+               "z": -1.4868
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.12,
+                 "z": 120.01
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.0415,
+               "z": -1.4868
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.88,
+                 "z": 120.01
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.2902,
+               "z": -0.0598
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.76,
+                 "z": 109.11
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.2902,
+               "z": -0.0598
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.27,
+                 "z": 10.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.2902,
+               "z": -0.0598
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.1,
+                 "z": -119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.2902,
+               "z": -0.7733
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.76,
+                 "z": 109.11
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.2902,
+               "z": -0.7733
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.27,
+                 "z": 10.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.2902,
+               "z": -0.7733
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.1,
+                 "z": -119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.2902,
+               "z": -0.7733
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.9,
+                 "z": -119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.2902,
+               "z": -1.4868
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 74.76,
+                 "z": 109.11
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2275,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.2902,
+               "z": -1.4868
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 105.27,
+                 "z": 10.9
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2274,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.2902,
+               "z": -1.4868
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 141.1,
+                 "z": -119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.3591,
+               "y": 0.2902,
+               "z": -1.4868
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 38.9,
+                 "z": -119.99
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ni-S]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 0.2287,
+                   "radius_bottom": 0.025,
+                   "radius_top": 0.025,
+                   "segments": 6,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Ni3S2 Ni-S bonds",
+  "description": "Ni3S2 Ni-S bonds. Overall size 9 x 5 x 2 (document units). Built from 102 translate, 102 rotate, 102 cylinder, 2 for_loop, 1 component, 1 color. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "988d3419c22346c9a946f7d684b6d8be",
+  "created": "2026-09-28T14:03:00"
+ }
+}

@@ -1,0 +1,1384 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "nm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Compound optical microscope",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "b262db300adb4a6895f207c1f3c2f490",
+      "title": "Compound optical microscope, binocular, 400 mm tall",
+      "area": "Science &amp; space",
+      "named": "Compound optical microscope",
+      "source": "assistant",
+      "description": "A laboratory compound (biological) optical microscope, binocular head, modelled at true scale: about 210 mm wide, 250 mm deep and 400 mm tall, standing on its own base with the origin at the centre of the base and z = 0 at the bench top, so it can be dropped straight onto a bench by setting x / y / z on the Object. Built from primitives only (no booleans), about 35 coloured statements. Parts, bottom to top: hulled horseshoe base in dark grey, cylindrical lamp housing with a pale yellow lamp lens, condenser on its mount with a side focus knob, a hulled two-segment C arm rising at the back (+y) carrying coarse (d 74) and fine (d 44) focus knobs on both sides, a white mechanical stage 160 x 140 mm at z = 166 with a pale blue specimen slide, two slide clips and X/Y stage knobs on the left, a revolving nosepiece (d 104) with three objectives banded red (40x), yellow (10x) and green (4x), and a head with a binocular trunk and two eyepiece tubes inclined 45 degrees toward the front (-y), so the user's side is -y and the arm is at the back. No parameters or variables: edit the literal dimensions in the tree, or scale the Object, to change the size. Colours are set per statement, so recolouring the body means changing the '#3a3f45' and '#2b2f34' colour nodes.",
+      "tags": [
+       "microscope",
+       "optical microscope",
+       "compound microscope",
+       "binocular microscope",
+       "biological microscope",
+       "lab",
+       "laboratory",
+       "bench",
+       "eyepiece",
+       "objective",
+       "stage",
+       "science",
+       "school",
+       "microscope optique",
+       "Mikroskop"
+      ]
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color [Base]",
+      "visible": true,
+      "params": {
+       "color": "#3a3f45",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -20.0,
+             "z": 0.0,
+             "height": 28.0,
+             "radius_bottom": 105.0,
+             "radius_top": 105.0,
+             "segments": 48,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 95.0,
+             "z": 0.0,
+             "height": 28.0,
+             "radius_bottom": 60.0,
+             "radius_top": 60.0,
+             "segments": 48,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#3a3f45",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Base boss]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 60.0,
+         "z": 28.0,
+         "height": 14.0,
+         "radius_bottom": 59.0,
+         "radius_top": 59.0,
+         "segments": 48,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2b2f34",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Lamp housing]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 28.0,
+         "height": 40.0,
+         "radius_bottom": 35.0,
+         "radius_top": 35.0,
+         "segments": 36,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#f2e6b0",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Lamp lens]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 68.0,
+         "height": 8.0,
+         "radius_bottom": 26.0,
+         "radius_top": 26.0,
+         "segments": 36,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2b2f34",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Condenser]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 120.0,
+         "height": 46.0,
+         "radius_bottom": 20.0,
+         "radius_top": 31.0,
+         "segments": 36,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2b2f34",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Condenser mount]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 100.0,
+         "height": 20.0,
+         "radius_bottom": 17.0,
+         "radius_top": 17.0,
+         "segments": 24,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8f959c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -46.0,
+         "y": 0.0,
+         "z": 112.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Condenser knob]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 8.0,
+             "radius_bottom": 13.0,
+             "radius_top": 13.0,
+             "segments": 24,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Arm lower]",
+      "visible": true,
+      "params": {
+       "color": "#3a3f45",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "hull",
+        "name": "Hull",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -26.0,
+           "y": 58.0,
+           "z": 28.0,
+           "width": 52.0,
+           "depth": 52.0,
+           "height": 10.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -26.0,
+           "y": 74.0,
+           "z": 180.0,
+           "width": 52.0,
+           "depth": 52.0,
+           "height": 10.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Arm upper]",
+      "visible": true,
+      "params": {
+       "color": "#3a3f45",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "hull",
+        "name": "Hull",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -26.0,
+           "y": 74.0,
+           "z": 180.0,
+           "width": 52.0,
+           "depth": 52.0,
+           "height": 10.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -26.0,
+           "y": 40.0,
+           "z": 320.0,
+           "width": 52.0,
+           "depth": 56.0,
+           "height": 10.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#3a3f45",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Arm head]",
+        "visible": true,
+        "params": {
+         "x": -26.0,
+         "y": 40.0,
+         "z": 300.0,
+         "width": 52.0,
+         "depth": 56.0,
+         "height": 30.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1e2126",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -48.0,
+         "y": 84.0,
+         "z": 196.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Coarse knob left]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 16.0,
+             "radius_bottom": 37.0,
+             "radius_top": 37.0,
+             "segments": 36,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1e2126",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 32.0,
+         "y": 84.0,
+         "z": 196.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Coarse knob right]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 16.0,
+             "radius_bottom": 37.0,
+             "radius_top": 37.0,
+             "segments": 36,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1e2126",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -58.0,
+         "y": 84.0,
+         "z": 196.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Fine knob left]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 12.0,
+             "radius_bottom": 22.0,
+             "radius_top": 22.0,
+             "segments": 36,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1e2126",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 48.0,
+         "y": 84.0,
+         "z": 196.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Fine knob right]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 12.0,
+             "radius_bottom": 22.0,
+             "radius_top": 22.0,
+             "segments": 36,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#e8eaec",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Stage plate]",
+        "visible": true,
+        "params": {
+         "x": -80.0,
+         "y": -62.0,
+         "z": 166.0,
+         "width": 160.0,
+         "depth": 140.0,
+         "height": 10.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#cfd3d7",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Mechanical stage body]",
+        "visible": true,
+        "params": {
+         "x": -80.0,
+         "y": -62.0,
+         "z": 150.0,
+         "width": 160.0,
+         "depth": 44.0,
+         "height": 16.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#bfd8e0",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Specimen slide]",
+        "visible": true,
+        "params": {
+         "x": -38.0,
+         "y": -20.0,
+         "z": 176.0,
+         "width": 76.0,
+         "depth": 26.0,
+         "height": 1.5,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8f959c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Slide clip left]",
+        "visible": true,
+        "params": {
+         "x": -26.0,
+         "y": -24.0,
+         "z": 176.0,
+         "width": 28.0,
+         "depth": 4.0,
+         "height": 7.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8f959c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Slide clip right]",
+        "visible": true,
+        "params": {
+         "x": 6.0,
+         "y": -24.0,
+         "z": 176.0,
+         "width": 28.0,
+         "depth": 4.0,
+         "height": 7.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1e2126",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -96.0,
+         "y": -52.0,
+         "z": 150.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Stage knob X]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 14.0,
+             "radius_bottom": 20.0,
+             "radius_top": 20.0,
+             "segments": 30,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1e2126",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -96.0,
+         "y": -52.0,
+         "z": 150.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 90.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Stage knob Y]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 8.0,
+             "radius_bottom": 13.0,
+             "radius_top": 13.0,
+             "segments": 30,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#3a3f45",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Stage carrier]",
+        "visible": true,
+        "params": {
+         "x": -14.0,
+         "y": -62.0,
+         "z": 176.0,
+         "width": 28.0,
+         "depth": 10.0,
+         "height": 26.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2b2f34",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Nosepiece turret]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 40.0,
+         "z": 226.0,
+         "height": 26.0,
+         "radius_bottom": 52.0,
+         "radius_top": 52.0,
+         "segments": 40,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#e8eaec",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Objective 40x]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 196.0,
+         "height": 32.0,
+         "radius_bottom": 6.5,
+         "radius_top": 13.0,
+         "segments": 24,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#e8eaec",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Objective 10x]",
+        "visible": true,
+        "params": {
+         "x": -34.0,
+         "y": 18.0,
+         "z": 206.0,
+         "height": 22.0,
+         "radius_bottom": 8.5,
+         "radius_top": 13.0,
+         "segments": 24,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#e8eaec",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Objective 4x]",
+        "visible": true,
+        "params": {
+         "x": 34.0,
+         "y": 18.0,
+         "z": 206.0,
+         "height": 22.0,
+         "radius_bottom": 8.5,
+         "radius_top": 13.0,
+         "segments": 24,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#cf3b2f",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Objective band 40x]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 222.0,
+         "height": 4.0,
+         "radius_bottom": 13.5,
+         "radius_top": 13.5,
+         "segments": 24,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#f0c33c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Objective band 10x]",
+        "visible": true,
+        "params": {
+         "x": -34.0,
+         "y": 18.0,
+         "z": 224.0,
+         "height": 4.0,
+         "radius_bottom": 13.5,
+         "radius_top": 13.5,
+         "segments": 24,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#3f9b6d",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Objective band 4x]",
+        "visible": true,
+        "params": {
+         "x": 34.0,
+         "y": 18.0,
+         "z": 224.0,
+         "height": 4.0,
+         "radius_bottom": 13.5,
+         "radius_top": 13.5,
+         "segments": 24,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2b2f34",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Head body]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 40.0,
+         "z": 252.0,
+         "height": 54.0,
+         "radius_bottom": 38.0,
+         "radius_top": 38.0,
+         "segments": 36,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2b2f34",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 40.0,
+         "z": 290.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": -45.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Binocular trunk]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 86.0,
+             "radius_bottom": 31.0,
+             "radius_top": 31.0,
+             "segments": 36,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2b2f34",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -23.0,
+         "y": 40.0,
+         "z": 290.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": -45.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Eyepiece tube left]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 104.0,
+             "radius_bottom": 18.0,
+             "radius_top": 18.0,
+             "segments": 30,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2b2f34",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 23.0,
+         "y": 40.0,
+         "z": 290.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": -45.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Eyepiece tube right]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 104.0,
+             "radius_bottom": 18.0,
+             "radius_top": 18.0,
+             "segments": 30,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1e2126",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -23.0,
+         "y": 40.0,
+         "z": 290.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": -45.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Eyepiece left]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 100.0,
+             "height": 30.0,
+             "radius_bottom": 21.0,
+             "radius_top": 21.0,
+             "segments": 30,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1e2126",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 23.0,
+         "y": 40.0,
+         "z": 290.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": -45.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Eyepiece right]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 100.0,
+             "height": 30.0,
+             "radius_bottom": 21.0,
+             "radius_top": 21.0,
+             "segments": 30,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Compound optical microscope, binocular, 400 mm tall",
+  "description": "A laboratory compound (biological) optical microscope, binocular head, modelled at true scale: about 210 mm wide, 250 mm deep and 400 mm tall, standing on its own base with the origin at the centre of the base and z = 0 at the bench top, so it can be dropped straight onto a bench by setting x / y / z on the Object. Built from primitives only (no booleans), about 35 coloured statements. Parts, bottom to top: hulled horseshoe base in dark grey, cylindrical lamp housing with a pale yellow lamp lens, condenser on its mount with a side focus knob, a hulled two-segment C arm rising at the back (+y) carrying coarse (d 74) and fine (d 44) focus knobs on both sides, a white mechanical stage 160 x 140 mm at z = 166 with a pale blue specimen slide, two slide clips and X/Y stage knobs on the left, a revolving nosepiece (d 104) with three objectives banded red (40x), yellow (10x) and green (4x), and a head with a binocular trunk and two eyepiece tubes inclined 45 degrees toward the front (-y), so the user's side is -y and the arm is at the back. No parameters or variables: edit the literal dimensions in the tree, or scale the Object, to change the size. Colours are set per statement, so recolouring the body means changing the '#3a3f45' and '#2b2f34' colour nodes.",
+  "tags": [
+   "microscope",
+   "optical microscope",
+   "compound microscope",
+   "binocular microscope",
+   "biological microscope",
+   "lab",
+   "laboratory",
+   "bench",
+   "eyepiece",
+   "objective",
+   "stage",
+   "science",
+   "school",
+   "microscope optique",
+   "Mikroskop"
+  ],
+  "source": "assistant",
+  "uid": "b262db300adb4a6895f207c1f3c2f490",
+  "created": "2026-09-25T12:57:00"
+ }
+}

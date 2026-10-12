@@ -1,0 +1,323 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Roll-to-roll slot-die coater with dryer",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#4a4f55",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Frame]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -450.0,
+         "z": 0.0,
+         "width": 5600.0,
+         "depth": 900.0,
+         "height": 800.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#c9ced4",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 200.0,
+         "y": 0.0,
+         "z": 1100.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Unwinder]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 600.0,
+             "radius_bottom": 250.0,
+             "radius_top": 250.0,
+             "segments": 48,
+             "center": true
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8a6b3c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 200.0,
+         "y": 0.0,
+         "z": 1100.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Copper foil roll]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 620.0,
+             "radius_bottom": 180.0,
+             "radius_top": 180.0,
+             "segments": 48,
+             "center": true
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#e0e3e6",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Slot die]",
+        "visible": true,
+        "params": {
+         "x": 750.0,
+         "y": -350.0,
+         "z": 800.0,
+         "width": 350.0,
+         "depth": 700.0,
+         "height": 500.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#e7e9ec",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Drying tunnel]",
+        "visible": true,
+        "params": {
+         "x": 1300.0,
+         "y": -500.0,
+         "z": 800.0,
+         "width": 3600.0,
+         "depth": 1000.0,
+         "height": 650.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ff8c1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Heater stripe]",
+        "visible": true,
+        "params": {
+         "x": 1300.0,
+         "y": -510.0,
+         "z": 1300.0,
+         "width": 3600.0,
+         "depth": 10.0,
+         "height": 80.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#c9ced4",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 5350.0,
+         "y": 0.0,
+         "z": 1100.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Rewinder]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 600.0,
+             "radius_bottom": 230.0,
+             "radius_top": 230.0,
+             "segments": 48,
+             "center": true
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#20252b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Control panel]",
+        "visible": true,
+        "params": {
+         "x": 600.0,
+         "y": -700.0,
+         "z": 900.0,
+         "width": 400.0,
+         "depth": 200.0,
+         "height": 350.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Roll-to-roll slot-die coater with dryer",
+  "description": "Roll-to-roll slot-die coater with dryer. Overall size 5650 x 1200 x 1450 (document units). Built from 8 color, 5 cube, 3 translate, 3 rotate, 3 cylinder. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "6094f7fc00794d219ea1c5cff9505191",
+  "created": "2026-09-23T16:14:34"
+ }
+}

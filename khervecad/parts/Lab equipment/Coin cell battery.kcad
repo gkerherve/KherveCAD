@@ -1,0 +1,1173 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 96.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Transparent housing 20 mm",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "lightsteelblue",
+     "alpha": 0.35,
+     "library": {
+      "uid": "88eb7c29569048029f9992455dbca522",
+      "title": "Transparent housing 20 mm",
+      "area": "General",
+      "named": "Transparent housing 20 mm"
+     }
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "height": 3.0,
+           "radius_bottom": 10.0,
+           "radius_top": 10.0,
+           "segments": 96,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -4.5,
+           "z": 0.0,
+           "width": 28.0,
+           "depth": 9.0,
+           "height": 2.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "cylinder",
+        "name": "Cylinder",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 1.0,
+         "height": 3.0,
+         "radius_bottom": 9.0,
+         "radius_top": 9.0,
+         "segments": 96,
+         "center": false
+        }
+       },
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 8.5,
+         "y": -3.5,
+         "z": 1.0,
+         "width": 18.5,
+         "depth": 7.0,
+         "height": 2.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Separator walls 0.5 mm",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 1.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "gainsboro",
+     "alpha": 0.6,
+     "library": {
+      "uid": "292965e9f1fc4cb3b20b4d6df1355702",
+      "title": "Separator walls 0.5 mm",
+      "area": "General",
+      "named": "Separator walls 0.5 mm"
+     }
+    },
+    "children": [
+     {
+      "type": "linear_extrude",
+      "name": "Linear extrude",
+      "visible": true,
+      "params": {
+       "height": 1.2,
+       "twist": 0.0,
+       "scale": 1.0,
+       "center": false,
+       "segments": 0
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "circle",
+            "name": "Circle",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "radius": 9.0,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 96
+            }
+           },
+           {
+            "type": "rect",
+            "name": "Rectangle",
+            "visible": true,
+            "params": {
+             "x": 8.5,
+             "y": -3.5,
+             "width": 18.5,
+             "height": 7.0
+            }
+           }
+          ]
+         },
+         {
+          "type": "offset",
+          "name": "Offset",
+          "visible": true,
+          "params": {
+           "radius": 0.05,
+           "chamfer": false
+          },
+          "children": [
+           {
+            "type": "component",
+            "name": "red2",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "union",
+                "name": "Group",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "rx": 0.0,
+                 "ry": 0.0,
+                 "rz": 0.0,
+                 "color": "",
+                 "alpha": 1.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "ring2",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "assign",
+                    "name": "r1 =",
+                    "visible": true,
+                    "params": {
+                     "variable": "r1",
+                     "value": "3.2"
+                    }
+                   },
+                   {
+                    "type": "assign",
+                    "name": "r2 =",
+                    "visible": true,
+                    "params": {
+                     "variable": "r2",
+                     "value": "4.4"
+                    }
+                   },
+                   {
+                    "type": "difference",
+                    "name": "Difference",
+                    "visible": true,
+                    "params": {},
+                    "children": [
+                     {
+                      "type": "circle",
+                      "name": "Circle",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "radius": "r2",
+                       "angle": 360.0,
+                       "start_angle": 0.0,
+                       "segments": 96
+                      }
+                     },
+                     {
+                      "type": "circle",
+                      "name": "Circle",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "radius": "r1",
+                       "angle": 360.0,
+                       "start_angle": 0.0,
+                       "segments": 96
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "union",
+                  "name": "ring2",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "assign",
+                    "name": "r1 =",
+                    "visible": true,
+                    "params": {
+                     "variable": "r1",
+                     "value": "6.8"
+                    }
+                   },
+                   {
+                    "type": "assign",
+                    "name": "r2 =",
+                    "visible": true,
+                    "params": {
+                     "variable": "r2",
+                     "value": "8"
+                    }
+                   },
+                   {
+                    "type": "difference",
+                    "name": "Difference",
+                    "visible": true,
+                    "params": {},
+                    "children": [
+                     {
+                      "type": "circle",
+                      "name": "Circle",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "radius": "r2",
+                       "angle": 360.0,
+                       "start_angle": 0.0,
+                       "segments": 96
+                      }
+                     },
+                     {
+                      "type": "circle",
+                      "name": "Circle",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "radius": "r1",
+                       "angle": 360.0,
+                       "start_angle": 0.0,
+                       "segments": 96
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "rect",
+                "name": "Rectangle",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.2,
+                 "width": 10.0,
+                 "height": 2.0
+                }
+               }
+              ]
+             },
+             {
+              "type": "rect",
+              "name": "Rectangle",
+              "visible": true,
+              "params": {
+               "x": 3.6,
+               "y": -2.2,
+               "width": 22.9,
+               "height": 1.2
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "offset",
+          "name": "Offset",
+          "visible": true,
+          "params": {
+           "radius": 0.05,
+           "chamfer": false
+          },
+          "children": [
+           {
+            "type": "component",
+            "name": "blue2",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "union",
+                "name": "Group",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "rx": 0.0,
+                 "ry": 0.0,
+                 "rz": 0.0,
+                 "color": "",
+                 "alpha": 1.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "ring2",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "assign",
+                    "name": "r1 =",
+                    "visible": true,
+                    "params": {
+                     "variable": "r1",
+                     "value": "0.9"
+                    }
+                   },
+                   {
+                    "type": "assign",
+                    "name": "r2 =",
+                    "visible": true,
+                    "params": {
+                     "variable": "r2",
+                     "value": "2.2"
+                    }
+                   },
+                   {
+                    "type": "difference",
+                    "name": "Difference",
+                    "visible": true,
+                    "params": {},
+                    "children": [
+                     {
+                      "type": "circle",
+                      "name": "Circle",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "radius": "r2",
+                       "angle": 360.0,
+                       "start_angle": 0.0,
+                       "segments": 96
+                      }
+                     },
+                     {
+                      "type": "circle",
+                      "name": "Circle",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "radius": "r1",
+                       "angle": 360.0,
+                       "start_angle": 0.0,
+                       "segments": 96
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "union",
+                  "name": "ring2",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "assign",
+                    "name": "r1 =",
+                    "visible": true,
+                    "params": {
+                     "variable": "r1",
+                     "value": "5"
+                    }
+                   },
+                   {
+                    "type": "assign",
+                    "name": "r2 =",
+                    "visible": true,
+                    "params": {
+                     "variable": "r2",
+                     "value": "6.2"
+                    }
+                   },
+                   {
+                    "type": "difference",
+                    "name": "Difference",
+                    "visible": true,
+                    "params": {},
+                    "children": [
+                     {
+                      "type": "circle",
+                      "name": "Circle",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "radius": "r2",
+                       "angle": 360.0,
+                       "start_angle": 0.0,
+                       "segments": 96
+                      }
+                     },
+                     {
+                      "type": "circle",
+                      "name": "Circle",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "radius": "r1",
+                       "angle": 360.0,
+                       "start_angle": 0.0,
+                       "segments": 96
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "rect",
+                "name": "Rectangle",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": -2.6,
+                 "width": 10.0,
+                 "height": 2.0
+                }
+               }
+              ]
+             },
+             {
+              "type": "rect",
+              "name": "Rectangle",
+              "visible": true,
+              "params": {
+               "x": 1.5,
+               "y": 0.6,
+               "width": 23.5,
+               "height": 1.2
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "circle",
+          "name": "Circle",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "radius": 0.85,
+           "angle": 360.0,
+           "start_angle": 0.0,
+           "segments": 96
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Red ring electrode",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 1.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "red",
+     "alpha": 1.0,
+     "library": {
+      "uid": "88aa9ef3ccee48cfb487e4689cd51e3c",
+      "title": "Red ring electrode",
+      "area": "General",
+      "named": "Red ring electrode"
+     }
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "ring",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "assign",
+            "name": "r1 =",
+            "visible": true,
+            "params": {
+             "variable": "r1",
+             "value": "3.2"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "r2 =",
+            "visible": true,
+            "params": {
+             "variable": "r2",
+             "value": "4.4"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "h =",
+            "visible": true,
+            "params": {
+             "variable": "h",
+             "value": "0.4"
+            }
+           },
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": "h",
+               "radius_bottom": "r2",
+               "radius_top": "r2",
+               "segments": 96,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": -1.0,
+               "height": "h+2",
+               "radius_bottom": "r1",
+               "radius_top": "r1",
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "union",
+          "name": "ring",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "assign",
+            "name": "r1 =",
+            "visible": true,
+            "params": {
+             "variable": "r1",
+             "value": "6.8"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "r2 =",
+            "visible": true,
+            "params": {
+             "variable": "r2",
+             "value": "8"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "h =",
+            "visible": true,
+            "params": {
+             "variable": "h",
+             "value": "0.4"
+            }
+           },
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": "h",
+               "radius_bottom": "r2",
+               "radius_top": "r2",
+               "segments": 96,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": -1.0,
+               "height": "h+2",
+               "radius_bottom": "r1",
+               "radius_top": "r1",
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.2,
+         "z": -1.0,
+         "width": 10.0,
+         "depth": 2.0,
+         "height": 3.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "cube",
+      "name": "Cube",
+      "visible": true,
+      "params": {
+       "x": 3.6,
+       "y": -2.2,
+       "z": 0.0,
+       "width": 22.9,
+       "depth": 1.2,
+       "height": 0.4,
+       "center": false
+      }
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Blue ring electrode",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 1.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "blue",
+     "alpha": 1.0,
+     "library": {
+      "uid": "1d2b4a6dcdcc44a38b0f5ad9e482e92a",
+      "title": "Blue ring electrode",
+      "area": "General",
+      "named": "Blue ring electrode"
+     }
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "ring",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "assign",
+            "name": "r1 =",
+            "visible": true,
+            "params": {
+             "variable": "r1",
+             "value": "0.9"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "r2 =",
+            "visible": true,
+            "params": {
+             "variable": "r2",
+             "value": "2.2"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "h =",
+            "visible": true,
+            "params": {
+             "variable": "h",
+             "value": "0.4"
+            }
+           },
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": "h",
+               "radius_bottom": "r2",
+               "radius_top": "r2",
+               "segments": 96,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": -1.0,
+               "height": "h+2",
+               "radius_bottom": "r1",
+               "radius_top": "r1",
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "union",
+          "name": "ring",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "assign",
+            "name": "r1 =",
+            "visible": true,
+            "params": {
+             "variable": "r1",
+             "value": "5"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "r2 =",
+            "visible": true,
+            "params": {
+             "variable": "r2",
+             "value": "6.2"
+            }
+           },
+           {
+            "type": "assign",
+            "name": "h =",
+            "visible": true,
+            "params": {
+             "variable": "h",
+             "value": "0.4"
+            }
+           },
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": "h",
+               "radius_bottom": "r2",
+               "radius_top": "r2",
+               "segments": 96,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": -1.0,
+               "height": "h+2",
+               "radius_bottom": "r1",
+               "radius_top": "r1",
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -2.6,
+         "z": -1.0,
+         "width": 10.0,
+         "depth": 2.0,
+         "height": 3.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "cube",
+      "name": "Cube",
+      "visible": true,
+      "params": {
+       "x": 1.5,
+       "y": 0.6,
+       "z": 0.0,
+       "width": 23.5,
+       "depth": 1.2,
+       "height": 0.4,
+       "center": false
+      }
+     }
+    ]
+   },
+   {
+    "type": "color",
+    "name": "Color",
+    "visible": true,
+    "params": {
+     "color": "lightgray",
+     "alpha": 1.0,
+     "material": "Default"
+    },
+    "children": [
+     {
+      "type": "cylinder",
+      "name": "Cylinder [Centre post]",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "height": 2.2,
+       "radius_bottom": 0.8,
+       "radius_top": 0.8,
+       "segments": 96,
+       "center": false
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Circular_Battery",
+  "description": "Circular_Battery: a whole design (every part of the document). Parts: Transparent housing 20 mm, Separator walls 0.5 mm, Red ring electrode, Blue ring electrode. Plus 1 loose pieces of geometry. Overall size 38 x 20 x 3 mm. (Description generated automatically.)",
+  "tags": [],
+  "source": "design",
+  "uid": "doc-6491764b9232493a",
+  "document": "/Users/gkerherv/Documents/CAD New/Circular_Battery.kcad",
+  "created": "2026-10-05T16:41:04"
+ }
+}

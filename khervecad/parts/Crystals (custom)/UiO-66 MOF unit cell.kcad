@@ -1,0 +1,9073 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "nm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "UiO-66 unit cell",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "b7a9eb5d0cce4a7c824b211ff4d7a951",
+      "title": "UiO-66 unit cell",
+      "area": "Unit cells & crystals",
+      "named": "UiO-66 unit cell"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color [Cell box]",
+      "visible": true,
+      "params": {
+       "color": "#000000",
+       "alpha": 0.08,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [Lattice cell]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.0,
+           0.0,
+           0.0
+          ],
+          [
+           2.07004,
+           0.0,
+           0.0
+          ],
+          [
+           2.07004,
+           2.07004,
+           0.0
+          ],
+          [
+           0.0,
+           2.07004,
+           0.0
+          ],
+          [
+           0.0,
+           0.0,
+           2.07004
+          ],
+          [
+           2.07004,
+           0.0,
+           2.07004
+          ],
+          [
+           2.07004,
+           2.07004,
+           2.07004
+          ],
+          [
+           0.0,
+           2.07004,
+           2.07004
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           1,
+           2,
+           3
+          ],
+          [
+           7,
+           6,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           1,
+           0
+          ],
+          [
+           5,
+           6,
+           2,
+           1
+          ],
+          [
+           6,
+           7,
+           3,
+           2
+          ],
+          [
+           7,
+           4,
+           0,
+           3
+          ]
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Zr atoms]",
+      "visible": true,
+      "params": {
+       "color": "#00FF00",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.24758,
+         "y": 0.0,
+         "z": 0.0,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.24758,
+         "y": 2.07004,
+         "z": 0.0,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.24758,
+         "y": 0.0,
+         "z": 2.07004,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.24758,
+         "y": 2.07004,
+         "z": 2.07004,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.24758,
+         "y": 1.03502,
+         "z": 1.03502,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.2826,
+         "y": 0.0,
+         "z": 1.03502,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.2826,
+         "y": 2.07004,
+         "z": 1.03502,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.2826,
+         "y": 1.03502,
+         "z": 0.0,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.2826,
+         "y": 1.03502,
+         "z": 2.07004,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.82246,
+         "y": 0.0,
+         "z": 0.0,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.82246,
+         "y": 2.07004,
+         "z": 0.0,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.82246,
+         "y": 0.0,
+         "z": 2.07004,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.82246,
+         "y": 2.07004,
+         "z": 2.07004,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.82246,
+         "y": 1.03502,
+         "z": 1.03502,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.78744,
+         "y": 0.0,
+         "z": 1.03502,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.78744,
+         "y": 2.07004,
+         "z": 1.03502,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.78744,
+         "y": 1.03502,
+         "z": 0.0,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.78744,
+         "y": 1.03502,
+         "z": 2.07004,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.24758,
+         "z": 0.0,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.24758,
+         "z": 0.0,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.24758,
+         "z": 2.07004,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.24758,
+         "z": 2.07004,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.2826,
+         "z": 1.03502,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.2826,
+         "z": 1.03502,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.24758,
+         "z": 1.03502,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.2826,
+         "z": 0.0,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.2826,
+         "z": 2.07004,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.82246,
+         "z": 0.0,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.82246,
+         "z": 0.0,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.82246,
+         "z": 2.07004,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.82246,
+         "z": 2.07004,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.78744,
+         "z": 1.03502,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.78744,
+         "z": 1.03502,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.82246,
+         "z": 1.03502,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.78744,
+         "z": 0.0,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.78744,
+         "z": 2.07004,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.24758,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.0,
+         "z": 0.24758,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 2.07004,
+         "z": 0.24758,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 2.07004,
+         "z": 0.24758,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.03502,
+         "z": 1.2826,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.03502,
+         "z": 1.2826,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.0,
+         "z": 1.2826,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 2.07004,
+         "z": 1.2826,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.03502,
+         "z": 0.24758,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 1.82246,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.0,
+         "z": 1.82246,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 2.07004,
+         "z": 1.82246,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 2.07004,
+         "z": 1.82246,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.03502,
+         "z": 0.78744,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.03502,
+         "z": 0.78744,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.0,
+         "z": 0.78744,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 2.07004,
+         "z": 0.78744,
+         "radius": 0.07,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Zr]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.03502,
+         "z": 1.82246,
+         "radius": 0.07,
+         "segments": 16
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [O atoms]",
+      "visible": true,
+      "params": {
+       "color": "#FE0300",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.1211,
+         "y": 0.1211,
+         "z": 0.1211,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.1211,
+         "y": 1.15612,
+         "z": 1.15612,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.15612,
+         "y": 0.1211,
+         "z": 1.15612,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.15612,
+         "y": 1.15612,
+         "z": 0.1211,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.1211,
+         "y": 0.1211,
+         "z": 1.94894,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.1211,
+         "y": 1.15612,
+         "z": 0.91392,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.15612,
+         "y": 0.1211,
+         "z": 0.91392,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.15612,
+         "y": 1.15612,
+         "z": 1.94894,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.1211,
+         "y": 1.94894,
+         "z": 0.1211,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.1211,
+         "y": 0.91392,
+         "z": 1.15612,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.15612,
+         "y": 1.94894,
+         "z": 1.15612,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.15612,
+         "y": 0.91392,
+         "z": 0.1211,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.1211,
+         "y": 1.94894,
+         "z": 1.94894,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.1211,
+         "y": 0.91392,
+         "z": 0.91392,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.15612,
+         "y": 1.94894,
+         "z": 0.91392,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.15612,
+         "y": 0.91392,
+         "z": 1.94894,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.94894,
+         "y": 0.1211,
+         "z": 0.1211,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.94894,
+         "y": 1.15612,
+         "z": 1.15612,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.91392,
+         "y": 0.1211,
+         "z": 1.15612,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.91392,
+         "y": 1.15612,
+         "z": 0.1211,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.94894,
+         "y": 0.1211,
+         "z": 1.94894,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.94894,
+         "y": 1.15612,
+         "z": 0.91392,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.91392,
+         "y": 0.1211,
+         "z": 0.91392,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.91392,
+         "y": 1.15612,
+         "z": 1.94894,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.94894,
+         "y": 1.94894,
+         "z": 0.1211,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.94894,
+         "y": 0.91392,
+         "z": 1.15612,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.91392,
+         "y": 1.94894,
+         "z": 1.15612,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.91392,
+         "y": 0.91392,
+         "z": 0.1211,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.94894,
+         "y": 1.94894,
+         "z": 1.94894,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.94894,
+         "y": 0.91392,
+         "z": 0.91392,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.91392,
+         "y": 1.94894,
+         "z": 0.91392,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.91392,
+         "y": 0.91392,
+         "z": 1.94894,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.35874,
+         "y": 0.19231,
+         "z": 0.0,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.35874,
+         "y": 0.19231,
+         "z": 2.07004,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.35874,
+         "y": 1.22733,
+         "z": 1.03502,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.39376,
+         "y": 0.19231,
+         "z": 1.03502,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.39376,
+         "y": 1.22733,
+         "z": 0.0,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.39376,
+         "y": 1.22733,
+         "z": 2.07004,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.35874,
+         "y": 1.87773,
+         "z": 0.0,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.35874,
+         "y": 1.87773,
+         "z": 2.07004,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.35874,
+         "y": 0.84271,
+         "z": 1.03502,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.39376,
+         "y": 1.87773,
+         "z": 1.03502,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.39376,
+         "y": 0.84271,
+         "z": 0.0,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.39376,
+         "y": 0.84271,
+         "z": 2.07004,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.7113,
+         "y": 0.19231,
+         "z": 0.0,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.7113,
+         "y": 0.19231,
+         "z": 2.07004,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.7113,
+         "y": 1.22733,
+         "z": 1.03502,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.67628,
+         "y": 0.19231,
+         "z": 1.03502,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.67628,
+         "y": 1.22733,
+         "z": 0.0,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.67628,
+         "y": 1.22733,
+         "z": 2.07004,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.7113,
+         "y": 1.87773,
+         "z": 0.0,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.7113,
+         "y": 1.87773,
+         "z": 2.07004,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.7113,
+         "y": 0.84271,
+         "z": 1.03502,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.67628,
+         "y": 1.87773,
+         "z": 1.03502,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.67628,
+         "y": 0.84271,
+         "z": 0.0,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.67628,
+         "y": 0.84271,
+         "z": 2.07004,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.35874,
+         "y": 0.0,
+         "z": 0.19231,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.35874,
+         "y": 2.07004,
+         "z": 0.19231,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.35874,
+         "y": 1.03502,
+         "z": 1.22733,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.39376,
+         "y": 0.0,
+         "z": 1.22733,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.39376,
+         "y": 2.07004,
+         "z": 1.22733,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.39376,
+         "y": 1.03502,
+         "z": 0.19231,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.35874,
+         "y": 0.0,
+         "z": 1.87773,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.35874,
+         "y": 2.07004,
+         "z": 1.87773,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.35874,
+         "y": 1.03502,
+         "z": 0.84271,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.39376,
+         "y": 0.0,
+         "z": 0.84271,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.39376,
+         "y": 2.07004,
+         "z": 0.84271,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.39376,
+         "y": 1.03502,
+         "z": 1.87773,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.7113,
+         "y": 0.0,
+         "z": 0.19231,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.7113,
+         "y": 2.07004,
+         "z": 0.19231,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.7113,
+         "y": 1.03502,
+         "z": 1.22733,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.67628,
+         "y": 0.0,
+         "z": 1.22733,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.67628,
+         "y": 2.07004,
+         "z": 1.22733,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.67628,
+         "y": 1.03502,
+         "z": 0.19231,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.7113,
+         "y": 0.0,
+         "z": 1.87773,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.7113,
+         "y": 2.07004,
+         "z": 1.87773,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.7113,
+         "y": 1.03502,
+         "z": 0.84271,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.67628,
+         "y": 0.0,
+         "z": 0.84271,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.67628,
+         "y": 2.07004,
+         "z": 0.84271,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.67628,
+         "y": 1.03502,
+         "z": 1.87773,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.19231,
+         "y": 0.35874,
+         "z": 0.0,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.19231,
+         "y": 0.35874,
+         "z": 2.07004,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.19231,
+         "y": 1.39376,
+         "z": 1.03502,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.22733,
+         "y": 0.35874,
+         "z": 1.03502,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.22733,
+         "y": 1.39376,
+         "z": 0.0,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.22733,
+         "y": 1.39376,
+         "z": 2.07004,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.19231,
+         "y": 1.7113,
+         "z": 0.0,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.19231,
+         "y": 1.7113,
+         "z": 2.07004,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.19231,
+         "y": 0.67628,
+         "z": 1.03502,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.22733,
+         "y": 1.7113,
+         "z": 1.03502,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.22733,
+         "y": 0.67628,
+         "z": 0.0,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.22733,
+         "y": 0.67628,
+         "z": 2.07004,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.87773,
+         "y": 0.35874,
+         "z": 0.0,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.87773,
+         "y": 0.35874,
+         "z": 2.07004,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.87773,
+         "y": 1.39376,
+         "z": 1.03502,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.84271,
+         "y": 0.35874,
+         "z": 1.03502,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.84271,
+         "y": 1.39376,
+         "z": 0.0,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.84271,
+         "y": 1.39376,
+         "z": 2.07004,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.87773,
+         "y": 1.7113,
+         "z": 0.0,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.87773,
+         "y": 1.7113,
+         "z": 2.07004,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.87773,
+         "y": 0.67628,
+         "z": 1.03502,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.84271,
+         "y": 1.7113,
+         "z": 1.03502,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.84271,
+         "y": 0.67628,
+         "z": 0.0,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.84271,
+         "y": 0.67628,
+         "z": 2.07004,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.19231,
+         "y": 0.0,
+         "z": 0.35874,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.19231,
+         "y": 2.07004,
+         "z": 0.35874,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.19231,
+         "y": 1.03502,
+         "z": 1.39376,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.22733,
+         "y": 0.0,
+         "z": 1.39376,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.22733,
+         "y": 2.07004,
+         "z": 1.39376,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.22733,
+         "y": 1.03502,
+         "z": 0.35874,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.19231,
+         "y": 0.0,
+         "z": 1.7113,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.19231,
+         "y": 2.07004,
+         "z": 1.7113,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.19231,
+         "y": 1.03502,
+         "z": 0.67628,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.22733,
+         "y": 0.0,
+         "z": 0.67628,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.22733,
+         "y": 2.07004,
+         "z": 0.67628,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.22733,
+         "y": 1.03502,
+         "z": 1.7113,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.87773,
+         "y": 0.0,
+         "z": 0.35874,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.87773,
+         "y": 2.07004,
+         "z": 0.35874,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.87773,
+         "y": 1.03502,
+         "z": 1.39376,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.84271,
+         "y": 0.0,
+         "z": 1.39376,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.84271,
+         "y": 2.07004,
+         "z": 1.39376,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.84271,
+         "y": 1.03502,
+         "z": 0.35874,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.87773,
+         "y": 0.0,
+         "z": 1.7113,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.87773,
+         "y": 2.07004,
+         "z": 1.7113,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.87773,
+         "y": 1.03502,
+         "z": 0.67628,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.84271,
+         "y": 0.0,
+         "z": 0.67628,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.84271,
+         "y": 2.07004,
+         "z": 0.67628,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.84271,
+         "y": 1.03502,
+         "z": 1.7113,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.35874,
+         "z": 0.19231,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.35874,
+         "z": 0.19231,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.39376,
+         "z": 1.22733,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.39376,
+         "z": 1.22733,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.35874,
+         "z": 1.22733,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.39376,
+         "z": 0.19231,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.35874,
+         "z": 1.87773,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.35874,
+         "z": 1.87773,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.39376,
+         "z": 0.84271,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.39376,
+         "z": 0.84271,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.35874,
+         "z": 0.84271,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.39376,
+         "z": 1.87773,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.7113,
+         "z": 0.19231,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.7113,
+         "z": 0.19231,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.67628,
+         "z": 1.22733,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.67628,
+         "z": 1.22733,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.7113,
+         "z": 1.22733,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.67628,
+         "z": 0.19231,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.7113,
+         "z": 1.87773,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.7113,
+         "z": 1.87773,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.67628,
+         "z": 0.84271,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.67628,
+         "z": 0.84271,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.7113,
+         "z": 0.84271,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.67628,
+         "z": 1.87773,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.19231,
+         "z": 0.35874,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.19231,
+         "z": 0.35874,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.22733,
+         "z": 1.39376,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.22733,
+         "z": 1.39376,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.19231,
+         "z": 1.39376,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.22733,
+         "z": 0.35874,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.19231,
+         "z": 1.7113,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.19231,
+         "z": 1.7113,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.22733,
+         "z": 0.67628,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.22733,
+         "z": 0.67628,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.19231,
+         "z": 0.67628,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.22733,
+         "z": 1.7113,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.87773,
+         "z": 0.35874,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.87773,
+         "z": 0.35874,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.84271,
+         "z": 1.39376,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.84271,
+         "z": 1.39376,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.87773,
+         "z": 1.39376,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.84271,
+         "z": 0.35874,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.87773,
+         "z": 1.7113,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.87773,
+         "z": 1.7113,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.84271,
+         "z": 0.67628,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.84271,
+         "z": 0.67628,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.87773,
+         "z": 0.67628,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.84271,
+         "z": 1.7113,
+         "radius": 0.0264,
+         "segments": 16
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [C atoms]",
+      "visible": true,
+      "params": {
+       "color": "#814929",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.31692,
+         "y": 0.31692,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.31692,
+         "y": 0.31692,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.31692,
+         "y": 1.35194,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.35194,
+         "y": 0.31692,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.35194,
+         "y": 1.35194,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.35194,
+         "y": 1.35194,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.31692,
+         "y": 1.75312,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.31692,
+         "y": 1.75312,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.31692,
+         "y": 0.7181,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.35194,
+         "y": 1.75312,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.35194,
+         "y": 0.7181,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.35194,
+         "y": 0.7181,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.75312,
+         "y": 0.31692,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.75312,
+         "y": 0.31692,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.75312,
+         "y": 1.35194,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.7181,
+         "y": 0.31692,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.7181,
+         "y": 1.35194,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.7181,
+         "y": 1.35194,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.75312,
+         "y": 1.75312,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.75312,
+         "y": 1.75312,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.75312,
+         "y": 0.7181,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.7181,
+         "y": 1.75312,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.7181,
+         "y": 0.7181,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.7181,
+         "y": 0.7181,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.31692,
+         "y": 0.0,
+         "z": 0.31692,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.31692,
+         "y": 2.07004,
+         "z": 0.31692,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.31692,
+         "y": 1.03502,
+         "z": 1.35194,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.35194,
+         "y": 0.0,
+         "z": 1.35194,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.35194,
+         "y": 2.07004,
+         "z": 1.35194,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.35194,
+         "y": 1.03502,
+         "z": 0.31692,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.31692,
+         "y": 0.0,
+         "z": 1.75312,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.31692,
+         "y": 2.07004,
+         "z": 1.75312,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.31692,
+         "y": 1.03502,
+         "z": 0.7181,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.35194,
+         "y": 0.0,
+         "z": 0.7181,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.35194,
+         "y": 2.07004,
+         "z": 0.7181,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.35194,
+         "y": 1.03502,
+         "z": 1.75312,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.75312,
+         "y": 0.0,
+         "z": 0.31692,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.75312,
+         "y": 2.07004,
+         "z": 0.31692,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.75312,
+         "y": 1.03502,
+         "z": 1.35194,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.7181,
+         "y": 0.0,
+         "z": 1.35194,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.7181,
+         "y": 2.07004,
+         "z": 1.35194,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.7181,
+         "y": 1.03502,
+         "z": 0.31692,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.75312,
+         "y": 0.0,
+         "z": 1.75312,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.75312,
+         "y": 2.07004,
+         "z": 1.75312,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.75312,
+         "y": 1.03502,
+         "z": 0.7181,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.7181,
+         "y": 0.0,
+         "z": 0.7181,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.7181,
+         "y": 2.07004,
+         "z": 0.7181,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.7181,
+         "y": 1.03502,
+         "z": 1.75312,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.31692,
+         "z": 0.31692,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.31692,
+         "z": 0.31692,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.35194,
+         "z": 1.35194,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.35194,
+         "z": 1.35194,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.31692,
+         "z": 1.35194,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.35194,
+         "z": 0.31692,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.31692,
+         "z": 1.75312,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.31692,
+         "z": 1.75312,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.35194,
+         "z": 0.7181,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.35194,
+         "z": 0.7181,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.31692,
+         "z": 0.7181,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.35194,
+         "z": 1.75312,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.75312,
+         "z": 0.31692,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.75312,
+         "z": 0.31692,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.7181,
+         "z": 1.35194,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.7181,
+         "z": 1.35194,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.75312,
+         "z": 1.35194,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.7181,
+         "z": 0.31692,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.75312,
+         "z": 1.75312,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.75312,
+         "z": 1.75312,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.7181,
+         "z": 0.7181,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.7181,
+         "z": 0.7181,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.75312,
+         "z": 0.7181,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.7181,
+         "z": 1.75312,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.42125,
+         "y": 0.42125,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.42125,
+         "y": 0.42125,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.42125,
+         "y": 1.45627,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.45627,
+         "y": 0.42125,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.45627,
+         "y": 1.45627,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.45627,
+         "y": 1.45627,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.42125,
+         "y": 1.64879,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.42125,
+         "y": 1.64879,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.42125,
+         "y": 0.61377,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.45627,
+         "y": 1.64879,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.45627,
+         "y": 0.61377,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.45627,
+         "y": 0.61377,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.64879,
+         "y": 0.42125,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.64879,
+         "y": 0.42125,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.64879,
+         "y": 1.45627,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.61377,
+         "y": 0.42125,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.61377,
+         "y": 1.45627,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.61377,
+         "y": 1.45627,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.64879,
+         "y": 1.64879,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.64879,
+         "y": 1.64879,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.64879,
+         "y": 0.61377,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.61377,
+         "y": 1.64879,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.61377,
+         "y": 0.61377,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.61377,
+         "y": 0.61377,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.42125,
+         "y": 0.0,
+         "z": 0.42125,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.42125,
+         "y": 2.07004,
+         "z": 0.42125,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.42125,
+         "y": 1.03502,
+         "z": 1.45627,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.45627,
+         "y": 0.0,
+         "z": 1.45627,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.45627,
+         "y": 2.07004,
+         "z": 1.45627,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.45627,
+         "y": 1.03502,
+         "z": 0.42125,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.42125,
+         "y": 0.0,
+         "z": 1.64879,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.42125,
+         "y": 2.07004,
+         "z": 1.64879,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.42125,
+         "y": 1.03502,
+         "z": 0.61377,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.45627,
+         "y": 0.0,
+         "z": 0.61377,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.45627,
+         "y": 2.07004,
+         "z": 0.61377,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.45627,
+         "y": 1.03502,
+         "z": 1.64879,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.64879,
+         "y": 0.0,
+         "z": 0.42125,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.64879,
+         "y": 2.07004,
+         "z": 0.42125,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.64879,
+         "y": 1.03502,
+         "z": 1.45627,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.61377,
+         "y": 0.0,
+         "z": 1.45627,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.61377,
+         "y": 2.07004,
+         "z": 1.45627,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.61377,
+         "y": 1.03502,
+         "z": 0.42125,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.64879,
+         "y": 0.0,
+         "z": 1.64879,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.64879,
+         "y": 2.07004,
+         "z": 1.64879,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.64879,
+         "y": 1.03502,
+         "z": 0.61377,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.61377,
+         "y": 0.0,
+         "z": 0.61377,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.61377,
+         "y": 2.07004,
+         "z": 0.61377,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.61377,
+         "y": 1.03502,
+         "z": 1.64879,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.42125,
+         "z": 0.42125,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.42125,
+         "z": 0.42125,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.45627,
+         "z": 1.45627,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.45627,
+         "z": 1.45627,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.42125,
+         "z": 1.45627,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.45627,
+         "z": 0.42125,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.42125,
+         "z": 1.64879,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.42125,
+         "z": 1.64879,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.45627,
+         "z": 0.61377,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.45627,
+         "z": 0.61377,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.42125,
+         "z": 0.61377,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.45627,
+         "z": 1.64879,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.64879,
+         "z": 0.42125,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.64879,
+         "z": 0.42125,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.61377,
+         "z": 1.45627,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.61377,
+         "z": 1.45627,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.64879,
+         "z": 1.45627,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.61377,
+         "z": 0.42125,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.64879,
+         "z": 1.64879,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.64879,
+         "z": 1.64879,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.61377,
+         "z": 0.61377,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.61377,
+         "z": 0.61377,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.64879,
+         "z": 0.61377,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.61377,
+         "z": 1.64879,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.55622,
+         "y": 0.38441,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.55622,
+         "y": 0.38441,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.55622,
+         "y": 1.41943,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.59124,
+         "y": 0.38441,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.59124,
+         "y": 1.41943,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.59124,
+         "y": 1.41943,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.55622,
+         "y": 1.68563,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.55622,
+         "y": 1.68563,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.55622,
+         "y": 0.65061,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.59124,
+         "y": 1.68563,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.59124,
+         "y": 0.65061,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.59124,
+         "y": 0.65061,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.51382,
+         "y": 0.38441,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.51382,
+         "y": 0.38441,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.51382,
+         "y": 1.41943,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.4788,
+         "y": 0.38441,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.4788,
+         "y": 1.41943,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.4788,
+         "y": 1.41943,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.51382,
+         "y": 1.68563,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.51382,
+         "y": 1.68563,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.51382,
+         "y": 0.65061,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.4788,
+         "y": 1.68563,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.4788,
+         "y": 0.65061,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.4788,
+         "y": 0.65061,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.55622,
+         "y": 0.0,
+         "z": 0.38441,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.55622,
+         "y": 2.07004,
+         "z": 0.38441,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.55622,
+         "y": 1.03502,
+         "z": 1.41943,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.59124,
+         "y": 0.0,
+         "z": 1.41943,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.59124,
+         "y": 2.07004,
+         "z": 1.41943,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.59124,
+         "y": 1.03502,
+         "z": 0.38441,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.55622,
+         "y": 0.0,
+         "z": 1.68563,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.55622,
+         "y": 2.07004,
+         "z": 1.68563,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.55622,
+         "y": 1.03502,
+         "z": 0.65061,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.59124,
+         "y": 0.0,
+         "z": 0.65061,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.59124,
+         "y": 2.07004,
+         "z": 0.65061,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.59124,
+         "y": 1.03502,
+         "z": 1.68563,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.51382,
+         "y": 0.0,
+         "z": 0.38441,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.51382,
+         "y": 2.07004,
+         "z": 0.38441,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.51382,
+         "y": 1.03502,
+         "z": 1.41943,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.4788,
+         "y": 0.0,
+         "z": 1.41943,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.4788,
+         "y": 2.07004,
+         "z": 1.41943,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.4788,
+         "y": 1.03502,
+         "z": 0.38441,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.51382,
+         "y": 0.0,
+         "z": 1.68563,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.51382,
+         "y": 2.07004,
+         "z": 1.68563,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.51382,
+         "y": 1.03502,
+         "z": 0.65061,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.4788,
+         "y": 0.0,
+         "z": 0.65061,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.4788,
+         "y": 2.07004,
+         "z": 0.65061,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.4788,
+         "y": 1.03502,
+         "z": 1.68563,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.38441,
+         "y": 0.55622,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.38441,
+         "y": 0.55622,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.38441,
+         "y": 1.59124,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.41943,
+         "y": 0.55622,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.41943,
+         "y": 1.59124,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.41943,
+         "y": 1.59124,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.38441,
+         "y": 1.51382,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.38441,
+         "y": 1.51382,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.38441,
+         "y": 0.4788,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.41943,
+         "y": 1.51382,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.41943,
+         "y": 0.4788,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.41943,
+         "y": 0.4788,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.68563,
+         "y": 0.55622,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.68563,
+         "y": 0.55622,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.68563,
+         "y": 1.59124,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.65061,
+         "y": 0.55622,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.65061,
+         "y": 1.59124,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.65061,
+         "y": 1.59124,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.68563,
+         "y": 1.51382,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.68563,
+         "y": 1.51382,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.68563,
+         "y": 0.4788,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.65061,
+         "y": 1.51382,
+         "z": 1.03502,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.65061,
+         "y": 0.4788,
+         "z": 0.0,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.65061,
+         "y": 0.4788,
+         "z": 2.07004,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.38441,
+         "y": 0.0,
+         "z": 0.55622,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.38441,
+         "y": 2.07004,
+         "z": 0.55622,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.38441,
+         "y": 1.03502,
+         "z": 1.59124,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.41943,
+         "y": 0.0,
+         "z": 1.59124,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.41943,
+         "y": 2.07004,
+         "z": 1.59124,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.41943,
+         "y": 1.03502,
+         "z": 0.55622,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.38441,
+         "y": 0.0,
+         "z": 1.51382,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.38441,
+         "y": 2.07004,
+         "z": 1.51382,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.38441,
+         "y": 1.03502,
+         "z": 0.4788,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.41943,
+         "y": 0.0,
+         "z": 0.4788,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.41943,
+         "y": 2.07004,
+         "z": 0.4788,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.41943,
+         "y": 1.03502,
+         "z": 1.51382,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.68563,
+         "y": 0.0,
+         "z": 0.55622,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.68563,
+         "y": 2.07004,
+         "z": 0.55622,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.68563,
+         "y": 1.03502,
+         "z": 1.59124,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.65061,
+         "y": 0.0,
+         "z": 1.59124,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.65061,
+         "y": 2.07004,
+         "z": 1.59124,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.65061,
+         "y": 1.03502,
+         "z": 0.55622,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.68563,
+         "y": 0.0,
+         "z": 1.51382,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.68563,
+         "y": 2.07004,
+         "z": 1.51382,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.68563,
+         "y": 1.03502,
+         "z": 0.4788,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.65061,
+         "y": 0.0,
+         "z": 0.4788,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.65061,
+         "y": 2.07004,
+         "z": 0.4788,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.65061,
+         "y": 1.03502,
+         "z": 1.51382,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.55622,
+         "z": 0.38441,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.55622,
+         "z": 0.38441,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.59124,
+         "z": 1.41943,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.59124,
+         "z": 1.41943,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.55622,
+         "z": 1.41943,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.59124,
+         "z": 0.38441,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.55622,
+         "z": 1.68563,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.55622,
+         "z": 1.68563,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.59124,
+         "z": 0.65061,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.59124,
+         "z": 0.65061,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.55622,
+         "z": 0.65061,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.59124,
+         "z": 1.68563,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.51382,
+         "z": 0.38441,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.51382,
+         "z": 0.38441,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.4788,
+         "z": 1.41943,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.4788,
+         "z": 1.41943,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.51382,
+         "z": 1.41943,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.4788,
+         "z": 0.38441,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.51382,
+         "z": 1.68563,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.51382,
+         "z": 1.68563,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.4788,
+         "z": 0.65061,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.4788,
+         "z": 0.65061,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.51382,
+         "z": 0.65061,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.4788,
+         "z": 1.68563,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.38441,
+         "z": 0.55622,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.38441,
+         "z": 0.55622,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.41943,
+         "z": 1.59124,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.41943,
+         "z": 1.59124,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.38441,
+         "z": 1.59124,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.41943,
+         "z": 0.55622,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.38441,
+         "z": 1.51382,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.38441,
+         "z": 1.51382,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.41943,
+         "z": 0.4788,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.41943,
+         "z": 0.4788,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.38441,
+         "z": 0.4788,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.41943,
+         "z": 1.51382,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.68563,
+         "z": 0.55622,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.68563,
+         "z": 0.55622,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.65061,
+         "z": 1.59124,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.65061,
+         "z": 1.59124,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.68563,
+         "z": 1.59124,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.65061,
+         "z": 0.55622,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.68563,
+         "z": 1.51382,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 1.68563,
+         "z": 1.51382,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.65061,
+         "z": 0.4788,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 2.07004,
+         "y": 0.65061,
+         "z": 0.4788,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 1.68563,
+         "z": 0.4788,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [C]",
+        "visible": true,
+        "params": {
+         "x": 1.03502,
+         "y": 0.65061,
+         "z": 1.51382,
+         "radius": 0.0304,
+         "segments": 16
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [ZrO8 cubes]",
+      "visible": true,
+      "params": {
+       "color": "#00FF00",
+       "alpha": 0.55,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.35874,
+           0.19231,
+           0.0
+          ],
+          [
+           0.35874,
+           0.0,
+           -0.19231
+          ],
+          [
+           0.1211,
+           0.1211,
+           -0.1211
+          ],
+          [
+           0.35874,
+           0.0,
+           0.19231
+          ],
+          [
+           0.35874,
+           -0.19231,
+           0.0
+          ],
+          [
+           0.1211,
+           -0.1211,
+           0.1211
+          ],
+          [
+           0.1211,
+           0.1211,
+           0.1211
+          ],
+          [
+           0.1211,
+           -0.1211,
+           -0.1211
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           1,
+           3,
+           0
+          ],
+          [
+           1,
+           4,
+           3
+          ],
+          [
+           3,
+           4,
+           5
+          ],
+          [
+           0,
+           6,
+           2
+          ],
+          [
+           2,
+           6,
+           5
+          ],
+          [
+           5,
+           6,
+           3
+          ],
+          [
+           3,
+           6,
+           0
+          ],
+          [
+           5,
+           7,
+           2
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           4
+          ],
+          [
+           4,
+           7,
+           5
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.35874,
+           0.84271,
+           1.03502
+          ],
+          [
+           0.1211,
+           0.91392,
+           0.91392
+          ],
+          [
+           0.35874,
+           1.03502,
+           0.84271
+          ],
+          [
+           0.35874,
+           1.22733,
+           1.03502
+          ],
+          [
+           0.35874,
+           1.03502,
+           1.22733
+          ],
+          [
+           0.1211,
+           1.15612,
+           1.15612
+          ],
+          [
+           0.1211,
+           0.91392,
+           1.15612
+          ],
+          [
+           0.1211,
+           1.15612,
+           0.91392
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           0,
+           3,
+           2
+          ],
+          [
+           0,
+           4,
+           3
+          ],
+          [
+           3,
+           4,
+           5
+          ],
+          [
+           5,
+           6,
+           1
+          ],
+          [
+           1,
+           6,
+           0
+          ],
+          [
+           0,
+           6,
+           4
+          ],
+          [
+           4,
+           6,
+           5
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           5
+          ],
+          [
+           5,
+           7,
+           3
+          ],
+          [
+           3,
+           7,
+           2
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           1.39376,
+           -0.19231,
+           1.03502
+          ],
+          [
+           1.39376,
+           0.0,
+           1.22733
+          ],
+          [
+           1.15612,
+           -0.1211,
+           1.15612
+          ],
+          [
+           1.39376,
+           0.0,
+           0.84271
+          ],
+          [
+           1.39376,
+           0.19231,
+           1.03502
+          ],
+          [
+           1.15612,
+           0.1211,
+           0.91392
+          ],
+          [
+           1.15612,
+           -0.1211,
+           0.91392
+          ],
+          [
+           1.15612,
+           0.1211,
+           1.15612
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           1,
+           3,
+           0
+          ],
+          [
+           1,
+           4,
+           3
+          ],
+          [
+           3,
+           4,
+           5
+          ],
+          [
+           0,
+           6,
+           2
+          ],
+          [
+           2,
+           6,
+           5
+          ],
+          [
+           5,
+           6,
+           3
+          ],
+          [
+           3,
+           6,
+           0
+          ],
+          [
+           5,
+           7,
+           2
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           4
+          ],
+          [
+           4,
+           7,
+           5
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           1.39376,
+           1.03502,
+           0.19231
+          ],
+          [
+           1.39376,
+           1.22733,
+           0.0
+          ],
+          [
+           1.15612,
+           1.15612,
+           0.1211
+          ],
+          [
+           1.39376,
+           1.03502,
+           -0.19231
+          ],
+          [
+           1.15612,
+           0.91392,
+           -0.1211
+          ],
+          [
+           1.39376,
+           0.84271,
+           0.0
+          ],
+          [
+           1.15612,
+           0.91392,
+           0.1211
+          ],
+          [
+           1.15612,
+           1.15612,
+           -0.1211
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           1,
+           3,
+           0
+          ],
+          [
+           4,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           0
+          ],
+          [
+           0,
+           6,
+           2
+          ],
+          [
+           2,
+           6,
+           4
+          ],
+          [
+           4,
+           6,
+           5
+          ],
+          [
+           5,
+           6,
+           0
+          ],
+          [
+           4,
+           7,
+           2
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           3
+          ],
+          [
+           3,
+           7,
+           4
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           1.7113,
+           0.0,
+           0.19231
+          ],
+          [
+           1.7113,
+           -0.19231,
+           0.0
+          ],
+          [
+           1.94894,
+           -0.1211,
+           0.1211
+          ],
+          [
+           1.7113,
+           0.19231,
+           0.0
+          ],
+          [
+           1.7113,
+           0.0,
+           -0.19231
+          ],
+          [
+           1.94894,
+           0.1211,
+           -0.1211
+          ],
+          [
+           1.94894,
+           0.1211,
+           0.1211
+          ],
+          [
+           1.94894,
+           -0.1211,
+           -0.1211
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           1,
+           3,
+           0
+          ],
+          [
+           1,
+           4,
+           3
+          ],
+          [
+           3,
+           4,
+           5
+          ],
+          [
+           0,
+           6,
+           2
+          ],
+          [
+           2,
+           6,
+           5
+          ],
+          [
+           5,
+           6,
+           3
+          ],
+          [
+           3,
+           6,
+           0
+          ],
+          [
+           5,
+           7,
+           2
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           4
+          ],
+          [
+           4,
+           7,
+           5
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           1.7113,
+           0.84271,
+           1.03502
+          ],
+          [
+           1.7113,
+           1.03502,
+           0.84271
+          ],
+          [
+           1.94894,
+           0.91392,
+           0.91392
+          ],
+          [
+           1.7113,
+           1.22733,
+           1.03502
+          ],
+          [
+           1.94894,
+           1.15612,
+           1.15612
+          ],
+          [
+           1.7113,
+           1.03502,
+           1.22733
+          ],
+          [
+           1.94894,
+           0.91392,
+           1.15612
+          ],
+          [
+           1.94894,
+           1.15612,
+           0.91392
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           1,
+           3,
+           0
+          ],
+          [
+           4,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           0
+          ],
+          [
+           0,
+           6,
+           2
+          ],
+          [
+           2,
+           6,
+           4
+          ],
+          [
+           4,
+           6,
+           5
+          ],
+          [
+           5,
+           6,
+           0
+          ],
+          [
+           4,
+           7,
+           2
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           3
+          ],
+          [
+           3,
+           7,
+           4
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.67628,
+           -0.19231,
+           1.03502
+          ],
+          [
+           0.67628,
+           0.0,
+           0.84271
+          ],
+          [
+           0.91392,
+           -0.1211,
+           0.91392
+          ],
+          [
+           0.67628,
+           0.19231,
+           1.03502
+          ],
+          [
+           0.91392,
+           0.1211,
+           1.15612
+          ],
+          [
+           0.67628,
+           0.0,
+           1.22733
+          ],
+          [
+           0.91392,
+           -0.1211,
+           1.15612
+          ],
+          [
+           0.91392,
+           0.1211,
+           0.91392
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           1,
+           3,
+           0
+          ],
+          [
+           4,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           0
+          ],
+          [
+           0,
+           6,
+           2
+          ],
+          [
+           2,
+           6,
+           4
+          ],
+          [
+           4,
+           6,
+           5
+          ],
+          [
+           5,
+           6,
+           0
+          ],
+          [
+           4,
+           7,
+           2
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           3
+          ],
+          [
+           3,
+           7,
+           4
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.67628,
+           1.03502,
+           -0.19231
+          ],
+          [
+           0.67628,
+           1.22733,
+           0.0
+          ],
+          [
+           0.91392,
+           1.15612,
+           -0.1211
+          ],
+          [
+           0.67628,
+           0.84271,
+           0.0
+          ],
+          [
+           0.67628,
+           1.03502,
+           0.19231
+          ],
+          [
+           0.91392,
+           0.91392,
+           0.1211
+          ],
+          [
+           0.91392,
+           0.91392,
+           -0.1211
+          ],
+          [
+           0.91392,
+           1.15612,
+           0.1211
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           1,
+           3,
+           0
+          ],
+          [
+           1,
+           4,
+           3
+          ],
+          [
+           3,
+           4,
+           5
+          ],
+          [
+           0,
+           6,
+           2
+          ],
+          [
+           2,
+           6,
+           5
+          ],
+          [
+           5,
+           6,
+           3
+          ],
+          [
+           3,
+           6,
+           0
+          ],
+          [
+           5,
+           7,
+           2
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           4
+          ],
+          [
+           4,
+           7,
+           5
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           -0.19231,
+           0.35874,
+           0.0
+          ],
+          [
+           0.0,
+           0.35874,
+           -0.19231
+          ],
+          [
+           -0.1211,
+           0.1211,
+           -0.1211
+          ],
+          [
+           0.19231,
+           0.35874,
+           0.0
+          ],
+          [
+           0.1211,
+           0.1211,
+           0.1211
+          ],
+          [
+           0.0,
+           0.35874,
+           0.19231
+          ],
+          [
+           -0.1211,
+           0.1211,
+           0.1211
+          ],
+          [
+           0.1211,
+           0.1211,
+           -0.1211
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           1,
+           3,
+           0
+          ],
+          [
+           4,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           0
+          ],
+          [
+           0,
+           6,
+           2
+          ],
+          [
+           2,
+           6,
+           4
+          ],
+          [
+           4,
+           6,
+           5
+          ],
+          [
+           5,
+           6,
+           0
+          ],
+          [
+           4,
+           7,
+           2
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           3
+          ],
+          [
+           3,
+           7,
+           4
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           -0.19231,
+           1.39376,
+           1.03502
+          ],
+          [
+           0.0,
+           1.39376,
+           0.84271
+          ],
+          [
+           -0.1211,
+           1.15612,
+           0.91392
+          ],
+          [
+           0.19231,
+           1.39376,
+           1.03502
+          ],
+          [
+           0.1211,
+           1.15612,
+           1.15612
+          ],
+          [
+           0.0,
+           1.39376,
+           1.22733
+          ],
+          [
+           -0.1211,
+           1.15612,
+           1.15612
+          ],
+          [
+           0.1211,
+           1.15612,
+           0.91392
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           1,
+           3,
+           0
+          ],
+          [
+           4,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           0
+          ],
+          [
+           0,
+           6,
+           2
+          ],
+          [
+           2,
+           6,
+           4
+          ],
+          [
+           4,
+           6,
+           5
+          ],
+          [
+           5,
+           6,
+           0
+          ],
+          [
+           4,
+           7,
+           2
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           3
+          ],
+          [
+           3,
+           7,
+           4
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.84271,
+           0.35874,
+           1.03502
+          ],
+          [
+           0.91392,
+           0.1211,
+           1.15612
+          ],
+          [
+           1.03502,
+           0.35874,
+           1.22733
+          ],
+          [
+           1.03502,
+           0.35874,
+           0.84271
+          ],
+          [
+           1.15612,
+           0.1211,
+           0.91392
+          ],
+          [
+           1.22733,
+           0.35874,
+           1.03502
+          ],
+          [
+           0.91392,
+           0.1211,
+           0.91392
+          ],
+          [
+           1.15612,
+           0.1211,
+           1.15612
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           0,
+           3,
+           2
+          ],
+          [
+           4,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           2
+          ],
+          [
+           4,
+           6,
+           1
+          ],
+          [
+           1,
+           6,
+           0
+          ],
+          [
+           0,
+           6,
+           3
+          ],
+          [
+           3,
+           6,
+           4
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           4
+          ],
+          [
+           4,
+           7,
+           5
+          ],
+          [
+           5,
+           7,
+           2
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           1.03502,
+           1.39376,
+           0.19231
+          ],
+          [
+           0.84271,
+           1.39376,
+           0.0
+          ],
+          [
+           0.91392,
+           1.15612,
+           0.1211
+          ],
+          [
+           1.03502,
+           1.39376,
+           -0.19231
+          ],
+          [
+           1.15612,
+           1.15612,
+           -0.1211
+          ],
+          [
+           1.22733,
+           1.39376,
+           0.0
+          ],
+          [
+           1.15612,
+           1.15612,
+           0.1211
+          ],
+          [
+           0.91392,
+           1.15612,
+           -0.1211
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           1,
+           3,
+           0
+          ],
+          [
+           4,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           0
+          ],
+          [
+           0,
+           6,
+           2
+          ],
+          [
+           2,
+           6,
+           4
+          ],
+          [
+           4,
+           6,
+           5
+          ],
+          [
+           5,
+           6,
+           0
+          ],
+          [
+           4,
+           7,
+           2
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           3
+          ],
+          [
+           3,
+           7,
+           4
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.19231,
+           1.7113,
+           0.0
+          ],
+          [
+           0.0,
+           1.7113,
+           -0.19231
+          ],
+          [
+           0.1211,
+           1.94894,
+           -0.1211
+          ],
+          [
+           -0.19231,
+           1.7113,
+           0.0
+          ],
+          [
+           -0.1211,
+           1.94894,
+           0.1211
+          ],
+          [
+           0.0,
+           1.7113,
+           0.19231
+          ],
+          [
+           0.1211,
+           1.94894,
+           0.1211
+          ],
+          [
+           -0.1211,
+           1.94894,
+           -0.1211
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           1,
+           3,
+           0
+          ],
+          [
+           4,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           0
+          ],
+          [
+           0,
+           6,
+           2
+          ],
+          [
+           2,
+           6,
+           4
+          ],
+          [
+           4,
+           6,
+           5
+          ],
+          [
+           5,
+           6,
+           0
+          ],
+          [
+           4,
+           7,
+           2
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           3
+          ],
+          [
+           3,
+           7,
+           4
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.19231,
+           0.67628,
+           1.03502
+          ],
+          [
+           0.0,
+           0.67628,
+           0.84271
+          ],
+          [
+           0.1211,
+           0.91392,
+           0.91392
+          ],
+          [
+           -0.19231,
+           0.67628,
+           1.03502
+          ],
+          [
+           -0.1211,
+           0.91392,
+           1.15612
+          ],
+          [
+           0.0,
+           0.67628,
+           1.22733
+          ],
+          [
+           0.1211,
+           0.91392,
+           1.15612
+          ],
+          [
+           -0.1211,
+           0.91392,
+           0.91392
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           1,
+           3,
+           0
+          ],
+          [
+           4,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           0
+          ],
+          [
+           0,
+           6,
+           2
+          ],
+          [
+           2,
+           6,
+           4
+          ],
+          [
+           4,
+           6,
+           5
+          ],
+          [
+           5,
+           6,
+           0
+          ],
+          [
+           4,
+           7,
+           2
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           3
+          ],
+          [
+           3,
+           7,
+           4
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           1.22733,
+           1.7113,
+           1.03502
+          ],
+          [
+           1.03502,
+           1.7113,
+           0.84271
+          ],
+          [
+           1.15612,
+           1.94894,
+           0.91392
+          ],
+          [
+           0.84271,
+           1.7113,
+           1.03502
+          ],
+          [
+           0.91392,
+           1.94894,
+           1.15612
+          ],
+          [
+           1.03502,
+           1.7113,
+           1.22733
+          ],
+          [
+           1.15612,
+           1.94894,
+           1.15612
+          ],
+          [
+           0.91392,
+           1.94894,
+           0.91392
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           1,
+           3,
+           0
+          ],
+          [
+           4,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           0
+          ],
+          [
+           0,
+           6,
+           2
+          ],
+          [
+           2,
+           6,
+           4
+          ],
+          [
+           4,
+           6,
+           5
+          ],
+          [
+           5,
+           6,
+           0
+          ],
+          [
+           4,
+           7,
+           2
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           3
+          ],
+          [
+           3,
+           7,
+           4
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           1.03502,
+           0.67628,
+           0.19231
+          ],
+          [
+           0.91392,
+           0.91392,
+           0.1211
+          ],
+          [
+           0.84271,
+           0.67628,
+           0.0
+          ],
+          [
+           1.22733,
+           0.67628,
+           0.0
+          ],
+          [
+           1.15612,
+           0.91392,
+           -0.1211
+          ],
+          [
+           1.03502,
+           0.67628,
+           -0.19231
+          ],
+          [
+           1.15612,
+           0.91392,
+           0.1211
+          ],
+          [
+           0.91392,
+           0.91392,
+           -0.1211
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           0,
+           3,
+           2
+          ],
+          [
+           4,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           2
+          ],
+          [
+           4,
+           6,
+           1
+          ],
+          [
+           1,
+           6,
+           0
+          ],
+          [
+           0,
+           6,
+           3
+          ],
+          [
+           3,
+           6,
+           4
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           4
+          ],
+          [
+           4,
+           7,
+           5
+          ],
+          [
+           5,
+           7,
+           2
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           -0.19231,
+           0.0,
+           0.35874
+          ],
+          [
+           0.0,
+           0.19231,
+           0.35874
+          ],
+          [
+           -0.1211,
+           0.1211,
+           0.1211
+          ],
+          [
+           0.19231,
+           0.0,
+           0.35874
+          ],
+          [
+           0.1211,
+           -0.1211,
+           0.1211
+          ],
+          [
+           0.0,
+           -0.19231,
+           0.35874
+          ],
+          [
+           -0.1211,
+           -0.1211,
+           0.1211
+          ],
+          [
+           0.1211,
+           0.1211,
+           0.1211
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           1,
+           3,
+           0
+          ],
+          [
+           4,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           0
+          ],
+          [
+           0,
+           6,
+           2
+          ],
+          [
+           2,
+           6,
+           4
+          ],
+          [
+           4,
+           6,
+           5
+          ],
+          [
+           5,
+           6,
+           0
+          ],
+          [
+           4,
+           7,
+           2
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           3
+          ],
+          [
+           3,
+           7,
+           4
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           -0.19231,
+           1.03502,
+           1.39376
+          ],
+          [
+           -0.1211,
+           0.91392,
+           1.15612
+          ],
+          [
+           0.0,
+           0.84271,
+           1.39376
+          ],
+          [
+           0.0,
+           1.22733,
+           1.39376
+          ],
+          [
+           0.1211,
+           1.15612,
+           1.15612
+          ],
+          [
+           0.19231,
+           1.03502,
+           1.39376
+          ],
+          [
+           -0.1211,
+           1.15612,
+           1.15612
+          ],
+          [
+           0.1211,
+           0.91392,
+           1.15612
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           0,
+           3,
+           2
+          ],
+          [
+           4,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           2
+          ],
+          [
+           4,
+           6,
+           1
+          ],
+          [
+           1,
+           6,
+           0
+          ],
+          [
+           0,
+           6,
+           3
+          ],
+          [
+           3,
+           6,
+           4
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           4
+          ],
+          [
+           4,
+           7,
+           5
+          ],
+          [
+           5,
+           7,
+           2
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           1.03502,
+           -0.19231,
+           1.39376
+          ],
+          [
+           1.15612,
+           -0.1211,
+           1.15612
+          ],
+          [
+           1.22733,
+           0.0,
+           1.39376
+          ],
+          [
+           1.03502,
+           0.19231,
+           1.39376
+          ],
+          [
+           0.84271,
+           0.0,
+           1.39376
+          ],
+          [
+           0.91392,
+           0.1211,
+           1.15612
+          ],
+          [
+           0.91392,
+           -0.1211,
+           1.15612
+          ],
+          [
+           1.15612,
+           0.1211,
+           1.15612
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           0,
+           3,
+           2
+          ],
+          [
+           0,
+           4,
+           3
+          ],
+          [
+           3,
+           4,
+           5
+          ],
+          [
+           5,
+           6,
+           1
+          ],
+          [
+           1,
+           6,
+           0
+          ],
+          [
+           0,
+           6,
+           4
+          ],
+          [
+           4,
+           6,
+           5
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           5
+          ],
+          [
+           5,
+           7,
+           3
+          ],
+          [
+           3,
+           7,
+           2
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           1.22733,
+           1.03502,
+           0.35874
+          ],
+          [
+           1.15612,
+           1.15612,
+           0.1211
+          ],
+          [
+           1.03502,
+           1.22733,
+           0.35874
+          ],
+          [
+           0.84271,
+           1.03502,
+           0.35874
+          ],
+          [
+           1.03502,
+           0.84271,
+           0.35874
+          ],
+          [
+           0.91392,
+           0.91392,
+           0.1211
+          ],
+          [
+           1.15612,
+           0.91392,
+           0.1211
+          ],
+          [
+           0.91392,
+           1.15612,
+           0.1211
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           0,
+           3,
+           2
+          ],
+          [
+           0,
+           4,
+           3
+          ],
+          [
+           3,
+           4,
+           5
+          ],
+          [
+           5,
+           6,
+           1
+          ],
+          [
+           1,
+           6,
+           0
+          ],
+          [
+           0,
+           6,
+           4
+          ],
+          [
+           4,
+           6,
+           5
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           5
+          ],
+          [
+           5,
+           7,
+           3
+          ],
+          [
+           3,
+           7,
+           2
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           -0.19231,
+           0.0,
+           1.7113
+          ],
+          [
+           -0.1211,
+           0.1211,
+           1.94894
+          ],
+          [
+           0.0,
+           0.19231,
+           1.7113
+          ],
+          [
+           0.0,
+           -0.19231,
+           1.7113
+          ],
+          [
+           0.1211,
+           -0.1211,
+           1.94894
+          ],
+          [
+           0.19231,
+           0.0,
+           1.7113
+          ],
+          [
+           -0.1211,
+           -0.1211,
+           1.94894
+          ],
+          [
+           0.1211,
+           0.1211,
+           1.94894
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           0,
+           3,
+           2
+          ],
+          [
+           4,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           2
+          ],
+          [
+           4,
+           6,
+           1
+          ],
+          [
+           1,
+           6,
+           0
+          ],
+          [
+           0,
+           6,
+           3
+          ],
+          [
+           3,
+           6,
+           4
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           4
+          ],
+          [
+           4,
+           7,
+           5
+          ],
+          [
+           5,
+           7,
+           2
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.19231,
+           1.03502,
+           0.67628
+          ],
+          [
+           0.0,
+           1.22733,
+           0.67628
+          ],
+          [
+           0.1211,
+           1.15612,
+           0.91392
+          ],
+          [
+           -0.19231,
+           1.03502,
+           0.67628
+          ],
+          [
+           -0.1211,
+           0.91392,
+           0.91392
+          ],
+          [
+           0.0,
+           0.84271,
+           0.67628
+          ],
+          [
+           0.1211,
+           0.91392,
+           0.91392
+          ],
+          [
+           -0.1211,
+           1.15612,
+           0.91392
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           1,
+           3,
+           0
+          ],
+          [
+           4,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           0
+          ],
+          [
+           0,
+           6,
+           2
+          ],
+          [
+           2,
+           6,
+           4
+          ],
+          [
+           4,
+           6,
+           5
+          ],
+          [
+           5,
+           6,
+           0
+          ],
+          [
+           4,
+           7,
+           2
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           3
+          ],
+          [
+           3,
+           7,
+           4
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           1.03502,
+           -0.19231,
+           0.67628
+          ],
+          [
+           0.91392,
+           -0.1211,
+           0.91392
+          ],
+          [
+           0.84271,
+           0.0,
+           0.67628
+          ],
+          [
+           1.22733,
+           0.0,
+           0.67628
+          ],
+          [
+           1.15612,
+           0.1211,
+           0.91392
+          ],
+          [
+           1.03502,
+           0.19231,
+           0.67628
+          ],
+          [
+           1.15612,
+           -0.1211,
+           0.91392
+          ],
+          [
+           0.91392,
+           0.1211,
+           0.91392
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           0,
+           3,
+           2
+          ],
+          [
+           4,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           2
+          ],
+          [
+           4,
+           6,
+           1
+          ],
+          [
+           1,
+           6,
+           0
+          ],
+          [
+           0,
+           6,
+           3
+          ],
+          [
+           3,
+           6,
+           4
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           4
+          ],
+          [
+           4,
+           7,
+           5
+          ],
+          [
+           5,
+           7,
+           2
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [ZrO8 cube]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           1.22733,
+           1.03502,
+           1.7113
+          ],
+          [
+           1.03502,
+           1.22733,
+           1.7113
+          ],
+          [
+           1.15612,
+           1.15612,
+           1.94894
+          ],
+          [
+           1.03502,
+           0.84271,
+           1.7113
+          ],
+          [
+           0.84271,
+           1.03502,
+           1.7113
+          ],
+          [
+           0.91392,
+           0.91392,
+           1.94894
+          ],
+          [
+           1.15612,
+           0.91392,
+           1.94894
+          ],
+          [
+           0.91392,
+           1.15612,
+           1.94894
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           1,
+           3,
+           0
+          ],
+          [
+           1,
+           4,
+           3
+          ],
+          [
+           3,
+           4,
+           5
+          ],
+          [
+           0,
+           6,
+           2
+          ],
+          [
+           2,
+           6,
+           5
+          ],
+          [
+           5,
+           6,
+           3
+          ],
+          [
+           3,
+           6,
+           0
+          ],
+          [
+           5,
+           7,
+           2
+          ],
+          [
+           2,
+           7,
+           1
+          ],
+          [
+           1,
+           7,
+           4
+          ],
+          [
+           4,
+           7,
+           5
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "UiO-66 unit cell",
+  "description": "UiO-66 unit cell. Overall size 2 x 2 x 2 (document units). Built from 518 sphere, 25 polyhedron, 5 color. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "b7a9eb5d0cce4a7c824b211ff4d7a951",
+  "created": "2026-10-12T15:50:58"
+ }
+}

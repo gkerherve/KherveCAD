@@ -1,0 +1,409 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "T =",
+    "visible": true,
+    "params": {
+     "variable": "T",
+     "value": 2.4
+    },
+    "children": []
+   },
+   {
+    "type": "assign",
+    "name": "F =",
+    "visible": true,
+    "params": {
+     "variable": "F",
+     "value": 1.6
+    },
+    "children": []
+   },
+   {
+    "type": "assign",
+    "name": "W =",
+    "visible": true,
+    "params": {
+     "variable": "W",
+     "value": 640.0
+    },
+    "children": []
+   },
+   {
+    "type": "assign",
+    "name": "D =",
+    "visible": true,
+    "params": {
+     "variable": "D",
+     "value": 640.0
+    },
+    "children": []
+   },
+   {
+    "type": "assign",
+    "name": "H =",
+    "visible": true,
+    "params": {
+     "variable": "H",
+     "value": 40.0
+    },
+    "children": []
+   },
+   {
+    "type": "component",
+    "name": "08 Hose-guide wall",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "#ffffff",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "difference",
+      "name": "Difference",
+      "visible": true,
+      "params": {},
+      "children": [
+       {
+        "type": "union",
+        "name": "Group",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": "W",
+           "depth": "D",
+           "height": "H",
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": "D - T - 12",
+           "z": 0.0,
+           "width": "W",
+           "depth": "T + 12",
+           "height": 140.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "cube",
+        "name": "Cube",
+        "visible": true,
+        "params": {
+         "x": "T",
+         "y": "T",
+         "z": "T",
+         "width": "W - 2*T",
+         "depth": "D - 2*T - 12",
+         "height": "H + 200",
+         "center": false
+        }
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "170, 340, 510"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": "D - 20",
+           "z": 110.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 30.0,
+               "radius_bottom": 13.0,
+               "radius_top": 13.0,
+               "segments": 40,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "170, 340, 510"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": "x - 9",
+           "y": "D - 20",
+           "z": 110.0,
+           "width": 18.0,
+           "depth": 30.0,
+           "height": 40.0,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "union",
+        "name": "spigot_hole",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        },
+        "children": [
+         {
+          "type": "assign",
+          "name": "x =",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "value": "W/2"
+          }
+         },
+         {
+          "type": "assign",
+          "name": "z =",
+          "visible": true,
+          "params": {
+           "variable": "z",
+           "value": "T + 9"
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": "D - T - 2",
+           "z": "z"
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": "T + 6",
+               "radius_bottom": 8.5,
+               "radius_top": 8.5,
+               "segments": 40,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "union",
+      "name": "spigot",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "assign",
+        "name": "x =",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "value": "W/2"
+        }
+       },
+       {
+        "type": "assign",
+        "name": "z =",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "value": "T + 9"
+        }
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": "x",
+         "y": "D - 1",
+         "z": "z"
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": -90.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 40.0,
+               "radius_bottom": 12.0,
+               "radius_top": 12.0,
+               "segments": 40,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": -1.0,
+               "height": 42.0,
+               "radius_bottom": 8.5,
+               "radius_top": 8.5,
+               "segments": 40,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "08 Hose-guide wall",
+  "description": "08 Hose-guide wall. Overall size 24 x 40 x 152 (document units). Built from 4 cube, 4 cylinder, 4 assign, 3 union, 3 translate, 3 rotate. Parameters: x, z, x, z. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "dee838ede7e643ac9c5ed3a43e5f1965",
+  "created": "2026-09-30T20:58:49"
+ }
+}

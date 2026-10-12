@@ -1,0 +1,295 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "12U rack frame 600x600x653",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "d536f8faea294202a0dbf555e644fce3",
+      "title": "12U 19-inch open-frame server rack, 600x600x653 mm",
+      "area": "Electronics",
+      "named": "12U rack frame 600x600x653",
+      "source": "assistant",
+      "description": "Frame of a 12U, 19-inch four-post open server rack. The footprint is 600 x 600 mm and the height 653.4 mm, built from 40x40 mm box-section corner posts with top and bottom width and depth members, on four levelling feet. Frame: x centred, front at y=0, z up. U1 starts at z=70. It goes with the '19in EIA-310 rails, 12U' part (front rail faces at y=50, rear at y=550, hole centres 465.1 mm apart, three 9.5 mm square cage-nut holes per U at 6.35, 22.225 and 38.1 mm). It also goes with the rail bracket plates, the 60 mm corner gussets and a 2U vented cantilever shelf with rack ears.",
+      "tags": [
+       "server rack",
+       "12U",
+       "19 inch",
+       "EIA-310",
+       "network cabinet",
+       "open frame",
+       "rack"
+      ]
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#23262b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For m",
+        "visible": true,
+        "params": {
+         "variable": "m",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "0, 1"
+        },
+        "children": [
+         {
+          "type": "mirror",
+          "name": "Mirror",
+          "visible": true,
+          "params": {
+           "x": "m",
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For y",
+            "visible": true,
+            "params": {
+             "variable": "y",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "0, 560"
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Corner post]",
+              "visible": true,
+              "params": {
+               "x": 260.0,
+               "y": "y",
+               "z": 20.0,
+               "width": 40.0,
+               "depth": 40.0,
+               "height": 633.4,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For z",
+            "visible": true,
+            "params": {
+             "variable": "z",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "20, 613.4"
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Depth member]",
+              "visible": true,
+              "params": {
+               "x": 260.0,
+               "y": 40.0,
+               "z": "z",
+               "width": 40.0,
+               "depth": 520.0,
+               "height": 40.0,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#23262b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For y",
+        "visible": true,
+        "params": {
+         "variable": "y",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "0, 560"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For z",
+          "visible": true,
+          "params": {
+           "variable": "z",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "20, 613.4"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Width member]",
+            "visible": true,
+            "params": {
+             "x": -260.0,
+             "y": "y",
+             "z": "z",
+             "width": 520.0,
+             "depth": 40.0,
+             "height": 40.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#555",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-280, 280"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For y",
+          "visible": true,
+          "params": {
+           "variable": "y",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "20, 580"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": "y",
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Levelling foot pad]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 6.0,
+               "radius_bottom": 18.0,
+               "radius_top": 18.0,
+               "segments": 24,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Levelling foot screw]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 20.0,
+               "radius_bottom": 6.0,
+               "radius_top": 6.0,
+               "segments": 24,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "12U 19-inch open-frame server rack, 600x600x653 mm",
+  "description": "Frame of a 12U, 19-inch four-post open server rack. The footprint is 600 x 600 mm and the height 653.4 mm, built from 40x40 mm box-section corner posts with top and bottom width and depth members, on four levelling feet. Frame: x centred, front at y=0, z up. U1 starts at z=70. It goes with the '19in EIA-310 rails, 12U' part (front rail faces at y=50, rear at y=550, hole centres 465.1 mm apart, three 9.5 mm square cage-nut holes per U at 6.35, 22.225 and 38.1 mm). It also goes with the rail bracket plates, the 60 mm corner gussets and a 2U vented cantilever shelf with rack ears.",
+  "tags": [
+   "server rack",
+   "12U",
+   "19 inch",
+   "EIA-310",
+   "network cabinet",
+   "open frame",
+   "rack"
+  ],
+  "source": "assistant",
+  "uid": "d536f8faea294202a0dbf555e644fce3",
+  "created": "2026-09-28T13:50:11"
+ }
+}

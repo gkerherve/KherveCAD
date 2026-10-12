@@ -1,0 +1,145 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "04 Rod and sleeve",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 70.0,
+       "y": -30.0,
+       "z": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#7cc47f",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 40.0,
+           "depth": 3.4,
+           "height": 2.4,
+           "center": false
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 8.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 35.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "rect",
+                "name": "Rectangle",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "width": 7.4,
+                 "height": 7.4
+                }
+               },
+               {
+                "type": "rect",
+                "name": "Rectangle",
+                "visible": true,
+                "params": {
+                 "x": 1.7,
+                 "y": 1.7,
+                 "width": 4.0,
+                 "height": 4.0
+                }
+               },
+               {
+                "type": "rect",
+                "name": "Rectangle",
+                "visible": true,
+                "params": {
+                 "x": 5.6,
+                 "y": 2.7,
+                 "width": 2.0,
+                 "height": 2.0
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "04 Rod and sleeve",
+  "description": "04 Rod and sleeve. Overall size 40 x 15 x 35 (document units). Built from 3 rect, 2 translate, 1 color, 1 cube, 1 linear_extrude, 1 difference. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "0b0e68b8defb4a5aa1e8de82b7c195b9",
+  "created": "2026-09-30T21:57:51"
+ }
+}

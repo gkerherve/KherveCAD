@@ -1,0 +1,1862 @@
+{
+ "format": "kcad",
+ "version": 8,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Body",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#e9c2a6",
+       "alpha": 1.0,
+       "material": "Skin"
+      },
+      "children": [
+       {
+        "type": "rotate",
+        "name": "Rotate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "sculpt",
+          "name": "Sculpt (brush strokes)",
+          "visible": true,
+          "params": {
+           "strokes": [],
+           "detail": 4.0,
+           "mirror": "none",
+           "region": [
+            [
+             -140.0,
+             -260.0,
+             1380.0
+            ],
+            [
+             140.0,
+             120.0,
+             1700.0
+            ]
+           ]
+          },
+          "children": [
+           {
+            "type": "human",
+            "name": "Human figure [Figure]",
+            "visible": true,
+            "params": {
+             "gender": 0.0,
+             "age": 1.0,
+             "weight": 0.35,
+             "height": -0.4,
+             "stature": 1630.0,
+             "targets": [
+              [
+               "head-scale-horiz",
+               -0.0408
+              ],
+              [
+               "head-scale-vert",
+               -0.0723
+              ],
+              [
+               "head-scale-depth",
+               0.0002
+              ],
+              [
+               "head-fat",
+               0.0871
+              ],
+              [
+               "head-oval",
+               0.0796
+              ],
+              [
+               "head-round",
+               0.1262
+              ],
+              [
+               "head-square",
+               0.2581
+              ],
+              [
+               "forehead-scale-vert",
+               0.0694
+              ],
+              [
+               "eye-trans-side",
+               -0.0199
+              ],
+              [
+               "eye-trans-vert",
+               0.2513
+              ],
+              [
+               "eye-scale",
+               0.0407
+              ],
+              [
+               "nose-scale-vert",
+               0.0319
+              ],
+              [
+               "nose-trans-vert",
+               0.0657
+              ],
+              [
+               "nose-point-vert",
+               -0.0284
+              ],
+              [
+               "mouth-scale-horiz",
+               -0.0012
+              ],
+              [
+               "mouth-scale-vert",
+               -0.0576
+              ],
+              [
+               "mouth-trans-vert",
+               0.1769
+              ],
+              [
+               "chin-height",
+               -0.084
+              ],
+              [
+               "cheek-volume",
+               0.0053
+              ],
+              [
+               "cheek-bones",
+               -0.0053
+              ],
+              [
+               "neck-scale-horiz",
+               0.0495
+              ]
+             ],
+             "warp": [
+              [
+               -30.094,
+               -175.893,
+               1521.57,
+               -4.521,
+               0.0,
+               4.495
+              ],
+              [
+               29.553,
+               -175.968,
+               1521.724,
+               -5.194,
+               0.0,
+               9.469
+              ],
+              [
+               -33.726,
+               -183.755,
+               1541.557,
+               -3.453,
+               0.0,
+               -3.953
+              ],
+              [
+               33.062,
+               -183.839,
+               1541.729,
+               -3.575,
+               0.0,
+               -0.28
+              ],
+              [
+               -0.213,
+               -210.512,
+               1482.619,
+               0.213,
+               0.0,
+               -1.939
+              ],
+              [
+               -0.266,
+               -192.266,
+               1511.888,
+               -8.709,
+               0.0,
+               5.202
+              ],
+              [
+               -38.091,
+               -175.719,
+               1464.732,
+               4.758,
+               0.0,
+               -2.77
+              ],
+              [
+               37.844,
+               -175.814,
+               1464.928,
+               4.463,
+               0.0,
+               0.88
+              ],
+              [
+               -0.145,
+               -194.07,
+               1464.418,
+               1.427,
+               0.0,
+               2.672
+              ],
+              [
+               -0.07,
+               -183.489,
+               1440.642,
+               1.353,
+               0.0,
+               8.499
+              ],
+              [
+               0.06,
+               -146.873,
+               1405.427,
+               5.068,
+               0.0,
+               2.688
+              ],
+              [
+               -57.025,
+               -158.75,
+               1505.037,
+               1.897,
+               0.0,
+               -8.46
+              ],
+              [
+               56.612,
+               -158.892,
+               1505.331,
+               -6.612,
+               0.0,
+               -6.19
+              ],
+              [
+               -64.501,
+               -108.743,
+               1451.738,
+               -7.294,
+               0.0,
+               -9.006
+              ]
+             ],
+             "warp_radius": 45.0,
+             "pose": [
+              [
+               "upperarm02.R",
+               0.0,
+               55.0,
+               0.0
+              ],
+              [
+               "lowerarm01.R",
+               -85.0,
+               0.0,
+               0.0
+              ],
+              [
+               "lowerarm01.L",
+               -50.0,
+               0.0,
+               0.0
+              ],
+              [
+               "head",
+               -0.0405,
+               -0.1482,
+               -0.0718
+              ]
+             ]
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Coat",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#c8479e",
+       "alpha": 1.0,
+       "material": "Matte"
+      },
+      "children": [
+       {
+        "type": "loft",
+        "name": "Loft [Coat body]",
+        "visible": true,
+        "params": {
+         "sections": [
+          [
+           0.0,
+           -60.0,
+           520.0,
+           165.0,
+           215.0
+          ],
+          [
+           0.0,
+           -60.0,
+           700.0,
+           150.0,
+           200.0
+          ],
+          [
+           0.0,
+           -62.0,
+           900.0,
+           138.0,
+           188.0
+          ],
+          [
+           0.0,
+           -70.0,
+           1050.0,
+           132.0,
+           150.0
+          ],
+          [
+           0.0,
+           -72.0,
+           1120.0,
+           160.0,
+           168.0
+          ],
+          [
+           0.0,
+           -70.0,
+           1170.0,
+           170.0,
+           178.0
+          ],
+          [
+           0.0,
+           -68.0,
+           1220.0,
+           162.0,
+           190.0
+          ],
+          [
+           0.0,
+           -64.0,
+           1270.0,
+           150.0,
+           212.0
+          ],
+          [
+           0.0,
+           -62.0,
+           1310.0,
+           140.0,
+           226.0
+          ],
+          [
+           0.0,
+           -60.0,
+           1340.0,
+           126.0,
+           218.0
+          ]
+         ],
+         "sides": 56,
+         "smooth": 4,
+         "caps": "flat"
+        },
+        "children": []
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -52.0,
+         "z": 1350.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 1.0,
+           "y": 0.6,
+           "z": 1.0
+          },
+          "children": [
+           {
+            "type": "rotate_extrude",
+            "name": "Rotate extrude",
+            "visible": true,
+            "params": {
+             "angle": 360.0,
+             "segments": 64
+            },
+            "children": [
+             {
+              "type": "circle",
+              "name": "Circle [Neckline]",
+              "visible": true,
+              "params": {
+               "x": 150.0,
+               "y": 0.0,
+               "radius": 7.0,
+               "angle": 360.0,
+               "start_angle": 0.0,
+               "segments": 16
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "loft",
+        "name": "Loft [Sleeve L]",
+        "visible": true,
+        "params": {
+         "sections": [
+          [
+           175.9,
+           -71.02,
+           1263.0,
+           76.0,
+           76.0
+          ],
+          [
+           225.5,
+           -76.52,
+           1215.0,
+           68.0,
+           68.0
+          ],
+          [
+           291.6,
+           -83.85,
+           1152.0,
+           62.0,
+           62.0
+          ],
+          [
+           333.0,
+           -88.43,
+           1112.0,
+           58.0,
+           58.0
+          ],
+          [
+           379.9,
+           -161.1,
+           1128.0,
+           54.0,
+           54.0
+          ],
+          [
+           426.8,
+           -233.7,
+           1145.0,
+           50.0,
+           50.0
+          ],
+          [
+           446.8,
+           -264.6,
+           1152.0,
+           47.0,
+           47.0
+          ]
+         ],
+         "sides": 32,
+         "smooth": 3,
+         "caps": "round"
+        },
+        "children": []
+       },
+       {
+        "type": "loft",
+        "name": "Loft [Sleeve R]",
+        "visible": true,
+        "params": {
+         "sections": [
+          [
+           -178.3,
+           -71.02,
+           1271.0,
+           76.0,
+           76.0
+          ],
+          [
+           -242.3,
+           -76.52,
+           1268.0,
+           68.0,
+           68.0
+          ],
+          [
+           -327.7,
+           -83.85,
+           1264.0,
+           62.0,
+           62.0
+          ],
+          [
+           -381.0,
+           -88.43,
+           1261.0,
+           58.0,
+           58.0
+          ],
+          [
+           -362.8,
+           -138.5,
+           1332.0,
+           54.0,
+           54.0
+          ],
+          [
+           -344.5,
+           -188.6,
+           1402.0,
+           50.0,
+           50.0
+          ],
+          [
+           -336.8,
+           -209.9,
+           1431.0,
+           47.0,
+           47.0
+          ]
+         ],
+         "sides": 32,
+         "smooth": 3,
+         "caps": "round"
+        },
+        "children": []
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Button",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d9b45c",
+       "alpha": 1.0,
+       "material": "Gold"
+      },
+      "children": [
+       {
+        "type": "sphere",
+        "name": "Sphere [Button]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -153.0,
+         "z": 1290.0,
+         "radius": 10.0,
+         "segments": 24
+        },
+        "children": []
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Brooch",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d8d8d8",
+       "alpha": 1.0,
+       "material": "Metal"
+      },
+      "children": [
+       {
+        "type": "sphere",
+        "name": "Sphere [Brooch]",
+        "visible": true,
+        "params": {
+         "x": 95.0,
+         "y": -152.0,
+         "z": 1250.0,
+         "radius": 15.0,
+         "segments": 24
+        },
+        "children": []
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Brooch bead]",
+        "visible": true,
+        "params": {
+         "x": 107.0,
+         "y": -164.0,
+         "z": 1250.0,
+         "radius": 3.2,
+         "segments": 12
+        },
+        "children": []
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Brooch bead]",
+        "visible": true,
+        "params": {
+         "x": 103.5,
+         "y": -164.0,
+         "z": 1258.0,
+         "radius": 3.2,
+         "segments": 12
+        },
+        "children": []
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Brooch bead]",
+        "visible": true,
+        "params": {
+         "x": 95.0,
+         "y": -164.0,
+         "z": 1262.0,
+         "radius": 3.2,
+         "segments": 12
+        },
+        "children": []
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Brooch bead]",
+        "visible": true,
+        "params": {
+         "x": 86.51,
+         "y": -164.0,
+         "z": 1258.0,
+         "radius": 3.2,
+         "segments": 12
+        },
+        "children": []
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Brooch bead]",
+        "visible": true,
+        "params": {
+         "x": 83.0,
+         "y": -164.0,
+         "z": 1250.0,
+         "radius": 3.2,
+         "segments": 12
+        },
+        "children": []
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Brooch bead]",
+        "visible": true,
+        "params": {
+         "x": 86.51,
+         "y": -164.0,
+         "z": 1242.0,
+         "radius": 3.2,
+         "segments": 12
+        },
+        "children": []
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Brooch bead]",
+        "visible": true,
+        "params": {
+         "x": 95.0,
+         "y": -164.0,
+         "z": 1238.0,
+         "radius": 3.2,
+         "segments": 12
+        },
+        "children": []
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Brooch bead]",
+        "visible": true,
+        "params": {
+         "x": 103.5,
+         "y": -164.0,
+         "z": 1242.0,
+         "radius": 3.2,
+         "segments": 12
+        },
+        "children": []
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Pearls",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#f2ede2",
+       "alpha": 1.0,
+       "material": "Plastic"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate [Strand]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -78.0,
+         "z": 1395.0
+        },
+        "children": [
+         {
+          "type": "pattern",
+          "name": "Pattern",
+          "visible": true,
+          "params": {
+           "kind": "polar",
+           "count": 30,
+           "dx": 0.0,
+           "dy": 0.0,
+           "dz": 0.0,
+           "angle": 360.0,
+           "axis": "z",
+           "count_x": 3,
+           "count_y": 3,
+           "count_z": 1
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Pearl]",
+            "visible": true,
+            "params": {
+             "x": 70.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 6.5,
+             "segments": 16
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate [Strand]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -78.0,
+         "z": 1383.0
+        },
+        "children": [
+         {
+          "type": "pattern",
+          "name": "Pattern",
+          "visible": true,
+          "params": {
+           "kind": "polar",
+           "count": 34,
+           "dx": 0.0,
+           "dy": 0.0,
+           "dz": 0.0,
+           "angle": 360.0,
+           "axis": "z",
+           "count_x": 3,
+           "count_y": 3,
+           "count_z": 1
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Pearl]",
+            "visible": true,
+            "params": {
+             "x": 79.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 6.5,
+             "segments": 16
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "translate",
+        "name": "Translate [Strand]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -78.0,
+         "z": 1371.0
+        },
+        "children": [
+         {
+          "type": "pattern",
+          "name": "Pattern",
+          "visible": true,
+          "params": {
+           "kind": "polar",
+           "count": 38,
+           "dx": 0.0,
+           "dy": 0.0,
+           "dz": 0.0,
+           "angle": 360.0,
+           "axis": "z",
+           "count_x": 3,
+           "count_y": 3,
+           "count_z": 1
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Pearl]",
+            "visible": true,
+            "params": {
+             "x": 88.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 6.5,
+             "segments": 16
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "symmetry",
+        "name": "Symmetry",
+        "visible": true,
+        "params": {
+         "x": 1.0,
+         "y": 0.0,
+         "z": 0.0,
+         "cx": 0.0,
+         "cy": 0.0,
+         "cz": 0.0
+        },
+        "children": [
+         {
+          "type": "sphere",
+          "name": "Sphere [Earring]",
+          "visible": true,
+          "params": {
+           "x": 78.0,
+           "y": -38.0,
+           "z": 1488.0,
+           "radius": 6.0,
+           "segments": 16
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Shoes",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#141416",
+       "alpha": 1.0,
+       "material": "Plastic"
+      },
+      "children": [
+       {
+        "type": "symmetry",
+        "name": "Symmetry",
+        "visible": true,
+        "params": {
+         "x": 1.0,
+         "y": 0.0,
+         "z": 0.0,
+         "cx": 0.0,
+         "cy": 0.0,
+         "cz": 0.0
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 205.0,
+           "y": -60.0,
+           "z": 40.0
+          },
+          "children": [
+           {
+            "type": "rounded_box",
+            "name": "Rounded box [Shoe]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "width": 105.0,
+             "depth": 250.0,
+             "height": 75.0,
+             "radius": 25.0,
+             "center": true,
+             "segments": 16
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 205.0,
+           "y": 35.0,
+           "z": 20.0
+          },
+          "children": [
+           {
+            "type": "rounded_box",
+            "name": "Rounded box [Heel]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "width": 80.0,
+             "depth": 70.0,
+             "height": 42.0,
+             "radius": 8.0,
+             "center": true,
+             "segments": 12
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Handbag",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#141416",
+       "alpha": 1.0,
+       "material": "Plastic"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 470.2,
+         "y": -279.6,
+         "z": 1014.0
+        },
+        "children": [
+         {
+          "type": "rounded_box",
+          "name": "Rounded box [Handbag]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 170.0,
+           "depth": 70.0,
+           "height": 130.0,
+           "radius": 22.0,
+           "center": true,
+           "segments": 16
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "sweep",
+        "name": "Sweep along path",
+        "visible": true,
+        "params": {
+         "path": [
+          [
+           415.2,
+           -279.6,
+           1084.0
+          ],
+          [
+           420.2,
+           -279.6,
+           1134.0
+          ],
+          [
+           440.2,
+           -279.6,
+           1164.0
+          ],
+          [
+           470.2,
+           -279.6,
+           1172.0
+          ],
+          [
+           500.2,
+           -279.6,
+           1164.0
+          ],
+          [
+           520.2,
+           -279.6,
+           1134.0
+          ],
+          [
+           525.2,
+           -279.6,
+           1084.0
+          ]
+         ],
+         "smooth": 3,
+         "twist": 0.0,
+         "scale": 1.0,
+         "wall": 0.0,
+         "closed": false
+        },
+        "children": [
+         {
+          "type": "circle",
+          "name": "Circle [Handle]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "radius": 8.0,
+           "angle": 360.0,
+           "start_angle": 0.0,
+           "segments": 12
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Clasp",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d9b45c",
+       "alpha": 1.0,
+       "material": "Gold"
+      },
+      "children": [
+       {
+        "type": "sphere",
+        "name": "Sphere [Clasp]",
+        "visible": true,
+        "params": {
+         "x": 470.2,
+         "y": -317.6,
+         "z": 1059.0,
+         "radius": 12.0,
+         "segments": 16
+        },
+        "children": []
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Hair",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#e8e4de",
+       "alpha": 1.0,
+       "material": "Matte"
+      },
+      "children": [
+       {
+        "type": "hair_cap",
+        "name": "Hair cap",
+        "visible": true,
+        "params": {
+         "thickness": 18.0,
+         "noise": 7.0,
+         "curl": 24.0,
+         "seed": 4.0,
+         "within": [
+          [
+           -150,
+           -128,
+           1481.97
+          ],
+          [
+           150,
+           130,
+           1669.99
+          ]
+         ],
+         "clear": "-y",
+         "clear_angle": 70.0
+        },
+        "children": [
+         {
+          "type": "sculpt",
+          "name": "Sculpt (brush strokes)",
+          "visible": true,
+          "params": {
+           "strokes": [],
+           "detail": 5.0,
+           "mirror": "none",
+           "region": [
+            [
+             -140.0,
+             -260.0,
+             1380.0
+            ],
+            [
+             140.0,
+             120.0,
+             1700.0
+            ]
+           ]
+          },
+          "children": [
+           {
+            "type": "human",
+            "name": "Human figure [Figure]",
+            "visible": true,
+            "params": {
+             "gender": 0.0,
+             "age": 1.0,
+             "weight": 0.35,
+             "height": -0.4,
+             "stature": 1630.0,
+             "targets": [
+              [
+               "head-scale-horiz",
+               -0.0408
+              ],
+              [
+               "head-scale-vert",
+               -0.0723
+              ],
+              [
+               "head-scale-depth",
+               0.0002
+              ],
+              [
+               "head-fat",
+               0.0871
+              ],
+              [
+               "head-oval",
+               0.0796
+              ],
+              [
+               "head-round",
+               0.1262
+              ],
+              [
+               "head-square",
+               0.2581
+              ],
+              [
+               "forehead-scale-vert",
+               0.0694
+              ],
+              [
+               "eye-trans-side",
+               -0.0199
+              ],
+              [
+               "eye-trans-vert",
+               0.2513
+              ],
+              [
+               "eye-scale",
+               0.0407
+              ],
+              [
+               "nose-scale-vert",
+               0.0319
+              ],
+              [
+               "nose-trans-vert",
+               0.0657
+              ],
+              [
+               "nose-point-vert",
+               -0.0284
+              ],
+              [
+               "mouth-scale-horiz",
+               -0.0012
+              ],
+              [
+               "mouth-scale-vert",
+               -0.0576
+              ],
+              [
+               "mouth-trans-vert",
+               0.1769
+              ],
+              [
+               "chin-height",
+               -0.084
+              ],
+              [
+               "cheek-volume",
+               0.0053
+              ],
+              [
+               "cheek-bones",
+               -0.0053
+              ],
+              [
+               "neck-scale-horiz",
+               0.0495
+              ]
+             ],
+             "warp": [
+              [
+               -30.09,
+               -175.9,
+               1522.0,
+               -4.521,
+               0.0,
+               4.495
+              ],
+              [
+               29.55,
+               -176.0,
+               1522.0,
+               -5.194,
+               0.0,
+               9.469
+              ],
+              [
+               -33.73,
+               -183.8,
+               1542.0,
+               -3.453,
+               0.0,
+               -3.953
+              ],
+              [
+               33.06,
+               -183.8,
+               1542.0,
+               -3.575,
+               0.0,
+               -0.28
+              ],
+              [
+               -0.213,
+               -210.5,
+               1483.0,
+               0.213,
+               0.0,
+               -1.939
+              ],
+              [
+               -0.266,
+               -192.3,
+               1512.0,
+               -8.709,
+               0.0,
+               5.202
+              ],
+              [
+               -38.09,
+               -175.7,
+               1465.0,
+               4.758,
+               0.0,
+               -2.77
+              ],
+              [
+               37.84,
+               -175.8,
+               1465.0,
+               4.463,
+               0.0,
+               0.88
+              ],
+              [
+               -0.145,
+               -194.1,
+               1464.0,
+               1.427,
+               0.0,
+               2.672
+              ],
+              [
+               -0.07,
+               -183.5,
+               1441.0,
+               1.353,
+               0.0,
+               8.499
+              ],
+              [
+               0.06,
+               -146.9,
+               1405.0,
+               5.068,
+               0.0,
+               2.688
+              ],
+              [
+               -57.02,
+               -158.8,
+               1505.0,
+               1.897,
+               0.0,
+               -8.46
+              ],
+              [
+               56.61,
+               -158.9,
+               1505.0,
+               -6.612,
+               0.0,
+               -6.19
+              ],
+              [
+               -64.5,
+               -108.7,
+               1452.0,
+               -7.294,
+               0.0,
+               -9.006
+              ]
+             ],
+             "warp_radius": 45.0,
+             "pose": [
+              [
+               "upperarm02.R",
+               0.0,
+               55.0,
+               0.0
+              ],
+              [
+               "lowerarm01.R",
+               -85.0,
+               0.0,
+               0.0
+              ],
+              [
+               "lowerarm01.L",
+               -50.0,
+               0.0,
+               0.0
+              ],
+              [
+               "head",
+               -0.0405,
+               -0.1482,
+               -0.0718
+              ]
+             ]
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Hat",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#c8479e",
+       "alpha": 1.0,
+       "material": "Matte"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -15.0,
+         "z": 1578.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": -7.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 1.04,
+             "z": 1.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Brim]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 11.0,
+               "radius_bottom": 152.0,
+               "radius_top": 152.0,
+               "segments": 72,
+               "center": false
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "loft",
+        "name": "Loft [Crown]",
+        "visible": true,
+        "params": {
+         "sections": [
+          [
+           0.0,
+           -15.0,
+           1582.0,
+           100.0,
+           94.0
+          ],
+          [
+           0.0,
+           -15.0,
+           1628.0,
+           97.0,
+           91.0
+          ],
+          [
+           0.0,
+           -15.0,
+           1666.0,
+           90.0,
+           84.0
+          ]
+         ],
+         "sides": 56,
+         "smooth": 3,
+         "caps": "flat"
+        },
+        "children": []
+       },
+       {
+        "type": "ellipsoid",
+        "name": "Ellipsoid [Crown top]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -15.0,
+         "z": 1666.0,
+         "rx": 91.0,
+         "ry": 85.0,
+         "rz": 20.0,
+         "segments": 40
+        },
+        "children": []
+       },
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -15.0,
+         "z": 1592.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 1.0,
+           "y": 0.95,
+           "z": 1.0
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Band]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 18.0,
+             "radius_bottom": 104.0,
+             "radius_top": 104.0,
+             "segments": 56,
+             "center": false
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Feathers",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#e0413c",
+       "alpha": 1.0,
+       "material": "Matte"
+      },
+      "children": [
+       {
+        "type": "loft",
+        "name": "Loft [Feather]",
+        "visible": true,
+        "params": {
+         "sections": [
+          [
+           -30.0,
+           -62.0,
+           1618.0,
+           3.5,
+           6.0
+          ],
+          [
+           40.0,
+           -77.0,
+           1683.0,
+           3.0,
+           15.0
+          ],
+          [
+           110.0,
+           -92.0,
+           1748.0,
+           2.5,
+           17.0
+          ],
+          [
+           185.0,
+           -110.0,
+           1813.0,
+           1.5,
+           8.0
+          ]
+         ],
+         "sides": 16,
+         "smooth": 3,
+         "caps": "round"
+        },
+        "children": []
+       },
+       {
+        "type": "loft",
+        "name": "Loft [Feather]",
+        "visible": true,
+        "params": {
+         "sections": [
+          [
+           -20.0,
+           -54.0,
+           1605.0,
+           3.5,
+           6.0
+          ],
+          [
+           70.0,
+           -64.0,
+           1643.0,
+           3.0,
+           14.0
+          ],
+          [
+           160.0,
+           -79.0,
+           1685.0,
+           2.5,
+           16.0
+          ],
+          [
+           245.0,
+           -94.0,
+           1728.0,
+           1.5,
+           7.0
+          ]
+         ],
+         "sides": 16,
+         "smooth": 3,
+         "caps": "round"
+        },
+        "children": []
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Queen Elizabeth figure",
+  "description": "Queen Elizabeth figure: a whole design (every part of the document Queen Elizabeth fable5 v4.kcad). Parts: Body, Coat, Button, Brooch, Pearls, Shoes, Handbag, Clasp, Hair, Hat, Feathers. Units: mm. (Added to the library from Documents.)",
+  "tags": [
+   "people & figures"
+  ],
+  "source": "design",
+  "uid": "doc-607b5e0f3593f468",
+  "document": "/Users/gkerherv/Documents/Queen Elizabeth fable5 v4.kcad",
+  "created": "2026-09-24T16:05:47"
+ }
+}

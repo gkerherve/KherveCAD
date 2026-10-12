@@ -1,0 +1,5504 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "nm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "variables",
+    "name": "Variables",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "assign",
+      "name": "custom_L =",
+      "visible": true,
+      "params": {
+       "variable": "custom_L",
+       "value": 2.5
+      }
+     },
+     {
+      "type": "assign",
+      "name": "custom_na =",
+      "visible": true,
+      "params": {
+       "variable": "custom_na",
+       "value": 2.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "custom_nb =",
+      "visible": true,
+      "params": {
+       "variable": "custom_nb",
+       "value": 2.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "custom_nc =",
+      "visible": true,
+      "params": {
+       "variable": "custom_nc",
+       "value": 2.0
+      }
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "YIG garnet supercell 2x2x2",
+    "visible": true,
+    "params": {
+     "x": 4.16506,
+     "y": -1.2376,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "7500dd62eb4e4479945a9038e3af80dd",
+      "title": "YIG garnet supercell 2x2x2",
+      "area": "Unit cells & crystals",
+      "named": "YIG garnet supercell 2x2x2"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color [Supercell box]",
+      "visible": true,
+      "params": {
+       "color": "#9ecbff",
+       "alpha": 0.12,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "scale",
+        "name": "Scale",
+        "visible": true,
+        "params": {
+         "x": "custom_na",
+         "y": "custom_nb",
+         "z": "custom_nc"
+        },
+        "children": [
+         {
+          "type": "polyhedron",
+          "name": "Polyhedron [Lattice box]",
+          "visible": true,
+          "params": {
+           "points": [
+            [
+             0.0,
+             0.0,
+             0.0
+            ],
+            [
+             1.2376,
+             0.0,
+             0.0
+            ],
+            [
+             1.2376,
+             1.2376,
+             0.0
+            ],
+            [
+             0.0,
+             1.2376,
+             0.0
+            ],
+            [
+             0.0,
+             0.0,
+             1.2376
+            ],
+            [
+             1.2376,
+             0.0,
+             1.2376
+            ],
+            [
+             1.2376,
+             1.2376,
+             1.2376
+            ],
+            [
+             0.0,
+             1.2376,
+             1.2376
+            ]
+           ],
+           "faces": [
+            [
+             0,
+             1,
+             2,
+             3
+            ],
+            [
+             7,
+             6,
+             5,
+             4
+            ],
+            [
+             4,
+             5,
+             1,
+             0
+            ],
+            [
+             5,
+             6,
+             2,
+             1
+            ],
+            [
+             6,
+             7,
+             3,
+             2
+            ],
+            [
+             7,
+             4,
+             0,
+             3
+            ]
+           ]
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For i [Unit cells]",
+      "visible": true,
+      "params": {
+       "variable": "i",
+       "start": 0.0,
+       "end": "custom_na - 1",
+       "step": 1.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For j",
+        "visible": true,
+        "params": {
+         "variable": "j",
+         "start": 0.0,
+         "end": "custom_nb - 1",
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For k",
+          "visible": true,
+          "params": {
+           "variable": "k",
+           "start": 0.0,
+           "end": "custom_nc - 1",
+           "step": 1.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "reference",
+            "name": "Custom_cell_polyhedra instance",
+            "visible": true,
+            "params": {
+             "ref": "Custom_cell_polyhedra",
+             "x": "1.2376 * i",
+             "y": "1.2376 * j",
+             "z": "1.2376 * k",
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Y3Fe5O12 yttrium iron garnet (YIG) unit cell",
+    "visible": true,
+    "params": {
+     "x": 7.64026,
+     "y": -0.6188,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "bf85fd04e73449be9a528a41a78200eb",
+      "title": "Y3Fe5O12 yttrium iron garnet (YIG) unit cell",
+      "area": "Unit cells & crystals",
+      "named": "Y3Fe5O12 yttrium iron garnet (YIG) unit cell"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color [Cell box]",
+      "visible": true,
+      "params": {
+       "color": "#9ecbff",
+       "alpha": 0.15,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [Lattice cell]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.0,
+           0.0,
+           0.0
+          ],
+          [
+           1.2376,
+           0.0,
+           0.0
+          ],
+          [
+           1.2376,
+           1.2376,
+           0.0
+          ],
+          [
+           0.0,
+           1.2376,
+           0.0
+          ],
+          [
+           0.0,
+           0.0,
+           1.2376
+          ],
+          [
+           1.2376,
+           0.0,
+           1.2376
+          ],
+          [
+           1.2376,
+           1.2376,
+           1.2376
+          ],
+          [
+           0.0,
+           1.2376,
+           1.2376
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           1,
+           2,
+           3
+          ],
+          [
+           7,
+           6,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           1,
+           0
+          ],
+          [
+           5,
+           6,
+           2,
+           1
+          ],
+          [
+           6,
+           7,
+           3,
+           2
+          ],
+          [
+           7,
+           4,
+           0,
+           3
+          ]
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Y atoms]",
+      "visible": true,
+      "params": {
+       "color": "#94FFFF",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.3094,
+         "z": 0.1547,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 1.2376,
+         "y": 0.3094,
+         "z": 0.1547,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.3094,
+         "z": 0.7735,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 1.2376,
+         "y": 0.3094,
+         "z": 0.7735,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.9282,
+         "z": 0.4641,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 1.2376,
+         "y": 0.9282,
+         "z": 0.4641,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.9282,
+         "z": 1.0829,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 1.2376,
+         "y": 0.9282,
+         "z": 1.0829,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.1547,
+         "y": 0.0,
+         "z": 0.3094,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.1547,
+         "y": 1.2376,
+         "z": 0.3094,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.1547,
+         "y": 0.6188,
+         "z": 0.9282,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.3094,
+         "y": 0.1547,
+         "z": 0.0,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.3094,
+         "y": 0.1547,
+         "z": 1.2376,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.3094,
+         "y": 0.4641,
+         "z": 0.6188,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.3094,
+         "y": 0.7735,
+         "z": 0.0,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.3094,
+         "y": 0.7735,
+         "z": 1.2376,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.3094,
+         "y": 1.0829,
+         "z": 0.6188,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.4641,
+         "y": 0.0,
+         "z": 0.9282,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.4641,
+         "y": 1.2376,
+         "z": 0.9282,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.4641,
+         "y": 0.6188,
+         "z": 0.3094,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.6188,
+         "y": 0.3094,
+         "z": 0.4641,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.6188,
+         "y": 0.3094,
+         "z": 1.0829,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.6188,
+         "y": 0.9282,
+         "z": 0.1547,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.6188,
+         "y": 0.9282,
+         "z": 0.7735,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.7735,
+         "y": 0.0,
+         "z": 0.3094,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.7735,
+         "y": 1.2376,
+         "z": 0.3094,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.7735,
+         "y": 0.6188,
+         "z": 0.9282,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.9282,
+         "y": 0.1547,
+         "z": 0.6188,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.9282,
+         "y": 0.4641,
+         "z": 0.0,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.9282,
+         "y": 0.4641,
+         "z": 1.2376,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.9282,
+         "y": 0.7735,
+         "z": 0.6188,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.9282,
+         "y": 1.0829,
+         "z": 0.0,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 0.9282,
+         "y": 1.0829,
+         "z": 1.2376,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 1.0829,
+         "y": 0.0,
+         "z": 0.9282,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 1.0829,
+         "y": 1.2376,
+         "z": 0.9282,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Y]",
+        "visible": true,
+        "params": {
+         "x": 1.0829,
+         "y": 0.6188,
+         "z": 0.3094,
+         "radius": 0.0665,
+         "segments": 12
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Fe atoms]",
+      "visible": true,
+      "params": {
+       "color": "#E06633",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 1.2376,
+         "y": 0.0,
+         "z": 0.0,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.2376,
+         "z": 0.0,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 1.2376,
+         "y": 1.2376,
+         "z": 0.0,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 1.2376,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 1.2376,
+         "y": 0.0,
+         "z": 1.2376,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.2376,
+         "z": 1.2376,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 1.2376,
+         "y": 1.2376,
+         "z": 1.2376,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.6188,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 1.2376,
+         "y": 0.0,
+         "z": 0.6188,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 1.2376,
+         "z": 0.6188,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 1.2376,
+         "y": 1.2376,
+         "z": 0.6188,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.6188,
+         "z": 0.0,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 1.2376,
+         "y": 0.6188,
+         "z": 0.0,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.6188,
+         "z": 1.2376,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 1.2376,
+         "y": 0.6188,
+         "z": 1.2376,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.6188,
+         "z": 0.6188,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 1.2376,
+         "y": 0.6188,
+         "z": 0.6188,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.3094,
+         "y": 0.3094,
+         "z": 0.3094,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.3094,
+         "y": 0.3094,
+         "z": 0.9282,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.3094,
+         "y": 0.9282,
+         "z": 0.3094,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.3094,
+         "y": 0.9282,
+         "z": 0.9282,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.6188,
+         "y": 0.0,
+         "z": 0.0,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.6188,
+         "y": 1.2376,
+         "z": 0.0,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.6188,
+         "y": 0.0,
+         "z": 1.2376,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.6188,
+         "y": 1.2376,
+         "z": 1.2376,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.6188,
+         "y": 0.0,
+         "z": 0.6188,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.6188,
+         "y": 1.2376,
+         "z": 0.6188,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.6188,
+         "y": 0.6188,
+         "z": 0.0,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.6188,
+         "y": 0.6188,
+         "z": 1.2376,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.6188,
+         "y": 0.6188,
+         "z": 0.6188,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.9282,
+         "y": 0.3094,
+         "z": 0.3094,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.9282,
+         "y": 0.3094,
+         "z": 0.9282,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.9282,
+         "y": 0.9282,
+         "z": 0.3094,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.9282,
+         "y": 0.9282,
+         "z": 0.9282,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.3094,
+         "z": 0.4641,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 1.2376,
+         "y": 0.3094,
+         "z": 0.4641,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.3094,
+         "z": 1.0829,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 1.2376,
+         "y": 0.3094,
+         "z": 1.0829,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.9282,
+         "z": 0.1547,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 1.2376,
+         "y": 0.9282,
+         "z": 0.1547,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.9282,
+         "z": 0.7735,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 1.2376,
+         "y": 0.9282,
+         "z": 0.7735,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.1547,
+         "y": 0.0,
+         "z": 0.9282,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.1547,
+         "y": 1.2376,
+         "z": 0.9282,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.1547,
+         "y": 0.6188,
+         "z": 0.3094,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.3094,
+         "y": 0.1547,
+         "z": 0.6188,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.3094,
+         "y": 0.4641,
+         "z": 0.0,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.3094,
+         "y": 0.4641,
+         "z": 1.2376,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.3094,
+         "y": 0.7735,
+         "z": 0.6188,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.3094,
+         "y": 1.0829,
+         "z": 0.0,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.3094,
+         "y": 1.0829,
+         "z": 1.2376,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.4641,
+         "y": 0.0,
+         "z": 0.3094,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.4641,
+         "y": 1.2376,
+         "z": 0.3094,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.4641,
+         "y": 0.6188,
+         "z": 0.9282,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.6188,
+         "y": 0.3094,
+         "z": 0.1547,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.6188,
+         "y": 0.3094,
+         "z": 0.7735,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.6188,
+         "y": 0.9282,
+         "z": 0.4641,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.6188,
+         "y": 0.9282,
+         "z": 1.0829,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.7735,
+         "y": 0.0,
+         "z": 0.9282,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.7735,
+         "y": 1.2376,
+         "z": 0.9282,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.7735,
+         "y": 0.6188,
+         "z": 0.3094,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.9282,
+         "y": 0.1547,
+         "z": 0.0,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.9282,
+         "y": 0.1547,
+         "z": 1.2376,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.9282,
+         "y": 0.4641,
+         "z": 0.6188,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.9282,
+         "y": 0.7735,
+         "z": 0.0,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.9282,
+         "y": 0.7735,
+         "z": 1.2376,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 0.9282,
+         "y": 1.0829,
+         "z": 0.6188,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 1.0829,
+         "y": 0.0,
+         "z": 0.3094,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 1.0829,
+         "y": 1.2376,
+         "z": 0.3094,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [Fe]",
+        "visible": true,
+        "params": {
+         "x": 1.0829,
+         "y": 0.6188,
+         "z": 0.9282,
+         "radius": 0.0462,
+         "segments": 12
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [O atoms]",
+      "visible": true,
+      "params": {
+       "color": "#FF0D0D",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.03391,
+         "y": 0.07079,
+         "z": 0.80382,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.03391,
+         "y": 0.54801,
+         "z": 0.18502,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.03391,
+         "y": 0.68959,
+         "z": 0.43378,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.03391,
+         "y": 1.16681,
+         "z": 1.05258,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.07079,
+         "y": 0.18502,
+         "z": 1.20369,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.07079,
+         "y": 0.43378,
+         "z": 0.58489,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.07079,
+         "y": 0.80382,
+         "z": 0.03391,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.07079,
+         "y": 1.05258,
+         "z": 0.65271,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.12438,
+         "y": 0.23861,
+         "z": 0.34331,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.12438,
+         "y": 0.38019,
+         "z": 0.96211,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.12438,
+         "y": 0.85741,
+         "z": 0.89429,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.12438,
+         "y": 0.99899,
+         "z": 0.27549,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.18502,
+         "y": 0.03391,
+         "z": 0.54801,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.18502,
+         "y": 0.58489,
+         "z": 1.16681,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.18502,
+         "y": 0.65271,
+         "z": 0.68959,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.18502,
+         "y": 1.20369,
+         "z": 0.07079,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.23861,
+         "y": 0.27549,
+         "z": 0.74318,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.23861,
+         "y": 0.34331,
+         "z": 0.12438,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.23861,
+         "y": 0.89429,
+         "z": 0.49442,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.23861,
+         "y": 0.96211,
+         "z": 1.11322,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.27549,
+         "y": 0.12438,
+         "z": 0.99899,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.27549,
+         "y": 0.49442,
+         "z": 0.38019,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.27549,
+         "y": 0.74318,
+         "z": 0.23861,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.27549,
+         "y": 1.11322,
+         "z": 0.85741,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.34331,
+         "y": 0.12438,
+         "z": 0.23861,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.34331,
+         "y": 0.49442,
+         "z": 0.85741,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.34331,
+         "y": 0.74318,
+         "z": 0.99899,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.34331,
+         "y": 1.11322,
+         "z": 0.38019,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.38019,
+         "y": 0.27549,
+         "z": 0.49442,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.38019,
+         "y": 0.34331,
+         "z": 1.11322,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.38019,
+         "y": 0.89429,
+         "z": 0.74318,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.38019,
+         "y": 0.96211,
+         "z": 0.12438,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.43378,
+         "y": 0.03391,
+         "z": 0.68959,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.43378,
+         "y": 0.58489,
+         "z": 0.07079,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.43378,
+         "y": 0.65271,
+         "z": 0.54801,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.43378,
+         "y": 1.20369,
+         "z": 1.16681,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.49442,
+         "y": 0.23861,
+         "z": 0.89429,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.49442,
+         "y": 0.38019,
+         "z": 0.27549,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.49442,
+         "y": 0.85741,
+         "z": 0.34331,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.49442,
+         "y": 0.99899,
+         "z": 0.96211,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.54801,
+         "y": 0.18502,
+         "z": 0.03391,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.54801,
+         "y": 0.43378,
+         "z": 0.65271,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.54801,
+         "y": 0.80382,
+         "z": 1.20369,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.54801,
+         "y": 1.05258,
+         "z": 0.58489,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.58489,
+         "y": 0.07079,
+         "z": 0.43378,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.58489,
+         "y": 0.54801,
+         "z": 1.05258,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.58489,
+         "y": 0.68959,
+         "z": 0.80382,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.58489,
+         "y": 1.16681,
+         "z": 0.18502,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.65271,
+         "y": 0.07079,
+         "z": 1.05258,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.65271,
+         "y": 0.54801,
+         "z": 0.43378,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.65271,
+         "y": 0.68959,
+         "z": 0.18502,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.65271,
+         "y": 1.16681,
+         "z": 0.80382,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.68959,
+         "y": 0.18502,
+         "z": 0.65271,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.68959,
+         "y": 0.43378,
+         "z": 0.03391,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.68959,
+         "y": 0.80382,
+         "z": 0.58489,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.68959,
+         "y": 1.05258,
+         "z": 1.20369,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.74318,
+         "y": 0.23861,
+         "z": 0.27549,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.74318,
+         "y": 0.38019,
+         "z": 0.89429,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.74318,
+         "y": 0.85741,
+         "z": 0.96211,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.74318,
+         "y": 0.99899,
+         "z": 0.34331,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.80382,
+         "y": 0.03391,
+         "z": 0.07079,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.80382,
+         "y": 0.58489,
+         "z": 0.68959,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.80382,
+         "y": 0.65271,
+         "z": 1.16681,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.80382,
+         "y": 1.20369,
+         "z": 0.54801,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.85741,
+         "y": 0.27549,
+         "z": 1.11322,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.85741,
+         "y": 0.34331,
+         "z": 0.49442,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.85741,
+         "y": 0.89429,
+         "z": 0.12438,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.85741,
+         "y": 0.96211,
+         "z": 0.74318,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.89429,
+         "y": 0.12438,
+         "z": 0.85741,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.89429,
+         "y": 0.49442,
+         "z": 0.23861,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.89429,
+         "y": 0.74318,
+         "z": 0.38019,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.89429,
+         "y": 1.11322,
+         "z": 0.99899,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.96211,
+         "y": 0.12438,
+         "z": 0.38019,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.96211,
+         "y": 0.49442,
+         "z": 0.99899,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.96211,
+         "y": 0.74318,
+         "z": 0.85741,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.96211,
+         "y": 1.11322,
+         "z": 0.23861,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.99899,
+         "y": 0.27549,
+         "z": 0.12438,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.99899,
+         "y": 0.34331,
+         "z": 0.74318,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.99899,
+         "y": 0.89429,
+         "z": 1.11322,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 0.99899,
+         "y": 0.96211,
+         "z": 0.49442,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.05258,
+         "y": 0.03391,
+         "z": 1.16681,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.05258,
+         "y": 0.58489,
+         "z": 0.54801,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.05258,
+         "y": 0.65271,
+         "z": 0.07079,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.05258,
+         "y": 1.20369,
+         "z": 0.68959,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.11322,
+         "y": 0.23861,
+         "z": 0.96211,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.11322,
+         "y": 0.38019,
+         "z": 0.34331,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.11322,
+         "y": 0.85741,
+         "z": 0.27549,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.11322,
+         "y": 0.99899,
+         "z": 0.89429,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.16681,
+         "y": 0.18502,
+         "z": 0.58489,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.16681,
+         "y": 0.43378,
+         "z": 1.20369,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.16681,
+         "y": 0.80382,
+         "z": 0.65271,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.16681,
+         "y": 1.05258,
+         "z": 0.03391,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.20369,
+         "y": 0.07079,
+         "z": 0.18502,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.20369,
+         "y": 0.54801,
+         "z": 0.80382,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.20369,
+         "y": 0.68959,
+         "z": 1.05258,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       },
+       {
+        "type": "sphere",
+        "name": "Sphere [O]",
+        "visible": true,
+        "params": {
+         "x": 1.20369,
+         "y": 1.16681,
+         "z": 0.43378,
+         "radius": 0.0231,
+         "segments": 12
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [FeO6 octahedra]",
+      "visible": false,
+      "params": {
+       "color": "#E06633",
+       "alpha": 0.4,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.18502,
+           -0.03391,
+           0.07079
+          ],
+          [
+           -0.03391,
+           0.07079,
+           0.18502
+          ],
+          [
+           -0.07079,
+           -0.18502,
+           0.03391
+          ],
+          [
+           -0.18502,
+           0.03391,
+           -0.07079
+          ],
+          [
+           0.07079,
+           0.18502,
+           -0.03391
+          ],
+          [
+           0.03391,
+           -0.07079,
+           -0.18502
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           4,
+           1
+          ],
+          [
+           1,
+           4,
+           0
+          ],
+          [
+           0,
+           5,
+           2
+          ],
+          [
+           2,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.18502,
+           0.03391,
+           0.54801
+          ],
+          [
+           -0.03391,
+           -0.07079,
+           0.43378
+          ],
+          [
+           -0.07079,
+           0.18502,
+           0.58489
+          ],
+          [
+           -0.18502,
+           -0.03391,
+           0.68959
+          ],
+          [
+           0.07079,
+           -0.18502,
+           0.65271
+          ],
+          [
+           0.03391,
+           0.07079,
+           0.80382
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           4,
+           1
+          ],
+          [
+           1,
+           4,
+           0
+          ],
+          [
+           0,
+           5,
+           2
+          ],
+          [
+           2,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.18502,
+           0.58489,
+           -0.07079
+          ],
+          [
+           0.03391,
+           0.54801,
+           0.18502
+          ],
+          [
+           -0.07079,
+           0.43378,
+           -0.03391
+          ],
+          [
+           -0.18502,
+           0.65271,
+           0.07079
+          ],
+          [
+           -0.03391,
+           0.68959,
+           -0.18502
+          ],
+          [
+           0.07079,
+           0.80382,
+           0.03391
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           0,
+           4,
+           2
+          ],
+          [
+           2,
+           4,
+           3
+          ],
+          [
+           3,
+           5,
+           1
+          ],
+          [
+           1,
+           5,
+           0
+          ],
+          [
+           0,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           3
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.18502,
+           0.65271,
+           0.68959
+          ],
+          [
+           0.07079,
+           0.43378,
+           0.58489
+          ],
+          [
+           0.03391,
+           0.68959,
+           0.43378
+          ],
+          [
+           -0.18502,
+           0.58489,
+           0.54801
+          ],
+          [
+           -0.07079,
+           0.80382,
+           0.65271
+          ],
+          [
+           -0.03391,
+           0.54801,
+           0.80382
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           0,
+           4,
+           2
+          ],
+          [
+           2,
+           4,
+           3
+          ],
+          [
+           3,
+           5,
+           1
+          ],
+          [
+           1,
+           5,
+           0
+          ],
+          [
+           0,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           3
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.49442,
+           0.38019,
+           0.27549
+          ],
+          [
+           0.27549,
+           0.49442,
+           0.38019
+          ],
+          [
+           0.38019,
+           0.27549,
+           0.49442
+          ],
+          [
+           0.12438,
+           0.23861,
+           0.34331
+          ],
+          [
+           0.23861,
+           0.34331,
+           0.12438
+          ],
+          [
+           0.34331,
+           0.12438,
+           0.23861
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           4,
+           1
+          ],
+          [
+           1,
+           4,
+           0
+          ],
+          [
+           0,
+           5,
+           2
+          ],
+          [
+           2,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.34331,
+           0.49442,
+           0.85741
+          ],
+          [
+           0.49442,
+           0.23861,
+           0.89429
+          ],
+          [
+           0.23861,
+           0.27549,
+           0.74318
+          ],
+          [
+           0.27549,
+           0.12438,
+           0.99899
+          ],
+          [
+           0.38019,
+           0.34331,
+           1.11322
+          ],
+          [
+           0.12438,
+           0.38019,
+           0.96211
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           4,
+           1
+          ],
+          [
+           1,
+           4,
+           0
+          ],
+          [
+           0,
+           5,
+           2
+          ],
+          [
+           2,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.49442,
+           0.85741,
+           0.34331
+          ],
+          [
+           0.23861,
+           0.89429,
+           0.49442
+          ],
+          [
+           0.27549,
+           0.74318,
+           0.23861
+          ],
+          [
+           0.12438,
+           0.99899,
+           0.27549
+          ],
+          [
+           0.34331,
+           1.11322,
+           0.38019
+          ],
+          [
+           0.38019,
+           0.96211,
+           0.12438
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           4,
+           1
+          ],
+          [
+           1,
+           4,
+           0
+          ],
+          [
+           0,
+           5,
+           2
+          ],
+          [
+           2,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.49442,
+           0.99899,
+           0.96211
+          ],
+          [
+           0.27549,
+           1.11322,
+           0.85741
+          ],
+          [
+           0.23861,
+           0.96211,
+           1.11322
+          ],
+          [
+           0.12438,
+           0.85741,
+           0.89429
+          ],
+          [
+           0.38019,
+           0.89429,
+           0.74318
+          ],
+          [
+           0.34331,
+           0.74318,
+           0.99899
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           4,
+           1
+          ],
+          [
+           1,
+           4,
+           0
+          ],
+          [
+           0,
+           5,
+           2
+          ],
+          [
+           2,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.80382,
+           0.03391,
+           0.07079
+          ],
+          [
+           0.58489,
+           -0.07079,
+           0.18502
+          ],
+          [
+           0.68959,
+           -0.18502,
+           -0.03391
+          ],
+          [
+           0.43378,
+           -0.03391,
+           -0.07079
+          ],
+          [
+           0.54801,
+           0.18502,
+           0.03391
+          ],
+          [
+           0.65271,
+           0.07079,
+           -0.18502
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           4,
+           1
+          ],
+          [
+           1,
+           4,
+           0
+          ],
+          [
+           0,
+           5,
+           2
+          ],
+          [
+           2,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.80382,
+           -0.03391,
+           0.54801
+          ],
+          [
+           0.58489,
+           0.07079,
+           0.43378
+          ],
+          [
+           0.68959,
+           0.18502,
+           0.65271
+          ],
+          [
+           0.43378,
+           0.03391,
+           0.68959
+          ],
+          [
+           0.54801,
+           -0.18502,
+           0.58489
+          ],
+          [
+           0.65271,
+           -0.07079,
+           0.80382
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           4,
+           1
+          ],
+          [
+           1,
+           4,
+           0
+          ],
+          [
+           0,
+           5,
+           2
+          ],
+          [
+           2,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.80382,
+           0.65271,
+           -0.07079
+          ],
+          [
+           0.65271,
+           0.68959,
+           0.18502
+          ],
+          [
+           0.68959,
+           0.43378,
+           0.03391
+          ],
+          [
+           0.43378,
+           0.58489,
+           0.07079
+          ],
+          [
+           0.58489,
+           0.54801,
+           -0.18502
+          ],
+          [
+           0.54801,
+           0.80382,
+           -0.03391
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           0,
+           4,
+           2
+          ],
+          [
+           2,
+           4,
+           3
+          ],
+          [
+           3,
+           5,
+           1
+          ],
+          [
+           1,
+           5,
+           0
+          ],
+          [
+           0,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           3
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.80382,
+           0.58489,
+           0.68959
+          ],
+          [
+           0.54801,
+           0.43378,
+           0.65271
+          ],
+          [
+           0.65271,
+           0.54801,
+           0.43378
+          ],
+          [
+           0.43378,
+           0.65271,
+           0.54801
+          ],
+          [
+           0.68959,
+           0.80382,
+           0.58489
+          ],
+          [
+           0.58489,
+           0.68959,
+           0.80382
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           0,
+           4,
+           2
+          ],
+          [
+           2,
+           4,
+           3
+          ],
+          [
+           3,
+           5,
+           1
+          ],
+          [
+           1,
+           5,
+           0
+          ],
+          [
+           0,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           3
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.85741,
+           0.34331,
+           0.49442
+          ],
+          [
+           0.89429,
+           0.49442,
+           0.23861
+          ],
+          [
+           0.74318,
+           0.23861,
+           0.27549
+          ],
+          [
+           0.99899,
+           0.27549,
+           0.12438
+          ],
+          [
+           1.11322,
+           0.38019,
+           0.34331
+          ],
+          [
+           0.96211,
+           0.12438,
+           0.38019
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           4,
+           1
+          ],
+          [
+           1,
+           4,
+           0
+          ],
+          [
+           0,
+           5,
+           2
+          ],
+          [
+           2,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.96211,
+           0.49442,
+           0.99899
+          ],
+          [
+           0.74318,
+           0.38019,
+           0.89429
+          ],
+          [
+           0.85741,
+           0.27549,
+           1.11322
+          ],
+          [
+           0.89429,
+           0.12438,
+           0.85741
+          ],
+          [
+           1.11322,
+           0.23861,
+           0.96211
+          ],
+          [
+           0.99899,
+           0.34331,
+           0.74318
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           0,
+           4,
+           2
+          ],
+          [
+           2,
+           4,
+           3
+          ],
+          [
+           3,
+           5,
+           1
+          ],
+          [
+           1,
+           5,
+           0
+          ],
+          [
+           0,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           3
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           1.11322,
+           0.85741,
+           0.27549
+          ],
+          [
+           0.99899,
+           0.96211,
+           0.49442
+          ],
+          [
+           0.89429,
+           0.74318,
+           0.38019
+          ],
+          [
+           0.74318,
+           0.99899,
+           0.34331
+          ],
+          [
+           0.96211,
+           1.11322,
+           0.23861
+          ],
+          [
+           0.85741,
+           0.89429,
+           0.12438
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           4,
+           1
+          ],
+          [
+           1,
+           4,
+           0
+          ],
+          [
+           0,
+           5,
+           2
+          ],
+          [
+           2,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           1.11322,
+           0.99899,
+           0.89429
+          ],
+          [
+           0.99899,
+           0.89429,
+           1.11322
+          ],
+          [
+           0.96211,
+           0.74318,
+           0.85741
+          ],
+          [
+           0.74318,
+           0.85741,
+           0.96211
+          ],
+          [
+           0.89429,
+           1.11322,
+           0.99899
+          ],
+          [
+           0.85741,
+           0.96211,
+           0.74318
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           4,
+           1
+          ],
+          [
+           1,
+           4,
+           0
+          ],
+          [
+           0,
+           5,
+           2
+          ],
+          [
+           2,
+           5,
+           3
+          ],
+          [
+           3,
+           5,
+           4
+          ],
+          [
+           4,
+           5,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.07079,
+           0.43378,
+           0.58489
+          ],
+          [
+           -0.07079,
+           0.18502,
+           0.58489
+          ],
+          [
+           0.12438,
+           0.23861,
+           0.34331
+          ],
+          [
+           -0.12438,
+           0.38019,
+           0.34331
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           0,
+           1
+          ],
+          [
+           3,
+           2,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.07079,
+           0.18502,
+           1.20369
+          ],
+          [
+           0.12438,
+           0.38019,
+           0.96211
+          ],
+          [
+           -0.07079,
+           0.43378,
+           1.20369
+          ],
+          [
+           -0.12438,
+           0.23861,
+           0.96211
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           2,
+           0
+          ],
+          [
+           3,
+           0,
+           1
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           -0.07079,
+           1.05258,
+           0.03391
+          ],
+          [
+           0.12438,
+           0.99899,
+           0.27549
+          ],
+          [
+           0.07079,
+           0.80382,
+           0.03391
+          ],
+          [
+           -0.12438,
+           0.85741,
+           0.27549
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           0,
+           1
+          ],
+          [
+           3,
+           2,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           -0.07079,
+           0.80382,
+           0.65271
+          ],
+          [
+           0.07079,
+           1.05258,
+           0.65271
+          ],
+          [
+           0.12438,
+           0.85741,
+           0.89429
+          ],
+          [
+           -0.12438,
+           0.99899,
+           0.89429
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           2,
+           0
+          ],
+          [
+           3,
+           0,
+           1
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.27549,
+           0.12438,
+           0.99899
+          ],
+          [
+           0.03391,
+           -0.07079,
+           1.05258
+          ],
+          [
+           0.27549,
+           -0.12438,
+           0.85741
+          ],
+          [
+           0.03391,
+           0.07079,
+           0.80382
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           2,
+           0
+          ],
+          [
+           3,
+           0,
+           1
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.03391,
+           0.54801,
+           0.18502
+          ],
+          [
+           0.27549,
+           0.49442,
+           0.38019
+          ],
+          [
+           0.03391,
+           0.68959,
+           0.43378
+          ],
+          [
+           0.27549,
+           0.74318,
+           0.23861
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           0,
+           1
+          ],
+          [
+           3,
+           2,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.23861,
+           0.27549,
+           0.74318
+          ],
+          [
+           0.43378,
+           0.03391,
+           0.68959
+          ],
+          [
+           0.38019,
+           0.27549,
+           0.49442
+          ],
+          [
+           0.18502,
+           0.03391,
+           0.54801
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           2,
+           0
+          ],
+          [
+           3,
+           0,
+           1
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.23861,
+           0.34331,
+           0.12438
+          ],
+          [
+           0.38019,
+           0.34331,
+           -0.12438
+          ],
+          [
+           0.43378,
+           0.58489,
+           0.07079
+          ],
+          [
+           0.18502,
+           0.58489,
+           -0.07079
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           2,
+           0
+          ],
+          [
+           3,
+           0,
+           1
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.38019,
+           0.89429,
+           0.74318
+          ],
+          [
+           0.23861,
+           0.89429,
+           0.49442
+          ],
+          [
+           0.18502,
+           0.65271,
+           0.68959
+          ],
+          [
+           0.43378,
+           0.65271,
+           0.54801
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           0,
+           1
+          ],
+          [
+           3,
+           2,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.23861,
+           0.96211,
+           -0.12438
+          ],
+          [
+           0.43378,
+           1.20369,
+           -0.07079
+          ],
+          [
+           0.38019,
+           0.96211,
+           0.12438
+          ],
+          [
+           0.18502,
+           1.20369,
+           0.07079
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           0,
+           1
+          ],
+          [
+           3,
+           2,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.58489,
+           0.07079,
+           0.43378
+          ],
+          [
+           0.58489,
+           -0.07079,
+           0.18502
+          ],
+          [
+           0.34331,
+           0.12438,
+           0.23861
+          ],
+          [
+           0.34331,
+           -0.12438,
+           0.38019
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           0,
+           1
+          ],
+          [
+           3,
+           2,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.58489,
+           0.54801,
+           1.05258
+          ],
+          [
+           0.58489,
+           0.68959,
+           0.80382
+          ],
+          [
+           0.34331,
+           0.74318,
+           0.99899
+          ],
+          [
+           0.34331,
+           0.49442,
+           0.85741
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           2,
+           0
+          ],
+          [
+           3,
+           0,
+           1
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.54801,
+           0.18502,
+           0.03391
+          ],
+          [
+           0.49442,
+           0.38019,
+           0.27549
+          ],
+          [
+           0.68959,
+           0.43378,
+           0.03391
+          ],
+          [
+           0.74318,
+           0.23861,
+           0.27549
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           0,
+           1
+          ],
+          [
+           3,
+           2,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.68959,
+           0.18502,
+           0.65271
+          ],
+          [
+           0.49442,
+           0.23861,
+           0.89429
+          ],
+          [
+           0.54801,
+           0.43378,
+           0.65271
+          ],
+          [
+           0.74318,
+           0.38019,
+           0.89429
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           2,
+           0
+          ],
+          [
+           3,
+           0,
+           1
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.54801,
+           1.05258,
+           0.58489
+          ],
+          [
+           0.68959,
+           0.80382,
+           0.58489
+          ],
+          [
+           0.74318,
+           0.99899,
+           0.34331
+          ],
+          [
+           0.49442,
+           0.85741,
+           0.34331
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           2,
+           0
+          ],
+          [
+           3,
+           0,
+           1
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.54801,
+           0.80382,
+           1.20369
+          ],
+          [
+           0.74318,
+           0.85741,
+           0.96211
+          ],
+          [
+           0.68959,
+           1.05258,
+           1.20369
+          ],
+          [
+           0.49442,
+           0.99899,
+           0.96211
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           0,
+           1
+          ],
+          [
+           3,
+           2,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.89429,
+           -0.12438,
+           0.99899
+          ],
+          [
+           0.89429,
+           0.12438,
+           0.85741
+          ],
+          [
+           0.65271,
+           0.07079,
+           1.05258
+          ],
+          [
+           0.65271,
+           -0.07079,
+           0.80382
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           0,
+           1
+          ],
+          [
+           3,
+           2,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.89429,
+           0.74318,
+           0.38019
+          ],
+          [
+           0.89429,
+           0.49442,
+           0.23861
+          ],
+          [
+           0.65271,
+           0.68959,
+           0.18502
+          ],
+          [
+           0.65271,
+           0.54801,
+           0.43378
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           0,
+           1
+          ],
+          [
+           3,
+           2,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.85741,
+           0.27549,
+           -0.12438
+          ],
+          [
+           0.80382,
+           0.03391,
+           0.07079
+          ],
+          [
+           0.99899,
+           0.27549,
+           0.12438
+          ],
+          [
+           1.05258,
+           0.03391,
+           -0.07079
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           2,
+           0
+          ],
+          [
+           3,
+           0,
+           1
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.99899,
+           0.34331,
+           0.74318
+          ],
+          [
+           0.85741,
+           0.34331,
+           0.49442
+          ],
+          [
+           1.05258,
+           0.58489,
+           0.54801
+          ],
+          [
+           0.80382,
+           0.58489,
+           0.68959
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           0,
+           1
+          ],
+          [
+           3,
+           2,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.99899,
+           0.89429,
+           -0.12438
+          ],
+          [
+           0.85741,
+           0.89429,
+           0.12438
+          ],
+          [
+           1.05258,
+           0.65271,
+           0.07079
+          ],
+          [
+           0.80382,
+           0.65271,
+           -0.07079
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           0,
+           1
+          ],
+          [
+           3,
+           2,
+           0
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           0.99899,
+           0.96211,
+           0.49442
+          ],
+          [
+           1.05258,
+           1.20369,
+           0.68959
+          ],
+          [
+           0.85741,
+           0.96211,
+           0.74318
+          ],
+          [
+           0.80382,
+           1.20369,
+           0.54801
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           2,
+           0
+          ],
+          [
+           3,
+           0,
+           1
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           1.20369,
+           0.07079,
+           0.18502
+          ],
+          [
+           0.96211,
+           0.12438,
+           0.38019
+          ],
+          [
+           1.20369,
+           -0.07079,
+           0.43378
+          ],
+          [
+           0.96211,
+           -0.12438,
+           0.23861
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           2,
+           0
+          ],
+          [
+           3,
+           0,
+           1
+          ]
+         ]
+        }
+       },
+       {
+        "type": "polyhedron",
+        "name": "Polyhedron [FeO6 octahedron]",
+        "visible": true,
+        "params": {
+         "points": [
+          [
+           1.20369,
+           0.68959,
+           1.05258
+          ],
+          [
+           0.96211,
+           0.49442,
+           0.99899
+          ],
+          [
+           1.20369,
+           0.54801,
+           0.80382
+          ],
+          [
+           0.96211,
+           0.74318,
+           0.85741
+          ]
+         ],
+         "faces": [
+          [
+           0,
+           2,
+           1
+          ],
+          [
+           3,
+           1,
+           2
+          ],
+          [
+           3,
+           0,
+           1
+          ],
+          [
+           3,
+           2,
+           0
+          ]
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Fe-O bonds]",
+      "visible": true,
+      "params": {
+       "color": "#e8a070",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For b",
+        "visible": true,
+        "params": {
+         "variable": "b",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "[0,0,0,.034,-.071,-.185], [0,0,0,.071,.185,-.034], [0,0,0,.185,-.034,.071], [0,0,0,-.185,.034,-.071], [0,0,0,-.071,-.185,.034], [0,0,0,-.034,.071,.185], [0,0,1.238,.034,-.071,1.053], [0,0,1.238,.071,.185,1.204], [0,0,1.238,.185,-.034,1.308], [0,0,1.238,-.185,.034,1.167], [0,0,1.238,-.071,-.185,1.272], [0,0,1.238,-.034,.071,1.423], [0,1.238,0,.034,1.167,-.185], [0,1.238,0,.071,1.423,-.034], [0,1.238,0,.185,1.204,.071], [0,1.238,0,-.185,1.272,-.071], [0,1.238,0,-.071,1.053,.034], [0,1.238,0,-.034,1.308,.185], [0,1.238,1.238,.034,1.167,1.053], [0,1.238,1.238,.071,1.423,1.204], [0,1.238,1.238,.185,1.204,1.308], [0,1.238,1.238,-.185,1.272,1.167], [0,1.238,1.238,-.071,1.053,1.272], [0,1.238,1.238,-.034,1.308,1.423], [1.238,0,0,1.272,-.071,-.185], [1.238,0,0,1.308,.185,-.034], [1.238,0,0,1.423,-.034,.071], [1.238,0,0,1.053,.034,-.071], [1.238,0,0,1.167,-.185,.034], [1.238,0,0,1.204,.071,.185], [1.238,0,1.238,1.272,-.071,1.053], [1.238,0,1.238,1.308,.185,1.204], [1.238,0,1.238,1.423,-.034,1.308], [1.238,0,1.238,1.053,.034,1.167], [1.238,0,1.238,1.167,-.185,1.272], [1.238,0,1.238,1.204,.071,1.423], [1.238,1.238,0,1.272,1.167,-.185], [1.238,1.238,0,1.308,1.423,-.034], [1.238,1.238,0,1.423,1.204,.071], [1.238,1.238,0,1.053,1.272,-.071], [1.238,1.238,0,1.167,1.053,.034], [1.238,1.238,0,1.204,1.308,.185], [1.238,1.238,1.238,1.272,1.167,1.053], [1.238,1.238,1.238,1.308,1.423,1.204], [1.238,1.238,1.238,1.423,1.204,1.308], [1.238,1.238,1.238,1.053,1.272,1.167], [1.238,1.238,1.238,1.167,1.053,1.272], [1.238,1.238,1.238,1.204,1.308,1.423], [0,0,.619,.034,.071,.804], [0,0,.619,.071,-.185,.653], [0,0,.619,.185,.034,.548], [0,0,.619,-.185,-.034,.69], [0,0,.619,-.071,.185,.585], [0,0,.619,-.034,-.071,.434], [0,1.238,.619,.034,1.308,.804], [0,1.238,.619,.071,1.053,.653], [0,1.238,.619,.185,1.272,.548], [0,1.238,.619,-.185,1.204,.69], [0,1.238,.619,-.071,1.423,.585], [0,1.238,.619,-.034,1.167,.434], [1.238,0,.619,1.272,.071,.804], [1.238,0,.619,1.308,-.185,.653], [1.238,0,.619,1.423,.034,.548], [1.238,0,.619,1.053,-.034,.69], [1.238,0,.619,1.167,.185,.585], [1.238,0,.619,1.204,-.071,.434], [1.238,1.238,.619,1.272,1.308,.804], [1.238,1.238,.619,1.308,1.053,.653], [1.238,1.238,.619,1.423,1.272,.548], [1.238,1.238,.619,1.053,1.204,.69], [1.238,1.238,.619,1.167,1.423,.585], [1.238,1.238,.619,1.204,1.167,.434], [0,.619,0,.034,.548,.185], [0,.619,0,.071,.804,.034], [0,.619,0,.185,.585,-.071], [0,.619,0,-.185,.653,.071], [0,.619,0,-.071,.434,-.034], [0,.619,0,-.034,.69,-.185], [0,.619,1.238,.034,.548,1.423], [0,.619,1.238,.071,.804,1.272], [0,.619,1.238,.185,.585,1.167], [0,.619,1.238,-.185,.653,1.308], [0,.619,1.238,-.071,.434,1.204], [0,.619,1.238,-.034,.69,1.053], [1.238,.619,0,1.272,.548,.185], [1.238,.619,0,1.308,.804,.034], [1.238,.619,0,1.423,.585,-.071], [1.238,.619,0,1.053,.653,.071], [1.238,.619,0,1.167,.434,-.034], [1.238,.619,0,1.204,.69,-.185], [1.238,.619,1.238,1.272,.548,1.423], [1.238,.619,1.238,1.308,.804,1.272], [1.238,.619,1.238,1.423,.585,1.167], [1.238,.619,1.238,1.053,.653,1.308], [1.238,.619,1.238,1.167,.434,1.204], [1.238,.619,1.238,1.204,.69,1.053], [0,.619,.619,.034,.69,.434], [0,.619,.619,.071,.434,.585], [0,.619,.619,.185,.653,.69], [0,.619,.619,-.185,.585,.548], [0,.619,.619,-.071,.804,.653], [0,.619,.619,-.034,.548,.804], [1.238,.619,.619,1.272,.69,.434], [1.238,.619,.619,1.308,.434,.585], [1.238,.619,.619,1.423,.653,.69], [1.238,.619,.619,1.053,.585,.548], [1.238,.619,.619,1.167,.804,.653], [1.238,.619,.619,1.204,.548,.804], [.309,.309,.309,.124,.239,.343], [.309,.309,.309,.239,.343,.124], [.309,.309,.309,.275,.494,.38], [.309,.309,.309,.343,.124,.239], [.309,.309,.309,.38,.275,.494], [.309,.309,.309,.494,.38,.275], [.309,.309,.928,.124,.38,.962], [.309,.309,.928,.239,.275,.743], [.309,.309,.928,.275,.124,.999], [.309,.309,.928,.343,.494,.857], [.309,.309,.928,.38,.343,1.113], [.309,.309,.928,.494,.239,.894], [.309,.928,.309,.124,.999,.275], [.309,.928,.309,.239,.894,.494], [.309,.928,.309,.275,.743,.239], [.309,.928,.309,.343,1.113,.38], [.309,.928,.309,.38,.962,.124], [.309,.928,.309,.494,.857,.343], [.309,.928,.928,.124,.857,.894], [.309,.928,.928,.239,.962,1.113], [.309,.928,.928,.275,1.113,.857], [.309,.928,.928,.343,.743,.999], [.309,.928,.928,.38,.894,.743], [.309,.928,.928,.494,.999,.962], [.619,0,0,.434,-.034,-.071], [.619,0,0,.548,.185,.034], [.619,0,0,.585,-.071,.185], [.619,0,0,.653,.071,-.185], [.619,0,0,.69,-.185,-.034], [.619,0,0,.804,.034,.071], [.619,0,1.238,.434,-.034,1.167], [.619,0,1.238,.548,.185,1.272], [.619,0,1.238,.585,-.071,1.423], [.619,0,1.238,.653,.071,1.053], [.619,0,1.238,.69,-.185,1.204], [.619,0,1.238,.804,.034,1.308], [.619,1.238,0,.434,1.204,-.071], [.619,1.238,0,.548,1.423,.034], [.619,1.238,0,.585,1.167,.185], [.619,1.238,0,.653,1.308,-.185], [.619,1.238,0,.69,1.053,-.034], [.619,1.238,0,.804,1.272,.071], [.619,1.238,1.238,.434,1.204,1.167], [.619,1.238,1.238,.548,1.423,1.272], [.619,1.238,1.238,.585,1.167,1.423], [.619,1.238,1.238,.653,1.308,1.053], [.619,1.238,1.238,.69,1.053,1.204], [.619,1.238,1.238,.804,1.272,1.308], [.619,0,.619,.434,.034,.69], [.619,0,.619,.548,-.185,.585], [.619,0,.619,.585,.071,.434], [.619,0,.619,.653,-.071,.804], [.619,0,.619,.69,.185,.653], [.619,0,.619,.804,-.034,.548], [.619,1.238,.619,.434,1.272,.69], [.619,1.238,.619,.548,1.053,.585], [.619,1.238,.619,.585,1.308,.434], [.619,1.238,.619,.653,1.167,.804], [.619,1.238,.619,.69,1.423,.653], [.619,1.238,.619,.804,1.204,.548], [.619,.619,0,.434,.585,.071], [.619,.619,0,.548,.804,-.034], [.619,.619,0,.585,.548,-.185], [.619,.619,0,.653,.69,.185], [.619,.619,0,.69,.434,.034], [.619,.619,0,.804,.653,-.071], [.619,.619,1.238,.434,.585,1.308], [.619,.619,1.238,.548,.804,1.204], [.619,.619,1.238,.585,.548,1.053], [.619,.619,1.238,.653,.69,1.423], [.619,.619,1.238,.69,.434,1.272], [.619,.619,1.238,.804,.653,1.167], [.619,.619,.619,.434,.653,.548], [.619,.619,.619,.548,.434,.653], [.619,.619,.619,.585,.69,.804], [.619,.619,.619,.653,.548,.434], [.619,.619,.619,.69,.804,.585], [.619,.619,.619,.804,.585,.69], [.928,.309,.309,.743,.239,.275], [.928,.309,.309,.857,.343,.494], [.928,.309,.309,.894,.494,.239], [.928,.309,.309,.962,.124,.38], [.928,.309,.309,.999,.275,.124], [.928,.309,.309,1.113,.38,.343], [.928,.309,.928,.743,.38,.894], [.928,.309,.928,.857,.275,1.113], [.928,.309,.928,.894,.124,.857], [.928,.309,.928,.962,.494,.999], [.928,.309,.928,.999,.343,.743], [.928,.309,.928,1.113,.239,.962], [.928,.928,.309,.743,.999,.343], [.928,.928,.309,.857,.894,.124], [.928,.928,.309,.894,.743,.38], [.928,.928,.309,.962,1.113,.239], [.928,.928,.309,.999,.962,.494], [.928,.928,.309,1.113,.857,.275], [.928,.928,.928,.743,.857,.962], [.928,.928,.928,.857,.962,.743], [.928,.928,.928,.894,1.113,.999], [.928,.928,.928,.962,.743,.857], [.928,.928,.928,.999,.894,1.113], [.928,.928,.928,1.113,.999,.894], [0,.309,.464,.071,.434,.585], [0,.309,.464,.124,.239,.343], [0,.309,.464,-.124,.38,.343], [0,.309,.464,-.071,.185,.585], [1.238,.309,.464,1.308,.434,.585], [1.238,.309,.464,1.362,.239,.343], [1.238,.309,.464,1.113,.38,.343], [1.238,.309,.464,1.167,.185,.585], [0,.309,1.083,.071,.185,1.204], [0,.309,1.083,.124,.38,.962], [0,.309,1.083,-.124,.239,.962], [0,.309,1.083,-.071,.434,1.204], [1.238,.309,1.083,1.308,.185,1.204], [1.238,.309,1.083,1.362,.38,.962], [1.238,.309,1.083,1.113,.239,.962], [1.238,.309,1.083,1.167,.434,1.204], [0,.928,.155,.071,.804,.034], [0,.928,.155,.124,.999,.275], [0,.928,.155,-.124,.857,.275], [0,.928,.155,-.071,1.053,.034], [1.238,.928,.155,1.308,.804,.034], [1.238,.928,.155,1.362,.999,.275], [1.238,.928,.155,1.113,.857,.275], [1.238,.928,.155,1.167,1.053,.034], [0,.928,.774,.071,1.053,.653], [0,.928,.774,.124,.857,.894], [0,.928,.774,-.124,.999,.894], [0,.928,.774,-.071,.804,.653], [1.238,.928,.774,1.308,1.053,.653], [1.238,.928,.774,1.362,.857,.894], [1.238,.928,.774,1.113,.999,.894], [1.238,.928,.774,1.167,.804,.653], [.155,0,.928,.034,.071,.804], [.155,0,.928,.034,-.071,1.053], [.155,0,.928,.275,.124,.999], [.155,0,.928,.275,-.124,.857], [.155,1.238,.928,.034,1.308,.804], [.155,1.238,.928,.034,1.167,1.053], [.155,1.238,.928,.275,1.362,.999], [.155,1.238,.928,.275,1.113,.857], [.155,.619,.309,.034,.548,.185], [.155,.619,.309,.034,.69,.434], [.155,.619,.309,.275,.494,.38], [.155,.619,.309,.275,.743,.239], [.309,.155,.619,.185,.034,.548], [.309,.155,.619,.239,.275,.743], [.309,.155,.619,.38,.275,.494], [.309,.155,.619,.434,.034,.69], [.309,.464,0,.185,.585,-.071], [.309,.464,0,.239,.343,.124], [.309,.464,0,.38,.343,-.124], [.309,.464,0,.434,.585,.071], [.309,.464,1.238,.185,.585,1.167], [.309,.464,1.238,.239,.343,1.362], [.309,.464,1.238,.38,.343,1.113], [.309,.464,1.238,.434,.585,1.308], [.309,.774,.619,.185,.653,.69], [.309,.774,.619,.239,.894,.494], [.309,.774,.619,.38,.894,.743], [.309,.774,.619,.434,.653,.548], [.309,1.083,0,.185,1.204,.071], [.309,1.083,0,.239,.962,-.124], [.309,1.083,0,.38,.962,.124], [.309,1.083,0,.434,1.204,-.071], [.309,1.083,1.238,.185,1.204,1.308], [.309,1.083,1.238,.239,.962,1.113], [.309,1.083,1.238,.38,.962,1.362], [.309,1.083,1.238,.434,1.204,1.167], [.464,0,.309,.343,.124,.239], [.464,0,.309,.343,-.124,.38], [.464,0,.309,.585,.071,.434], [.464,0,.309,.585,-.071,.185], [.464,1.238,.309,.343,1.362,.239], [.464,1.238,.309,.343,1.113,.38], [.464,1.238,.309,.585,1.308,.434], [.464,1.238,.309,.585,1.167,.185], [.464,.619,.928,.343,.494,.857], [.464,.619,.928,.343,.743,.999], [.464,.619,.928,.585,.548,1.053], [.464,.619,.928,.585,.69,.804], [.619,.309,.155,.494,.38,.275], [.619,.309,.155,.548,.185,.034], [.619,.309,.155,.69,.434,.034], [.619,.309,.155,.743,.239,.275], [.619,.309,.774,.494,.239,.894], [.619,.309,.774,.548,.434,.653], [.619,.309,.774,.69,.185,.653], [.619,.309,.774,.743,.38,.894], [.619,.928,.464,.494,.857,.343], [.619,.928,.464,.548,1.053,.585], [.619,.928,.464,.69,.804,.585], [.619,.928,.464,.743,.999,.343], [.619,.928,1.083,.494,.999,.962], [.619,.928,1.083,.548,.804,1.204], [.619,.928,1.083,.69,1.053,1.204], [.619,.928,1.083,.743,.857,.962], [.774,0,.928,.653,.071,1.053], [.774,0,.928,.653,-.071,.804], [.774,0,.928,.894,.124,.857], [.774,0,.928,.894,-.124,.999], [.774,1.238,.928,.653,1.308,1.053], [.774,1.238,.928,.653,1.167,.804], [.774,1.238,.928,.894,1.362,.857], [.774,1.238,.928,.894,1.113,.999], [.774,.619,.309,.653,.548,.434], [.774,.619,.309,.653,.69,.185], [.774,.619,.309,.894,.494,.239], [.774,.619,.309,.894,.743,.38], [.928,.155,0,.804,.034,.071], [.928,.155,0,.857,.275,-.124], [.928,.155,0,.999,.275,.124], [.928,.155,0,1.053,.034,-.071], [.928,.155,1.238,.804,.034,1.308], [.928,.155,1.238,.857,.275,1.113], [.928,.155,1.238,.999,.275,1.362], [.928,.155,1.238,1.053,.034,1.167], [.928,.464,.619,.804,.585,.69], [.928,.464,.619,.857,.343,.494], [.928,.464,.619,.999,.343,.743], [.928,.464,.619,1.053,.585,.548], [.928,.774,0,.804,.653,-.071], [.928,.774,0,.857,.894,.124], [.928,.774,0,.999,.894,-.124], [.928,.774,0,1.053,.653,.071], [.928,.774,1.238,.804,.653,1.167], [.928,.774,1.238,.857,.894,1.362], [.928,.774,1.238,.999,.894,1.113], [.928,.774,1.238,1.053,.653,1.308], [.928,1.083,.619,.804,1.204,.548], [.928,1.083,.619,.857,.962,.743], [.928,1.083,.619,.999,.962,.494], [.928,1.083,.619,1.053,1.204,.69], [1.083,0,.309,.962,.124,.38], [1.083,0,.309,.962,-.124,.239], [1.083,0,.309,1.204,.071,.185], [1.083,0,.309,1.204,-.071,.434], [1.083,1.238,.309,.962,1.362,.38], [1.083,1.238,.309,.962,1.113,.239], [1.083,1.238,.309,1.204,1.308,.185], [1.083,1.238,.309,1.204,1.167,.434], [1.083,.619,.928,.962,.494,.999], [1.083,.619,.928,.962,.743,.857], [1.083,.619,.928,1.204,.548,.804], [1.083,.619,.928,1.204,.69,1.053]"
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere",
+            "visible": true,
+            "params": {
+             "x": "b[0]",
+             "y": "b[1]",
+             "z": "b[2]",
+             "radius": 0.018,
+             "segments": 8
+            }
+           },
+           {
+            "type": "sphere",
+            "name": "Sphere [Fe-O bonds]",
+            "visible": true,
+            "params": {
+             "x": "b[3]",
+             "y": "b[4]",
+             "z": "b[5]",
+             "radius": 0.018,
+             "segments": 8
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Y-O bonds]",
+      "visible": true,
+      "params": {
+       "color": "#8fd8d8",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For b",
+        "visible": true,
+        "params": {
+         "variable": "b",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "[0,.309,.155,.034,.548,.185], [0,.309,.155,.071,.185,-.034], [0,.309,.155,.124,.239,.343], [0,.309,.155,.239,.343,.124], [0,.309,.155,-.239,.275,.124], [0,.309,.155,-.124,.38,.343], [0,.309,.155,-.071,.434,-.034], [0,.309,.155,-.034,.071,.185], [1.238,.309,.155,1.272,.548,.185], [1.238,.309,.155,1.308,.185,-.034], [1.238,.309,.155,1.362,.239,.343], [1.238,.309,.155,1.476,.343,.124], [1.238,.309,.155,.999,.275,.124], [1.238,.309,.155,1.113,.38,.343], [1.238,.309,.155,1.167,.434,-.034], [1.238,.309,.155,1.204,.071,.185], [0,.309,.774,.034,.071,.804], [0,.309,.774,.071,.434,.585], [0,.309,.774,.124,.38,.962], [0,.309,.774,.239,.275,.743], [0,.309,.774,-.239,.343,.743], [0,.309,.774,-.124,.239,.962], [0,.309,.774,-.071,.185,.585], [0,.309,.774,-.034,.548,.804], [1.238,.309,.774,1.272,.071,.804], [1.238,.309,.774,1.308,.434,.585], [1.238,.309,.774,1.362,.38,.962], [1.238,.309,.774,1.476,.275,.743], [1.238,.309,.774,.999,.343,.743], [1.238,.309,.774,1.113,.239,.962], [1.238,.309,.774,1.167,.185,.585], [1.238,.309,.774,1.204,.548,.804], [0,.928,.464,.034,.69,.434], [0,.928,.464,.071,1.053,.653], [0,.928,.464,.124,.999,.275], [0,.928,.464,.239,.894,.494], [0,.928,.464,-.239,.962,.494], [0,.928,.464,-.124,.857,.275], [0,.928,.464,-.071,.804,.653], [0,.928,.464,-.034,1.167,.434], [1.238,.928,.464,1.272,.69,.434], [1.238,.928,.464,1.308,1.053,.653], [1.238,.928,.464,1.362,.999,.275], [1.238,.928,.464,1.476,.894,.494], [1.238,.928,.464,.999,.962,.494], [1.238,.928,.464,1.113,.857,.275], [1.238,.928,.464,1.167,.804,.653], [1.238,.928,.464,1.204,1.167,.434], [0,.928,1.083,.034,1.167,1.053], [0,.928,1.083,.071,.804,1.272], [0,.928,1.083,.124,.857,.894], [0,.928,1.083,.239,.962,1.113], [0,.928,1.083,-.239,.894,1.113], [0,.928,1.083,-.124,.999,.894], [0,.928,1.083,-.071,1.053,1.272], [0,.928,1.083,-.034,.69,1.053], [1.238,.928,1.083,1.272,1.167,1.053], [1.238,.928,1.083,1.308,.804,1.272], [1.238,.928,1.083,1.362,.857,.894], [1.238,.928,1.083,1.476,.962,1.113], [1.238,.928,1.083,.999,.894,1.113], [1.238,.928,1.083,1.113,.999,.894], [1.238,.928,1.083,1.167,1.053,1.272], [1.238,.928,1.083,1.204,.69,1.053], [.155,0,.309,.124,.239,.343], [.155,0,.309,.124,-.239,.275], [.155,0,.309,.185,.034,.548], [.155,0,.309,.185,-.034,.071], [.155,0,.309,.343,.124,.239], [.155,0,.309,.343,-.124,.38], [.155,0,.309,-.034,.071,.185], [.155,0,.309,-.034,-.071,.434], [.155,1.238,.309,.124,1.476,.343], [.155,1.238,.309,.124,.999,.275], [.155,1.238,.309,.185,1.272,.548], [.155,1.238,.309,.185,1.204,.071], [.155,1.238,.309,.343,1.362,.239], [.155,1.238,.309,.343,1.113,.38], [.155,1.238,.309,-.034,1.308,.185], [.155,1.238,.309,-.034,1.167,.434], [.155,.619,.928,.124,.38,.962], [.155,.619,.928,.124,.857,.894], [.155,.619,.928,.185,.585,1.167], [.155,.619,.928,.185,.653,.69], [.155,.619,.928,.343,.494,.857], [.155,.619,.928,.343,.743,.999], [.155,.619,.928,-.034,.548,.804], [.155,.619,.928,-.034,.69,1.053], [.309,.155,0,.071,.185,-.034], [.309,.155,0,.185,-.034,.071], [.309,.155,0,.239,.343,.124], [.309,.155,0,.275,.124,-.239], [.309,.155,0,.343,.124,.239], [.309,.155,0,.38,.343,-.124], [.309,.155,0,.434,-.034,-.071], [.309,.155,0,.548,.185,.034], [.309,.155,1.238,.071,.185,1.204], [.309,.155,1.238,.185,-.034,1.308], [.309,.155,1.238,.239,.343,1.362], [.309,.155,1.238,.275,.124,.999], [.309,.155,1.238,.343,.124,1.476], [.309,.155,1.238,.38,.343,1.113], [.309,.155,1.238,.434,-.034,1.167], [.309,.155,1.238,.548,.185,1.272], [.309,.464,.619,.071,.434,.585], [.309,.464,.619,.185,.653,.69], [.309,.464,.619,.239,.275,.743], [.309,.464,.619,.275,.494,.38], [.309,.464,.619,.343,.494,.857], [.309,.464,.619,.38,.275,.494], [.309,.464,.619,.434,.653,.548], [.309,.464,.619,.548,.434,.653], [.309,.774,0,.071,.804,.034], [.309,.774,0,.185,.585,-.071], [.309,.774,0,.239,.962,-.124], [.309,.774,0,.275,.743,.239], [.309,.774,0,.343,.743,-.239], [.309,.774,0,.38,.962,.124], [.309,.774,0,.434,.585,.071], [.309,.774,0,.548,.804,-.034], [.309,.774,1.238,.071,.804,1.272], [.309,.774,1.238,.185,.585,1.167], [.309,.774,1.238,.239,.962,1.113], [.309,.774,1.238,.275,.743,1.476], [.309,.774,1.238,.343,.743,.999], [.309,.774,1.238,.38,.962,1.362], [.309,.774,1.238,.434,.585,1.308], [.309,.774,1.238,.548,.804,1.204], [.309,1.083,.619,.071,1.053,.653], [.309,1.083,.619,.185,1.272,.548], [.309,1.083,.619,.239,.894,.494], [.309,1.083,.619,.275,1.113,.857], [.309,1.083,.619,.343,1.113,.38], [.309,1.083,.619,.38,.894,.743], [.309,1.083,.619,.434,1.272,.69], [.309,1.083,.619,.548,1.053,.585], [.464,0,.928,.275,.124,.999], [.464,0,.928,.275,-.124,.857], [.464,0,.928,.434,.034,.69], [.464,0,.928,.434,-.034,1.167], [.464,0,.928,.494,.239,.894], [.464,0,.928,.494,-.239,.962], [.464,0,.928,.653,.071,1.053], [.464,0,.928,.653,-.071,.804], [.464,1.238,.928,.275,1.362,.999], [.464,1.238,.928,.275,1.113,.857], [.464,1.238,.928,.434,1.272,.69], [.464,1.238,.928,.434,1.204,1.167], [.464,1.238,.928,.494,1.476,.894], [.464,1.238,.928,.494,.999,.962], [.464,1.238,.928,.653,1.308,1.053], [.464,1.238,.928,.653,1.167,.804], [.464,.619,.309,.275,.494,.38], [.464,.619,.309,.275,.743,.239], [.464,.619,.309,.434,.585,.071], [.464,.619,.309,.434,.653,.548], [.464,.619,.309,.494,.38,.275], [.464,.619,.309,.494,.857,.343], [.464,.619,.309,.653,.548,.434], [.464,.619,.309,.653,.69,.185], [.619,.309,.464,.38,.275,.494], [.619,.309,.464,.494,.38,.275], [.619,.309,.464,.548,.434,.653], [.619,.309,.464,.585,.071,.434], [.619,.309,.464,.653,.548,.434], [.619,.309,.464,.69,.185,.653], [.619,.309,.464,.743,.239,.275], [.619,.309,.464,.857,.343,.494], [.619,.309,1.083,.38,.343,1.113], [.619,.309,1.083,.494,.239,.894], [.619,.309,1.083,.548,.185,1.272], [.619,.309,1.083,.585,.548,1.053], [.619,.309,1.083,.653,.071,1.053], [.619,.309,1.083,.69,.434,1.272], [.619,.309,1.083,.743,.38,.894], [.619,.309,1.083,.857,.275,1.113], [.619,.928,.155,.38,.962,.124], [.619,.928,.155,.494,.857,.343], [.619,.928,.155,.548,.804,-.034], [.619,.928,.155,.585,1.167,.185], [.619,.928,.155,.653,.69,.185], [.619,.928,.155,.69,1.053,-.034], [.619,.928,.155,.743,.999,.343], [.619,.928,.155,.857,.894,.124], [.619,.928,.774,.38,.894,.743], [.619,.928,.774,.494,.999,.962], [.619,.928,.774,.548,1.053,.585], [.619,.928,.774,.585,.69,.804], [.619,.928,.774,.653,1.167,.804], [.619,.928,.774,.69,.804,.585], [.619,.928,.774,.743,.857,.962], [.619,.928,.774,.857,.962,.743], [.774,0,.309,.585,.071,.434], [.774,0,.309,.585,-.071,.185], [.774,0,.309,.743,.239,.275], [.774,0,.309,.743,-.239,.343], [.774,0,.309,.804,.034,.071], [.774,0,.309,.804,-.034,.548], [.774,0,.309,.962,.124,.38], [.774,0,.309,.962,-.124,.239], [.774,1.238,.309,.585,1.308,.434], [.774,1.238,.309,.585,1.167,.185], [.774,1.238,.309,.743,1.476,.275], [.774,1.238,.309,.743,.999,.343], [.774,1.238,.309,.804,1.272,.071], [.774,1.238,.309,.804,1.204,.548], [.774,1.238,.309,.962,1.362,.38], [.774,1.238,.309,.962,1.113,.239], [.774,.619,.928,.585,.548,1.053], [.774,.619,.928,.585,.69,.804], [.774,.619,.928,.743,.38,.894], [.774,.619,.928,.743,.857,.962], [.774,.619,.928,.804,.585,.69], [.774,.619,.928,.804,.653,1.167], [.774,.619,.928,.962,.494,.999], [.774,.619,.928,.962,.743,.857], [.928,.155,.619,.69,.185,.653], [.928,.155,.619,.804,-.034,.548], [.928,.155,.619,.857,.343,.494], [.928,.155,.619,.894,.124,.857], [.928,.155,.619,.962,.124,.38], [.928,.155,.619,.999,.343,.743], [.928,.155,.619,1.053,-.034,.69], [.928,.155,.619,1.167,.185,.585], [.928,.464,0,.69,.434,.034], [.928,.464,0,.804,.653,-.071], [.928,.464,0,.857,.275,-.124], [.928,.464,0,.894,.494,.239], [.928,.464,0,.962,.494,-.239], [.928,.464,0,.999,.275,.124], [.928,.464,0,1.053,.653,.071], [.928,.464,0,1.167,.434,-.034], [.928,.464,1.238,.69,.434,1.272], [.928,.464,1.238,.804,.653,1.167], [.928,.464,1.238,.857,.275,1.113], [.928,.464,1.238,.894,.494,1.476], [.928,.464,1.238,.962,.494,.999], [.928,.464,1.238,.999,.275,1.362], [.928,.464,1.238,1.053,.653,1.308], [.928,.464,1.238,1.167,.434,1.204], [.928,.774,.619,.69,.804,.585], [.928,.774,.619,.804,.585,.69], [.928,.774,.619,.857,.962,.743], [.928,.774,.619,.894,.743,.38], [.928,.774,.619,.962,.743,.857], [.928,.774,.619,.999,.962,.494], [.928,.774,.619,1.053,.585,.548], [.928,.774,.619,1.167,.804,.653], [.928,1.083,0,.69,1.053,-.034], [.928,1.083,0,.804,1.272,.071], [.928,1.083,0,.857,.894,.124], [.928,1.083,0,.894,1.113,-.239], [.928,1.083,0,.962,1.113,.239], [.928,1.083,0,.999,.894,-.124], [.928,1.083,0,1.053,1.272,-.071], [.928,1.083,0,1.167,1.053,.034], [.928,1.083,1.238,.69,1.053,1.204], [.928,1.083,1.238,.804,1.272,1.308], [.928,1.083,1.238,.857,.894,1.362], [.928,1.083,1.238,.894,1.113,.999], [.928,1.083,1.238,.962,1.113,1.476], [.928,1.083,1.238,.999,.894,1.113], [.928,1.083,1.238,1.053,1.272,1.167], [.928,1.083,1.238,1.167,1.053,1.272], [1.083,0,.928,1.272,.071,.804], [1.083,0,.928,1.272,-.071,1.053], [1.083,0,.928,.894,.124,.857], [1.083,0,.928,.894,-.124,.999], [1.083,0,.928,1.053,.034,1.167], [1.083,0,.928,1.053,-.034,.69], [1.083,0,.928,1.113,.239,.962], [1.083,0,.928,1.113,-.239,.894], [1.083,1.238,.928,1.272,1.308,.804], [1.083,1.238,.928,1.272,1.167,1.053], [1.083,1.238,.928,.894,1.362,.857], [1.083,1.238,.928,.894,1.113,.999], [1.083,1.238,.928,1.053,1.272,1.167], [1.083,1.238,.928,1.053,1.204,.69], [1.083,1.238,.928,1.113,1.476,.962], [1.083,1.238,.928,1.113,.999,.894], [1.083,.619,.309,1.272,.548,.185], [1.083,.619,.309,1.272,.69,.434], [1.083,.619,.309,.894,.494,.239], [1.083,.619,.309,.894,.743,.38], [1.083,.619,.309,1.053,.585,.548], [1.083,.619,.309,1.053,.653,.071], [1.083,.619,.309,1.113,.38,.343], [1.083,.619,.309,1.113,.857,.275]"
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere",
+            "visible": true,
+            "params": {
+             "x": "b[0]",
+             "y": "b[1]",
+             "z": "b[2]",
+             "radius": 0.013,
+             "segments": 8
+            }
+           },
+           {
+            "type": "sphere",
+            "name": "Sphere [Y-O bonds]",
+            "visible": true,
+            "params": {
+             "x": "b[3]",
+             "y": "b[4]",
+             "z": "b[5]",
+             "radius": 0.013,
+             "segments": 8
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Ytrium Iron Garnet",
+  "description": "Ytrium Iron Garnet: a whole design (every part of the document). Parts: YIG garnet supercell 2x2x2, Y3Fe5O12 yttrium iron garnet (YIG) unit cell. Overall size 5 x 2 x 3 nm. (Description generated automatically.)",
+  "tags": [],
+  "source": "design",
+  "uid": "doc-f3cc4b24d5b5803a",
+  "document": "/Users/gkerherv/Documents/Ytrium Iron Garnet.kcad",
+  "created": "2026-09-24T15:53:49"
+ }
+}

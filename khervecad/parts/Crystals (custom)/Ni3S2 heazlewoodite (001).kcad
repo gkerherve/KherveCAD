@@ -1,0 +1,734 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "nm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "Custom_surf_nx =",
+    "visible": true,
+    "params": {
+     "variable": "Custom_surf_nx",
+     "value": 10.0
+    },
+    "children": []
+   },
+   {
+    "type": "assign",
+    "name": "Custom_surf_ny =",
+    "visible": true,
+    "params": {
+     "variable": "Custom_surf_ny",
+     "value": 10.0
+    },
+    "children": []
+   },
+   {
+    "type": "component",
+    "name": "Ni3S2 heazlewoodite (001)",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "for_loop",
+      "name": "For i",
+      "visible": true,
+      "params": {
+       "variable": "i",
+       "start": 0.0,
+       "end": "Custom_surf_nx - 1",
+       "step": 1.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For j",
+        "visible": true,
+        "params": {
+         "variable": "j",
+         "start": 0.0,
+         "end": "Custom_surf_ny - 1",
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "component",
+          "name": "Custom_surf_cell",
+          "visible": true,
+          "params": {
+           "x": "0.57454 * i - 0.28727 * j",
+           "y": "0.49757 * j",
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "color",
+            "name": "Color [Ni atoms]",
+            "visible": true,
+            "params": {
+             "color": "#50D050",
+             "alpha": 1.0,
+             "material": "Default"
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.43091,
+               "y": 0.0,
+               "z": -0.53548,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.43091,
+               "y": 0.0,
+               "z": -1.24898,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.43091,
+               "y": 0.0,
+               "z": -1.96248,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": -0.21545,
+               "y": 0.37317,
+               "z": -0.53548,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": -0.21545,
+               "y": 0.37317,
+               "z": -1.24898,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": -0.21545,
+               "y": 0.37317,
+               "z": -1.96248,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.07182,
+               "y": 0.12439,
+               "z": -0.53548,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.07182,
+               "y": 0.12439,
+               "z": -1.24898,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.07182,
+               "y": 0.12439,
+               "z": -1.96248,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": -0.14366,
+               "y": 0.33173,
+               "z": -0.29767,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": -0.14366,
+               "y": 0.33173,
+               "z": -1.01117,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": -0.14366,
+               "y": 0.33173,
+               "z": -1.72467,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.07179,
+               "y": 0.20734,
+               "z": -0.29767,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.07179,
+               "y": 0.20734,
+               "z": -1.01117,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.07179,
+               "y": 0.20734,
+               "z": -1.72467,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.07179,
+               "y": 0.45612,
+               "z": -0.29767,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.07179,
+               "y": 0.45612,
+               "z": -1.01117,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.07179,
+               "y": 0.45612,
+               "z": -1.72467,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.14366,
+               "y": 0.16584,
+               "z": -0.05979,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.14366,
+               "y": 0.16584,
+               "z": -0.77329,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.14366,
+               "y": 0.16584,
+               "z": -1.48679,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.35912,
+               "y": 0.04145,
+               "z": -0.05979,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.35912,
+               "y": 0.04145,
+               "z": -0.77329,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.35912,
+               "y": 0.04145,
+               "z": -1.48679,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.35912,
+               "y": 0.29023,
+               "z": -0.05979,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.35912,
+               "y": 0.29023,
+               "z": -0.77329,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [Ni]",
+              "visible": true,
+              "params": {
+               "x": 0.35912,
+               "y": 0.29023,
+               "z": -1.48679,
+               "radius": 0.0434,
+               "segments": 12
+              }
+             }
+            ]
+           },
+           {
+            "type": "color",
+            "name": "Color [S atoms]",
+            "visible": true,
+            "params": {
+             "color": "#FFFF30",
+             "alpha": 1.0,
+             "material": "Default"
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": -0.7135,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": -1.427,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": -0.35746,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": -1.07096,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": -1.78446,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": -3e-05,
+               "y": 0.33173,
+               "z": -0.47569,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": -3e-05,
+               "y": 0.33173,
+               "z": -1.18919,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": -3e-05,
+               "y": 0.33173,
+               "z": -1.90269,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": -3e-05,
+               "y": 0.33173,
+               "z": -0.11965,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": -3e-05,
+               "y": 0.33173,
+               "z": -0.83315,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": -3e-05,
+               "y": 0.33173,
+               "z": -1.54665,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": 0.2873,
+               "y": 0.16584,
+               "z": -0.23781,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": 0.2873,
+               "y": 0.16584,
+               "z": -0.95131,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": 0.2873,
+               "y": 0.16584,
+               "z": -1.66481,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": 0.2873,
+               "y": 0.16584,
+               "z": -0.59527,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": 0.2873,
+               "y": 0.16584,
+               "z": -1.30877,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             },
+             {
+              "type": "sphere",
+              "name": "Sphere [S]",
+              "visible": true,
+              "params": {
+               "x": 0.2873,
+               "y": 0.16584,
+               "z": -2.02227,
+               "radius": 0.03675,
+               "segments": 12
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#9ecbff",
+       "alpha": 0.15,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": -2.1605
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 0.02,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "polygon",
+            "name": "Polygon [Slab base]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "points": [
+              [
+               0.0,
+               0.0
+              ],
+              [
+               5.7454,
+               0.0
+              ],
+              [
+               2.8727,
+               4.97566
+              ],
+              [
+               -2.8727,
+               4.97566
+              ]
+             ]
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Ni3S2 heazlewoodite (001)",
+  "description": "Ni3S2 heazlewoodite (001). Overall size 9 x 5 x 2 (document units). Built from 45 sphere, 3 color, 2 for_loop, 1 component, 1 translate, 1 linear_extrude. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "889a719ec95842189c31a916aeaf17f4",
+  "created": "2026-09-28T14:03:29"
+ }
+}

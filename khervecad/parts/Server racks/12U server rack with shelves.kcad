@@ -1,0 +1,1698 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "assign",
+    "name": "$fn =",
+    "visible": true,
+    "params": {
+     "variable": "$fn",
+     "value": 24.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "12U rack frame 600x600x653",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "d536f8faea294202a0dbf555e644fce3",
+      "title": "12U 19-inch open-frame server rack, 600x600x653 mm",
+      "area": "Electronics",
+      "named": "12U rack frame 600x600x653",
+      "source": "assistant",
+      "description": "Frame of a 12U, 19-inch four-post open server rack. The footprint is 600 x 600 mm and the height 653.4 mm, built from 40x40 mm box-section corner posts with top and bottom width and depth members, on four levelling feet. Frame: x centred, front at y=0, z up. U1 starts at z=70. It goes with the '19in EIA-310 rails, 12U' part (front rail faces at y=50, rear at y=550, hole centres 465.1 mm apart, three 9.5 mm square cage-nut holes per U at 6.35, 22.225 and 38.1 mm). It also goes with the rail bracket plates, the 60 mm corner gussets and a 2U vented cantilever shelf with rack ears.",
+      "tags": [
+       "server rack",
+       "12U",
+       "19 inch",
+       "EIA-310",
+       "network cabinet",
+       "open frame",
+       "rack"
+      ]
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#23262b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For m",
+        "visible": true,
+        "params": {
+         "variable": "m",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "0, 1"
+        },
+        "children": [
+         {
+          "type": "mirror",
+          "name": "Mirror",
+          "visible": true,
+          "params": {
+           "x": "m",
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For y",
+            "visible": true,
+            "params": {
+             "variable": "y",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "0, 560"
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Corner post]",
+              "visible": true,
+              "params": {
+               "x": 260.0,
+               "y": "y",
+               "z": 20.0,
+               "width": 40.0,
+               "depth": 40.0,
+               "height": 633.4,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For z",
+            "visible": true,
+            "params": {
+             "variable": "z",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "20, 613.4"
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Depth member]",
+              "visible": true,
+              "params": {
+               "x": 260.0,
+               "y": 40.0,
+               "z": "z",
+               "width": 40.0,
+               "depth": 520.0,
+               "height": 40.0,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#23262b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For y",
+        "visible": true,
+        "params": {
+         "variable": "y",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "0, 560"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For z",
+          "visible": true,
+          "params": {
+           "variable": "z",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "20, 613.4"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Width member]",
+            "visible": true,
+            "params": {
+             "x": -260.0,
+             "y": "y",
+             "z": "z",
+             "width": 520.0,
+             "depth": 40.0,
+             "height": 40.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#555",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-280, 280"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For y",
+          "visible": true,
+          "params": {
+           "variable": "y",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "20, 580"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": "y",
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Levelling foot pad]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 6.0,
+               "radius_bottom": 18.0,
+               "radius_top": 18.0,
+               "segments": 24,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Levelling foot screw]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 20.0,
+               "radius_bottom": 6.0,
+               "radius_top": 6.0,
+               "segments": 24,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "19in EIA-310 rails, 12U",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "8434744c90ae4a7490f9588d3d9eba28",
+      "title": "19in EIA-310 rails, 12U",
+      "area": "General",
+      "named": "19in EIA-310 rails, 12U"
+     }
+    },
+    "children": [
+     {
+      "type": "for_loop",
+      "name": "For m",
+      "visible": true,
+      "params": {
+       "variable": "m",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": "0, 1"
+      },
+      "children": [
+       {
+        "type": "mirror",
+        "name": "Mirror",
+        "visible": true,
+        "params": {
+         "x": "m",
+         "y": 0.0,
+         "z": 0.0
+        },
+        "children": [
+         {
+          "type": "component",
+          "name": "Front rail",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 50.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "color",
+            "name": "Color",
+            "visible": true,
+            "params": {
+             "color": "#b8bcc2",
+             "alpha": 1.0,
+             "material": "Default"
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "union",
+                "name": "Group",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "rx": 0.0,
+                 "ry": 0.0,
+                 "rz": 0.0,
+                 "color": "",
+                 "alpha": 1.0
+                },
+                "children": [
+                 {
+                  "type": "cube",
+                  "name": "Cube [Rail flange]",
+                  "visible": true,
+                  "params": {
+                   "x": 225.0,
+                   "y": 0.0,
+                   "z": 60.0,
+                   "width": 18.0,
+                   "depth": 2.0,
+                   "height": 553.4,
+                   "center": false
+                  }
+                 },
+                 {
+                  "type": "cube",
+                  "name": "Cube [Rail web]",
+                  "visible": true,
+                  "params": {
+                   "x": 241.0,
+                   "y": 2.0,
+                   "z": 60.0,
+                   "width": 2.0,
+                   "depth": 40.0,
+                   "height": 553.4,
+                   "center": false
+                  }
+                 }
+                ]
+               },
+               {
+                "type": "for_loop",
+                "name": "For u",
+                "visible": true,
+                "params": {
+                 "variable": "u",
+                 "start": 0.0,
+                 "end": 11.0,
+                 "step": 1.0,
+                 "values": ""
+                },
+                "children": [
+                 {
+                  "type": "for_loop",
+                  "name": "For o",
+                  "visible": true,
+                  "params": {
+                   "variable": "o",
+                   "start": 0.0,
+                   "end": 4.0,
+                   "step": 1.0,
+                   "values": "6.35, 22.225, 38.1"
+                  },
+                  "children": [
+                   {
+                    "type": "cube",
+                    "name": "Cube [Square hole]",
+                    "visible": true,
+                    "params": {
+                     "x": 227.8,
+                     "y": -1.0,
+                     "z": "70 + u * 44.45 + o - 4.75",
+                     "width": 9.5,
+                     "depth": 4.0,
+                     "height": 9.5,
+                     "center": false
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 550.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "mirror",
+            "name": "Mirror [Rear rail]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 1.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "reference",
+              "name": "Rail_R instance",
+              "visible": true,
+              "params": {
+               "ref": "Rail_R",
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Rail brackets and corner gussets",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "0e1426b311d144d6b396edac53b9e08d",
+      "title": "Rail brackets and corner gussets",
+      "area": "Fasteners & brackets",
+      "named": "Rail brackets and corner gussets"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8a8f96",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For m",
+        "visible": true,
+        "params": {
+         "variable": "m",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "0, 1"
+        },
+        "children": [
+         {
+          "type": "mirror",
+          "name": "Mirror",
+          "visible": true,
+          "params": {
+           "x": "m",
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For y0",
+            "visible": true,
+            "params": {
+             "variable": "y0",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "52, 508"
+            },
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For z",
+              "visible": true,
+              "params": {
+               "variable": "z",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "56, 609.4"
+              },
+              "children": [
+               {
+                "type": "difference",
+                "name": "Difference",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "cube",
+                  "name": "Cube [Rail bracket plate]",
+                  "visible": true,
+                  "params": {
+                   "x": 243.0,
+                   "y": "y0",
+                   "z": "z",
+                   "width": 17.0,
+                   "depth": 40.0,
+                   "height": 4.0,
+                   "center": false
+                  }
+                 },
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [M6 bolt hole]",
+                  "visible": true,
+                  "params": {
+                   "x": 251.5,
+                   "y": "y0 + 20",
+                   "z": "z - 1",
+                   "height": 6.0,
+                   "radius_bottom": 3.25,
+                   "radius_top": 3.25,
+                   "segments": 24,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For y",
+            "visible": true,
+            "params": {
+             "variable": "y",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "21.5, 581.5"
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 260.0,
+               "y": "y",
+               "z": 60.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 90.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "linear_extrude",
+                  "name": "Linear extrude",
+                  "visible": true,
+                  "params": {
+                   "height": 3.0,
+                   "twist": 0.0,
+                   "scale": 1.0,
+                   "center": false,
+                   "segments": 0
+                  },
+                  "children": [
+                   {
+                    "type": "polygon",
+                    "name": "Polygon [Lower corner gusset]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "points": [
+                      [
+                       0.0,
+                       0.0
+                      ],
+                      [
+                       -60.0,
+                       0.0
+                      ],
+                      [
+                       0.0,
+                       60.0
+                      ]
+                     ]
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 260.0,
+               "y": "y",
+               "z": 613.4
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 90.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "linear_extrude",
+                  "name": "Linear extrude",
+                  "visible": true,
+                  "params": {
+                   "height": 3.0,
+                   "twist": 0.0,
+                   "scale": 1.0,
+                   "center": false,
+                   "segments": 0
+                  },
+                  "children": [
+                   {
+                    "type": "polygon",
+                    "name": "Polygon [Upper corner gusset]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "points": [
+                      [
+                       0.0,
+                       0.0
+                      ],
+                      [
+                       -60.0,
+                       0.0
+                      ],
+                      [
+                       0.0,
+                       -60.0
+                      ]
+                     ]
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "2U cantilever shelf",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "7da967ad81c84a0686e06a52cd87d93d",
+      "title": "2U cantilever shelf",
+      "area": "House & home",
+      "named": "2U cantilever shelf"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#3a3f46",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For m",
+            "visible": true,
+            "params": {
+             "variable": "m",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "0, 1"
+            },
+            "children": [
+             {
+              "type": "mirror",
+              "name": "Mirror",
+              "visible": true,
+              "params": {
+               "x": "m",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cube",
+                "name": "Cube [Rack ear]",
+                "visible": true,
+                "params": {
+                 "x": 222.0,
+                 "y": 46.0,
+                 "z": 70.0,
+                 "width": 19.3,
+                 "depth": 3.0,
+                 "height": 88.1,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Front face]",
+            "visible": true,
+            "params": {
+             "x": -222.0,
+             "y": 46.0,
+             "z": 70.0,
+             "width": 444.0,
+             "depth": 3.0,
+             "height": 88.1,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Shelf tray]",
+            "visible": true,
+            "params": {
+             "x": -222.0,
+             "y": 49.0,
+             "z": 70.0,
+             "width": 444.0,
+             "depth": 350.0,
+             "height": 2.0,
+             "center": false
+            }
+           },
+           {
+            "type": "for_loop",
+            "name": "For x",
+            "visible": true,
+            "params": {
+             "variable": "x",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "-222, 220"
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Side lip]",
+              "visible": true,
+              "params": {
+               "x": "x",
+               "y": 49.0,
+               "z": 70.0,
+               "width": 2.0,
+               "depth": 350.0,
+               "height": 40.0,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Rear lip]",
+            "visible": true,
+            "params": {
+             "x": -222.0,
+             "y": 397.0,
+             "z": 70.0,
+             "width": 444.0,
+             "depth": 2.0,
+             "height": 20.0,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-232.55, 232.55"
+          },
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For o",
+            "visible": true,
+            "params": {
+             "variable": "o",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "6.35, 82.55"
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "x",
+               "y": 45.0,
+               "z": "70 + o"
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": -90.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ear hole]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 6.0,
+                   "radius_bottom": 3.25,
+                   "radius_top": 3.25,
+                   "segments": 24,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For i",
+          "visible": true,
+          "params": {
+           "variable": "i",
+           "start": 0.0,
+           "end": 17.0,
+           "step": 1.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Floor vent slot]",
+            "visible": true,
+            "params": {
+             "x": "-190 + i * 22",
+             "y": 80.0,
+             "z": 69.0,
+             "width": 8.0,
+             "depth": 280.0,
+             "height": 4.0,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For i",
+          "visible": true,
+          "params": {
+           "variable": "i",
+           "start": 0.0,
+           "end": 9.0,
+           "step": 1.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Front vent]",
+            "visible": true,
+            "params": {
+             "x": "-150 + i * 30",
+             "y": 45.0,
+             "z": 90.0,
+             "width": 14.0,
+             "depth": 6.0,
+             "height": 50.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "2U shelf U5-U6",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 177.8,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "45668ccea85c4e728676532b408c6891",
+      "title": "2U shelf U5-U6",
+      "area": "House & home",
+      "named": "2U shelf U5-U6"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#3a3f46",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For m",
+            "visible": true,
+            "params": {
+             "variable": "m",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "0, 1"
+            },
+            "children": [
+             {
+              "type": "mirror",
+              "name": "Mirror",
+              "visible": true,
+              "params": {
+               "x": "m",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cube",
+                "name": "Cube [Rack ear]",
+                "visible": true,
+                "params": {
+                 "x": 222.0,
+                 "y": 46.0,
+                 "z": 70.0,
+                 "width": 19.3,
+                 "depth": 3.0,
+                 "height": 88.1,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Front face]",
+            "visible": true,
+            "params": {
+             "x": -222.0,
+             "y": 46.0,
+             "z": 70.0,
+             "width": 444.0,
+             "depth": 3.0,
+             "height": 88.1,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Shelf tray]",
+            "visible": true,
+            "params": {
+             "x": -222.0,
+             "y": 49.0,
+             "z": 70.0,
+             "width": 444.0,
+             "depth": 350.0,
+             "height": 2.0,
+             "center": false
+            }
+           },
+           {
+            "type": "for_loop",
+            "name": "For x",
+            "visible": true,
+            "params": {
+             "variable": "x",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "-222, 220"
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Side lip]",
+              "visible": true,
+              "params": {
+               "x": "x",
+               "y": 49.0,
+               "z": 70.0,
+               "width": 2.0,
+               "depth": 350.0,
+               "height": 40.0,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Rear lip]",
+            "visible": true,
+            "params": {
+             "x": -222.0,
+             "y": 397.0,
+             "z": 70.0,
+             "width": 444.0,
+             "depth": 2.0,
+             "height": 20.0,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-232.55, 232.55"
+          },
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For o",
+            "visible": true,
+            "params": {
+             "variable": "o",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "6.35, 82.55"
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "x",
+               "y": 45.0,
+               "z": "70 + o"
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": -90.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Ear hole]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 6.0,
+                   "radius_bottom": 3.25,
+                   "radius_top": 3.25,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For i",
+          "visible": true,
+          "params": {
+           "variable": "i",
+           "start": 0.0,
+           "end": 17.0,
+           "step": 1.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Floor vent slot]",
+            "visible": true,
+            "params": {
+             "x": "-190 + i * 22",
+             "y": 80.0,
+             "z": 69.0,
+             "width": 8.0,
+             "depth": 280.0,
+             "height": 4.0,
+             "center": false
+            }
+           }
+          ]
+         },
+         {
+          "type": "for_loop",
+          "name": "For i",
+          "visible": true,
+          "params": {
+           "variable": "i",
+           "start": 0.0,
+           "end": 9.0,
+           "step": 1.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Front vent]",
+            "visible": true,
+            "params": {
+             "x": "-150 + i * 30",
+             "y": 45.0,
+             "z": 90.0,
+             "width": 14.0,
+             "depth": 6.0,
+             "height": 50.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "reference",
+    "name": "Shelf_2U_Extra instance",
+    "visible": true,
+    "params": {
+     "ref": "Shelf_2U_Extra",
+     "x": 0.0,
+     "y": 0.0,
+     "z": 355.6,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    }
+   },
+   {
+    "type": "component",
+    "name": "Glass front door, lockable",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "924c7b2fa6e4430ca5dd0a9e1238ab70",
+      "title": "Glass front door, lockable",
+      "area": "House & home",
+      "named": "Glass front door, lockable"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#23262b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Difference",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Door frame]",
+          "visible": true,
+          "params": {
+           "x": -298.0,
+           "y": -22.0,
+           "z": 24.0,
+           "width": 596.0,
+           "depth": 20.0,
+           "height": 625.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Glass opening]",
+          "visible": true,
+          "params": {
+           "x": -263.0,
+           "y": -23.0,
+           "z": 59.0,
+           "width": 526.0,
+           "depth": 22.0,
+           "height": 555.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#23262b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For z",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "24, 629"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -298.0,
+           "y": -22.0,
+           "z": "z",
+           "width": 596.0,
+           "depth": 20.0,
+           "height": 20.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8fb3c9",
+       "alpha": 0.35,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Tinted tempered glass]",
+        "visible": true,
+        "params": {
+         "x": -266.0,
+         "y": -14.0,
+         "z": 56.0,
+         "width": 532.0,
+         "depth": 5.0,
+         "height": 561.0,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#23262b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": 0.0,
+         "end": 7.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Bottom vent slot]",
+          "visible": true,
+          "params": {
+           "x": "-240 + i * 68",
+           "y": -23.0,
+           "z": 30.0,
+           "width": 40.0,
+           "depth": 2.0,
+           "height": 20.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#9aa0a6",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For z",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "80, 336, 590"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -300.0,
+           "y": -12.0,
+           "z": "z"
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Hinge knuckle]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "height": 45.0,
+             "radius_bottom": 5.0,
+             "radius_top": 5.0,
+             "segments": 64,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 22.0,
+             "height": 2.0,
+             "radius_bottom": 7.0,
+             "radius_top": 7.0,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#9aa0a6",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 270.0,
+         "y": -34.0,
+         "z": 280.0
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Swing handle]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "width": 14.0,
+           "depth": 12.0,
+           "height": 110.0,
+           "center": false
+          }
+         },
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 7.0,
+           "y": -1.0,
+           "z": 90.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Lock cylinder]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 3.0,
+               "radius_bottom": 5.0,
+               "radius_top": 5.0,
+               "segments": 64,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Rack-12U",
+  "description": "Rack-12U: a whole design (every part of the document). Parts: 12U rack frame 600x600x653, 19in EIA-310 rails, 12U, Rail brackets and corner gussets, 2U cantilever shelf, 2U shelf U5-U6, Glass front door, lockable. Plus 1 loose pieces of geometry. Overall size 607 x 638 x 653 mm. (Description generated automatically.)",
+  "tags": [],
+  "source": "design",
+  "uid": "doc-f836a095a0b69db0",
+  "document": "/Users/gkerherv/Documents/Rack-12U.kcad",
+  "created": "2026-09-28T11:50:09"
+ }
+}

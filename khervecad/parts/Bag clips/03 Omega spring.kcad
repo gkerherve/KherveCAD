@@ -1,0 +1,289 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "03 Omega spring",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0
+    },
+    "children": [
+     {
+      "type": "translate",
+      "name": "Translate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": -30.0,
+       "z": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#f5d547",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "Group",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 6.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "rect",
+              "name": "Rectangle",
+              "visible": true,
+              "params": {
+               "x": -1.0,
+               "y": 0.0,
+               "width": 41.0,
+               "height": 2.2
+              }
+             },
+             {
+              "type": "rect",
+              "name": "Rectangle",
+              "visible": true,
+              "params": {
+               "x": 40.0,
+               "y": 0.0,
+               "width": 1.8,
+               "height": 7.2
+              }
+             },
+             {
+              "type": "polygon",
+              "name": "Polygon",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 40.0,
+                 5.15
+                ],
+                [
+                 38.9,
+                 5.15
+                ],
+                [
+                 38.9,
+                 5.45
+                ],
+                [
+                 40.0,
+                 7.2
+                ]
+               ]
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line",
+              "visible": true,
+              "params": {
+               "x1": -0.5,
+               "y1": 0.6,
+               "x2": -3.0,
+               "y2": 0.6,
+               "width": 1.0
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line",
+              "visible": true,
+              "params": {
+               "x1": -3.0,
+               "y1": 0.6,
+               "x2": -3.0,
+               "y2": -3.0,
+               "width": 1.0
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line",
+              "visible": true,
+              "params": {
+               "x1": -3.0,
+               "y1": -3.0,
+               "x2": -8.0,
+               "y2": -3.0,
+               "width": 1.0
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line",
+              "visible": true,
+              "params": {
+               "x1": -8.0,
+               "y1": -3.0,
+               "x2": -8.0,
+               "y2": 8.4,
+               "width": 1.0
+              }
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": -8.0,
+             "y": 8.4,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 14.0
+              },
+              "children": [
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": 8.0,
+                 "y": -8.4,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "linear_extrude",
+                  "name": "Linear extrude",
+                  "visible": true,
+                  "params": {
+                   "height": 6.0,
+                   "twist": 0.0,
+                   "scale": 1.0,
+                   "center": false,
+                   "segments": 0
+                  },
+                  "children": [
+                   {
+                    "type": "rect",
+                    "name": "Rectangle",
+                    "visible": true,
+                    "params": {
+                     "x": -1.0,
+                     "y": 3.0,
+                     "width": 40.5,
+                     "height": 2.0
+                    }
+                   },
+                   {
+                    "type": "line",
+                    "name": "Line",
+                    "visible": true,
+                    "params": {
+                     "x1": -8.0,
+                     "y1": 8.4,
+                     "x2": -3.0,
+                     "y2": 8.4,
+                     "width": 1.0
+                    }
+                   },
+                   {
+                    "type": "line",
+                    "name": "Line",
+                    "visible": true,
+                    "params": {
+                     "x1": -3.0,
+                     "y1": 8.4,
+                     "x2": -3.0,
+                     "y2": 4.5,
+                     "width": 1.0
+                    }
+                   },
+                   {
+                    "type": "line",
+                    "name": "Line",
+                    "visible": true,
+                    "params": {
+                     "x1": -3.0,
+                     "y1": 4.5,
+                     "x2": -0.5,
+                     "y2": 4.5,
+                     "width": 1.0
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "03 Omega spring",
+  "description": "03 Omega spring. Overall size 50 x 20 x 6 (document units). Built from 7 line, 3 translate, 3 rect, 2 linear_extrude, 1 color, 1 union. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "ddf2372400484aa2b98db1928e44e64a",
+  "created": "2026-09-30T21:57:52"
+ }
+}
