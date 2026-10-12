@@ -1,0 +1,5 @@
+l_bracket        C0 s1 fail 4/7 calls=1 41.1s
+l_bracket        C1 s1 fail 4/7 calls=11 317.7s
+l_bracket        C2 s1 PASS 7/7 calls=10 1155.4s
+tube             C0 s1 fail 0/6 calls=0 900.0s
+tube             C1 s1 fail 0/6 calls=0 900.0s

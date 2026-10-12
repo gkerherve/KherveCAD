@@ -329,6 +329,11 @@ def main():
                         continue
                     r = run(bench, a.model, task, cond, seed,
                             refs[task["id"]])
+                    if any(isinstance(u, dict) for u in r["tools"]):
+                        print(f"{task['id']:16s} {cond} s{seed} model "
+                              "did not answer; left for a later run",
+                              flush=True)
+                        continue
                     f.write(json.dumps(r) + "\n")
                     f.flush()
                     print(f"{task['id']:16s} {cond} s{seed} "
