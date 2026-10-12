@@ -4,6 +4,9 @@
 \usepackage{hyperref}
 \usepackage{url}
 \usepackage{tikz}
+\usepackage{subcaption}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\scriptsize,columns=fullflexible,frame=single,breaklines=true}
 \usetikzlibrary{arrows.meta,positioning}
 
 \journal{SoftwareX}
@@ -15,9 +18,9 @@
 \title{KherveCAD: an open parametric modeller that language-model agents can drive}
 
 \author[aff1]{Gwilherm Kerherve\corref{cor1}}
-\ead{[email]}
+\ead{g.kerherve@ic.ac.uk}
 \cortext[cor1]{Corresponding author}
-\address[aff1]{[Affiliation]}
+\address[aff1]{Department of Materials, Imperial College London, Royal School of Mines, South Kensington, London SW7 2BP, United Kingdom}
 
 \begin{abstract}
 KherveCAD is a desktop modeller written in Python and Qt that keeps every design as a tree of objects, and that tree compiles one-to-one into an OpenSCAD program. Because the tree and the program cannot drift apart, a part drawn with the mouse can be edited as code and a program pasted in comes back as editable objects. The application also exposes its editing operations through the Model Context Protocol (MCP). A language-model assistant connected this way does not stop at writing code: it can look at a render of what it built, measure volumes, test a part for 3D printing and check whether two parts collide, and then correct its own work. We describe the architecture, give three worked examples (a printable hinge, an ultra-high-vacuum chamber layout and a carbon nanotube), and discuss where the tool has been useful in teaching and laboratory design.
@@ -35,7 +38,7 @@ computer-aided design \sep OpenSCAD \sep Model Context Protocol \sep large langu
 \begin{tabular}{|l|p{6.2cm}|p{6.2cm}|}
 \hline
 \textbf{Nr} & \textbf{Code metadata description} & \textbf{Value} \\ \hline
-C1 & Current code version & v0.1.[N] \\ \hline
+C1 & Current code version & v0.1.546 \\ \hline
 C2 & Permanent link to code/repository & \url{https://github.com/gkerherve/KherveCAD} \\ \hline
 C3 & Permanent link to reproducible capsule & [Zenodo DOI] \\ \hline
 C4 & Legal code licence & GPL-3.0 \\ \hline
@@ -43,7 +46,7 @@ C5 & Code versioning system used & git \\ \hline
 C6 & Software code languages, tools and services used & Python 3.11+, PyQt5, OpenSCAD (optional), manifold3d, numpy \\ \hline
 C7 & Compilation requirements, operating environments and dependencies & Windows 10/11, macOS (Apple silicon and Intel); see \texttt{requirements.txt} \\ \hline
 C8 & Link to developer documentation/manual & Built-in user guide (F1); \texttt{docs/MCP.md} \\ \hline
-C9 & Support email for questions & [email] \\ \hline
+C9 & Support email for questions & g.kerherve@ic.ac.uk \\ \hline
 \end{tabular}
 \end{table}
 
@@ -53,14 +56,25 @@ Scientists often need small custom parts: a sample holder, a flange adapter, a b
 
 Language models have changed this picture somewhat. Several groups have shown that an LLM can produce CAD from a description, either as sketch-and-extrude sequences~\cite{wu2023cadllm,khan2024text2cad} or as scripts in CadQuery and similar languages~\cite{xie2025textcadquery,guan2025cadcoder}. In practice the code often compiles but the part is wrong --- a hole on the wrong face, two pieces that overlap, a wall too thin to print --- and the model has no way of knowing. Alrashedy et al.~\cite{alrashedy2025cadcodeverify} showed that letting a vision-language model inspect renders of its output and revise the code improves results, and Sadik and Bujny~\cite{sadik2025hitl} argue that geometric metrics are needed to judge such output at all.
 
-KherveCAD was built to close both gaps. On the human side it gives OpenSCAD a graphical editor in which shapes are drawn, moved and combined by hand, while the program stays visible and editable in a code tab (Fig.~\ref{fig:window}). On the machine side it offers the same editor to an AI assistant through the Model Context Protocol~\cite{mcp}, an open standard for connecting assistants to tools. The assistant gets the operations a person would use, plus the means to inspect the result. Our view is that this inspection step, more than code generation itself, is what makes AI-assisted design dependable enough for laboratory work.
+KherveCAD was built to close both gaps. On the human side it gives OpenSCAD a graphical editor in which shapes are drawn, moved and combined by hand, while the program stays visible and editable in a code tab. Fig.~\ref{fig:window} shows a flange joint built this way, one node at a time, and Fig.~\ref{fig:flangefinal} the finished part. On the machine side it offers the same editor to an AI assistant through the Model Context Protocol~\cite{mcp}, an open standard for connecting assistants to tools. The assistant gets the operations a person would use, plus the means to inspect the result. Our view is that this inspection step, more than code generation itself, is what makes AI-assisted design dependable enough for laboratory work.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{figures/fig5_window.png}
-\caption{The main window: object tree (1), properties (2), 2D sketch and assembly view (3), 3D preview (4), drawing tools (5) and main toolbar (6).}
+\begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{figures/flange_1_discs.png}\caption{Two discs grouped as \emph{Flanges}.}\end{subfigure}\hfill
+\begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{figures/flange_2_bore.png}\caption{A \emph{Bore} added to the difference.}\end{subfigure}\\[4pt]
+\begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{figures/flange_3_holes.png}\caption{A \texttt{for} loop places six bolt holes.}\end{subfigure}\hfill
+\begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{figures/flange_4_bolts.png}\caption{Bolts and nuts, two more loops.}\end{subfigure}
+\caption{Building a bolted flange joint in the main window. Each step adds one node to the tree on the left. The selected node is tinted red in the 3D view, so in (b) and (c) the red solids are the material the difference removes.}
 \label{fig:window}
 \end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.6\linewidth]{figures/flange_final.png}
+\caption{The finished flange joint, rendered exactly by OpenSCAD.}
+\label{fig:flangefinal}
+\end{figure}
+
 
 \section{Software description}
 
@@ -104,14 +118,44 @@ Around this core sit tools that grew from our own needs. These include fillets p
 
 \section{Illustrative examples}
 
-\paragraph{A print-in-place butt hinge} The hinge is three Objects: two leaves and a removable pin (Fig.~\ref{fig:hinge}). Each is placed in its own print orientation. Clearances between knuckles and around the pin are named variables, so changing the printer tolerance is a one-line edit. The shipped file is generated by a script, and a test renders it with OpenSCAD to confirm that every piece is watertight and that the leaves swing a full 180\textdegree{} without touching.
+\paragraph{A butt hinge in three printable parts} The hinge is three Objects: \emph{Leaf A}, \emph{Leaf B} and a removable threaded pin, \emph{Bolt} (Fig.~\ref{fig:hinge}). In the tree each one is a single row with its own colour and placement. In the program each one is an OpenSCAD \texttt{module} followed by one placed call (Listing~\ref{lst:hinge}). Clearances between knuckles and around the pin are named variables, so changing the printer tolerance is a one-line edit. The shipped file is generated by a script, and a test renders it with OpenSCAD to confirm that every piece is watertight and that the leaves swing a full 180\textdegree{} without touching.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.8\linewidth]{figures/fig2_hinge.png}
-\caption{Butt hinge with removable threaded pin, as rendered by OpenSCAD inside KherveCAD.}
+\begin{subfigure}{\linewidth}\includegraphics[width=\linewidth]{figures/hinge_tree.png}\caption{The tree holds three Objects; Leaf B is selected.}\end{subfigure}\\[4pt]
+\begin{subfigure}{0.32\linewidth}\includegraphics[width=\linewidth]{figures/hinge_Leaf_A.png}\caption{Leaf A}\end{subfigure}\hfill
+\begin{subfigure}{0.32\linewidth}\includegraphics[width=\linewidth]{figures/hinge_Leaf_B.png}\caption{Leaf B}\end{subfigure}\hfill
+\begin{subfigure}{0.32\linewidth}\includegraphics[width=\linewidth]{figures/hinge_Bolt.png}\caption{Bolt (pin)}\end{subfigure}\\[4pt]
+\begin{subfigure}{0.6\linewidth}\includegraphics[width=\linewidth]{figures/hinge_assembled.png}\caption{Assembled}\end{subfigure}
+\caption{Butt hinge: the object tree, each printable part on its own, and the assembly.}
 \label{fig:hinge}
 \end{figure}
+
+\begin{lstlisting}[float=t,caption={Outline of the 216-line program KherveCAD generates for the hinge. Each Object becomes a module and one placed call. The body of \texttt{Bolt} is shown in full, with long point lists cut.},label=lst:hinge]
+module Leaf_A() { ... }                                // 97 lines
+color("#d1ad59") Leaf_A();  // Leaf A
+module Leaf_B() { ... }                                // 74 lines
+color("#d1ad59") Leaf_B();  // Leaf B
+module Bolt() {
+    difference() {
+        union() {
+            translate([0, 0, 4.6]) rotate([0, 90, 0])        // head
+                rotate_extrude($fn=96) polygon(points=[...]);
+            translate([-0.5, 0, 4.6]) rotate([0, 90, 0])     // shank
+                cylinder(h=59, r1=4.95, r2=4.95, $fn=96);
+            translate([58, 0, 4.6]) rotate([0, 90, 0])       // thread
+                linear_extrude(height=14.5, twist=-2610, slices=174)
+                    polygon(points=[...]);
+        }
+        translate([-7, -10, -10]) cube([80.5, 20, 10]);      // flat to print on
+        translate([-6.01, 0, 4.6]) rotate([0, 90, 0])        // hex socket
+            cylinder(h=5.01, r1=3.4641, r2=3.4641, $fn=6);
+        translate([0, 0, 4.6]) rotate([0, 90, 0])            // chamfers
+            rotate_extrude($fn=96) polygon(points=[...]);
+    }
+}
+color("#a8843f") translate([0, 0, 4.4]) Bolt();
+\end{lstlisting}
 
 \paragraph{An ultra-high-vacuum chamber} The Chamber Designer takes a chamber body and a list of ports, each aimed at a focal point on the axis, and fills them with flanges and instruments from the library (Fig.~\ref{fig:chamber}). It reports clashes between ports in 3D before anything is ordered. All port-mounted parts follow one convention --- sealing face at $z = 0$, vacuum side down --- so any instrument fits any port of the right flange size.
 
