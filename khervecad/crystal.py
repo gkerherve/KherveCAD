@@ -13,7 +13,9 @@ the xy plane, c completing a right-handed cell. Lengths here are
 ÅNGSTRÖM (the unit papers give); the builder writes nanometres. Atom
 sizes are the covalent radii of Cordero et al., Dalton Trans. 2008 —
 what "the size of the atom" meant in the quartz models — and colours
-the Jmol/CPK scheme crystallography viewers share.
+VESTA's default scheme (`VESTA_COLOURS`, the viewer most papers'
+structure pictures come from); the Jmol/CPK colours stay in
+`ELEMENTS` for `colour(el, "jmol")`.
 
 A crystal may name its coordination polyhedra — a centre element, the
 ligand element and a cut-off: SiO4 tetrahedra in quartz, TiO6
@@ -89,8 +91,44 @@ def radius(element: str) -> float:
     return ELEMENTS[element][0]
 
 
-def colour(element: str) -> str:
+#: VESTA's default element colours (its elements.ini); an element it
+#: does not list here falls back to the Jmol colour
+VESTA_COLOURS = {
+    "H": "#FFCCCC", "He": "#FCE8CE", "Li": "#86DF73", "Be": "#5ED77B",
+    "B": "#1FA20F", "C": "#814929", "N": "#B0B9E6", "O": "#FE0300",
+    "F": "#B0B9E6", "Ne": "#FE37B5", "Na": "#F9DC3C", "Mg": "#FB7B15",
+    "Al": "#81B2D6", "Si": "#1B3BFA", "P": "#C09CC2", "S": "#FFFA00",
+    "Cl": "#31FC02", "Ar": "#CFFEC4", "K": "#A121F6", "Ca": "#5A96BD",
+    "Sc": "#B563AB", "Ti": "#78CAFF", "V": "#E51900", "Cr": "#00009E",
+    "Mn": "#A8089E", "Fe": "#B57100", "Co": "#0000AF", "Ni": "#B7BBBD",
+    "Cu": "#2247DC", "Zn": "#8F8F81", "Ga": "#9EE373", "Ge": "#7E6EA6",
+    "As": "#74D057", "Se": "#9AEF0F", "Br": "#7E3102", "Kr": "#FAC1F3",
+    "Rb": "#FF0099", "Sr": "#00FF27", "Y": "#67988E", "Zr": "#00FF00",
+    "Nb": "#4CB276", "Mo": "#B386AF", "Ru": "#CFCFCF", "Rh": "#CDD1AB",
+    "Pd": "#C1C3B8", "Ag": "#B7BBBD", "Cd": "#F31FDC", "In": "#D780BB",
+    "Sn": "#9A8EB9", "Sb": "#D8831D", "Te": "#ADA251", "I": "#8E1F8A",
+    "Xe": "#9AA1F8", "Cs": "#0EFEB9", "Ba": "#1EEF2C", "La": "#5AC449",
+    "Ce": "#D1FC06", "Hf": "#B4B359", "Ta": "#B79A56", "W": "#8E8A80",
+    "Re": "#B3B18E", "Os": "#C9B179", "Ir": "#C9CF73", "Pt": "#CBC5BE",
+    "Au": "#FEB338", "Hg": "#D3B7CB", "Tl": "#95896C", "Pb": "#52535B",
+    "Bi": "#D230F8", "Po": "#0000FF", "U": "#7A8CA6",
+}
+#: the colour scheme crystal pictures use: "vesta" or "jmol"
+SCHEME = "vesta"
+
+
+def colour(element: str, scheme: str | None = None) -> str:
+    if (scheme or SCHEME) == "vesta" and element in VESTA_COLOURS:
+        return VESTA_COLOURS[element]
     return ELEMENTS[element][1]
+
+
+#: two atoms are bonded within this many times their covalent radii
+BOND_TOLERANCE = 1.15
+
+
+def bonded(el1: str, el2: str, d: float) -> bool:
+    return 1e-6 < d <= BOND_TOLERANCE * (radius(el1) + radius(el2))
 
 
 def _clean(value: float) -> float:

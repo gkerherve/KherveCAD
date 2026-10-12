@@ -1774,12 +1774,18 @@ TOOLS = [
                                            "at random about z (default "
                                            "true)."},
             "representation": {"type": "string",
-                               "enum": ["auto", "atoms", "polyhedra",
-                                        "both"],
-                               "description": "How a cell is drawn. auto: "
-                                              "both in the unit cell, "
-                                              "polyhedra (else atoms) in "
-                                              "supercells."},
+                               "enum": ["auto", "vesta",
+                                        "ball_and_stick", "atoms",
+                                        "polyhedra", "both"],
+                               "description": "How a cell is drawn, in "
+                                              "VESTA's colours. vesta: "
+                                              "small balls + bonds + "
+                                              "translucent polyhedra; "
+                                              "ball_and_stick: balls + "
+                                              "bonds; atoms: full-size "
+                                              "spheres. auto: vesta in "
+                                              "the unit cell, polyhedra "
+                                              "(else atoms) in supercells."},
             "supercell": {"type": "array", "items": {"type": "integer"},
                           "description": "[na, nb, nc], default [4, 4, 4]."},
             "shape": {"type": "string",

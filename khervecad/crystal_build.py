@@ -46,7 +46,14 @@ from . import crystal as cr
 
 NM = 0.1                                   # nm per Å
 BUILDS = ("unit_cell", "supercell", "particle", "hierarchy", "scatter")
-REPRESENTATIONS = ("auto", "atoms", "polyhedra", "both")
+REPRESENTATIONS = ("auto", "vesta", "ball_and_stick", "atoms",
+                   "polyhedra", "both")
+#: drawn with bonds: VESTA's ball-and-stick, and with its polyhedra
+BONDED = ("vesta", "ball_and_stick")
+#: a ball-and-stick atom is this much of its covalent radius
+BALL_SCALE = 0.4
+BOND_RADIUS = 0.012                        # nm
+BOND_FN = 8
 FILLS = ("auto", "atoms", "polyhedra", "blocks")
 #: shape -> what `size` measures
 SHAPES = {"sphere": "diameter", "hemisphere": "diameter",
@@ -227,6 +234,14 @@ def _prism_text(V, k=1.0) -> str:
 
 
 @lru_cache(maxsize=None)
+def cylinder_triangles(fn: int) -> int:
+    from . import mesh
+    from .model import CadNode
+    return len(mesh.tessellate(CadNode("cylinder", "C", dict(
+        height=1.0, radius_bottom=1.0, radius_top=1.0, segments=fn))))
+
+
+@lru_cache(maxsize=None)
 def sphere_triangles(fn: int) -> int:
     from . import mesh
     from .model import CadNode
@@ -255,11 +270,44 @@ def _cell_atoms(c, display):
 def resolve_rep(c, rep, level):
     has = bool(c.polyhedra_sites())
     if rep == "auto":
-        rep = ("both" if level == "unit_cell" else "polyhedra") if has \
-            else "atoms"
+        if level == "unit_cell":
+            rep = "vesta"
+        else:
+            rep = "polyhedra" if has else "atoms"
     if rep in ("polyhedra", "both") and not has:
         rep = "atoms"
+    if rep == "vesta" and not has:
+        rep = "ball_and_stick"
     return rep
+
+
+def _half_bonds(c, atoms, display):
+    """[(element, start Å, end Å)]: from each atom to the middle of each
+    of its bonds — VESTA's two-coloured sticks. A displayed cell joins
+    the atoms it draws; a tiling cell reaches into the next cells, each
+    half belonging to the atom it starts at, so tiles never double one."""
+    if display:
+        others = atoms
+    else:
+        others = [(el, q) for el, *f in c.atoms
+                  for q in c._images([x % 1.0 for x in f], 1)]
+    out = []
+    for el, p in atoms:
+        for el2, q in others:
+            if cr.bonded(el, el2, math.dist(p, q)):
+                out.append((el, p, tuple((a + b) / 2 for a, b in zip(p, q))))
+    return out
+
+
+def _stick(p, q) -> str:
+    """translate(p) rotate(...) cylinder from p to q (nm text)."""
+    d = [(b - a) * NM for a, b in zip(p, q)]
+    h = math.sqrt(sum(x * x for x in d))
+    tilt = math.degrees(math.acos(max(-1.0, min(1.0, d[2] / h))))
+    turn = math.degrees(math.atan2(d[1], d[0]))
+    return (f"translate({_vec(p)}) rotate([0, {_n(tilt)}, {_n(turn)}]) "
+            f"cylinder(h = {_n(h)}, r = {_n(BOND_RADIUS)}, "
+            f"$fn = {BOND_FN});")
 
 
 def _content(c, rep, display, spec):
@@ -269,13 +317,14 @@ def _content(c, rep, display, spec):
     hidden = ({poly.get("centre"), poly.get("ligand")}
               if rep == "polyhedra" else set())
     groups = {}
-    if rep in ("atoms", "both", "polyhedra"):
+    if rep in REPRESENTATIONS:
         for el, p in _cell_atoms(c, display):
             if el not in hidden:
                 groups.setdefault(el, []).append(p)
     per_sphere = sphere_triangles(spec.fn)
+    ball = BALL_SCALE if rep in BONDED else 1.0
     for el, points in groups.items():
-        r = cr.radius(el) * NM * spec.atom_scale
+        r = cr.radius(el) * NM * spec.atom_scale * ball
         lines.append(f'color("{cr.colour(el)}") {{  // {el} atoms')
         for p in points:
             lines.append(f"  translate({_vec(p)}) sphere(r = {_n(r)}, "
@@ -283,12 +332,22 @@ def _content(c, rep, display, spec):
         lines.append("}")
         n_atoms += len(points)
         tris += len(points) * per_sphere
-    if rep in ("polyhedra", "both"):
+    if rep in BONDED:
+        sticks = {}
+        for el, p, q in _half_bonds(c, _cell_atoms(c, display), display):
+            sticks.setdefault(el, []).append((p, q))
+        per_stick = cylinder_triangles(BOND_FN)
+        for el, pairs in sticks.items():
+            lines.append(f'color("{cr.colour(el)}") {{  // {el} bonds')
+            lines += [f"  {_stick(p, q)}  // {el} bond" for p, q in pairs]
+            lines.append("}")
+            tris += len(pairs) * per_stick
+    if rep in ("polyhedra", "both", "vesta"):
         label = c.polyhedra_label()
         one = label.rsplit(" ", 1)
         one = f"{one[0]} {_SINGULAR.get(one[1], one[1])}"
         col = cr.colour(poly["centre"])
-        head = (f'color("{col}", 0.4)' if rep == "both"
+        head = (f'color("{col}", 0.4)' if rep in ("both", "vesta")
                 else f'color("{col}")')
         lines.append(f"{head} {{  // {label}")
         for _idx, _p, ligands in c.polyhedra_sites():

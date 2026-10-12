@@ -255,3 +255,32 @@ def test_dialog_counts_refuses_and_builds(window):
     panel.build_now()
     assert any(n.type == "component" for n in window.model.root.children)
     panel.close()
+
+
+@pytest.mark.parametrize("key, rep", [("nacl", "vesta"),
+                                      ("quartz", "vesta"),
+                                      ("cu", "ball_and_stick")])
+def test_unit_cells_default_to_vesta_ball_and_stick(key, rep):
+    """auto draws a unit cell as VESTA does: small balls, two-coloured
+    half-bond sticks, translucent polyhedra where the crystal has them —
+    and the count is still what the preview draws."""
+    spec = cb.Spec(get(key), build="unit_cell")
+    root, stats = _built(spec)
+    assert stats["unit_cell"]["representation"] == rep
+    code = cb.program(spec)[0]
+    assert "bonds" in code and "cylinder(" in code
+    assert len(mesh.tessellate(root, fn=spec.fn)) == stats["triangles"]
+
+
+def test_a_ball_and_stick_supercell_tiles_without_doubled_bonds():
+    """Each half bond belongs to the atom it starts at: rock salt has
+    6 Na-Cl bonds per ion, so 8 ions a cell give 48 halves."""
+    c = get("nacl")
+    halves = cb._half_bonds(c, cb._cell_atoms(c, False), False)
+    assert len(halves) == 48
+
+
+def test_crystal_colours_follow_vesta():
+    from khervecad import crystal as cr
+    assert cr.colour("O") == "#FE0300" and cr.colour("Si") == "#1B3BFA"
+    assert cr.colour("O", "jmol") == "#FF0D0D"

@@ -842,6 +842,17 @@ into a new module and import.
                        `rutile`…), quartz's O the P3₂21 orbit.
                        `test_crystal` pins every density (2.5 %) and
                        nearest distance (1.5 %).
+  - Crystal look (2026-10-12, the user: "VESTA as the most common, and
+                       bonds and spheres"): `crystal.colour` uses
+                       `VESTA_COLOURS` (`SCHEME`; "jmol" still asks for
+                       the old ones), and a unit cell's auto
+                       representation is **vesta** — balls at
+                       `BALL_SCALE` 0.4 x covalent, two-coloured half-bond
+                       sticks (`_half_bonds`: within `BOND_TOLERANCE` 1.15
+                       x the radii; a tiling cell's halves reach into the
+                       next cell and belong to their start atom, so a
+                       supercell never doubles one), translucent polyhedra;
+                       `ball_and_stick` drops the polyhedra.
   - `crystal_build.py` — the **Crystal Builder**'s program writer: unit
                        cell (atoms incl. face/edge/corner repeats, lattice
                        box, translucent polyhedra) -> supercell (for i,

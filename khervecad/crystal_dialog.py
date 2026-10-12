@@ -36,7 +36,9 @@ BUILD_CHOICES = (("Unit cell, supercell and particle", "hierarchy"),
                  ("Unit cell", "unit_cell"), ("Supercell", "supercell"),
                  ("Particle", "particle"),
                  ("Scatter particles over an area", "scatter"))
-REP_CHOICES = (("Automatic", "auto"), ("Atoms", "atoms"),
+REP_CHOICES = (("Automatic", "auto"),
+               ("VESTA (balls, bonds, polyhedra)", "vesta"),
+               ("Ball and stick", "ball_and_stick"), ("Atoms", "atoms"),
                ("Polyhedra", "polyhedra"), ("Atoms and polyhedra", "both"))
 FILL_CHOICES = (("Automatic", "auto"), ("Atoms", "atoms"),
                 ("Polyhedra", "polyhedra"), ("Blocks of cells", "blocks"))
