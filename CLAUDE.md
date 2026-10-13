@@ -986,6 +986,14 @@ into a new module and import.
                        first shape's `strain` exceeds `SOUND` (morphinans
                        tangled from atom 0). An unknown compound key falls
                        back to `carbon_nano.get` (c60 …).
+  - `molecule_library_extra.py` — 204 compounds KherveMol had and KherveCAD
+                       lacked (2026-10-13): elements and noble gases, more
+                       salts / oxides / halides, homologous series,
+                       heterocycles, monomers, terpenes, fatty acids, drugs —
+                       folded into the existing families plus "Elements &
+                       noble gases", "Halogen compounds", "Organic building
+                       blocks" (IF7 dropped: the embedder cannot seat 7
+                       ligands). ~690 compounds in all.
   - `carbon_nano.py` — carbon nanostructures (Qt-free) as Molecules on
                        their LATTICE, not SMILES: graphene flakes (AB /
                        ABA / ABC / AA stacks, twisted bilayer), H-capped

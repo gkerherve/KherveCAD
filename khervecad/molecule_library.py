@@ -329,6 +329,12 @@ from .molecule_library_more import (CATEGORIES as _MORE_CATEGORIES,  # noqa
                                     MORE as _MORE)
 COMPOUNDS.update(_MORE)
 CATEGORIES = CATEGORIES + _MORE_CATEGORIES
+# elements, more salts and halides, homologous series… (from KherveMol)
+from .molecule_library_extra import (CATEGORIES as _EXTRA_CATEGORIES,  # noqa
+                                     EXTRA as _EXTRA)
+COMPOUNDS.update(_EXTRA)
+CATEGORIES = CATEGORIES[:3] + _EXTRA_CATEGORIES[:2] + CATEGORIES[3:] + \
+    _EXTRA_CATEGORIES[2:]
 
 
 def get(key: str):
