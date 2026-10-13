@@ -42,7 +42,8 @@ def test_every_crystal_matches_its_density_and_bonds(key):
     nearest distance."""
     c = LIBRARY[key]
     assert c.category in CATEGORIES
-    assert c.computed_density() == pytest.approx(c.density, rel=0.025)
+    if c.density is not None:      # a few entries pin bonds only
+        assert c.computed_density() == pytest.approx(c.density, rel=0.025)
     for a, b, d in c.bonds:
         assert c.nearest(a, b) == pytest.approx(d, rel=0.015), (a, b)
 

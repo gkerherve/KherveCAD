@@ -852,7 +852,11 @@ into a new module and import.
                        images), `polyhedron` (convex hull -> OpenSCAD
                        points/faces, clockwise outside) and `custom(dict)`
                        for a crystal an assistant brings from a paper.
-  - `crystal_library.py` — 32 standard structures in five families
+  - `crystal_library.py` — 122 standard structures in six families
+                       (ported from KherveMol 2026-10-13, the user: "KherveMol
+                       has all that and I want it in KherveCAD"; "Layered
+                       materials" added; a few entries pin bonds only, so the
+                       density test skips `density=None`). Was: 32 standard structures in five families
                        (metals FCC/BCC/HCP/SC, semiconductors, ionic
                        salts, oxides incl. rutile/anatase/perovskite/
                        α-quartz, carbon & nitrides); prototypes written

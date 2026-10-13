@@ -78,7 +78,7 @@ ELEMENTS = {
     "Au": (1.36, "#FFD123", 196.97), "Hg": (1.32, "#B8B8D0", 200.59),
     "Tl": (1.45, "#A6544D", 204.38), "Pb": (1.46, "#575961", 207.2),
     "Bi": (1.48, "#9E4FB5", 208.98), "Po": (1.40, "#AB5C00", 208.98),
-    "U": (1.96, "#008FFF", 238.03),
+    "Th": (2.06, "#00BAFF", 232.04), "U": (1.96, "#008FFF", 238.03),
 }
 
 #: ligand count -> the polyhedron's name
@@ -159,6 +159,8 @@ class Crystal:
     density: float | None = None
     bonds: list = field(default_factory=list)
     source: str = ""
+    #: explicit bond cutoffs {(el, el) sorted: max length Å}
+    cutoffs: dict = field(default_factory=dict)
 
     # ------------------------------------------------------- geometry
     def vectors(self):
