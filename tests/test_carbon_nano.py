@@ -245,8 +245,10 @@ def test_every_crystal_face_is_a_surface_part():
     for key, crystal in LIBRARY.items():
         if key in ls.SKIP:
             continue
-        ids = [p for p in ls.PARTS if p.startswith(f"surface_{key}_")]
-        assert len(ids) == len(ls.faces(crystal)) >= 3
+        # exact ids: a prefix match would also count "zns_w" for "zns"
+        ids = [f"surface_{key}_{m.replace('-', 'm')}"
+               for m in ls.faces(crystal)]
+        assert all(i in ls.PARTS for i in ids) and len(ids) >= 3
     for pid in ("surface_si_111", "surface_quartz_0001",
                 "surface_rutile_110", "surface_cu_100"):
         group = library.build_part(pid, {"surf_repeat": 3,
