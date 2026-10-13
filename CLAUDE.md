@@ -802,7 +802,8 @@ into a new module and import.
                        into new or existing `parts/` sections — Washing
                        machine trays, Bag clips, Printables (3D printing),
                        Server racks, RPi enclosures (Electronics), Lab
-                       equipment (Chemistry lab), Crystals (custom) ("Your
+                       equipment (Chemistry lab), MOFs (every UiO cell,
+                       both styles, together), Crystals (custom) ("Your
                        crystals": UiO-66, UiO-66 + hematite, hematite, YIG,
                        LaNb0.9Mo0.1O4, Ni3S2, delta-MnO2), Characters,
                        Houses, Vehicles (its own Toys & models menu), Lego
