@@ -889,7 +889,13 @@ def apply(window, spec: Spec) -> dict:
 def spec_from_params(params: dict) -> Spec:
     """A Spec from build_crystal's arguments; BuildError on bad input."""
     from .crystal_library import get
-    if params.get("custom"):
+    if params.get("path"):                # a CIF file
+        from .cifread import read_cif
+        try:
+            crystal = read_cif(str(params["path"]))
+        except (OSError, ValueError) as exc:
+            raise BuildError(f"CIF: {exc}")
+    elif params.get("custom"):
         try:
             crystal = cr.custom(params["custom"])
         except ValueError as exc:

@@ -1841,7 +1841,9 @@ class MainWindow(QMainWindow):
                 "*.3mf *.step *.stp *.iges *.igs *.3dm *.brep);;"
                 "KherveCAD document (*.kcad);;OpenSCAD program "
                 "(*.scad);;Mesh (*.stl *.obj *.off *.3mf);;"
-                "CAD file (*.step *.stp *.iges *.igs *.3dm *.brep)"))
+                "CAD file (*.step *.stp *.iges *.igs *.3dm *.brep)")
+            .replace("*.brep);;", "*.brep *.cif);;", 1)
+            + ";;" + language.tr("Crystal structure (*.cif)"))
         if not path:
             return
         self.open_any(path)
@@ -1866,6 +1868,13 @@ class MainWindow(QMainWindow):
             self._import_drawing_path(path)
         elif ext == ".dat":
             self._import_surface_path(path)
+        elif ext == ".cif":                   # a crystal structure
+            from . import crystal_build
+            try:
+                crystal_build.build_crystal(
+                    self, {"path": path, "build": "unit_cell"})
+            except crystal_build.BuildError as exc:
+                QMessageBox.warning(self, APP_NAME, str(exc))
         elif ext in cadexchange.CAD_EXTS:
             from . import cadexchange_ui
             cadexchange_ui.import_cad(self, path)
@@ -1882,7 +1891,7 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------ drag & drop
     _DROP_EXTS = (".kcad", ".scad", ".csg", ".stl", ".obj", ".off", ".3mf",
                   ".amf", ".svg", ".dxf", ".dat", ".step", ".stp",
-                  ".iges", ".igs", ".3dm", ".brep")
+                  ".iges", ".igs", ".3dm", ".brep", ".cif")
 
     def _dropped_file(self, event):
         """The first supported local file in a file drag, or None."""

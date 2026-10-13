@@ -23,7 +23,7 @@ the Free Software Foundation, either version 3 of the License, or
 from dataclasses import replace
 
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog,
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QFileDialog,
                              QDoubleSpinBox, QFormLayout, QHBoxLayout,
                              QLabel, QMessageBox, QPushButton, QSpinBox,
                              QVBoxLayout)
@@ -82,7 +82,18 @@ class CrystalBuilder(QDialog):
             for c in members:
                 self.crystal.addItem(f"   {c.name}", c.key)
         self.crystal.setCurrentIndex(self.crystal.findData("quartz"))
-        form.addRow(language.tr("Crystal:"), self.crystal)
+        #: crystals read from CIF files this session, by combo data key
+        self._loaded = {}
+        pick = QHBoxLayout()
+        pick.addWidget(self.crystal, 1)
+        self.open_cif = QPushButton(language.tr("Open CIF…"))
+        self.open_cif.setToolTip(language.tr(
+            "Build a crystal from a CIF file (ICSD, COD, Materials "
+            "Project, a paper's SI): its symmetry operators expand the "
+            "asymmetric unit to every atom of the cell"))
+        self.open_cif.clicked.connect(self._choose_cif)
+        pick.addWidget(self.open_cif)
+        form.addRow(language.tr("Crystal:"), pick)
         self.info = QLabel()
         self.info.setWordWrap(True)
         self.info.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -202,7 +213,31 @@ class CrystalBuilder(QDialog):
 
     # ------------------------------------------------------------ state
     def crystal_obj(self):
-        return LIBRARY.get(self.crystal.currentData() or "quartz")
+        key = self.crystal.currentData() or "quartz"
+        return self._loaded.get(key) or LIBRARY.get(key)
+
+    def load_cif(self, path):
+        """Read *path* into the crystal list and select it; returns the
+        Crystal or raises ValueError / OSError."""
+        from .cifread import read_cif
+        crystal = read_cif(path)
+        key = f"cif:{len(self._loaded)}"
+        self._loaded[key] = crystal
+        self.crystal.addItem(f"   {crystal.name} (CIF)", key)
+        self.crystal.setCurrentIndex(self.crystal.count() - 1)
+        return crystal
+
+    def _choose_cif(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, language.tr("Open CIF"), "",
+            language.tr("Crystal structure (*.cif)"))
+        if not path:
+            return
+        try:
+            self.load_cif(path)
+        except (OSError, ValueError) as exc:
+            self.info.setText(language.tr("Could not read the CIF: {e}")
+                              .format(e=exc))
 
     def spec(self) -> cb.Spec:
         return cb.Spec(

@@ -1743,7 +1743,17 @@ TOOLS = [
                                       "polyhedra: {centre, ligand, "
                                       "cutoff}, units: 'angstrom' | "
                                       "'nm'} — every atom of the "
-                                      "conventional cell, fractional."},
+                                      "conventional cell, fractional. "
+                                      "Or give only the asymmetric unit as "
+                                      "atoms plus symops: ['x,y,z', "
+                                      "'-x+1/2,y,-z', ...] and every atom "
+                                      "is generated; or cif: the text of a "
+                                      "CIF file."},
+            "path": {"type": "string",
+                     "description": "A CIF file to build (ICSD, COD, "
+                                    "Materials Project, a paper's SI): its "
+                                    "symmetry operators expand the "
+                                    "asymmetric unit to every atom."},
             "build": {"type": "string",
                       "enum": ["hierarchy", "unit_cell", "supercell",
                                "particle", "scatter"],

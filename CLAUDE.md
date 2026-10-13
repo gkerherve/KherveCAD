@@ -921,6 +921,18 @@ into a new module and import.
                        (`crystal_surface_dialog.py`, presets). Tests pin
                        the cells, spacings and that a layer holds the bulk
                        density for any orientation.
+  - `cifread.py`     — **CIF files** (2026-10-13, from the KherveMol gap
+                       list): `read_cif` parses a small-molecule CIF (cell,
+                       `_symmetry_equiv_pos_as_xyz` / `_space_group_symop_
+                       operation_xyz`, atom sites; occupancy < 0.5 dropped)
+                       and `expand` applies every operator, wrapping and
+                       dropping copies within `SAME_SITE` — no ASE and no
+                       space-group tables (a CIF naming a group without
+                       operators is refused). Reached from File ▸ Open / drop
+                       (.cif -> a unit cell), the Crystal Builder's Open
+                       CIF…, `crystal.custom` (`cif`, or `atoms` as the
+                       asymmetric unit + `symops`) and MCP build_crystal
+                       `path` (a file tool).
   - `crystal_dialog.py` — Library ▸ Crystal Builder…: a non-modal panel
                        over crystal_build with a live count; a refused
                        build disables Build and says why.

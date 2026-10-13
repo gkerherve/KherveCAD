@@ -299,6 +299,9 @@ def custom(spec: dict) -> Crystal:
     if not isinstance(spec, dict):
         raise ValueError("A custom crystal is an object with a, b, c, "
                          "angles and atoms.")
+    if spec.get("cif"):                  # a CIF's text (or its path)
+        from .cifread import read_cif
+        return read_cif(str(spec["cif"]))
     units = str(spec.get("units", "angstrom")).lower()
     if units not in ("angstrom", "a", "å", "nm", "nanometre", "nanometer"):
         raise ValueError("custom units are 'angstrom' or 'nm'.")
@@ -326,6 +329,7 @@ def custom(spec: dict) -> Crystal:
         atoms.append((el, *(float(x) % 1.0 for x in row[1:])))
     if not atoms:
         raise ValueError("A custom crystal needs at least one atom.")
+    symops = spec.get("symops")
     poly = spec.get("polyhedra")
     if poly:
         try:
@@ -345,4 +349,7 @@ def custom(spec: dict) -> Crystal:
         source=str(spec.get("source") or "given by the user"))
     if crystal.volume() < 1e-6:
         raise ValueError("Those angles give a flat cell.")
+    if symops:                # atoms were the asymmetric unit
+        from .cifread import expand
+        crystal.atoms = expand(atoms, [str(o) for o in symops], crystal)
     return crystal
