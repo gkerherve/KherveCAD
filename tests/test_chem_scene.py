@@ -67,3 +67,19 @@ def test_whole_polyhedra_at_a_surface_cut():
 def test_properties_rows():
     rows = dict(cs.properties(cs.compound_scene("water")))
     assert rows["Formula"] == "H2O" and "g/mol" in rows["Molar mass"]
+
+
+# ---------------------------------------------------------------- files
+def test_every_format_writes_and_a_cif_reads_back(tmp_path):
+    from khervecad import chem_io, cifread
+    s = cs.crystal_scene("nacl", (1, 1, 1))
+    for ext in ("xyz", "mol", "sdf", "pdb", "cif"):
+        out = chem_io.export(s, str(tmp_path / f"nacl.{ext}"))
+        assert out["atoms"] == len(s.atoms) and out["bytes"] > 0
+    back = cifread.read_cif(str(tmp_path / "nacl.cif"))
+    assert back.composition() == {"Na": 4, "Cl": 4}
+    assert back.a == pytest.approx(5.64, abs=0.01)
+    water = cs.compound_scene("water")
+    assert chem_io.xyz_text(water).splitlines()[0] == "3"
+    with pytest.raises(cs.BuildError, match="cell"):
+        chem_io.cif_text(water)
