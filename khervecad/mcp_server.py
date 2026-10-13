@@ -406,7 +406,16 @@ density and polyhedra; build_crystal builds from it, or from `custom` \
 fractional coordinates, from a paper or a CIF) when the material is \
 missing. Every library crystal is a ready Part Library part too: \
 insert_part with part_id "crystal_<key>" (its unit cell) or \
-"supercell_<key>" (size "2x2x2" to "6x6x6") — the quickest start.
+"supercell_<key>" (size "2x2x2" to "6x6x6") — the quickest start. A \
+published structure: build_crystal `path` reads a CIF (its symmetry \
+operators expand the asymmetric unit), or `custom` with the asymmetric \
+unit as atoms plus `symops`.
+- To MEASURE (bond lengths, angles, torsions), EDIT atom by atom, DOPE \
+(host:dopant:fraction), lay MOLECULES ON A SURFACE, EXPORT XYZ/PDB/CIF/MOL \
+or animate a REACTION as a film, use the `chemistry` tool — the \
+Chemistry Builder window's own scene, so the user watches it: load, \
+then measure / edit / dope / adsorb, then build (into the document) or \
+export. A reaction film plays from the rx_t slider (play_motion).
 - Work in NANOMETRES (build_crystal switches an empty document to nm) \
 and in the builder's hierarchy, each level its own Object: the UNIT \
 CELL (atoms at covalent radii, the lattice box, coordination polyhedra \

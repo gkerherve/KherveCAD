@@ -211,7 +211,16 @@ def _people(window, sub):
     sub.addSeparator()
 
 
+def _chemistry(window, sub):
+    """The Chemistry Builder sits on top of every chemistry menu."""
+    from . import chem_dialog
+    sub.addAction(icons.icon("mdi.flask-outline"),
+                  language.tr("Chemistry Builder..."),
+                  lambda: chem_dialog.open_builder(window))
+
+
 def _crystals(window, sub):
+    _chemistry(window, sub)
     from . import crystal_dialog
     sub.addAction(icons.icon("mdi.molecule"),
                   language.tr("Crystal Builder..."),
@@ -222,6 +231,7 @@ def _crystals(window, sub):
 def _surfaces(window, sub):
     """The Surface Builder (any crystal, any (hkl)) on top; graphene,
     graphite and every crystal's usual faces follow as parts."""
+    _chemistry(window, sub)
     from . import crystal_surface_dialog
     sub.addAction(icons.icon("mdi.layers-outline"),
                   language.tr("Surface Builder..."),
@@ -230,6 +240,7 @@ def _surfaces(window, sub):
 
 
 def _molecules(window, sub):
+    _chemistry(window, sub)
     from . import molecule_dialog
     sub.addAction(icons.icon("mdi.atom"),
                   language.tr("Compound Builder..."),

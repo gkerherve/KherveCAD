@@ -311,7 +311,7 @@ def dope(scene, rules, seed=7) -> int:
     changed = substitute(els, rules, seed)
     for i in changed:
         scene.atoms[i][0] = els[i]
-    scene.source = {**scene.source, "dope": rules, "seed": seed}
+    scene.source = {**scene.source, "dope": parse_dope(rules), "seed": seed}
     return len(changed)
 
 

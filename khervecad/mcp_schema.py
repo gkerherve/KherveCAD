@@ -2281,6 +2281,84 @@ TOOLS = [
         }, ["equation"]),
     },
     {
+        "name": "chemistry",
+        "description": (
+            "The Chemistry Builder (Library ▸ Science ▸ Chemistry Builder…) "
+            "— build, edit, MEASURE and export molecules, crystals, surfaces "
+            "and reactions, then put them in the document. One action a "
+            "call: load (source compound: name/formula/SMILES; crystal: "
+            "library key + cells [a,b,c] + dope; surface: crystal + miller "
+            "+ repeat [u,v] + layers + complete (whole polyhedra at the "
+            "cut) + dope; cif: path; reaction: equation) · state (atoms "
+            "[index, element, x, y, z Å] and bonds) · measure (atoms: 2 = "
+            "distance Å, 3 = angle °, 4 = torsion °; drawn on the "
+            "builder's canvas too) · edit (op add {element, position or "
+            "bond_to}, delete, bond, unbond, move {position}, element, "
+            "find_bonds; atoms = 0-based indices) · dope (rule 'Nb:Mo:0.1', "
+            "seed) · adsorb (a compound onto a loaded surface: mode flat / "
+            "upright / as drawn, height Å above the top layer, spin °, x, "
+            "y; else the first free spot) · move_adsorbate (group, x, y, "
+            "height, rx, ry, rz) · remove_adsorbate · properties (formula, "
+            "mass, composition at.% / wt.%, bond range, space group, "
+            "density) · export (path .xyz .pdb .cif .mol .sdf) · build "
+            "(into the document, ball and stick in nm with the cell box; a "
+            "reaction becomes a film driven by the rx_t slider — finish "
+            "with play_motion)."
+        ),
+        "input_schema": _obj({
+            "action": {"type": "string",
+                       "enum": ["load", "state", "measure", "edit", "dope",
+                                "adsorb", "move_adsorbate",
+                                "remove_adsorbate", "properties", "export",
+                                "build"]},
+            "source": {"type": "string",
+                       "enum": ["compound", "crystal", "surface", "cif",
+                                "reaction"]},
+            "compound": {"type": "string"},
+            "crystal": {"type": "string",
+                        "description": "Library key from list_crystals."},
+            "cells": {"type": "array", "items": {"type": "integer"}},
+            "miller": {"type": "string"},
+            "repeat": {"type": "array", "items": {"type": "integer"}},
+            "layers": {"type": "integer"},
+            "termination": {"type": "number"},
+            "complete": {"type": "boolean",
+                         "description": "Whole coordination polyhedra at "
+                                        "a surface cut."},
+            "dope": {"type": "string",
+                     "description": "host:dopant:fraction, e.g. Nb:Mo:0.1."},
+            "rule": {"type": "string"},
+            "seed": {"type": "integer"},
+            "equation": {"type": "string"},
+            "path": {"type": "string",
+                     "description": "A CIF to load, or the file to export."},
+            "format": {"type": "string",
+                       "enum": ["xyz", "pdb", "cif", "mol", "sdf"]},
+            "atoms": {"type": "array", "items": {"type": "integer"}},
+            "op": {"type": "string",
+                   "enum": ["add", "delete", "bond", "unbond", "move",
+                            "element", "find_bonds"]},
+            "element": {"type": "string"},
+            "position": {"type": "array", "items": {"type": "number"}},
+            "bond_to": {"type": "integer"},
+            "order": {"type": "integer"},
+            "mode": {"type": "string",
+                     "enum": ["flat", "upright", "as drawn"]},
+            "height": {"type": "number"},
+            "spin": {"type": "number"},
+            "x": {"type": "number"},
+            "y": {"type": "number"},
+            "rx": {"type": "number"},
+            "ry": {"type": "number"},
+            "rz": {"type": "number"},
+            "group": {"type": "integer"},
+            "name": {"type": "string"},
+            "style": {"type": "string",
+                      "enum": ["ball_and_stick", "space_filling", "sticks"]},
+            "cell_box": {"type": "boolean"},
+        }, ["action"]),
+    },
+    {
         "name": "list_proteins",
         "description": (
             "What the Protein Builder takes: the preset peptides (alpha "

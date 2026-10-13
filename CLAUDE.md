@@ -933,6 +933,44 @@ into a new module and import.
                        CIF…, `crystal.custom` (`cif`, or `atoms` as the
                        asymmetric unit + `symops`) and MCP build_crystal
                        `path` (a file tool).
+  - **Chemistry Builder** (2026-10-13, the user: everything KherveMol does,
+                       "like the House Builder", "the 2D should show us the
+                       angle, the distance"): `chem_scene.py` (Qt-free) —
+                       `Scene` = atoms [el, x, y, z] Å, bonds, cell-box
+                       edges, adsorbate groups, kind, source; built from a
+                       compound / SMILES, a crystal block (`crystal_scene`,
+                       face atoms included once), a slab (`surface_scene`,
+                       `complete` = whole polyhedra from crystal_surface's
+                       new `pad` layers + in-plane images) or a CIF; measure
+                       (distance / angle / torsion), edit (add, place_bonded,
+                       move, element, bond, delete with re-indexing),
+                       `dope` (host:dopant:fraction, seeded), properties
+                       (formula, mass, at.% / wt.%, bond range, space group,
+                       density). `chem_io.py` XYZ / MOL / SDF / PDB / CIF
+                       (P 1), `chem_adsorb.py` molecules on a slab (flat /
+                       upright / as drawn, place, rotate, remove),
+                       `chem_rxanim.py` + `chem_reaction.py` reaction films
+                       (atom mapping; the document version is one Motion
+                       slider `rx_t`, atoms on `lookup` keyframes, bonds
+                       that break / form behind `if`s) — all ported from
+                       KherveMol. `chem_canvas.py` — the QPainter drawing:
+                       Top / Front / Side plans and a free turn, tools Turn
+                       / Select / Measure / Add atom / Bond / Move / Delete,
+                       measurements drawn on the structure (distance on the
+                       line, angle with an arc, torsion). `chem_dialog.py` —
+                       the window (steps 1 Start from, 2 Edit and measure,
+                       3 Dope, 4 Molecules on the surface, 5 Reaction film,
+                       6 Properties; Export…, Build into document with the
+                       cell box), whole-scene undo, at the top of the
+                       Crystals, Surfaces and Molecules menus. MCP
+                       `chemistry` (`chem_mcp.py`, action load / state /
+                       measure / edit / dope / adsorb / move_adsorbate /
+                       remove_adsorbate / properties / export / build; a
+                       file tool with `path`) drives the window's own scene.
+                       **Surface fix found here**: crystal_surface placed a
+                       layer's in-plane shift without the site's own height
+                       (`(z - g) * sw`), so slanted faces (rutile 110) had
+                       Ti with 2 or 5 O; now `z * sw`.
   - `crystal_dialog.py` — Library ▸ Crystal Builder…: a non-modal panel
                        over crystal_build with a live count; a refused
                        build disables Build and says why.
