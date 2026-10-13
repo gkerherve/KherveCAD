@@ -1278,6 +1278,7 @@ except OSError:
 
 #: dialog fields holding a count (integer spin box, no "mm" suffix)
 _COUNT_FIELDS = ({"bolts"} | library_lego.COUNT_FIELDS
+                 | library_molecule.COUNT_FIELDS
                  | library_home.COUNT_FIELDS | library_crystal.COUNT_FIELDS
                  | library_home_more.COUNT_FIELDS
                  | library_home_extra.COUNT_FIELDS

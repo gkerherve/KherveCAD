@@ -994,6 +994,14 @@ into a new module and import.
                        noble gases", "Halogen compounds", "Organic building
                        blocks" (IF7 dropped: the embedder cannot seat 7
                        ligands). ~690 compounds in all.
+  - `polymers.py`     — polymer chains (ported from KherveMol 2026-10-13):
+                       40 `PRESETS` (vinyl, dienes and rubbers, polyethers,
+                       polyesters / amides / urethanes, silicones and
+                       conducting) as a SMILES repeat unit + end caps,
+                       `chain_smiles` × n, built by molecule.py (capped by
+                       `max_units` under MAX_ATOMS). Library parts
+                       `polymer_<key>` in "Molecules: Polymers: <family>",
+                       sizes 2 / 4 / 8 / the preset's units.
   - `carbon_nano.py` — carbon nanostructures (Qt-free) as Molecules on
                        their LATTICE, not SMILES: graphene flakes (AB /
                        ABA / ABC / AA stacks, twisted bilayer), H-capped
