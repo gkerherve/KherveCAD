@@ -83,3 +83,25 @@ def test_every_format_writes_and_a_cif_reads_back(tmp_path):
     assert chem_io.xyz_text(water).splitlines()[0] == "3"
     with pytest.raises(cs.BuildError, match="cell"):
         chem_io.cif_text(water)
+
+
+# --------------------------------------------------- molecules on a slab
+def test_a_molecule_lies_on_a_surface_and_moves():
+    from khervecad import chem_adsorb as ad
+    slab = cs.surface_scene("cu", "111", (4, 4), 2)
+    n = len(slab.atoms)
+    benzene = cs.compound_scene("c1ccccc1")
+    g = ad.add(slab, benzene, height=2.5, mode="flat")
+    assert len(slab.atoms) == n + 12 and slab.groups[g]["count"] == 12
+    assert ad.pose(slab, g)["height"] == pytest.approx(2.5)
+    zs = [slab.atoms[i][3] for i in ad.members(slab, g)
+          if slab.atoms[i][0] == "C"]
+    assert max(zs) - min(zs) < 0.2             # flat: the ring lies down
+    ad.place(slab, g, x=1.0, y=-2.0, height=3.0)
+    p = ad.pose(slab, g)
+    assert (p["x"], p["y"], p["height"]) == pytest.approx((1, -2, 3))
+    ad.rotate(slab, g, rz=90)
+    g2 = ad.add(slab, cs.compound_scene("water"), mode="upright", auto=True)
+    ad.remove(slab, g)
+    assert len(slab.groups) == 1 and slab.groups[0]["start"] == n
+    assert g2 == 1
