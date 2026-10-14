@@ -245,6 +245,23 @@ into a new module and import.
                        (PNG per step via pngexport). MCP
                        `set_render_options time`. scadparse never folds an
                        expression reading $t / $preview / $vp* (`_LIVE`).
+  - `movie.py`       — File ▸ Export Turntable Movie / MCP `export_movie`:
+                       every frame a `View3D.snapshot` (offscreen twin),
+                       ffmpeg to MP4 / GIF. `motion` turntable, light,
+                       both, sequence, **still** (the user's camera) and
+                       **tumble** (yaw and pitch advance together,
+                       `tumble_turns` over the top; the fit is measured
+                       at every pitch it passes). **Moving parts**
+                       (2026-10-14, the user: "when there are moveable
+                       parts, they could be requested to move during the
+                       video"): `Animator` sweeps Customizer sliders
+                       (`animate` true = the Motion-group ones, or names /
+                       {variable, from, to}) 0 -> 1 -> 0 (`ping_pong`,
+                       `animate_cycles`), writing `params["value"]` and
+                       calling `mates.refresh` + `_refresh_preview` per
+                       frame — no node_changed, so no undo steps and no
+                       dirty flag — and restores the values after. The
+                       fitted distance looks at several poses.
   - `customizer.py`  — OpenSCAD Customizer annotations on variables:
                        `// [10:5:200]`, `// [a, b]`, `// [1:Thin, 2:Thick]`,
                        `// 12` (text length), the description line above

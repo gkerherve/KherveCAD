@@ -2689,7 +2689,8 @@ TOOLS = [
     {
         "name": "export_movie",
         "description": (
-            "A turntable movie for a product page or an advert: the "
+            "A movie for a product page or an advert. By default a "
+            "turntable: the "
             "camera circles the model at a fixed height and distance "
             "(fitted so the whole model stays in frame from every side) "
             "and each frame is painted by the 3D view — the user's "
@@ -2697,7 +2698,8 @@ TOOLS = [
             ".mp4 (H.264, plays everywhere) or .gif (looping). The loop "
             "joins without a stutter. Needs ffmpeg (bundled by the "
             "imageio-ffmpeg package); 8 s at 30 fps is 240 snapshots, "
-            "so allow a minute or two."
+            "so allow a minute or two. Moving parts can move while it "
+            "films (animate), with the camera turning, tumbling or still."
         ),
         "input_schema": _obj({
             "path": {"type": "string",
@@ -2721,13 +2723,49 @@ TOOLS = [
                                          "Default: the user's view."},
             "motion": {"type": "string",
                        "enum": ["turntable", "light", "both",
-                                "sequence"],
+                                "sequence", "still", "tumble"],
                        "description": "What moves: the camera round the "
                                       "model (default), the light round "
                                       "a still model (reflections sweep "
-                                      "across it), both, or sequence — "
+                                      "across it), both, sequence — "
                                       "light sweep, then a turn, then "
-                                      "light again, a third each."},
+                                      "light again, a third each — "
+                                      "still (the camera stays where "
+                                      "the user has it: use with "
+                                      "animate), or tumble (the camera "
+                                      "goes round AND over the top at "
+                                      "once, two axes together)."},
+            "tumble_turns": {"type": "number",
+                             "description": "Tumble only: turns over "
+                                            "the top during the movie "
+                                            "(while `turns` go round). "
+                                            "Default 1."},
+            "animate": {"description": "Move the model's MOVING PARTS "
+                                       "while filming: true for its "
+                                       "motion sliders (Customizer "
+                                       "variables in a Motion group, "
+                                       "e.g. a robot arm's joints), or a "
+                                       "list of slider names, or of "
+                                       "{variable, from, to} to limit "
+                                       "each one's sweep. Every slider "
+                                       "goes from -> to -> from together, "
+                                       "so the movie loops; the user's "
+                                       "values come back after.",
+                        "anyOf": [{"type": "boolean"},
+                                  {"type": "array", "items": {
+                                      "anyOf": [
+                                          {"type": "string"},
+                                          {"type": "object",
+                                           "properties": {
+                                               "variable": {
+                                                   "type": "string"},
+                                               "from": {"type": "number"},
+                                               "to": {"type": "number"}},
+                                           "required": ["variable"]}]}}]},
+            "animate_cycles": {"type": "number",
+                               "description": "How many times the parts "
+                                              "go there and back over "
+                                              "the movie. Default 1."},
             "light_seconds": {"type": "number",
                               "description": "Sequence only: length of "
                                              "EACH light swing; the turn "

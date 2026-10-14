@@ -149,3 +149,95 @@ def test_light_swings_must_leave_time_for_the_turn(window, tmp_path):
     with pytest.raises(movie.MovieError):
         movie.export(window.view3d, tmp_path / "a.mp4", seconds=4,
                      motion="sequence", light_seconds=2)
+
+
+# ── tumble, still camera, moving parts ─────────────────────────────
+
+def test_tumble_goes_over_the_top_while_it_turns():
+    pitches = movie.tumble_pitches(8, turns=1, start=0.0)
+    assert pitches[:3] == [0.0, 45.0, 90.0]
+    assert pitches[4] == -180.0 and pitches[-1] == -45.0   # wrapped
+    yaws, _l = movie.motion_path("tumble", 8, 1, 0.0, 0.0)
+    assert len(set(yaws)) == 8                 # and it goes round
+
+
+def test_still_keeps_the_camera():
+    yaws, lights = movie.motion_path("still", 5, 1, 30.0, 0.2)
+    assert yaws == [30.0] * 5 and lights == [0.2] * 5
+
+
+def test_ping_pong_loops():
+    assert movie.ping_pong(4) == [0.0, 0.5, 1.0, 0.5]
+    assert movie.ping_pong(4, cycles=2) == [0.0, 1.0, 0.0, 1.0]
+
+
+@pytest.fixture
+def moving(app):
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    win.resize(900, 650)
+    win._confirm_discard = lambda: True
+    root, _w = scadparse.parse_scad(
+        "/* [Motion] */\n"
+        "arm = 0;  // [0:10:90]\n"
+        "cube([60, 10, 10]);\n"
+        "rotate([0, -arm, 0]) translate([0, 20, 0]) cube([60, 10, 10]);\n")
+    win.model.root = root
+    win.model.structure_changed.emit()
+    win._refresh_preview()
+    yield win
+    win._dirty = False
+    win.close()
+
+
+def _arm(win):
+    return next(n for n in win.model.root.walk()
+                if n.type == "assign" and n.params.get("variable") == "arm")
+
+
+def test_animator_finds_the_motion_slider_and_puts_it_back(moving):
+    anim = movie.Animator(moving)
+    assert anim.names == ["arm"]
+    anim.pose(1.0)
+    assert float(_arm(moving).params["value"]) == 90.0
+    anim.restore()
+    assert _arm(moving).params["value"] in (0, 0.0, "0")
+
+
+def test_animator_takes_a_limited_range(moving):
+    anim = movie.Animator(moving, [{"variable": "arm", "from": 20,
+                                    "to": 40}])
+    anim.pose(0.5)
+    assert float(_arm(moving).params["value"]) == 30.0
+    anim.restore()
+    with pytest.raises(movie.MovieError):
+        movie.Animator(moving, ["nothing_here"])
+
+
+def test_parts_move_while_the_camera_stays(moving, tmp_path):
+    view = moving.view3d
+    yaw, pitch = view.yaw, view.pitch
+    before = list(view.mesh)
+    QApplication.processEvents()            # settle the load's snapshot
+    steps = moving.model.undo_stack.count()
+    count = movie.render_frames(view, tmp_path, seconds=1, fps=4, turns=1,
+                                width=96, height=64, motion="still",
+                                animator=movie.Animator(moving))
+    assert count == 4 and (view.yaw, view.pitch) == (yaw, pitch)
+    a, c = (QImage(str(tmp_path / f"frame_{i:05d}.png")) for i in (0, 2))
+    assert a != c                       # the arm swung between them
+    assert list(view.mesh) == before    # and came back
+    QApplication.processEvents()
+    assert moving.model.undo_stack.count() == steps   # no undo steps
+
+
+def test_a_document_without_sliders_says_so(window):
+    with pytest.raises(movie.MovieError):
+        movie.Animator(window)
+
+
+def test_tumble_frames_render(window, tmp_path):
+    count = movie.render_frames(window.view3d, tmp_path, seconds=1, fps=4,
+                                turns=1, width=96, height=64,
+                                motion="tumble", tumble_turns=1)
+    assert count == 4

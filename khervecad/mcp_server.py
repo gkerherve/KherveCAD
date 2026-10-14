@@ -218,8 +218,14 @@ checks: set_render_options heatmap draft / curvature / zebra. A line \
 drawing from the current camera: export_drawing views ["Current"].
 - A turntable movie / video / advert / GIF of the model turning: \
 export_movie path ".mp4" or ".gif" (seconds, fps, turns, size, \
-elevation; motion "light" keeps the model still and sweeps the light) — set up the look first (colours, materials, a Cut \
-Through, the platform); every frame is the 3D view as the user sees it.
+elevation; motion "light" keeps the model still and sweeps the light, \
+"tumble" turns the camera round AND over the top at once, "still" keeps \
+the user's camera) — set up the look first (colours, materials, a Cut \
+Through, the platform); every frame is the 3D view as the user sees it. \
+To show a mechanism WORKING in the movie (a robot arm's joints, gears \
+turning), pass animate: true (its Motion sliders) or a list of slider \
+names / {variable, from, to}; animate_cycles sets how often they go \
+there and back.
 - Beyond OpenSCAD's own shapes, apply_code understands KherveCAD's \
 helpers, which parse into editable nodes: `kcad_sweep(path = [[x, y, \
 z], ...], smooth = 3, twist = 0, scale = 1, wall = 0, closed = false) \
