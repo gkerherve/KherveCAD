@@ -235,3 +235,64 @@ def test_errors_say_what_to_do(char, tmp_path):
     bad.write_bytes(b"nope")
     with pytest.raises(character.CharacterError, match="not a binary"):
         character.import_character(doc, bad)
+
+
+# ------------------------------------------------------------ the window
+
+@pytest.fixture
+def window(app):
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    yield win
+    win._dirty = False          # no "discard unsaved changes?" on close
+    win.close()
+
+
+def _actions(win):
+    return {a.text().replace("&", ""): a
+            for a in win.menuBar().actions()[0].menu().actions()}
+
+
+def test_file_menu_imports_poses_and_exports(window, tmp_path, monkeypatch):
+    from PyQt5.QtWidgets import QFileDialog, QMessageBox
+    from khervecad import character_ui
+    acts = _actions(window)
+    for label in ("Import Animated Character (GLB)...",
+                  "Export Animated Character (GLB)...", "Pose Character..."):
+        assert label in acts
+    src = make_glb(tmp_path / "column.glb")
+    monkeypatch.setattr(character, "default_parts_dir",
+                        lambda _s: str(tmp_path / "parts"))
+    monkeypatch.setattr(QFileDialog, "getOpenFileName",
+                        staticmethod(lambda *a, **k: (str(src), "")))
+    monkeypatch.setattr(QMessageBox, "information",
+                        staticmethod(lambda *a, **k: None))
+    monkeypatch.setattr(QMessageBox, "exec_", lambda self: 0)
+    def fail(*a, **k):
+        raise AssertionError(f"warning shown: {a[2] if len(a) > 2 else a}")
+    monkeypatch.setattr(QMessageBox, "warning", staticmethod(fail))
+    monkeypatch.setattr(QMessageBox, "question",
+                        staticmethod(lambda *a, **k: QMessageBox.Discard))
+    acts["Import Animated Character (GLB)..."].trigger()
+    comps = character_ui.characters(window)
+    assert len(comps) == 1
+    comp = comps[0]
+    # pose through the panel: the Wave clip at its end
+    acts["Pose Character..."].trigger()
+    dlg = window._pose_dialog
+    dlg.clip.setCurrentIndex(dlg.clip.findData("Wave"))
+    dlg.time.setValue(dlg.STEPS)
+    assert comp.params["character"]["clip"] == "Wave"
+    assert abs(comp.params["character"]["time"] - 1.0) < 1e-6
+    dlg.clip.setCurrentIndex(0)                       # back to rest
+    assert comp.params["character"]["clip"] == ""
+    dlg.close()
+    # something to export, then File ▸ Export
+    window.model.add_node("cube", dict(width=40, depth=40, height=40,
+                                       center=True, z=1000), parent=comp)
+    out_path = tmp_path / "out.glb"
+    monkeypatch.setattr(QFileDialog, "getSaveFileName",
+                        staticmethod(lambda *a, **k: (str(out_path), "")))
+    acts["Export Animated Character (GLB)..."].trigger()
+    assert out_path.exists()
+    assert character.Glb(out_path).clips()[0][0] == "Wave"

@@ -231,6 +231,11 @@ class MainWindow(QMainWindow):
         file_menu.addAction(icons.icon("mdi.image-filter-hdr"),
                             self.tr("Import &Height Map (surface)..."),
                             self.import_surface)
+        from . import character_ui
+        file_menu.addAction(icons.icon("mdi.human-handsup"),
+                            self.tr("Import Animated C&haracter (GLB)..."),
+                            lambda: character_ui.import_character_dialog(
+                                self))
         file_menu.addSeparator()
         file_menu.addAction(self.tr("Export Open&SCAD..."), self.export_scad,
                             "Ctrl+E")
@@ -241,6 +246,13 @@ class MainWindow(QMainWindow):
                                     "Rhino)..."),
                             lambda: cadexchange_ui.export_cad_dialog(self),
                             "Ctrl+Alt+S")
+        file_menu.addAction(icons.icon("mdi.human-handsup"),
+                            self.tr("Export Animated Character (GLB)..."),
+                            lambda: character_ui.export_character_dialog(
+                                self))
+        file_menu.addAction(icons.icon("mdi.run"),
+                            self.tr("&Pose Character..."),
+                            lambda: character_ui.pose_character_dialog(self))
         from .pngexport import open_dialog as export_png_dialog
         file_menu.addAction(icons.icon("mdi.image-outline"),
                             self.tr("Export PN&G..."),
