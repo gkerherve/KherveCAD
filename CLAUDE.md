@@ -4320,6 +4320,31 @@ into a new module and import.
                        (`pngexport.render(uncut=True)` →
                        `snapshot(uncut=True)`). MCP: set_render_options
                        `cut` / `cut_position` / `cut_flip`.
+  - `character.py`   — **animated characters** (Qt-free): a rigged,
+                       animated .glb in, dressed with KherveCAD parts,
+                       posed, and an animated .glb out for a game.
+                       `import_character` makes an Object: the body as
+                       coloured `stl_import` parts "Body n" (one STL per
+                       colour, in `parts_dir`), standing on z = 0,
+                       facing -Y, in mm, and a `character` param dict
+                       (source, height_mm, k + centre = the glTF->CAD
+                       frame, bones {name: head mm}, clip/time/turns).
+                       The **`bone`** wrapper node (`kcad_bone(name,
+                       pivot, a, t) { children }`, COLORED, in
+                       features.MODULES) = "these parts ride on bone X":
+                       `attach` wraps parts (nearest bone when none is
+                       named); `pose(clip, time, turns)` re-skins the
+                       body with the GLB's own weights (`Glb.body`,
+                       clips sampled by `Glb.sample`, LINEAR/STEP/
+                       CUBICSPLINE, quaternion nlerp) and sets every
+                       bone node's a/t from the bone's delta. `export_glb`
+                       = source GLB + one skinned mesh of all added parts
+                       (tessellate_colored, at REST: the bone node's pose
+                       left out), each bound 100 % to its bone, all clips
+                       kept. MCP: import_character, attach_to_bone,
+                       pose_character, export_character (one call each,
+                       short answers). Tests: tests/test_character.py
+                       builds a two-bone animated GLB itself.
   - `meshimport.py`  — **imported meshes** (`stl_import`, Qt-free):
                        paths stay absolute in memory (preview,
                        validation and the engine's temp-folder render

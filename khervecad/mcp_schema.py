@@ -108,7 +108,7 @@ WRAP_TYPES = [
     "pattern", "shell", "sculpt", "decimate", "shrinkwrap", "bevel",
     "remesh", "wireframe", "cloth", "push_pull", "bisect", "weathering",
     "scatter", "displace", "armature", "shape_keys", "hair_strands",
-    "vertex_paint",
+    "vertex_paint", "bone",
 ]
 
 
@@ -3419,6 +3419,71 @@ TOOLS = [
                         "description": "Include the catalogue (default "
                                        "true)."},
         }),
+    },
+    # ------------------------------------------------ animated characters
+    {
+        "name": "import_character",
+        "description": (
+            "Bring in a rigged, ANIMATED character (.glb — skeleton, skin "
+            "and clips) as one Object, standing on z = 0, facing -Y, in "
+            "mm: its body as coloured imported meshes, its bones and clips "
+            "kept. Then add parts inside it (helmet, armour, pouches...), "
+            "attach_to_bone, pose_character to check any clip, and "
+            "export_character for a game. Returns the Object id, its "
+            "height, bone names with head positions, and the clips."
+        ),
+        "input_schema": _obj({
+            "path": {"type": "string", "description": "Absolute .glb path."},
+            "height_mm": {"type": "number", "description": (
+                "Real height (default: from the file, metres assumed).")},
+            "name": {"type": "string"},
+        }, ["path"]),
+    },
+    {
+        "name": "attach_to_bone",
+        "description": (
+            "Make parts ride on a character's bones: each node is wrapped "
+            "in a `bone` node and from then on follows that bone in every "
+            "pose and in the exported game model (a helmet on the Head, a "
+            "radio on the Spine...). Give `bone`, or leave it out to use "
+            "each part's NEAREST bone. Many parts in one call."
+        ),
+        "input_schema": _obj({
+            "node_ids": dict(_IDS, description=(
+                "Parts inside an imported character.")),
+            "bone": {"type": "string", "description": (
+                "Bone name for all of them; omit for the nearest.")},
+        }, ["node_ids"]),
+    },
+    {
+        "name": "pose_character",
+        "description": (
+            "Pose an imported character: a clip at a time (seconds) and/or "
+            "extra bone turns {bone: [rx, ry, rz]} degrees. The body is "
+            "re-skinned with its own weights and every attached part "
+            "follows its bone. No clip and no turns = rest pose. Returns "
+            "the clips with their lengths."
+        ),
+        "input_schema": _obj({
+            "node_id": dict(_ID, description="The character's Object."),
+            "clip": {"type": "string"},
+            "time": {"type": "number", "description": "Seconds."},
+            "turns": {"type": "object", "description": (
+                "{\"<bone>\": [rx, ry, rz]} degrees, in the bone's frame.")},
+        }, ["node_id"]),
+    },
+    {
+        "name": "export_character",
+        "description": (
+            "Write the character as an animated .glb for a game: the "
+            "original skeleton, skin and every clip, plus everything added "
+            "in KherveCAD bound to its bone (parts not attached go to the "
+            "nearest bone), with their colours."
+        ),
+        "input_schema": _obj({
+            "node_id": dict(_ID, description="The character's Object."),
+            "path": {"type": "string", "description": "Absolute .glb path."},
+        }, ["node_id", "path"]),
     },
 ]
 

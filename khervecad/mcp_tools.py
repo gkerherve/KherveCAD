@@ -2969,6 +2969,61 @@ class McpToolExecutor:
         except creature_mcp.CreatureError as exc:
             raise ToolError(str(exc))
 
+    # ---- animated characters (character.py)
+
+    def _character(self, node_id):
+        from . import character
+        found = character.info_of(self._node(node_id))
+        if found is None:
+            raise ToolError("That node is not inside an imported "
+                            "character: import_character first.")
+        return found[0]
+
+    def _t_import_character(self, params) -> dict:
+        from . import character
+        try:
+            comp = character.import_character(
+                self._model, params.get("path", ""),
+                params.get("height_mm"), str(params.get("name") or ""))
+            clips = character.pose(self._model, comp)["clips"]
+        except (character.CharacterError, OSError) as exc:
+            raise ToolError(str(exc))
+        info = comp.params["character"]
+        return {"node_id": comp.id, "name": comp.name,
+                "height_mm": info["height_mm"],
+                "bones": info["bones"], "clips": clips}
+
+    def _t_attach_to_bone(self, params) -> dict:
+        from . import character
+        nodes = [self._node(i) for i in params.get("node_ids") or []]
+        if not nodes:
+            raise ToolError("Give node_ids: the parts to attach.")
+        try:
+            out = character.attach(self._model, nodes, params.get("bone"))
+        except character.CharacterError as exc:
+            raise ToolError(str(exc))
+        return {"attached": [{"bone_node_id": w.id, "bone": b}
+                             for w, b in out]}
+
+    def _t_pose_character(self, params) -> dict:
+        from . import character
+        comp = self._character(params.get("node_id"))
+        try:
+            return character.pose(self._model, comp, params.get("clip"),
+                                  float(params.get("time") or 0.0),
+                                  params.get("turns") or {})
+        except character.CharacterError as exc:
+            raise ToolError(str(exc))
+
+    def _t_export_character(self, params) -> dict:
+        from . import character
+        comp = self._character(params.get("node_id"))
+        try:
+            return character.export_glb(self._model, comp,
+                                        params.get("path", ""))
+        except (character.CharacterError, OSError) as exc:
+            raise ToolError(str(exc))
+
     def _t_rig_armature(self, params) -> dict:
         from . import creature_mcp
         try:
