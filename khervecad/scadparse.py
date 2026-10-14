@@ -84,6 +84,16 @@ _LABEL_MAX = 48
 _CODE_LIKE = re.compile(r"^[A-Za-z_$][\w$.]*(\(|\s*=[^=])")
 
 
+def _names_module(label, ident):
+    """True when *label* is the name codegen wrote beside a call of
+    module *ident*: the identifier of that name, or it deduped
+    (``Wheel`` -> ``Wheel_2``)."""
+    from .model import module_name
+    base = module_name(label)
+    return ident == base or re.fullmatch(re.escape(base) + r"_\d+",
+                                         ident) is not None
+
+
 def _comment_label(text):
     """The label a `// Body` comment gives, or "" — block comments,
     long prose and commented-out code name nothing. Banner dressing
@@ -382,12 +392,12 @@ class Parser:
                 continue
             if node is not None:
                 root.add(node)
-        self._apply_comment_labels()
+        self._apply_comment_labels(root)
         from . import customizer
         customizer.annotate(self, root)
         return root
 
-    def _apply_comment_labels(self):
+    def _apply_comment_labels(self, root=None):
         """Name nodes after their comments: "Cube" becomes "Cube [Body]".
 
         A trailing ``// Body`` after a statement that ends on its line
@@ -413,15 +423,37 @@ class Parser:
             if node.type == "component" or node.type not in UNTAGGED_TYPES:
                 heads[line_of(offset)][offset].append((node, end))
 
+        # module name -> the instances other calls of it became
+        refs = defaultdict(list)
+        for node in (root.walk() if root is not None else ()):
+            if node.type == "reference":
+                refs[str(node.params.get("ref", ""))].append(node)
+
         def label_node(node, label):
             # an Object is NAMED by the label on its placed call
             # (`Throat_and_belly();  // Throat and belly`, which is how
             # codegen carries a name its identifier cannot), where any
             # other node is tagged ("Cube [Body]")
-            if node.type == "component":
-                node.name = label
-            else:
+            if node.type != "component":
                 node.name = with_tag(node.name, label)
+                return True
+            old = node.name
+            if refs.get(old) and not _names_module(label, old) and \
+                    node.parent is not None and node.parent is not root:
+                # one call, inside another module, of a part placed from
+                # elsewhere too: the label describes this placement
+                # ("Race bolts"), not the part ("Bolt") — it goes to
+                # the wrapper round the call
+                return False
+            node.name = label
+            # the other calls reference the module by name — renaming
+            # without them left each one an empty `union() { }`
+            for ref in refs.pop(old, ()):
+                ref.params["ref"] = label
+                if ref.name == f"{old} instance":
+                    ref.name = f"{label} instance"
+                refs[label].append(ref)
+            return True
         comment_lines = set()
         for offset, body in self.comments:
             if not text[starts[line_of(offset)]:offset].strip():
@@ -440,9 +472,17 @@ class Parser:
                                 if any(line_of(end) == line
                                        for _n, end in heads[line][o])]
                     pick = max(complete) if complete else min(before)
-                    for node, _end in heads[line][pick]:
-                        label_node(node, label)
-                        labelled.add(id(node))
+                    # a declined Object call passes the label outwards
+                    order = [pick] + sorted((o for o in before if o < pick),
+                                            reverse=True)
+                    for o in order:
+                        took = False
+                        for node, _end in heads[line][o]:
+                            if label_node(node, label):
+                                labelled.add(id(node))
+                                took = True
+                        if took:
+                            break
             elif line - 1 not in comment_lines:
                 standalone.append((line, label))
         for line, label in standalone:
@@ -1376,7 +1416,11 @@ def _fold_container(node: CadNode):
                 p[k] = node.params.get(k, 0.0)
             folded = True
         elif node.type == "rotate" and all(
-                _is_zero(p.get(k, 0.0)) for k in ("rx", "ry", "rz")):
+                _is_zero(p.get(k, 0.0))
+                for k in ("rx", "ry", "rz", "x", "y", "z")):
+            # placement params mean translate(rotate(part)): a rotate
+            # of an already-translated call swings it about the origin
+            # (a bolt circle) and cannot fold — it stays a node
             for k, src in (("rx", "x"), ("ry", "y"), ("rz", "z")):
                 p[k] = node.params.get(src, 0.0)
             folded = True

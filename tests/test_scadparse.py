@@ -430,3 +430,82 @@ def test_split_values_respects_brackets_and_strings():
     assert split_values("[7, 7], [30, 7]") == ["[7, 7]", " [30, 7]"]
     assert split_values("1, 2, 4") == ["1", " 2", " 4"]
     assert split_values('max(1, 2), "a, b"') == ["max(1, 2)", ' "a, b"']
+
+
+def _code_of(root):
+    model = DocumentModel()
+    model.root = root
+    return model.to_scad()
+
+
+def _assert_no_lost_calls(code):
+    # an instance whose module cannot be found is emitted as an empty
+    # union — the geometry silently gone
+    assert "union() { }" not in code, code
+
+
+def test_a_label_on_one_call_of_a_shared_module_keeps_every_call(app):
+    root, _ = _parse(
+        'module Bolt() { color("black") cylinder(h=5, r=4.5, $fn=12); }\n'
+        "module A() { for (a=[0:20:340]) rotate([0,0,a]) "
+        "translate([114,0,126]) Bolt(); // Race bolts\n"
+        "}\n"
+        "module B() { translate([0,0,5]) Bolt(); // Turret bolts\n"
+        "}\n"
+        "A(); B();\n")
+    code = _code_of(root)
+    _assert_no_lost_calls(code)
+    # the part keeps its module name: the label described one placement
+    assert "module Bolt()" in code and "Race_bolts" not in code
+    assert code.count("Bolt();") == 2
+    # ... and labels the wrapper round that call instead
+    assert any(n.name.endswith("[Race bolts]") for n in root.walk())
+    # a rotate of a translated call is a bolt circle, not translate +
+    # rotate in place (every bolt would land on the same spot)
+    assert "rotate([0, 0, a]) {" in code
+    assert "translate([114, 0, 126]) Bolt();" in code
+    again, _ = _parse(code)
+    assert _code_of(again) == code
+
+
+def test_renaming_an_object_from_its_label_follows_every_reference(app):
+    root, _ = _parse(
+        "module Jaw_A() { cube([10,4,2]); }\n"
+        "module Jaw_B() { mirror([0,1,0]) Jaw_A(); }\n"
+        "Jaw_A(); // Finger A\n"
+        "Jaw_B();\n")
+    code = _code_of(root)
+    _assert_no_lost_calls(code)
+    names = {n.name for n in root.walk() if n.type == "component"}
+    assert "Finger A" in names
+    refs = [n for n in root.walk() if n.type == "reference"]
+    assert [r.params["ref"] for r in refs] == ["Finger A"]
+    assert "mirror([0, 1, 0]) {\n        Finger_A();" in code
+    again, _ = _parse(code)
+    assert _code_of(again) == code
+
+
+def test_a_module_that_only_calls_another_keeps_its_geometry(app):
+    root, _ = _parse(
+        "module Jaw_A() { cube([10,4,2]); }\n"
+        "module Jaw_B() { mirror([0,1,0]) Jaw_A(); }\n"
+        "Jaw_B();\n"
+        "Jaw_A(); // Finger A\n")
+    code = _code_of(root)
+    _assert_no_lost_calls(code)
+    assert "mirror([0, 1, 0]) {\n        Jaw_A();" in code
+    again, _ = _parse(code)
+    assert _code_of(again) == code
+
+
+def test_a_deduped_object_name_still_round_trips(app):
+    # codegen's own `Wheel_2();  // Wheel` note names the Object even
+    # when other calls reference it
+    root, _ = _parse(
+        "module Wheel_2() { cube(1); }\n"
+        "module Car() { Wheel_2(); translate([5,0,0]) Wheel_2(); }\n"
+        "Wheel_2();  // Wheel\n"
+        "Car();\n")
+    code = _code_of(root)
+    _assert_no_lost_calls(code)
+    assert "Wheel" in {n.name for n in root.walk() if n.type == "component"}

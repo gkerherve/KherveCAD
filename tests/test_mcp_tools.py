@@ -240,6 +240,26 @@ def test_apply_code_round_trips_through_get_code(ex):
     assert call(ex, "get_code")["code"] == once
 
 
+@pytest.mark.parametrize("code", [
+    # a label on the first of several calls of a module
+    'module Bolt() { color("black") cylinder(h=5, r=4.5, $fn=12); }\n'
+    "module A() { for (a=[0:20:340]) rotate([0,0,a]) "
+    "translate([114,0,126]) Bolt(); // Race bolts\n}\n"
+    "module B() { translate([0,0,5]) Bolt(); // Turret bolts\n}\n"
+    "A(); B();\n",
+    # a module whose body only calls another, which a label renames
+    "module Jaw_A() { cube([10,4,2]); }\n"
+    "module Jaw_B() { mirror([0,1,0]) Jaw_A(); }\n"
+    "Jaw_A(); // Finger A\nJaw_B();\n",
+])
+def test_apply_code_never_drops_a_module_call(ex, code):
+    call(ex, "apply_code", code=code, mode="replace")
+    once = call(ex, "get_code", full=True)["code"]
+    assert "union() { }" not in once, once
+    call(ex, "apply_code", code=once, mode="replace")
+    assert call(ex, "get_code", full=True)["code"] == once
+
+
 def test_apply_code_replace_swaps_the_document(ex):
     cube(ex)
     call(ex, "apply_code", code="sphere(r = 4);", mode="replace")
