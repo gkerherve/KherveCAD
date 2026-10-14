@@ -2747,7 +2747,8 @@ TOOLS = [
                                        "e.g. a robot arm's joints), or a "
                                        "list of slider names, or of "
                                        "{variable, from, to} to limit "
-                                       "each one's sweep. Every slider "
+                                       "each one's sweep, or {variable, "
+                                       "keys} to script it over time. Every slider "
                                        "goes from -> to -> from together, "
                                        "so the movie loops; the user's "
                                        "values come back after.",
@@ -2760,7 +2761,17 @@ TOOLS = [
                                                "variable": {
                                                    "type": "string"},
                                                "from": {"type": "number"},
-                                               "to": {"type": "number"}},
+                                               "to": {"type": "number"},
+                                               "keys": {
+                                                   "type": "array",
+                                                   "description":
+                                                   "[[time 0-1, value], "
+                                                   "...]: the slider "
+                                                   "follows these, eased "
+                                                   "between them — a "
+                                                   "choreography (reach, "
+                                                   "grip, lift, release)."
+                                                   " Time is one cycle."}},
                                            "required": ["variable"]}]}}]},
             "animate_cycles": {"type": "number",
                                "description": "How many times the parts "

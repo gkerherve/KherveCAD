@@ -36,7 +36,10 @@ sliders (motion_play.sliders — a robot arm's joints, a gear train's
 angle, an orrery's days) can MOVE while it is filmed. `Animator` sweeps
 each named slider from its minimum to its maximum and back
 (`ping_pong`, so the movie loops), `animate_cycles` times, all together
-— or only between the `from` / `to` a request gives. With no names it
+— or only between the `from` / `to` a request gives — or along KEYS,
+[[time 0..1, value], ...], eased between them (`key_value`), so a
+mechanism can act out a sequence: a robot arm turns to an object,
+reaches down with the gripper open, closes on it, lifts it and lets go. With no names it
 takes the motion sliders: those in a Motion / Time group, else
 motion_play.pick's one. Each frame writes the values into the
 variables, re-solves the mates and repaints the preview before the
@@ -68,6 +71,8 @@ FORMATS = (".mp4", ".gif")
 MOTIONS = ("turntable", "light", "both", "sequence", "still", "tumble")
 #: poses of a moving model the fitted distance looks at
 ANIMATION_FIT_POSES = (1.0, 0.75, 0.5, 0.25, 0.0)
+#: movie times the fitted distance looks at (keyed tracks peak anywhere)
+FIT_TIMES = (0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 0.0)
 #: (key, label, (width, height))
 SIZES = (
     ("1280x720", "1280 × 720 (HD)", (1280, 720)),
@@ -203,16 +208,22 @@ class Animator:
             except motion_play.MotionError as exc:
                 raise MovieError(str(exc))
             spec = customizer.widget(node) or {}
-            lo, hi = spec.get("min"), spec.get("max")
-            if isinstance(req, dict):
-                lo, hi = req.get("from", lo), req.get("to", hi)
-            try:
-                lo, hi = float(lo), float(hi)
-            except (TypeError, ValueError):
-                raise MovieError(
-                    f"{name}: give its range as from / to — it is not a "
-                    "slider with a minimum and maximum.")
-            self.tracks.append((node, lo, hi, node.params.get("value")))
+            keys = req.get("keys") if isinstance(req, dict) else None
+            if keys is not None:
+                keys = check_keys(name, keys)
+                lo = hi = None
+            else:
+                lo, hi = spec.get("min"), spec.get("max")
+                if isinstance(req, dict):
+                    lo, hi = req.get("from", lo), req.get("to", hi)
+                try:
+                    lo, hi = float(lo), float(hi)
+                except (TypeError, ValueError):
+                    raise MovieError(
+                        f"{name}: give its range as from / to (or keys) — "
+                        "it is not a slider with a minimum and maximum.")
+            self.tracks.append((node, lo, hi, node.params.get("value"),
+                                keys))
         if not self.tracks:
             raise MovieError("animate named no slider.")
 
@@ -226,24 +237,62 @@ class Animator:
         self.window._refresh_preview()
 
     def pose(self, u):
-        """Every track at fraction *u* (0..1) of its range."""
-        for node, lo, hi, _orig in self.tracks:
-            node.params["value"] = round(lo + (hi - lo) * float(u), 6)
+        """Every from/to track at fraction *u* (0..1) of its range, every
+        keyed track at time *u* of its cycle."""
+        for node, lo, hi, _orig, keys in self.tracks:
+            value = key_value(keys, u) if keys else lo + (hi - lo) * float(u)
+            node.params["value"] = round(value, 6)
+        self._refresh()
+
+    def at(self, t, cycles=1.0):
+        """Every track at movie time *t* (0..1): a from/to track goes
+        there and back (`ping_pong`), a keyed track follows its keys."""
+        u = (float(cycles) * float(t)) % 1.0
+        swing = 1.0 - abs(2.0 * u - 1.0)
+        for node, lo, hi, _orig, keys in self.tracks:
+            value = key_value(keys, u) if keys else lo + (hi - lo) * swing
+            node.params["value"] = round(value, 6)
         self._refresh()
 
     def restore(self):
-        for node, _lo, _hi, orig in self.tracks:
+        for node, _lo, _hi, orig, _keys in self.tracks:
             node.params["value"] = orig
         self._refresh()
 
     def points(self, view3d):
         """The model's points in several poses (for the fitted
-        distance), leaving it at the first pose."""
+        distance), leaving it at the first frame's."""
         pts = []
-        for u in ANIMATION_FIT_POSES:       # ends at 0, the first frame
-            self.pose(u)
+        for t in FIT_TIMES:                 # ends at 0, the first frame
+            self.at(t)
             pts.extend(_model_points(view3d))
         return pts
+
+
+def check_keys(name, keys):
+    """[[time 0..1, value], ...] sorted by time, or MovieError."""
+    try:
+        rows = sorted((float(t), float(v)) for t, v in keys)
+    except (TypeError, ValueError):
+        raise MovieError(f"{name}: keys are [time 0-1, value] pairs.")
+    if not rows or any(not 0.0 <= t <= 1.0 for t, _v in rows):
+        raise MovieError(f"{name}: key times run from 0 to 1.")
+    return rows
+
+
+def key_value(keys, u):
+    """The keyed value at cycle time *u*, eased (smoothstep) between
+    keys so every move starts and stops gently; held before the first
+    key and after the last."""
+    if u <= keys[0][0]:
+        return keys[0][1]
+    for (t0, v0), (t1, v1) in zip(keys, keys[1:]):
+        if u <= t1:
+            if t1 <= t0:
+                return v1
+            s = (u - t0) / (t1 - t0)
+            return v0 + (v1 - v0) * s * s * (3.0 - 2.0 * s)
+    return keys[-1][1]
 
 
 def light_turns(count, turns=1.0, start=0.0):
@@ -309,14 +358,14 @@ def render_frames(view3d, folder, *, seconds, fps, turns, width, height,
         yaws, lights = motion_path(motion, count, turns, view3d.yaw,
                                    view3d.light_turn, clockwise,
                                    light_frames)
-        poses = ping_pong(count, animate_cycles) if animator else None
+
         saved = view3d.light_turn
         try:
             for i, (yaw, light) in enumerate(zip(yaws, lights)):
                 if progress is not None and progress(i, count) is False:
                     raise MovieError("Cancelled.")
                 if animator is not None:
-                    animator.pose(poses[i])
+                    animator.at(i / count, animate_cycles)
                 view3d.light_turn = light  # copied by the snapshot twin
                 image, _cam = view3d.snapshot(
                     width, height, yaw=yaw, pitch=pitches[i],

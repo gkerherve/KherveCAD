@@ -241,3 +241,25 @@ def test_tumble_frames_render(window, tmp_path):
                                 turns=1, width=96, height=64,
                                 motion="tumble", tumble_turns=1)
     assert count == 4
+
+
+def test_keys_are_eased_and_held():
+    keys = movie.check_keys("a", [[0.5, 10], [0, 0], [1, 0]])
+    assert keys[0] == (0.0, 0.0)               # sorted
+    assert movie.key_value(keys, 0.0) == 0.0
+    assert movie.key_value(keys, 0.5) == 10.0
+    assert movie.key_value(keys, 0.25) == 5.0  # eased midpoint
+    assert movie.key_value(keys, 0.05) < 0.5   # starts gently
+    with pytest.raises(movie.MovieError):
+        movie.check_keys("a", [[1.5, 0]])
+
+
+def test_a_keyed_slider_acts_out_its_keys(moving):
+    anim = movie.Animator(moving, [{"variable": "arm",
+                                    "keys": [[0, 0], [0.5, 80], [1, 0]]}])
+    anim.at(0.5)
+    assert float(_arm(moving).params["value"]) == 80.0
+    anim.at(0.25, cycles=2)                    # half way through cycle 1
+    assert float(_arm(moving).params["value"]) == 80.0
+    anim.restore()
+    assert _arm(moving).params["value"] in (0, 0.0, "0")

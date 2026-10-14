@@ -225,7 +225,10 @@ Through, the platform); every frame is the 3D view as the user sees it. \
 To show a mechanism WORKING in the movie (a robot arm's joints, gears \
 turning), pass animate: true (its Motion sliders) or a list of slider \
 names / {variable, from, to}; animate_cycles sets how often they go \
-there and back.
+there and back. To ACT something out (a robot arm turning to an object, \
+reaching down with the gripper open, closing, lifting, letting go), give \
+each slider {variable, keys: [[time 0-1, value], ...]} — eased between \
+keys, one cycle per animate_cycles.
 - Beyond OpenSCAD's own shapes, apply_code understands KherveCAD's \
 helpers, which parse into editable nodes: `kcad_sweep(path = [[x, y, \
 z], ...], smooth = 3, twist = 0, scale = 1, wall = 0, closed = false) \
