@@ -123,7 +123,9 @@ def default_fields(title):
     stem = re.sub(r"[^A-Za-z0-9]+", "-", title or "PART").strip("-")
     return {
         "title": title or "Part",
-        "number": (stem.upper()[:16] or "PART") + "-001",
+        # cut BEFORE stripping: a cut landing on a dash once gave
+        # "AIR-SOURCE-HEAT--001"
+        "number": (stem.upper()[:16].strip("-") or "PART") + "-001",
         "material": str(settings.value("blueprint/material",
                                        analysis.DEFAULT_MATERIAL)),
         "finish": "", "mass": "",
@@ -517,6 +519,11 @@ class BlueprintScene(QGraphicsScene):
 
     # -- layout
     def new_layout(self, names=("Front", "Top", "Right", "Isometric")):
+        g = self.geometry
+        if g is not None and len(g.tris) > BUSY_TRIS:
+            # an assembly this size is a mat of dashes with hidden edges
+            # on, and finding them was half of a 30 s open
+            self.hidden_lines = False
         for view in list(self.views.values()):
             self.remove([view])
         for name in names:
@@ -691,21 +698,31 @@ class BlueprintScene(QGraphicsScene):
                 continue                           # a speck on paper
             key = (bool(c["closed"]), round(c["r"], 2))
             groups.setdefault(key, []).append(c)
+        if len(view.circles) > BUSY_CIRCLES:
+            most = min(most, 3)       # an assembly: the big rounds only
         order = sorted(groups.items(), key=lambda kv: -kv[0][1])[:most]
         w, h = view.size()
         mid = (w / 2.0, -h / 2.0)
-        for (closed, _r), circles in order:
+        rings = {}                   # labels per centre: a fan guard's
+        for (closed, _r), circles in order:   # ten rings get two
+            spot = tuple(round(v / 2.0) for v in circles[0]["centre"])
+            if len(circles) == 1 and rings.get(spot, 0) >= 2:
+                continue
+            rings[spot] = rings.get(spot, 0) + 1
             # label the hole nearest the outline, its leader pointing
             # away from the middle so the number lands off the part
             first = max(circles, key=lambda c: math.hypot(
                 *[a - b for a, b in zip(view.to_local(c["centre"]), mid)]))
-            angle, offset = _leader(view.to_local(first["centre"]),
-                                    first["r"] * view.scale_, mid, w, h)
-            self.add_note({"type": "dim",
-                           "kind": "diameter" if closed else "radius",
-                           "centre": list(first["centre"]),
-                           "r": first["r"], "angle": angle, "offset": offset,
-                           "count": len(circles), "auto": True}, view)
+            C = view.to_local(first["centre"])
+            angle, offset = _leader(C, first["r"] * view.scale_, mid, w, h)
+            data = {"type": "dim",
+                    "kind": "diameter" if closed else "radius",
+                    "centre": list(first["centre"]), "r": first["r"],
+                    "angle": angle, "offset": offset,
+                    "count": len(circles), "auto": True}
+            if not self._place_clear(view, data, C,
+                                     first["r"] * view.scale_, w, h):
+                continue          # nowhere to put it without a pile-up
             if closed:
                 for c in circles[:40]:
                     self.add_note({"type": "centre_mark",
@@ -713,18 +730,59 @@ class BlueprintScene(QGraphicsScene):
                                    "r": c["r"], "auto": True}, view)
 
 
+    def _place_clear(self, view, data, C, R, w, h):
+        """Add the Ø/R label *data*, turning its leader through the
+        allowed directions (and lengthening it) until its box clears
+        every other label, dimension and view. False, and nothing added,
+        when no direction does: two labels printed over each other
+        ("R125.63" on "R123.04") are worse than one fewer."""
+        taken = [r for n in self.notes() if n.KIND == "dim"
+                 for r in _text_boxes(n)]
+        taken += [v.mapRectToScene(v.content_rect()) for v in
+                  self.views.values() if v is not view]
+        first = data["angle"]
+        tries = sorted(_LEADER_ANGLES, key=lambda a: abs(
+            ((a - first) + 180.0) % 360.0 - 180.0))
+        for grow in (0.0, 8.0, 16.0):
+            for angle in tries:
+                a, off = _leader(C, R, (w / 2.0, -h / 2.0), w, h, angle)
+                data.update(angle=a, offset=off + grow)
+                item = self.add_note(dict(data), view)
+                if item is None:
+                    return False
+                boxes = _text_boxes(item)
+                if not any(b.intersects(t) for b in boxes for t in taken):
+                    return True
+                self.remove([item])
+        return False
+
+
+def _text_boxes(note):
+    """The sheet rectangles of a note's WORDS — what must not overlap
+    (its leader may cross another's, as on any drawing)."""
+    return [note.mapRectToScene(bi.placed_text(p).boundingRect().adjusted(
+        -1.0, -1.0, 1.0, 1.0)) for p in note.prims if p[0] == "text"]
+
+
+#: past this many triangles a fresh sheet leaves hidden edges out
+BUSY_TRIS = 40000
+#: past this many round edges in a view only the biggest get labels
+BUSY_CIRCLES = 60
+
 #: leader directions a label may take: never along an axis, where it
 #: would read as a dimension line or an edge
 _LEADER_ANGLES = (30.0, 60.0, 120.0, 150.0, 210.0, 240.0, 300.0, 330.0)
 
 
-def _leader(C, R, mid, w, h):
+def _leader(C, R, mid, w, h, angle=None):
     """(angle°, offset mm) for a Ø/R label on the circle at local *C*:
-    pointing away from the view's middle, long enough to clear the
-    view's outline by 6 mm."""
+    pointing away from the view's middle (or along *angle*), long
+    enough to clear the view's outline by 6 mm."""
     dx, dy = C[0] - mid[0], C[1] - mid[1]
     raw = math.degrees(math.atan2(-dy, dx)) if math.hypot(dx, dy) > 1e-6 \
         else 45.0
+    if angle is not None:
+        raw = angle
     angle = min(_LEADER_ANGLES,
                 key=lambda a: abs(((a - raw) + 180.0) % 360.0 - 180.0))
     ux, uy = math.cos(math.radians(angle)), -math.sin(math.radians(angle))
