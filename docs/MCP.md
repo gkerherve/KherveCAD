@@ -102,6 +102,33 @@ Each call is **one undo step**, so **Ctrl+Z in KherveCAD reverts a
 remote assistant's change** just like your own — and two calls are two
 steps, so you can reject the last one on its own.
 
+## Install as a Claude plugin
+
+Both packages only start the stdio server; KherveCAD itself must be
+running with **AI ▸ Connect to Claude** switched on. The shared launcher
+(`plugins/khervecad/bin/khervecad_mcp.py`) runs the installed app with
+`--mcp-server` (set `KHERVECAD_EXE` if it is somewhere unusual), else a
+source checkout, else the copy bundled with it. It needs `python3`.
+
+**Claude Code** — the repository is a plugin marketplace:
+
+```
+claude plugin marketplace add gkerherve/KherveCAD
+claude plugin install khervecad@khervetools
+```
+
+That brings the MCP tools and the `model-from-blueprint` skill.
+
+**Claude Desktop** — build the extension and double-click it (or
+Settings ▸ Extensions ▸ Install Extension):
+
+```
+python packaging/build_mcpb.py      # -> dist/KherveCAD.mcpb
+```
+
+Attach `KherveCAD.mcpb` to a release so users can download it.
+`tests/test_claude_plugin.py` checks both.
+
 ## How it fits together
 
 There are two doors into the same bridge:

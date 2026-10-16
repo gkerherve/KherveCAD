@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "khervecad": {
+      "command": "python3",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/bin/khervecad_mcp.py"]
+    }
+  }
+}

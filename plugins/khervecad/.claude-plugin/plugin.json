@@ -1,0 +1,10 @@
+{
+  "name": "khervecad",
+  "version": "0.1.0",
+  "description": "Drive a live KherveCAD window: build parametric OpenSCAD models, insert library parts, render views, export STL/STEP and more (88 MCP tools).",
+  "author": {"name": "Gwilherm Kerherve", "url": "https://khervetools.com"},
+  "homepage": "https://github.com/gkerherve/KherveCAD",
+  "repository": "https://github.com/gkerherve/KherveCAD",
+  "license": "GPL-3.0",
+  "keywords": ["cad", "openscad", "3d", "modelling", "3d-printing", "mcp"]
+}

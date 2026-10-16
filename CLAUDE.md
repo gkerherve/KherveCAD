@@ -4837,6 +4837,11 @@ into a new module and import.
   the variable reaching it only through PLACEMENT, and NEVER into the
   geometry of a part (a cube's size, a gear's teeth, a polygon's
   points) — that re-cuts the solid every frame.
+- `plugins/khervecad/` + `.claude-plugin/marketplace.json` — the **Claude
+  Code plugin** (MCP server via `bin/khervecad_mcp.py`, which finds the
+  installed app, + the model-from-blueprint skill); `packaging/
+  build_mcpb.py` builds the **Claude Desktop extension**
+  `dist/KherveCAD.mcpb` from the same launcher. See docs/MCP.md.
 - `docs/MCP.md` — how to connect an assistant, what the tools do,
   access levels, security, troubleshooting.
 - `tests/` — pytest suite (offscreen Qt; run `python -m pytest tests/`).

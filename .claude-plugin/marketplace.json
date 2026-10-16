@@ -1,0 +1,17 @@
+{
+  "name": "khervetools",
+  "owner": {
+    "name": "Gwilherm Kerherve",
+    "url": "https://khervetools.com"
+  },
+  "metadata": {
+    "description": "Kherve family apps for Claude: KherveCAD parametric CAD."
+  },
+  "plugins": [
+    {
+      "name": "khervecad",
+      "source": "./plugins/khervecad",
+      "description": "Drive a live KherveCAD window from Claude: parametric CAD on the OpenSCAD engine."
+    }
+  ]
+}
