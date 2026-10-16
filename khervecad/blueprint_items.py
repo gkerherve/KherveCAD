@@ -1037,12 +1037,21 @@ class BomItem(SheetItem):
     ROW = 6.0
     COLS = (("ITEM", 14.0), ("PART", 62.0), ("QTY", 14.0),
             ("MATERIAL", 40.0))
-    DEFAULTS = {"rows": []}
-    FIELDS = (("rows_text", "Rows (item | part | qty | material)",
+    #: the engineering parts list `bom` fills (style "full")
+    FULL_COLS = (("ITEM", 11.0), ("PART NO.", 30.0),
+                 ("NAME / DESCRIPTION", 70.0), ("MATERIAL", 32.0),
+                 ("QTY", 13.0), ("MASS kg", 17.0))
+    DEFAULTS = {"rows": [], "style": "basic"}
+    FIELDS = (("rows_text", "Rows (cells separated by |)",
                "multiline", None),)
 
+    @property
+    def cols(self):
+        return self.FULL_COLS if self.data.get("style") == "full" \
+            else self.COLS
+
     def width(self):
-        return sum(w for _h, w in self.COLS)
+        return sum(w for _h, w in self.cols)
 
     def height(self):
         return self.ROW * (len(self.data.get("rows") or []) + 1)
@@ -1054,15 +1063,20 @@ class BomItem(SheetItem):
         for i in range(1, len(rows) + 1):
             out.append(line("thin", (0, i * self.ROW), (W, i * self.ROW)))
         x = 0.0
-        for c, (head, w) in enumerate(self.COLS):
+        full = self.data.get("style") == "full"
+        for c, (head, w) in enumerate(self.cols):
             if c:
                 out.append(line("thin", (x, 0), (x, H)))
             out.append(text(head, (x + 1.5, self.ROW / 2.0), 2.2, "left",
                             "middle", bold=True, kind="text"))
             for r, row in enumerate(rows):
                 value = str(row[c]) if c < len(row) else ""
-                out.append(text(value, (x + 1.5, (r + 1.5) * self.ROW), 2.5,
-                                "left", "middle", kind="text"))
+                size = 2.2 if full else 2.5
+                # long words are cut to the column, not run over it
+                while value and text_width(value, size) > w - 2.5:
+                    value = value[:-2] + "…" if len(value) > 2 else ""
+                out.append(text(value, (x + 1.5, (r + 1.5) * self.ROW),
+                                size, "left", "middle", kind="text"))
             x += w
         return out
 

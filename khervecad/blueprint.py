@@ -37,7 +37,7 @@ import copy
 import re
 from pathlib import Path
 
-from PyQt5.QtCore import QRectF, QSettings, Qt, QTimer
+from PyQt5.QtCore import QPointF, QRectF, QSettings, Qt, QTimer
 from PyQt5.QtGui import QKeySequence, QPainter
 from PyQt5.QtWidgets import (QAction, QActionGroup, QApplication, QCheckBox,
                              QComboBox, QDialog, QDialogButtonBox,
@@ -800,6 +800,13 @@ class BlueprintWindow(QMainWindow):
         if self.scene.geometry.tris:
             self.scene.new_layout()
             self.scene.auto_dimension()
+            try:
+                from . import bom
+                _b, lines = bom.sheet_lines(self.model, "parts")
+            except Exception:                      # noqa: BLE001
+                lines = []
+            if len(lines) >= 2:            # an assembly: list + balloons
+                self.add_bom(balloons=True)
 
     def _new_sheet(self):
         if QMessageBox.question(
@@ -1053,16 +1060,178 @@ class BlueprintWindow(QMainWindow):
                              material])
         return rows or [["1", self.scene.title_text(), "1", material]]
 
-    def add_bom(self):
-        existing = [n for n in self.scene.notes() if n.KIND == "bom"]
+    def add_bom(self, detail="parts", balloons=None):
+        """The parts list from the BOM (item, part no., name and
+        description, material, quantity, mass) above the title block,
+        and — for an assembly — a numbered balloon on the Front view
+        pointing at each part. Replaces the list and balloons it placed
+        before; the user's own stay."""
+        from . import bom
+        existing = [n for n in self.scene.notes() if n.KIND == "bom" or (
+            n.KIND == "balloon" and n.data.get("auto"))]
         self.scene.remove(existing)
-        item = bi.BomItem({"rows": self.bom_rows()})
+        try:
+            b, lines = bom.sheet_lines(self.model, detail)
+        except Exception:                          # noqa: BLE001
+            b, lines = None, []
+        if len(lines) < 2:
+            item = bi.BomItem({"rows": self.bom_rows()})
+            data = {"type": "bom", "rows": item.data["rows"]}
+        else:
+            rows = []
+            for i, ln in enumerate(lines, 1):
+                ln.values["sheet_item"] = str(i)
+                desc = ln.get("description") or ""
+                name = ln.name if not desc or desc.startswith(ln.name) \
+                    else f"{ln.name} — {desc}"
+                if desc.startswith(ln.name):
+                    name = desc
+                mass = ln.get("mass_each")
+                rows.append([str(i), ln.get("part_no"), name,
+                             ln.get("material") or "",
+                             str(bom.line_row(ln)["qty"]) +
+                             ("" if ln.unit == "pc" else f" {ln.unit}"),
+                             f"{mass:.3g}" if mass else ""])
+            data = {"type": "bom", "rows": rows, "style": "full"}
+            item = bi.BomItem(data)
         m = bi.FrameItem.MARGIN
-        x = self.scene.W - m - item.width()
-        y = self.scene.H - m - drawing.TITLE_H - item.height()
-        self.scene.add_note({"type": "bom", "rows": item.data["rows"],
-                             "x": x, "y": y})
+        data["x"] = self.scene.W - m - item.width()
+        data["y"] = self.scene.H - m - drawing.TITLE_H - item.height()
+        listed = self.scene.add_note(data)
+        if listed is not None:
+            self._clear_list(listed)
+        if balloons is None:
+            balloons = len(lines) >= 2
+        if balloons and len(lines) >= 2:
+            self._balloon_parts(lines)
+        if b is not None and len(lines) >= 2:
+            total = b.totals()["mass_kg"]
+            f = self.scene.fields
+            if total and not str(f.get("mass") or "").strip():
+                f["mass"] = f"{total:.3g} kg"
+            if f.get("material") in (None, "", "PLA"):
+                f["material"] = "As parts list"
+            self.scene.refresh_title()
         self.commit("Add parts list")
+
+    def _clear_list(self, listed):
+        """Move any view the parts list now covers to a free spot of the
+        sheet (the isometric, top-right, usually)."""
+        box = listed.sceneBoundingRect().adjusted(-4.0, -4.0, 4.0, 4.0)
+        for view in list(self.scene.views.values()):
+            # the caption ("ISOMETRIC") counts: it sits under the view
+            here = view.sceneBoundingRect()
+            if not here.intersects(box):
+                continue
+            spot, room = self._roomy_spot(view, here, box)
+            for _shrink in range(3):
+                if room >= 22.0 or view.data.get("name") != "Isometric":
+                    break
+                # the isometric is a picture, not a measured view: it
+                # may shrink to leave room for its balloons
+                factor = float(view.data.get("factor", 1.0)) * 0.85
+                view.data["factor"] = factor
+                view.set_scale(self.scene.scale * factor)
+                here = view.sceneBoundingRect()
+                got, more = self._roomy_spot(view, here, box)
+                if got is not None:
+                    spot, room = got, more
+            if spot is None:
+                continue
+            view.setPos(view.pos() + QPointF(spot[0] - here.left(),
+                                             spot[1] - here.top()))
+
+    def _roomy_spot(self, view, here, listed):
+        """(top-left corner, room) for *view*: of every place on the
+        sheet where it clears the other views, notes and the parts list,
+        the one with the most room round it (mm to the nearest thing) —
+        the middle of the biggest empty patch, where balloons fit."""
+        area = self.scene.usable_rect()
+        taken = [v.sceneBoundingRect() for v in self.scene.views.values()
+                 if v is not view]
+        taken += [n.sceneBoundingRect() for n in self.scene.notes()
+                  if (n.view is not None and n.view is not view)
+                  or n.KIND == "bom"]
+        taken.append(listed)
+        w, h = here.width(), here.height()
+        best, room = None, -1.0
+        y = area.top()
+        while y + h <= area.bottom():
+            x = area.left()
+            while x + w <= area.right():
+                box = QRectF(x, y, w, h)
+                gap = min([_rect_gap(box, t) for t in taken] + [
+                    x - area.left(), area.right() - x - w,
+                    y - area.top(), area.bottom() - y - h])
+                if gap > room:
+                    best, room = (x, y), gap
+                x += 4.0
+            y += 4.0
+        if room < 0.0:
+            return None, room
+        return best, room
+
+    def _balloon_parts(self, lines):
+        """A balloon per parts-list line on the isometric (else the
+        Front view), its leader on the part's middle, the balloons spread
+        round the view in order so they never sit on each other."""
+        from . import bom
+        name = "Isometric" if self.scene.projected("Isometric") else "Front"
+        view = self.scene.projected(name)
+        if view is None:
+            return
+        # what a balloon must not sit on: words of every note, the other
+        # views and the parts list (in this view's coordinates)
+        blocked = []
+        for n in self.scene.notes():
+            if n.KIND == "bom":
+                blocked.append(view.mapRectFromScene(n.sceneBoundingRect()))
+            elif n.KIND == "dim":
+                blocked += [view.mapRectFromScene(r)
+                            for r in _word_boxes(n)]
+        blocked += [view.mapRectFromScene(v.mapRectToScene(
+            v.content_rect())) for v in self.scene.views.values()
+            if v is not view]
+
+        sheet = view.mapRectFromScene(self.scene.usable_rect())
+        inner, outer = view.content_rect(), view.boundingRect()
+        if outer.bottom() > inner.bottom():           # the caption
+            blocked.append(QRectF(inner.left() - 20.0, inner.bottom(),
+                                  inner.width() + 40.0,
+                                  outer.bottom() - inner.bottom() + 2.0))
+
+        def clear(p):
+            r = 6.0
+            box = QRectF(p[0] - r, p[1] - r, 2 * r, 2 * r)
+            return sheet.contains(box) and \
+                not any(box.intersects(b) for b in blocked)
+        tips = []
+        for ln in lines:
+            box = bom.world_box(self.model, ln)
+            if box is None:
+                continue
+            mid = [(a + b) / 2.0 for a, b in zip(*box)]
+            u, v, _d = drawing.project(mid, name)
+            tips.append((ln, (u, v), view.to_local((u, v))))
+        # rings further out until every balloon finds a clear place:
+        # on each ring the balloons keep the ORDER of their parts round
+        # the middle (sorted by where their ray meets the ring), so no
+        # two leaders cross, and sit at least a balloon apart
+        for grow in (12.0, 24.0, 36.0, 48.0):
+            rect = view.content_rect().adjusted(-grow, -grow, grow, grow)
+            spots = _ring_spots(rect, [t for _l, _m, t in tips], 11.0,
+                                clear)
+            if spots is not None:
+                break
+        else:
+            spots = _ring_spots(rect, [t for _l, _m, t in tips], 11.0,
+                                lambda p: True)
+        for (ln, (u, v), tip), spot in zip(tips, spots):
+            self.scene.add_note({
+                "type": "balloon", "tip": [u, v],
+                "at": [spot[0] - tip[0], spot[1] - tip[1]],
+                "number": ln.values.get("sheet_item", ""), "auto": True},
+                view)
 
     def edit_title(self):
         self.set_tool("select")
@@ -1211,6 +1380,106 @@ class BlueprintWindow(QMainWindow):
         self.flush_pending()
         self.tool.deactivate()
         super().closeEvent(event)
+
+
+def _rect_gap(a, b):
+    """Clear distance between rectangles (negative when they overlap)."""
+    dx = max(b.left() - a.right(), a.left() - b.right())
+    dy = max(b.top() - a.bottom(), a.top() - b.bottom())
+    if dx < 0 and dy < 0:
+        return max(dx, dy)
+    return max(dx, dy) if min(dx, dy) < 0 else (dx * dx + dy * dy) ** 0.5
+
+
+def _word_boxes(note):
+    return [note.mapRectToScene(bi.placed_text(p).boundingRect())
+            for p in note.prims if p[0] == "text"]
+
+
+def _ring_pos(rect, p):
+    """Distance clockwise round *rect*'s edge from its top-left corner
+    to the edge point *p*."""
+    l, t, r, b = rect.left(), rect.top(), rect.right(), rect.bottom()
+    w, h = r - l, b - t
+    x, y = p
+    if abs(y - t) < 1e-6:
+        return x - l
+    if abs(x - r) < 1e-6:
+        return w + (y - t)
+    if abs(y - b) < 1e-6:
+        return w + h + (r - x)
+    return 2 * w + h + (b - y)
+
+
+def _ring_point(rect, s):
+    l, t, r, b = rect.left(), rect.top(), rect.right(), rect.bottom()
+    w, h = r - l, b - t
+    s %= 2 * (w + h)
+    if s <= w:
+        return [l + s, t]
+    if s <= w + h:
+        return [r, t + s - w]
+    if s <= 2 * w + h:
+        return [r - (s - w - h), b]
+    return [l, b - (s - 2 * w - h)]
+
+
+def _ring_spots(rect, tips, gap, clear):
+    """Balloon centres on *rect*'s edge for the *tips*: each where the
+    ray from the middle through its tip meets the edge, then pushed
+    clockwise until it is *gap* past the one before and *clear*. None
+    when they do not all fit on this ring."""
+    c = rect.center()
+    perim = 2 * (rect.width() + rect.height())
+    wanted = []
+    for i, tip in enumerate(tips):
+        dx, dy = tip[0] - c.x(), tip[1] - c.y()
+        if abs(dx) < 1e-6 and abs(dy) < 1e-6:
+            dx = 1.0
+        k = min(abs((rect.width() / 2.0) / dx) if dx else 1e9,
+                abs((rect.height() / 2.0) / dy) if dy else 1e9)
+        wanted.append((_ring_pos(rect, (c.x() + dx * k, c.y() + dy * k)),
+                       i))
+    wanted.sort()
+    out = [None] * len(tips)
+    first = None
+    last = None
+    for s, i in wanted:
+        if last is not None:
+            s = max(s, last + gap)
+        moved = 0.0
+        while not clear(_ring_point(rect, s)):
+            s += 2.0
+            moved += 2.0
+            if moved > perim:
+                return None
+        if first is not None and s - first > perim - gap:
+            return None                    # wrapped round onto the first
+        if first is None:
+            first = s
+        last = s
+        out[i] = _ring_point(rect, s)
+    return out
+
+
+def _along_ring(rect, p, step):
+    """*p* moved *step* mm clockwise round the edge of *rect*."""
+    x, y = p
+    l, t, r, b = rect.left(), rect.top(), rect.right(), rect.bottom()
+    x = min(max(x, l), r)
+    y = min(max(y, t), b)
+    if abs(y - t) < 1e-6 and x < r:
+        return [min(x + step, r), t]
+    if abs(x - r) < 1e-6 and y < b:
+        return [r, min(y + step, b)]
+    if abs(y - b) < 1e-6 and x > l:
+        return [max(x - step, l), b]
+    if abs(x - l) < 1e-6:
+        return [l, max(y - step, t)]
+    # inside (should not happen): snap to the nearest edge
+    d = {"t": y - t, "b": b - y, "l": x - l, "r": r - x}
+    side = min(d, key=d.get)
+    return {"t": [x, t], "b": [x, b], "l": [l, y], "r": [r, y]}[side]
 
 
 def open_blueprint(main):

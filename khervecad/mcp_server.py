@@ -361,6 +361,25 @@ Hidden is a view setting: exports keep everything.
 loop): the piece becomes a hidden Object and each copy calls it, so \
 editing it changes every copy.
 
+Engineering documents — BOM, P&ID, drawings:
+- bill_of_materials lists every Object and every LABELLED piece inside \
+it (grouped by label, loops counted, tubes in metres, material from the \
+label word or colour). So label pieces with what they ARE and are made \
+of ('// Copper tube', '// Brass valve body'); set what the label cannot \
+say (material, supplier, cost, part_no, mass for hollow parts) with \
+action set; export .xlsx / .csv; action place puts the parts list and \
+numbered balloons on the Blueprint.
+- pid builds the P&ID (process and instrumentation diagram; File > \
+P&ID): action symbols lists ~55 ISO 10628 / ISA symbols with their \
+ports; add symbols at sheet mm (A3 is 420 x 297, keep clear of the title \
+block bottom-right), connect lines 'TAG.port' -> 'TAG.port' (or a free \
+{x, y} point ON another line for a tee) with a service (HWF, HWR, CW, \
+DHW, RHG, RL, RS, R2P, GLY, AIR, DR), size and material — they route \
+square and get line numbers — then action render and LOOK, fix what \
+crosses, and finish with action state's `problems` empty. Instruments: \
+tag with ISA letters (TE-101, PT-201, FS-101). Link symbols to their 3D \
+part with `node`.
+
 Motion — mechanisms, orreries, anything that MOVES:
 - Drive it from ONE annotated document variable, the OpenSCAD \
 Customizer way: `angle = 0;  // [0:5:360]` with a `// description` line \

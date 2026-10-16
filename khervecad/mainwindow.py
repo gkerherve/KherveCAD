@@ -269,6 +269,12 @@ class MainWindow(QMainWindow):
         file_menu.addAction(icons.icon("mdi.drawing-box"),
                             self.tr("&Blueprint (2D Drawing)..."),
                             self.open_blueprint, "Ctrl+Shift+D")
+        file_menu.addAction(icons.icon("mdi.format-list-numbered"),
+                            self.tr("Bill of &Materials..."),
+                            self.open_bom, "Ctrl+Alt+B")
+        file_menu.addAction(icons.icon("mdi.pipe"),
+                            self.tr("P&&&ID (Process Diagram)..."),
+                            self.open_pid, "Ctrl+Alt+I")
         from . import make2d
         file_menu.addAction(icons.icon("mdi.vector-square"),
                             self.tr("&Make 2D Drawing of This View..."),
@@ -2405,6 +2411,16 @@ class MainWindow(QMainWindow):
         """File ▸ Blueprint… — the 2D engineering drawing window."""
         from .blueprint import open_blueprint
         return open_blueprint(self)
+
+    def open_bom(self):
+        """File ▸ Bill of Materials… — the BOM window."""
+        from .bom_window import open_bom
+        return open_bom(self)
+
+    def open_pid(self):
+        """File ▸ P&ID… — the process and instrumentation diagram."""
+        from .pid_window import open_pid
+        return open_pid(self)
 
     def _drawing_edited(self):
         """The Blueprint sheet lives in the document: an edit to it is

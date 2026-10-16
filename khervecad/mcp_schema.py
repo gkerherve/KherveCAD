@@ -1540,6 +1540,98 @@ TOOLS = [
 
     # ── Parts and assemblies ───────────────────────────────────────
     {
+        "name": "bill_of_materials",
+        "description": (
+            "The document's BILL OF MATERIALS (File > Bill of Materials). "
+            "Objects are assemblies/parts, and every LABELLED node inside "
+            "a part ('// Copper tube' comment, 'Cube [Copper tube]') is a "
+            "component line, grouped by label with loop iterations "
+            "counted. Each line: item ('1.3.2'), part_no, name, "
+            "description (from what the node is: tube OD and length, "
+            "cylinder Ø × h, plate thickness), qty + unit (pc, or m for "
+            "pipe / tube / cable / rail), material (label word or colour, "
+            "'(est.)' when guessed), finish, size L×W×H mm, mass each / "
+            "total kg (solid estimate), cost, supplier, source. action: "
+            "get (default; detail components | parts | assemblies, "
+            "max_level, columns), set (item or ids + fields: part_no, "
+            "description, material, finish, supplier, cost, mass, unit, "
+            "notes, exclude — saved on the nodes, one undo step), export "
+            "(path .csv .xlsx .html .json), place (parts list + numbered "
+            "balloons on the Blueprint). LABEL every piece you build so "
+            "the BOM can list it."
+        ),
+        "input_schema": _obj({
+            "action": {"type": "string",
+                       "enum": ["get", "set", "export", "place"]},
+            "detail": {"type": "string",
+                       "enum": ["components", "parts", "assemblies"]},
+            "max_level": {"type": "integer", "minimum": 0},
+            "columns": {"type": "array", "items": {"type": "string"}},
+            "item": {"type": "string"},
+            "ids": _IDS,
+            "fields": {"type": "object"},
+            "path": {"type": "string"},
+            "balloons": {"type": "boolean"},
+        }),
+    },
+    {
+        "name": "pid",
+        "description": (
+            "The document's P&ID — piping and instrumentation diagram "
+            "(File > P&ID), saved in the .kcad. action: symbols (the "
+            "~55 ISO 10628 / ISA-5.1 symbols: kind, ports with the way a "
+            "pipe leaves each, tag prefix), state (default; symbols, "
+            "lines, notes, problems, usable sheet area), add (symbols: "
+            "[{kind, x, y, tag?, label, rot 0/90/180/270, mirror, data, "
+            "node = the 3D part's name}] in sheet mm, y DOWN; tags "
+            "number themselves, P-101, V-102), set (id or tag + x, y, "
+            "rot, mirror, tag, label, node, data, kind), connect (lines: "
+            "[{from: 'TAG.port', to: 'TAG.port' or {x, y} on another "
+            "line (a tee), kind process | secondary | signal | pneumatic "
+            "| capillary | data, service HWF HWR DHW CW RHG RL RS R2P "
+            "GLY AIR DR, size, material CU SS CS PEX..., insulated, "
+            "arrow, points?}] — routed square round the symbols, process "
+            "lines numbered 28-HWF-001-CU), set_line (id or number + "
+            "fields, new_number, reroute), remove (ids or tags), note "
+            "(text, x, y, size), sheet (sheet A4-A1, fields title / "
+            "number / revision / project / company / drawn / checked, "
+            "colour_lines), from_model (a symbol per recognised 3D "
+            "part, to arrange and connect), schedules (equipment, "
+            "valves, instrument index, line list), export (path: .pdf "
+            ".svg .png .dxf the sheet, .xlsx .csv the schedules), "
+            "render (a PNG to look at), clear."
+        ),
+        "input_schema": _obj({
+            "action": {"type": "string",
+                       "enum": ["state", "symbols", "add", "set",
+                                "connect", "set_line", "remove", "note",
+                                "sheet", "from_model", "schedules",
+                                "export", "render", "clear"]},
+            "symbols": {"type": "array", "items": {"type": "object"}},
+            "lines": {"type": "array", "items": {"type": "object"}},
+            "id": {"type": "string"},
+            "tag": {"type": "string"},
+            "number": {"type": "string"},
+            "new_number": {"type": "string"},
+            "ids": {"type": "array", "items": {"type": "string"}},
+            "x": {"type": "number"}, "y": {"type": "number"},
+            "rot": {"type": "integer"}, "mirror": {"type": "boolean"},
+            "label": {"type": "string"}, "node": {"type": "string"},
+            "kind": {"type": "string"}, "data": {"type": "object"},
+            "service": {"type": "string"}, "size": {"type": "string"},
+            "material": {"type": "string"},
+            "insulated": {"type": "boolean"},
+            "arrow": {"type": "boolean"}, "reroute": {"type": "boolean"},
+            "points": {"type": "array", "items": {"type": "array", "items": {"type": "number"}}},
+            "text": {"type": "string"}, "sheet": {"type": "string"},
+            "fields": {"type": "object"},
+            "colour_lines": {"type": "boolean"},
+            "replace": {"type": "boolean"},
+            "path": {"type": "string"},
+            "px_per_mm": {"type": "number"},
+        }),
+    },
+    {
         "name": "collections",
         "description": (
             "Blender-style COLLECTIONS: named sets of parts shown, "

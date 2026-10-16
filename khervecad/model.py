@@ -1130,6 +1130,10 @@ class DocumentModel(QObject):
         #: out of the undo snapshots — the Blueprint window has its own
         #: undo, and a Ctrl+Z in the model must not rewind the drawing.
         self.drawing = None
+        #: the P&ID (pid.Diagram.to_dict) or None — saved in the .kcad,
+        #: out of the model's undo like the drawing (its window has its
+        #: own undo)
+        self.pid = None
         #: the House Builder design (house.house_to_spec + "objects", the
         #: names of the Objects it built) or None — saved in the .kcad
         #: and IN the undo snapshots, so the builder reopens on the
@@ -1814,6 +1818,7 @@ class DocumentModel(QObject):
     def clear(self):
         self.reference_images = []
         self.drawing = None
+        self.pid = None
         self.house = None
         self.city = None
         self.collections = []

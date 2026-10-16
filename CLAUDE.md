@@ -3582,6 +3582,97 @@ into a new module and import.
                        (HIDDEN and CENTER linetypes) from the same
                        primitives (arrowheads as SOLID, Ø as %%c), and
                        printing.
+  - `bom.py`         — **bill of materials** (Qt-free, 2026-10-16, the
+                       user: "with a design such as this we need a P&ID,
+                       blueprints and BOM"). `build(model, detail)`:
+                       Objects/instances are assembly and part lines, and
+                       every LABELLED node inside a part ("Cube [Copper
+                       tube]", the `// label` comment) a COMPONENT line,
+                       grouped by (label, material, size), loop iterations
+                       counted (`_iterations`); a label sitting on the
+                       circle inside a sweep counts for the whole chain
+                       (`_chain_tag`, `_CHAIN`). Per line: item "1.3.2",
+                       part no. (prefix from the title), description
+                       written from the node (`_describe`: cylinder Ø × h,
+                       plate thickness, "turned ring", a TUBE as OD +
+                       metres a piece), qty + unit (m for pipe / cable /
+                       rail words, `_stock_length` = sweep path length),
+                       material (label word as a WHOLE word start —
+                       "pla" once matched "plate" — then the part's name,
+                       then the colour node: copper / brass hues, Metal,
+                       Glass, alpha; `estimated`), finish, size, mass
+                       (SOLID estimate: preview volume × `DENSITY`; an
+                       assembly weighs its lines, a part its hidden
+                       component lines even at "parts" detail), cost.
+                       Typed values live on the node as `params["bom"]`
+                       (`EDITABLE`, `set_fields`; in `mesh._TEXT_PARAMS`
+                       and skipped by `_component_key`, so typing a
+                       supplier re-renders nothing). Exports CSV / XLSX
+                       (`xlsx.py`, a zipfile writer — no openpyxl) /
+                       HTML / JSON. `sheet_lines` = what a drawing's parts
+                       list shows (inside a lone wrapping Object; loose
+                       shapes are not parts). `bom_window.py` is File ▸
+                       Bill of Materials (Ctrl+Alt+B): editable tree
+                       (material drop-down), filter, detail level, select
+                       in model, Export, Place on Blueprint.
+                       `bom_mcp.py` = MCP `bill_of_materials` (get / set /
+                       export / place).
+  - **Blueprint second pass** (same day): automatic Ø/R labels try every
+                       leader direction and length until their WORDS clear
+                       every other label and view (`_place_clear`,
+                       `_text_boxes`), at most two per centre (a fan
+                       guard's rings), three groups past `BUSY_CIRCLES`; a
+                       fresh sheet of a model past `BUSY_TRIS` (40k) has
+                       hidden lines off (half of a 30 s open); the drawing
+                       number is cut BEFORE stripping dashes. An assembly
+                       gets the engineering parts list (`BomItem` style
+                       "full": item, part no., name / description,
+                       material, qty, mass, words cut to their column) and
+                       numbered BALLOONS on the isometric (`_balloon_parts`
+                       → `_ring_spots`: each where its part's ray meets a
+                       ring round the view, pushed clockwise so they keep
+                       their order — no crossing leaders — a balloon
+                       apart, off every word, view and the list; rings
+                       grow until all fit). A view the list covers moves
+                       to the roomiest free patch (`_roomy_spot`,
+                       `_rect_gap`); the isometric may shrink (×0.85) to
+                       leave room. Mass = the BOM's total, material "As
+                       parts list".
+  - `pid_symbols.py` / `pid.py` / `pid_render.py` / `pid_window.py` /
+    `pid_mcp.py` — **P&ID** (same day). ~55 ISO 10628 / ISA-5.1 symbols
+                       as primitives about their centre with PORTS (x, y,
+                       leaving direction) and a tag prefix
+                       (`placed_prims`/`port_points` turn and mirror them).
+                       `pid.Diagram` (saved as `DocumentModel.pid`,
+                       FORMAT_VERSION 14, out of the model's undo like the
+                       drawing): symbols with auto tags (P-101, V-201),
+                       lines between ports or to a free point ON a line (a
+                       tee, drawn as a dot) with kind (process, secondary,
+                       signal, pneumatic, capillary, data), SERVICE (HWF,
+                       HWR, DHW, CW, RHG, RL, RS, R2P, GLY, AIR, DR — the
+                       screen colour) and a line number "28-HWF-001-CU"
+                       (process lines only); `smart_route` scores square
+                       candidates (straight, L, Z, detours) by length,
+                       bends, crossing a symbol box, running along another
+                       line, reversing — and `simplify` never merges a leg
+                       that doubles back (that drew a line THROUGH the
+                       coil it entered). `check` (unconnected, open ports,
+                       duplicate tags), `schedules` (equipment, valves,
+                       instrument index with ISA meanings, line list),
+                       `from_model` (symbols from 3D part names).
+                       pid_render paints sheet, zones, title block, legend
+                       of the kinds/services used, insulation (dotted),
+                       flow arrows, line numbers placed where they clear
+                       everything (`label_spots`), ISA letters inside
+                       bubbles; PDF/SVG/PNG/DXF + schedules XLSX/CSV.
+                       pid_window = File ▸ P&ID (Ctrl+Alt+I): palette,
+                       canvas (place, connect port → waypoints → port,
+                       drag symbols and line legs, R/M/Delete/arrows),
+                       properties, schedules dock, own undo stack, 3D part
+                       link (selects it in the main window). MCP `pid`.
+  - Toolbar (2026-10-16, the user): Edit vertices sits just before the
+                       Repeat & logic (For loop) family; Render and Fit 3D
+                       left the bar (F5 still renders, the 3D nav bar fits).
   - `pngexport.py`   — **File ▸ Export PNG…** (Ctrl+Alt+E): pictures
                        of the 3D view from the built-in renderer via
                        `View3D.snapshot(..., clean=True)` — the model
@@ -4507,7 +4598,7 @@ into a new module and import.
                        what each SHIPPED .kcad compiles to and pins the
                        files to the generator (`python -m
                        khervecad.tools.print_tests --check`).
-  - `mcp_schema.py`  — the **MCP tool table**: 88 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 96 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -5058,7 +5149,7 @@ where each node dict has `"type"`, `"name"`, `"visible"`, `"params"`
 and nested `"children"`. When a node gains new persisted properties,
 bump `FORMAT_VERSION` in `document.py` and keep loading backward
 compatible. Version 9 adds the top-level `"unit"` (units.py); a file
-without it, or with a unit it does not know, opens as millimetres. Version 12 adds `"real_scale"` — the N of 1 : N the scale bar measures (absent = 1, life size). Version 13 adds `"collections"` (part_collections.py; absent = none).
+without it, or with a unit it does not know, opens as millimetres. Version 12 adds `"real_scale"` — the N of 1 : N the scale bar measures (absent = 1, life size). Version 13 adds `"collections"` (part_collections.py; absent = none). Version 14 adds `"pid"` (pid.py) and `params["bom"]` on nodes (bom.py).
 
 ## UI conventions
 
@@ -5138,7 +5229,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **88 tools**: the object tree, OpenSCAD in
+client gets the whole app as **96 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

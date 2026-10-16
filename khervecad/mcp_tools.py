@@ -1559,6 +1559,20 @@ class McpToolExecutor:
         except crystal_build.BuildError as exc:
             raise ToolError(str(exc))
 
+    def _t_bill_of_materials(self, params) -> dict:
+        from . import bom_mcp
+        try:
+            return bom_mcp.run(self._w, params)
+        except (bom_mcp.BomError, ValueError, KeyError) as exc:
+            raise ToolError(str(exc))
+
+    def _t_pid(self, params) -> dict:
+        from . import pid_mcp
+        try:
+            return pid_mcp.run(self._w, params)
+        except (pid_mcp.PidError, ValueError, KeyError) as exc:
+            raise ToolError(str(exc))
+
     def _t_chemistry(self, params) -> dict:
         from . import chem_mcp
         try:

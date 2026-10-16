@@ -86,7 +86,7 @@ _FILE_TOOLS = frozenset({
     "mesh_from_photo", "build_city", "import_map", "send_to_planetcraft",
     "build_creature", "list_planetcraft_creatures", "remove_from_planetcraft",
     "install_scad_library", "build_protein", "render_photo",
-    "build_crystal", "chemistry",
+    "build_crystal", "chemistry", "bill_of_materials", "pid",
 })
 
 

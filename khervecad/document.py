@@ -20,7 +20,7 @@ from .meshimport import relative_for_save, resolve_paths
 from .model import NODE_TYPES, CadNode, DocumentModel, retire_masters
 from .units import coerce
 
-FORMAT_VERSION = 13         # 4: "component" (Object) node type
+FORMAT_VERSION = 14         # 4: "component" (Object) node type
                             # 5: instances (reference->component) may
                             #    carry a "mate" record
                             # 6: organic/mesh node types; color nodes
@@ -41,6 +41,9 @@ FORMAT_VERSION = 13         # 4: "component" (Object) node type
                             # 13: "collections" — Blender-style sets of
                             #    parts, [{name, visible, locked}]; members
                             #    carry params["collection"]; absent = none
+                            # 14: "pid" — the P&ID (pid.Diagram), and
+                            #    params["bom"] — hand-typed BOM fields on
+                            #    any node; absent = none
 
 
 def node_to_dict(node: CadNode) -> dict:
@@ -76,6 +79,8 @@ def save_kcad(model: DocumentModel, path: str):
         data["real_scale"] = model.real_scale
     if model.drawing:
         data["drawing"] = model.drawing
+    if model.pid:
+        data["pid"] = model.pid
     if model.house:
         data["house"] = model.house
     if model.city:
@@ -101,6 +106,7 @@ def load_kcad(model: DocumentModel, path: str):
     model.dimensions = [dict(d) for d in data.get("dimensions", [])]
     model.reference_images = [dict(r) for r in data.get("references", [])]
     model.drawing = data.get("drawing") or None
+    model.pid = data.get("pid") or None
     model.house = data.get("house") or None
     model.city = data.get("city") or None
     model.collections = [dict(c) for c in data.get("collections") or []]
