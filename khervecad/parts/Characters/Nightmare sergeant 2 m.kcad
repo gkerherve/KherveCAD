@@ -1,0 +1,2081 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Nightmare sergeant 2 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library_part": "user_characters_monsters_swat_soldier_1_8_m",
+     "library": {
+      "uid": "1945f2039d994ad996dd7632dde8c39c",
+      "title": "Commando sergeant 2 m",
+      "area": "Characters & monsters",
+      "named": "Commando sergeant 2 m",
+      "source": "assistant",
+      "description": "A big, muscular soldier for games, made from the SWAT soldier 1.8 m (Quaternius CC0 low-poly body). Scaled to about 2.0 m tall and ~20 % broader and deeper (scale 1.22 x 1.2 x 1.12 node \"Bigger and broader\"), with sculpt inflate strokes (mirrored in x) bulking the shoulders, upper arms, forearms, upper back, neck and thighs. Olive-drab uniform (#4E5B34). Stripped of the plate carrier, pouches, webbing, radio, grenade and backpack; the black visor is hidden and modelled eyes sit on the face. His RIGHT hand wears a bladed horror glove (module Bladed_glove, world mm): one steel blade per finger, each placed by a multmatrix whose axis is THAT finger's own direction (measured from the hand mesh by PCA), so the four blades splay with the fingers \u2014 a strip along the back of the finger, then a 2.5 mm blade curving toward the palm ~200 mm past the tip \u2014 with a leather cap and ring on each finger and a knuckle plate. Keeps the duty belt and holstered pistol, knee and elbow pads, shoulder patches and the helmet with NVG mount and headset. Stands on z = 0, facing -Y. Static (no skeleton).",
+      "tags": [
+       "soldier",
+       "military",
+       "army",
+       "commando",
+       "muscular",
+       "character",
+       "game",
+       "horror",
+       "claws",
+       "finger blades",
+       "green uniform"
+      ]
+     }
+    },
+    "children": [
+     {
+      "type": "scale",
+      "name": "Bigger and broader",
+      "visible": true,
+      "params": {
+       "x": 1.22,
+       "y": 1.2,
+       "z": 1.12
+      },
+      "children": [
+       {
+        "type": "component",
+        "name": "SWAT soldier 1.8 m",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0,
+         "library": {
+          "uid": "80f0ebd8b8884cc8ac9ac4255ac4ef55",
+          "title": "SWAT soldier 1.8 m",
+          "area": "Characters & monsters",
+          "named": "SWAT soldier 1.8 m"
+         }
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Colour #332222",
+          "visible": true,
+          "params": {
+           "color": "#332222",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "stl_import",
+            "name": "SWAT soldier part 1",
+            "visible": true,
+            "params": {
+             "path": "meshes/soldier/soldier-1.stl",
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "scale": 1.0
+            }
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Colour #444455",
+          "visible": true,
+          "params": {
+           "color": "#8E1B1B",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "sculpt",
+            "name": "Sculpt (brush strokes) 1",
+            "visible": true,
+            "params": {
+             "strokes": [
+              [
+               1,
+               170.0,
+               30.0,
+               1440.0,
+               130.0,
+               28.0,
+               0.0,
+               0.0,
+               0.0
+              ],
+              [
+               1,
+               215.0,
+               30.0,
+               1280.0,
+               110.0,
+               30.0,
+               0.0,
+               0.0,
+               0.0
+              ],
+              [
+               1,
+               235.0,
+               20.0,
+               1100.0,
+               90.0,
+               18.0,
+               0.0,
+               0.0,
+               0.0
+              ],
+              [
+               1,
+               0.0,
+               60.0,
+               1450.0,
+               170.0,
+               22.0,
+               0.0,
+               0.0,
+               0.0
+              ],
+              [
+               1,
+               110.0,
+               0.0,
+               650.0,
+               140.0,
+               25.0,
+               0.0,
+               0.0,
+               0.0
+              ],
+              [
+               1,
+               110.0,
+               30.0,
+               380.0,
+               90.0,
+               14.0,
+               0.0,
+               0.0,
+               0.0
+              ],
+              [
+               1,
+               90.0,
+               10.0,
+               1560.0,
+               80.0,
+               20.0,
+               0.0,
+               0.0,
+               0.0
+              ]
+             ],
+             "detail": 15.0,
+             "mirror": "x",
+             "region": [],
+             "noise": 0.0,
+             "noise_scale": 4.0,
+             "seed": 1
+            },
+            "children": [
+             {
+              "type": "stl_import",
+              "name": "SWAT soldier part 2",
+              "visible": true,
+              "params": {
+               "path": "meshes/soldier/soldier-2.stl",
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "scale": 1.0
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Colour #bb9977",
+          "visible": true,
+          "params": {
+           "color": "#bb9977",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "stl_import",
+            "name": "SWAT soldier part 3",
+            "visible": true,
+            "params": {
+             "path": "meshes/soldier/soldier-3.stl",
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "scale": 1.0
+            }
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Colour #111111",
+          "visible": false,
+          "params": {
+           "color": "#111111",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "stl_import",
+            "name": "SWAT soldier part 4",
+            "visible": true,
+            "params": {
+             "path": "meshes/soldier/soldier-4.stl",
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "scale": 1.0
+            }
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#1b1c1a",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 85.0,
+             "z": 1062.0
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 1.0,
+               "y": 0.84,
+               "z": 1.0
+              },
+              "children": [
+               {
+                "type": "difference",
+                "name": "Difference",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 50.0,
+                   "radius_bottom": 152.0,
+                   "radius_top": 152.0,
+                   "segments": 64,
+                   "center": true
+                  }
+                 },
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Duty belt]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 60.0,
+                   "radius_bottom": 136.0,
+                   "radius_top": 136.0,
+                   "segments": 64,
+                   "center": true
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#8c8c86",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Buckle]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -42.0,
+             "z": 1062.0,
+             "width": 56.0,
+             "depth": 10.0,
+             "height": 40.0,
+             "center": true
+            }
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#3a3e32",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For x",
+            "visible": true,
+            "params": {
+             "variable": "x",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "-150, -95"
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Belt pouches]",
+              "visible": true,
+              "params": {
+               "x": "x",
+               "y": -10.0,
+               "z": 1030.0,
+               "width": 48.0,
+               "depth": 40.0,
+               "height": 90.0,
+               "center": true
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#141414",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 158.0,
+             "y": 70.0,
+             "z": 935.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": -8.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cube",
+                "name": "Cube [Holster]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "width": 56.0,
+                 "depth": 90.0,
+                 "height": 210.0,
+                 "center": true
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#2a2a2a",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Pistol grip]",
+            "visible": true,
+            "params": {
+             "x": 158.0,
+             "y": 70.0,
+             "z": 1055.0,
+             "width": 40.0,
+             "depth": 36.0,
+             "height": 40.0,
+             "center": true
+            }
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#1c1c1c",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": -82.0,
+             "y": -192.0,
+             "z": 540.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -12.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "hull",
+                "name": "Hull",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "for_loop",
+                  "name": "For x",
+                  "visible": true,
+                  "params": {
+                   "variable": "x",
+                   "start": 0.0,
+                   "end": 4.0,
+                   "step": 1.0,
+                   "values": "-44, 44"
+                  },
+                  "children": [
+                   {
+                    "type": "for_loop",
+                    "name": "For z",
+                    "visible": true,
+                    "params": {
+                     "variable": "z",
+                     "start": 0.0,
+                     "end": 4.0,
+                     "step": 1.0,
+                     "values": "-55, 55"
+                    },
+                    "children": [
+                     {
+                      "type": "translate",
+                      "name": "Translate",
+                      "visible": true,
+                      "params": {
+                       "x": "x",
+                       "y": 0.0,
+                       "z": "z"
+                      },
+                      "children": [
+                       {
+                        "type": "rotate",
+                        "name": "Rotate",
+                        "visible": true,
+                        "params": {
+                         "x": 90.0,
+                         "y": 0.0,
+                         "z": 0.0
+                        },
+                        "children": [
+                         {
+                          "type": "cylinder",
+                          "name": "Cylinder [Left knee pad]",
+                          "visible": true,
+                          "params": {
+                           "x": 0.0,
+                           "y": 0.0,
+                           "z": 0.0,
+                           "height": 34.0,
+                           "radius_bottom": 14.0,
+                           "radius_top": 14.0,
+                           "segments": 16,
+                           "center": true
+                          }
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#1c1c1c",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 150.0,
+             "y": 44.0,
+             "z": 540.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -20.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "hull",
+                "name": "Hull",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "for_loop",
+                  "name": "For x",
+                  "visible": true,
+                  "params": {
+                   "variable": "x",
+                   "start": 0.0,
+                   "end": 4.0,
+                   "step": 1.0,
+                   "values": "-44, 44"
+                  },
+                  "children": [
+                   {
+                    "type": "for_loop",
+                    "name": "For z",
+                    "visible": true,
+                    "params": {
+                     "variable": "z",
+                     "start": 0.0,
+                     "end": 4.0,
+                     "step": 1.0,
+                     "values": "-55, 55"
+                    },
+                    "children": [
+                     {
+                      "type": "translate",
+                      "name": "Translate",
+                      "visible": true,
+                      "params": {
+                       "x": "x",
+                       "y": 0.0,
+                       "z": "z"
+                      },
+                      "children": [
+                       {
+                        "type": "rotate",
+                        "name": "Rotate",
+                        "visible": true,
+                        "params": {
+                         "x": 90.0,
+                         "y": 0.0,
+                         "z": 0.0
+                        },
+                        "children": [
+                         {
+                          "type": "cylinder",
+                          "name": "Cylinder [Right knee pad]",
+                          "visible": true,
+                          "params": {
+                           "x": 0.0,
+                           "y": 0.0,
+                           "z": 0.0,
+                           "height": 34.0,
+                           "radius_bottom": 14.0,
+                           "radius_top": 14.0,
+                           "segments": 16,
+                           "center": true
+                          }
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#1c1c1c",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": -242.0,
+             "y": 132.0,
+             "z": 1130.0
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 1.0,
+               "y": 0.7,
+               "z": 1.15
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere [Left elbow pad]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 48.0,
+                 "segments": 24
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#1c1c1c",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 228.0,
+             "y": 188.0,
+             "z": 1130.0
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 1.0,
+               "y": 0.7,
+               "z": 1.15
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere [Right elbow pad]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 48.0,
+                 "segments": 24
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#2f4a7a",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Left shoulder patch]",
+            "visible": true,
+            "params": {
+             "x": -268.0,
+             "y": 85.0,
+             "z": 1360.0,
+             "width": 6.0,
+             "depth": 60.0,
+             "height": 70.0,
+             "center": true
+            }
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#2f4a7a",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Right shoulder patch]",
+            "visible": true,
+            "params": {
+             "x": 250.0,
+             "y": 95.0,
+             "z": 1360.0,
+             "width": 6.0,
+             "depth": 60.0,
+             "height": 70.0,
+             "center": true
+            }
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#1a1a1a",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [NVG mount]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -108.0,
+             "z": 1745.0,
+             "width": 56.0,
+             "depth": 30.0,
+             "height": 42.0,
+             "center": true
+            }
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#1a1a1a",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For x",
+            "visible": true,
+            "params": {
+             "variable": "x",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "-122, 110"
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Helmet rails]",
+              "visible": true,
+              "params": {
+               "x": "x",
+               "y": 30.0,
+               "z": 1690.0,
+               "width": 10.0,
+               "depth": 120.0,
+               "height": 22.0,
+               "center": true
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#222222",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For x",
+            "visible": true,
+            "params": {
+             "variable": "x",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "-128, 112"
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "x",
+               "y": 40.0,
+               "z": 1630.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Headset ear cups]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 30.0,
+                   "radius_bottom": 38.0,
+                   "radius_top": 38.0,
+                   "segments": 28,
+                   "center": true
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For s",
+      "visible": true,
+      "params": {
+       "variable": "s",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": "-1, 1"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": "s * 38",
+         "y": -78.0,
+         "z": 1842.0
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#F4F1EA",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 18.0,
+             "y": 10.0,
+             "z": 11.0
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [Eye white]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 1.0,
+               "segments": 24
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#3C6E3A",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Iris]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -8.0,
+             "z": 0.0,
+             "radius": 7.0,
+             "segments": 20
+            }
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#111111",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Pupil]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -13.0,
+             "z": 0.0,
+             "radius": 3.5,
+             "segments": 16
+            }
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#FFFFFF",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "color",
+            "name": "Color",
+            "visible": true,
+            "params": {
+             "color": "#c8c8c8",
+             "alpha": 1.0,
+             "material": "Emissive"
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [Eye sparkle]",
+              "visible": true,
+              "params": {
+               "x": 2.5,
+               "y": -16.0,
+               "z": 2.5,
+               "radius": 1.3,
+               "segments": 10
+              }
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#2A1E14",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -2.0,
+             "z": 13.0
+            },
+            "children": [
+             {
+              "type": "scale",
+              "name": "Scale",
+              "visible": true,
+              "params": {
+               "x": 22.0,
+               "y": 6.0,
+               "z": 3.5
+              },
+              "children": [
+               {
+                "type": "sphere",
+                "name": "Sphere [Eyebrow]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "radius": 1.0,
+                 "segments": 16
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#C9CED3",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "multmatrix",
+        "name": "Matrix",
+        "visible": true,
+        "params": {
+         "matrix": [
+          [
+           -0.8394,
+           0.5433,
+           -0.0161,
+           -323.3741
+          ],
+          [
+           0.0,
+           -0.0297,
+           -0.9996,
+           -3.5
+          ],
+          [
+           -0.5435,
+           -0.839,
+           0.0249,
+           962.8363
+          ],
+          [
+           0.0,
+           0.0,
+           0.0,
+           1.0
+          ]
+         ]
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": -1.25
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 2.5,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Polygon [Finger blade]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 3.0,
+                 0.0
+                ],
+                [
+                 3.0,
+                 71.0
+                ],
+                [
+                 6.0,
+                 81.0
+                ],
+                [
+                 6.0,
+                 151.0
+                ],
+                [
+                 3.0,
+                 221.0
+                ],
+                [
+                 -7.0,
+                 276.0
+                ],
+                [
+                 -2.0,
+                 221.0
+                ],
+                [
+                 -5.0,
+                 151.0
+                ],
+                [
+                 -6.0,
+                 81.0
+                ],
+                [
+                 -3.0,
+                 71.0
+                ],
+                [
+                 -3.0,
+                 0.0
+                ]
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2B1D15",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "multmatrix",
+        "name": "Matrix",
+        "visible": true,
+        "params": {
+         "matrix": [
+          [
+           -0.8394,
+           0.5433,
+           -0.0161,
+           -323.3741
+          ],
+          [
+           0.0,
+           -0.0297,
+           -0.9996,
+           -3.5
+          ],
+          [
+           -0.5435,
+           -0.839,
+           0.0249,
+           962.8363
+          ],
+          [
+           0.0,
+           0.0,
+           0.0,
+           1.0
+          ]
+         ]
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -21.0,
+           "y": 57.0,
+           "z": -8.0,
+           "width": 24.0,
+           "depth": 16.0,
+           "height": 16.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Finger cap and ring]",
+          "visible": true,
+          "params": {
+           "x": -4.0,
+           "y": 30.0,
+           "z": -8.0,
+           "width": 7.0,
+           "depth": 10.0,
+           "height": 16.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#C9CED3",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "multmatrix",
+        "name": "Matrix",
+        "visible": true,
+        "params": {
+         "matrix": [
+          [
+           -0.9092,
+           0.4163,
+           0.006,
+           -318.9373
+          ],
+          [
+           0.0,
+           0.0144,
+           -0.9999,
+           -30.9
+          ],
+          [
+           -0.4164,
+           -0.9091,
+           -0.0131,
+           955.9443
+          ],
+          [
+           0.0,
+           0.0,
+           0.0,
+           1.0
+          ]
+         ]
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": -1.25
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 2.5,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Polygon [Finger blade]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 3.0,
+                 0.0
+                ],
+                [
+                 3.0,
+                 90.0
+                ],
+                [
+                 6.0,
+                 100.0
+                ],
+                [
+                 6.0,
+                 170.0
+                ],
+                [
+                 3.0,
+                 240.0
+                ],
+                [
+                 -7.0,
+                 295.0
+                ],
+                [
+                 -2.0,
+                 240.0
+                ],
+                [
+                 -5.0,
+                 170.0
+                ],
+                [
+                 -6.0,
+                 100.0
+                ],
+                [
+                 -3.0,
+                 90.0
+                ],
+                [
+                 -3.0,
+                 0.0
+                ]
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2B1D15",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "multmatrix",
+        "name": "Matrix",
+        "visible": true,
+        "params": {
+         "matrix": [
+          [
+           -0.9092,
+           0.4163,
+           0.006,
+           -318.9373
+          ],
+          [
+           0.0,
+           0.0144,
+           -0.9999,
+           -30.9
+          ],
+          [
+           -0.4164,
+           -0.9091,
+           -0.0131,
+           955.9443
+          ],
+          [
+           0.0,
+           0.0,
+           0.0,
+           1.0
+          ]
+         ]
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -21.0,
+           "y": 76.0,
+           "z": -8.0,
+           "width": 24.0,
+           "depth": 16.0,
+           "height": 16.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Finger cap and ring]",
+          "visible": true,
+          "params": {
+           "x": -4.0,
+           "y": 40.0,
+           "z": -8.0,
+           "width": 7.0,
+           "depth": 10.0,
+           "height": 16.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#C9CED3",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "multmatrix",
+        "name": "Matrix",
+        "visible": true,
+        "params": {
+         "matrix": [
+          [
+           -0.9377,
+           0.3467,
+           -0.0227,
+           -311.7083
+          ],
+          [
+           0.0,
+           -0.0654,
+           -0.9979,
+           -65.2
+          ],
+          [
+           -0.3474,
+           -0.9357,
+           0.0614,
+           954.1996
+          ],
+          [
+           0.0,
+           0.0,
+           0.0,
+           1.0
+          ]
+         ]
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": -1.25
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 2.5,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Polygon [Finger blade]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 3.0,
+                 0.0
+                ],
+                [
+                 3.0,
+                 98.0
+                ],
+                [
+                 6.0,
+                 108.0
+                ],
+                [
+                 6.0,
+                 178.0
+                ],
+                [
+                 3.0,
+                 248.0
+                ],
+                [
+                 -7.0,
+                 303.0
+                ],
+                [
+                 -2.0,
+                 248.0
+                ],
+                [
+                 -5.0,
+                 178.0
+                ],
+                [
+                 -6.0,
+                 108.0
+                ],
+                [
+                 -3.0,
+                 98.0
+                ],
+                [
+                 -3.0,
+                 0.0
+                ]
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2B1D15",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "multmatrix",
+        "name": "Matrix",
+        "visible": true,
+        "params": {
+         "matrix": [
+          [
+           -0.9377,
+           0.3467,
+           -0.0227,
+           -311.7083
+          ],
+          [
+           0.0,
+           -0.0654,
+           -0.9979,
+           -65.2
+          ],
+          [
+           -0.3474,
+           -0.9357,
+           0.0614,
+           954.1996
+          ],
+          [
+           0.0,
+           0.0,
+           0.0,
+           1.0
+          ]
+         ]
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -21.0,
+           "y": 84.0,
+           "z": -8.0,
+           "width": 24.0,
+           "depth": 16.0,
+           "height": 16.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Finger cap and ring]",
+          "visible": true,
+          "params": {
+           "x": -4.0,
+           "y": 44.0,
+           "z": -8.0,
+           "width": 7.0,
+           "depth": 10.0,
+           "height": 16.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#C9CED3",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "multmatrix",
+        "name": "Matrix",
+        "visible": true,
+        "params": {
+         "matrix": [
+          [
+           -0.9299,
+           0.3603,
+           -0.0734,
+           -289.7344
+          ],
+          [
+           0.0,
+           -0.1997,
+           -0.9799,
+           -97.9
+          ],
+          [
+           -0.3677,
+           -0.9112,
+           0.1857,
+           969.0067
+          ],
+          [
+           0.0,
+           0.0,
+           0.0,
+           1.0
+          ]
+         ]
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": -1.25
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 2.5,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "polygon",
+              "name": "Polygon [Finger blade]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "points": [
+                [
+                 3.0,
+                 0.0
+                ],
+                [
+                 3.0,
+                 77.0
+                ],
+                [
+                 6.0,
+                 87.0
+                ],
+                [
+                 6.0,
+                 157.0
+                ],
+                [
+                 3.0,
+                 227.0
+                ],
+                [
+                 -7.0,
+                 282.0
+                ],
+                [
+                 -2.0,
+                 227.0
+                ],
+                [
+                 -5.0,
+                 157.0
+                ],
+                [
+                 -6.0,
+                 87.0
+                ],
+                [
+                 -3.0,
+                 77.0
+                ],
+                [
+                 -3.0,
+                 0.0
+                ]
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2B1D15",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "multmatrix",
+        "name": "Matrix",
+        "visible": true,
+        "params": {
+         "matrix": [
+          [
+           -0.9299,
+           0.3603,
+           -0.0734,
+           -289.7344
+          ],
+          [
+           0.0,
+           -0.1997,
+           -0.9799,
+           -97.9
+          ],
+          [
+           -0.3677,
+           -0.9112,
+           0.1857,
+           969.0067
+          ],
+          [
+           0.0,
+           0.0,
+           0.0,
+           1.0
+          ]
+         ]
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube",
+          "visible": true,
+          "params": {
+           "x": -21.0,
+           "y": 63.0,
+           "z": -8.0,
+           "width": 24.0,
+           "depth": 16.0,
+           "height": 16.0,
+           "center": false
+          }
+         },
+         {
+          "type": "cube",
+          "name": "Cube [Finger cap and ring]",
+          "visible": true,
+          "params": {
+           "x": -4.0,
+           "y": 33.0,
+           "z": -8.0,
+           "width": 7.0,
+           "depth": 10.0,
+           "height": 16.0,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2B1D15",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "hull",
+        "name": "Hull",
+        "visible": true,
+        "params": {},
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For p",
+          "visible": true,
+          "params": {
+           "variable": "p",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "[-325.4726,-3.5000,961.4775], [-321.2102,-30.9000,954.9033], [-314.0525,-65.2000,953.3310], [-292.0593,-97.9000,968.0875]"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Knuckle plate]",
+            "visible": true,
+            "params": {
+             "x": "p",
+             "y": "p",
+             "z": "p",
+             "width": 10.0,
+             "depth": 14.0,
+             "height": 26.0,
+             "center": true
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Nightmare sergeant 2 m",
+  "description": "A horror villain soldier for games: the Commando sergeant 2 m (muscular SWAT-based soldier, scaled to ~2 m, sculpted shoulders, arms, back and thighs, vest and backpack removed, visor off with modelled eyes) in a blood-red costume (#8E1B1B), wearing a bladed glove on his RIGHT hand (module Bladed_glove, world mm): one steel blade per finger, each placed by a multmatrix along THAT finger's own axis (measured from the hand mesh), so the four blades splay with the fingers \u2014 a strip along the back of the finger, then a 2.5 mm blade curving toward the palm ~200 mm past the tip \u2014 with leather caps, rings and a knuckle plate. Keeps the duty belt and holstered pistol, knee and elbow pads, shoulder patches and helmet with headset. Stands on z = 0, facing -Y. Static (no skeleton). The plain green version without blades is \"Commando sergeant 2 m\".",
+  "tags": [
+   "soldier",
+   "horror",
+   "villain",
+   "claws",
+   "finger blades",
+   "red costume",
+   "character",
+   "game",
+   "monster",
+   "muscular"
+  ],
+  "source": "assistant",
+  "uid": "1945f2039d994ad996dd7632dde8c39c",
+  "created": "2026-10-16T14:32:15"
+ }
+}
