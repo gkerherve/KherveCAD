@@ -30,7 +30,7 @@
       "area": "Characters & monsters",
       "named": "Commando sergeant 2 m",
       "source": "assistant",
-      "description": "A big, muscular soldier for games, made from the SWAT soldier 1.8 m (Quaternius CC0 low-poly body). Scaled to about 2.0 m tall and ~20 % broader and deeper (scale 1.22 x 1.2 x 1.12 node \"Bigger and broader\"), with sculpt inflate strokes (mirrored in x) bulking the shoulders, upper arms, forearms, upper back, neck and thighs. Olive-drab uniform (#4E5B34). Stripped of the plate carrier, magazine pouches, admin pouch, MOLLE webbing, radio, grenade and hydration backpack, so the body shows; the black visor is hidden and modelled eyes (whites, green irises, pupils, emissive sparkle) sit on the face. Keeps the duty belt and holstered pistol, knee and elbow pads, shoulder patches and the helmet with NVG mount, rails and headset. Stands on z = 0, facing -Y. Static (no skeleton); the animated original is \"SWAT soldier (animated) 1.8 m\".",
+      "description": "A big, muscular soldier for games, made from the SWAT soldier 1.8 m (Quaternius CC0 low-poly body). Scaled to about 2.0 m tall and ~20 % broader and deeper (scale 1.22 x 1.2 x 1.12 node \"Bigger and broader\"), with sculpt inflate strokes (mirrored in x) bulking the shoulders, upper arms, forearms, upper back, neck and thighs. Olive-drab uniform (#4E5B34). Stripped of the plate carrier, pouches, webbing, radio, grenade and backpack; the black visor is hidden and modelled eyes sit on the face. His RIGHT hand wears a bladed glove: four long curved steel finger blades (~290 mm, flat, 1.5 mm thick) on a leather knuckle plate with finger caps (module Finger_blades, in world mm). Keeps the duty belt and holstered pistol, knee and elbow pads, shoulder patches and the helmet with NVG mount and headset. Stands on z = 0, facing -Y. Static (no skeleton).",
       "tags": [
        "soldier",
        "military",
@@ -39,7 +39,9 @@
        "muscular",
        "character",
        "game",
-       "SWAT",
+       "horror",
+       "claws",
+       "finger blades",
        "green uniform"
       ]
      }
@@ -1195,10 +1197,10 @@
      },
      {
       "type": "color",
-      "name": "Color",
+      "name": "Finger blades",
       "visible": true,
       "params": {
-       "color": "#B8BEC4",
+       "color": "#C9CED3",
        "alpha": 1.0,
        "material": "Default"
       },
@@ -1215,24 +1217,38 @@
         "children": [
          {
           "type": "for_loop",
-          "name": "For y",
+          "name": "For f",
           "visible": true,
           "params": {
-           "variable": "y",
+           "variable": "f",
            "start": 0.0,
            "end": 4.0,
            "step": 1.0,
-           "values": "-96, -79, -62, -45"
+           "values": "[-5, 905], [-32, 880], [-66, 870], [-104, 905]"
           },
           "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Finger strip]",
+            "visible": true,
+            "params": {
+             "x": -316.0,
+             "y": "f[0] - 4",
+             "z": "f[1]",
+             "width": 3.0,
+             "depth": 8.0,
+             "height": "983 - f[1]",
+             "center": false
+            }
+           },
            {
             "type": "translate",
             "name": "Translate",
             "visible": true,
             "params": {
-             "x": -300.0,
-             "y": "y + 0.75",
-             "z": 1005.0
+             "x": -312.0,
+             "y": "f[0] + 1.25",
+             "z": "f[1] + 12"
             },
             "children": [
              {
@@ -1250,7 +1266,7 @@
                 "name": "Linear extrude",
                 "visible": true,
                 "params": {
-                 "height": 1.5,
+                 "height": 2.5,
                  "twist": 0.0,
                  "scale": 1.0,
                  "center": false,
@@ -1259,47 +1275,47 @@
                 "children": [
                  {
                   "type": "polygon",
-                  "name": "Polygon [Finger blades]",
+                  "name": "Polygon [Finger blade]",
                   "visible": true,
                   "params": {
                    "x": 0.0,
                    "y": 0.0,
                    "points": [
                     [
-                     5.0,
+                     -6.0,
                      0.0
-                    ],
-                    [
-                     -5.0,
-                     0.0
-                    ],
-                    [
-                     -4.0,
-                     -90.0
-                    ],
-                    [
-                     -1.0,
-                     -180.0
                     ],
                     [
                      6.0,
-                     -250.0
+                     0.0
                     ],
                     [
-                     15.0,
-                     -290.0
+                     6.0,
+                     -60.0
                     ],
                     [
-                     9.0,
-                     -240.0
+                     5.0,
+                     -120.0
                     ],
                     [
-                     7.0,
+                     8.0,
                      -170.0
                     ],
                     [
-                     6.0,
-                     -90.0
+                     14.0,
+                     -205.0
+                    ],
+                    [
+                     3.0,
+                     -175.0
+                    ],
+                    [
+                     -3.0,
+                     -120.0
+                    ],
+                    [
+                     -5.0,
+                     -60.0
                     ]
                    ]
                   }
@@ -1321,9 +1337,9 @@
       "name": "Color",
       "visible": true,
       "params": {
-       "color": "#3A2A20",
+       "color": "#2B1D15",
        "alpha": 1.0,
-       "material": "Default"
+       "material": "Matte"
       },
       "children": [
        {
@@ -1331,24 +1347,52 @@
         "name": "Color",
         "visible": true,
         "params": {
-         "color": "#c8c8c8",
+         "color": "#2B1D15",
          "alpha": 1.0,
-         "material": "Leather"
+         "material": "Matte"
         },
         "children": [
          {
-          "type": "cube",
-          "name": "Cube [Knuckle plate]",
+          "type": "for_loop",
+          "name": "For f",
           "visible": true,
           "params": {
-           "x": -326.0,
-           "y": -108.0,
-           "z": 985.0,
-           "width": 10.0,
-           "depth": 76.0,
-           "height": 30.0,
-           "center": false
-          }
+           "variable": "f",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "[-5, 905], [-32, 880], [-66, 870], [-104, 905]"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Fingertip cap]",
+            "visible": true,
+            "params": {
+             "x": -322.0,
+             "y": "f[0] - 7",
+             "z": "f[1] - 2",
+             "width": 24.0,
+             "depth": 14.0,
+             "height": 18.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Finger ring]",
+            "visible": true,
+            "params": {
+             "x": -322.0,
+             "y": "f[0] - 7",
+             "z": "(f[1] + 983) / 2 - 5",
+             "width": 8.0,
+             "depth": 14.0,
+             "height": 10.0,
+             "center": false
+            }
+           }
+          ]
          }
         ]
        }
@@ -1359,9 +1403,9 @@
       "name": "Color",
       "visible": true,
       "params": {
-       "color": "#3A2A20",
+       "color": "#2B1D15",
        "alpha": 1.0,
-       "material": "Default"
+       "material": "Matte"
       },
       "children": [
        {
@@ -1369,38 +1413,24 @@
         "name": "Color",
         "visible": true,
         "params": {
-         "color": "#c8c8c8",
+         "color": "#2B1D15",
          "alpha": 1.0,
-         "material": "Leather"
+         "material": "Matte"
         },
         "children": [
          {
-          "type": "for_loop",
-          "name": "For y",
+          "type": "cube",
+          "name": "Cube [Knuckle plate]",
           "visible": true,
           "params": {
-           "variable": "y",
-           "start": 0.0,
-           "end": 4.0,
-           "step": 1.0,
-           "values": "-96, -79, -62, -45"
-          },
-          "children": [
-           {
-            "type": "cube",
-            "name": "Cube [Finger caps]",
-            "visible": true,
-            "params": {
-             "x": -308.0,
-             "y": "y - 5",
-             "z": 900.0,
-             "width": 16.0,
-             "depth": 10.0,
-             "height": 16.0,
-             "center": false
-            }
-           }
-          ]
+           "x": -326.0,
+           "y": -118.0,
+           "z": 975.0,
+           "width": 12.0,
+           "depth": 126.0,
+           "height": 26.0,
+           "center": false
+          }
          }
         ]
        }
@@ -1412,7 +1442,7 @@
  },
  "library": {
   "title": "Commando sergeant 2 m",
-  "description": "A big, muscular soldier for games, made from the SWAT soldier 1.8 m (Quaternius CC0 low-poly body). Scaled to about 2.0 m tall and ~20 % broader and deeper (scale 1.22 x 1.2 x 1.12 node \"Bigger and broader\"), with sculpt inflate strokes (mirrored in x) bulking the shoulders, upper arms, forearms, upper back, neck and thighs. Olive-drab uniform (#4E5B34). Stripped of the plate carrier, pouches, webbing, radio, grenade and backpack; the black visor is hidden and modelled eyes sit on the face. His RIGHT hand wears a bladed glove: four long curved steel finger blades (~290 mm, flat, 1.5 mm thick) on a leather knuckle plate with finger caps (module Finger_blades, in world mm). Keeps the duty belt and holstered pistol, knee and elbow pads, shoulder patches and the helmet with NVG mount and headset. Stands on z = 0, facing -Y. Static (no skeleton).",
+  "description": "A big, muscular soldier for games, made from the SWAT soldier 1.8 m (Quaternius CC0 low-poly body). Scaled to about 2.0 m tall and ~20 % broader and deeper (scale 1.22 x 1.2 x 1.12 node \"Bigger and broader\"), with sculpt inflate strokes (mirrored in x) bulking the shoulders, upper arms, forearms, upper back, neck and thighs. Olive-drab uniform (#4E5B34). Stripped of the plate carrier, pouches, webbing, radio, grenade and backpack; the black visor is hidden and modelled eyes sit on the face. His RIGHT hand wears a bladed horror glove (module Bladed_glove, world mm): one steel blade per finger \u2014 a strip along the back of each finger from the knuckle plate to the fingertip, then a curved 2.5 mm blade ~200 mm past the tip \u2014 with a leather fingertip cap and ring on each finger and a leather knuckle plate. The finger rows [y, fingertip z] in the for-loop place the four blades. Keeps the duty belt and holstered pistol, knee and elbow pads, shoulder patches and the helmet with NVG mount and headset. Stands on z = 0, facing -Y. Static (no skeleton).",
   "tags": [
    "soldier",
    "military",
@@ -1428,6 +1458,6 @@
   ],
   "source": "assistant",
   "uid": "1945f2039d994ad996dd7632dde8c39c",
-  "created": "2026-10-16T14:25:37"
+  "created": "2026-10-16T14:28:21"
  }
 }
