@@ -249,6 +249,16 @@ def build_options_bar(win):
                 win, spec["icon"], spec["label"], op,
                 lambda _=False, o=op: win._apply_operation(o),
                 _OP_SHORTCUTS.get(op, ""), bind=False))  # Edit menu's
+        if key == "logic":
+            # Blender's Edit Mode: Tab over the 3D view
+            # (View3D.tab_pressed); sits just before the loops
+            win._edit_mesh_act = _action(win, "mdi.vector-polyline-edit",
+                                         "Edit vertices", "edit_mesh",
+                                         shortcut="Tab", checkable=True,
+                                         bind=False)
+            win._edit_mesh_act.toggled.connect(
+                lambda on: win.set_edit_mode(bool(on)))
+            bar.addAction(win._edit_mesh_act)
         button = GroupButton(key, family, bar)
         button.setIconSize(ICON_SIZE)
         bar.addWidget(button)
@@ -295,10 +305,11 @@ def build_options_bar(win):
     bar.addSeparator()
 
     # -- 3D
-    bar.addAction(_action(win, "mdi.play-outline", "Render", "render",
+    # Render and Fit 3D left the bar (2026-10-16, the user: obsolete — the
+    # exact render runs by itself and the 3D view's own bar fits); F5
+    # still forces a render from anywhere in the window
+    win.addAction(_action(win, "mdi.play-outline", "Render", "render",
                           win._render_now, "F5"))
-    bar.addAction(_action(win, "mdi.arrow-expand-all", "Fit 3D", "fit_3d",
-                          win.view3d.fit))
     bar.addAction(_action(win, "mdi.drawing-box", "Blueprint", "blueprint",
                           win.open_blueprint, "Ctrl+Shift+D",
                           bind=False))                     # File menu's
@@ -307,14 +318,6 @@ def build_options_bar(win):
                                 checkable=True, bind=False)  # View menu's
     win._cut_tool_act.toggled.connect(lambda on: win.set_cut(bool(on)))
     bar.addAction(win._cut_tool_act)
-    # Blender's Edit Mode: Tab over the 3D view (View3D.tab_pressed)
-    win._edit_mesh_act = _action(win, "mdi.vector-polyline-edit",
-                                 "Edit vertices", "edit_mesh",
-                                 shortcut="Tab", checkable=True,
-                                 bind=False)
-    win._edit_mesh_act.toggled.connect(
-        lambda on: win.set_edit_mode(bool(on)))
-    bar.addAction(win._edit_mesh_act)
     bar.addSeparator()
 
     # -- the 3D-only layout for building with an assistant (the ChatBox
