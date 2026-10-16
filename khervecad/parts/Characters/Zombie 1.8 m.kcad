@@ -1,0 +1,325 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Zombie 1.8 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "f2dc4d3a731648448c6c241efa6a0281",
+      "title": "Zombie 1.8 m",
+      "area": "Characters & monsters",
+      "named": "Zombie 1.8 m"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Colour #779955",
+      "visible": true,
+      "params": {
+       "color": "#779955",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Zombie part 1",
+        "visible": true,
+        "params": {
+         "path": "meshes/zombie/zombie-1.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #999977",
+      "visible": true,
+      "params": {
+       "color": "#999977",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Zombie part 2",
+        "visible": true,
+        "params": {
+         "path": "meshes/zombie/zombie-2.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #111111",
+      "visible": true,
+      "params": {
+       "color": "#111111",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Zombie part 3",
+        "visible": true,
+        "params": {
+         "path": "meshes/zombie/zombie-3.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #445566",
+      "visible": true,
+      "params": {
+       "color": "#445566",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Zombie part 4",
+        "visible": true,
+        "params": {
+         "path": "meshes/zombie/zombie-4.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #222222",
+      "visible": true,
+      "params": {
+       "color": "#222222",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Zombie part 5",
+        "visible": true,
+        "params": {
+         "path": "meshes/zombie/zombie-5.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #664433",
+      "visible": true,
+      "params": {
+       "color": "#664433",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Zombie part 6",
+        "visible": true,
+        "params": {
+         "path": "meshes/zombie/zombie-6.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #883333",
+      "visible": true,
+      "params": {
+       "color": "#883333",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Zombie part 7",
+        "visible": true,
+        "params": {
+         "path": "meshes/zombie/zombie-7.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #662222",
+      "visible": true,
+      "params": {
+       "color": "#662222",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Zombie part 8",
+        "visible": true,
+        "params": {
+         "path": "meshes/zombie/zombie-8.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #aaaaaa",
+      "visible": true,
+      "params": {
+       "color": "#aaaaaa",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Zombie part 9",
+        "visible": true,
+        "params": {
+         "path": "meshes/zombie/zombie-9.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #667744",
+      "visible": true,
+      "params": {
+       "color": "#667744",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Zombie part 10",
+        "visible": true,
+        "params": {
+         "path": "meshes/zombie/zombie-10.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Zombie 1.8 m",
+  "description": "A green zombie in torn shorts, arms reaching out. Low-poly character by Quaternius (CC0 1.0, public domain), from the animated model used in the KherveOS games, here in its rest pose. 1800 mm tall (1973 x 1096 x 1800 mm), standing on z = 0, centred on x/y, facing -Y. Built as one Object of 10 coloured imported meshes (STL files in meshes/zombie/ beside this part); scale the Object to resize it. 7822 triangles.",
+  "tags": [
+   "zombie",
+   "undead",
+   "monster",
+   "halloween",
+   "character",
+   "quaternius",
+   "low poly",
+   "cc0"
+  ],
+  "source": "assistant",
+  "uid": "f2dc4d3a731648448c6c241efa6a0281",
+  "created": "2026-10-14T05:58:48"
+ }
+}

@@ -1,0 +1,136 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Skeleton warrior 1.85 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "a8d1f0cda5ec429ba1136f01be5b8014",
+      "title": "Skeleton warrior 1.85 m",
+      "area": "Characters & monsters",
+      "named": "Skeleton warrior 1.85 m"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Colour #bbaa77",
+      "visible": true,
+      "params": {
+       "color": "#bbaa77",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Skeleton warrior part 1",
+        "visible": true,
+        "params": {
+         "path": "meshes/skeleton/skeleton-1.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #666666",
+      "visible": true,
+      "params": {
+       "color": "#666666",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Skeleton warrior part 2",
+        "visible": true,
+        "params": {
+         "path": "meshes/skeleton/skeleton-2.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #993311",
+      "visible": true,
+      "params": {
+       "color": "#993311",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Skeleton warrior part 3",
+        "visible": true,
+        "params": {
+         "path": "meshes/skeleton/skeleton-3.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Skeleton warrior 1.85 m",
+  "description": "An undead skeleton warrior with a helmet. Low-poly character by Quaternius (CC0 1.0, public domain), from the animated model used in the KherveOS games, here in its rest pose. 1850 mm tall (1139 x 1015 x 1850 mm), standing on z = 0, centred on x/y, facing -Y. Built as one Object of 3 coloured imported meshes (STL files in meshes/skeleton/ beside this part); scale the Object to resize it. 6854 triangles.",
+  "tags": [
+   "skeleton",
+   "undead",
+   "monster",
+   "halloween",
+   "character",
+   "quaternius",
+   "low poly",
+   "cc0"
+  ],
+  "source": "assistant",
+  "uid": "a8d1f0cda5ec429ba1136f01be5b8014",
+  "created": "2026-10-14T05:58:48"
+ }
+}

@@ -1,0 +1,2488 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "SWAT soldier (animated) 1.8 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "character": {
+      "source": "/Users/gkerherv/Documents/PycharmProjects/KherveOS/public/models/quaternius/soldier.glb",
+      "height_mm": 1800.0,
+      "k": 989.2218129810369,
+      "centre": [
+       0.0140040189962026,
+       -0.14637514869156043,
+       -0.0017208972653988551
+      ],
+      "parts_dir": "/Users/gkerherv/Documents/KherveCAD Library/Characters & monsters/meshes/soldier-animated",
+      "clip": "",
+      "time": 0.0,
+      "bones": {
+       "Root": [
+        -13.85,
+        73.29,
+        1.7
+       ],
+       "Body": [
+        -13.4,
+        118.4,
+        829.46
+       ],
+       "Hips": [
+        0.87,
+        88.95,
+        857.85
+       ],
+       "Abdomen": [
+        -5.78,
+        101.88,
+        961.8
+       ],
+       "Torso": [
+        -8.96,
+        108.06,
+        1121.91
+       ],
+       "Chest": [
+        -9.49,
+        79.63,
+        1333.97
+       ],
+       "Neck": [
+        -9.81,
+        64.45,
+        1464.91
+       ],
+       "Head": [
+        -9.99,
+        57.15,
+        1540.46
+       ],
+       "Shoulder.L": [
+        88.02,
+        54.97,
+        1360.25
+       ],
+       "UpperArm.L": [
+        141.51,
+        55.0,
+        1397.05
+       ],
+       "LowerArm.L": [
+        210.68,
+        112.5,
+        1241.19
+       ],
+       "Wrist.L": [
+        243.75,
+        104.38,
+        1010.96
+       ],
+       "Index1.L": [
+        248.32,
+        103.98,
+        983.6
+       ],
+       "Index2.L": [
+        264.87,
+        79.52,
+        864.17
+       ],
+       "Index3.L": [
+        267.73,
+        77.5,
+        831.96
+       ],
+       "Index4.L": [
+        266.31,
+        77.28,
+        802.78
+       ],
+       "Middle1.L": [
+        248.32,
+        103.98,
+        983.6
+       ],
+       "Middle2.L": [
+        274.78,
+        106.24,
+        863.97
+       ],
+       "Middle3.L": [
+        276.27,
+        106.65,
+        824.04
+       ],
+       "Middle4.L": [
+        268.11,
+        106.08,
+        784.95
+       ],
+       "Ring1.L": [
+        248.32,
+        103.98,
+        983.6
+       ],
+       "Ring2.L": [
+        269.57,
+        133.16,
+        867.51
+       ],
+       "Ring3.L": [
+        269.81,
+        139.26,
+        834.49
+       ],
+       "Ring4.L": [
+        261.92,
+        144.47,
+        803.07
+       ],
+       "Pinky1.L": [
+        248.32,
+        103.98,
+        983.6
+       ],
+       "Pinky2.L": [
+        267.96,
+        154.67,
+        878.64
+       ],
+       "Pinky3.L": [
+        265.54,
+        157.95,
+        852.68
+       ],
+       "Pinky4.L": [
+        258.04,
+        160.68,
+        826.59
+       ],
+       "Thumb1.L": [
+        248.32,
+        103.98,
+        983.6
+       ],
+       "Thumb2.L": [
+        246.0,
+        51.77,
+        921.16
+       ],
+       "Thumb3.L": [
+        245.82,
+        35.88,
+        893.69
+       ],
+       "Shoulder.R": [
+        -106.65,
+        55.86,
+        1359.87
+       ],
+       "UpperArm.R": [
+        -160.28,
+        56.39,
+        1396.46
+       ],
+       "LowerArm.R": [
+        -239.61,
+        96.37,
+        1239.97
+       ],
+       "Wrist.R": [
+        -236.31,
+        1.52,
+        1027.45
+       ],
+       "Index1.R": [
+        -237.17,
+        -8.04,
+        1001.43
+       ],
+       "Index2.R": [
+        -230.82,
+        -69.16,
+        894.84
+       ],
+       "Index3.R": [
+        -227.38,
+        -80.48,
+        864.68
+       ],
+       "Index4.R": [
+        -219.94,
+        -87.5,
+        837.32
+       ],
+       "Middle1.R": [
+        -237.17,
+        -8.04,
+        1001.43
+       ],
+       "Middle2.R": [
+        -248.25,
+        -48.33,
+        886.23
+       ],
+       "Middle3.R": [
+        -245.75,
+        -53.79,
+        846.72
+       ],
+       "Middle4.R": [
+        -233.89,
+        -57.03,
+        808.73
+       ],
+       "Ring1.R": [
+        -237.17,
+        -8.04,
+        1001.43
+       ],
+       "Ring2.R": [
+        -251.9,
+        -21.33,
+        881.48
+       ],
+       "Ring3.R": [
+        -249.94,
+        -25.21,
+        848.19
+       ],
+       "Ring4.R": [
+        -240.21,
+        -26.8,
+        816.88
+       ],
+       "Pinky1.R": [
+        -237.17,
+        -8.04,
+        1001.43
+       ],
+       "Pinky2.R": [
+        -258.24,
+        1.74,
+        885.53
+       ],
+       "Pinky3.R": [
+        -253.78,
+        -1.83,
+        859.88
+       ],
+       "Pinky4.R": [
+        -244.33,
+        -4.27,
+        834.4
+       ],
+       "Thumb1.R": [
+        -237.17,
+        -8.04,
+        1001.43
+       ],
+       "Thumb2.R": [
+        -207.62,
+        -78.11,
+        972.34
+       ],
+       "Thumb3.R": [
+        -198.84,
+        -104.17,
+        956.5
+       ],
+       "UpperLeg.L": [
+        100.58,
+        156.64,
+        927.15
+       ],
+       "LowerLeg.L": [
+        188.26,
+        138.21,
+        508.31
+       ],
+       "UpperLeg.R": [
+        -111.54,
+        47.42,
+        927.15
+       ],
+       "LowerLeg.R": [
+        -87.56,
+        -110.28,
+        529.65
+       ],
+       "Foot.L": [
+        105.44,
+        258.3,
+        24.21
+       ],
+       "PT.L": [
+        548.24,
+        -151.34,
+        621.46
+       ],
+       "Foot.R": [
+        -81.62,
+        -98.53,
+        24.21
+       ],
+       "PT.R": [
+        -31.82,
+        -578.55,
+        420.4
+       ]
+      }
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Body colour #332222",
+      "visible": true,
+      "params": {
+       "color": "#332222",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Body 1",
+        "visible": true,
+        "params": {
+         "path": "meshes/soldier-animated/body-1.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Body colour #444455",
+      "visible": true,
+      "params": {
+       "color": "#444455",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Body 2",
+        "visible": true,
+        "params": {
+         "path": "meshes/soldier-animated/body-2.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Body colour #bb9977",
+      "visible": true,
+      "params": {
+       "color": "#bb9977",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Body 3",
+        "visible": true,
+        "params": {
+         "path": "meshes/soldier-animated/body-3.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Body colour #111111",
+      "visible": true,
+      "params": {
+       "color": "#111111",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Body 4",
+        "visible": true,
+        "params": {
+         "path": "meshes/soldier-animated/body-4.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Chest]",
+      "visible": true,
+      "params": {
+       "name": "Chest",
+       "px": -9.49,
+       "py": 79.63,
+       "pz": 1333.97,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#2b2e29",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -82.0,
+           "z": 1290.0
+          },
+          "children": [
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For x",
+              "visible": true,
+              "params": {
+               "variable": "x",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "-112, 112"
+              },
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For z",
+                "visible": true,
+                "params": {
+                 "variable": "z",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "-140, 140"
+                },
+                "children": [
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": "x",
+                   "y": 0.0,
+                   "z": "z"
+                  },
+                  "children": [
+                   {
+                    "type": "rotate",
+                    "name": "Rotate",
+                    "visible": true,
+                    "params": {
+                     "x": 90.0,
+                     "y": 0.0,
+                     "z": 0.0
+                    },
+                    "children": [
+                     {
+                      "type": "cylinder",
+                      "name": "Cylinder [Front plate]",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "height": 44.0,
+                       "radius_bottom": 14.0,
+                       "radius_top": 14.0,
+                       "segments": 20,
+                       "center": true
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Chest]",
+      "visible": true,
+      "params": {
+       "name": "Chest",
+       "px": -9.49,
+       "py": 79.63,
+       "pz": 1333.97,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#2b2e29",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 194.0,
+           "z": 1300.0
+          },
+          "children": [
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For x",
+              "visible": true,
+              "params": {
+               "variable": "x",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "-118, 118"
+              },
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For z",
+                "visible": true,
+                "params": {
+                 "variable": "z",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "-150, 150"
+                },
+                "children": [
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": "x",
+                   "y": 0.0,
+                   "z": "z"
+                  },
+                  "children": [
+                   {
+                    "type": "rotate",
+                    "name": "Rotate",
+                    "visible": true,
+                    "params": {
+                     "x": 90.0,
+                     "y": 0.0,
+                     "z": 0.0
+                    },
+                    "children": [
+                     {
+                      "type": "cylinder",
+                      "name": "Cylinder [Back plate]",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "height": 44.0,
+                       "radius_bottom": 14.0,
+                       "radius_top": 14.0,
+                       "segments": 20,
+                       "center": true
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Torso]",
+      "visible": true,
+      "params": {
+       "name": "Torso",
+       "px": -8.96,
+       "py": 108.06,
+       "pz": 1121.91,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1d1f1c",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-128, 128"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Cummerbund]",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": 56.0,
+             "z": 1210.0,
+             "width": 26.0,
+             "depth": 230.0,
+             "height": 150.0,
+             "center": true
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Neck]",
+      "visible": true,
+      "params": {
+       "name": "Neck",
+       "px": -9.81,
+       "py": 64.45,
+       "pz": 1464.91,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1d1f1c",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-72, 72"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Shoulder straps]",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": 56.0,
+             "z": 1488.0,
+             "width": 62.0,
+             "depth": 270.0,
+             "height": 22.0,
+             "center": true
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Chest]",
+      "visible": true,
+      "params": {
+       "name": "Chest",
+       "px": -9.49,
+       "py": 79.63,
+       "pz": 1333.97,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#151614",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For z",
+          "visible": true,
+          "params": {
+           "variable": "z",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "1190, 1230, 1270, 1310, 1350, 1390"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [MOLLE rows]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -106.0,
+             "z": "z",
+             "width": 226.0,
+             "depth": 6.0,
+             "height": 10.0,
+             "center": true
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Torso]",
+      "visible": true,
+      "params": {
+       "name": "Torso",
+       "px": -8.96,
+       "py": 108.06,
+       "pz": 1121.91,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#3a3e32",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-80, 0, 80"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Mag pouches]",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": -128.0,
+             "z": 1175.0,
+             "width": 70.0,
+             "depth": 46.0,
+             "height": 110.0,
+             "center": true
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Chest]",
+      "visible": true,
+      "params": {
+       "name": "Chest",
+       "px": -9.49,
+       "py": 79.63,
+       "pz": 1333.97,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#2f3329",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-80, 0, 80"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Pouch flaps]",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": -130.0,
+             "z": 1236.0,
+             "width": 74.0,
+             "depth": 50.0,
+             "height": 22.0,
+             "center": true
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Chest]",
+      "visible": true,
+      "params": {
+       "name": "Chest",
+       "px": -9.49,
+       "py": 79.63,
+       "pz": 1333.97,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#8a7a5a",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-80, 0, 80"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Flap tabs]",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": -156.0,
+             "z": 1236.0,
+             "width": 22.0,
+             "depth": 4.0,
+             "height": 14.0,
+             "center": true
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Shoulder.L]",
+      "visible": true,
+      "params": {
+       "name": "Shoulder.L",
+       "px": 88.02,
+       "py": 54.97,
+       "pz": 1360.25,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#3a3e32",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Admin pouch]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -120.0,
+           "z": 1390.0,
+           "width": 150.0,
+           "depth": 34.0,
+           "height": 70.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Shoulder.R]",
+      "visible": true,
+      "params": {
+       "name": "Shoulder.R",
+       "px": -106.65,
+       "py": 55.86,
+       "pz": 1359.87,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1a1a1a",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Radio]",
+          "visible": true,
+          "params": {
+           "x": -95.0,
+           "y": -112.0,
+           "z": 1420.0,
+           "width": 58.0,
+           "depth": 40.0,
+           "height": 120.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Head]",
+      "visible": true,
+      "params": {
+       "name": "Head",
+       "px": -9.99,
+       "py": 57.15,
+       "pz": 1540.46,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#0f0f0f",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Antenna]",
+          "visible": true,
+          "params": {
+           "x": -110.0,
+           "y": -112.0,
+           "z": 1480.0,
+           "height": 290.0,
+           "radius_bottom": 4.0,
+           "radius_top": 4.0,
+           "segments": 12,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Neck]",
+      "visible": true,
+      "params": {
+       "name": "Neck",
+       "px": -9.81,
+       "py": 64.45,
+       "pz": 1464.91,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c8202a",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Radio light]",
+          "visible": true,
+          "params": {
+           "x": -80.0,
+           "y": -133.0,
+           "z": 1450.0,
+           "width": 12.0,
+           "depth": 3.0,
+           "height": 8.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [UpperArm.L]",
+      "visible": true,
+      "params": {
+       "name": "UpperArm.L",
+       "px": 141.51,
+       "py": 55.0,
+       "pz": 1397.05,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#4a5238",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "sphere",
+          "name": "Sphere [Grenade]",
+          "visible": true,
+          "params": {
+           "x": 95.0,
+           "y": -125.0,
+           "z": 1410.0,
+           "radius": 30.0,
+           "segments": 24
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [UpperArm.L]",
+      "visible": true,
+      "params": {
+       "name": "UpperArm.L",
+       "px": 141.51,
+       "py": 55.0,
+       "pz": 1397.05,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#7a7a70",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Grenade fuse]",
+          "visible": true,
+          "params": {
+           "x": 95.0,
+           "y": -125.0,
+           "z": 1440.0,
+           "height": 18.0,
+           "radius_bottom": 8.0,
+           "radius_top": 8.0,
+           "segments": 12,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Torso]",
+      "visible": true,
+      "params": {
+       "name": "Torso",
+       "px": -8.96,
+       "py": 108.06,
+       "pz": 1121.91,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1b1c1a",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 85.0,
+           "z": 1062.0
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 0.84,
+             "z": 1.0
+            },
+            "children": [
+             {
+              "type": "difference",
+              "name": "Difference",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 50.0,
+                 "radius_bottom": 152.0,
+                 "radius_top": 152.0,
+                 "segments": 64,
+                 "center": true
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Duty belt]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 60.0,
+                 "radius_bottom": 136.0,
+                 "radius_top": 136.0,
+                 "segments": 64,
+                 "center": true
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Torso]",
+      "visible": true,
+      "params": {
+       "name": "Torso",
+       "px": -8.96,
+       "py": 108.06,
+       "pz": 1121.91,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#8c8c86",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Buckle]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -42.0,
+           "z": 1062.0,
+           "width": 56.0,
+           "depth": 10.0,
+           "height": 40.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Wrist.R]",
+      "visible": true,
+      "params": {
+       "name": "Wrist.R",
+       "px": -236.31,
+       "py": 1.52,
+       "pz": 1027.45,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#3a3e32",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-150, -95"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Belt pouches]",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": -10.0,
+             "z": 1030.0,
+             "width": 48.0,
+             "depth": 40.0,
+             "height": 90.0,
+             "center": true
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Thumb2.L]",
+      "visible": true,
+      "params": {
+       "name": "Thumb2.L",
+       "px": 246.0,
+       "py": 51.77,
+       "pz": 921.16,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#141414",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 158.0,
+           "y": 70.0,
+           "z": 935.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -8.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cube",
+              "name": "Cube [Holster]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "width": 56.0,
+               "depth": 90.0,
+               "height": 210.0,
+               "center": true
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Wrist.L]",
+      "visible": true,
+      "params": {
+       "name": "Wrist.L",
+       "px": 243.75,
+       "py": 104.38,
+       "pz": 1010.96,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#2a2a2a",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Pistol grip]",
+          "visible": true,
+          "params": {
+           "x": 158.0,
+           "y": 70.0,
+           "z": 1055.0,
+           "width": 40.0,
+           "depth": 36.0,
+           "height": 40.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [LowerLeg.R]",
+      "visible": true,
+      "params": {
+       "name": "LowerLeg.R",
+       "px": -87.56,
+       "py": -110.28,
+       "pz": 529.65,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1c1c1c",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -82.0,
+           "y": -192.0,
+           "z": 540.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -12.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For x",
+                "visible": true,
+                "params": {
+                 "variable": "x",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "-44, 44"
+                },
+                "children": [
+                 {
+                  "type": "for_loop",
+                  "name": "For z",
+                  "visible": true,
+                  "params": {
+                   "variable": "z",
+                   "start": 0.0,
+                   "end": 4.0,
+                   "step": 1.0,
+                   "values": "-55, 55"
+                  },
+                  "children": [
+                   {
+                    "type": "translate",
+                    "name": "Translate",
+                    "visible": true,
+                    "params": {
+                     "x": "x",
+                     "y": 0.0,
+                     "z": "z"
+                    },
+                    "children": [
+                     {
+                      "type": "rotate",
+                      "name": "Rotate",
+                      "visible": true,
+                      "params": {
+                       "x": 90.0,
+                       "y": 0.0,
+                       "z": 0.0
+                      },
+                      "children": [
+                       {
+                        "type": "cylinder",
+                        "name": "Cylinder [Left knee pad]",
+                        "visible": true,
+                        "params": {
+                         "x": 0.0,
+                         "y": 0.0,
+                         "z": 0.0,
+                         "height": 34.0,
+                         "radius_bottom": 14.0,
+                         "radius_top": 14.0,
+                         "segments": 16,
+                         "center": true
+                        }
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [LowerLeg.L]",
+      "visible": true,
+      "params": {
+       "name": "LowerLeg.L",
+       "px": 188.26,
+       "py": 138.21,
+       "pz": 508.31,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1c1c1c",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 150.0,
+           "y": 44.0,
+           "z": 540.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": -20.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For x",
+                "visible": true,
+                "params": {
+                 "variable": "x",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "-44, 44"
+                },
+                "children": [
+                 {
+                  "type": "for_loop",
+                  "name": "For z",
+                  "visible": true,
+                  "params": {
+                   "variable": "z",
+                   "start": 0.0,
+                   "end": 4.0,
+                   "step": 1.0,
+                   "values": "-55, 55"
+                  },
+                  "children": [
+                   {
+                    "type": "translate",
+                    "name": "Translate",
+                    "visible": true,
+                    "params": {
+                     "x": "x",
+                     "y": 0.0,
+                     "z": "z"
+                    },
+                    "children": [
+                     {
+                      "type": "rotate",
+                      "name": "Rotate",
+                      "visible": true,
+                      "params": {
+                       "x": 90.0,
+                       "y": 0.0,
+                       "z": 0.0
+                      },
+                      "children": [
+                       {
+                        "type": "cylinder",
+                        "name": "Cylinder [Right knee pad]",
+                        "visible": true,
+                        "params": {
+                         "x": 0.0,
+                         "y": 0.0,
+                         "z": 0.0,
+                         "height": 34.0,
+                         "radius_bottom": 14.0,
+                         "radius_top": 14.0,
+                         "segments": 16,
+                         "center": true
+                        }
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [LowerArm.R]",
+      "visible": true,
+      "params": {
+       "name": "LowerArm.R",
+       "px": -239.61,
+       "py": 96.37,
+       "pz": 1239.97,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1c1c1c",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -242.0,
+           "y": 132.0,
+           "z": 1130.0
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 0.7,
+             "z": 1.15
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [Left elbow pad]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 48.0,
+               "segments": 24
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [LowerArm.L]",
+      "visible": true,
+      "params": {
+       "name": "LowerArm.L",
+       "px": 210.68,
+       "py": 112.5,
+       "pz": 1241.19,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1c1c1c",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 228.0,
+           "y": 188.0,
+           "z": 1130.0
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 0.7,
+             "z": 1.15
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [Right elbow pad]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 48.0,
+               "segments": 24
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Chest]",
+      "visible": true,
+      "params": {
+       "name": "Chest",
+       "px": -9.49,
+       "py": 79.63,
+       "pz": 1333.97,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#2f3229",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 252.0,
+           "z": 1300.0
+          },
+          "children": [
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For x",
+              "visible": true,
+              "params": {
+               "variable": "x",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "-95, 95"
+              },
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For z",
+                "visible": true,
+                "params": {
+                 "variable": "z",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "-150, 150"
+                },
+                "children": [
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": "x",
+                   "y": 0.0,
+                   "z": "z"
+                  },
+                  "children": [
+                   {
+                    "type": "rotate",
+                    "name": "Rotate",
+                    "visible": true,
+                    "params": {
+                     "x": 90.0,
+                     "y": 0.0,
+                     "z": 0.0
+                    },
+                    "children": [
+                     {
+                      "type": "cylinder",
+                      "name": "Cylinder [Hydration pack]",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "height": 70.0,
+                       "radius_bottom": 22.0,
+                       "radius_top": 22.0,
+                       "segments": 20,
+                       "center": true
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Chest]",
+      "visible": true,
+      "params": {
+       "name": "Chest",
+       "px": -9.49,
+       "py": 79.63,
+       "pz": 1333.97,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1d1f1c",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Pack bungee panel]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 290.0,
+           "z": 1300.0,
+           "width": 150.0,
+           "depth": 6.0,
+           "height": 220.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [UpperArm.R]",
+      "visible": true,
+      "params": {
+       "name": "UpperArm.R",
+       "px": -160.28,
+       "py": 56.39,
+       "pz": 1396.46,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#2f4a7a",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Left shoulder patch]",
+          "visible": true,
+          "params": {
+           "x": -268.0,
+           "y": 85.0,
+           "z": 1360.0,
+           "width": 6.0,
+           "depth": 60.0,
+           "height": 70.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [UpperArm.L]",
+      "visible": true,
+      "params": {
+       "name": "UpperArm.L",
+       "px": 141.51,
+       "py": 55.0,
+       "pz": 1397.05,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#2f4a7a",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Right shoulder patch]",
+          "visible": true,
+          "params": {
+           "x": 250.0,
+           "y": 95.0,
+           "z": 1360.0,
+           "width": 6.0,
+           "depth": 60.0,
+           "height": 70.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Head]",
+      "visible": true,
+      "params": {
+       "name": "Head",
+       "px": -9.99,
+       "py": 57.15,
+       "pz": 1540.46,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1a1a1a",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [NVG mount]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -108.0,
+           "z": 1745.0,
+           "width": 56.0,
+           "depth": 30.0,
+           "height": 42.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Head]",
+      "visible": true,
+      "params": {
+       "name": "Head",
+       "px": -9.99,
+       "py": 57.15,
+       "pz": 1540.46,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1a1a1a",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-122, 110"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Helmet rails]",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": 30.0,
+             "z": 1690.0,
+             "width": 10.0,
+             "depth": 120.0,
+             "height": 22.0,
+             "center": true
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "bone",
+      "name": "Bone [Head]",
+      "visible": true,
+      "params": {
+       "name": "Head",
+       "px": -9.99,
+       "py": 57.15,
+       "pz": 1540.46,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "tx": 0.0,
+       "ty": 0.0,
+       "tz": 0.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#222222",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-128, 112"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": 40.0,
+             "z": 1630.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Headset ear cups]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 30.0,
+                 "radius_bottom": 38.0,
+                 "radius_top": 38.0,
+                 "segments": 28,
+                 "center": true
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "SWAT soldier (animated) 1.8 m",
+  "description": "An ANIMATED tactical officer for games: the Quaternius SWAT character (CC0) imported with its skeleton (62 bones) and 24 clips (Idle_Gun, Run_Shoot, Gun_Shoot, Death...), wearing gear modelled in KherveCAD \u2014 plate carrier with MOLLE rows, magazine pouches, radio and antenna, grenade, duty belt and holster, knee and elbow pads, hydration pack, patches, helmet NVG mount, rails and headset \u2014 each part in a Bone node riding on its bone (Chest, Torso, Head, arms...). 1800 mm tall, z = 0 floor, facing -Y. pose_character previews any clip; export_character writes the animated GLB (KherveOS Rune Keep uses it as soldier-cad.glb).",
+  "tags": [
+   "soldier",
+   "swat",
+   "animated",
+   "rigged",
+   "character",
+   "game",
+   "glb",
+   "skeleton"
+  ],
+  "source": "assistant",
+  "uid": "ec0d1859bde046cfac4713b35123549b",
+  "created": "2026-10-14T06:56:32"
+ }
+}

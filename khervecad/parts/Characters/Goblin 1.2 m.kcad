@@ -1,0 +1,189 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Goblin 1.2 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "5c692235595d4eecb02116888c6b7caf",
+      "title": "Goblin 1.2 m",
+      "area": "Characters & monsters",
+      "named": "Goblin 1.2 m"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Colour #778822",
+      "visible": true,
+      "params": {
+       "color": "#778822",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Goblin part 1",
+        "visible": true,
+        "params": {
+         "path": "meshes/goblin/goblin-1.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #444433",
+      "visible": true,
+      "params": {
+       "color": "#444433",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Goblin part 2",
+        "visible": true,
+        "params": {
+         "path": "meshes/goblin/goblin-2.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #775544",
+      "visible": true,
+      "params": {
+       "color": "#775544",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Goblin part 3",
+        "visible": true,
+        "params": {
+         "path": "meshes/goblin/goblin-3.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #cc9944",
+      "visible": true,
+      "params": {
+       "color": "#cc9944",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Goblin part 4",
+        "visible": true,
+        "params": {
+         "path": "meshes/goblin/goblin-4.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #aa44ff",
+      "visible": true,
+      "params": {
+       "color": "#aa44ff",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Goblin part 5",
+        "visible": true,
+        "params": {
+         "path": "meshes/goblin/goblin-5.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Goblin 1.2 m",
+  "description": "A small green goblin. Low-poly character by Quaternius (CC0 1.0, public domain), from the animated model used in the KherveOS games, here in its rest pose. 1200 mm tall (867 x 483 x 1200 mm), standing on z = 0, centred on x/y, facing -Y. Built as one Object of 5 coloured imported meshes (STL files in meshes/goblin/ beside this part); scale the Object to resize it. 2912 triangles.",
+  "tags": [
+   "goblin",
+   "monster",
+   "fantasy",
+   "character",
+   "quaternius",
+   "low poly",
+   "cc0"
+  ],
+  "source": "assistant",
+  "uid": "5c692235595d4eecb02116888c6b7caf",
+  "created": "2026-10-14T05:58:48"
+ }
+}

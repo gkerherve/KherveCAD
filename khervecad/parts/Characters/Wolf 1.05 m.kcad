@@ -1,0 +1,163 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Wolf 1.05 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "179b53f93efe47c0ad59205380e0dace",
+      "title": "Wolf 1.05 m",
+      "area": "Characters & monsters",
+      "named": "Wolf 1.05 m"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Colour #666666",
+      "visible": true,
+      "params": {
+       "color": "#666666",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Wolf part 1",
+        "visible": true,
+        "params": {
+         "path": "meshes/wolf/wolf-1.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #999988",
+      "visible": true,
+      "params": {
+       "color": "#999988",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Wolf part 2",
+        "visible": true,
+        "params": {
+         "path": "meshes/wolf/wolf-2.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #222222",
+      "visible": true,
+      "params": {
+       "color": "#222222",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Wolf part 3",
+        "visible": true,
+        "params": {
+         "path": "meshes/wolf/wolf-3.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #111111",
+      "visible": true,
+      "params": {
+       "color": "#111111",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Wolf part 4",
+        "visible": true,
+        "params": {
+         "path": "meshes/wolf/wolf-4.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Wolf 1.05 m",
+  "description": "A grey wolf standing on all fours, 2 m long. Low-poly character by Quaternius (CC0 1.0, public domain), from the animated model used in the KherveOS games, here in its rest pose. 1050 mm tall (411 x 2050 x 1050 mm), standing on z = 0, centred on x/y, facing -Y. Built as one Object of 4 coloured imported meshes (STL files in meshes/wolf/ beside this part); scale the Object to resize it. 1962 triangles.",
+  "tags": [
+   "wolf",
+   "animal",
+   "dog",
+   "creature",
+   "character",
+   "quaternius",
+   "low poly",
+   "cc0"
+  ],
+  "source": "assistant",
+  "uid": "179b53f93efe47c0ad59205380e0dace",
+  "created": "2026-10-14T05:58:48"
+ }
+}

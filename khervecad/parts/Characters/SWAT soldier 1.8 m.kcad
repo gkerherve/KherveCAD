@@ -1,0 +1,1600 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "SWAT soldier 1.8 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "80f0ebd8b8884cc8ac9ac4255ac4ef55",
+      "title": "SWAT soldier 1.8 m",
+      "area": "Characters & monsters",
+      "named": "SWAT soldier 1.8 m"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Colour #332222",
+      "visible": true,
+      "params": {
+       "color": "#332222",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "SWAT soldier part 1",
+        "visible": true,
+        "params": {
+         "path": "meshes/soldier/soldier-1.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #444455",
+      "visible": true,
+      "params": {
+       "color": "#444455",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "SWAT soldier part 2",
+        "visible": true,
+        "params": {
+         "path": "meshes/soldier/soldier-2.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #bb9977",
+      "visible": true,
+      "params": {
+       "color": "#bb9977",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "SWAT soldier part 3",
+        "visible": true,
+        "params": {
+         "path": "meshes/soldier/soldier-3.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #111111",
+      "visible": true,
+      "params": {
+       "color": "#111111",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "SWAT soldier part 4",
+        "visible": true,
+        "params": {
+         "path": "meshes/soldier/soldier-4.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2b2e29",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -82.0,
+         "z": 1290.0
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For x",
+            "visible": true,
+            "params": {
+             "variable": "x",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "-112, 112"
+            },
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For z",
+              "visible": true,
+              "params": {
+               "variable": "z",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "-140, 140"
+              },
+              "children": [
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": "x",
+                 "y": 0.0,
+                 "z": "z"
+                },
+                "children": [
+                 {
+                  "type": "rotate",
+                  "name": "Rotate",
+                  "visible": true,
+                  "params": {
+                   "x": 90.0,
+                   "y": 0.0,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder [Front plate]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": 44.0,
+                     "radius_bottom": 14.0,
+                     "radius_top": 14.0,
+                     "segments": 20,
+                     "center": true
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2b2e29",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 194.0,
+         "z": 1300.0
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For x",
+            "visible": true,
+            "params": {
+             "variable": "x",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "-118, 118"
+            },
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For z",
+              "visible": true,
+              "params": {
+               "variable": "z",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "-150, 150"
+              },
+              "children": [
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": "x",
+                 "y": 0.0,
+                 "z": "z"
+                },
+                "children": [
+                 {
+                  "type": "rotate",
+                  "name": "Rotate",
+                  "visible": true,
+                  "params": {
+                   "x": 90.0,
+                   "y": 0.0,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder [Back plate]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": 44.0,
+                     "radius_bottom": 14.0,
+                     "radius_top": 14.0,
+                     "segments": 20,
+                     "center": true
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1d1f1c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-128, 128"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Cummerbund]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 56.0,
+           "z": 1210.0,
+           "width": 26.0,
+           "depth": 230.0,
+           "height": 150.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1d1f1c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-72, 72"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Shoulder straps]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 56.0,
+           "z": 1488.0,
+           "width": 62.0,
+           "depth": 270.0,
+           "height": 22.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#151614",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For z",
+        "visible": true,
+        "params": {
+         "variable": "z",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "1190, 1230, 1270, 1310, 1350, 1390"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [MOLLE rows]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -106.0,
+           "z": "z",
+           "width": 226.0,
+           "depth": 6.0,
+           "height": 10.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#3a3e32",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-80, 0, 80"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Mag pouches]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -128.0,
+           "z": 1175.0,
+           "width": 70.0,
+           "depth": 46.0,
+           "height": 110.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2f3329",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-80, 0, 80"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Pouch flaps]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -130.0,
+           "z": 1236.0,
+           "width": 74.0,
+           "depth": 50.0,
+           "height": 22.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8a7a5a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-80, 0, 80"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Flap tabs]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -156.0,
+           "z": 1236.0,
+           "width": 22.0,
+           "depth": 4.0,
+           "height": 14.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#3a3e32",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Admin pouch]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -120.0,
+         "z": 1390.0,
+         "width": 150.0,
+         "depth": 34.0,
+         "height": 70.0,
+         "center": true
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a1a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Radio]",
+        "visible": true,
+        "params": {
+         "x": -95.0,
+         "y": -112.0,
+         "z": 1420.0,
+         "width": 58.0,
+         "depth": 40.0,
+         "height": 120.0,
+         "center": true
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#0f0f0f",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Antenna]",
+        "visible": true,
+        "params": {
+         "x": -110.0,
+         "y": -112.0,
+         "z": 1480.0,
+         "height": 290.0,
+         "radius_bottom": 4.0,
+         "radius_top": 4.0,
+         "segments": 12,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#c8202a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Radio light]",
+        "visible": true,
+        "params": {
+         "x": -80.0,
+         "y": -133.0,
+         "z": 1450.0,
+         "width": 12.0,
+         "depth": 3.0,
+         "height": 8.0,
+         "center": true
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#4a5238",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "sphere",
+        "name": "Sphere [Grenade]",
+        "visible": true,
+        "params": {
+         "x": 95.0,
+         "y": -125.0,
+         "z": 1410.0,
+         "radius": 30.0,
+         "segments": 24
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#7a7a70",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Grenade fuse]",
+        "visible": true,
+        "params": {
+         "x": 95.0,
+         "y": -125.0,
+         "z": 1440.0,
+         "height": 18.0,
+         "radius_bottom": 8.0,
+         "radius_top": 8.0,
+         "segments": 12,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1b1c1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 85.0,
+         "z": 1062.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 1.0,
+           "y": 0.84,
+           "z": 1.0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 50.0,
+               "radius_bottom": 152.0,
+               "radius_top": 152.0,
+               "segments": 64,
+               "center": true
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Duty belt]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 60.0,
+               "radius_bottom": 136.0,
+               "radius_top": 136.0,
+               "segments": 64,
+               "center": true
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8c8c86",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Buckle]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -42.0,
+         "z": 1062.0,
+         "width": 56.0,
+         "depth": 10.0,
+         "height": 40.0,
+         "center": true
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#3a3e32",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-150, -95"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Belt pouches]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -10.0,
+           "z": 1030.0,
+           "width": 48.0,
+           "depth": 40.0,
+           "height": 90.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#141414",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 158.0,
+         "y": 70.0,
+         "z": 935.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": -8.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Holster]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "width": 56.0,
+             "depth": 90.0,
+             "height": 210.0,
+             "center": true
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2a2a2a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Pistol grip]",
+        "visible": true,
+        "params": {
+         "x": 158.0,
+         "y": 70.0,
+         "z": 1055.0,
+         "width": 40.0,
+         "depth": 36.0,
+         "height": 40.0,
+         "center": true
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1c1c1c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -82.0,
+         "y": -192.0,
+         "z": 540.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": -12.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For x",
+              "visible": true,
+              "params": {
+               "variable": "x",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "-44, 44"
+              },
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For z",
+                "visible": true,
+                "params": {
+                 "variable": "z",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "-55, 55"
+                },
+                "children": [
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": "x",
+                   "y": 0.0,
+                   "z": "z"
+                  },
+                  "children": [
+                   {
+                    "type": "rotate",
+                    "name": "Rotate",
+                    "visible": true,
+                    "params": {
+                     "x": 90.0,
+                     "y": 0.0,
+                     "z": 0.0
+                    },
+                    "children": [
+                     {
+                      "type": "cylinder",
+                      "name": "Cylinder [Left knee pad]",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "height": 34.0,
+                       "radius_bottom": 14.0,
+                       "radius_top": 14.0,
+                       "segments": 16,
+                       "center": true
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1c1c1c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 150.0,
+         "y": 44.0,
+         "z": 540.0
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": -20.0,
+           "y": 0.0,
+           "z": 0.0
+          },
+          "children": [
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For x",
+              "visible": true,
+              "params": {
+               "variable": "x",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "-44, 44"
+              },
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For z",
+                "visible": true,
+                "params": {
+                 "variable": "z",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "-55, 55"
+                },
+                "children": [
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": "x",
+                   "y": 0.0,
+                   "z": "z"
+                  },
+                  "children": [
+                   {
+                    "type": "rotate",
+                    "name": "Rotate",
+                    "visible": true,
+                    "params": {
+                     "x": 90.0,
+                     "y": 0.0,
+                     "z": 0.0
+                    },
+                    "children": [
+                     {
+                      "type": "cylinder",
+                      "name": "Cylinder [Right knee pad]",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "height": 34.0,
+                       "radius_bottom": 14.0,
+                       "radius_top": 14.0,
+                       "segments": 16,
+                       "center": true
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1c1c1c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": -242.0,
+         "y": 132.0,
+         "z": 1130.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 1.0,
+           "y": 0.7,
+           "z": 1.15
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Left elbow pad]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 48.0,
+             "segments": 24
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1c1c1c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 228.0,
+         "y": 188.0,
+         "z": 1130.0
+        },
+        "children": [
+         {
+          "type": "scale",
+          "name": "Scale",
+          "visible": true,
+          "params": {
+           "x": 1.0,
+           "y": 0.7,
+           "z": 1.15
+          },
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere [Right elbow pad]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "radius": 48.0,
+             "segments": 24
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2f3229",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 252.0,
+         "z": 1300.0
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For x",
+            "visible": true,
+            "params": {
+             "variable": "x",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "-95, 95"
+            },
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For z",
+              "visible": true,
+              "params": {
+               "variable": "z",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "-150, 150"
+              },
+              "children": [
+               {
+                "type": "translate",
+                "name": "Translate",
+                "visible": true,
+                "params": {
+                 "x": "x",
+                 "y": 0.0,
+                 "z": "z"
+                },
+                "children": [
+                 {
+                  "type": "rotate",
+                  "name": "Rotate",
+                  "visible": true,
+                  "params": {
+                   "x": 90.0,
+                   "y": 0.0,
+                   "z": 0.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder [Hydration pack]",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": 70.0,
+                     "radius_bottom": 22.0,
+                     "radius_top": 22.0,
+                     "segments": 20,
+                     "center": true
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1d1f1c",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Pack bungee panel]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 290.0,
+         "z": 1300.0,
+         "width": 150.0,
+         "depth": 6.0,
+         "height": 220.0,
+         "center": true
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2f4a7a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Left shoulder patch]",
+        "visible": true,
+        "params": {
+         "x": -268.0,
+         "y": 85.0,
+         "z": 1360.0,
+         "width": 6.0,
+         "depth": 60.0,
+         "height": 70.0,
+         "center": true
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2f4a7a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Right shoulder patch]",
+        "visible": true,
+        "params": {
+         "x": 250.0,
+         "y": 95.0,
+         "z": 1360.0,
+         "width": 6.0,
+         "depth": 60.0,
+         "height": 70.0,
+         "center": true
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a1a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [NVG mount]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -108.0,
+         "z": 1745.0,
+         "width": 56.0,
+         "depth": 30.0,
+         "height": 42.0,
+         "center": true
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#1a1a1a",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-122, 110"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Helmet rails]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 30.0,
+           "z": 1690.0,
+           "width": 10.0,
+           "depth": 120.0,
+           "height": 22.0,
+           "center": true
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#222222",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-128, 112"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": 40.0,
+           "z": 1630.0
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 90.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Headset ear cups]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 30.0,
+               "radius_bottom": 38.0,
+               "radius_top": 38.0,
+               "segments": 28,
+               "center": true
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "SWAT soldier 1.8 m",
+  "description": "A tactical officer (Quaternius CC0 low-poly character, rest pose) kitted out with modelled gear: a plate carrier (front and back plates, cummerbund, shoulder straps, MOLLE webbing rows), three magazine pouches with flaps and pull tabs, an admin pouch, a radio with antenna and status light on the left chest, a grenade on the right chest, a duty belt with buckle, belt pouches and a holstered pistol, knee and elbow pads, a hydration pack on the back, shoulder patches, and a helmet with night-vision mount, side rails and headset ear cups. 1800 mm tall, standing on z = 0, facing -Y. The body is coloured imported meshes (meshes/soldier/); the gear is ordinary KherveCAD nodes (hulls, cubes, cylinders), each named and coloured, so it can be edited or moved. Exported to the KherveOS games with tools/kcad_to_game_glb.py, which re-attaches everything to the original animated skeleton.",
+  "tags": [
+   "soldier",
+   "swat",
+   "police",
+   "military",
+   "tactical",
+   "person",
+   "character",
+   "plate carrier",
+   "game"
+  ],
+  "source": "assistant",
+  "uid": "80f0ebd8b8884cc8ac9ac4255ac4ef55",
+  "created": "2026-10-14T06:42:08"
+ }
+}

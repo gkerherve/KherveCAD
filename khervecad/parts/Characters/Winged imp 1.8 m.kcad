@@ -1,0 +1,127 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Winged imp 1.8 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "0b8891aa6ce14a4186dd09a62611625e",
+      "title": "Winged imp 1.8 m",
+      "area": "Characters & monsters",
+      "named": "Winged imp 1.8 m"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Colour #661122",
+      "visible": true,
+      "params": {
+       "color": "#661122",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Winged imp part 1",
+        "visible": true,
+        "params": {
+         "path": "meshes/winged-demon/winged-demon-1.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #222222",
+      "visible": true,
+      "params": {
+       "color": "#222222",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Winged imp part 2",
+        "visible": true,
+        "params": {
+         "path": "meshes/winged-demon/winged-demon-2.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #888888",
+      "visible": true,
+      "params": {
+       "color": "#888888",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Winged imp part 3",
+        "visible": true,
+        "params": {
+         "path": "meshes/winged-demon/winged-demon-3.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Winged imp 1.8 m",
+  "description": "Winged imp 1.8 m. Overall size 3264 x 1780 x 1800 (document units). Built from 3 color, 3 stl_import. (Description generated automatically.)",
+  "tags": [],
+  "source": "auto",
+  "uid": "0b8891aa6ce14a4186dd09a62611625e",
+  "created": "2026-10-14T07:45:20"
+ }
+}

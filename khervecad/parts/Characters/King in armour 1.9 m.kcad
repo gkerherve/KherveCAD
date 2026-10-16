@@ -1,0 +1,299 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "King in armour 1.9 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "aff4fa03e5564de5b8d49477fa232ec9",
+      "title": "King in armour 1.9 m",
+      "area": "Characters & monsters",
+      "named": "King in armour 1.9 m"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Colour #555555",
+      "visible": true,
+      "params": {
+       "color": "#555555",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "King in armour part 1",
+        "visible": true,
+        "params": {
+         "path": "meshes/king/king-1.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #aaaaaa",
+      "visible": true,
+      "params": {
+       "color": "#aaaaaa",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "King in armour part 2",
+        "visible": true,
+        "params": {
+         "path": "meshes/king/king-2.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #bb9977",
+      "visible": true,
+      "params": {
+       "color": "#bb9977",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "King in armour part 3",
+        "visible": true,
+        "params": {
+         "path": "meshes/king/king-3.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #886633",
+      "visible": true,
+      "params": {
+       "color": "#886633",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "King in armour part 4",
+        "visible": true,
+        "params": {
+         "path": "meshes/king/king-4.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #444444",
+      "visible": true,
+      "params": {
+       "color": "#444444",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "King in armour part 5",
+        "visible": true,
+        "params": {
+         "path": "meshes/king/king-5.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #443333",
+      "visible": true,
+      "params": {
+       "color": "#443333",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "King in armour part 6",
+        "visible": true,
+        "params": {
+         "path": "meshes/king/king-6.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #334455",
+      "visible": true,
+      "params": {
+       "color": "#334455",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "King in armour part 7",
+        "visible": true,
+        "params": {
+         "path": "meshes/king/king-7.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #888877",
+      "visible": true,
+      "params": {
+       "color": "#888877",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "King in armour part 8",
+        "visible": true,
+        "params": {
+         "path": "meshes/king/king-8.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #332211",
+      "visible": true,
+      "params": {
+       "color": "#332211",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "King in armour part 9",
+        "visible": true,
+        "params": {
+         "path": "meshes/king/king-9.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "King in armour 1.9 m",
+  "description": "A crowned king in plate armour with a cape. Low-poly character by Quaternius (CC0 1.0, public domain), from the animated model used in the KherveOS games, here in its rest pose. 1900 mm tall (619 x 639 x 1900 mm), standing on z = 0, centred on x/y, facing -Y. Built as one Object of 9 coloured imported meshes (STL files in meshes/king/ beside this part); scale the Object to resize it. 11100 triangles.",
+  "tags": [
+   "king",
+   "knight",
+   "medieval",
+   "royal",
+   "person",
+   "character",
+   "quaternius",
+   "low poly",
+   "cc0"
+  ],
+  "source": "assistant",
+  "uid": "aff4fa03e5564de5b8d49477fa232ec9",
+  "created": "2026-10-14T05:58:48"
+ }
+}

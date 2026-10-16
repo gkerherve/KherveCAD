@@ -1,0 +1,135 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Green monster 2.3 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "69a7bb7bb3594a02916f137d0b056ff5",
+      "title": "Green monster 2.3 m",
+      "area": "Characters & monsters",
+      "named": "Green monster 2.3 m"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Colour #335511",
+      "visible": true,
+      "params": {
+       "color": "#335511",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Green monster part 1",
+        "visible": true,
+        "params": {
+         "path": "meshes/enemy-large/enemy-large-1.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #cccccc",
+      "visible": true,
+      "params": {
+       "color": "#cccccc",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Green monster part 2",
+        "visible": true,
+        "params": {
+         "path": "meshes/enemy-large/enemy-large-2.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #222222",
+      "visible": true,
+      "params": {
+       "color": "#222222",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Green monster part 3",
+        "visible": true,
+        "params": {
+         "path": "meshes/enemy-large/enemy-large-3.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Green monster 2.3 m",
+  "description": "A tall green crested monster with long arms. Low-poly character by Quaternius (CC0 1.0, public domain), from the animated model used in the KherveOS games, here in its rest pose. 2300 mm tall (1911 x 826 x 2300 mm), standing on z = 0, centred on x/y, facing -Y. Built as one Object of 3 coloured imported meshes (STL files in meshes/enemy-large/ beside this part); scale the Object to resize it. 4724 triangles.",
+  "tags": [
+   "monster",
+   "brute",
+   "creature",
+   "character",
+   "quaternius",
+   "low poly",
+   "cc0"
+  ],
+  "source": "assistant",
+  "uid": "69a7bb7bb3594a02916f137d0b056ff5",
+  "created": "2026-10-14T05:58:48"
+ }
+}

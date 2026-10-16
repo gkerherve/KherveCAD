@@ -1,0 +1,324 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Orc 1.95 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "4a99318096c940b692b6cdc36a6faad4",
+      "title": "Orc 1.95 m",
+      "area": "Characters & monsters",
+      "named": "Orc 1.95 m"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Colour #667733",
+      "visible": true,
+      "params": {
+       "color": "#667733",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Orc part 1",
+        "visible": true,
+        "params": {
+         "path": "meshes/orc/orc-1.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #888888",
+      "visible": true,
+      "params": {
+       "color": "#888888",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Orc part 2",
+        "visible": true,
+        "params": {
+         "path": "meshes/orc/orc-2.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #226677",
+      "visible": true,
+      "params": {
+       "color": "#226677",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Orc part 3",
+        "visible": true,
+        "params": {
+         "path": "meshes/orc/orc-3.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #336633",
+      "visible": true,
+      "params": {
+       "color": "#336633",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Orc part 4",
+        "visible": true,
+        "params": {
+         "path": "meshes/orc/orc-4.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #775533",
+      "visible": true,
+      "params": {
+       "color": "#775533",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Orc part 5",
+        "visible": true,
+        "params": {
+         "path": "meshes/orc/orc-5.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #555533",
+      "visible": true,
+      "params": {
+       "color": "#555533",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Orc part 6",
+        "visible": true,
+        "params": {
+         "path": "meshes/orc/orc-6.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #553344",
+      "visible": true,
+      "params": {
+       "color": "#553344",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Orc part 7",
+        "visible": true,
+        "params": {
+         "path": "meshes/orc/orc-7.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #bb8822",
+      "visible": true,
+      "params": {
+       "color": "#bb8822",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Orc part 8",
+        "visible": true,
+        "params": {
+         "path": "meshes/orc/orc-8.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #773355",
+      "visible": true,
+      "params": {
+       "color": "#773355",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Orc part 9",
+        "visible": true,
+        "params": {
+         "path": "meshes/orc/orc-9.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #222222",
+      "visible": true,
+      "params": {
+       "color": "#222222",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Orc part 10",
+        "visible": true,
+        "params": {
+         "path": "meshes/orc/orc-10.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Orc 1.95 m",
+  "description": "A green orc brute with tusks, belt and hair. Low-poly character by Quaternius (CC0 1.0, public domain), from the animated model used in the KherveOS games, here in its rest pose. 1950 mm tall (1999 x 1128 x 1950 mm), standing on z = 0, centred on x/y, facing -Y. Built as one Object of 10 coloured imported meshes (STL files in meshes/orc/ beside this part); scale the Object to resize it. 7344 triangles.",
+  "tags": [
+   "orc",
+   "monster",
+   "fantasy",
+   "character",
+   "quaternius",
+   "low poly",
+   "cc0"
+  ],
+  "source": "assistant",
+  "uid": "4a99318096c940b692b6cdc36a6faad4",
+  "created": "2026-10-14T05:58:48"
+ }
+}

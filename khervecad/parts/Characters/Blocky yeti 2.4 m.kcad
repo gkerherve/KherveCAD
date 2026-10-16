@@ -1,0 +1,136 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Blocky yeti 2.4 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "66f99223d1f5420ba3b8b3ff23a7905a",
+      "title": "Blocky yeti 2.4 m",
+      "area": "Characters & monsters",
+      "named": "Blocky yeti 2.4 m"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Colour #aaaa99",
+      "visible": true,
+      "params": {
+       "color": "#aaaa99",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Blocky yeti part 1",
+        "visible": true,
+        "params": {
+         "path": "meshes/yeti/yeti-1.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #ccaa22",
+      "visible": true,
+      "params": {
+       "color": "#ccaa22",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Blocky yeti part 2",
+        "visible": true,
+        "params": {
+         "path": "meshes/yeti/yeti-2.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #4488aa",
+      "visible": true,
+      "params": {
+       "color": "#4488aa",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Blocky yeti part 3",
+        "visible": true,
+        "params": {
+         "path": "meshes/yeti/yeti-3.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Blocky yeti 2.4 m",
+  "description": "A chunky blocky yeti with yellow fur and horns. Low-poly character by Quaternius (CC0 1.0, public domain), from the animated model used in the KherveOS games, here in its rest pose. 2400 mm tall (2358 x 1589 x 2400 mm), standing on z = 0, centred on x/y, facing -Y. Built as one Object of 3 coloured imported meshes (STL files in meshes/yeti/ beside this part); scale the Object to resize it. 3070 triangles.",
+  "tags": [
+   "yeti",
+   "monster",
+   "snow",
+   "creature",
+   "character",
+   "quaternius",
+   "low poly",
+   "cc0"
+  ],
+  "source": "assistant",
+  "uid": "66f99223d1f5420ba3b8b3ff23a7905a",
+  "created": "2026-10-14T05:58:48"
+ }
+}

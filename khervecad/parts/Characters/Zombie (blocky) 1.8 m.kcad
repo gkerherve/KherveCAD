@@ -1,0 +1,190 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Zombie (blocky) 1.8 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "1d1663323be7485d96b24fe25518a740",
+      "title": "Zombie (blocky) 1.8 m",
+      "area": "Characters & monsters",
+      "named": "Zombie (blocky) 1.8 m"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Colour #333322",
+      "visible": true,
+      "params": {
+       "color": "#333322",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Zombie (blocky) part 1",
+        "visible": true,
+        "params": {
+         "path": "meshes/zombie2/zombie2-1.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #772244",
+      "visible": true,
+      "params": {
+       "color": "#772244",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Zombie (blocky) part 2",
+        "visible": true,
+        "params": {
+         "path": "meshes/zombie2/zombie2-2.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #444433",
+      "visible": true,
+      "params": {
+       "color": "#444433",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Zombie (blocky) part 3",
+        "visible": true,
+        "params": {
+         "path": "meshes/zombie2/zombie2-3.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #663377",
+      "visible": true,
+      "params": {
+       "color": "#663377",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Zombie (blocky) part 4",
+        "visible": true,
+        "params": {
+         "path": "meshes/zombie2/zombie2-4.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #778822",
+      "visible": true,
+      "params": {
+       "color": "#778822",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Zombie (blocky) part 5",
+        "visible": true,
+        "params": {
+         "path": "meshes/zombie2/zombie2-5.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Zombie (blocky) 1.8 m",
+  "description": "A chunky low-poly zombie. Low-poly character by Quaternius (CC0 1.0, public domain), from the animated model used in the KherveOS games, here in its rest pose. 1800 mm tall (1079 x 659 x 1800 mm), standing on z = 0, centred on x/y, facing -Y. Built as one Object of 5 coloured imported meshes (STL files in meshes/zombie2/ beside this part); scale the Object to resize it. 3550 triangles.",
+  "tags": [
+   "zombie",
+   "undead",
+   "monster",
+   "halloween",
+   "character",
+   "quaternius",
+   "low poly",
+   "cc0"
+  ],
+  "source": "assistant",
+  "uid": "1d1663323be7485d96b24fe25518a740",
+  "created": "2026-10-14T05:58:48"
+ }
+}

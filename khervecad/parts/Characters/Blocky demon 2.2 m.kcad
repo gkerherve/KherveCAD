@@ -1,0 +1,162 @@
+{
+ "format": "kcad",
+ "version": 13,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Blocky demon 2.2 m",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "a251a18ee53547358683e13d9b056310",
+      "title": "Blocky demon 2.2 m",
+      "area": "Characters & monsters",
+      "named": "Blocky demon 2.2 m"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Colour #bbaa77",
+      "visible": true,
+      "params": {
+       "color": "#bbaa77",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Blocky demon part 1",
+        "visible": true,
+        "params": {
+         "path": "meshes/demon/demon-1.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #aa9966",
+      "visible": true,
+      "params": {
+       "color": "#aa9966",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Blocky demon part 2",
+        "visible": true,
+        "params": {
+         "path": "meshes/demon/demon-2.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #444433",
+      "visible": true,
+      "params": {
+       "color": "#444433",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Blocky demon part 3",
+        "visible": true,
+        "params": {
+         "path": "meshes/demon/demon-3.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Colour #772211",
+      "visible": true,
+      "params": {
+       "color": "#772211",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "stl_import",
+        "name": "Blocky demon part 4",
+        "visible": true,
+        "params": {
+         "path": "meshes/demon/demon-4.stl",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "scale": 1.0
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Blocky demon 2.2 m",
+  "description": "A blocky horned demon with fangs. Low-poly character by Quaternius (CC0 1.0, public domain), from the animated model used in the KherveOS games, here in its rest pose. 2200 mm tall (2246 x 896 x 2200 mm), standing on z = 0, centred on x/y, facing -Y. Built as one Object of 4 coloured imported meshes (STL files in meshes/demon/ beside this part); scale the Object to resize it. 3292 triangles.",
+  "tags": [
+   "demon",
+   "monster",
+   "fantasy",
+   "character",
+   "quaternius",
+   "low poly",
+   "cc0"
+  ],
+  "source": "assistant",
+  "uid": "a251a18ee53547358683e13d9b056310",
+  "created": "2026-10-14T05:58:48"
+ }
+}
