@@ -100,3 +100,33 @@ def test_group_action_wraps_the_selection(window):
     window._op_groups["combine"].family[0].trigger()        # Group
     assert node.parent.type == "union"
     QSettings("Kherve", "KherveCAD").remove("toolbar/combine")
+
+
+def test_tool_guide_helps_on_hover_and_without_a_selection(app):
+    """macOS menus show no tooltips: the guide card does — while a menu
+    item is hovered, when an operation needs a selection (with an Apply
+    that works once there is one), and after it is applied."""
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    w.resize(1200, 800)
+    g = w.tool_guide
+    tools = [a.menu() for a in w.menuBar().actions()
+             if a.text().replace("&", "") == "Tools"][0]
+    char = [a.menu() for a in tools.actions()
+            if a.text().replace("&", "") == "Character"][0]
+    sym = [a for a in char.actions() if a.data() == "symmetry"][0]
+    char.hovered.emit(sym)
+    assert g.mode == "hover" and "Symmetry" in g.body.text()
+    g.menu_closed()
+    sym.trigger()
+    assert g.mode == "need" and not g.apply_btn.isEnabled()
+    node = w.model.add_node("cube", {})
+    w.model.structure_changed.emit()
+    w.builder.active_tree().select_nodes([node])
+    g._check_selection()
+    assert g.apply_btn.isEnabled()
+    g.apply_btn.click()
+    assert g.mode == "applied" and "Cube" in g.body.text()
+    assert any(n.type == "symmetry" for n in w.model.root.walk())
+    w._dirty = False
+    w.close()

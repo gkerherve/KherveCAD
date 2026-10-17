@@ -175,6 +175,10 @@ class MainWindow(QMainWindow):
         self._build_options_bar()
         self._build_menus()
         self._build_status_bar()
+        # help you can see while using the menus (macOS menus never show
+        # tooltips) and a clear word when an operation needs a selection
+        from . import toolguide
+        toolguide.install(self)
         self._update_title()
         self._refresh_preview()
         # an installed build looks for a new release once a day
@@ -808,12 +812,19 @@ class MainWindow(QMainWindow):
                       "pattern", "intersection_for", "let"):
                 self._add_primitive(op)       # empty, fill it after
                 return
-            self.statusBar().showMessage(
-                language.tr("Select objects in the tree first."), 3000)
+            guide = getattr(self, "tool_guide", None)
+            if guide is not None:
+                guide.need_selection(op)
+            else:
+                self.statusBar().showMessage(
+                    language.tr("Select objects in the tree first."), 3000)
             return
         wrapper = self.model.wrap_nodes(nodes, op)
         if wrapper is not None:
             tree.select_nodes([wrapper])
+            guide = getattr(self, "tool_guide", None)
+            if guide is not None:
+                guide.applied(op, wrapper, nodes)
             if op == "fillet":                # now: which edges?
                 self.start_fillet_pick(wrapper)
             elif op == "sculpt":              # now: where to push?

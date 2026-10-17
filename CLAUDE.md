@@ -3717,6 +3717,20 @@ into a new module and import.
                        City, Human, Car, Lego, Crystal, Compound, Chemistry)
                        and Add a figure (Human figure, Skin), then
                        Engineering documents.
+  - `toolguide.py`   — the **tool guide** (2026-10-17, the user: "when we
+                       click on any of those items it doesn't seem to do
+                       anything ... we have to have help"): macOS menus
+                       never show tooltips, and an operation with nothing
+                       selected only flashed the status bar. A card in the
+                       main window's bottom right shows `tooltips.rich` of
+                       the HOVERED menu item (every menu via `QMenu.hovered`,
+                       Help ▸ Show Help While Hovering Menus), "Nothing
+                       selected" with an Apply button that lights up once
+                       something is selected (`_apply_operation` →
+                       `need_selection`), and "Done" after a wrap (what
+                       was wrapped, its Properties settings, Ctrl+Z).
+                       Its slots never raise: an exception out of a Qt
+                       callback aborts (it once did, in test windows).
   - `pngexport.py`   — **File ▸ Export PNG…** (Ctrl+Alt+E): pictures
                        of the 3D view from the built-in renderer via
                        `View3D.snapshot(..., clean=True)` — the model
