@@ -3713,6 +3713,10 @@ into a new module and import.
                        names set on NODE_TYPES at the bottom of model.py, so
                        bar, menus and tree agree): the MDI rounded box read
                        as film, the cylinder as a stack of discs.
+                       The Tools menu ends with a Builders section (House,
+                       City, Human, Car, Lego, Crystal, Compound, Chemistry)
+                       and Add a figure (Human figure, Skin), then
+                       Engineering documents.
   - `pngexport.py`   — **File ▸ Export PNG…** (Ctrl+Alt+E): pictures
                        of the 3D view from the built-in renderer via
                        `View3D.snapshot(..., clean=True)` — the model

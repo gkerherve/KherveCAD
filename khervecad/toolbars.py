@@ -482,6 +482,34 @@ def build_tools_menu(win, menu):
     by_key = {a.data(): a for a in win._tool_group.actions()}
     for tool, _glyph, _label, _key in MEASURE_TOOLS:
         measure.addAction(by_key[tool])
+    # the builders (2026-10-17, the user: what left the vertical bar
+    # must still be under Tools — the Library menu has them too)
+    menu.addSection(language.tr("Builders"))
+    import importlib
+
+    def _builder(module):
+        def run(_=False):
+            importlib.import_module("khervecad." + module).open_builder(win)
+        return run
+    for glyph, label, module in (
+            ("mdi.home-city-outline", "&House Builder...", "house_dialog"),
+            ("mdi.city-variant-outline", "C&ity Builder...", "city_dialog"),
+            ("mdi.human-handsup", "H&uman Builder...", "human_dialog"),
+            ("mdi.car-sports", "Ca&r Builder...", "car_dialog"),
+            ("mdi.toy-brick-outline", "&Lego Builder...", "lego_builder"),
+            ("mdi.atom", "Cr&ystal Builder...", "crystal_dialog"),
+            ("mdi.molecule", "C&ompound Builder...", "molecule_dialog"),
+            ("mdi.flask-outline", "C&hemistry Builder...", "chem_dialog")):
+        menu.addAction(icons.icon(glyph, icons.family_color("build")),
+                       language.tr(label), _builder(module))
+    figures = menu.addMenu(icons.icon("mdi.human", icons.family_color(
+        "character")), language.tr("Add a &figure"))
+    figures.setToolTipsVisible(True)
+    for prim in ("human", "skin"):
+        spec = NODE_TYPES[prim]
+        figures.addAction(_action(
+            win, spec["icon"], spec["label"], prim,
+            lambda _=False, t=prim: win._add_primitive(t)))
     # the engineering documents of the design (also in the File menu,
     # which owns their shortcuts)
     menu.addSection(language.tr("Engineering documents"))
