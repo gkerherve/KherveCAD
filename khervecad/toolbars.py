@@ -332,9 +332,8 @@ def build_options_bar(win):
     win._vibe_act.toggled.connect(win.set_vibe_model)
     bar.addAction(win._vibe_act)
     win._vibe_keep.add(win._vibe_act)
-    # named on the bar: the only toggle that changes the whole window
-    bar.widgetForAction(win._vibe_act).setToolButtonStyle(
-        Qt.ToolButtonTextBesideIcon)
+    # icon only (2026-10-17, the user: the name made it too long); the
+    # tooltip still names it
     return bar
 
 
