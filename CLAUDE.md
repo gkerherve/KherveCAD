@@ -3673,6 +3673,10 @@ into a new module and import.
   - Toolbar (2026-10-16, the user): Edit vertices sits just before the
                        Repeat & logic (For loop) family; Render and Fit 3D
                        left the bar (F5 still renders, the 3D nav bar fits).
+                       Blueprint, Bill of materials and P&ID sit together on
+                       the bar and in an "Engineering documents" section at
+                       the end of the Tools menu (2026-10-17, the user looked
+                       for them there); the File menu owns their shortcuts.
   - `pngexport.py`   — **File ▸ Export PNG…** (Ctrl+Alt+E): pictures
                        of the 3D view from the built-in renderer via
                        `View3D.snapshot(..., clean=True)` — the model

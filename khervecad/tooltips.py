@@ -815,6 +815,32 @@ TIPS = {
          "Export PDF, DXF, SVG or PNG, or print."],
         "The sheet is saved in the .kcad; Update from model re-projects "
         "the views after you change the part."),
+    "bom": (
+        "Bill of materials",
+        "Lists every part and every labelled piece inside it — item "
+        "number, part number, description, quantity (tube and cable in "
+        "metres), material, finish, size, mass and cost — as an editable "
+        "table.",
+        ["Name your Objects and label their pieces (a // comment in "
+         "the code).",
+         "Click Bill of materials (Ctrl+Alt+B); pick the detail level.",
+         "Double-click a cell to set material, supplier, cost or notes.",
+         "Export to Excel, CSV, HTML or JSON, or place it on the "
+         "Blueprint with numbered balloons."],
+        "Masses are solid estimates; type the real mass of a hollow "
+        "part."),
+    "pid": (
+        "P&ID (process diagram)",
+        "Opens the piping and instrumentation diagram editor: standard "
+        "ISO 10628 / ISA symbols for pumps, compressors, exchangers, "
+        "tanks, valves and instruments, joined by numbered pipe lines "
+        "coloured by what flows in them.",
+        ["Click Process diagram (Ctrl+Alt+I), or Start from 3D model.",
+         "Pick a symbol in the palette and click the sheet to place it.",
+         "Connect (C): click a port, any bends, then the other port.",
+         "Check lists what is unconnected; Export writes PDF, DXF, SVG "
+         "or PNG and the schedules to Excel."],
+        "The diagram is saved in the .kcad with the model."),
     "vibe_model": (
         "Vibe Model",
         "Folds away the object tree, Properties, the 2D sketch, the "

@@ -313,6 +313,11 @@ def build_options_bar(win):
     bar.addAction(_action(win, "mdi.drawing-box", "Blueprint", "blueprint",
                           win.open_blueprint, "Ctrl+Shift+D",
                           bind=False))                     # File menu's
+    bar.addAction(_action(win, "mdi.format-list-numbered",
+                          "Bill of materials", "bom", win.open_bom,
+                          "Ctrl+Alt+B", bind=False))       # File menu's
+    bar.addAction(_action(win, "mdi.pipe", "P&ID (process diagram)", "pid",
+                          win.open_pid, "Ctrl+Alt+I", bind=False))
     win._cut_tool_act = _action(win, "mdi.content-cut", "Cut through",
                                 "cut_through", shortcut="Ctrl+Alt+X",
                                 checkable=True, bind=False)  # View menu's
@@ -479,4 +484,17 @@ def build_tools_menu(win, menu):
     by_key = {a.data(): a for a in win._tool_group.actions()}
     for tool, _glyph, _label, _key in MEASURE_TOOLS:
         measure.addAction(by_key[tool])
+    # the engineering documents of the design (also in the File menu,
+    # which owns their shortcuts)
+    menu.addSection(language.tr("Engineering documents"))
+    for glyph, label, key, slot, keys in (
+            ("mdi.drawing-box", "&Blueprint (2D drawing)...", "blueprint",
+             win.open_blueprint, "Ctrl+Shift+D"),
+            ("mdi.format-list-numbered", "Bill of &Materials...", "bom",
+             win.open_bom, "Ctrl+Alt+B"),
+            ("mdi.pipe", "P&&&ID (Process Diagram)...", "pid",
+             win.open_pid, "Ctrl+Alt+I")):
+        act = _action(win, glyph, label, key, slot, keys, bind=False)
+        act.setText(act.text() + "\t" + keys)
+        menu.addAction(act)
     return menu
