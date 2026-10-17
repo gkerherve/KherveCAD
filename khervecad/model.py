@@ -2024,3 +2024,10 @@ def _contains_3d(node) -> bool:
 from . import organic as _organic  # noqa: E402
 
 _organic.register(NODE_TYPES, CONTAINER_TYPES)
+
+# the 3D solids wear painted, shaded icons (icons_solid) — in the
+# toolbar, the menus and the tree alike
+for _kind in ("cube", "sphere", "cylinder", "capsule", "ellipsoid",
+              "rounded_box", "loft"):
+    if _kind in NODE_TYPES:
+        NODE_TYPES[_kind]["icon"] = "kc." + _kind

@@ -3703,6 +3703,16 @@ into a new module and import.
                        the bar and in an "Engineering documents" section at
                        the end of the Tools menu (2026-10-17, the user looked
                        for them there); the File menu owns their shortcuts.
+                       Same day ("too monotonous and too many"): the vertical
+                       bar shows `BAR_PRIMITIVES` only — Skin and Human are
+                       in Insert ▸ 3D Solids (`PRIMITIVES`), the City Builder
+                       in Library ▸ City. Each family's glyphs have their own
+                       colour (`icons.FAMILY_COLORS`, a light and a dark-theme
+                       shade, `_action(family=)`), and the 3D solids wear
+                       PAINTED shaded icons (`icons_solid.py`, "kc.<kind>"
+                       names set on NODE_TYPES at the bottom of model.py, so
+                       bar, menus and tree agree): the MDI rounded box read
+                       as film, the cylinder as a stack of discs.
   - `pngexport.py`   — **File ▸ Export PNG…** (Ctrl+Alt+E): pictures
                        of the 3D view from the built-in renderer via
                        `View3D.snapshot(..., clean=True)` — the model

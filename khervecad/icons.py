@@ -33,6 +33,36 @@ _CAD_ORANGE = "#e07b39"
 DEFAULT_COLOR = "#444444"
 
 
+#: one colour per toolbar family, so the bars are not a wall of grey:
+#: (light-theme colour, dark-theme colour)
+FAMILY_COLORS = {
+    "draw": ("#00897b", "#4db6ac"),        # 2D drawing tools
+    "measure": ("#8e24aa", "#ce93d8"),
+    "build": ("#ef6c00", "#ffb74d"),       # builders (house)
+    "extrude": ("#1e88e5", "#64b5f6"),
+    "transform": ("#3949ab", "#9fa8da"),
+    "combine": ("#e53935", "#ef9a9a"),
+    "finish": ("#f57c00", "#ffcc80"),
+    "deform": ("#8e24aa", "#ce93d8"),
+    "character": ("#d81b60", "#f48fb1"),
+    "logic": ("#43a047", "#a5d6a7"),
+    "docs": ("#00838f", "#80deea"),        # Blueprint, BOM, P&ID
+    "edit": ("#5e35b1", "#b39ddb"),
+    "brand": (_CAD_ORANGE, _CAD_ORANGE),
+}
+
+
+def family_color(family: str) -> str:
+    """The colour for icons of *family*, light or dark by the theme
+    (judged from the theme's own icon colour)."""
+    pair = FAMILY_COLORS.get(family)
+    if pair is None:
+        return DEFAULT_COLOR
+    c = QColor(DEFAULT_COLOR)
+    dark_theme = c.lightness() > 140        # light glyphs = a dark theme
+    return pair[1] if dark_theme else pair[0]
+
+
 def set_icon_color(color: str):
     """Called by style.apply_style so icons follow the theme."""
     global DEFAULT_COLOR
@@ -42,6 +72,9 @@ def set_icon_color(color: str):
 def icon(name: str, color: str = None) -> QIcon:
     """Return the qtawesome icon *name* (e.g. "mdi.cube-outline"), or a
     null icon if qtawesome is unavailable."""
+    if name.startswith("kc."):           # a painted solid (icons_solid)
+        from . import icons_solid
+        return icons_solid.icon(name[3:]) or QIcon()
     if qta is None:
         return QIcon()
     try:

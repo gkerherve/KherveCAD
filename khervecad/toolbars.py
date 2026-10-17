@@ -53,7 +53,11 @@ MEASURE_TOOLS = [
 
 #: 3D primitives added with one click.
 PRIMITIVES = ["cube", "sphere", "cylinder", "capsule", "ellipsoid",
-              "rounded_box", "loft", "skin"]
+              "rounded_box", "loft", "skin", "human"]
+#: the ones with a button on the vertical bar (2026-10-17, the user: too
+#: many buttons — Skin and Human stay in Insert ▸ 3D Solids)
+BAR_PRIMITIVES = ["cube", "sphere", "cylinder", "capsule", "ellipsoid",
+                  "rounded_box", "loft"]
 
 #: the operation families of the horizontal bar, in order (applied to
 #: the selection — Group and the control-flow tools insert an empty
@@ -144,11 +148,13 @@ class GroupButton(QToolButton):
 
 
 def _action(win, glyph, text, key, slot=None, shortcut="",
-            checkable=False, bind=True):
+            checkable=False, bind=True, family=None):
     """A toolbar action with its rich tooltip. *bind* False shows the
     shortcut in the tip without claiming it — a menu already owns it,
-    and two actions on one key make Qt ignore both."""
-    act = QAction(icons.icon(glyph), language.tr(text), win)
+    and two actions on one key make Qt ignore both. *family* colours
+    the glyph (icons.FAMILY_COLORS)."""
+    color = icons.family_color(family) if family else None
+    act = QAction(icons.icon(glyph, color), language.tr(text), win)
     act.setData(key)
     act.setCheckable(checkable)
     if shortcut and bind:
@@ -167,40 +173,31 @@ def build_tool_bar(win):
     bar.setMovable(False)
     win.addToolBar(Qt.LeftToolBarArea, bar)
     win._tool_group = QActionGroup(win)
-    for tools in (TOOLS, MEASURE_TOOLS):
+    for tools, family in ((TOOLS, "draw"), (MEASURE_TOOLS, "measure")):
         for tool, glyph, label, shortcut in tools:
             act = _action(win, glyph, label, tool,
                           lambda _=False, t=tool: win._set_tool(t),
-                          shortcut, checkable=True)
+                          shortcut, checkable=True,
+                          family=None if tool == SELECT else family)
             win._tool_group.addAction(act)
             bar.addAction(act)
         bar.addSeparator()
     win._tool_group.actions()[0].setChecked(True)
-    for prim in PRIMITIVES:
+    for prim in BAR_PRIMITIVES:
         spec = NODE_TYPES[prim]
         bar.addAction(_action(
             win, spec["icon"], spec["label"], prim,
             lambda _=False, t=prim: win._add_primitive(t)))
     bar.addSeparator()
 
-    human_spec = NODE_TYPES["human"]
-    bar.addAction(_action(
-        win, human_spec["icon"], human_spec["label"], "human",
-        lambda _=False, t="human": win._add_primitive(t)))
-
+    # Human, Skin and the City Builder left the bar (2026-10-17, the
+    # user): Insert ▸ 3D Solids and Library ▸ City still have them
     def _house_builder():
         from . import house_dialog
         house_dialog.open_builder(win)
 
     bar.addAction(_action(win, "mdi.home-city-outline", "House Builder",
-                          "house_builder", _house_builder))
-
-    def _city_builder():
-        from . import city_dialog
-        city_dialog.open_builder(win)
-
-    bar.addAction(_action(win, "mdi.city-variant-outline", "City Builder",
-                          "city_builder", _city_builder))
+                          "house_builder", _house_builder, family="build"))
     return bar
 
 
@@ -248,14 +245,15 @@ def build_options_bar(win):
             family.append(_action(
                 win, spec["icon"], spec["label"], op,
                 lambda _=False, o=op: win._apply_operation(o),
-                _OP_SHORTCUTS.get(op, ""), bind=False))  # Edit menu's
+                _OP_SHORTCUTS.get(op, ""), bind=False,  # Edit menu's
+                family=key))
         if key == "logic":
             # Blender's Edit Mode: Tab over the 3D view
             # (View3D.tab_pressed); sits just before the loops
             win._edit_mesh_act = _action(win, "mdi.vector-polyline-edit",
                                          "Edit vertices", "edit_mesh",
                                          shortcut="Tab", checkable=True,
-                                         bind=False)
+                                         bind=False, family="edit")
             win._edit_mesh_act.toggled.connect(
                 lambda on: win.set_edit_mode(bool(on)))
             bar.addAction(win._edit_mesh_act)
@@ -312,12 +310,13 @@ def build_options_bar(win):
                           win._render_now, "F5"))
     bar.addAction(_action(win, "mdi.drawing-box", "Blueprint", "blueprint",
                           win.open_blueprint, "Ctrl+Shift+D",
-                          bind=False))                     # File menu's
+                          bind=False, family="docs"))      # File menu's
     bar.addAction(_action(win, "mdi.format-list-numbered",
                           "Bill of materials", "bom", win.open_bom,
-                          "Ctrl+Alt+B", bind=False))       # File menu's
+                          "Ctrl+Alt+B", bind=False, family="docs"))
     bar.addAction(_action(win, "mdi.pipe", "P&ID (process diagram)", "pid",
-                          win.open_pid, "Ctrl+Alt+I", bind=False))
+                          win.open_pid, "Ctrl+Alt+I", bind=False,
+                          family="docs"))
     win._cut_tool_act = _action(win, "mdi.content-cut", "Cut through",
                                 "cut_through", shortcut="Ctrl+Alt+X",
                                 checkable=True, bind=False)  # View menu's
@@ -329,7 +328,7 @@ def build_options_bar(win):
     # stays in the AI menu, Ctrl+/; it no longer earns a toolbar button)
     win._vibe_act = _action(win, "mdi.creation", "Vibe Model",
                             "vibe_model", shortcut="Ctrl+Shift+M",
-                            checkable=True)
+                            checkable=True, family="brand")
     win._vibe_act.toggled.connect(win.set_vibe_model)
     bar.addAction(win._vibe_act)
     win._vibe_keep.add(win._vibe_act)

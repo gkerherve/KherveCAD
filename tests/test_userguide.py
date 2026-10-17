@@ -71,7 +71,7 @@ def test_dialog_searches_and_jumps(app):
     from PyQt5.QtCore import QUrl
     from PyQt5.QtGui import QTextDocument
     assert doc.resource(QTextDocument.ImageResource,
-                        QUrl("icon:mdi.cube-outline")) is not None
+                        QUrl("icon:kc.cube")) is not None
     dlg.close()
 
 
