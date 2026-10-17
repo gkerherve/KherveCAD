@@ -441,3 +441,89 @@ def test_blueprint_lists_parts_with_balloons(window):
 def test_drawing_number_never_ends_in_a_double_dash():
     from khervecad.blueprint_scene import default_fields
     assert "--" not in default_fields("Air source heat pump 7 kW")["number"]
+
+
+# ── drawing set and per-Object BOMs ────────────────────────────────
+
+def test_each_object_has_its_own_bom_with_the_same_numbers(model):
+    whole = bom.build(model)
+    pump_no = _line(whole, "Pump unit").get("part_no")
+    comp = next(c for c in model.all_components()
+                if c.name in ("Pump unit", "Pump_unit"))
+    sub = bom.part_bom(model, comp)
+    assert {ln.name for ln in sub.lines} == {"Copper tube",
+                                             "Aluminium fin", "Base plate"}
+    for ln in sub.lines:
+        assert ln.level == 0
+        assert ln.get("part_no").startswith(pump_no + "-")
+    names = [n for n, _c in bom.parts_of(model)]
+    assert names == ["Pump_unit", "Tank_unit"] or \
+        names == ["Pump unit", "Tank unit"]
+
+
+def test_every_parts_bom_exports(model, tmp_path):
+    files = bom.export_per_part(model, tmp_path / "parts.xlsx")
+    with zipfile.ZipFile(files[0]) as z:
+        book = z.read("xl/workbook.xml").decode()
+    assert book.count("<sheet ") == 3                 # summary + 2 parts
+    files = bom.export_per_part(model, tmp_path / "csv")
+    assert len(files) == 3 and all(Path(f).exists() for f in files)
+
+
+def test_drawing_set_part_sheets(window, tmp_path):
+    from khervecad import blueprint, drawing_set
+    window._refresh_preview()
+    board = blueprint.open_blueprint(window)
+    names = [n for n, _c in drawing_set.parts(window.model)]
+    assert len(names) == 2
+    made = drawing_set.make_all(board)
+    assert sorted(made) == sorted(names)
+    assert board.current is None                       # back on assembly
+    drawing_set.show(board, names[0])
+    fields = board.scene.fields
+    assert fields["number"].count("-") >= 1 and fields["sheet_no"] == "2 / 3"
+    lists = [n for n in board.scene.notes() if n.KIND == "bom"]
+    assert lists and len(lists[0].data["rows"]) == 3   # its 3 components
+    assert lists[0].data["rows"][0][1].startswith(fields["number"])
+    # views clear the parts list
+    box = lists[0].sceneBoundingRect()
+    for v in board.scene.views.values():
+        if v.data.get("name") != "Isometric":
+            assert not v.mapRectToScene(v.content_rect()).intersects(box)
+    pdf = tmp_path / "set.pdf"
+    drawing_set.export_set(board, pdf)
+    assert pdf.read_bytes().count(b"/Type /Page\n") + \
+        pdf.read_bytes().count(b"/Type /Page\r") + \
+        pdf.read_bytes().count(b"/Type /Page ") >= 3 or \
+        pdf.read_bytes().count(b"/Page") >= 3
+    files = drawing_set.export_set(board, tmp_path / "folder")
+    assert len(files) == 12                            # 3 sheets x 4 kinds
+    # saved with the document, and a rename keeps a drawing
+    path = tmp_path / "doc.kcad"
+    document.save_kcad(window.model, str(path))
+    again = DocumentModel()
+    document.load_kcad(again, str(path))
+    assert set(again.part_drawings) == set(names)
+    comp = drawing_set.component(window.model, names[0])
+    window.model.rename(comp, "Renamed part")
+    assert "Renamed part" in window.model.part_drawings
+    board.close()
+
+
+def test_drawing_set_and_part_bom_mcp(window, tmp_path):
+    ex = McpToolExecutor(window)
+    window._refresh_preview()
+    listed = call(ex, "drawing_set")
+    assert listed["total"] == 3
+    made = call(ex, "drawing_set", action="make")
+    assert len(made["made"]) == 2
+    png = call(ex, "drawing_set", action="render",
+               name=listed["sheets"][1]["name"])
+    assert valid_png_b64(png[IMAGE_KEY])
+    out = tmp_path / "set.pdf"
+    assert call(ex, "drawing_set", action="export", path=str(out))["written"]
+    objs = call(ex, "bill_of_materials", action="parts")["objects"]
+    one = call(ex, "bill_of_materials", object=objs[0])
+    assert len(one["rows"]) == 3
+    assert call(ex, "bill_of_materials", action="export_parts",
+                path=str(tmp_path / "p.xlsx"))["written"]

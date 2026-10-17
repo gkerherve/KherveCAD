@@ -1566,6 +1566,13 @@ class McpToolExecutor:
         except (bom_mcp.BomError, ValueError, KeyError) as exc:
             raise ToolError(str(exc))
 
+    def _t_drawing_set(self, params) -> dict:
+        from . import drawing_set
+        try:
+            return drawing_set.run_tool(self._w, params)
+        except (ValueError, KeyError, OSError) as exc:
+            raise ToolError(str(exc))
+
     def _t_pid(self, params) -> dict:
         from . import pid_mcp
         try:

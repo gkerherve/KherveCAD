@@ -368,7 +368,13 @@ label word or colour). So label pieces with what they ARE and are made \
 of ('// Copper tube', '// Brass valve body'); set what the label cannot \
 say (material, supplier, cost, part_no, mass for hollow parts) with \
 action set; export .xlsx / .csv; action place puts the parts list and \
-numbered balloons on the Blueprint.
+numbered balloons on the Blueprint. Each Object also has its OWN BOM \
+(object = its name; export_parts writes all of them, a sheet each).
+- drawing_set: engineering drawings come one per part — make gives every \
+Object its own Blueprint sheet (views, dimensions, its own parts list and \
+balloons, part number, material, mass, sheet n / N) besides the assembly \
+sheet; export path .pdf = the whole set as one multi-page PDF; render a \
+sheet to check it.
 - pid builds the P&ID (process and instrumentation diagram; File > \
 P&ID): action symbols lists ~55 ISO 10628 / ISA symbols with their \
 ports; add symbols at sheet mm (A3 is 420 x 297, keep clear of the title \

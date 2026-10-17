@@ -106,6 +106,13 @@ class BomWindow(QMainWindow):
             pass
         self.detail.currentIndexChanged.connect(self._detail_changed)
         bar.addWidget(self.detail)
+        bar.addWidget(QLabel(" BOM of "))
+        self.scope = QComboBox()
+        self.scope.setMinimumWidth(220)
+        self.scope.setToolTip("The whole design, or one Object's own bill "
+                              "of materials (same item and part numbers)")
+        self.scope.currentIndexChanged.connect(lambda _i: self.refresh())
+        bar.addWidget(self.scope)
         bar.addSeparator()
         self.search = QLineEdit()
         self.search.setPlaceholderText("Filter (name, material, supplier…)")
@@ -121,6 +128,8 @@ class BomWindow(QMainWindow):
                 ("mdi.unfold-less-horizontal", "Collapse to parts",
                  lambda: self.tree.expandToDepth(0)),
                 ("mdi.file-export-outline", "Export…", self.export),
+                ("mdi.file-table-box-multiple-outline",
+                 "Export every part's BOM…", self.export_all),
                 ("mdi.drawing-box", "Place on Blueprint",
                  self.place_on_blueprint)):
             act = bar.addAction(icons.icon(glyph), text, slot)
@@ -186,10 +195,46 @@ class BomWindow(QMainWindow):
             self.refresh()
 
     def build(self):
+        name = self.scope.currentData() if self.scope.count() else None
+        comp = None
+        if name:
+            from .drawing_set import component
+            comp = component(self.model, name)
+        if comp is not None:
+            return bom.part_bom(self.model, comp, self.detail_key())
         return bom.build(self.model, self.detail_key())
+
+    def _fill_scope(self):
+        keep = self.scope.currentData()
+        self.scope.blockSignals(True)
+        self.scope.clear()
+        self.scope.addItem("Whole design", None)
+        for name, _c in bom.parts_of(self.model):
+            self.scope.addItem(name, name)
+        self.scope.setCurrentIndex(max(0, self.scope.findData(keep)))
+        self.scope.blockSignals(False)
+
+    def export_all(self):
+        start = str(Path.home() / "Documents" / "Parts BOM.xlsx")
+        path, chosen = QFileDialog.getSaveFileName(
+            self, "Export every part's BOM", start,
+            "One Excel workbook, a sheet per part (*.xlsx);;"
+            "A folder of CSV files, one per part (*)")
+        if not path:
+            return
+        if "folder" in chosen.lower() and path.lower().endswith(".xlsx"):
+            path = path[:-5]
+        try:
+            files = bom.export_per_part(self.model, path, self.detail_key())
+        except (OSError, ValueError) as exc:
+            QMessageBox.warning(self, "Bill of materials", str(exc))
+            return
+        self.statusBar().showMessage(f"Written {len(files)} file(s): "
+                                     f"{path}", 8000)
 
     def refresh(self):
         open_items = self._expanded_items()
+        self._fill_scope()
         self._bom = self.build()
         keys = [k for k, _h in bom.COLUMNS]
         self._filling = True

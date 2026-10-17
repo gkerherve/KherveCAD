@@ -44,7 +44,29 @@ def run(window, params):
     detail = params.get("detail") or "components"
     if detail not in ("components", "parts", "assemblies"):
         raise BomError("detail is components, parts or assemblies")
-    b = bom.build(model, detail)
+    scope = params.get("object")
+    if scope:
+        from .drawing_set import component
+        comp = component(model, scope)
+        if comp is None:
+            raise BomError(f"no Object named {scope!r}; Objects with a "
+                           f"BOM: {[n for n, _c in bom.parts_of(model)]}")
+        b = bom.part_bom(model, comp, detail)
+    else:
+        b = bom.build(model, detail)
+    if action == "parts":
+        return {"objects": [n for n, _c in bom.parts_of(model)]}
+    if action == "export_parts":
+        path = params.get("path")
+        if not path:
+            raise BomError("export_parts needs a path (.xlsx = one "
+                           "workbook, a sheet per Object; else a folder "
+                           "of CSV files)")
+        try:
+            files = bom.export_per_part(model, path, detail)
+        except (OSError, ValueError) as exc:
+            raise BomError(str(exc))
+        return {"written": files}
     if action == "get":
         rows = b.rows(params.get("max_level"))
         keep = params.get("columns")

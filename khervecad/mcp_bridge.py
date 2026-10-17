@@ -87,6 +87,7 @@ _FILE_TOOLS = frozenset({
     "build_creature", "list_planetcraft_creatures", "remove_from_planetcraft",
     "install_scad_library", "build_protein", "render_photo",
     "build_crystal", "chemistry", "bill_of_materials", "pid",
+    "drawing_set",
 })
 
 

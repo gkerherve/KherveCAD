@@ -48,7 +48,7 @@ from PyQt5.QtWidgets import (QAction, QActionGroup, QApplication, QCheckBox,
                              QToolBar, QToolButton, QUndoCommand,
                              QUndoStack, QVBoxLayout, QWidget)
 
-from . import analysis, blueprint_export, drawing, icons
+from . import analysis, blueprint_export, drawing, drawing_set, icons
 from . import blueprint_items as bi
 from .blueprint_tools import make_tools
 from .blueprint_scene import (  # noqa: F401 — re-exported
@@ -508,6 +508,8 @@ class BlueprintWindow(QMainWindow):
         self._saving = False
         self._restoring = False
         self._stale = False
+        #: the drawing on show: None = the assembly, else an Object's name
+        self.current = None
         self.tools = make_tools(self)
         self.tool = self.tools["select"]
         self._build_ui()
@@ -657,6 +659,7 @@ class BlueprintWindow(QMainWindow):
                  "dashed lines. Turn off for threaded or very detailed "
                  "parts."), checkable=True)
         top.addAction(self.hidden_act)
+        drawing_set.install_ui(self, top)
         top.addSeparator()
         view_menu = menu.addMenu("&View")
         for glyph, label, slot, key in (
@@ -761,9 +764,13 @@ class BlueprintWindow(QMainWindow):
                 wait_until_idle(engine, 60.0)
             finally:
                 QApplication.restoreOverrideCursor()
+        if self.current is not None:          # one part, its own frame
+            return drawing_set.part_tris(self.model, self.current)
         return list(self.main.view3d.model_mesh or ())   # never the cut
 
     def _doc_title(self):
+        if self.current is not None:
+            return self.current
         builder = getattr(self.main, "builder", None)
         part = builder.isolated_component() if builder is not None else None
         if part is not None:
@@ -778,7 +785,7 @@ class BlueprintWindow(QMainWindow):
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
             self.scene.geometry = Geometry(self._model_tris())
-            state = self.model.drawing
+            state = drawing_set.stored(self)
             if state and state.get("views"):
                 self.scene.load_state(state)
             else:
@@ -795,6 +802,9 @@ class BlueprintWindow(QMainWindow):
                         "something, then Update from model.")
 
     def _fresh(self):
+        if self.current is not None:
+            drawing_set.fresh_part(self)
+            return
         self.scene.load_state({"sheet": DEFAULT_SHEET,
                                "fields": default_fields(self._doc_title())})
         if self.scene.geometry.tris:
@@ -806,7 +816,7 @@ class BlueprintWindow(QMainWindow):
             except Exception:                      # noqa: BLE001
                 lines = []
             if len(lines) >= 2:            # an assembly: list + balloons
-                self.add_bom(balloons=True)
+                drawing_set.lay_out_with_list(self)
 
     def _new_sheet(self):
         if QMessageBox.question(
@@ -842,13 +852,17 @@ class BlueprintWindow(QMainWindow):
         """Another document was opened (or New): show its sheet."""
         if self._saving or not self.isVisible():
             return
-        if self.model.drawing != self._state:
+        if self.current is not None and drawing_set.component(
+                self.model, self.current) is None:
+            self.current = None             # a new document: its assembly
+        if drawing_set.stored(self) != self._state:
             self.load()
+        drawing_set.refill(self)
 
     def _save(self):
         self._saving = True
         try:
-            self.model.drawing = copy.deepcopy(self._state)
+            drawing_set.store(self, copy.deepcopy(self._state))
             self.model.drawing_changed.emit()
         finally:
             self._saving = False
@@ -1071,7 +1085,11 @@ class BlueprintWindow(QMainWindow):
             n.KIND == "balloon" and n.data.get("auto"))]
         self.scene.remove(existing)
         try:
-            b, lines = bom.sheet_lines(self.model, detail)
+            if self.current is not None:      # the part's own list
+                b, lines = None, drawing_set.part_lines(self.model,
+                                                         self.current)
+            else:
+                b, lines = bom.sheet_lines(self.model, detail)
         except Exception:                          # noqa: BLE001
             b, lines = None, []
         if len(lines) < 2:
@@ -1207,7 +1225,8 @@ class BlueprintWindow(QMainWindow):
                 not any(box.intersects(b) for b in blocked)
         tips = []
         for ln in lines:
-            box = bom.world_box(self.model, ln)
+            box = bom.world_box(self.model, ln, stop=drawing_set.component(
+                self.model, self.current) if self.current else None)
             if box is None:
                 continue
             mid = [(a + b) / 2.0 for a, b in zip(*box)]
@@ -1224,8 +1243,12 @@ class BlueprintWindow(QMainWindow):
             if spots is not None:
                 break
         else:
+            # crowded: let them sit on other things, never off the sheet
             spots = _ring_spots(rect, [t for _l, _m, t in tips], 11.0,
-                                lambda p: True)
+                                lambda p: sheet.contains(QPointF(*p)))
+            if spots is None:
+                spots = _ring_spots(rect, [t for _l, _m, t in tips], 11.0,
+                                    lambda p: True)
         for (ln, (u, v), tip), spot in zip(tips, spots):
             self.scene.add_note({
                 "type": "balloon", "tip": [u, v],

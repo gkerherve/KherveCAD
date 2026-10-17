@@ -1134,6 +1134,9 @@ class DocumentModel(QObject):
         #: out of the model's undo like the drawing (its window has its
         #: own undo)
         self.pid = None
+        #: the drawing set's part sheets {Object name: sheet state}
+        #: (drawing_set.py) — saved, out of the undo like the drawing
+        self.part_drawings = {}
         #: the House Builder design (house.house_to_spec + "objects", the
         #: names of the Objects it built) or None — saved in the .kcad
         #: and IN the undo snapshots, so the builder reopens on the
@@ -1498,6 +1501,8 @@ class DocumentModel(QObject):
     def rename(self, node: CadNode, name: str):
         old = node.name
         node.name = name
+        if node.type == "component" and old in self.part_drawings:
+            self.part_drawings[name] = self.part_drawings.pop(old)
         # keep Linked copies and mates pointing at a renamed target
         if old and old != name:
             for other in self.root.walk():
@@ -1819,6 +1824,7 @@ class DocumentModel(QObject):
         self.reference_images = []
         self.drawing = None
         self.pid = None
+        self.part_drawings = {}
         self.house = None
         self.city = None
         self.collections = []

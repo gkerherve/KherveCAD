@@ -3638,6 +3638,32 @@ into a new module and import.
                        `_rect_gap`); the isometric may shrink (×0.85) to
                        leave room. Mass = the BOM's total, material "As
                        parts list".
+  - `drawing_set.py` — the **drawing set** (2026-10-17, the user: "each
+                       object's got its own drawing ... and an individual
+                       BOM"): `DocumentModel.part_drawings` {Object name:
+                       sheet state} (FORMAT_VERSION 15, kept on rename)
+                       beside the assembly sheet (`drawing`). The
+                       Blueprint window's `current` (None = assembly)
+                       picks which; hooks in blueprint.py call `stored` /
+                       `store` / `part_tris` (the Object alone, its local
+                       frame) / `fresh_part` (title block from its BOM
+                       line: part no., material, mass, sheet n / N; its
+                       OWN parts list = its line's children in the WHOLE
+                       BOM, so numbers continue ASHP-01-09-03; balloons in
+                       its frame, `world_box(stop=)`). `lay_out_with_list`
+                       places the list first, then `arrange` with
+                       `scene.keep_clear` (views above or left of it,
+                       whichever scale is bigger), dimensions, balloons.
+                       Drawing picker (● made / ○ not yet), Make all part
+                       drawings, Export drawing set (one multi-page PDF or
+                       a folder of PDF/DXF/SVG/PNG per sheet). MCP
+                       `drawing_set` (list / make / show / export /
+                       render). Per-Object BOM: `bom.part_bom` (cut from
+                       the whole BOM), `parts_of`, `export_per_part` (XLSX
+                       Summary + a sheet per Object, or CSV folder); BOM
+                       window "BOM of" picker and Export every part's BOM;
+                       MCP bill_of_materials `object`, `parts`,
+                       `export_parts`.
   - `pid_symbols.py` / `pid.py` / `pid_render.py` / `pid_window.py` /
     `pid_mcp.py` — **P&ID** (same day). ~55 ISO 10628 / ISA-5.1 symbols
                        as primitives about their centre with PORTS (x, y,
@@ -4602,7 +4628,7 @@ into a new module and import.
                        what each SHIPPED .kcad compiles to and pins the
                        files to the generator (`python -m
                        khervecad.tools.print_tests --check`).
-  - `mcp_schema.py`  — the **MCP tool table**: 96 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 97 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -5153,7 +5179,7 @@ where each node dict has `"type"`, `"name"`, `"visible"`, `"params"`
 and nested `"children"`. When a node gains new persisted properties,
 bump `FORMAT_VERSION` in `document.py` and keep loading backward
 compatible. Version 9 adds the top-level `"unit"` (units.py); a file
-without it, or with a unit it does not know, opens as millimetres. Version 12 adds `"real_scale"` — the N of 1 : N the scale bar measures (absent = 1, life size). Version 13 adds `"collections"` (part_collections.py; absent = none). Version 14 adds `"pid"` (pid.py) and `params["bom"]` on nodes (bom.py).
+without it, or with a unit it does not know, opens as millimetres. Version 12 adds `"real_scale"` — the N of 1 : N the scale bar measures (absent = 1, life size). Version 13 adds `"collections"` (part_collections.py; absent = none). Version 14 adds `"pid"` (pid.py) and `params["bom"]` on nodes (bom.py). Version 15 adds `"part_drawings"` (drawing_set.py).
 
 ## UI conventions
 
@@ -5233,7 +5259,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **96 tools**: the object tree, OpenSCAD in
+client gets the whole app as **97 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

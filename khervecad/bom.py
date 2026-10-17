@@ -857,8 +857,9 @@ def _describe(node, label, length=0.0, size=None, ln=None):
     return f"{label} ({kind})"
 
 
-def world_box(model, line, fn=None):
-    """(lo, hi) of *line*'s first node in world millimetres, or None."""
+def world_box(model, line, fn=None, stop=None):
+    """(lo, hi) of *line*'s first node in world millimetres (in the
+    frame of the Object *stop* when given), or None."""
     from . import mesh
     from .bake import _codegen_env
     node = line.nodes[0] if line.nodes else None
@@ -875,7 +876,7 @@ def world_box(model, line, fn=None):
         node.visible = saved
     if not tris:
         return None
-    m = mesh.ancestor_matrix(node, anchors_env(model))
+    m = mesh.ancestor_matrix(node, anchors_env(model), stop=stop)
     pts = [p for t in tris for p in t]
     lo = [min(p[i] for p in pts) for i in range(3)]
     hi = [max(p[i] for p in pts) for i in range(3)]
@@ -1015,6 +1016,71 @@ def to_xlsx(bom, path, columns=None):
     mats = [["Material", "Mass (kg)"]] + [
         [m, kg] for m, kg in bom.summary_by_material().items()]
     return xlsx.write(path, {"BOM": rows, "By material": mats})
+
+
+def part_bom(model, comp, detail="components"):
+    """The BOM of ONE Object, cut from the whole design's BOM so its
+    item and part numbers are the same everywhere: its lines re-rooted
+    at level 0 under a title of the Object's name and part number."""
+    whole = build(model, detail)
+    for ln in whole.flat():
+        if ln.kind in ("part", "assembly") and comp in ln.nodes:
+            lines = list(ln.children) or [ln]
+            for c in lines:
+                _relevel(c, 0)
+            sub = Bom(f"{ln.name} ({ln.get('part_no')})", lines,
+                      warnings=whole.warnings)
+            return sub
+    sub = build(model, detail, scope=comp)
+    return sub
+
+
+def parts_of(model):
+    """[(name, Object)] with a BOM of their own: every part and
+    sub-assembly in BOM order, each definition once."""
+    from .drawing_set import parts
+    return parts(model)
+
+
+def export_per_part(model, path, detail="components"):
+    """Every Object's own BOM. *path* .xlsx: one workbook, a Summary
+    sheet (the whole design) then a sheet per Object; anything else: a
+    folder of CSV files, one per Object plus the summary."""
+    from . import xlsx
+    path = Path(path)
+    items = [(name, part_bom(model, comp, detail))
+             for name, comp in parts_of(model)]
+    whole = build(model, "parts")
+    if path.suffix.lower() == ".xlsx":
+        sheets = [("Summary", _table(whole))]
+        for name, b in items:
+            sheets.append((name, _table(b)))
+        xlsx.write(path, sheets)
+        return [str(path)]
+    path.mkdir(parents=True, exist_ok=True)
+    out = [str(path / "00 Summary.csv")]
+    to_csv(whole, out[0])
+    for i, (name, b) in enumerate(items, 1):
+        safe = re.sub(r"[\\/:*?\"<>|]+", "-", name)
+        f = path / f"{i:02d} {safe}.csv"
+        to_csv(b, f)
+        out.append(str(f))
+    return out
+
+
+def _table(bom_, columns=None):
+    keys, heads = _headers(columns)
+    rows = [["Level"] + heads]
+    for row in bom_.rows():
+        rows.append([row["level"]] + [
+            ("    " * row["level"] + str(row[k])) if k == "name" else row[k]
+            for k in keys])
+    t = bom_.totals()
+    total = [""] * (len(keys) + 1)
+    total[1] = "TOTAL"
+    total[keys.index("mass_total") + 1] = t["mass_kg"]
+    total[keys.index("cost_total") + 1] = t["cost"]
+    return rows + [[], total]
 
 
 EXPORTERS = {".csv": to_csv, ".json": to_json, ".html": to_html,

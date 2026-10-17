@@ -558,10 +558,27 @@ class BlueprintScene(QGraphicsScene):
         rows = [h for h in (top_h, mid_h, bot_h) if h > 0]
         gaps_w = GAP * (len(widths) - 1)
         gaps_h = GAP * (len(rows) - 1)
+        def fit(a):
+            return drawing.nice_scale(
+                sum(widths), sum(rows), max(a.width() - gaps_w, 10.0),
+                max(a.height() - gaps_h, 10.0))
+        clear = getattr(self, "keep_clear", None)
+        if clear is not None:
+            # a parts list sits bottom-right: the views go above it or to
+            # its left, whichever lets them be drawn bigger
+            # a margin for the labels the views' dimensions put outside
+            room = area.adjusted(LABEL_ROOM, 0.0, 0.0, 0.0)
+            above = QRectF(room.left(), room.top(), room.width(),
+                           max(clear.top() - 6.0 - room.top(), 10.0))
+            left_of = QRectF(room.left(), room.top(),
+                             max(clear.left() - 6.0 - room.left(), 10.0),
+                             room.height())
+            # equal scales: beside the list, where the sheet is tallest
+            area = max((left_of, above), key=fit) if scale is None else \
+                (above if above.height() >= sum(rows) * scale + gaps_h
+                 else left_of)
         if scale is None:
-            scale = drawing.nice_scale(
-                sum(widths), sum(rows), max(area.width() - gaps_w, 10.0),
-                max(area.height() - gaps_h, 10.0))
+            scale = fit(area)
         self.scale = float(scale)
         for view in self.views.values():
             view.set_scale(self.scale * float(view.data.get("factor", 1.0)))
@@ -740,6 +757,8 @@ class BlueprintScene(QGraphicsScene):
                  for r in _text_boxes(n)]
         taken += [v.mapRectToScene(v.content_rect()) for v in
                   self.views.values() if v is not view]
+        m = bi.FrameItem.MARGIN + 1.0
+        sheet = QRectF(m, m, self.W - 2 * m, self.H - 2 * m)
         first = data["angle"]
         tries = sorted(_LEADER_ANGLES, key=lambda a: abs(
             ((a - first) + 180.0) % 360.0 - 180.0))
@@ -751,7 +770,9 @@ class BlueprintScene(QGraphicsScene):
                 if item is None:
                     return False
                 boxes = _text_boxes(item)
-                if not any(b.intersects(t) for b in boxes for t in taken):
+                inside = all(sheet.contains(b) for b in boxes)
+                if inside and not any(b.intersects(t) for b in boxes
+                                      for t in taken):
                     return True
                 self.remove([item])
         return False
@@ -763,6 +784,10 @@ def _text_boxes(note):
     return [note.mapRectToScene(bi.placed_text(p).boundingRect().adjusted(
         -1.0, -1.0, 1.0, 1.0)) for p in note.prims if p[0] == "text"]
 
+
+#: mm kept round views that make room for a parts list: their Ø / R
+#: labels sit outside them
+LABEL_ROOM = 12.0
 
 #: past this many triangles a fresh sheet leaves hidden edges out
 BUSY_TRIS = 40000

@@ -1557,12 +1557,18 @@ TOOLS = [
             "description, material, finish, supplier, cost, mass, unit, "
             "notes, exclude — saved on the nodes, one undo step), export "
             "(path .csv .xlsx .html .json), place (parts list + numbered "
-            "balloons on the Blueprint). LABEL every piece you build so "
-            "the BOM can list it."
+            "balloons on the Blueprint), parts (the Objects that have a "
+            "BOM of their own), export_parts (every Object's own BOM: "
+            ".xlsx = a sheet each after a Summary, else a folder of CSV). "
+            "object = one Object's own BOM for get / export (same item "
+            "and part numbers as the whole). LABEL every piece you build "
+            "so the BOM can list it."
         ),
         "input_schema": _obj({
             "action": {"type": "string",
-                       "enum": ["get", "set", "export", "place"]},
+                       "enum": ["get", "set", "export", "place", "parts",
+                                "export_parts"]},
+            "object": {"type": "string"},
             "detail": {"type": "string",
                        "enum": ["components", "parts", "assemblies"]},
             "max_level": {"type": "integer", "minimum": 0},
@@ -1572,6 +1578,29 @@ TOOLS = [
             "fields": {"type": "object"},
             "path": {"type": "string"},
             "balloons": {"type": "boolean"},
+        }),
+    },
+    {
+        "name": "drawing_set",
+        "description": (
+            "The DRAWING SET: the Blueprint's assembly sheet plus one "
+            "part drawing per Object (its own views and dimensions, its "
+            "own parts list with balloons, title block with its part "
+            "number, material, mass and sheet n / N), saved in the "
+            ".kcad. action: list (default; every sheet and whether it is "
+            "made), make (names, or all missing), show (name; '' = the "
+            "assembly) — opens the Blueprint on it, export (path: .pdf = "
+            "ONE multi-page PDF of the whole set, else a folder with a "
+            "PDF, DXF, SVG and PNG per sheet), render (name: a PNG of "
+            "that sheet to look at)."
+        ),
+        "input_schema": _obj({
+            "action": {"type": "string",
+                       "enum": ["list", "make", "show", "export",
+                                "render"]},
+            "names": {"type": "array", "items": {"type": "string"}},
+            "name": {"type": "string"},
+            "path": {"type": "string"},
         }),
     },
     {
