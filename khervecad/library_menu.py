@@ -302,6 +302,13 @@ def _home_menu(window, menu, parts, categories):
                    commercial, parts)
         home.addSeparator()
     listed = set(finished) | set(labs) | set(commercial)
+    detailed = [pid for pid, spec in parts.items()     # just above the rooms
+                if spec.get("category") == "Detailed parts"]
+    if detailed:
+        _add_parts(window, home.addMenu(icons.icon("mdi.magnify-plus-outline"),
+                                        language.tr("Detailed parts")),
+                   detailed, parts)
+        listed.update(detailed)
     for room, ids in FURNITURE_CATALOG.items():
         ids = [pid for pid in ids if pid in parts]
         if not ids:

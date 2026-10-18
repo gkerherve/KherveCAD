@@ -44,7 +44,7 @@ SECTIONS = [
                    "Finished commercial", "Houses", "Porches",
                    "Home furniture", "Room & furniture", "Tables",
                    "Bookshelves", "Doors", "Appliances",
-                   "Ceiling lights"])),
+                   "Ceiling lights", "Detailed parts"])),
         ("City", "mdi.city-variant-outline",
          ("city", ["Buildings", "Landmarks", "Skyscrapers", "Bridges",
                    "Park & sport", "Lighting & signals"])),

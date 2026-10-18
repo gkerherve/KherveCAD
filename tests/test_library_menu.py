@@ -187,5 +187,8 @@ def test_no_part_falls_into_an_other_menu(window):
     for kind in ("Tables", "Bookshelves", "Doors", "Appliances",
                  "Ceiling lights"):
         assert _texts(_menu(home, kind)), kind
+    rooms = _texts(home)
+    assert rooms.index("Detailed parts") == rooms.index("Living room") - 1
+    assert _texts(_menu(home, "Detailed parts"))
     assert _texts(_menu(_menu(library, "Nature & garden"), "Garden"))
     assert "Maze" in _texts(_menu(library, "Games"))

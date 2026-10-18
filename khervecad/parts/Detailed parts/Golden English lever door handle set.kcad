@@ -1,0 +1,3360 @@
+{
+ "format": "kcad",
+ "version": 16,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "variables",
+    "name": "Variables",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "assign",
+      "name": "$fn =",
+      "visible": true,
+      "params": {
+       "variable": "$fn",
+       "value": 64.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "door =",
+      "visible": true,
+      "params": {
+       "variable": "door",
+       "value": 44.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "lever_path =",
+      "visible": true,
+      "params": {
+       "variable": "lever_path",
+       "value": "[[0, -6, 0, 9.5], [0, -20, 0, 8], [0, -32, 0, 8.2], [0.6, -41, 0, 8.6], [2.4, -47, 0, 8.8], [5.3, -52, 0, 8.6], [9, -55.6, 0, 8.3], [14, -57.6, -0.4, 7.8], [22, -58.6, -1, 7.1], [40, -59, -2, 6.6], [60, -59.4, -3, 6.6], [80, -59.8, -4.4, 7], [98, -60.2, -6, 7.2], [111, -60.4, -8, 6.8], [119, -60.4, -12, 6.2], [122, -60.4, -18, 5.4], [119, -60.4, -23, 4.7], [113, -60.4, -23.5, 4.2], [110, -60.4, -20, 3.8]]",
+       "description": "Lever centre line: x, y, z, radius (ends in a scroll curl)"
+      }
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Front handle set",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "51b7fd7cb73f494ea1fa087b60723ba1",
+      "title": "Front handle set",
+      "area": "General",
+      "named": "Front handle set"
+     }
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Front lever",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#e0b245",
+         "alpha": 1.0,
+         "material": "Gold"
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For i",
+              "visible": true,
+              "params": {
+               "variable": "i",
+               "start": 0.0,
+               "end": "len(lever_path) - 2",
+               "step": 1.0,
+               "values": ""
+              },
+              "children": [
+               {
+                "type": "hull",
+                "name": "Hull",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": "lever_path[i][0]",
+                   "y": "lever_path[i][1]",
+                   "z": "lever_path[i][2]"
+                  },
+                  "children": [
+                   {
+                    "type": "scale",
+                    "name": "Scale",
+                    "visible": true,
+                    "params": {
+                     "x": 1.0,
+                     "y": 1.0,
+                     "z": 0.85
+                    },
+                    "children": [
+                     {
+                      "type": "sphere",
+                      "name": "Sphere",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "radius": "lever_path[i][3]",
+                       "segments": 64
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": "lever_path[i + 1][0]",
+                   "y": "lever_path[i + 1][1]",
+                   "z": "lever_path[i + 1][2]"
+                  },
+                  "children": [
+                   {
+                    "type": "scale",
+                    "name": "Scale",
+                    "visible": true,
+                    "params": {
+                     "x": 1.0,
+                     "y": 1.0,
+                     "z": 0.85
+                    },
+                    "children": [
+                     {
+                      "type": "sphere",
+                      "name": "Sphere",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": 0.0,
+                       "z": 0.0,
+                       "radius": "lever_path[i + 1][3]",
+                       "segments": 64
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Turned collar]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 7.0,
+                 "height": 5.0,
+                 "radius_bottom": 14.0,
+                 "radius_top": 11.0,
+                 "segments": 64,
+                 "center": false
+                }
+               }
+              ]
+             },
+             {
+              "type": "for_loop",
+              "name": "For d",
+              "visible": true,
+              "params": {
+               "variable": "d",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "13.5, 20"
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 90.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "translate",
+                  "name": "Translate",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": "d"
+                  },
+                  "children": [
+                   {
+                    "type": "rotate_extrude",
+                    "name": "Rotate extrude",
+                    "visible": true,
+                    "params": {
+                     "angle": 360.0,
+                     "segments": 64
+                    },
+                    "children": [
+                     {
+                      "type": "circle",
+                      "name": "Circle [Neck beads]",
+                      "visible": true,
+                      "params": {
+                       "x": 8.6,
+                       "y": 0.0,
+                       "radius": 1.4,
+                       "angle": 360.0,
+                       "start_angle": 0.0,
+                       "segments": 24
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Spindle hole]",
+            "visible": true,
+            "params": {
+             "x": -4.1,
+             "y": -50.0,
+             "z": -4.1,
+             "width": 8.2,
+             "depth": 44.0,
+             "height": 8.2,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Grub screw hole]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -30.0,
+             "z": -14.0,
+             "height": 10.0,
+             "radius_bottom": 1.7,
+             "radius_top": 1.7,
+             "segments": 64,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "Front backplate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#e0b245",
+         "alpha": 1.0,
+         "material": "Gold"
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 90.0,
+             "y": 0.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "union",
+              "name": "Group",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 2.5,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Plate_outline [Plate base]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "assign",
+                    "name": "inset =",
+                    "visible": true,
+                    "params": {
+                     "variable": "inset",
+                     "value": "0"
+                    }
+                   },
+                   {
+                    "type": "offset",
+                    "name": "Offset",
+                    "visible": true,
+                    "params": {
+                     "radius": "-inset",
+                     "chamfer": false
+                    },
+                    "children": [
+                     {
+                      "type": "translate",
+                      "name": "Translate",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": -45.0,
+                       "z": 0.0
+                      },
+                      "children": [
+                       {
+                        "type": "union",
+                        "name": "Group",
+                        "visible": true,
+                        "params": {
+                         "x": 0.0,
+                         "y": 0.0,
+                         "z": 0.0,
+                         "rx": 0.0,
+                         "ry": 0.0,
+                         "rz": 0.0,
+                         "color": "",
+                         "alpha": 1.0
+                        },
+                        "children": [
+                         {
+                          "type": "rect",
+                          "name": "Rectangle",
+                          "visible": true,
+                          "params": {
+                           "x": -22.5,
+                           "y": -80.0,
+                           "width": 45.0,
+                           "height": 160.0
+                          }
+                         },
+                         {
+                          "type": "for_loop",
+                          "name": "For s",
+                          "visible": true,
+                          "params": {
+                           "variable": "s",
+                           "start": 0.0,
+                           "end": 4.0,
+                           "step": 1.0,
+                           "values": "-1, 1"
+                          },
+                          "children": [
+                           {
+                            "type": "circle",
+                            "name": "Circle",
+                            "visible": true,
+                            "params": {
+                             "x": 0.0,
+                             "y": "s * 80",
+                             "radius": 22.5,
+                             "angle": 360.0,
+                             "start_angle": 0.0,
+                             "segments": 64
+                            }
+                           }
+                          ]
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 5.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Plate_outline [Raised step]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "assign",
+                    "name": "inset =",
+                    "visible": true,
+                    "params": {
+                     "variable": "inset",
+                     "value": "2"
+                    }
+                   },
+                   {
+                    "type": "offset",
+                    "name": "Offset",
+                    "visible": true,
+                    "params": {
+                     "radius": "-inset",
+                     "chamfer": false
+                    },
+                    "children": [
+                     {
+                      "type": "translate",
+                      "name": "Translate",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": -45.0,
+                       "z": 0.0
+                      },
+                      "children": [
+                       {
+                        "type": "union",
+                        "name": "Group",
+                        "visible": true,
+                        "params": {
+                         "x": 0.0,
+                         "y": 0.0,
+                         "z": 0.0,
+                         "rx": 0.0,
+                         "ry": 0.0,
+                         "rz": 0.0,
+                         "color": "",
+                         "alpha": 1.0
+                        },
+                        "children": [
+                         {
+                          "type": "rect",
+                          "name": "Rectangle",
+                          "visible": true,
+                          "params": {
+                           "x": -22.5,
+                           "y": -80.0,
+                           "width": 45.0,
+                           "height": 160.0
+                          }
+                         },
+                         {
+                          "type": "for_loop",
+                          "name": "For s",
+                          "visible": true,
+                          "params": {
+                           "variable": "s",
+                           "start": 0.0,
+                           "end": 4.0,
+                           "step": 1.0,
+                           "values": "-1, 1"
+                          },
+                          "children": [
+                           {
+                            "type": "circle",
+                            "name": "Circle",
+                            "visible": true,
+                            "params": {
+                             "x": 0.0,
+                             "y": "s * 80",
+                             "radius": 22.5,
+                             "angle": 360.0,
+                             "start_angle": 0.0,
+                             "segments": 64
+                            }
+                           }
+                          ]
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "linear_extrude",
+                "name": "Linear extrude",
+                "visible": true,
+                "params": {
+                 "height": 7.0,
+                 "twist": 0.0,
+                 "scale": 1.0,
+                 "center": false,
+                 "segments": 0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Plate_outline [Centre panel]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "assign",
+                    "name": "inset =",
+                    "visible": true,
+                    "params": {
+                     "variable": "inset",
+                     "value": "4.5"
+                    }
+                   },
+                   {
+                    "type": "offset",
+                    "name": "Offset",
+                    "visible": true,
+                    "params": {
+                     "radius": "-inset",
+                     "chamfer": false
+                    },
+                    "children": [
+                     {
+                      "type": "translate",
+                      "name": "Translate",
+                      "visible": true,
+                      "params": {
+                       "x": 0.0,
+                       "y": -45.0,
+                       "z": 0.0
+                      },
+                      "children": [
+                       {
+                        "type": "union",
+                        "name": "Group",
+                        "visible": true,
+                        "params": {
+                         "x": 0.0,
+                         "y": 0.0,
+                         "z": 0.0,
+                         "rx": 0.0,
+                         "ry": 0.0,
+                         "rz": 0.0,
+                         "color": "",
+                         "alpha": 1.0
+                        },
+                        "children": [
+                         {
+                          "type": "rect",
+                          "name": "Rectangle",
+                          "visible": true,
+                          "params": {
+                           "x": -22.5,
+                           "y": -80.0,
+                           "width": 45.0,
+                           "height": 160.0
+                          }
+                         },
+                         {
+                          "type": "for_loop",
+                          "name": "For s",
+                          "visible": true,
+                          "params": {
+                           "variable": "s",
+                           "start": 0.0,
+                           "end": 4.0,
+                           "step": 1.0,
+                           "values": "-1, 1"
+                          },
+                          "children": [
+                           {
+                            "type": "circle",
+                            "name": "Circle",
+                            "visible": true,
+                            "params": {
+                             "x": 0.0,
+                             "y": "s * 80",
+                             "radius": 22.5,
+                             "angle": 360.0,
+                             "start_angle": 0.0,
+                             "segments": 64
+                            }
+                           }
+                          ]
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.1,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Cassette recess]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 5.0,
+                 "radius_bottom": 21.5,
+                 "radius_top": 21.5,
+                 "segments": 64,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 1.0,
+             "z": 0.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Spindle bore]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 10.0,
+                 "radius_bottom": 10.0,
+                 "radius_top": 10.0,
+                 "segments": 64,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 1.0,
+             "z": -72.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Keyhole round]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 10.0,
+                 "radius_bottom": 4.5,
+                 "radius_top": 4.5,
+                 "segments": 64,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Keyhole slot]",
+            "visible": true,
+            "params": {
+             "x": -2.0,
+             "y": -9.0,
+             "z": -86.0,
+             "width": 4.0,
+             "depth": 10.0,
+             "height": 14.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "Front spring cassette",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#99999e",
+         "alpha": 1.0,
+         "material": "Metal"
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Cassette housing]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 4.5,
+                 "radius_bottom": 21.0,
+                 "radius_top": 21.0,
+                 "segments": 64,
+                 "center": false
+                }
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Rotor boss]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 6.5,
+                 "radius_bottom": 9.8,
+                 "radius_top": 9.8,
+                 "segments": 64,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Square drive]",
+            "visible": true,
+            "params": {
+             "x": -4.1,
+             "y": -10.0,
+             "z": -4.1,
+             "width": 8.2,
+             "depth": 12.0,
+             "height": 8.2,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "Front grub screw",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#26262b",
+         "alpha": 1.0,
+         "material": "Metal"
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Grub body]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -30.0,
+             "z": -8.5,
+             "height": 5.0,
+             "radius_bottom": 1.7,
+             "radius_top": 1.7,
+             "segments": 24,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Hex socket]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -30.0,
+             "z": -8.6,
+             "height": 2.0,
+             "radius_bottom": 1.0,
+             "radius_top": 1.0,
+             "segments": 6,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "Fixing_screw_M4",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 40.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c7c7cc",
+         "alpha": 1.0,
+         "material": "Metal"
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "union",
+            "name": "Group",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": 0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0
+            },
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": -7.1,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": -90.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Countersunk head]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 2.2,
+                   "radius_bottom": 3.6,
+                   "radius_top": 1.9,
+                   "segments": 32,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": -5.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": -90.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Shank]",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": 30.0,
+                   "radius_bottom": 1.9,
+                   "radius_top": 1.9,
+                   "segments": 24,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Cross recess]",
+            "visible": true,
+            "params": {
+             "x": -2.6,
+             "y": -7.5,
+             "z": -0.4,
+             "width": 5.2,
+             "depth": 1.2,
+             "height": 0.8,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Cross recess]",
+            "visible": true,
+            "params": {
+             "x": -0.4,
+             "y": -7.5,
+             "z": -2.6,
+             "width": 0.8,
+             "depth": 1.2,
+             "height": 5.2,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "reference",
+      "name": "Fixing_screw_M4 instance",
+      "visible": true,
+      "params": {
+       "ref": "Fixing_screw_M4",
+       "x": 0.0,
+       "y": 0.0,
+       "z": -125.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0
+      }
+     }
+    ]
+   },
+   {
+    "type": "translate",
+    "name": "Translate",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": "door",
+     "z": 0.0
+    },
+    "children": [
+     {
+      "type": "mirror",
+      "name": "Mirror [Back handle set]",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 1.0,
+       "z": 0.0
+      },
+      "children": [
+       {
+        "type": "reference",
+        "name": "Front handle set instance",
+        "visible": true,
+        "params": {
+         "ref": "Front handle set",
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 0.0,
+         "ry": 0.0,
+         "rz": 0.0,
+         "color": "",
+         "alpha": 1.0
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Square spindle",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "e5469284ecd345bf9c684c9f0343b26c",
+      "title": "Square spindle",
+      "area": "General",
+      "named": "Square spindle"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8c8c91",
+       "alpha": 1.0,
+       "material": "Metal"
+      },
+      "children": [
+       {
+        "type": "cube",
+        "name": "Cube [Spindle bar]",
+        "visible": true,
+        "params": {
+         "x": -4.0,
+         "y": -50.0,
+         "z": -4.0,
+         "width": 8.0,
+         "depth": "door + 100",
+         "height": 8.0,
+         "center": false
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "drawing": {
+  "version": 1,
+  "sheet": "A3",
+  "style": "paper",
+  "scale": 0.5,
+  "hidden_lines": false,
+  "merge_parts": true,
+  "fields": {
+   "title": "Door handle golden",
+   "number": "DOOR-HANDLE-GOLD-001",
+   "material": "As parts list",
+   "finish": "",
+   "mass": "1.34 kg",
+   "company": "",
+   "drawn": "gkerherv",
+   "date": "2026-10-18",
+   "checked": "",
+   "approved": "",
+   "revision": "A",
+   "tolerance": "ISO 2768-m",
+   "sheet_no": "1 / 1"
+  },
+  "views": [
+   {
+    "kind": "projected",
+    "name": "Front",
+    "id": "v1",
+    "show_label": false,
+    "x": 52.047,
+    "y": 238.354
+   },
+   {
+    "kind": "projected",
+    "name": "Top",
+    "id": "v2",
+    "show_label": false,
+    "x": 52.047,
+    "y": 111.854
+   },
+   {
+    "kind": "projected",
+    "name": "Right",
+    "id": "v3",
+    "show_label": false,
+    "x": 150.997,
+    "y": 238.354
+   },
+   {
+    "kind": "projected",
+    "name": "Isometric",
+    "id": "v4",
+    "show_label": true,
+    "x": 264.397,
+    "y": 111.854
+   }
+  ],
+  "notes": [
+   {
+    "rows": [
+     [
+      "1",
+      "A-01",
+      "Front handle set, 150 \u00d7 92 \u00d7 205 mm; 5 kinds of component, 6 pieces",
+      "Brass",
+      "1",
+      "1.27"
+     ],
+     [
+      "2",
+      "A-03",
+      "Square spindle, 8 \u00d7 144 \u00d7 8 mm; 1 kinds of component, 1 pieces",
+      "Steel",
+      "1",
+      "0.0723"
+     ]
+    ],
+    "style": "full",
+    "x": 237.0,
+    "y": 227.0,
+    "type": "bom"
+   },
+   {
+    "kind": "horizontal",
+    "offset": 48.0,
+    "text": "",
+    "prefix": "",
+    "suffix": "",
+    "tol_plus": "",
+    "tol_minus": "",
+    "decimals": 2,
+    "count": 1,
+    "angle": 45.0,
+    "a": [
+     -22.5,
+     -125.0
+    ],
+    "b": [
+     127.4,
+     -18.0
+    ],
+    "auto": true,
+    "type": "dim",
+    "view": "v1"
+   },
+   {
+    "kind": "vertical",
+    "offset": 73.7,
+    "text": "",
+    "prefix": "",
+    "suffix": "",
+    "tol_plus": "",
+    "tol_minus": "",
+    "decimals": 2,
+    "count": 1,
+    "angle": 45.0,
+    "a": [
+     0.0,
+     -147.5
+    ],
+    "b": [
+     0.0,
+     57.5
+    ],
+    "auto": true,
+    "type": "dim",
+    "view": "v1"
+   },
+   {
+    "kind": "radius",
+    "offset": 8.229360441538747,
+    "text": "",
+    "prefix": "",
+    "suffix": "",
+    "tol_plus": "",
+    "tol_minus": "",
+    "decimals": 2,
+    "count": 1,
+    "angle": 150.0,
+    "centre": [
+     -0.13439640552242338,
+     1.8308666826290116e-16
+    ],
+    "r": 21.366853628642687,
+    "auto": true,
+    "type": "dim",
+    "view": "v1"
+   },
+   {
+    "kind": "radius",
+    "offset": 21.499448931034028,
+    "text": "",
+    "prefix": "",
+    "suffix": "",
+    "tol_plus": "",
+    "tol_minus": "",
+    "decimals": 2,
+    "count": 1,
+    "angle": 120.0,
+    "centre": [
+     -0.0007524877305593591,
+     0.00026202696878145984
+    ],
+    "r": 13.999597162470844,
+    "auto": true,
+    "type": "dim",
+    "view": "v1"
+   },
+   {
+    "kind": "radius",
+    "offset": 13.490386757925105,
+    "text": "",
+    "prefix": "",
+    "suffix": "",
+    "tol_plus": "",
+    "tol_minus": "",
+    "decimals": 2,
+    "count": 2,
+    "angle": 210.0,
+    "centre": [
+     1.637897440343039e-06,
+     -2.801618771613329e-16
+    ],
+    "r": 10.99999048896401,
+    "auto": true,
+    "type": "dim",
+    "view": "v1"
+   },
+   {
+    "kind": "diameter",
+    "offset": 14.342278947199802,
+    "text": "",
+    "prefix": "",
+    "suffix": "",
+    "tol_plus": "",
+    "tol_minus": "",
+    "decimals": 2,
+    "count": 2,
+    "angle": 120.0,
+    "centre": [
+     3.746387995804986e-17,
+     40.0
+    ],
+    "r": 3.5227015272372992,
+    "auto": true,
+    "type": "dim",
+    "view": "v1"
+   },
+   {
+    "centre": [
+     7.04544608166311e-17,
+     -125.0
+    ],
+    "r": 3.52270396588331,
+    "auto": true,
+    "type": "centre_mark",
+    "view": "v1"
+   },
+   {
+    "centre": [
+     3.746387995804986e-17,
+     40.0
+    ],
+    "r": 3.5227015272372992,
+    "auto": true,
+    "type": "centre_mark",
+    "view": "v1"
+   },
+   {
+    "kind": "vertical",
+    "offset": -70.25,
+    "text": "",
+    "prefix": "",
+    "suffix": "",
+    "tol_plus": "",
+    "tol_minus": "",
+    "decimals": 2,
+    "count": 1,
+    "angle": 45.0,
+    "a": [
+     98.0,
+     -67.4
+    ],
+    "b": [
+     98.0,
+     111.4
+    ],
+    "auto": true,
+    "type": "dim",
+    "view": "v2"
+   },
+   {
+    "kind": "radius",
+    "offset": 35.987801665931784,
+    "text": "",
+    "prefix": "",
+    "suffix": "",
+    "tol_plus": "",
+    "tol_minus": "",
+    "decimals": 2,
+    "count": 2,
+    "angle": 60.0,
+    "centre": [
+     47.81931661324574,
+     3.609261357489234e-17
+    ],
+    "r": 6.419677624943406,
+    "auto": true,
+    "type": "dim",
+    "view": "v3"
+   },
+   {
+    "kind": "radius",
+    "offset": 7.594465314908781,
+    "text": "",
+    "prefix": "",
+    "suffix": "",
+    "tol_plus": "",
+    "tol_minus": "",
+    "decimals": 2,
+    "count": 1,
+    "angle": 30.0,
+    "centre": [
+     104.39932449990671,
+     -22.175526465975754
+    ],
+    "r": 4.894753139158583,
+    "auto": true,
+    "type": "dim",
+    "view": "v3"
+   },
+   {
+    "kind": "radius",
+    "offset": 7.6197347015269,
+    "text": "",
+    "prefix": "",
+    "suffix": "",
+    "tol_plus": "",
+    "tol_minus": "",
+    "decimals": 2,
+    "count": 1,
+    "angle": 150.0,
+    "centre": [
+     -60.40150864099207,
+     -22.229609081843503
+    ],
+    "r": 4.8416923370352025,
+    "auto": true,
+    "type": "dim",
+    "view": "v3"
+   }
+  ]
+ },
+ "part_drawings": {
+  "Preparation chamber": {
+   "version": 1,
+   "sheet": "A3",
+   "style": "paper",
+   "scale": 1.0,
+   "hidden_lines": true,
+   "merge_parts": true,
+   "fields": {
+    "title": "Preparation chamber",
+    "number": "PREPARATION-CHAM-001",
+    "material": "PLA",
+    "finish": "",
+    "mass": "",
+    "company": "",
+    "drawn": "gkerherv",
+    "date": "2026-10-18",
+    "checked": "",
+    "approved": "",
+    "revision": "A",
+    "tolerance": "ISO 2768-m",
+    "sheet_no": "1 / 1"
+   },
+   "views": [],
+   "notes": []
+  },
+  "Front handle set": {
+   "version": 1,
+   "sheet": "A3",
+   "style": "paper",
+   "scale": 0.5,
+   "hidden_lines": true,
+   "merge_parts": true,
+   "fields": {
+    "title": "Front handle set",
+    "number": "A-01",
+    "material": "Brass",
+    "finish": "",
+    "mass": "1.27 kg",
+    "company": "",
+    "drawn": "gkerherv",
+    "date": "2026-10-18",
+    "checked": "",
+    "approved": "",
+    "revision": "A",
+    "tolerance": "ISO 2768-m",
+    "sheet_no": "2 / 8"
+   },
+   "views": [
+    {
+     "kind": "projected",
+     "name": "Front",
+     "id": "v1",
+     "show_label": false,
+     "x": 80.0,
+     "y": 232.931
+    },
+    {
+     "kind": "projected",
+     "name": "Top",
+     "id": "v2",
+     "show_label": false,
+     "x": 80.0,
+     "y": 106.431
+    },
+    {
+     "kind": "projected",
+     "name": "Right",
+     "id": "v3",
+     "show_label": false,
+     "x": 182.0,
+     "y": 232.931
+    },
+    {
+     "kind": "projected",
+     "name": "Isometric",
+     "id": "v4",
+     "show_label": true,
+     "x": 271.931,
+     "y": 106.431
+    }
+   ],
+   "notes": [
+    {
+     "rows": [
+      [
+       "1",
+       "A-01-01",
+       "Front lever, 141 \u00d7 71 \u00d7 41 mm; 4 kinds of component, 5 pieces",
+       "Brass",
+       "1",
+       "0.052"
+      ],
+      [
+       "2",
+       "A-01-02",
+       "Front backplate, 45 \u00d7 7 \u00d7 205 mm; 7 kinds of component, 7 pieces",
+       "Brass",
+       "1",
+       "1.14"
+      ],
+      [
+       "3",
+       "A-01-03",
+       "Front spring cassette, 42 \u00d7 6.5 \u00d7 42 mm; 3 kinds of component, 3 pieces",
+       "Steel",
+       "1",
+       "0.0699"
+      ],
+      [
+       "4",
+       "A-01-04",
+       "Front grub screw, 3.4 \u00d7 3.4 \u00d7 5 mm; 2 kinds of component, 2 pieces",
+       "Steel",
+       "1",
+       "0.000393"
+      ],
+      [
+       "5",
+       "A-01-05",
+       "Fixing_screw_M4, 7.2 \u00d7 32 \u00d7 7.2 mm; 4 kinds of component, 4 pieces",
+       "Steel",
+       "2",
+       "0.00314"
+      ]
+     ],
+     "style": "full",
+     "x": 237.0,
+     "y": 209.0,
+     "type": "bom"
+    },
+    {
+     "kind": "horizontal",
+     "offset": 47.9437,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      -22.5,
+      -125.0
+     ],
+     "b": [
+      127.3935,
+      -18.2252
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "vertical",
+     "offset": 73.69674499999999,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      0.0,
+      -147.5
+     ],
+     "b": [
+      0.0,
+      57.5
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "diameter",
+     "offset": 8.479898692454038,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 150.0,
+     "centre": [
+      -0.11428730953457844,
+      1.6758940497694947e-16
+     ],
+     "r": 20.888997110775588,
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "centre": [
+      -0.11428730953457844,
+      1.6758940497694947e-16
+     ],
+     "r": 20.888997110775588,
+     "auto": true,
+     "type": "centre_mark",
+     "view": "v1"
+    },
+    {
+     "kind": "radius",
+     "offset": 21.49943018821638,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 120.0,
+     "centre": [
+      -0.0007930249729186101,
+      0.0004643999911044805
+     ],
+     "r": 13.999553573621416,
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "radius",
+     "offset": 14.385406411327763,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 2,
+     "angle": 210.0,
+     "centre": [
+      -1.6708144490039175e-17,
+      2.4056352498803912
+     ],
+     "r": 9.209949290877635,
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "radius",
+     "offset": 36.02191492319326,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 60.0,
+     "centre": [
+      -1.4872372421369855,
+      -0.3678850159918836
+     ],
+     "r": 6.776248136447931,
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "radius",
+     "offset": 27.23419717086072,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 240.0,
+     "centre": [
+      1.8202991960536492,
+      1.286409044694784e-16
+     ],
+     "r": 6.172204050385813,
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "vertical",
+     "offset": -45.275,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      98.0,
+      -67.3913
+     ],
+     "b": [
+      -1.9,
+      25.0
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v2"
+    },
+    {
+     "kind": "radius",
+     "offset": 14.246720492035479,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 150.0,
+     "centre": [
+      -3.3910465894349488e-18,
+      -5.99864310390322
+     ],
+     "r": 9.4873211294622,
+     "auto": true,
+     "type": "dim",
+     "view": "v2"
+    },
+    {
+     "kind": "radius",
+     "offset": 6.0,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 330.0,
+     "centre": [
+      121.96496634966856,
+      -60.39999486856175
+     ],
+     "r": 7.460659278614275,
+     "auto": true,
+     "type": "dim",
+     "view": "v2"
+    },
+    {
+     "kind": "radius",
+     "offset": 13.91826319541607,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 30.0,
+     "centre": [
+      107.47051543207554,
+      -60.399992797740595
+     ],
+     "r": 7.168543068866331,
+     "auto": true,
+     "type": "dim",
+     "view": "v2"
+    },
+    {
+     "kind": "radius",
+     "offset": 6.944845769872293,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 240.0,
+     "centre": [
+      121.71556233769893,
+      -60.40000105193844
+     ],
+     "r": 6.183199760568543,
+     "auto": true,
+     "type": "dim",
+     "view": "v2"
+    },
+    {
+     "kind": "radius",
+     "offset": 8.15815564450709,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 120.0,
+     "centre": [
+      -60.39999485860648,
+      -6.315597352382117
+     ],
+     "r": 9.666358993772851,
+     "auto": true,
+     "type": "dim",
+     "view": "v3"
+    },
+    {
+     "kind": "radius",
+     "offset": 7.382132097031038,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 150.0,
+     "centre": [
+      -60.400001027385684,
+      -24.765782288337252
+     ],
+     "r": 5.30862713460213,
+     "auto": true,
+     "type": "dim",
+     "view": "v3"
+    }
+   ]
+  },
+  "Front lever": {
+   "version": 1,
+   "sheet": "A3",
+   "style": "paper",
+   "scale": 1.0,
+   "hidden_lines": true,
+   "merge_parts": true,
+   "fields": {
+    "title": "Front lever",
+    "number": "A-01-01",
+    "material": "Brass",
+    "finish": "",
+    "mass": "52 g",
+    "company": "",
+    "drawn": "gkerherv",
+    "date": "2026-10-18",
+    "checked": "",
+    "approved": "",
+    "revision": "A",
+    "tolerance": "ISO 2768-m",
+    "sheet_no": "3 / 8"
+   },
+   "views": [
+    {
+     "kind": "projected",
+     "name": "Front",
+     "id": "v1",
+     "show_label": false,
+     "x": 34.582,
+     "y": 212.121
+    },
+    {
+     "kind": "projected",
+     "name": "Top",
+     "id": "v2",
+     "show_label": false,
+     "x": 34.582,
+     "y": 147.055
+    },
+    {
+     "kind": "projected",
+     "name": "Right",
+     "id": "v3",
+     "show_label": false,
+     "x": 199.975,
+     "y": 212.121
+    },
+    {
+     "kind": "projected",
+     "name": "Isometric",
+     "id": "v4",
+     "show_label": true,
+     "x": 294.855,
+     "y": 147.055
+    }
+   ],
+   "notes": [
+    {
+     "kind": "horizontal",
+     "offset": 27.95310053100586,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      -14.0,
+      0.0
+     ],
+     "b": [
+      127.3935,
+      -18.2252
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "vertical",
+     "offset": 80.79044365234375,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      113.2061,
+      -27.0657
+     ],
+     "b": [
+      0.0,
+      14.0
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "radius",
+     "offset": 8.165360394175938,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 150.0,
+     "centre": [
+      -0.0007592098008135095,
+      0.0004404591338726116
+     ],
+     "r": 13.99957048316784,
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "diameter",
+     "offset": 11.165817632314152,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 120.0,
+     "centre": [
+      -1.6882761279361495e-16,
+      2.275502607218289e-16
+     ],
+     "r": 10.999989904995367,
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "centre": [
+      -1.6882761279361495e-16,
+      2.275502607218289e-16
+     ],
+     "r": 10.999989904995367,
+     "auto": true,
+     "type": "centre_mark",
+     "view": "v1"
+    },
+    {
+     "kind": "radius",
+     "offset": 10.178130214133661,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 2,
+     "angle": 60.0,
+     "centre": [
+      -9.299522640360059e-17,
+      2.4056053100866697
+     ],
+     "r": 9.209923576490796,
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "radius",
+     "offset": 31.080541610623083,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 2,
+     "angle": 300.0,
+     "centre": [
+      -1.8202517972203562,
+      -1.2864120810573529e-16
+     ],
+     "r": 6.17223736414098,
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "vertical",
+     "offset": -73.0,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      98.0,
+      -67.3913
+     ],
+     "b": [
+      0.0,
+      3.4886
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v2"
+    },
+    {
+     "kind": "radius",
+     "offset": 6.0,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 330.0,
+     "centre": [
+      121.96506309466251,
+      -60.4
+     ],
+     "r": 7.46074694726815,
+     "auto": true,
+     "type": "dim",
+     "view": "v2"
+    },
+    {
+     "kind": "radius",
+     "offset": 6.9042796494002125,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 300.0,
+     "centre": [
+      107.47044398370682,
+      -60.400003421774805
+     ],
+     "r": 7.168605339851526,
+     "auto": true,
+     "type": "dim",
+     "view": "v2"
+    },
+    {
+     "kind": "radius",
+     "offset": 6.37310815333641,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 30.0,
+     "centre": [
+      121.71556372514534,
+      -60.4
+     ],
+     "r": 6.18320059047927,
+     "auto": true,
+     "type": "dim",
+     "view": "v2"
+    },
+    {
+     "kind": "radius",
+     "offset": 20.46583063981694,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 150.0,
+     "centre": [
+      0.00012009221740116871,
+      -30.0
+     ],
+     "r": 1.7001155680406692,
+     "auto": true,
+     "type": "dim",
+     "view": "v2"
+    },
+    {
+     "kind": "radius",
+     "offset": 31.722256358797015,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 3,
+     "angle": 60.0,
+     "centre": [
+      -8.59999172398227,
+      -20.0
+     ],
+     "r": 1.399992895364529,
+     "auto": true,
+     "type": "dim",
+     "view": "v2"
+    },
+    {
+     "kind": "radius",
+     "offset": 10.31651654792404,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 120.0,
+     "centre": [
+      -60.4,
+      -6.315835416054384
+     ],
+     "r": 9.666137260669718,
+     "auto": true,
+     "type": "dim",
+     "view": "v3"
+    },
+    {
+     "kind": "radius",
+     "offset": 6.0,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 210.0,
+     "centre": [
+      -60.4,
+      -24.7657777290459
+     ],
+     "r": 5.308624949581515,
+     "auto": true,
+     "type": "dim",
+     "view": "v3"
+    },
+    {
+     "kind": "diameter",
+     "offset": 10.8353804555613,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 2,
+     "angle": 60.0,
+     "centre": [
+      -20.0,
+      8.60000827601773
+     ],
+     "r": 1.399992895364529,
+     "auto": true,
+     "type": "dim",
+     "view": "v3"
+    },
+    {
+     "centre": [
+      -20.0,
+      -8.59999172398227
+     ],
+     "r": 1.399992895364529,
+     "auto": true,
+     "type": "centre_mark",
+     "view": "v3"
+    },
+    {
+     "centre": [
+      -20.0,
+      8.60000827601773
+     ],
+     "r": 1.399992895364529,
+     "auto": true,
+     "type": "centre_mark",
+     "view": "v3"
+    },
+    {
+     "kind": "radius",
+     "offset": 24.216707241475422,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 330.0,
+     "centre": [
+      -13.5,
+      -8.599980605330668
+     ],
+     "r": 1.399988513220994,
+     "auto": true,
+     "type": "dim",
+     "view": "v3"
+    },
+    {
+     "kind": "radius",
+     "offset": 24.24623635260746,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 330.0,
+     "centre": [
+      -13.513525128038218,
+      8.594724474493587
+     ],
+     "r": 1.3860768747163343,
+     "auto": true,
+     "type": "dim",
+     "view": "v3"
+    },
+    {
+     "kind": "radius",
+     "offset": 10.918545685889484,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 2,
+     "angle": 120.0,
+     "centre": [
+      -13.44057600768459,
+      8.580344204019
+     ],
+     "r": 1.3395337795600086,
+     "auto": true,
+     "type": "dim",
+     "view": "v3"
+    }
+   ]
+  },
+  "Front backplate": {
+   "version": 1,
+   "sheet": "A3",
+   "style": "paper",
+   "scale": 0.5,
+   "hidden_lines": true,
+   "merge_parts": true,
+   "fields": {
+    "title": "Front backplate",
+    "number": "A-01-02",
+    "material": "Brass",
+    "finish": "",
+    "mass": "1.14 kg",
+    "company": "",
+    "drawn": "gkerherv",
+    "date": "2026-10-18",
+    "checked": "",
+    "approved": "",
+    "revision": "A",
+    "tolerance": "ISO 2768-m",
+    "sheet_no": "4 / 8"
+   },
+   "views": [
+    {
+     "kind": "projected",
+     "name": "Front",
+     "id": "v1",
+     "show_label": false,
+     "x": 164.515,
+     "y": 232.931
+    },
+    {
+     "kind": "projected",
+     "name": "Top",
+     "id": "v2",
+     "show_label": false,
+     "x": 164.515,
+     "y": 106.431
+    },
+    {
+     "kind": "projected",
+     "name": "Right",
+     "id": "v3",
+     "show_label": false,
+     "x": 211.015,
+     "y": 232.931
+    },
+    {
+     "kind": "projected",
+     "name": "Isometric",
+     "id": "v4",
+     "show_label": true,
+     "x": 238.515,
+     "y": 106.431
+    }
+   ],
+   "notes": [
+    {
+     "kind": "horizontal",
+     "offset": 21.25,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      -22.5,
+      -125.0
+     ],
+     "b": [
+      22.5,
+      -125.0
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "vertical",
+     "offset": 21.25,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      0.0,
+      -147.5
+     ],
+     "b": [
+      0.0,
+      57.5
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "radius",
+     "offset": 17.751769147293317,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 120.0,
+     "centre": [
+      -0.003241684278279422,
+      -0.010329990895186825
+     ],
+     "r": 21.489978336856822,
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "diameter",
+     "offset": 23.5000012249064,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 60.0,
+     "centre": [
+      2.250978285322454e-16,
+      2.432603922246976e-16
+     ],
+     "r": 9.999997550187198,
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "centre": [
+      2.250978285322454e-16,
+      2.432603922246976e-16
+     ],
+     "r": 9.999997550187198,
+     "auto": true,
+     "type": "centre_mark",
+     "view": "v1"
+    },
+    {
+     "kind": "vertical",
+     "offset": -11.125,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      -18.0,
+      -7.0
+     ],
+     "b": [
+      -22.5,
+      0.0
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v2"
+    }
+   ]
+  },
+  "Front spring cassette": {
+   "version": 1,
+   "sheet": "A3",
+   "style": "paper",
+   "scale": 2.0,
+   "hidden_lines": true,
+   "merge_parts": true,
+   "fields": {
+    "title": "Front spring cassette",
+    "number": "A-01-03",
+    "material": "Steel",
+    "finish": "",
+    "mass": "69.9 g",
+    "company": "",
+    "drawn": "gkerherv",
+    "date": "2026-10-18",
+    "checked": "",
+    "approved": "",
+    "revision": "A",
+    "tolerance": "ISO 2768-m",
+    "sheet_no": "5 / 8"
+   },
+   "views": [
+    {
+     "kind": "projected",
+     "name": "Front",
+     "id": "v1",
+     "show_label": false,
+     "x": 104.62,
+     "y": 220.663
+    },
+    {
+     "kind": "projected",
+     "name": "Top",
+     "id": "v2",
+     "show_label": false,
+     "x": 104.62,
+     "y": 112.663
+    },
+    {
+     "kind": "projected",
+     "name": "Right",
+     "id": "v3",
+     "show_label": false,
+     "x": 212.62,
+     "y": 220.663
+    },
+    {
+     "kind": "projected",
+     "name": "Isometric",
+     "id": "v4",
+     "show_label": true,
+     "x": 249.62,
+     "y": 112.663
+    }
+   ],
+   "notes": [
+    {
+     "kind": "horizontal",
+     "offset": 52.0,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      -21.0,
+      0.0
+     ],
+     "b": [
+      21.0,
+      0.0
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "vertical",
+     "offset": 52.0,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      -0.0,
+      -21.0
+     ],
+     "b": [
+      0.0,
+      21.0
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "diameter",
+     "offset": 12.497419600678676,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 30.0,
+     "centre": [
+      1.9334493438730939e-16,
+      -4.0280194664022785e-17
+     ],
+     "r": 21.000001505624944,
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "centre": [
+      1.9334493438730939e-16,
+      -4.0280194664022785e-17
+     ],
+     "r": 21.000001505624944,
+     "auto": true,
+     "type": "centre_mark",
+     "view": "v1"
+    },
+    {
+     "kind": "diameter",
+     "offset": 34.897434904024266,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 60.0,
+     "centre": [
+      -4.681808506409265e-17,
+      3.893198323578135e-16
+     ],
+     "r": 9.799993853952154,
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "centre": [
+      -4.681808506409265e-17,
+      3.893198323578135e-16
+     ],
+     "r": 9.799993853952154,
+     "auto": true,
+     "type": "centre_mark",
+     "view": "v1"
+    },
+    {
+     "kind": "vertical",
+     "offset": -21.2,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      -9.8,
+      -6.5
+     ],
+     "b": [
+      -21.0,
+      0.0
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v2"
+    }
+   ]
+  },
+  "Front grub screw": {
+   "version": 1,
+   "sheet": "A3",
+   "style": "paper",
+   "scale": 10.0,
+   "hidden_lines": true,
+   "merge_parts": true,
+   "fields": {
+    "title": "Front grub screw",
+    "number": "A-01-04",
+    "material": "Steel",
+    "finish": "",
+    "mass": "0.393 g",
+    "company": "",
+    "drawn": "gkerherv",
+    "date": "2026-10-18",
+    "checked": "",
+    "approved": "",
+    "revision": "A",
+    "tolerance": "ISO 2768-m",
+    "sheet_no": "6 / 8"
+   },
+   "views": [
+    {
+     "kind": "projected",
+     "name": "Front",
+     "id": "v1",
+     "show_label": false,
+     "x": 135.0,
+     "y": 193.727
+    },
+    {
+     "kind": "projected",
+     "name": "Top",
+     "id": "v2",
+     "show_label": false,
+     "x": 135.0,
+     "y": 119.727
+    },
+    {
+     "kind": "projected",
+     "name": "Right",
+     "id": "v3",
+     "show_label": false,
+     "x": 193.0,
+     "y": 193.727
+    },
+    {
+     "kind": "projected",
+     "name": "Isometric",
+     "id": "v4",
+     "show_label": true,
+     "x": 251.0,
+     "y": 119.727
+    }
+   ],
+   "notes": [
+    {
+     "kind": "horizontal",
+     "offset": 10.0,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      -1.7,
+      -8.5
+     ],
+     "b": [
+      1.7,
+      -8.5
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "vertical",
+     "offset": 27.0,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      1.7,
+      -8.5
+     ],
+     "b": [
+      -1.7,
+      -3.5
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "vertical",
+     "offset": -27.0,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      -0.0,
+      -31.7
+     ],
+     "b": [
+      0.0,
+      -28.3
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v2"
+    },
+    {
+     "kind": "diameter",
+     "offset": 8.629899681861676,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 30.0,
+     "centre": [
+      -6.082529978368552e-17,
+      -30.0
+     ],
+     "r": 1.70000094705856,
+     "auto": true,
+     "type": "dim",
+     "view": "v2"
+    },
+    {
+     "centre": [
+      -6.082529978368552e-17,
+      -30.0
+     ],
+     "r": 1.70000094705856,
+     "auto": true,
+     "type": "centre_mark",
+     "view": "v2"
+    }
+   ]
+  },
+  "Fixing_screw_M4": {
+   "version": 1,
+   "sheet": "A3",
+   "style": "paper",
+   "scale": 4.0,
+   "hidden_lines": true,
+   "merge_parts": true,
+   "fields": {
+    "title": "Fixing_screw_M4",
+    "number": "A-01-05",
+    "material": "Steel",
+    "finish": "",
+    "mass": "3.14 g",
+    "company": "",
+    "drawn": "gkerherv",
+    "date": "2026-10-18",
+    "checked": "",
+    "approved": "",
+    "revision": "A",
+    "tolerance": "ISO 2768-m",
+    "sheet_no": "7 / 8"
+   },
+   "views": [
+    {
+     "kind": "projected",
+     "name": "Front",
+     "id": "v1",
+     "show_label": false,
+     "x": 54.226,
+     "y": 217.1
+    },
+    {
+     "kind": "projected",
+     "name": "Top",
+     "id": "v2",
+     "show_label": false,
+     "x": 54.226,
+     "y": 164.3
+    },
+    {
+     "kind": "projected",
+     "name": "Right",
+     "id": "v3",
+     "show_label": false,
+     "x": 107.026,
+     "y": 217.1
+    },
+    {
+     "kind": "projected",
+     "name": "Isometric",
+     "id": "v4",
+     "show_label": true,
+     "x": 259.426,
+     "y": 164.3
+    }
+   ],
+   "notes": [
+    {
+     "kind": "horizontal",
+     "offset": 24.4,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      -3.6,
+      -0.0
+     ],
+     "b": [
+      3.6,
+      0.0
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "vertical",
+     "offset": 24.4,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      0.0,
+      -3.6
+     ],
+     "b": [
+      -0.0,
+      3.6
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "diameter",
+     "offset": 8.22762782500814,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 30.0,
+     "centre": [
+      8.566464382561937e-17,
+      -4.1761513864989436e-17
+     ],
+     "r": 3.60001498191327,
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "centre": [
+      8.566464382561937e-17,
+      -4.1761513864989436e-17
+     ],
+     "r": 3.60001498191327,
+     "auto": true,
+     "type": "centre_mark",
+     "view": "v1"
+    },
+    {
+     "kind": "vertical",
+     "offset": -13.4,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      -3.6,
+      -7.1
+     ],
+     "b": [
+      -1.9,
+      25.0
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v2"
+    }
+   ]
+  },
+  "Square spindle": {
+   "version": 1,
+   "sheet": "A3",
+   "style": "paper",
+   "scale": 1.0,
+   "hidden_lines": true,
+   "merge_parts": true,
+   "fields": {
+    "title": "Square spindle",
+    "number": "A-03",
+    "material": "Steel",
+    "finish": "",
+    "mass": "72.3 g",
+    "company": "",
+    "drawn": "gkerherv",
+    "date": "2026-10-18",
+    "checked": "",
+    "approved": "",
+    "revision": "A",
+    "tolerance": "ISO 2768-m",
+    "sheet_no": "8 / 8"
+   },
+   "views": [
+    {
+     "kind": "projected",
+     "name": "Front",
+     "id": "v1",
+     "show_label": false,
+     "x": 56.26,
+     "y": 214.5
+    },
+    {
+     "kind": "projected",
+     "name": "Top",
+     "id": "v2",
+     "show_label": false,
+     "x": 56.26,
+     "y": 182.5
+    },
+    {
+     "kind": "projected",
+     "name": "Right",
+     "id": "v3",
+     "show_label": false,
+     "x": 88.26,
+     "y": 214.5
+    },
+    {
+     "kind": "projected",
+     "name": "Isometric",
+     "id": "v4",
+     "show_label": true,
+     "x": 256.26,
+     "y": 182.5
+    }
+   ],
+   "notes": [
+    {
+     "kind": "horizontal",
+     "offset": 10.0,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      -4.0,
+      -4.0
+     ],
+     "b": [
+      4.0,
+      -4.0
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "vertical",
+     "offset": 14.0,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      4.0,
+      -4.0
+     ],
+     "b": [
+      -4.0,
+      4.0
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v1"
+    },
+    {
+     "kind": "vertical",
+     "offset": -10.0,
+     "text": "",
+     "prefix": "",
+     "suffix": "",
+     "tol_plus": "",
+     "tol_minus": "",
+     "decimals": 2,
+     "count": 1,
+     "angle": 45.0,
+     "a": [
+      -4.0,
+      -50.0
+     ],
+     "b": [
+      -4.0,
+      94.0
+     ],
+     "auto": true,
+     "type": "dim",
+     "view": "v2"
+    }
+   ]
+  }
+ }
+}
