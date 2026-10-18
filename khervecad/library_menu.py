@@ -130,13 +130,21 @@ def build_library_menu(window, menubar):
     return menu
 
 
+def _part_action(window, menu, pid, parts):
+    """One part's menu item; its data names the part, so the hover help
+    (menu_help.py) can say what it is."""
+    act = menu.addAction(
+        menu_text(parts[pid]["label"]),
+        lambda _=False, p=pid: window._insert_library_part(p))
+    act.setData("part:" + pid)
+    return act
+
+
 def _add_parts(window, sub, ids, parts, category=None):
     grouper = GROUPED_CATEGORIES.get(category)
     if grouper is None:
         for pid in ids:
-            sub.addAction(
-                menu_text(parts[pid]["label"]),
-                lambda _=False, p=pid: window._insert_library_part(p))
+            _part_action(window, sub, pid, parts)
         return
     groups = {}
     for pid in ids:
@@ -147,9 +155,7 @@ def _add_parts(window, sub, ids, parts, category=None):
     for name in names:
         target = sub.addMenu(menu_text(name))
         for pid in groups[name]:
-            target.addAction(
-                menu_text(parts[pid]["label"]),
-                lambda _=False, p=pid: window._insert_library_part(p))
+            _part_action(window, target, pid, parts)
 
 
 def _lego(window, sub):
@@ -326,7 +332,7 @@ def _add_examples(window, menu, section, subs):
     for where, title, icon, cats in EXAMPLE_PLACES:
         if where != section:
             continue
-        items = [(label, build) for label, cat, build in EXAMPLES
+        items = [(label, build, cat) for label, cat, build in EXAMPLES
                  if cat in cats]
         if not items:
             continue
@@ -337,6 +343,8 @@ def _add_examples(window, menu, section, subs):
             sub.addSeparator()
         note = sub.addAction(language.tr(EXAMPLE_NOTE))
         note.setEnabled(False)
-        for label, build in items:
-            sub.addAction(menu_text(label),
-                          lambda _=False, b=build: window._load_example(b))
+        for label, build, cat in items:
+            act = sub.addAction(
+                menu_text(label),
+                lambda _=False, b=build: window._load_example(b))
+            act.setData(f"example:{cat}|{label}")

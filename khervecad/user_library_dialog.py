@@ -62,6 +62,7 @@ def add_menu(window, menu):
                 act = target.addAction(
                     mine[pid]["label"].replace("&", "&&"),
                     lambda _=False, p=pid: window._insert_library_part(p))
+                act.setData("part:" + pid)
                 if mine[pid].get("description"):
                     act.setToolTip(mine[pid]["description"])
         sub.setToolTipsVisible(True)

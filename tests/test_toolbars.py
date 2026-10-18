@@ -151,3 +151,46 @@ def test_menu_help_closes_by_itself_and_skips_bar_tools(window):
     act.setData("rect")
     hover._show_for(act)
     assert not guide.isVisible()
+
+
+def test_every_menu_item_has_help(window):
+    """Hovering any menu item, in any submenu, shows a help card."""
+    from PyQt5.QtWidgets import QMenu
+    from khervecad import menu_help
+    bare = []
+
+    def walk(menu, path):
+        menu.aboutToShow.emit()
+        for act in menu.actions():
+            if act.isSeparator():
+                continue
+            if act.menu() is not None:
+                walk(act.menu(), path + [act.text()])
+                continue
+            if not act.isEnabled() and act.text().replace("&", "")[:1] \
+                    in "(" or act.text().isupper():
+                continue                    # section headings
+                continue
+            key = act.data()
+            if isinstance(key, str) and key in tooltips.TIPS:
+                continue
+            if menu_help.resolve(act) or act.statusTip():
+                continue
+            tip = act.toolTip().replace("&", "")
+            plain = act.text().split("\t")[0].replace("&", "").replace(
+                "...", "").replace("…", "")
+            if tip and tip != plain:
+                continue
+            bare.append(" > ".join(path + [act.text()]))
+
+    for act in window.menuBar().actions():
+        if act.menu() is not None:
+            walk(act.menu(), [act.text()])
+    assert not bare, bare[:10]
+
+
+def test_part_help_describes_the_part(window):
+    from khervecad import menu_help
+    card = menu_help.part_help("molecule_water")
+    assert "Water" in card and "ball stick" not in card
+    assert "How to use" in card

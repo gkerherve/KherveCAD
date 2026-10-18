@@ -264,6 +264,11 @@ class _MenuHover(QObject):
             return
         if action.menu() is not None:
             return                      # a submenu: its items say more
+        from . import menu_help
+        card = menu_help.resolve(action)
+        if card:
+            self.guide.hover(text=card)
+            return
         text = action.toolTip() or ""
         plain = action.text().replace("&", "").split("\t")[0]
         if text and text.replace("&", "") != plain:
