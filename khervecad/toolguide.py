@@ -82,15 +82,27 @@ class ToolGuide(QFrame):
         self._hide_timer.setSingleShot(True)
         self._hide_timer.timeout.connect(self.dismiss)
         main.installEventFilter(self)
+        from PyQt5.QtWidgets import QApplication
+        QApplication.instance().installEventFilter(self)
         self.hide()
 
     # -- placement
     def eventFilter(self, obj, event):
         # never raise here: an exception out of a Qt callback aborts
         try:
-            if event.type() == QEvent.Resize and obj is self.main and \
+            kind = event.type()
+            if kind == QEvent.Resize and obj is self.main and \
                     self.isVisible():
                 self._place()
+            elif self.mode == "hover" and self.isVisible() and kind in (
+                    QEvent.MouseMove, QEvent.MouseButtonPress,
+                    QEvent.KeyPress, QEvent.WindowDeactivate):
+                # a menu's help goes the moment the pointer is anywhere
+                # but in a menu — native menus (macOS) give no close signal
+                from PyQt5.QtWidgets import QMenuBar
+                if kind != QEvent.MouseMove or not isinstance(
+                        obj, (QMenu, QMenuBar)):
+                    self.menu_closed()
         except Exception:                          # noqa: BLE001
             pass
         return False
@@ -204,6 +216,14 @@ class ToolGuide(QFrame):
             self.main._apply_operation(op)
 
 
+def _bar_keys():
+    """The tools of the vertical bar: their hover tooltip is enough."""
+    from . import toolbars
+    keys = {t[0] for t in toolbars.TOOLS}
+    keys |= {t[0] for t in toolbars.MEASURE_TOOLS}
+    return keys | set(toolbars.BAR_PRIMITIVES)
+
+
 class _MenuHover(QObject):
     """Feeds the guide from every menu: hovered actions and closing."""
 
@@ -236,6 +256,9 @@ class _MenuHover(QObject):
         if action is None or action.isSeparator():
             return
         key = action.data()
+        if isinstance(key, str) and key in _bar_keys():
+            self.guide.hover(text=None)   # the toolbar has its own tooltip
+            return
         if isinstance(key, str) and key in tooltips.TIPS:
             self.guide.hover(key)
             return

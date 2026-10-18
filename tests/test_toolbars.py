@@ -130,3 +130,25 @@ def test_tool_guide_helps_on_hover_and_without_a_selection(app):
     assert any(n.type == "symmetry" for n in w.model.root.walk())
     w._dirty = False
     w.close()
+
+
+def test_menu_help_closes_by_itself_and_skips_bar_tools(window):
+    from PyQt5.QtCore import QEvent, QPoint, Qt
+    from PyQt5.QtGui import QMouseEvent
+    from khervecad import toolguide
+    guide = window.tool_guide
+    QSettings("Kherve", "KherveCAD").setValue(toolguide.SETTING, True)
+    window.show()
+    guide.hover("dimension")                 # not a vertical-bar key? use
+    guide.hover("grid_snap")                 # a menu-only tip
+    assert guide.isVisible()
+    ev = QMouseEvent(QEvent.MouseMove, QPoint(5, 5), Qt.NoButton,
+                     Qt.NoButton, Qt.NoModifier)
+    QApplication.sendEvent(window.centralWidget(), ev)
+    assert not guide.isVisible()
+    hover = toolguide._MenuHover(guide)
+    from PyQt5.QtWidgets import QAction
+    act = QAction("Rectangle", window)
+    act.setData("rect")
+    hover._show_for(act)
+    assert not guide.isVisible()
