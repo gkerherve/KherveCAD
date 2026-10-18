@@ -35,7 +35,7 @@ ROW_LENS = (DAB_LEN, LINE_LEN)
 NODE_TYPES = {
     "vertex_paint": dict(
         label="Vertex paint (hand painting)", category="operation",
-        icon="mdi.brush-variant",
+        icon="mdi.spray",
         params=dict(strokes=[], base=""),
         schema=[("strokes", "Strokes (centre, radius, r g b 0-255, "
                             "strength, hardness; + end for a line)",

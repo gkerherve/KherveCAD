@@ -2110,6 +2110,12 @@ class McpToolExecutor:
             win.view3d.set_grid(bool(params["grid"]))
         if params.get("opengl") is not None:
             win.view3d.set_hardware(bool(params["opengl"]))
+        if params.get("interface_style") is not None:
+            from . import toolbar_style
+            if params["interface_style"] not in toolbar_style.STYLES:
+                raise ToolError("interface_style must be one of "
+                                + ", ".join(toolbar_style.STYLES) + ".")
+            toolbar_style.apply(win, params["interface_style"])
         if params.get("explode") is not None or params.get("explode_mode"):
             amount = params.get("explode")
             win.set_explode(
@@ -2147,6 +2153,8 @@ class McpToolExecutor:
                 "projection": win.view3d.projection,
                 "stage": bool(win.view3d.stage),
                 "opengl": bool(win.view3d.hardware),
+                "interface_style": getattr(win, "_interface_style",
+                                           "KherveCAD"),
                 "cavity": bool(win.view3d.cavity),
                 "edges": bool(win.view3d.edges),
                 "smooth": bool(win.view3d.smooth),

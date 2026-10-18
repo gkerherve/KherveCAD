@@ -56,6 +56,34 @@ into a new module and import.
                        `finish(win)`. Painted, so no data file ships.
   - `style.py`       — token-driven QSS themes (same template family
                        as KhervePaint; theme persists via QSettings).
+  - `toolbar_style.py` / `ribbon.py` — **View ▸ Interface Style**
+                       (beside Theme, 2026-10-18, the user: make the
+                       toolbars look like Fusion or SolidWorks; the whole
+                       program, 2D and 3D, to follow later). KherveCAD
+                       (classic, default) / Fusion / SolidWorks, QSettings
+                       `interface_style`, MCP `set_render_options
+                       interface_style`. The horizontal bar's actions are
+                       made ONCE (`toolbars.make_bar_actions` ->
+                       `win._bar_parts`) and laid out per style:
+                       `fill_classic`, or a quick-access row (file, undo
+                       ... Vibe Model) over a `ribbon_bar` holding a
+                       `ribbon.Ribbon` — tabs `TABS` (SOLID/Features,
+                       FORM/Sculpt, CHARACTER, INSPECT/Evaluate) of panels
+                       (the operation families + Assemble, Edit mesh,
+                       Analyse, Documents). Fusion: tabs on top, icon rows
+                       with "PANEL ▾" labels listing the whole panel;
+                       SolidWorks: one large text-under button, the rest
+                       small with names beside in columns of three, tabs
+                       underneath, names dropped when the page does not
+                       fit (`_fit`, the full width measured once shown).
+                       The vertical bar is restyled (Fusion: flat, blue
+                       edge on the active tool, captions from
+                       `win._tool_sections`). Colours per (style, dark
+                       theme) in `_COLOURS`; a theme change calls
+                       `restyle`. GroupButton follows its MENU's
+                       `triggered`, not each action: the buttons are
+                       rebuilt on a switch and a slot left on a deleted
+                       one would abort the app.
   - `icons.py`       — qtawesome MDI icon wrapper with fallback.
   - `model.py`       — **the core**: `CadNode` tree, `NODE_TYPES`
                        registry (params + property schema + icon per

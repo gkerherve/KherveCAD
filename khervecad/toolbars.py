@@ -107,8 +107,11 @@ class GroupButton(QToolButton):
         menu.setToolTipsVisible(True)       # the rich tips while browsing
         for act in self.family:
             menu.addAction(act)
-            act.triggered.connect(
-                lambda _=False, a=act: self.set_current(a, remember=True))
+        # through the menu, not each action: the actions belong to the
+        # window and outlive this button when the Interface Style
+        # rebuilds the bar (a slot on a deleted button would abort)
+        menu.triggered.connect(
+            lambda a: self.set_current(a, remember=True))
         self.setMenu(menu)
         # the theme hides menu arrows; draw our own chevron (paintEvent)
         # in a slim strip that still opens the menu when clicked
@@ -173,7 +176,11 @@ def build_tool_bar(win):
     bar.setMovable(False)
     win.addToolBar(Qt.LeftToolBarArea, bar)
     win._tool_group = QActionGroup(win)
+    #: (caption, first action) per section, for the Fusion captions
+    win._tool_sections = []
     for tools, family in ((TOOLS, "draw"), (MEASURE_TOOLS, "measure")):
+        win._tool_sections.append(("Sketch" if family == "draw"
+                                   else "Inspect", None))
         for tool, glyph, label, shortcut in tools:
             act = _action(win, glyph, label, tool,
                           lambda _=False, t=tool: win._set_tool(t),
@@ -181,13 +188,17 @@ def build_tool_bar(win):
                           family=None if tool == SELECT else family)
             win._tool_group.addAction(act)
             bar.addAction(act)
+            if win._tool_sections[-1][1] is None:
+                win._tool_sections[-1] = (win._tool_sections[-1][0], act)
         bar.addSeparator()
     win._tool_group.actions()[0].setChecked(True)
     for prim in BAR_PRIMITIVES:
         spec = NODE_TYPES[prim]
-        bar.addAction(_action(
-            win, spec["icon"], spec["label"], prim,
-            lambda _=False, t=prim: win._add_primitive(t)))
+        act = _action(win, spec["icon"], spec["label"], prim,
+                      lambda _=False, t=prim: win._add_primitive(t))
+        if prim == BAR_PRIMITIVES[0]:
+            win._tool_sections.append(("Solids", act))
+        bar.addAction(act)
     bar.addSeparator()
 
     # Human, Skin and the City Builder left the bar (2026-10-17, the
@@ -196,31 +207,41 @@ def build_tool_bar(win):
         from . import house_dialog
         house_dialog.open_builder(win)
 
-    bar.addAction(_action(win, "mdi.home-city-outline", "House Builder",
-                          "house_builder", _house_builder, family="build"))
+    act = _action(win, "mdi.home-city-outline", "House Builder",
+                  "house_builder", _house_builder, family="build")
+    win._tool_sections.append(("Build", act))
+    bar.addAction(act)
     return bar
 
 
 def build_options_bar(win):
-    """The horizontal bar, left to right: file, undo, the operation
-    families, assembly snapping, the sketch controls, the 3D view and
-    the assistant — a separator between each section."""
+    """The horizontal bar. Its actions are made once (`make_bar_actions`)
+    and laid out by the Interface Style: `fill_classic` here, or the
+    quick-access row over a ribbon (toolbar_style.py)."""
     bar = QToolBar("Options")
     bar.setObjectName("options_bar")
     bar.setIconSize(ICON_SIZE)
     bar.setMovable(False)
     win.addToolBar(Qt.TopToolBarArea, bar)
+    make_bar_actions(win)
+    fill_classic(win, bar)
+    return bar
 
+
+def make_bar_actions(win):
+    """Every action of the horizontal bar, once per window, in
+    `win._bar_parts` — they belong to the window, so laying the bar out
+    again (another Interface Style) keeps their state and shortcuts."""
+    parts = {}
     # -- file
-    bar.addAction(_action(win, "mdi.file-outline", "New", "new",
-                          win.new_document))
-    bar.addAction(_action(win, "mdi.folder-open-outline", "Open", "open",
-                          win.open_file))
-    bar.addAction(_action(win, "mdi.content-save-outline", "Save",
-                          "save", win.save_file))
-    bar.addSeparator()
-
+    parts["file"] = [
+        _action(win, "mdi.file-outline", "New", "new", win.new_document),
+        _action(win, "mdi.folder-open-outline", "Open", "open",
+                win.open_file),
+        _action(win, "mdi.content-save-outline", "Save", "save",
+                win.save_file)]
     # -- undo
+    parts["undo"] = []
     for make, glyph, text, key, keys in (
             (win.model.undo_stack.createUndoAction, "mdi.undo", "Undo",
              "undo", "Ctrl+Z"),
@@ -230,14 +251,9 @@ def build_options_bar(win):
         act.setIcon(icons.icon(glyph))
         act.setText(language.tr(text))
         tooltips.apply(act, key, keys)
-        bar.addAction(act)
-    bar.addSeparator()
-    # Vibe Model hides the rest of the bar: talking to an assistant
-    # needs file and undo, not the modelling tools
-    win._vibe_keep = set(bar.actions())
-
-    # -- operations, one button per family
-    win._op_groups = {}
+        parts["undo"].append(act)
+    # -- operations, one family each
+    parts["families"] = []
     for key, ops in OPERATION_GROUPS:
         family = []
         for op in ops:
@@ -247,28 +263,21 @@ def build_options_bar(win):
                 lambda _=False, o=op: win._apply_operation(o),
                 _OP_SHORTCUTS.get(op, ""), bind=False,  # Edit menu's
                 family=key))
-        if key == "logic":
-            # Blender's Edit Mode: Tab over the 3D view
-            # (View3D.tab_pressed); sits just before the loops
-            win._edit_mesh_act = _action(win, "mdi.vector-polyline-edit",
-                                         "Edit vertices", "edit_mesh",
-                                         shortcut="Tab", checkable=True,
-                                         bind=False, family="edit")
-            win._edit_mesh_act.toggled.connect(
-                lambda on: win.set_edit_mode(bool(on)))
-            bar.addAction(win._edit_mesh_act)
-        button = GroupButton(key, family, bar)
-        button.setIconSize(ICON_SIZE)
-        bar.addWidget(button)
-        win._op_groups[key] = button
-    bar.addSeparator()
-
+        parts["families"].append((key, family))
+    # Blender's Edit Mode: Tab over the 3D view (View3D.tab_pressed)
+    win._edit_mesh_act = _action(win, "mdi.vector-polyline-edit",
+                                 "Edit vertices", "edit_mesh",
+                                 shortcut="Tab", checkable=True,
+                                 bind=False, family="edit")
+    win._edit_mesh_act.toggled.connect(
+        lambda on: win.set_edit_mode(bool(on)))
     # -- assembly
-    bar.addAction(_action(win, "mdi.magnet-on", "Snap objects",
-                          "snap_objects", win._start_snap, "J"))
-    bar.addSeparator()
+    parts["snap"] = _action(win, "mdi.magnet-on", "Snap objects",
+                            "snap_objects", win._start_snap, "J")
 
-    # -- sketch
+    # -- sketch: grid, snap and the plane live on the 2D view's own bar
+    # (viewnav.add_sketch_controls); the actions stay for the shortcuts
+    # and the View menu
     win._grid_act = _action(win, "mdi.grid", "Grid", "grid",
                             shortcut="Ctrl+'", checkable=True)
     win._grid_act.setChecked(win.scene.show_grid)
@@ -277,12 +286,8 @@ def build_options_bar(win):
                             shortcut="Ctrl+Shift+'", checkable=True)
     win._snap_act.setChecked(win.scene.snap_enabled)
     win._snap_act.toggled.connect(win._set_snap)
-    # grid, snap and the plane live on the 2D view's own bar
-    # (viewnav.add_sketch_controls); the actions stay for the shortcuts
-    # and the View menu
     win.addAction(win._grid_act)
     win.addAction(win._snap_act)
-    bar.addSeparator()
 
     # -- 3D
     # Render and Fit 3D left the bar (2026-10-16, the user: obsolete — the
@@ -290,33 +295,63 @@ def build_options_bar(win):
     # still forces a render from anywhere in the window
     win.addAction(_action(win, "mdi.play-outline", "Render", "render",
                           win._render_now, "F5"))
-    bar.addAction(_action(win, "mdi.drawing-box", "Blueprint", "blueprint",
-                          win.open_blueprint, "Ctrl+Shift+D",
-                          bind=False, family="docs"))      # File menu's
-    bar.addAction(_action(win, "mdi.format-list-numbered",
-                          "Bill of materials", "bom", win.open_bom,
-                          "Ctrl+Alt+B", bind=False, family="docs"))
-    bar.addAction(_action(win, "mdi.pipe", "P&ID (process diagram)", "pid",
-                          win.open_pid, "Ctrl+Alt+I", bind=False,
-                          family="docs"))
+    parts["docs"] = [
+        _action(win, "mdi.drawing-box", "Blueprint", "blueprint",
+                win.open_blueprint, "Ctrl+Shift+D", bind=False,
+                family="docs"),                        # File menu's
+        _action(win, "mdi.format-list-numbered", "Bill of materials",
+                "bom", win.open_bom, "Ctrl+Alt+B", bind=False,
+                family="docs"),
+        _action(win, "mdi.pipe", "P&ID (process diagram)", "pid",
+                win.open_pid, "Ctrl+Alt+I", bind=False, family="docs")]
     win._cut_tool_act = _action(win, "mdi.content-cut", "Cut through",
                                 "cut_through", shortcut="Ctrl+Alt+X",
                                 checkable=True, bind=False)  # View menu's
     win._cut_tool_act.toggled.connect(lambda on: win.set_cut(bool(on)))
     win.addAction(win._cut_tool_act)      # the 3D view's bar has the button
-    bar.addSeparator()
 
     # -- the 3D-only layout for building with an assistant (the ChatBox
-    # stays in the AI menu, Ctrl+/; it no longer earns a toolbar button)
+    # stays in the AI menu, Ctrl+/; it no longer earns a toolbar button).
+    # Icon only (2026-10-17, the user: the name made it too long); the
+    # tooltip still names it
     win._vibe_act = _action(win, "mdi.creation", "Vibe Model",
                             "vibe_model", shortcut="Ctrl+Shift+M",
                             checkable=True, family="brand")
     win._vibe_act.toggled.connect(win.set_vibe_model)
+    win._bar_parts = parts
+    return parts
+
+
+def fill_classic(win, bar):
+    """KherveCAD's own layout, left to right: file, undo, the operation
+    families as drop-down buttons, assembly snapping, the engineering
+    documents and Vibe Model — a separator between each section."""
+    parts = win._bar_parts
+    for act in parts["file"]:
+        bar.addAction(act)
+    bar.addSeparator()
+    for act in parts["undo"]:
+        bar.addAction(act)
+    bar.addSeparator()
+    # Vibe Model hides the rest of the bar: talking to an assistant
+    # needs file and undo, not the modelling tools
+    win._vibe_keep = set(bar.actions())
+    win._op_groups = {}
+    for key, family in parts["families"]:
+        if key == "logic":
+            bar.addAction(win._edit_mesh_act)    # just before the loops
+        button = GroupButton(key, family, bar)
+        button.setIconSize(ICON_SIZE)
+        bar.addWidget(button)
+        win._op_groups[key] = button
+    bar.addSeparator()
+    bar.addAction(parts["snap"])
+    bar.addSeparator()
+    for act in parts["docs"]:
+        bar.addAction(act)
+    bar.addSeparator()
     bar.addAction(win._vibe_act)
     win._vibe_keep.add(win._vibe_act)
-    # icon only (2026-10-17, the user: the name made it too long); the
-    # tooltip still names it
-    return bar
 
 
 #: (submenu title, tool keys) of the Insert menu's groups that are not

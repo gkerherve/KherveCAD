@@ -173,6 +173,10 @@ class MainWindow(QMainWindow):
         customizer_panel.attach(self)
         self._build_tool_bar()
         self._build_options_bar()
+        # Fusion / SolidWorks toolbars (View ▸ Interface Style)
+        from . import toolbar_style
+        if toolbar_style.saved() != toolbar_style.DEFAULT:
+            toolbar_style.apply(self, remember=False)
         self._build_menus()
         self._build_status_bar()
         # help you can see while using the menus (macOS menus never show
@@ -539,6 +543,7 @@ class MainWindow(QMainWindow):
         self._build_cut_menu(view_menu)
         self._add_view_toggles()
         view_menu.addSeparator()
+        from . import toolbar_style
         theme_menu = view_menu.addMenu(self.tr("&Theme"))
         theme_group = QActionGroup(self)
         for name in THEMES:
@@ -547,9 +552,11 @@ class MainWindow(QMainWindow):
             act.triggered.connect(
                 lambda _, n=name: (apply_style(QApplication.instance(),
                                                n),
-                                   self.builder.refresh_theme()))
+                                   self.builder.refresh_theme(),
+                                   toolbar_style.restyle(self)))
             theme_group.addAction(act)
             theme_menu.addAction(act)
+        toolbar_style.build_menu(self, view_menu)
 
         analyse_menu = m.addMenu(self.tr("A&nalyse"))
         from .analysis_dialog import open_analysis
@@ -1569,6 +1576,8 @@ class MainWindow(QMainWindow):
         for act in self._options_bar.actions():
             if act not in self._vibe_keep:
                 act.setVisible(not on)
+        if getattr(self, "ribbon", None) is not None:   # Fusion/SolidWorks
+            self._ribbon_bar.setVisible(not on)
         act = getattr(self, "_vibe_act", None)
         if act is not None and act.isChecked() != on:
             act.blockSignals(True)

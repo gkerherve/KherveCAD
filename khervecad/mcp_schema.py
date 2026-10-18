@@ -2786,6 +2786,17 @@ TOOLS = [
                        "description": "Draw the faces with OpenGL (exact "
                                       "occlusion, anti-aliased); off "
                                       "uses the built-in painter."},
+            "interface_style": {"type": "string",
+                                "enum": ["KherveCAD", "Fusion",
+                                         "SolidWorks"],
+                                "description": "Make the toolbars look "
+                                               "like KherveCAD's own "
+                                               "(classic), Fusion's "
+                                               "(tabs over icon panels) "
+                                               "or SolidWorks' "
+                                               "CommandManager. Only on "
+                                               "the user's request: it "
+                                               "is their workspace."},
             "explode": {"type": "number",
                         "description": "Exploded view: push every part "
                                        "away from the assembly's centre, "

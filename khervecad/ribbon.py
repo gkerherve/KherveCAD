@@ -1,0 +1,354 @@
+"""The ribbon the Fusion and SolidWorks Interface Styles put under the
+quick-access row (toolbar_style.py): the horizontal bar's tools on tabs.
+
+Both styles share the tabs and their panels (`TABS`, `PANELS`) and lay a
+panel out the way the program they imitate does:
+
+- **Fusion** — tabs on top (SOLID, FORM...), a workspace button at the
+  left; each panel is a row of icons with its name underneath in
+  capitals and a ▾ that lists the whole panel.
+- **SolidWorks** — the CommandManager: the panel's first tool a large
+  button with its name under it, the rest small buttons with their
+  names beside them in columns of three, a line between panels, the tabs
+  underneath. When the window is too narrow for the names the small
+  buttons drop them (SolidWorks does the same).
+
+Nothing here owns an action: the buttons show the window's own actions
+(`toolbars.make_bar_actions`), so a ribbon can be thrown away and built
+again at any time.
+
+Copyright (C) 2026 Gwilherm Kerherve
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+"""
+
+import re
+
+from PyQt5.QtCore import QSettings, QSize, Qt
+from PyQt5.QtWidgets import (QAction, QFrame, QGridLayout, QHBoxLayout,
+                             QMenu, QSizePolicy, QStackedWidget, QTabBar,
+                             QToolButton, QVBoxLayout, QWidget)
+
+from . import icons, language, tooltips
+
+_SETTINGS = ("Kherve", "KherveCAD")
+TAB_KEY = "ribbon/tab"
+
+#: (key, Fusion title, SolidWorks title, panel keys)
+TABS = [
+    ("features", "SOLID", "Features",
+     ["extrude", "transform", "combine", "finish", "logic", "assemble"]),
+    ("form", "FORM", "Sculpt", ["deform", "edit"]),
+    ("character", "CHARACTER", "Character", ["character"]),
+    ("inspect", "INSPECT", "Evaluate", ["analyse", "documents"]),
+]
+
+#: panels that are not operation families: key -> title
+EXTRA_PANELS = {"assemble": "Assemble", "edit": "Edit mesh",
+                "analyse": "Analyse", "documents": "Documents"}
+#: SolidWorks panels whose tools are all large buttons
+ALL_LARGE = {"assemble", "edit", "analyse", "documents"}
+
+#: icon sizes (px)
+FUSION_ICON = QSize(26, 26)
+SW_LARGE = QSize(30, 30)
+SW_SMALL = QSize(18, 18)
+#: icons a Fusion panel shows before the rest wait in its ▾ menu, by
+#: how many panels share the tab (a tab of one panel has room for more)
+FUSION_SHOWN = {1: 12, 2: 7}
+FUSION_SHOWN_MANY = 4
+
+#: tips for the analysis actions made here (the menu items they copy
+#: have none of their own)
+_TIPS = {
+    "mass_properties": (
+        "Mass properties",
+        "Volume, surface area, centre of mass and mass of the selection "
+        "(else of the whole document) in the material you pick.",
+        ["Select a part (or nothing for everything).",
+         "Click Mass properties and pick a material."], None),
+    "print_check": (
+        "Check for 3D printing",
+        "Is the part watertight, how much overhangs past the angle, "
+        "where are the walls thinner than the nozzle can print?",
+        ["Select the part.", "Click, then show the faults on the model."],
+        None),
+    "interference": (
+        "Check interference",
+        "Do these parts overlap, touch or sit inside each other? With "
+        "fewer than two selected, every part in Main is checked.",
+        ["Select two or more parts (or none).", "Click."], None),
+}
+for _key, _tip in _TIPS.items():
+    tooltips.TIPS.setdefault(_key, _tip)
+
+
+def analysis_actions(win):
+    """Mass properties, the print check and interference as actions —
+    made once per window, like the Analyse menu's items they copy."""
+    acts = getattr(win, "_ribbon_actions", None)
+    if acts is not None:
+        return acts
+    from .analysis_dialog import open_analysis
+    acts = []
+    for glyph, text, key, kind in (
+            ("mdi.scale-balance", "Mass properties", "mass_properties",
+             "mass"),
+            ("mdi.printer-3d-nozzle-outline", "Print check", "print_check",
+             "print"),
+            ("mdi.vector-intersection", "Interference", "interference",
+             "interference")):
+        act = QAction(icons.icon(glyph, icons.family_color("measure")),
+                      language.tr(text), win)
+        act.setData(key)
+        tooltips.apply(act, key)
+        act.triggered.connect(lambda _=False, k=kind: open_analysis(win, k))
+        acts.append(act)
+    win._ribbon_actions = acts
+    return acts
+
+
+def panel_actions(win, key):
+    """(title, actions) of panel *key*."""
+    parts = win._bar_parts
+    families = dict(parts["families"])
+    if key in families:
+        title = tooltips.GROUPS.get(key, (key, ""))[0]
+        return language.tr(title), families[key]
+    title = language.tr(EXTRA_PANELS[key])
+    if key == "assemble":
+        return title, [parts["snap"]]
+    if key == "edit":
+        return title, [win._edit_mesh_act]
+    if key == "documents":
+        return title, list(parts["docs"])
+    # analyse: the measure tool of the vertical bar, the three checks
+    # and a section (Cut Through)
+    from .view2d import MEASURE
+    measure = [a for a in win._tool_group.actions() if a.data() == MEASURE]
+    return title, measure + analysis_actions(win) + [win._cut_tool_act]
+
+
+def short_name(text):
+    """A button's name without its explanation in brackets: "Resize
+    (absolute size)" is "Resize" (the tooltip keeps the whole)."""
+    return re.sub(r"\s*\(.*\)\s*$", "", text) or text
+
+
+def _plain(text):
+    """*text* shown as written on a button: "P&ID" keeps its "&"."""
+    return text.replace("&", "&&")
+
+
+def _button(action, size, style, parent):
+    b = QToolButton(parent)
+    b.setDefaultAction(action)
+    b.setIconSize(size)
+    b.setToolButtonStyle(style)
+    b.setAutoRaise(True)
+    if style != Qt.ToolButtonIconOnly:
+        b.setText(_plain(short_name(action.text())))
+    return b
+
+
+def _separator(parent):
+    line = QFrame(parent)
+    line.setObjectName("panelSep")
+    line.setFrameShape(QFrame.VLine)
+    line.setFrameShadow(QFrame.Plain)
+    return line
+
+
+class Ribbon(QWidget):
+    """Tabs of panels over (Fusion) or above (SolidWorks) their tabs."""
+
+    def __init__(self, win, style: str, parent=None):
+        super().__init__(parent)
+        self.setObjectName("ribbon")
+        self.win = win
+        self.style_name = style
+        self.fusion = style == "Fusion"
+        #: SolidWorks small buttons per page, whose names drop when space
+        #: is short; each page's width with every name shown, measured
+        #: once it is styled and shown (measured just after dropping the
+        #: names, the hint is stale)
+        self.small = {}
+        self._compact = {}
+        self._full = {}
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+
+        self.tabs = QTabBar(self)
+        self.tabs.setObjectName("ribbonTabs")
+        self.tabs.setDrawBase(False)
+        self.tabs.setExpanding(False)
+        self.tabs.setFocusPolicy(Qt.NoFocus)
+        if not self.fusion:
+            self.tabs.setShape(QTabBar.RoundedSouth)
+        self.stack = QStackedWidget(self)
+        for key, fusion_title, sw_title, panels in TABS:
+            self.tabs.addTab(language.tr(fusion_title if self.fusion
+                                         else sw_title))
+            self.stack.addWidget(self._page(panels))
+
+        tab_row = QHBoxLayout()
+        tab_row.setContentsMargins(6 if self.fusion else 4, 0, 4, 0)
+        tab_row.setSpacing(8)
+        if self.fusion:
+            tab_row.addWidget(self._workspace_button())
+        tab_row.addWidget(self.tabs)
+        tab_row.addStretch(1)
+        if self.fusion:
+            outer.addLayout(tab_row)
+            outer.addWidget(self.stack)
+        else:
+            outer.addWidget(self.stack)
+            outer.addLayout(tab_row)
+
+        saved = QSettings(*_SETTINGS).value(TAB_KEY, 0)
+        try:
+            index = min(max(int(saved), 0), len(TABS) - 1)
+        except (TypeError, ValueError):
+            index = 0
+        self.tabs.setCurrentIndex(index)
+        self.stack.setCurrentIndex(index)
+        self.tabs.currentChanged.connect(self._tab_changed)
+
+    # ------------------------------------------------------------ tabs
+    def _tab_changed(self, index):
+        self.stack.setCurrentIndex(index)
+        QSettings(*_SETTINGS).setValue(TAB_KEY, index)
+        self._fit()
+
+    def show_tab(self, key):
+        """Bring the tab *key* ("features", "form"...) to the front."""
+        for i, tab in enumerate(TABS):
+            if tab[0] == key:
+                self.tabs.setCurrentIndex(i)
+
+    def _workspace_button(self):
+        """Fusion's workspace switcher: here it lists the tabs."""
+        b = QToolButton(self)
+        b.setObjectName("workspace")
+        b.setText(language.tr("DESIGN") + "  ▾")
+        b.setPopupMode(QToolButton.InstantPopup)
+        b.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        b.setToolTip(language.tr("Pick a tab of tools"))
+        menu = QMenu(b)
+        for i, tab in enumerate(TABS):
+            menu.addAction(language.tr(tab[1]).title(),
+                           lambda i=i: self.tabs.setCurrentIndex(i))
+        b.setMenu(menu)
+        return b
+
+    # ----------------------------------------------------------- pages
+    def _page(self, panels):
+        page = QWidget(self)
+        page.setObjectName("ribbonPage")
+        row = QHBoxLayout(page)
+        row.setContentsMargins(6, 3, 6, 2)
+        row.setSpacing(4)
+        for i, key in enumerate(panels):
+            if i:
+                row.addWidget(_separator(page))
+            title, actions = panel_actions(self.win, key)
+            if self.fusion:
+                shown = FUSION_SHOWN.get(len(panels), FUSION_SHOWN_MANY)
+                row.addWidget(self._fusion_panel(page, title,
+                                                 actions, shown))
+            else:
+                row.addWidget(self._sw_panel(page, key, actions))
+        row.addStretch(1)
+        return page
+
+    def _fusion_panel(self, page, title, actions, shown):
+        panel = QWidget(page)
+        col = QVBoxLayout(panel)
+        col.setContentsMargins(2, 0, 2, 0)
+        col.setSpacing(0)
+        icons_row = QHBoxLayout()
+        icons_row.setSpacing(1)
+        for act in actions[:shown]:
+            icons_row.addWidget(_button(act, FUSION_ICON,
+                                        Qt.ToolButtonIconOnly, panel))
+        icons_row.addStretch(1)
+        col.addLayout(icons_row)
+        label = QToolButton(panel)
+        label.setObjectName("panelLabel")
+        label.setText(_plain(title.upper()) + " ▾")
+        label.setPopupMode(QToolButton.InstantPopup)
+        label.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        label.setToolTip(language.tr("Every tool of {panel}").format(
+            panel=title))
+        menu = QMenu(title, label)
+        menu.setToolTipsVisible(True)
+        for act in actions:
+            menu.addAction(act)
+        label.setMenu(menu)
+        col.addWidget(label, 0, Qt.AlignHCenter)
+        return panel
+
+    def _sw_panel(self, page, key, actions):
+        panel = QWidget(page)
+        row = QHBoxLayout(panel)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(1)
+        large = actions if key in ALL_LARGE else actions[:1]
+        for act in large:
+            b = _button(act, SW_LARGE, Qt.ToolButtonTextUnderIcon, panel)
+            b.setObjectName("large")
+            row.addWidget(b)
+        rest = actions[len(large):]
+        if rest:
+            grid = QGridLayout()
+            grid.setContentsMargins(0, 0, 0, 0)
+            grid.setHorizontalSpacing(1)
+            grid.setVerticalSpacing(0)
+            for i, act in enumerate(rest):
+                b = _button(act, SW_SMALL, Qt.ToolButtonTextBesideIcon,
+                            panel)
+                b.setObjectName("small")
+                grid.addWidget(b, i % 3, i // 3, Qt.AlignLeft)
+                self.small.setdefault(self.stack.count(), []).append(b)
+            row.addLayout(grid)
+        return panel
+
+    # ---------------------------------------------------------- sizing
+    def sizeHint(self):
+        # narrow on purpose: an expanding widget in a QToolBar takes the
+        # bar's width, where a wide hint would push it into the overflow
+        h = super().sizeHint().height()
+        return QSize(240, h)
+
+    def minimumSizeHint(self):
+        return QSize(120, super().sizeHint().height())
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._fit()
+
+    def _fit(self):
+        """SolidWorks: the small buttons drop their names when the page
+        does not fit, and take them back when it does."""
+        index = self.stack.currentIndex()
+        page = self.stack.currentWidget()
+        if self.fusion or index not in self.small or page is None \
+                or not page.isVisible():
+            return
+        if index not in self._full:             # never compacted yet
+            self._full[index] = page.sizeHint().width()
+        self._set_compact(index, self._full[index] > self.width())
+
+    def _set_compact(self, index, on):
+        if on == self._compact.get(index, False):
+            return
+        self._compact[index] = on
+        style = (Qt.ToolButtonIconOnly if on
+                 else Qt.ToolButtonTextBesideIcon)
+        for b in self.small[index]:
+            b.setToolButtonStyle(style)

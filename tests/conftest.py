@@ -48,7 +48,9 @@ _NEUTRAL_SETTINGS = ("render_stage", "render_style", "render_bg",
                      # compared an English search term against a Chinese
                      # manual and only passed by the accident of the Tool
                      # reference chapter staying English
-                     "language")
+                     "language",
+                     # Fusion / SolidWorks toolbars and the ribbon tab
+                     "interface_style", "ribbon/tab")
 
 #: looks that default to on, held off for the session instead of removed
 _NEUTRAL_OFF = ("render_stage", "render_edges", "render_scale_bar")
