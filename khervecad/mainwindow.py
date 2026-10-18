@@ -563,6 +563,13 @@ class MainWindow(QMainWindow):
         analyse_menu.addAction(
             icons.icon("mdi.set-center"), self.tr("Check &interference..."),
             lambda: open_analysis(self, "interference"))
+        from .engcheck_dialog import open_check
+        analyse_menu.addAction(
+            icons.icon("mdi.knife"), self.tr("Check &sharp edges..."),
+            lambda: open_check(self, "sharp"))
+        analyse_menu.addAction(
+            icons.icon("mdi.ruler"), self.tr("Check &fits && tolerances..."),
+            lambda: open_check(self, "fit"))
         from . import heatmap_ui
         heatmap_ui.add_menu(self, analyse_menu)
 

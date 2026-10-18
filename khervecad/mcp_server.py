@@ -830,6 +830,12 @@ run check_printability (watertight, overhangs, thin walls, footprint) \
 and fix what it names; after placing or mating parts run \
 check_interference (do they overlap?); mass_properties gives volume, \
 mass and cost when the user asks how heavy or how much.
+- ENGINEERING CHECKS: after building or changing a part, and BEFORE \
+updating its Blueprint, run check_sharp_edges (round what it lists with \
+fillet_edges and its fillet_seeds, or add the 'break sharp edges' note \
+to the drawing) and, for parts that fit together, check_fits (gaps, \
+pin-in-bore ISO fit); once the drawing has toleranced dimensions run \
+tolerance_stackup on the chain that matters.
 
 Working rules:
 - Everything you do is one undoable step per call: the user gets their \

@@ -3232,6 +3232,27 @@ class McpToolExecutor:
             out["note"] = self._APPROX_NOTE
         return out
 
+    def _t_check_sharp_edges(self, params) -> dict:
+        from . import engcheck_mcp
+        try:
+            return engcheck_mcp.mcp_sharp(self, params)
+        except engcheck_mcp.CheckError as exc:
+            raise ToolError(str(exc))
+
+    def _t_check_fits(self, params) -> dict:
+        from . import engcheck_mcp
+        try:
+            return engcheck_mcp.mcp_fits(self, params)
+        except engcheck_mcp.CheckError as exc:
+            raise ToolError(str(exc))
+
+    def _t_tolerance_stackup(self, params) -> dict:
+        from . import engcheck_mcp
+        try:
+            return engcheck_mcp.mcp_stackup(self, params)
+        except engcheck_mcp.CheckError as exc:
+            raise ToolError(str(exc))
+
     def _t_check_interference(self, params) -> dict:
         from . import analysis, analysis_dialog
         ids = params.get("node_ids")

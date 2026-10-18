@@ -63,6 +63,7 @@ _READ_ONLY_TOOLS = frozenset({
     "list_edges",
     "mass_properties",
     "check_printability", "check_interference", "render_photo",
+    "check_sharp_edges", "check_fits", "tolerance_stackup",
 })
 
 #: Tools that never change the document, so there is no snapshot to

@@ -3345,6 +3345,68 @@ TOOLS = [
         "input_schema": _obj({"node_ids": _IDS}),
     },
     {
+        "name": "check_sharp_edges",
+        "description": (
+            "Sharp-edge check (Analyse > Check Sharp Edges): crease edges "
+            "whose faces meet at under face_angle (default 135°: a 90° "
+            "corner is sharp, a 45° chamfer is not) and that no fillet / "
+            "bevel / chamfer rounds. Returns status, count, total length, "
+            "the chains (centre, ends, length, face angle) and per node "
+            "the LOCAL fillet_seeds to hand to fillet_edges. highlight "
+            "tints them in the 3D view. Run it after building a part, "
+            "before updating the Blueprint."
+        ),
+        "input_schema": _obj({
+            "node_ids": _IDS,
+            "face_angle": {"type": "number",
+                           "description": "Degrees inside the material; "
+                                          "default 135."},
+            "concave": {"type": "boolean",
+                        "description": "Count inside corners too."},
+            "highlight": {"type": "boolean"},
+        }),
+    },
+    {
+        "name": "check_fits",
+        "description": (
+            "Clearance / fit check (Analyse > Check Fits & Tolerances): "
+            "for every pair of the parts (default: the scope's visible "
+            "parts) that overlap, are mated or lie within `near` mm, the "
+            "minimum gap and its two points, pass / warn (under "
+            "`clearance`, or touching unmated) / fail (overlap). A pin "
+            "standing in a bore gets its diametral clearance and the ISO "
+            "286 hole-basis fit it falls in (H11/c11 … H7/s6). Give "
+            "nominal + diametral_clearance to classify a fit directly."
+        ),
+        "input_schema": _obj({
+            "node_ids": _IDS,
+            "clearance": {"type": "number",
+                          "description": "Wanted gap, default 0.1."},
+            "near": {"type": "number",
+                     "description": "Neighbour distance, default 2."},
+            "nominal": {"type": "number"},
+            "diametral_clearance": {"type": "number"},
+        }),
+    },
+    {
+        "name": "tolerance_stackup",
+        "description": (
+            "Tolerance stack-up of Blueprint dimensions carrying tol_plus "
+            "/ tol_minus: worst case and RSS range of the closing value. "
+            "chain = note indices from blueprint state (or {index, sign: "
+            "-1} for a dimension that subtracts); default every "
+            "toleranced dimension, added. limits [min, max] gives pass "
+            "(worst case inside) / warn (only RSS) / fail. drawing = an "
+            "Object's own sheet (default the assembly)."
+        ),
+        "input_schema": _obj({
+            "chain": {"type": "array", "items": {}},
+            "limits": {"type": "array", "items": {"type": "number"},
+                       "minItems": 2, "maxItems": 2},
+            "drawing": {"type": "string"},
+        }),
+    },
+    {
         "name": "build_city",
         "description": (
             "The City Builder: villages, towns and cities — optionally ON "

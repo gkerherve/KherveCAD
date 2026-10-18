@@ -4455,6 +4455,27 @@ into a new module and import.
                        selection highlight on close. MCP:
                        `mass_properties`, `check_printability`,
                        `check_interference` (read-only).
+  - `edgecheck.py` / `fitcheck.py` / `engcheck_mcp.py` /
+    `engcheck_dialog.py` — **engineering checks** (2026-10-18, the
+                       user asked for tolerance and sharp-edge analysis):
+                       Analyse ▸ Check Sharp Edges (creases whose faces
+                       meet under 135° — `fillet.crease_edges` + `chain`,
+                       a rounded edge has no crease — tinted on the model,
+                       "Fillet these" wraps a fillet node with the LOCAL
+                       seeds, "break sharp edges" text note on the
+                       Blueprint) and Analyse ▸ Check Fits & Tolerances
+                       (min gap per overlapping / mated / near pair —
+                       vertices to the other's surface via
+                       `shrinkwrap.Target`; a pin in a bore (round bbox
+                       section inside the other's footprint) gets its
+                       diametral clearance and the ISO 286 hole-basis fit
+                       from `FITS`, IT6-11 + deviations up to 180 mm; the
+                       stack-up of saved Blueprint dimensions' tol_plus /
+                       tol_minus, worst case and RSS vs limits). MCP
+                       `check_sharp_edges`, `check_fits`,
+                       `tolerance_stackup` (read-only); the instructions
+                       run them after building a part and before updating
+                       the Blueprint.
   - `sdf.py`         — **smooth blend** geometry (Qt-free): the
                        primitives under a `blend` (sphere, cube,
                        cylinder, capsule, ellipsoid, rounded box —
