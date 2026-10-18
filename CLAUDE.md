@@ -3671,6 +3671,16 @@ into a new module and import.
                        see it. Sheet state `merge_parts` (default true,
                        MCP blueprint sheet `merge_parts`); `joined` says
                        how many solids were joined.
+                       Hidden lines on the merged copy: `drawing.
+                       view_lines` treats a face within 2 tol of the edge in
+                       space, or a GRAZING one (|n·view| < `GRAZE`) within 4
+                       tol, as the same surface — Manifold's slivers beside
+                       a silhouette sat a grid cell in front of it and the
+                       chamber's bottom edge vanished for 100 mm.
+                       `parts/Vacuum chambers` (Library ▸ Vacuum & UHV):
+                       the horizontal Ø250 preparation chamber (two focal
+                       points, 15 ports, knife-edge / rotatable CF flanges,
+                       its two-sheet drawing with welds), the user's design.
   - `drawing_set.py` — the **drawing set** (2026-10-17, the user: "each
                        object's got its own drawing ... and an individual
                        BOM"): `DocumentModel.part_drawings` {Object name:

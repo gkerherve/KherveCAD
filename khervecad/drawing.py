@@ -65,6 +65,10 @@ SAMPLES = 24
 DEPTH_TOL = 0.004
 #: depth-grid resolution across the model's longer side
 GRID = 600
+#: |normal · view| under which a face is seen nearly edge-on: beside an
+#: edge it is the same curved surface turning away (a grid cell 1/600 of
+#: the model wide lands on it, several mm in front of the silhouette)
+GRAZE = 0.26
 
 
 # ------------------------------------------------------------ projection
@@ -157,6 +161,40 @@ class DepthGrid:
         if 0 <= i < self.w and 0 <= j < self.h:
             return self.owner[j * self.w + i]
         return -1
+
+
+def _point_tri_dist(p, tri):
+    """Distance from point *p* to triangle *tri* in space."""
+    a, b, c = tri
+    ab = [b[i] - a[i] for i in range(3)]
+    ac = [c[i] - a[i] for i in range(3)]
+    ap = [p[i] - a[i] for i in range(3)]
+    d1, d2 = _dot(ab, ap), _dot(ac, ap)
+    if d1 <= 0 and d2 <= 0:
+        return math.dist(p, a)
+    bp = [p[i] - b[i] for i in range(3)]
+    d3, d4 = _dot(ab, bp), _dot(ac, bp)
+    if d3 >= 0 and d4 <= d3:
+        return math.dist(p, b)
+    vc = d1 * d4 - d3 * d2
+    if vc <= 0 and d1 >= 0 and d3 <= 0:
+        t = d1 / (d1 - d3)
+        return math.dist(p, [a[i] + t * ab[i] for i in range(3)])
+    cp = [p[i] - c[i] for i in range(3)]
+    d5, d6 = _dot(ab, cp), _dot(ac, cp)
+    if d6 >= 0 and d5 <= d6:
+        return math.dist(p, c)
+    vb = d5 * d2 - d1 * d6
+    if vb <= 0 and d2 >= 0 and d6 <= 0:
+        t = d2 / (d2 - d6)
+        return math.dist(p, [a[i] + t * ac[i] for i in range(3)])
+    va = d3 * d6 - d5 * d4
+    if va <= 0 and (d4 - d3) >= 0 and (d5 - d6) >= 0:
+        t = (d4 - d3) / ((d4 - d3) + (d5 - d6))
+        return math.dist(p, [b[i] + t * (c[i] - b[i]) for i in range(3)])
+    den = 1.0 / (va + vb + vc)
+    v, w = vb * den, vc * den
+    return math.dist(p, [a[i] + ab[i] * v + ac[i] * w for i in range(3)])
 
 
 def view_lines(tris, view, info=None, hidden_lines=True):
@@ -267,9 +305,22 @@ def view_lines(tris, view, info=None, hidden_lines=True):
                 point = (p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t,
                          p[2] + (q[2] - p[2]) * t)
                 if owner >= 0 and beside(tris[owner], point):
-                    if near is None:
-                        near = surroundings(ekey)
-                    seen = owner in near
+                    # a face that passes within the tolerance of the
+                    # edge in SPACE — or a grazing face just beside it —
+                    # is the same surface seen edge-on, not one in front:
+                    # Manifold's merged copy (drawmerge) re-triangulates a
+                    # body into long slivers the smooth ring walk below
+                    # never reached, and a chamber's bottom edge vanished
+                    # for 100 mm
+                    dist = _point_tri_dist(point, tris[owner])
+                    if dist <= 2.0 * tol or (
+                            abs(_dot(info.normals[owner], forward)) < GRAZE
+                            and dist <= 4.0 * tol):
+                        seen = True
+                    else:
+                        if near is None:
+                            near = surroundings(ekey)
+                        seen = owner in near
             if seen != state:
                 runs.append([seen, t, t])
                 state = seen

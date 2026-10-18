@@ -1,0 +1,5591 @@
+{
+ "format": "kcad",
+ "version": 16,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "variables",
+    "name": "Variables",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "assign",
+      "name": "body_od =",
+      "visible": true,
+      "params": {
+       "variable": "body_od",
+       "value": 250.0,
+       "options": "200:10:400",
+       "description": "Horizontal preparation chamber, \u00d8250 x 600, two focal points on the axis"
+      }
+     },
+     {
+      "type": "assign",
+      "name": "body_wall =",
+      "visible": true,
+      "params": {
+       "variable": "body_wall",
+       "value": 4.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "body_len =",
+      "visible": true,
+      "params": {
+       "variable": "body_len",
+       "value": 600.0,
+       "options": "400:10:1000"
+      }
+     },
+     {
+      "type": "assign",
+      "name": "end_t =",
+      "visible": true,
+      "params": {
+       "variable": "end_t",
+       "value": 12.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "f1_x =",
+      "visible": true,
+      "params": {
+       "variable": "f1_x",
+       "value": -150.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "f2_x =",
+      "visible": true,
+      "params": {
+       "variable": "f2_x",
+       "value": 150.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "cf40_face =",
+      "visible": true,
+      "params": {
+       "variable": "cf40_face",
+       "value": 200.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "cf100_face =",
+      "visible": true,
+      "params": {
+       "variable": "cf100_face",
+       "value": 200.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "end_face =",
+      "visible": true,
+      "params": {
+       "variable": "end_face",
+       "value": 380.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "turbo_face =",
+      "visible": true,
+      "params": {
+       "variable": "turbo_face",
+       "value": 350.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "branch_z =",
+      "visible": true,
+      "params": {
+       "variable": "branch_z",
+       "value": -265.0
+      }
+     },
+     {
+      "type": "assign",
+      "name": "branch_face =",
+      "visible": true,
+      "params": {
+       "variable": "branch_face",
+       "value": 150.0
+      }
+     }
+    ]
+   },
+   {
+    "type": "component",
+    "name": "Preparation chamber",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "ef51c5b54180485aab86c94173cb3662",
+      "title": "Preparation chamber",
+      "area": "Vacuum & UHV",
+      "named": "Preparation chamber"
+     }
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Chamber body \u00d8250 x 600",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "0a7506e3704d47209f4f260d06b8fcda",
+        "title": "Chamber body \u00d8250 x 600",
+        "area": "Vacuum & UHV",
+        "named": "Chamber body \u00d8250 x 600"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#b8bcc2",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len",
+                 "radius_bottom": "(body_od) / 2",
+                 "radius_top": "(body_od) / 2",
+                 "segments": 128,
+                 "center": true
+                }
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len + 2",
+                 "radius_bottom": "(body_od - 2 * body_wall) / 2",
+                 "radius_top": "(body_od - 2 * body_wall) / 2",
+                 "segments": 128,
+                 "center": true
+                }
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 90.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": "cf40_face",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 270.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": "cf40_face",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 45.0,
+                 "z": 90.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": "cf40_face",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 45.0,
+                 "z": 270.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": "cf40_face",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 150.0,
+                 "z": 180.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": "cf40_face",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 120.0,
+                 "z": 60.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": "cf40_face",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": "cf40_face",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 90.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": "cf40_face",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 270.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": "cf40_face",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 150.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": "cf40_face",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0,
+               "height": "cf100_face",
+               "radius_bottom": 48.5,
+               "radius_top": 48.5,
+               "segments": 96,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": "-cf100_face",
+               "height": "cf100_face",
+               "radius_bottom": 48.5,
+               "radius_top": 48.5,
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "Left end plate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "60fee80c0a20425691908a9584564aad",
+        "title": "Left end plate",
+        "area": "Kitchen & tableware",
+        "named": "Left end plate"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#b8bcc2",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "-body_len / 2 - end_t",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": "end_t",
+                   "radius_bottom": "(body_od) / 2",
+                   "radius_top": "(body_od) / 2",
+                   "segments": 128,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": -90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len",
+                 "radius_bottom": 17.5,
+                 "radius_top": 17.5,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "Right end plate",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "9d1b8af4eead4ec2815570e35051d3a9",
+        "title": "Right end plate",
+        "area": "Kitchen & tableware",
+        "named": "Right end plate"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#b8bcc2",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "body_len / 2",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": "end_t",
+                   "radius_bottom": "(body_od) / 2",
+                   "radius_top": "(body_od) / 2",
+                   "segments": 128,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len",
+                 "radius_bottom": 17.5,
+                 "radius_top": 17.5,
+                 "segments": 48,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "M1 CF100 manipulator port (up, focal point A)",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "46e80a022bfc4237aa2acb4e9dc45863",
+        "title": "M1 CF100 manipulator port (up, focal point A)",
+        "area": "General",
+        "named": "M1 CF100 manipulator port (up, focal point A)"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c9ccd1",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Group",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": "cf100_face - 22.4 - 0",
+                     "radius_bottom": 50.8,
+                     "radius_top": 50.8,
+                     "segments": 64,
+                     "center": false
+                    }
+                   },
+                   {
+                    "type": "component",
+                    "name": "CF100_fixed",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "cf100_face - 22.4",
+                     "rx": 0.0,
+                     "ry": 0.0,
+                     "rz": 0.0,
+                     "color": "",
+                     "alpha": 1.0
+                    },
+                    "children": [
+                     {
+                      "type": "difference",
+                      "name": "Difference",
+                      "visible": true,
+                      "params": {},
+                      "children": [
+                       {
+                        "type": "rotate_extrude",
+                        "name": "Rotate extrude",
+                        "visible": true,
+                        "params": {
+                         "angle": 360.0,
+                         "segments": 96
+                        },
+                        "children": [
+                         {
+                          "type": "polygon",
+                          "name": "Polygon",
+                          "visible": true,
+                          "params": {
+                           "x": 0.0,
+                           "y": 0.0,
+                           "points": [
+                            [
+                             48.5,
+                             0.0
+                            ],
+                            [
+                             75.2,
+                             0.0
+                            ],
+                            [
+                             76.2,
+                             1.0
+                            ],
+                            [
+                             76.2,
+                             21.4
+                            ],
+                            [
+                             75.2,
+                             22.4
+                            ],
+                            [
+                             75.2,
+                             22.4
+                            ],
+                            [
+                             60.65,
+                             22.4
+                            ],
+                            [
+                             60.65,
+                             20.8
+                            ],
+                            [
+                             60.22,
+                             20.8
+                            ],
+                            [
+                             59.45,
+                             21.9
+                            ],
+                            [
+                             58.68,
+                             20.8
+                            ],
+                            [
+                             48.5,
+                             20.8
+                            ]
+                           ]
+                          }
+                         }
+                        ]
+                       },
+                       {
+                        "type": "for_loop",
+                        "name": "For k",
+                        "visible": true,
+                        "params": {
+                         "variable": "k",
+                         "start": 0.0,
+                         "end": 15.0,
+                         "step": 1.0,
+                         "values": ""
+                        },
+                        "children": [
+                         {
+                          "type": "rotate",
+                          "name": "Rotate",
+                          "visible": true,
+                          "params": {
+                           "x": 0.0,
+                           "y": 0.0,
+                           "z": "k * 22.5 + 11.25"
+                          },
+                          "children": [
+                           {
+                            "type": "cylinder",
+                            "name": "Cylinder",
+                            "visible": true,
+                            "params": {
+                             "x": 65.15,
+                             "y": 0.0,
+                             "z": -1.0,
+                             "height": 24.4,
+                             "radius_bottom": 4.2,
+                             "radius_top": 4.2,
+                             "segments": 16,
+                             "center": false
+                            }
+                           }
+                          ]
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": -1.0,
+                   "height": "cf100_face - 22.4 + 1.5",
+                   "radius_bottom": 48.5,
+                   "radius_top": 48.5,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len",
+                 "radius_bottom": "(body_od - 2 * body_wall) / 2",
+                 "radius_top": "(body_od - 2 * body_wall) / 2",
+                 "segments": 128,
+                 "center": true
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "T1 CF100 pump port, turbo (down, focal point B)",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "dc99671d2967474a965b7f12f43142e2",
+        "title": "T1 CF100 pump port, turbo (down, focal point B)",
+        "area": "General",
+        "named": "T1 CF100 pump port, turbo (down, focal point B)"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c9ccd1",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "mirror",
+                "name": "Mirror",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 1.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Group",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": "turbo_face - 22.4 - 0",
+                     "radius_bottom": 50.8,
+                     "radius_top": 50.8,
+                     "segments": 64,
+                     "center": false
+                    }
+                   },
+                   {
+                    "type": "component",
+                    "name": "CF100_rotatable",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "turbo_face - 22.4",
+                     "rx": 0.0,
+                     "ry": 0.0,
+                     "rz": 0.0,
+                     "color": "",
+                     "alpha": 1.0
+                    },
+                    "children": [
+                     {
+                      "type": "rotate_extrude",
+                      "name": "Rotate extrude",
+                      "visible": true,
+                      "params": {
+                       "angle": 360.0,
+                       "segments": 96
+                      },
+                      "children": [
+                       {
+                        "type": "polygon",
+                        "name": "Polygon [Knife-edge ring]",
+                        "visible": true,
+                        "params": {
+                         "x": 0.0,
+                         "y": 0.0,
+                         "points": [
+                          [
+                           48.5,
+                           0.0
+                          ],
+                          [
+                           53.3,
+                           0.0
+                          ],
+                          [
+                           53.3,
+                           7.84
+                          ],
+                          [
+                           63.85,
+                           7.84
+                          ],
+                          [
+                           63.85,
+                           22.4
+                          ],
+                          [
+                           60.65,
+                           22.4
+                          ],
+                          [
+                           60.65,
+                           20.8
+                          ],
+                          [
+                           60.22,
+                           20.8
+                          ],
+                          [
+                           59.45,
+                           21.9
+                          ],
+                          [
+                           58.68,
+                           20.8
+                          ],
+                          [
+                           48.5,
+                           20.8
+                          ]
+                         ]
+                        }
+                       }
+                      ]
+                     },
+                     {
+                      "type": "color",
+                      "name": "Color [Rotatable bolt ring]",
+                      "visible": true,
+                      "params": {
+                       "color": "#9aa0a8",
+                       "alpha": 1.0,
+                       "material": "Default"
+                      },
+                      "children": [
+                       {
+                        "type": "difference",
+                        "name": "Difference",
+                        "visible": true,
+                        "params": {},
+                        "children": [
+                         {
+                          "type": "rotate_extrude",
+                          "name": "Rotate extrude",
+                          "visible": true,
+                          "params": {
+                           "angle": 360.0,
+                           "segments": 96
+                          },
+                          "children": [
+                           {
+                            "type": "polygon",
+                            "name": "Polygon",
+                            "visible": true,
+                            "params": {
+                             "x": 0.0,
+                             "y": 0.0,
+                             "points": [
+                              [
+                               53.8,
+                               0.0
+                              ],
+                              [
+                               75.2,
+                               0.0
+                              ],
+                              [
+                               76.2,
+                               1.0
+                              ],
+                              [
+                               76.2,
+                               21.2
+                              ],
+                              [
+                               75.2,
+                               22.2
+                              ],
+                              [
+                               64.35,
+                               22.2
+                              ],
+                              [
+                               64.35,
+                               7.85
+                              ],
+                              [
+                               53.8,
+                               7.85
+                              ]
+                             ]
+                            }
+                           }
+                          ]
+                         },
+                         {
+                          "type": "for_loop",
+                          "name": "For k",
+                          "visible": true,
+                          "params": {
+                           "variable": "k",
+                           "start": 0.0,
+                           "end": 15.0,
+                           "step": 1.0,
+                           "values": ""
+                          },
+                          "children": [
+                           {
+                            "type": "rotate",
+                            "name": "Rotate",
+                            "visible": true,
+                            "params": {
+                             "x": 0.0,
+                             "y": 0.0,
+                             "z": "k * 22.5 + 11.25"
+                            },
+                            "children": [
+                             {
+                              "type": "cylinder",
+                              "name": "Cylinder",
+                              "visible": true,
+                              "params": {
+                               "x": 65.15,
+                               "y": 0.0,
+                               "z": -1.0,
+                               "height": 24.4,
+                               "radius_bottom": 4.2,
+                               "radius_top": 4.2,
+                               "segments": 16,
+                               "center": false
+                              }
+                             }
+                            ]
+                           }
+                          ]
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "mirror",
+                "name": "Mirror",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 1.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": -1.0,
+                   "height": "turbo_face - 22.4 + 1.5",
+                   "radius_bottom": 48.5,
+                   "radius_top": 48.5,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len",
+                 "radius_bottom": "(body_od - 2 * body_wall) / 2",
+                 "radius_top": "(body_od - 2 * body_wall) / 2",
+                 "segments": 128,
+                 "center": true
+                }
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": "branch_z"
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": -90.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "height": "branch_face",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "G2 CF40 gauge port on the pump nipple",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "a3054b153a4c48879224d6460754e340",
+        "title": "G2 CF40 gauge port on the pump nipple",
+        "area": "Vacuum & UHV",
+        "named": "G2 CF40 gauge port on the pump nipple"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c9ccd1",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": "branch_z"
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": -90.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Group",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": "branch_face - 12.7",
+                     "radius_bottom": 19.05,
+                     "radius_top": 19.05,
+                     "segments": 64,
+                     "center": false
+                    }
+                   },
+                   {
+                    "type": "component",
+                    "name": "CF40_fixed",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "branch_face - 12.7",
+                     "rx": 0.0,
+                     "ry": 0.0,
+                     "rz": 0.0,
+                     "color": "",
+                     "alpha": 1.0
+                    },
+                    "children": [
+                     {
+                      "type": "difference",
+                      "name": "Difference",
+                      "visible": true,
+                      "params": {},
+                      "children": [
+                       {
+                        "type": "rotate_extrude",
+                        "name": "Rotate extrude",
+                        "visible": true,
+                        "params": {
+                         "angle": 360.0,
+                         "segments": 96
+                        },
+                        "children": [
+                         {
+                          "type": "polygon",
+                          "name": "Polygon",
+                          "visible": true,
+                          "params": {
+                           "x": 0.0,
+                           "y": 0.0,
+                           "points": [
+                            [
+                             17.5,
+                             0.0
+                            ],
+                            [
+                             33.95,
+                             0.0
+                            ],
+                            [
+                             34.95,
+                             1.0
+                            ],
+                            [
+                             34.95,
+                             11.7
+                            ],
+                            [
+                             33.95,
+                             12.7
+                            ],
+                            [
+                             33.95,
+                             12.7
+                            ],
+                            [
+                             24.45,
+                             12.7
+                            ],
+                            [
+                             24.45,
+                             11.1
+                            ],
+                            [
+                             24.02,
+                             11.1
+                            ],
+                            [
+                             23.25,
+                             12.2
+                            ],
+                            [
+                             22.48,
+                             11.1
+                            ],
+                            [
+                             17.5,
+                             11.1
+                            ]
+                           ]
+                          }
+                         }
+                        ]
+                       },
+                       {
+                        "type": "for_loop",
+                        "name": "For k",
+                        "visible": true,
+                        "params": {
+                         "variable": "k",
+                         "start": 0.0,
+                         "end": 5.0,
+                         "step": 1.0,
+                         "values": ""
+                        },
+                        "children": [
+                         {
+                          "type": "rotate",
+                          "name": "Rotate",
+                          "visible": true,
+                          "params": {
+                           "x": 0.0,
+                           "y": 0.0,
+                           "z": "k * 60.0 + 30.0"
+                          },
+                          "children": [
+                           {
+                            "type": "cylinder",
+                            "name": "Cylinder",
+                            "visible": true,
+                            "params": {
+                             "x": 29.35,
+                             "y": 0.0,
+                             "z": -1.0,
+                             "height": 14.7,
+                             "radius_bottom": 3.3,
+                             "radius_top": 3.3,
+                             "segments": 16,
+                             "center": false
+                            }
+                           }
+                          ]
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": "branch_z"
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": -90.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": -1.0,
+                   "height": "branch_face - 12.7 + 1.5",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": "-turbo_face",
+               "height": "turbo_face",
+               "radius_bottom": 48.5,
+               "radius_top": 48.5,
+               "segments": 96,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "V1 CF40 viewport (focal point A, +Y)",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "1cf611a5fb6e43c08e430316bdbd5b30",
+        "title": "V1 CF40 viewport (focal point A, +Y)",
+        "area": "Vacuum & UHV",
+        "named": "V1 CF40 viewport (focal point A, +Y)"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c9ccd1",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 90.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Group",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": "cf40_face - 12.7 - 0",
+                     "radius_bottom": 19.05,
+                     "radius_top": 19.05,
+                     "segments": 64,
+                     "center": false
+                    }
+                   },
+                   {
+                    "type": "reference",
+                    "name": "CF40_fixed instance",
+                    "visible": true,
+                    "params": {
+                     "ref": "CF40_fixed",
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "cf40_face - 12.7",
+                     "rx": 0.0,
+                     "ry": 0.0,
+                     "rz": 0.0,
+                     "color": "",
+                     "alpha": 1.0
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 90.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": -1.0,
+                   "height": "cf40_face - 12.7 + 1.5",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len",
+                 "radius_bottom": "(body_od - 2 * body_wall) / 2",
+                 "radius_top": "(body_od - 2 * body_wall) / 2",
+                 "segments": 128,
+                 "center": true
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "V2 CF40 viewport (focal point A, -Y)",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "28e03e50083d4193a2626d86b7ed061b",
+        "title": "V2 CF40 viewport (focal point A, -Y)",
+        "area": "Vacuum & UHV",
+        "named": "V2 CF40 viewport (focal point A, -Y)"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c9ccd1",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 270.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Group",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": "cf40_face - 12.7 - 0",
+                     "radius_bottom": 19.05,
+                     "radius_top": 19.05,
+                     "segments": 64,
+                     "center": false
+                    }
+                   },
+                   {
+                    "type": "reference",
+                    "name": "CF40_fixed instance",
+                    "visible": true,
+                    "params": {
+                     "ref": "CF40_fixed",
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "cf40_face - 12.7",
+                     "rx": 0.0,
+                     "ry": 0.0,
+                     "rz": 0.0,
+                     "color": "",
+                     "alpha": 1.0
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 270.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": -1.0,
+                   "height": "cf40_face - 12.7 + 1.5",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len",
+                 "radius_bottom": "(body_od - 2 * body_wall) / 2",
+                 "radius_top": "(body_od - 2 * body_wall) / 2",
+                 "segments": 128,
+                 "center": true
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "S1 CF40 sputter gun port (focal point A, 45 deg up +Y)",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "f558dc8fb2e343608760d1cfdf944330",
+        "title": "S1 CF40 sputter gun port (focal point A, 45 deg up +Y)",
+        "area": "Vacuum & UHV",
+        "named": "S1 CF40 sputter gun port (focal point A, 45 deg up +Y)"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c9ccd1",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 45.0,
+                 "z": 90.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Group",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": "cf40_face - 12.7 - 0",
+                     "radius_bottom": 19.05,
+                     "radius_top": 19.05,
+                     "segments": 64,
+                     "center": false
+                    }
+                   },
+                   {
+                    "type": "component",
+                    "name": "CF40_rotatable",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "cf40_face - 12.7",
+                     "rx": 0.0,
+                     "ry": 0.0,
+                     "rz": 0.0,
+                     "color": "",
+                     "alpha": 1.0
+                    },
+                    "children": [
+                     {
+                      "type": "rotate_extrude",
+                      "name": "Rotate extrude",
+                      "visible": true,
+                      "params": {
+                       "angle": 360.0,
+                       "segments": 96
+                      },
+                      "children": [
+                       {
+                        "type": "polygon",
+                        "name": "Polygon [Knife-edge ring]",
+                        "visible": true,
+                        "params": {
+                         "x": 0.0,
+                         "y": 0.0,
+                         "points": [
+                          [
+                           17.5,
+                           0.0
+                          ],
+                          [
+                           21.55,
+                           0.0
+                          ],
+                          [
+                           21.55,
+                           4.445
+                          ],
+                          [
+                           27.65,
+                           4.445
+                          ],
+                          [
+                           27.65,
+                           12.7
+                          ],
+                          [
+                           24.45,
+                           12.7
+                          ],
+                          [
+                           24.45,
+                           11.1
+                          ],
+                          [
+                           24.02,
+                           11.1
+                          ],
+                          [
+                           23.25,
+                           12.2
+                          ],
+                          [
+                           22.48,
+                           11.1
+                          ],
+                          [
+                           17.5,
+                           11.1
+                          ]
+                         ]
+                        }
+                       }
+                      ]
+                     },
+                     {
+                      "type": "color",
+                      "name": "Color [Rotatable bolt ring]",
+                      "visible": true,
+                      "params": {
+                       "color": "#9aa0a8",
+                       "alpha": 1.0,
+                       "material": "Default"
+                      },
+                      "children": [
+                       {
+                        "type": "difference",
+                        "name": "Difference",
+                        "visible": true,
+                        "params": {},
+                        "children": [
+                         {
+                          "type": "rotate_extrude",
+                          "name": "Rotate extrude",
+                          "visible": true,
+                          "params": {
+                           "angle": 360.0,
+                           "segments": 96
+                          },
+                          "children": [
+                           {
+                            "type": "polygon",
+                            "name": "Polygon",
+                            "visible": true,
+                            "params": {
+                             "x": 0.0,
+                             "y": 0.0,
+                             "points": [
+                              [
+                               22.05,
+                               0.0
+                              ],
+                              [
+                               33.95,
+                               0.0
+                              ],
+                              [
+                               34.95,
+                               1.0
+                              ],
+                              [
+                               34.95,
+                               11.5
+                              ],
+                              [
+                               33.95,
+                               12.5
+                              ],
+                              [
+                               28.15,
+                               12.5
+                              ],
+                              [
+                               28.15,
+                               4.455
+                              ],
+                              [
+                               22.05,
+                               4.455
+                              ]
+                             ]
+                            }
+                           }
+                          ]
+                         },
+                         {
+                          "type": "for_loop",
+                          "name": "For k",
+                          "visible": true,
+                          "params": {
+                           "variable": "k",
+                           "start": 0.0,
+                           "end": 5.0,
+                           "step": 1.0,
+                           "values": ""
+                          },
+                          "children": [
+                           {
+                            "type": "rotate",
+                            "name": "Rotate",
+                            "visible": true,
+                            "params": {
+                             "x": 0.0,
+                             "y": 0.0,
+                             "z": "k * 60.0 + 30.0"
+                            },
+                            "children": [
+                             {
+                              "type": "cylinder",
+                              "name": "Cylinder",
+                              "visible": true,
+                              "params": {
+                               "x": 29.35,
+                               "y": 0.0,
+                               "z": -1.0,
+                               "height": 14.7,
+                               "radius_bottom": 3.3,
+                               "radius_top": 3.3,
+                               "segments": 16,
+                               "center": false
+                              }
+                             }
+                            ]
+                           }
+                          ]
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 45.0,
+                 "z": 90.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": -1.0,
+                   "height": "cf40_face - 12.7 + 1.5",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len",
+                 "radius_bottom": "(body_od - 2 * body_wall) / 2",
+                 "radius_top": "(body_od - 2 * body_wall) / 2",
+                 "segments": 128,
+                 "center": true
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "S2 CF40 gun port, evaporator (focal point A, 45 deg up -Y)",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "d098564e727f4acd9319332bff8521e9",
+        "title": "S2 CF40 gun port, evaporator (focal point A, 45 deg up -Y)",
+        "area": "Vacuum & UHV",
+        "named": "S2 CF40 gun port, evaporator (focal point A, 45 deg up -Y)"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c9ccd1",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 45.0,
+                 "z": 270.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Group",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": "cf40_face - 12.7 - 0",
+                     "radius_bottom": 19.05,
+                     "radius_top": 19.05,
+                     "segments": 64,
+                     "center": false
+                    }
+                   },
+                   {
+                    "type": "reference",
+                    "name": "CF40_rotatable instance",
+                    "visible": true,
+                    "params": {
+                     "ref": "CF40_rotatable",
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "cf40_face - 12.7",
+                     "rx": 0.0,
+                     "ry": 0.0,
+                     "rz": 0.0,
+                     "color": "",
+                     "alpha": 1.0
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 45.0,
+                 "z": 270.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": -1.0,
+                   "height": "cf40_face - 12.7 + 1.5",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len",
+                 "radius_bottom": "(body_od - 2 * body_wall) / 2",
+                 "radius_top": "(body_od - 2 * body_wall) / 2",
+                 "segments": 128,
+                 "center": true
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "A1 CF40 spare port (focal point A, down)",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "5cb29f51c11b42c4b360b66c65e8bb87",
+        "title": "A1 CF40 spare port (focal point A, down)",
+        "area": "Vacuum & UHV",
+        "named": "A1 CF40 spare port (focal point A, down)"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c9ccd1",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 150.0,
+                 "z": 180.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Group",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": "cf40_face - 12.7 - 0",
+                     "radius_bottom": 19.05,
+                     "radius_top": 19.05,
+                     "segments": 64,
+                     "center": false
+                    }
+                   },
+                   {
+                    "type": "reference",
+                    "name": "CF40_rotatable instance",
+                    "visible": true,
+                    "params": {
+                     "ref": "CF40_rotatable",
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "cf40_face - 12.7",
+                     "rx": 0.0,
+                     "ry": 0.0,
+                     "rz": 0.0,
+                     "color": "",
+                     "alpha": 1.0
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 150.0,
+                 "z": 180.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": -1.0,
+                   "height": "cf40_face - 12.7 + 1.5",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len",
+                 "radius_bottom": "(body_od - 2 * body_wall) / 2",
+                 "radius_top": "(body_od - 2 * body_wall) / 2",
+                 "segments": 128,
+                 "center": true
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "A2 CF40 spare port (focal point A, 30 deg down +Y)",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "45cee4fe235942c09af773e2e42528c2",
+        "title": "A2 CF40 spare port (focal point A, 30 deg down +Y)",
+        "area": "Vacuum & UHV",
+        "named": "A2 CF40 spare port (focal point A, 30 deg down +Y)"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c9ccd1",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 120.0,
+                 "z": 60.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Group",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": "cf40_face - 12.7 - 0",
+                     "radius_bottom": 19.05,
+                     "radius_top": 19.05,
+                     "segments": 64,
+                     "center": false
+                    }
+                   },
+                   {
+                    "type": "reference",
+                    "name": "CF40_rotatable instance",
+                    "visible": true,
+                    "params": {
+                     "ref": "CF40_rotatable",
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "cf40_face - 12.7",
+                     "rx": 0.0,
+                     "ry": 0.0,
+                     "rz": 0.0,
+                     "color": "",
+                     "alpha": 1.0
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f1_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 120.0,
+                 "z": 60.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": -1.0,
+                   "height": "cf40_face - 12.7 + 1.5",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len",
+                 "radius_bottom": "(body_od - 2 * body_wall) / 2",
+                 "radius_top": "(body_od - 2 * body_wall) / 2",
+                 "segments": 128,
+                 "center": true
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "G1 CF40 ion gauge port (focal point B, up)",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "2ea545a71bd94ec2ad71b963248b2c67",
+        "title": "G1 CF40 ion gauge port (focal point B, up)",
+        "area": "Vacuum & UHV",
+        "named": "G1 CF40 ion gauge port (focal point B, up)"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c9ccd1",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Group",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": "cf40_face - 12.7 - 0",
+                     "radius_bottom": 19.05,
+                     "radius_top": 19.05,
+                     "segments": 64,
+                     "center": false
+                    }
+                   },
+                   {
+                    "type": "reference",
+                    "name": "CF40_fixed instance",
+                    "visible": true,
+                    "params": {
+                     "ref": "CF40_fixed",
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "cf40_face - 12.7",
+                     "rx": 0.0,
+                     "ry": 0.0,
+                     "rz": 0.0,
+                     "color": "",
+                     "alpha": 1.0
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": -1.0,
+                   "height": "cf40_face - 12.7 + 1.5",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len",
+                 "radius_bottom": "(body_od - 2 * body_wall) / 2",
+                 "radius_top": "(body_od - 2 * body_wall) / 2",
+                 "segments": 128,
+                 "center": true
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "V3 CF40 viewport (focal point B, +Y)",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "7658b67f1aca40719e9b983763ffd3ab",
+        "title": "V3 CF40 viewport (focal point B, +Y)",
+        "area": "Vacuum & UHV",
+        "named": "V3 CF40 viewport (focal point B, +Y)"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c9ccd1",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 90.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Group",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": "cf40_face - 12.7 - 0",
+                     "radius_bottom": 19.05,
+                     "radius_top": 19.05,
+                     "segments": 64,
+                     "center": false
+                    }
+                   },
+                   {
+                    "type": "reference",
+                    "name": "CF40_fixed instance",
+                    "visible": true,
+                    "params": {
+                     "ref": "CF40_fixed",
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "cf40_face - 12.7",
+                     "rx": 0.0,
+                     "ry": 0.0,
+                     "rz": 0.0,
+                     "color": "",
+                     "alpha": 1.0
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 90.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": -1.0,
+                   "height": "cf40_face - 12.7 + 1.5",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len",
+                 "radius_bottom": "(body_od - 2 * body_wall) / 2",
+                 "radius_top": "(body_od - 2 * body_wall) / 2",
+                 "segments": 128,
+                 "center": true
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "L1 CF40 leak valve port (focal point B, -Y)",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "a1ddcafcf8d8415abce7230c5d34c2c2",
+        "title": "L1 CF40 leak valve port (focal point B, -Y)",
+        "area": "Vacuum & UHV",
+        "named": "L1 CF40 leak valve port (focal point B, -Y)"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c9ccd1",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 270.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Group",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": "cf40_face - 12.7 - 0",
+                     "radius_bottom": 19.05,
+                     "radius_top": 19.05,
+                     "segments": 64,
+                     "center": false
+                    }
+                   },
+                   {
+                    "type": "reference",
+                    "name": "CF40_fixed instance",
+                    "visible": true,
+                    "params": {
+                     "ref": "CF40_fixed",
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "cf40_face - 12.7",
+                     "rx": 0.0,
+                     "ry": 0.0,
+                     "rz": 0.0,
+                     "color": "",
+                     "alpha": 1.0
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 270.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": -1.0,
+                   "height": "cf40_face - 12.7 + 1.5",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len",
+                 "radius_bottom": "(body_od - 2 * body_wall) / 2",
+                 "radius_top": "(body_od - 2 * body_wall) / 2",
+                 "segments": 128,
+                 "center": true
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "A3 CF40 spare port (focal point B, down)",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "156a603b17924f199a16a5834cbbb4a4",
+        "title": "A3 CF40 spare port (focal point B, down)",
+        "area": "Vacuum & UHV",
+        "named": "A3 CF40 spare port (focal point B, down)"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c9ccd1",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 150.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Group",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": 0.0,
+                     "height": "cf40_face - 12.7 - 0",
+                     "radius_bottom": 19.05,
+                     "radius_top": 19.05,
+                     "segments": 64,
+                     "center": false
+                    }
+                   },
+                   {
+                    "type": "reference",
+                    "name": "CF40_rotatable instance",
+                    "visible": true,
+                    "params": {
+                     "ref": "CF40_rotatable",
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "cf40_face - 12.7",
+                     "rx": 0.0,
+                     "ry": 0.0,
+                     "rz": 0.0,
+                     "color": "",
+                     "alpha": 1.0
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": "f2_x",
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 150.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": -1.0,
+                   "height": "cf40_face - 12.7 + 1.5",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len",
+                 "radius_bottom": "(body_od - 2 * body_wall) / 2",
+                 "radius_top": "(body_od - 2 * body_wall) / 2",
+                 "segments": 128,
+                 "center": true
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "X1 CF40 transfer port (left end)",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "f751617dc76846579beff58108107d63",
+        "title": "X1 CF40 transfer port (left end)",
+        "area": "Vacuum & UHV",
+        "named": "X1 CF40 transfer port (left end)"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c9ccd1",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 180.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Group",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "body_len / 2",
+                     "height": "end_face - 12.7 - body_len / 2",
+                     "radius_bottom": 19.05,
+                     "radius_top": 19.05,
+                     "segments": 64,
+                     "center": false
+                    }
+                   },
+                   {
+                    "type": "reference",
+                    "name": "CF40_fixed instance",
+                    "visible": true,
+                    "params": {
+                     "ref": "CF40_fixed",
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "end_face - 12.7",
+                     "rx": 0.0,
+                     "ry": 0.0,
+                     "rz": 0.0,
+                     "color": "",
+                     "alpha": 1.0
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 180.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": -1.0,
+                   "height": "end_face - 12.7 + 1.5",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len",
+                 "radius_bottom": "(body_od - 2 * body_wall) / 2",
+                 "radius_top": "(body_od - 2 * body_wall) / 2",
+                 "segments": 128,
+                 "center": true
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "X2 CF40 transfer port (right end)",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "73adef68d73047cfbcae3489a65b59d1",
+        "title": "X2 CF40 transfer port (right end)",
+        "area": "Vacuum & UHV",
+        "named": "X2 CF40 transfer port (right end)"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c9ccd1",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#c8c8c8",
+           "alpha": 1.0,
+           "material": "Metal"
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "union",
+                  "name": "Group",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": 0.0,
+                   "rx": 0.0,
+                   "ry": 0.0,
+                   "rz": 0.0,
+                   "color": "",
+                   "alpha": 1.0
+                  },
+                  "children": [
+                   {
+                    "type": "cylinder",
+                    "name": "Cylinder",
+                    "visible": true,
+                    "params": {
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "body_len / 2",
+                     "height": "end_face - 12.7 - body_len / 2",
+                     "radius_bottom": 19.05,
+                     "radius_top": 19.05,
+                     "segments": 64,
+                     "center": false
+                    }
+                   },
+                   {
+                    "type": "reference",
+                    "name": "CF40_fixed instance",
+                    "visible": true,
+                    "params": {
+                     "ref": "CF40_fixed",
+                     "x": 0.0,
+                     "y": 0.0,
+                     "z": "end_face - 12.7",
+                     "rx": 0.0,
+                     "ry": 0.0,
+                     "rz": 0.0,
+                     "color": "",
+                     "alpha": 1.0
+                    }
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "translate",
+              "name": "Translate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "rotate",
+                "name": "Rotate",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 90.0,
+                 "z": 0.0
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": 0.0,
+                   "y": 0.0,
+                   "z": -1.0,
+                   "height": "end_face - 12.7 + 1.5",
+                   "radius_bottom": 17.5,
+                   "radius_top": 17.5,
+                   "segments": 64,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 90.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": "body_len",
+                 "radius_bottom": "(body_od - 2 * body_wall) / 2",
+                 "radius_top": "(body_od - 2 * body_wall) / 2",
+                 "segments": 128,
+                 "center": true
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "drawing": {
+  "version": 1,
+  "sheet": "A3",
+  "style": "paper",
+  "scale": 0.2,
+  "hidden_lines": false,
+  "merge_parts": true,
+  "fields": {
+   "title": "Preparation chamber",
+   "number": "PREP-CH-001",
+   "material": "AISI 304L, CF flanges 316LN",
+   "finish": "Electropolished inside",
+   "mass": "31.9 kg",
+   "company": "",
+   "drawn": "gkerherv",
+   "date": "2026-10-18",
+   "checked": "",
+   "approved": "",
+   "revision": "A",
+   "tolerance": "ISO 2768-mK",
+   "sheet_no": "1 / 2",
+   "sheet": "1 / 2"
+  },
+  "views": [
+   {
+    "kind": "projected",
+    "name": "Front",
+    "id": "v1",
+    "show_label": false,
+    "x": 30.0,
+    "y": 228.0
+   },
+   {
+    "kind": "projected",
+    "name": "Top",
+    "id": "v2",
+    "show_label": false,
+    "x": 30.0,
+    "y": 100.0
+   },
+   {
+    "kind": "projected",
+    "name": "Right",
+    "id": "v3",
+    "show_label": false,
+    "x": 190.0,
+    "y": 228.0
+   }
+  ],
+  "notes": [
+   {
+    "kind": "horizontal",
+    "offset": 90.0,
+    "text": "",
+    "prefix": "",
+    "suffix": "",
+    "tol_plus": "1",
+    "tol_minus": "1",
+    "decimals": 2,
+    "count": 1,
+    "angle": 45.0,
+    "a": [
+     -380,
+     0
+    ],
+    "b": [
+     380,
+     0
+    ],
+    "type": "dim",
+    "view": "v1"
+   },
+   {
+    "kind": "vertical",
+    "offset": -56.0,
+    "text": "",
+    "prefix": "",
+    "suffix": "",
+    "tol_plus": "0.3",
+    "tol_minus": "0.3",
+    "decimals": 2,
+    "count": 1,
+    "angle": 45.0,
+    "a": [
+     -150,
+     0
+    ],
+    "b": [
+     -150,
+     200
+    ],
+    "type": "dim",
+    "view": "v1"
+   },
+   {
+    "kind": "vertical",
+    "offset": 58.0,
+    "text": "",
+    "prefix": "",
+    "suffix": "",
+    "tol_plus": "0.5",
+    "tol_minus": "0.5",
+    "decimals": 2,
+    "count": 1,
+    "angle": 45.0,
+    "a": [
+     150,
+     0
+    ],
+    "b": [
+     150,
+     -350
+    ],
+    "type": "dim",
+    "view": "v1"
+   },
+   {
+    "kind": "diameter",
+    "offset": 10.0,
+    "text": "",
+    "prefix": "",
+    "suffix": "",
+    "tol_plus": "",
+    "tol_minus": "",
+    "decimals": 2,
+    "count": 1,
+    "angle": 45.0,
+    "centre": [
+     0,
+     0
+    ],
+    "r": 125,
+    "type": "dim",
+    "view": "v3"
+   },
+   {
+    "tip": [
+     -150,
+     200
+    ],
+    "at": [
+     -14.0,
+     -8.0
+    ],
+    "text": "M1",
+    "size": 3,
+    "type": "leader",
+    "view": "v1"
+   },
+   {
+    "tip": [
+     150,
+     200
+    ],
+    "at": [
+     10.0,
+     -8.0
+    ],
+    "text": "G1",
+    "size": 3,
+    "type": "leader",
+    "view": "v1"
+   },
+   {
+    "tip": [
+     150,
+     -350
+    ],
+    "at": [
+     30.0,
+     -8.0
+    ],
+    "text": "T1",
+    "size": 3,
+    "type": "leader",
+    "view": "v1"
+   },
+   {
+    "tip": [
+     150,
+     -265
+    ],
+    "at": [
+     -30.0,
+     -4.0
+    ],
+    "text": "G2",
+    "size": 3,
+    "type": "leader",
+    "view": "v1"
+   },
+   {
+    "tip": [
+     -380,
+     0
+    ],
+    "at": [
+     -6.0,
+     -14.0
+    ],
+    "text": "X1",
+    "size": 3,
+    "type": "leader",
+    "view": "v1"
+   },
+   {
+    "tip": [
+     380,
+     0
+    ],
+    "at": [
+     6.0,
+     -14.0
+    ],
+    "text": "X2",
+    "size": 3,
+    "type": "leader",
+    "view": "v1"
+   },
+   {
+    "tip": [
+     -247,
+     -167
+    ],
+    "at": [
+     -10.0,
+     8.0
+    ],
+    "text": "A1",
+    "size": 3,
+    "type": "leader",
+    "view": "v1"
+   },
+   {
+    "tip": [
+     247,
+     -167
+    ],
+    "at": [
+     12.0,
+     6.0
+    ],
+    "text": "A3",
+    "size": 3,
+    "type": "leader",
+    "view": "v1"
+   },
+   {
+    "tip": [
+     -150,
+     0
+    ],
+    "at": [
+     -20.0,
+     20.0
+    ],
+    "text": "FOCAL A  (V1 / V2)",
+    "size": 2.5,
+    "type": "leader",
+    "view": "v1"
+   },
+   {
+    "tip": [
+     150,
+     0
+    ],
+    "at": [
+     30.0,
+     20.0
+    ],
+    "text": "FOCAL B  (V3 / L1)",
+    "size": 2.5,
+    "type": "leader",
+    "view": "v1"
+   },
+   {
+    "tip": [
+     -150,
+     137
+    ],
+    "at": [
+     -14.0,
+     -6.0
+    ],
+    "text": "S1",
+    "size": 3,
+    "type": "leader",
+    "view": "v2"
+   },
+   {
+    "tip": [
+     -150,
+     -137
+    ],
+    "at": [
+     -14.0,
+     6.0
+    ],
+    "text": "S2",
+    "size": 3,
+    "type": "leader",
+    "view": "v2"
+   },
+   {
+    "tip": [
+     -66,
+     145
+    ],
+    "at": [
+     10.0,
+     -6.0
+    ],
+    "text": "A2",
+    "size": 3,
+    "type": "leader",
+    "view": "v2"
+   },
+   {
+    "tip": [
+     -150,
+     193.6
+    ],
+    "at": [
+     18.0,
+     -4.0
+    ],
+    "text": "V1",
+    "size": 3,
+    "type": "leader",
+    "view": "v2"
+   },
+   {
+    "tip": [
+     -150,
+     -193.6
+    ],
+    "at": [
+     18.0,
+     4.0
+    ],
+    "text": "V2",
+    "size": 3,
+    "type": "leader",
+    "view": "v2"
+   },
+   {
+    "tip": [
+     150,
+     193.6
+    ],
+    "at": [
+     14.0,
+     -4.0
+    ],
+    "text": "V3",
+    "size": 3,
+    "type": "leader",
+    "view": "v2"
+   },
+   {
+    "tip": [
+     150,
+     -193.6
+    ],
+    "at": [
+     14.0,
+     4.0
+    ],
+    "text": "L1",
+    "size": 3,
+    "type": "leader",
+    "view": "v2"
+   },
+   {
+    "kind": "horizontal",
+    "offset": 105.0,
+    "text": "",
+    "prefix": "",
+    "suffix": "",
+    "tol_plus": "",
+    "tol_minus": "",
+    "decimals": 2,
+    "count": 1,
+    "angle": 45.0,
+    "a": [
+     -300,
+     125
+    ],
+    "b": [
+     300,
+     125
+    ],
+    "type": "dim",
+    "view": "v1"
+   },
+   {
+    "kind": "horizontal",
+    "offset": 100.0,
+    "text": "",
+    "prefix": "",
+    "suffix": " FOCAL A\u2013B",
+    "tol_plus": "0.2",
+    "tol_minus": "0.2",
+    "decimals": 2,
+    "count": 1,
+    "angle": 45.0,
+    "a": [
+     -150,
+     0
+    ],
+    "b": [
+     150,
+     0
+    ],
+    "type": "dim",
+    "view": "v1"
+   },
+   {
+    "text": "PORT SETTING-OUT",
+    "size": 2.4,
+    "bold": true,
+    "x": 272.0,
+    "y": 18.0,
+    "type": "text"
+   },
+   {
+    "text": "PORT",
+    "size": 2.1,
+    "bold": true,
+    "x": 272.0,
+    "y": 23.0,
+    "type": "text"
+   },
+   {
+    "text": "M1\nT1\nS1\nS2\nG1\nG2\nV1\nV2\nV3\nL1\nX1\nX2\nA1\nA2\nA3",
+    "size": 2.1,
+    "bold": false,
+    "x": 272.0,
+    "y": 27.0,
+    "type": "text"
+   },
+   {
+    "text": "FOCAL",
+    "size": 2.1,
+    "bold": true,
+    "x": 283.0,
+    "y": 23.0,
+    "type": "text"
+   },
+   {
+    "text": "A\nB\nA\nA\nB\nT1 z-265\nA\nA\nB\nB\naxis\naxis\nA\nA\nB",
+    "size": 2.1,
+    "bold": false,
+    "x": 283.0,
+    "y": 27.0,
+    "type": "text"
+   },
+   {
+    "text": "TILT\u00b0",
+    "size": 2.1,
+    "bold": true,
+    "x": 300.0,
+    "y": 23.0,
+    "type": "text"
+   },
+   {
+    "text": "0\n180\n45\n45\n0\n90\n90\n90\n90\n90\n90\n90\n150\n120\n150",
+    "size": 2.1,
+    "bold": false,
+    "x": 300.0,
+    "y": 27.0,
+    "type": "text"
+   },
+   {
+    "text": "TURN\u00b0",
+    "size": 2.1,
+    "bold": true,
+    "x": 311.0,
+    "y": 23.0,
+    "type": "text"
+   },
+   {
+    "text": "-\n-\n90\n270\n-\n90\n90\n270\n90\n270\n180\n0\n180\n60\n0",
+    "size": 2.1,
+    "bold": false,
+    "x": 311.0,
+    "y": 27.0,
+    "type": "text"
+   },
+   {
+    "text": "FACE AT",
+    "size": 2.1,
+    "bold": true,
+    "x": 322.0,
+    "y": 23.0,
+    "type": "text"
+   },
+   {
+    "text": "200 axis\n350 axis\n200\n200\n200\n150 nipple\n200\n200\n200\n200\n380 centre\n380 centre\n200\n200\n200",
+    "size": 2.1,
+    "bold": false,
+    "x": 322.0,
+    "y": 27.0,
+    "type": "text"
+   },
+   {
+    "text": "FLANGE",
+    "size": 2.1,
+    "bold": true,
+    "x": 341.0,
+    "y": 23.0,
+    "type": "text"
+   },
+   {
+    "text": "CF100 fixed\nCF100 rot.\nCF40 rot.\nCF40 rot.\nCF40 fixed\nCF40 fixed\nCF40 fixed\nCF40 fixed\nCF40 fixed\nCF40 fixed\nCF40 fixed\nCF40 fixed\nCF40 rot.\nCF40 rot.\nCF40 rot.",
+    "size": 2.1,
+    "bold": false,
+    "x": 341.0,
+    "y": 27.0,
+    "type": "text"
+   },
+   {
+    "text": "USE",
+    "size": 2.1,
+    "bold": true,
+    "x": 361.0,
+    "y": 23.0,
+    "type": "text"
+   },
+   {
+    "text": "Manipulator\nTurbo pump\nSputter gun\nGun / evaporator\nIon gauge\nGauge\nViewport\nViewport\nViewport\nLeak valve\nTransfer\nTransfer\nSpare\nSpare\nSpare",
+    "size": 2.1,
+    "bold": false,
+    "x": 361.0,
+    "y": 27.0,
+    "type": "text"
+   },
+   {
+    "text": "FOCAL A = (-150, 0, 0), B = (150, 0, 0). TILT FROM +Z (UP), TURN ABOUT Z\nFROM +X. FACE AT = SEALING FACE FROM THE FOCAL POINT UNLESS NOTED.\nBOLT HOLES STRADDLE THE CENTRE LINES.",
+    "size": 2.0,
+    "bold": false,
+    "x": 272.0,
+    "y": 83.0,
+    "type": "text"
+   },
+   {
+    "text": "NOTES",
+    "size": 2.4,
+    "bold": true,
+    "x": 272.0,
+    "y": 100.0,
+    "type": "text"
+   },
+   {
+    "text": "1. EVERY CF40 PORT AIMS AT ITS FOCAL POINT ON THE AXIS.\n2. FOCAL A: MANIPULATOR, GUNS, VIEWPORTS.\n   FOCAL B: TURBO PUMP, GAUGES, LEAK VALVE.\n3. CF KNIFE EDGES PROTECTED UNTIL ASSEMBLY.\n4. WELDS AND CUT LIST: SHEET 2.",
+    "size": 2.0,
+    "bold": false,
+    "x": 272.0,
+    "y": 105.0,
+    "type": "text"
+   },
+   {
+    "a": [
+     -400,
+     0
+    ],
+    "b": [
+     400,
+     0
+    ],
+    "type": "centre_line",
+    "view": "v1"
+   },
+   {
+    "a": [
+     -150,
+     -230
+    ],
+    "b": [
+     -150,
+     222
+    ],
+    "type": "centre_line",
+    "view": "v1"
+   },
+   {
+    "a": [
+     150,
+     -370
+    ],
+    "b": [
+     150,
+     222
+    ],
+    "type": "centre_line",
+    "view": "v1"
+   },
+   {
+    "tip": [
+     -150,
+     222
+    ],
+    "at": [
+     14.0,
+     -3.0
+    ],
+    "text": "CL FOCAL A",
+    "size": 2.5,
+    "type": "leader",
+    "view": "v1"
+   },
+   {
+    "tip": [
+     150,
+     222
+    ],
+    "at": [
+     -14.0,
+     -3.0
+    ],
+    "text": "CL FOCAL B",
+    "size": 2.5,
+    "type": "leader",
+    "view": "v1"
+   },
+   {
+    "a": [
+     -400,
+     0
+    ],
+    "b": [
+     400,
+     0
+    ],
+    "type": "centre_line",
+    "view": "v2"
+   },
+   {
+    "a": [
+     -150,
+     -215
+    ],
+    "b": [
+     -150,
+     215
+    ],
+    "type": "centre_line",
+    "view": "v2"
+   },
+   {
+    "a": [
+     150,
+     -215
+    ],
+    "b": [
+     150,
+     215
+    ],
+    "type": "centre_line",
+    "view": "v2"
+   },
+   {
+    "a": [
+     0,
+     -370
+    ],
+    "b": [
+     0,
+     222
+    ],
+    "type": "centre_line",
+    "view": "v3"
+   },
+   {
+    "a": [
+     -215,
+     0
+    ],
+    "b": [
+     215,
+     0
+    ],
+    "type": "centre_line",
+    "view": "v3"
+   },
+   {
+    "tip": [
+     400,
+     0
+    ],
+    "at": [
+     8.0,
+     8.0
+    ],
+    "text": "CL MAIN AXIS",
+    "size": 2.5,
+    "type": "leader",
+    "view": "v1"
+   }
+  ]
+ },
+ "part_drawings": {
+  "Preparation chamber": {
+   "version": 1,
+   "sheet": "A3",
+   "style": "paper",
+   "scale": 0.2,
+   "hidden_lines": false,
+   "merge_parts": true,
+   "fields": {
+    "title": "Preparation chamber - welds",
+    "number": "PREP-CH-002",
+    "material": "AISI 304L, CF flanges 316LN",
+    "finish": "Electropolished inside",
+    "mass": "31.9 kg",
+    "company": "",
+    "drawn": "gkerherv",
+    "date": "2026-10-18",
+    "checked": "",
+    "approved": "",
+    "revision": "A",
+    "tolerance": "ISO 13920-BF",
+    "sheet_no": "2 / 2"
+   },
+   "views": [
+    {
+     "kind": "projected",
+     "name": "Right",
+     "id": "v3",
+     "show_label": false,
+     "x": 198.025,
+     "y": 132.0
+    },
+    {
+     "kind": "projected",
+     "name": "Isometric",
+     "id": "v4",
+     "show_label": true,
+     "factor": 0.6141249999999999,
+     "x": 300.0,
+     "y": 110.0
+    },
+    {
+     "kind": "section",
+     "axis": "y",
+     "letter": "A",
+     "id": "v5",
+     "show_label": true,
+     "offset": 0.0,
+     "x": 25.0,
+     "y": 132.0
+    },
+    {
+     "kind": "detail",
+     "parent": "v5",
+     "source": "Front",
+     "centre": [
+      -300,
+      121
+     ],
+     "radius": 20,
+     "factor": 5,
+     "letter": "B",
+     "id": "v6",
+     "show_label": true,
+     "x": 30.0,
+     "y": 208.0,
+     "label": "DETAIL B - W1"
+    },
+    {
+     "kind": "detail",
+     "parent": "v5",
+     "source": "Front",
+     "centre": [
+      131,
+      123
+     ],
+     "radius": 20,
+     "factor": 5,
+     "letter": "C",
+     "id": "v7",
+     "show_label": true,
+     "x": 90.0,
+     "y": 208.0,
+     "label": "DETAIL C - W2"
+    },
+    {
+     "kind": "detail",
+     "parent": "v5",
+     "source": "Front",
+     "centre": [
+      -201,
+      178
+     ],
+     "radius": 20,
+     "factor": 5,
+     "letter": "D",
+     "id": "v8",
+     "show_label": true,
+     "x": 150.0,
+     "y": 208.0,
+     "label": "DETAIL D - W4"
+    },
+    {
+     "kind": "detail",
+     "parent": "v5",
+     "source": "Front",
+     "centre": [
+      -306,
+      19
+     ],
+     "radius": 20,
+     "factor": 5,
+     "letter": "E",
+     "id": "v9",
+     "show_label": true,
+     "x": 210.0,
+     "y": 208.0,
+     "label": "DETAIL E - W5"
+    }
+   ],
+   "notes": [
+    {
+     "tip": [
+      -300,
+      121
+     ],
+     "at": [
+      12.0,
+      10.0
+     ],
+     "text": "W1 141 a3",
+     "size": 2.5,
+     "type": "leader",
+     "view": "v6"
+    },
+    {
+     "tip": [
+      132.5,
+      121.3
+     ],
+     "at": [
+      10.0,
+      10.0
+     ],
+     "text": "W2 141 a1.2",
+     "size": 2.5,
+     "type": "leader",
+     "view": "v7"
+    },
+    {
+     "tip": [
+      -198.5,
+      177.6
+     ],
+     "at": [
+      10.0,
+      10.0
+     ],
+     "text": "W4 141 EDGE",
+     "size": 2.5,
+     "type": "leader",
+     "view": "v8"
+    },
+    {
+     "tip": [
+      -300,
+      17.5
+     ],
+     "at": [
+      10.0,
+      10.0
+     ],
+     "text": "W5 141 a1.2",
+     "size": 2.5,
+     "type": "leader",
+     "view": "v9"
+    },
+    {
+     "tip": [
+      300,
+      121
+     ],
+     "at": [
+      14.0,
+      -10.0
+     ],
+     "text": "W1 (2x)",
+     "size": 2.5,
+     "type": "leader",
+     "view": "v5"
+    },
+    {
+     "tip": [
+      -201,
+      125
+     ],
+     "at": [
+      -8.0,
+      -14.0
+     ],
+     "text": "W3",
+     "size": 2.5,
+     "type": "leader",
+     "view": "v5"
+    },
+    {
+     "tip": [
+      201,
+      -125
+     ],
+     "at": [
+      16.0,
+      6.0
+     ],
+     "text": "W3",
+     "size": 2.5,
+     "type": "leader",
+     "view": "v5"
+    },
+    {
+     "tip": [
+      201.5,
+      -327.6
+     ],
+     "at": [
+      14.0,
+      4.0
+     ],
+     "text": "W4 (ALL FLANGES)",
+     "size": 2.5,
+     "type": "leader",
+     "view": "v5"
+    },
+    {
+     "tip": [
+      50.8,
+      -265
+     ],
+     "at": [
+      16.0,
+      12.0
+     ],
+     "text": "W6",
+     "size": 2.5,
+     "type": "leader",
+     "view": "v3"
+    },
+    {
+     "text": "WELD SCHEDULE  (ISO 2553, PROCESS 141 = TIG / GTAW)",
+     "size": 2.6,
+     "bold": true,
+     "x": 290.0,
+     "y": 131.0,
+     "type": "text"
+    },
+    {
+     "text": "W1  BODY TO END PLATES (2x)       FILLET a3, ALL ROUND, INSIDE\nW2  CF40 TUBES TO BODY (10x)       FILLET a1.2, ALL ROUND, INSIDE (SADDLE)\nW3  CF100 TUBES TO BODY (2x)      FILLET a1.5, ALL ROUND, INSIDE (SADDLE)\nW4  TUBES TO CF FLANGES (15x)     EDGE WELD, FULL PEN., INSIDE LIP\nW5  X1 / X2 TUBES TO END PLATES   FILLET a1.2, ALL ROUND, INSIDE\nW6  G2 TUBE TO PUMP NIPPLE        FILLET a1.2, ALL ROUND, INSIDE (SADDLE)",
+     "size": 2.1,
+     "bold": false,
+     "x": 290.0,
+     "y": 137.0,
+     "type": "text"
+    },
+    {
+     "text": "WELDING NOTES",
+     "size": 2.4,
+     "bold": true,
+     "x": 290.0,
+     "y": 168.0,
+     "type": "text"
+    },
+    {
+     "text": "1. 141 (TIG) WITH ARGON SHIELD AND ARGON BACK PURGE;\n   FILLER ER308LSi, ER316LSi WHERE A 316LN FLANGE IS JOINED.\n2. EVERY VACUUM WELD IS CONTINUOUS AND MADE FROM THE\n   VACUUM SIDE ONLY - NO STITCH OR DOUBLE-SIDED WELDS\n   (A TRAPPED VOLUME IS A VIRTUAL LEAK).\n3. CF FLANGES: WELD ON THE LIP AWAY FROM THE KNIFE EDGE,\n   KEEP THE KNIFE EDGE BELOW 150 C AND PROTECTED.\n4. ROTATABLE FLANGES: WELD THE KNIFE-EDGE RING ONLY;\n   THE BOLT RING MUST TURN FREELY AFTER WELDING.\n5. AFTER WELDING: PICKLE AND ELECTROPOLISH, He LEAK TEST\n   < 1E-10 MBAR.L/S, BAKE 150 C.",
+     "size": 2.1,
+     "bold": false,
+     "x": 290.0,
+     "y": 173.0,
+     "type": "text"
+    },
+    {
+     "text": "CUT LIST",
+     "size": 2.4,
+     "bold": true,
+     "x": 25.0,
+     "y": 236.0,
+     "type": "text"
+    },
+    {
+     "text": "ITEM",
+     "size": 2.0,
+     "bold": true,
+     "x": 25.0,
+     "y": 241.0,
+     "type": "text"
+    },
+    {
+     "text": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10",
+     "size": 2.0,
+     "bold": false,
+     "x": 25.0,
+     "y": 244.8,
+     "type": "text"
+    },
+    {
+     "text": "DESCRIPTION (304L TUBE, 316LN FLANGES)",
+     "size": 2.0,
+     "bold": true,
+     "x": 36.0,
+     "y": 241.0,
+     "type": "text"
+    },
+    {
+     "text": "Body tube \u00d8250 x 4, 600 long\nEnd plate \u00d8250 x 12, \u00d835 bore\nCF100 tube \u00d8101.6 x 2.3, M1 70 / T1 220 *\nCF40 tube \u00d838.1 x 1.65, radial ports 70 *\nCF40 tube \u00d838.1 x 1.65, angled ports 55 *\nCF40 tube \u00d838.1 x 1.65, X1 / X2 70, G2 90\nCF100 flange, fixed (M1)\nCF100 flange, rotatable (T1)\nCF40 flange, fixed\nCF40 flange, rotatable",
+     "size": 2.0,
+     "bold": false,
+     "x": 36.0,
+     "y": 244.8,
+     "type": "text"
+    },
+    {
+     "text": "QTY",
+     "size": 2.0,
+     "bold": true,
+     "x": 116.0,
+     "y": 241.0,
+     "type": "text"
+    },
+    {
+     "text": "1\n2\n2\n7\n3\n3\n1\n1\n8\n5",
+     "size": 2.0,
+     "bold": false,
+     "x": 116.0,
+     "y": 244.8,
+     "type": "text"
+    },
+    {
+     "text": "* LENGTH BEFORE THE SADDLE CUT; TRIM TO FIT THE BODY.",
+     "size": 1.9,
+     "bold": false,
+     "x": 25.0,
+     "y": 282.0,
+     "type": "text"
+    },
+    {
+     "a": [
+      -400,
+      0
+     ],
+     "b": [
+      400,
+      0
+     ],
+     "type": "centre_line",
+     "view": "v5"
+    },
+    {
+     "a": [
+      -150,
+      -230
+     ],
+     "b": [
+      -150,
+      222
+     ],
+     "type": "centre_line",
+     "view": "v5"
+    },
+    {
+     "a": [
+      150,
+      -370
+     ],
+     "b": [
+      150,
+      222
+     ],
+     "type": "centre_line",
+     "view": "v5"
+    },
+    {
+     "tip": [
+      -150,
+      222
+     ],
+     "at": [
+      -14.0,
+      -3.0
+     ],
+     "text": "CL FOCAL A",
+     "size": 2.5,
+     "type": "leader",
+     "view": "v5"
+    },
+    {
+     "tip": [
+      150,
+      222
+     ],
+     "at": [
+      14.0,
+      -3.0
+     ],
+     "text": "CL FOCAL B",
+     "size": 2.5,
+     "type": "leader",
+     "view": "v5"
+    },
+    {
+     "a": [
+      0,
+      -370
+     ],
+     "b": [
+      0,
+      222
+     ],
+     "type": "centre_line",
+     "view": "v3"
+    },
+    {
+     "a": [
+      -215,
+      0
+     ],
+     "b": [
+      215,
+      0
+     ],
+     "type": "centre_line",
+     "view": "v3"
+    }
+   ]
+  }
+ }
+}

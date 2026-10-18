@@ -23,7 +23,7 @@ SECTIONS = [
         ("Fasteners & brackets", "mdi.screw-machine-flat-top",
          ["Fasteners", "Brackets"]),
         ("Hand tools", "mdi.hammer-wrench", ["Tools"]),
-        ("Vacuum & UHV", "mdi.pipe", ("vacuum", ["Vacuum"])),
+        ("Vacuum & UHV", "mdi.pipe", ("vacuum", ["Vacuum", "Vacuum chambers"])),
         ("Mechanisms & motion", "mdi.cogs",
          ["Mechanisms & motion", "Robot arms"]),
         ("Motion & motors", "mdi.cog-transfer-outline",

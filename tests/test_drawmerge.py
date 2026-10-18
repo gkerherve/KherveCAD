@@ -105,3 +105,24 @@ def test_an_object_name_with_symbols_gives_an_ascii_module():
     from khervecad.model import module_name
     assert module_name("Chamber body Ø250 x 600") == "Chamber_body_D250_x_600"
     assert module_name("Château 45°").isascii()
+
+
+def test_a_merged_bodys_silhouette_is_not_hidden_by_its_own_surface():
+    """The preparation chamber's bottom edge vanished for 100 mm in the
+    Top view: Manifold's slivers beside the silhouette sit a grid cell in
+    front of it, and the smooth-ring walk no longer reached them."""
+    from pathlib import Path
+    from khervecad import document, drawing
+    from khervecad.blueprint_scene import Geometry
+    from khervecad.model import DocumentModel
+    path = next((Path(__file__).parent.parent / "khervecad" / "parts"
+                 / "Vacuum chambers").glob("Preparation chamber*.kcad"))
+    model = DocumentModel()
+    document.load_kcad(model, str(path))
+    g = Geometry(mesh.tessellate(model.root))
+    assert g.joined >= 10
+    vis = drawing.view_lines(g.tris, "Top", g.info, True)["visible"]
+    for y in (125.0, -125.0):
+        cover = sum(abs(a[0] - b[0]) for a, b in vis
+                    if abs(a[1] - y) < 0.3 and abs(b[1] - y) < 0.3)
+        assert cover > 520, (y, cover)      # 600 less the ports crossing
