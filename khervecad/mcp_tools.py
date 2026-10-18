@@ -2402,7 +2402,7 @@ class McpToolExecutor:
             result["render_complete"] = complete
             return result
         from . import cadexchange
-        if suffix in cadexchange.CAD_EXTS:
+        if suffix in cadexchange.CAD_EXTS + (".glb",):
             try:
                 report = cadexchange.export_model(
                     self._model.root, path, fn=self._fn(),
@@ -2420,7 +2420,7 @@ class McpToolExecutor:
                           ".dxf"):
             raise ToolError(
                 "Export path must end in .scad, .stl, .3mf, .off, .amf, "
-                ".csg, .png, .step, .iges, .brep, .3dm, or .svg / .dxf "
+                ".csg, .png, .step, .iges, .brep, .3dm, .glb, or .svg / .dxf "
                 "for a 2D document.")
         if suffix != ".stl" and not self._w.engine.available:
             raise ToolError(

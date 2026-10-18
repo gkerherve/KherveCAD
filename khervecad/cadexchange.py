@@ -62,6 +62,7 @@ FORMAT_NAMES = {
     ".step": "STEP", ".stp": "STEP", ".iges": "IGES", ".igs": "IGES",
     ".brep": "OpenCascade BREP", ".brp": "OpenCascade BREP",
     ".3dm": "Rhino 3DM",
+    ".glb": "glTF binary",
 }
 
 
@@ -494,6 +495,10 @@ class Report:
 
     def sentence(self, fmt: str) -> str:
         from .language import tr
+        if fmt.startswith("glTF"):
+            return tr("Saved {n} part(s) as a glTF binary: one named node "
+                      "per part, a material per colour, in metres with Y "
+                      "up — for games and 3D programs.").format(n=self.parts)
         if fmt.startswith("Rhino"):
             return tr("Saved {n} part(s) for Rhino, each on its own "
                       "named, coloured layer as a mesh. For editable "
@@ -1115,6 +1120,10 @@ def export_model(root, path, fn=None, unit_mm=1.0):
     engine or a write that failed."""
     path = str(path)
     ext = Path(path).suffix.lower()
+    if ext == ".glb":
+        # meshes in named, coloured parts, for games and 3D programs
+        from .gltf_parts import write_glb
+        return write_glb(root, path, fn, unit_mm)
     problem = missing(ext)
     if problem:
         raise ValueError(problem)

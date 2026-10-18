@@ -2778,7 +2778,9 @@ TOOLS = [
         "description": (
             "Open a .kcad document, import a .scad (or OpenSCAD .csg) "
             "program as objects, import a mesh (.stl/.obj/.off/.3mf/.amf/"
-            ".glb) as one part, a 2D drawing (.svg/.dxf) as an extruded "
+            ".glb) as one part (an OBJ or GLB made of named groups, materials "
+            "or nodes comes in as one Object with a named, coloured group "
+            "per part), a 2D drawing (.svg/.dxf) as an extruded "
             "import_2d part, a height map (.dat) as a surface part, or "
             "a CAD file from another program — STEP (.step/.stp), IGES "
             "(.iges/.igs), Rhino (.3dm) or OpenCascade .brep — as one "
@@ -3047,7 +3049,7 @@ TOOLS = [
             "object, always in real millimetres; anything without an "
             "exact form (a blend, sculpt, gear, imported mesh) is a "
             "faceted solid, and the result lists those parts. .3dm "
-            "writes a Rhino file of meshes, one named layer per part."
+            "writes a Rhino file of meshes, one named layer per part; .glb a glTF binary for games and 3D programs (metres, Y up): one named node per part (an Object at the origin is split into its parts), a material per colour."
         ),
         "input_schema": _obj({
             "path": {"type": "string",

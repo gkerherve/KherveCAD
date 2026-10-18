@@ -48,6 +48,7 @@ EXPORT_FILTERS = [
     ("IGES — for older CAD programs (*.iges)", ".iges"),
     ("Rhino 3DM — meshes on named layers (*.3dm)", ".3dm"),
     ("OpenCascade BREP (*.brep)", ".brep"),
+    ("glTF binary — named, coloured parts for games (*.glb)", ".glb"),
 ]
 
 _HINTS = {
@@ -257,7 +258,7 @@ def export_cad_dialog(window):
     if not path:
         return None
     ext = Path(path).suffix.lower()
-    if ext not in cx.CAD_EXTS:
+    if ext not in cx.CAD_EXTS + (".glb",):
         ext = next((e for f, e in EXPORT_FILTERS
                     if language.tr(f) == picked), ".step")
         path += ext

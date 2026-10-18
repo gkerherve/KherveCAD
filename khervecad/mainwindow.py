@@ -2318,6 +2318,24 @@ class MainWindow(QMainWindow):
         self._import_mesh_path(path)
 
     def _import_mesh_path(self, path):
+        # an OBJ or GLB made of named parts (groups, materials, nodes)
+        # comes in like a STEP file: one Object, a coloured group per part
+        ext0 = Path(path).suffix.lower()
+        if ext0 in (".obj", ".glb"):
+            from . import cadexchange_ui, gltf_parts, units
+            try:
+                parts = gltf_parts.read_parts(path)
+            except (ValueError, OSError, KeyError, IndexError):
+                parts = []
+            if len(parts) > 1:
+                comp = cadexchange_ui.place_parts(
+                    self.model, str(path), parts, units.to_mm(self.model.unit))
+                self.builder.tree.select_nodes([comp])
+                if not self.view3d.user_moved:
+                    self.view3d.fit()
+                self.statusBar().showMessage(
+                    cadexchange_ui.summary(parts, self.model.unit), 12000)
+                return comp
         # OpenSCAD's import() renders STL/OFF/3MF but not OBJ, so convert
         # an OBJ to a sibling STL (from the same triangles the preview
         # uses) and point the node at that, so the exact render works too.
