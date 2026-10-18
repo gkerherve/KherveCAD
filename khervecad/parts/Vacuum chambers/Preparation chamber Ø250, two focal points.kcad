@@ -4874,128 +4874,128 @@
     "text": "PORT SETTING-OUT",
     "size": 2.4,
     "bold": true,
-    "x": 272.0,
-    "y": 18.0,
+    "x": 287.413,
+    "y": 17.572,
     "type": "text"
    },
    {
     "text": "PORT",
     "size": 2.1,
     "bold": true,
-    "x": 272.0,
-    "y": 23.0,
+    "x": 287.413,
+    "y": 22.572,
     "type": "text"
    },
    {
     "text": "M1\nT1\nS1\nS2\nG1\nG2\nV1\nV2\nV3\nL1\nX1\nX2\nA1\nA2\nA3",
     "size": 2.1,
     "bold": false,
-    "x": 272.0,
-    "y": 27.0,
+    "x": 287.413,
+    "y": 26.572,
     "type": "text"
    },
    {
     "text": "FOCAL",
     "size": 2.1,
     "bold": true,
-    "x": 283.0,
-    "y": 23.0,
+    "x": 298.413,
+    "y": 22.572,
     "type": "text"
    },
    {
     "text": "A\nB\nA\nA\nB\nT1 z-265\nA\nA\nB\nB\naxis\naxis\nA\nA\nB",
     "size": 2.1,
     "bold": false,
-    "x": 283.0,
-    "y": 27.0,
+    "x": 298.413,
+    "y": 26.572,
     "type": "text"
    },
    {
     "text": "TILT\u00b0",
     "size": 2.1,
     "bold": true,
-    "x": 300.0,
-    "y": 23.0,
+    "x": 315.413,
+    "y": 22.572,
     "type": "text"
    },
    {
     "text": "0\n180\n45\n45\n0\n90\n90\n90\n90\n90\n90\n90\n150\n120\n150",
     "size": 2.1,
     "bold": false,
-    "x": 300.0,
-    "y": 27.0,
+    "x": 315.413,
+    "y": 26.572,
     "type": "text"
    },
    {
     "text": "TURN\u00b0",
     "size": 2.1,
     "bold": true,
-    "x": 311.0,
-    "y": 23.0,
+    "x": 326.413,
+    "y": 22.572,
     "type": "text"
    },
    {
     "text": "-\n-\n90\n270\n-\n90\n90\n270\n90\n270\n180\n0\n180\n60\n0",
     "size": 2.1,
     "bold": false,
-    "x": 311.0,
-    "y": 27.0,
+    "x": 326.413,
+    "y": 26.572,
     "type": "text"
    },
    {
     "text": "FACE AT",
     "size": 2.1,
     "bold": true,
-    "x": 322.0,
-    "y": 23.0,
+    "x": 337.413,
+    "y": 22.572,
     "type": "text"
    },
    {
     "text": "200 axis\n350 axis\n200\n200\n200\n150 nipple\n200\n200\n200\n200\n380 centre\n380 centre\n200\n200\n200",
     "size": 2.1,
     "bold": false,
-    "x": 322.0,
-    "y": 27.0,
+    "x": 337.413,
+    "y": 26.572,
     "type": "text"
    },
    {
     "text": "FLANGE",
     "size": 2.1,
     "bold": true,
-    "x": 341.0,
-    "y": 23.0,
+    "x": 356.413,
+    "y": 22.572,
     "type": "text"
    },
    {
     "text": "CF100 fixed\nCF100 rot.\nCF40 rot.\nCF40 rot.\nCF40 fixed\nCF40 fixed\nCF40 fixed\nCF40 fixed\nCF40 fixed\nCF40 fixed\nCF40 fixed\nCF40 fixed\nCF40 rot.\nCF40 rot.\nCF40 rot.",
     "size": 2.1,
     "bold": false,
-    "x": 341.0,
-    "y": 27.0,
+    "x": 356.413,
+    "y": 26.572,
     "type": "text"
    },
    {
     "text": "USE",
     "size": 2.1,
     "bold": true,
-    "x": 361.0,
-    "y": 23.0,
+    "x": 376.413,
+    "y": 22.572,
     "type": "text"
    },
    {
     "text": "Manipulator\nTurbo pump\nSputter gun\nGun / evaporator\nIon gauge\nGauge\nViewport\nViewport\nViewport\nLeak valve\nTransfer\nTransfer\nSpare\nSpare\nSpare",
     "size": 2.1,
     "bold": false,
-    "x": 361.0,
-    "y": 27.0,
+    "x": 376.413,
+    "y": 26.572,
     "type": "text"
    },
    {
     "text": "FOCAL A = (-150, 0, 0), B = (150, 0, 0). TILT FROM +Z (UP), TURN ABOUT Z\nFROM +X. FACE AT = SEALING FACE FROM THE FOCAL POINT UNLESS NOTED.\nBOLT HOLES STRADDLE THE CENTRE LINES.",
     "size": 2.0,
     "bold": false,
-    "x": 272.0,
-    "y": 83.0,
+    "x": 287.413,
+    "y": 82.572,
     "type": "text"
    },
    {
@@ -5056,7 +5056,7 @@
      222
     ],
     "at": [
-     14.0,
+     -14.0,
      -3.0
     ],
     "text": "CL FOCAL A",
@@ -5070,7 +5070,7 @@
      222
     ],
     "at": [
-     -14.0,
+     14.0,
      -3.0
     ],
     "text": "CL FOCAL B",
