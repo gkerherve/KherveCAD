@@ -282,9 +282,6 @@ def build_options_bar(win):
     # and the View menu
     win.addAction(win._grid_act)
     win.addAction(win._snap_act)
-    bar.addAction(_action(win, "mdi.fit-to-page-outline", "Fit sketch",
-                          "fit_sketch", win.view2d.fit_content,
-                          "Ctrl+Shift+F", bind=False))     # View menu's
     bar.addSeparator()
 
     # -- 3D
@@ -306,7 +303,7 @@ def build_options_bar(win):
                                 "cut_through", shortcut="Ctrl+Alt+X",
                                 checkable=True, bind=False)  # View menu's
     win._cut_tool_act.toggled.connect(lambda on: win.set_cut(bool(on)))
-    bar.addAction(win._cut_tool_act)
+    win.addAction(win._cut_tool_act)      # the 3D view's bar has the button
     bar.addSeparator()
 
     # -- the 3D-only layout for building with an assistant (the ChatBox

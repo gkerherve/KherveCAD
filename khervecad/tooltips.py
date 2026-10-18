@@ -1186,3 +1186,7 @@ def apply(target, key, shortcut: str = ""):
     target.setToolTip(rich(key, shortcut))
     if hasattr(target, "setStatusTip"):
         target.setStatusTip(summary(key))
+
+
+from .tooltips_nav import NAV_TIPS  # noqa: E402  (after TIPS exists)
+TIPS.update(NAV_TIPS)

@@ -48,6 +48,15 @@ ZOOM_STEP = 1.25
 ORBIT_STEP = 15.0
 
 
+def set_tip(button, tip):
+    """*tip* is a tooltips.TIPS key (rich help) or plain text."""
+    from . import tooltips
+    if tip in tooltips.TIPS:
+        tooltips.apply(button, tip)
+    else:
+        button.setToolTip(tip)
+
+
 class NavBar(QWidget):
     """A row of small buttons floating in a view's top-right corner.
 
@@ -79,7 +88,7 @@ class NavBar(QWidget):
                 button.setText(fallback)
             else:
                 button.setIcon(art)
-            button.setToolTip(tip)
+            set_tip(button, tip)
             if repeat:                         # hold to keep going
                 button.setAutoRepeat(True)
                 button.setAutoRepeatDelay(350)
@@ -155,7 +164,7 @@ def add_menu_button(bar, key, glyph, fallback, tip, actions, on_click):
         button.setText(fallback)
     else:
         button.setIcon(art)
-    button.setToolTip(tip)
+    set_tip(button, tip)
     button.clicked.connect(on_click)
     bar.layout().addWidget(button)
     bar.buttons[key] = button
@@ -184,7 +193,7 @@ def add_options_button(bar, key, glyph, fallback, tip, actions):
         button.setText(fallback)
     else:
         button.setIcon(art)
-    button.setToolTip(tip)
+    set_tip(button, tip)
     bar.layout().addWidget(button)
     bar.buttons[key] = button
     bar.place()
@@ -212,29 +221,27 @@ def focus_2d(view):
 def attach_2d(view):
     s = PAN_STEP
     bar = NavBar(view, [
-        ("left", "mdi.chevron-left", "◀", "Scroll left (hold to keep "
-         "going; middle-drag in the view pans freely)",
+        ("left", "mdi.chevron-left", "◀", "nav2d_left",
          lambda: pan_2d(view, -s, 0), True),
-        ("up", "mdi.chevron-up", "▲", "Scroll up",
+        ("up", "mdi.chevron-up", "▲", "nav2d_up",
          lambda: pan_2d(view, 0, -s), True),
-        ("down", "mdi.chevron-down", "▼", "Scroll down",
+        ("down", "mdi.chevron-down", "▼", "nav2d_down",
          lambda: pan_2d(view, 0, s), True),
-        ("right", "mdi.chevron-right", "▶", "Scroll right",
+        ("right", "mdi.chevron-right", "▶", "nav2d_right",
          lambda: pan_2d(view, s, 0), True),
         None,
         ("zoom_in", "mdi.magnify-plus-outline", "+",
-         "Zoom in (Ctrl++, or the mouse wheel)",
+         "nav2d_zoom_in",
          lambda: view.zoom(ZOOM_STEP), True),
         ("zoom_out", "mdi.magnify-minus-outline", "−",
-         "Zoom out (Ctrl+-, or the mouse wheel)",
+         "nav2d_zoom_out",
          lambda: view.zoom(1 / ZOOM_STEP), True),
         None,
         ("focus", "mdi.image-filter-center-focus", "◎",
-         "Focus: frame the selected part wherever it is — or the whole "
-         "sketch when nothing is selected",
+         "nav2d_focus",
          lambda: focus_2d(view), False),
         ("fit", "mdi.arrow-expand-all", "⤢",
-         "Fit all: show everything in the sketch (Ctrl+Shift+F)",
+         "nav2d_fit",
          view.fit_content, False),
     ])
     view.nav_bar = bar
@@ -256,6 +263,8 @@ def add_sketch_controls(win, bar):
     names = {"Top (XY)": ("Top", "Top view (XY plane)"),
              "Front (XZ)": ("Front", "Front view (XZ plane)"),
              "Side (YZ)": ("Side", "Side view (YZ plane)")}
+    key_of = {"Top (XY)": "plane_top", "Front (XZ)": "plane_front",
+              "Side (YZ)": "plane_side"}
     win._plane_buttons = {}
     line = QFrame(bar)
     line.setFrameShape(QFrame.VLine)
@@ -264,7 +273,7 @@ def add_sketch_controls(win, bar):
         label, tip = names[plane]
         button = QToolButton(bar)
         button.setText(label)
-        button.setToolTip("Sketch plane: " + tip)
+        set_tip(button, key_of[plane])
         button.setCheckable(True)
         button.setAutoExclusive(True)
         button.setChecked(plane == win.scene.plane)
@@ -297,8 +306,7 @@ def add_sketch_controls(win, bar):
         grid.setText("#")
     else:
         grid.setIcon(art)
-    grid.setToolTip("Grid: click to show / hide; the arrow sets the "
-                    "spacing (0.1, 0.2, 0.5, 1 mm…)")
+    set_tip(grid, "grid_bar")
     grid.setChecked(win.scene.show_grid)
     grid.clicked.connect(win._grid_act.setChecked)
     win._grid_act.toggled.connect(grid.setChecked)
@@ -311,7 +319,7 @@ def add_sketch_controls(win, bar):
         snap.setIcon(art)
     snap.setCheckable(True)
     snap.setChecked(win.scene.snap_enabled)
-    snap.setToolTip("Snap to the grid (Ctrl+Shift+')")
+    set_tip(snap, "snap_bar")
     snap.clicked.connect(win._snap_act.setChecked)
     win._snap_act.toggled.connect(snap.setChecked)
     layout.addWidget(snap)
@@ -364,37 +372,34 @@ def attach_3d(view):
     s = PAN_STEP
     bar = NavBar(view, [
         ("orbit_left", "mdi.rotate-left", "↺",
-         "Turn the model left (or left-drag in the view)",
+         "nav3d_orbit_left",
          lambda: orbit_3d(view, -ORBIT_STEP), True),
-        ("orbit_right", "mdi.rotate-right", "↻", "Turn the model right",
+        ("orbit_right", "mdi.rotate-right", "↻", "nav3d_orbit_right",
          lambda: orbit_3d(view, ORBIT_STEP), True),
         None,
         ("left", "mdi.chevron-left", "◀",
-         "Pan left (hold to keep going; right- or middle-drag pans "
-         "freely)", lambda: pan_3d(view, -1, 0), True),
-        ("up", "mdi.chevron-up", "▲", "Pan up",
+         "nav3d_left", lambda: pan_3d(view, -1, 0), True),
+        ("up", "mdi.chevron-up", "▲", "nav3d_up",
          lambda: pan_3d(view, 0, 1), True),
-        ("down", "mdi.chevron-down", "▼", "Pan down",
+        ("down", "mdi.chevron-down", "▼", "nav3d_down",
          lambda: pan_3d(view, 0, -1), True),
-        ("right", "mdi.chevron-right", "▶", "Pan right",
+        ("right", "mdi.chevron-right", "▶", "nav3d_right",
          lambda: pan_3d(view, 1, 0), True),
         None,
         ("zoom_in", "mdi.magnify-plus-outline", "+",
-         "Zoom in (or the mouse wheel)",
+         "nav3d_zoom_in",
          lambda: zoom_3d(view, ZOOM_STEP), True),
-        ("zoom_out", "mdi.magnify-minus-outline", "−", "Zoom out",
+        ("zoom_out", "mdi.magnify-minus-outline", "−", "nav3d_zoom_out",
          lambda: zoom_3d(view, 1 / ZOOM_STEP), True),
         None,
         ("focus", "mdi.image-filter-center-focus", "◎",
-         "Focus: frame the selected part — or the whole model when "
-         "nothing is selected", lambda: focus_3d(view), False),
+         "nav3d_focus", lambda: focus_3d(view), False),
         ("fit", "mdi.arrow-expand-all", "⤢",
-         "Fit all: frame the whole model (Ctrl+F, or double-click)",
+         "nav3d_fit",
          lambda: (view.fit(), view.update()), False),
         None,
         ("stage", "mdi.box-shadow", "◐",
-         "Platform & shadow: stand the model on a round platform lit "
-         "from the far top left (also View ▸ 3D Platform & Shadow)",
+         "nav3d_stage",
          lambda: view.set_stage(not view.stage), False),
     ])
     # the button shows the stage's state, whoever switched it

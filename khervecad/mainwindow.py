@@ -1581,26 +1581,21 @@ class MainWindow(QMainWindow):
             return
         explode = viewnav.add_menu_button(
             bar, "explode", "mdi.cube-unfolded", "✥",
-            "Exploded view: pull the parts apart to show how they go "
-            "together (Ctrl+Shift+X). With a part selected, the assembly "
-            "it belongs to comes apart. The arrow: distance and direction.",
+            "nav3d_explode",
             self._explode_menu.actions(),
             lambda on: self.set_explode(bool(on)))
         explode.setChecked(self._explode["on"])
         self._explode_act.toggled.connect(explode.setChecked)
         cut = viewnav.add_menu_button(
             bar, "cut", "mdi.content-cut", "✂",
-            "Cut through: slice the model to see inside it (Ctrl+Alt+X). "
-            "The arrow: which axis, where, and which half stays.",
+            "nav3d_cut",
             self._cut_menu.actions(), lambda on: self.set_cut(bool(on)))
         cut.setChecked(self.view3d.cut_state() is not None)
         self.view3d.cut_changed.connect(
             lambda *_: cut.setChecked(self.view3d.cut_state() is not None))
         viewnav.add_options_button(
             bar, "display", "mdi.eye-settings-outline", "☰",
-            "Display: platform & shadow, cavity shading, edge lines, "
-            "scale bar, smooth shading, reference image overlay and "
-            "hardware rendering — the same switches as the View menu.",
+            "nav3d_display",
             [self._stage_act, self._cavity_act, self._edges_act,
              self._scale_bar_act, self._smooth_act, self._overlay_act,
              self._gl_act])

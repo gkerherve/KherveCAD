@@ -223,3 +223,19 @@ def test_sketch_bar_holds_plane_and_grid(app):
         assert win.scene.show_grid == win._grid_act.isChecked()
     finally:
         win.close()
+
+
+def test_view_bar_buttons_have_rich_help(app):
+    from khervecad import tooltips
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        for bar in (win.view2d.nav_bar, win.view3d.nav_bar):
+            for key, button in bar.buttons.items():
+                assert "How to use" in button.toolTip() \
+                    or "<b>" in button.toolTip(), key
+        assert "Cut through" in tooltips.rich("nav3d_cut")
+        acts = [a.data() for a in win.findChildren(type(win._grid_act))]
+        assert "fit_sketch" not in acts
+    finally:
+        win.close()
