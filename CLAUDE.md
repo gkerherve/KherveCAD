@@ -3687,8 +3687,11 @@ into a new module and import.
                        places the list first, then `arrange` with
                        `scene.keep_clear` (views above or left of it,
                        whichever scale is bigger), dimensions, balloons.
-                       Drawing picker (● made / ○ not yet), Make all part
-                       drawings, Export drawing set (one multi-page PDF or
+                       Drawing picker (● made / ○ not yet) on its OWN toolbar row with ◀ ▶
+                       and "n of N" (at the end of the main bar it hid
+                       behind the overflow chevron; a sheet of the lone
+                       wrapping Object is listed too), Delete this
+                       drawing, Make all part drawings, Export drawing set (one multi-page PDF or
                        a folder of PDF/DXF/SVG/PNG per sheet). MCP
                        `drawing_set` (list / make / show / export /
                        render). Per-Object BOM: `bom.part_bom` (cut from

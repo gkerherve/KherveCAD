@@ -193,8 +193,17 @@ def bom_rows(model, lines, numbered=True):
 # ── the window's picker and the set's export ───────────────────────
 
 def install_ui(win, bar):
-    """The Drawing picker and the set actions on the Blueprint bar."""
-    bar.addSeparator()
+    """The Drawing picker and the set actions on a bar of their OWN,
+    on its own row: at the end of the main bar they fell behind its
+    overflow chevron, and nobody found the second sheet."""
+    from PyQt5.QtCore import Qt as _Qt
+    if hasattr(win, "addToolBarBreak"):
+        win.addToolBarBreak(_Qt.TopToolBarArea)
+        bar = win.addToolBar("Drawing")
+        bar.setObjectName("drawing_set_bar")
+        bar.setMovable(False)
+    else:
+        bar.addSeparator()
     bar.addWidget(QLabel(" Drawing "))
     win.drawing_combo = QComboBox()
     win.drawing_combo.setMinimumWidth(220)
@@ -203,7 +212,18 @@ def install_ui(win, bar):
         "Drawing", "Which drawing of the set to show: the assembly, or "
         "one Object's own part drawing."))
     win.drawing_combo.activated.connect(lambda _i: _picked(win))
-    bar.addWidget(win.drawing_combo)
+    from PyQt5.QtWidgets import QToolButton
+    for text, step, tip in (("◀", -1, "Previous drawing"),
+                            ("▶", 1, "Next drawing")):
+        b = QToolButton()
+        b.setText(text)
+        b.setToolTip(tip)
+        b.clicked.connect(lambda _c=False, k=step: step_drawing(win, k))
+        bar.addWidget(b)
+        if step < 0:
+            bar.addWidget(win.drawing_combo)
+    win.drawing_page = QLabel("")
+    bar.addWidget(win.drawing_page)
     from . import icons
     from PyQt5.QtWidgets import QAction
     make = QAction(icons.icon("mdi.file-document-multiple-outline"),
@@ -220,6 +240,14 @@ def install_ui(win, bar):
         "Writes every drawing of the set in one go."))
     exp.triggered.connect(lambda: export_dialog(win))
     bar.addAction(exp)
+    drop = QAction(icons.icon("mdi.file-remove-outline"),
+                   "Delete this drawing", win)
+    drop.setToolTip(_tip(
+        "Delete this drawing",
+        "Removes the part drawing on screen from the set (the model is "
+        "untouched; the assembly sheet cannot be deleted)."))
+    drop.triggered.connect(lambda: delete_current(win))
+    bar.addAction(drop)
     refill(win)
 
 
@@ -231,10 +259,42 @@ def refill(win):
     combo.clear()
     combo.addItem(ASSEMBLY + " (whole design)", None)
     made = store_of(win.model)
+    listed = set()
     for name, _c in parts(win.model):
         combo.addItem(("● " if name in made else "○ ") + name, name)
+        listed.add(name)
+    # a sheet made for an Object the parts list does not name (the lone
+    # Object wrapping the whole design) is still a sheet of the set
+    known = {c.name for c in win.model.all_components()}
+    for name in made:
+        if name not in listed and name in known:
+            combo.addItem("● " + name, name)
     combo.setCurrentIndex(max(0, combo.findData(win.current)))
     combo.blockSignals(False)
+    page = getattr(win, "drawing_page", None)
+    if page is not None:
+        page.setText(f"  {combo.currentIndex() + 1} of {combo.count()}")
+
+
+def delete_current(win):
+    """Drop the part drawing on screen and go back to the assembly."""
+    name = win.current
+    if name is None:
+        return False
+    store_of(win.model).pop(name, None)
+    win.current = None
+    win.load()
+    refill(win)
+    return True
+
+
+def step_drawing(win, step):
+    """◀ / ▶: the previous or next drawing in the picker."""
+    combo = win.drawing_combo
+    i = combo.currentIndex() + step
+    if 0 <= i < combo.count():
+        combo.setCurrentIndex(i)
+        _picked(win)
 
 
 def _picked(win):

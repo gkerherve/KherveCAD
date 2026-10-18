@@ -57,3 +57,36 @@ def test_the_meeting_curve_is_an_edge_on_the_drawing():
     merged = Geometry(raw)
     assert merged.joined == 2 and len(ring(merged.tris)) >= 20
     assert Geometry(raw, merge=False).raw == raw      # the model's copy
+
+
+def test_the_drawing_picker_lists_a_wrapping_objects_sheet(qtbot=None):
+    import os
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PyQt5.QtWidgets import QApplication
+    app = QApplication.instance() or QApplication([])
+    from khervecad import drawing_set
+    from khervecad.mainwindow import MainWindow
+    from khervecad.blueprint import open_blueprint
+    win = MainWindow()
+    try:
+        m = win.model
+        a = m.add_node("cube", dict(width=10.0, depth=10.0, height=10.0))
+        b = m.add_node("cube", dict(width=10.0, depth=10.0, height=10.0,
+                                    x=20.0))
+        wrap = m.wrap_nodes([a, b], "union")
+        m.make_component(wrap) if hasattr(m, "make_component") else None
+        comp = next(c for c in m.all_components())
+        bp = open_blueprint(win)
+        drawing_set.show(bp, comp.name)          # sheet 2 = the wrapper
+        drawing_set.show(bp, None)
+        names = [bp.drawing_combo.itemData(i)
+                 for i in range(bp.drawing_combo.count())]
+        assert comp.name in names
+        assert "of" in bp.drawing_page.text()
+        drawing_set.step_drawing(bp, 1)
+        assert bp.current == names[1]
+        assert drawing_set.delete_current(bp) and bp.current is None
+        bp.close()
+    finally:
+        win._dirty = False
+        win.close()
