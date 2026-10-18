@@ -20,6 +20,7 @@ import os
 import socket
 import sys
 import threading
+import time
 from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -273,6 +274,13 @@ def live(app, tmp_path, monkeypatch):
     bridge.stop()
 
 
+#: Every reply helper below pumps Qt between 50 ms reads, so a reply that
+#: never comes used to spin for ever: on a Windows runner the whole suite
+#: hung until the job's six-hour limit, with nothing in the log naming the
+#: test.  One deadline turns that into a named failure.
+REPLY_WAIT_S = 30.0
+
+
 def _ask(bridge, method, params=None, token=None):
     """One request over the bridge's real socket, pumping Qt meanwhile."""
     sock = socket.create_connection(("127.0.0.1", bridge.port()), timeout=5)
@@ -280,7 +288,9 @@ def _ask(bridge, method, params=None, token=None):
                "method": method, "params": params or {}}
     sock.sendall((json.dumps(payload) + "\n").encode())
     buf = b""
+    end = time.monotonic() + REPLY_WAIT_S
     while b"\n" not in buf:
+        assert time.monotonic() < end, f"no bridge reply to {method}"
         QApplication.processEvents()
         sock.settimeout(0.05)
         try:
@@ -496,7 +506,9 @@ def _http(bridge, body, headers=""):
             if line.lower().startswith(b"content-length:"):
                 length = int(line.split(b":", 1)[1])
         return len(payload) >= length if length is not None else bool(payload)
+    end = time.monotonic() + REPLY_WAIT_S
     while not complete():
+        assert time.monotonic() < end, "no HTTP reply"
         QApplication.processEvents()
         sock.settimeout(0.05)
         try:
@@ -551,7 +563,9 @@ def _http_path(bridge, path, body, headers=""):
         f"Content-Type: application/json\r\n"
         f"Content-Length: {len(raw)}\r\n{headers}\r\n".encode() + raw)
     buf = b""
+    end = time.monotonic() + REPLY_WAIT_S
     while b"\r\n\r\n" not in buf or not buf.partition(b"\r\n\r\n")[2]:
+        assert time.monotonic() < end, f"no HTTP reply from {path}"
         QApplication.processEvents()
         sock.settimeout(0.05)
         try:
