@@ -103,6 +103,8 @@ def state(win):
             "scale": scene.scale, "scale_label": drawing.scale_label(
                 scene.scale) if scene.scale else "",
             "style": scene.look.style, "hidden_lines": scene.hidden_lines,
+            "merge_parts": scene.merge_parts,
+            "parts_joined": scene.geometry.joined,
             "fields": dict(scene.fields),
             "views": [_view_info(v) for v in scene.views.values()],
             "notes": [_note_info(i, n) for i, n in
@@ -349,6 +351,11 @@ def _apply(win, scene, action, params):
         if "hidden_lines" in params:
             scene.hidden_lines = bool(params["hidden_lines"])
             scene.refill()
+        if "merge_parts" in params:
+            scene.merge_parts = bool(params["merge_parts"])
+            scene.geometry = type(scene.geometry)(scene.geometry.raw,
+                                                  scene.merge_parts)
+            scene.refill()
         if params.get("fields"):
             scene.fields.update({k: str(v) for k, v in
                                  params["fields"].items()})
@@ -358,6 +365,8 @@ def _apply(win, scene, action, params):
         return {"sheet": scene.sheet, "scale": scene.scale,
                 "style": scene.look.style,
                 "hidden_lines": scene.hidden_lines,
+                "merge_parts": scene.merge_parts,
+                "parts_joined": scene.geometry.joined,
                 "fields": dict(scene.fields)}
     if action == "update_from_model":
         win.update_from_model()

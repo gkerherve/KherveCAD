@@ -3660,6 +3660,17 @@ into a new module and import.
                        `_rect_gap`); the isometric may shrink (×0.85) to
                        leave room. Mass = the BOM's total, material "As
                        parts list".
+  - `drawmerge.py` — **overlapping parts merged for the drawing**
+                       (2026-10-18, the user: a port tube's meeting curve
+                       with the chamber wall stopped half way — two
+                       overlapping parts have no edge where they meet).
+                       `Geometry(tris, merge=True)` splits a COPY into
+                       solids and unions each group that shares volume
+                       (Manifold); face-to-face contact (a bolted flange)
+                       stays apart. The model, exports and prints never
+                       see it. Sheet state `merge_parts` (default true,
+                       MCP blueprint sheet `merge_parts`); `joined` says
+                       how many solids were joined.
   - `drawing_set.py` — the **drawing set** (2026-10-17, the user: "each
                        object's got its own drawing ... and an individual
                        BOM"): `DocumentModel.part_drawings` {Object name:

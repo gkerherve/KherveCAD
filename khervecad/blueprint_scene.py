@@ -56,8 +56,18 @@ class Geometry:
     round edges are projected on first use and kept, so an undo or a
     style change never re-projects a thread."""
 
-    def __init__(self, tris):
-        self.tris = list(tris or ())
+    def __init__(self, tris, merge=True):
+        # parts that pass through each other are drawn as ONE solid, so
+        # the curve where a port meets a wall is a real edge — a copy
+        # for the drawing only (drawmerge.py); the model is untouched
+        self.raw = list(tris or ())
+        self.merge = bool(merge)
+        self.joined = 0
+        if self.merge:
+            from .drawmerge import merged
+            self.tris, self.joined = merged(self.raw)
+        else:
+            self.tris = list(self.raw)
         self.info = shading.analyse(self.tris) if self.tris else None
         self._views, self._sections = {}, {}
         self._volume = None
@@ -159,6 +169,8 @@ class BlueprintScene(QGraphicsScene):
         self.W, self.H = drawing.SHEETS[self.sheet]
         self.scale = 1.0
         self.hidden_lines = True
+        #: overlapping parts drawn as one solid (drawmerge.py)
+        self.merge_parts = True
         #: the document's unit: the title block's UNITS cell and the mass
         #: (the sheet itself is always paper millimetres)
         self.unit = "mm"
@@ -270,6 +282,7 @@ class BlueprintScene(QGraphicsScene):
     def state(self):
         return {"version": 1, "sheet": self.sheet, "style": self.look.style,
                 "scale": self.scale, "hidden_lines": self.hidden_lines,
+                "merge_parts": self.merge_parts,
                 "fields": dict(self.fields),
                 "views": [v.to_dict() for v in self.views.values()],
                 "notes": [n.to_dict() for n in self.notes()]}
@@ -290,6 +303,9 @@ class BlueprintScene(QGraphicsScene):
             if state.get("style") in bi.STYLES else "paper"
         self.scale = float(state.get("scale") or 1.0)
         self.hidden_lines = bool(state.get("hidden_lines", True))
+        self.merge_parts = bool(state.get("merge_parts", True))
+        if self.geometry.merge != self.merge_parts:
+            self.geometry = Geometry(self.geometry.raw, self.merge_parts)
         self.fields = dict(state.get("fields") or {})
         self._setup_paper()
         for data in state.get("views") or []:

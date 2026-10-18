@@ -1625,7 +1625,7 @@ TOOLS = [
             "axis offset | detail parent centre radius factor | shaded; "
             "x, y), set_view (view + x, y, label, show_label...), "
             "remove_view, sheet (sheet, scale 0.5 or '1:2', style, "
-            "hidden_lines, fields {title, number, material, drawn, "
+            "hidden_lines, merge_parts, fields {title, number, material, drawn, "
             "company, revision, finish...}), update_from_model, undo, "
             "redo, render (PNG to look at), export (path .pdf .svg .png "
             ".dxf). drawing = which sheet first (a part name; '' = "
@@ -1660,6 +1660,10 @@ TOOLS = [
             "scale": {"type": ["number", "string"]},
             "style": {"type": "string"},
             "hidden_lines": {"type": "boolean"},
+            "merge_parts": {"type": "boolean", "description": (
+                "sheet: draw parts that pass through each other (a port "
+                "welded into a wall) as ONE solid, so their meeting curve "
+                "is drawn — default true; the model is never changed.")},
             "fields": {"type": "object"},
             "px_per_mm": {"type": "number"},
             "path": {"type": "string"},
