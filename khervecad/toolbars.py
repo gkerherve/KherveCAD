@@ -273,30 +273,15 @@ def build_options_bar(win):
                             shortcut="Ctrl+'", checkable=True)
     win._grid_act.setChecked(win.scene.show_grid)
     win._grid_act.toggled.connect(win._set_show_grid)
-    bar.addAction(win._grid_act)
     win._snap_act = _action(win, "mdi.magnet", "Snap", "grid_snap",
                             shortcut="Ctrl+Shift+'", checkable=True)
     win._snap_act.setChecked(win.scene.snap_enabled)
     win._snap_act.toggled.connect(win._set_snap)
-    bar.addAction(win._snap_act)
-    bar.addWidget(QLabel(" " + language.tr("Grid") + " "))
-    win._grid_spin = QDoubleSpinBox()
-    win._grid_spin.setDecimals(2)                   # down to 0.01 mm
-    win._grid_spin.setRange(0.01, 1000.0)
-    win._grid_spin.setSingleStep(0.5)
-    # step in proportion to the value (0.6, 0.7… near 0.5; 6, 7… near 5)
-    win._grid_spin.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
-    win._grid_spin.setSuffix(" mm")
-    win._grid_spin.setValue(win.scene.grid_size)
-    win._grid_spin.valueChanged.connect(win._set_grid_size)
-    tooltips.apply(win._grid_spin, "grid_size")
-    bar.addWidget(win._grid_spin)
-    bar.addWidget(QLabel(" " + language.tr("Plane") + " "))
-    win._plane_combo = QComboBox()
-    win._plane_combo.addItems(list(PLANES))
-    tooltips.apply(win._plane_combo, "plane")
-    win._plane_combo.currentTextChanged.connect(win._set_plane)
-    bar.addWidget(win._plane_combo)
+    # grid, snap and the plane live on the 2D view's own bar
+    # (viewnav.add_sketch_controls); the actions stay for the shortcuts
+    # and the View menu
+    win.addAction(win._grid_act)
+    win.addAction(win._snap_act)
     bar.addAction(_action(win, "mdi.fit-to-page-outline", "Fit sketch",
                           "fit_sketch", win.view2d.fit_content,
                           "Ctrl+Shift+F", bind=False))     # View menu's

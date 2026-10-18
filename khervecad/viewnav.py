@@ -241,6 +241,91 @@ def attach_2d(view):
     return bar
 
 
+#: grid spacings offered by the sketch bar's grid menu (document units)
+GRID_STEPS = (0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100)
+
+
+def add_sketch_controls(win, bar):
+    """Plane (Top / Front / Side), grid and snap on the 2D view's own
+    bar (they used to sit on the main toolbar): the plane buttons are
+    exclusive and follow the scene when it jumps plane by itself; the
+    grid button switches the grid, its arrow picks the spacing."""
+    from PyQt5.QtWidgets import QActionGroup, QInputDialog
+    from . import icons
+    from .view2d import PLANES
+    names = {"Top (XY)": ("Top", "Top view (XY plane)"),
+             "Front (XZ)": ("Front", "Front view (XZ plane)"),
+             "Side (YZ)": ("Side", "Side view (YZ plane)")}
+    win._plane_buttons = {}
+    line = QFrame(bar)
+    line.setFrameShape(QFrame.VLine)
+    bar.layout().insertWidget(0, line)
+    for plane in reversed(list(PLANES)):
+        label, tip = names[plane]
+        button = QToolButton(bar)
+        button.setText(label)
+        button.setToolTip("Sketch plane: " + tip)
+        button.setCheckable(True)
+        button.setAutoExclusive(True)
+        button.setChecked(plane == win.scene.plane)
+        button.clicked.connect(lambda _=False, p=plane: win._set_plane(p))
+        bar.layout().insertWidget(0, button)
+        win._plane_buttons[plane] = button
+    menu = QMenu(bar)
+    group = QActionGroup(menu)
+    win._grid_step_acts = {}
+    for step in GRID_STEPS:
+        act = menu.addAction("%g mm" % step)
+        act.setCheckable(True)
+        group.addAction(act)
+        act.triggered.connect(lambda _=False, v=step: win._set_grid_step(v))
+        win._grid_step_acts[step] = act
+    menu.addSeparator()
+
+    def ask():
+        v, ok = QInputDialog.getDouble(
+            win, "Grid spacing", "Spacing (mm):", win.scene.grid_size,
+            0.01, 1000.0, 2)
+        if ok:
+            win._set_grid_step(v)
+    menu.addAction("Custom…").triggered.connect(ask)
+    layout = bar.layout()
+    layout.addWidget(_vline(bar))
+    grid = MenuButton(bar, menu)
+    art = icons.icon("mdi.grid", "#e6e9ec")
+    if art.isNull():
+        grid.setText("#")
+    else:
+        grid.setIcon(art)
+    grid.setToolTip("Grid: click to show / hide; the arrow sets the "
+                    "spacing (0.1, 0.2, 0.5, 1 mm…)")
+    grid.setChecked(win.scene.show_grid)
+    grid.clicked.connect(win._grid_act.setChecked)
+    win._grid_act.toggled.connect(grid.setChecked)
+    layout.addWidget(grid)
+    snap = QToolButton(bar)
+    art = icons.icon("mdi.magnet", "#e6e9ec")
+    if art.isNull():
+        snap.setText("⌗")
+    else:
+        snap.setIcon(art)
+    snap.setCheckable(True)
+    snap.setChecked(win.scene.snap_enabled)
+    snap.setToolTip("Snap to the grid (Ctrl+Shift+')")
+    snap.clicked.connect(win._snap_act.setChecked)
+    win._snap_act.toggled.connect(snap.setChecked)
+    layout.addWidget(snap)
+    bar.buttons["grid"], bar.buttons["snap"] = grid, snap
+    win._sync_grid_step()
+    bar.place()
+
+
+def _vline(parent):
+    line = QFrame(parent)
+    line.setFrameShape(QFrame.VLine)
+    return line
+
+
 # ------------------------------------------------------------------ 3D
 def pan_3d(view, dx, dy):
     """Slide the camera sideways / up by a fraction of the viewing

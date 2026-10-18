@@ -737,12 +737,15 @@ class MainWindow(QMainWindow):
     def _on_plane_auto_changed(self, plane):
         """The 2D view jumped planes to expose a primitive's edit handles;
         reflect it in the Plane combo without re-triggering a rebuild."""
-        self._plane_combo.blockSignals(True)
-        self._plane_combo.setCurrentText(plane)
-        self._plane_combo.blockSignals(False)
+        button = self._plane_buttons.get(plane)
+        if button is not None:
+            button.setChecked(True)
 
     def _set_plane(self, plane):
         self.scene.set_plane(plane)
+        button = getattr(self, "_plane_buttons", {}).get(plane)
+        if button is not None:
+            button.setChecked(True)
         self.view2d.viewport().update()
 
     def _refresh_engine_label(self, busy=False):
@@ -886,6 +889,14 @@ class MainWindow(QMainWindow):
     def _set_grid_size(self, size):
         self.scene.grid_size = float(size)
         self.view2d.viewport().update()
+
+    def _set_grid_step(self, size):
+        self._set_grid_size(size)
+        self._sync_grid_step()
+
+    def _sync_grid_step(self):
+        for step, act in getattr(self, "_grid_step_acts", {}).items():
+            act.setChecked(abs(step - self.scene.grid_size) < 1e-9)
 
     # -------------------------------------------------- selection sync
     def _tree_selected(self, nodes):
@@ -1564,6 +1575,7 @@ class MainWindow(QMainWindow):
         a button that switches each, and an arrow holding every option —
         the View menu's own actions, so the two always agree."""
         from . import viewnav
+        viewnav.add_sketch_controls(self, self.view2d.nav_bar)
         bar = getattr(self.view3d, "nav_bar", None)
         if bar is None:
             return

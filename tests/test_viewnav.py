@@ -206,3 +206,20 @@ def test_vibe_model_folds_the_panels_away_and_back(app):
     finally:
         win._dirty = False
         win.close()
+
+
+def test_sketch_bar_holds_plane_and_grid(app):
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        assert not hasattr(win, "_plane_combo")
+        win._plane_buttons["Front (XZ)"].click()
+        assert win.scene.plane == "Front (XZ)"
+        win._on_plane_auto_changed("Side (YZ)")
+        assert win._plane_buttons["Side (YZ)"].isChecked()
+        win._grid_step_acts[0.2].trigger()
+        assert win.scene.grid_size == 0.2
+        win.view2d.nav_bar.buttons["grid"].click()
+        assert win.scene.show_grid == win._grid_act.isChecked()
+    finally:
+        win.close()

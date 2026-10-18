@@ -252,7 +252,7 @@ def test_selecting_cylinder_jumps_to_editing_plane_blue_one_instance(window):
     window.builder.tree.select_nodes([bore])
     QApplication.instance().processEvents()
     assert window.scene.plane in ("Front (XZ)", "Side (YZ)")
-    assert window._plane_combo.currentText() == window.scene.plane
+    assert window._plane_buttons[window.scene.plane].isChecked()
     items = part_items()
     assert len(items) == 1
     assert items[0].pen().style() != 0           # a blue outline, not NoPen
