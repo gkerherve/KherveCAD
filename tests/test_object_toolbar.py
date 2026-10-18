@@ -84,7 +84,7 @@ def test_delete_removes_the_object_and_its_instances(app):
 
 def test_delete_is_one_undo_step(app):
     m = DocumentModel()
-    m.UNDO_MERGE_S = 0.0         # a person's clicks are never 0.4 s apart
+    m.UNDO_MERGE_S = -1.0        # never merge: Windows clock ticks are ~15 ms, so 0 s apart happens
     tab = ObjectTab(m)
     comp = m.new_component("Bracket")
     m.add_node("cube", parent=comp)
