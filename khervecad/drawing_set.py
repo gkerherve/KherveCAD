@@ -198,22 +198,26 @@ def install_ui(win, bar):
     bar.addWidget(QLabel(" Drawing "))
     win.drawing_combo = QComboBox()
     win.drawing_combo.setMinimumWidth(220)
-    win.drawing_combo.setToolTip(
-        "Which drawing of the set: the assembly, or one Object's own "
-        "part drawing (made the first time you pick it)")
+    from .blueprint import _tip
+    win.drawing_combo.setToolTip(_tip(
+        "Drawing", "Which drawing of the set to show: the assembly, or "
+        "one Object's own part drawing."))
     win.drawing_combo.activated.connect(lambda _i: _picked(win))
     bar.addWidget(win.drawing_combo)
     from . import icons
     from PyQt5.QtWidgets import QAction
     make = QAction(icons.icon("mdi.file-document-multiple-outline"),
                    "Make all part drawings", win)
-    make.setToolTip("A drawing for every Object that has none yet")
+    make.setToolTip(_tip(
+        "Make all part drawings",
+        "Creates a drawing for every Object that has none yet."))
     make.triggered.connect(lambda: make_all(win))
     bar.addAction(make)
     exp = QAction(icons.icon("mdi.book-open-page-variant-outline"),
                   "Export drawing set…", win)
-    exp.setToolTip("Every drawing of the set: one multi-page PDF, or a "
-                   "folder of PDF / DXF / SVG / PNG files")
+    exp.setToolTip(_tip(
+        "Export drawing set",
+        "Writes every drawing of the set in one go."))
     exp.triggered.connect(lambda: export_dialog(win))
     bar.addAction(exp)
     refill(win)

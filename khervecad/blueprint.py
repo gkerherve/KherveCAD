@@ -401,11 +401,9 @@ class FcfDialog(QDialog):
 
 # ── the window ─────────────────────────────────────────────────────
 
-def _tip(title, what, how=""):
-    body = f"<b>{title}</b><br>{what}"
-    if how:
-        body += f"<br><i>{how}</i>"
-    return f"<div style='max-width:320px'>{body}</div>"
+def _tip(title, what, how="", shortcut=""):
+    from . import blueprint_help
+    return blueprint_help.html(title, what, how, shortcut)
 
 
 #: the annotation toolbar: (tool key, icon, label, shortcut, what, how)
@@ -534,8 +532,15 @@ class BlueprintWindow(QMainWindow):
             act.setShortcut(QKeySequence(shortcut))
             act.setShortcutContext(Qt.WindowShortcut)
         if tip:
+            if shortcut:
+                from . import blueprint_help
+                tip = tip.replace(
+                    blueprint_help.KEY_MARK,
+                    f" &nbsp;<span style='color:#8a8a8a'>{shortcut}"
+                    "</span>")
             act.setToolTip(tip)
-            act.setStatusTip(re.sub(r"<[^>]+>", " ", tip).strip())
+            act.setStatusTip(re.sub(r"<[^>]+>", " ", tip).split(
+                "How to use")[0].strip())
         act.setCheckable(checkable)
         if slot is not None:
             act.triggered.connect(slot)
@@ -590,6 +595,10 @@ class BlueprintWindow(QMainWindow):
                               _tip("Delete", "Remove the selected views "
                                    "and annotations (a view takes its "
                                    "dimensions with it).", "Delete key"))
+        undo.setToolTip(_tip("Undo", "Takes back the last change to the "
+                             "sheet.", shortcut="Ctrl+Z"))
+        redo.setToolTip(_tip("Redo", "Brings back what Undo took away.",
+                             shortcut="Ctrl+Y"))
         for act in (undo, redo, delete):
             edit.addAction(act)
             top.addAction(act)
@@ -627,7 +636,8 @@ class BlueprintWindow(QMainWindow):
         top.addWidget(QLabel(" Sheet "))
         self.sheet_combo = QComboBox()
         self.sheet_combo.addItems(list(drawing.SHEETS))
-        self.sheet_combo.setToolTip("Paper size (landscape)")
+        self.sheet_combo.setToolTip(_tip(
+            "Sheet", "The paper size of the drawing (landscape)."))
         self.sheet_combo.activated.connect(self._sheet_chosen)
         top.addWidget(self.sheet_combo)
         top.addWidget(QLabel(" Scale "))
@@ -640,17 +650,18 @@ class BlueprintWindow(QMainWindow):
         self.scale_combo.setInsertPolicy(QComboBox.NoInsert)
         self.scale_combo.lineEdit().editingFinished.connect(
             self._scale_typed)
-        self.scale_combo.setToolTip("Drawing scale — pick one or type any "
-                                    "ratio (1:7, 1:333, 3:1); the title "
-                                    "block follows")
+        self.scale_combo.setToolTip(_tip(
+            "Scale", "The drawing scale: how much smaller (or larger) "
+            "the views are than the part."))
         self.scale_combo.activated.connect(self._scale_chosen)
         top.addWidget(self.scale_combo)
         self.style_combo = QComboBox()
         for key, label in bi.STYLE_NAMES.items():
             self.style_combo.addItem(icons.icon("mdi.palette-outline"),
                                      label, key)
-        self.style_combo.setToolTip("White paper, or the classic blueprint "
-                                    "blue — exports follow")
+        self.style_combo.setToolTip(_tip(
+            "Style", "How the sheet looks: white paper, or the classic "
+            "blueprint blue."))
         self.style_combo.activated.connect(self._style_chosen)
         top.addWidget(self.style_combo)
         self.hidden_act = self._action(
