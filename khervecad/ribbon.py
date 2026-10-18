@@ -32,7 +32,7 @@ from PyQt5.QtWidgets import (QAction, QFrame, QGridLayout, QHBoxLayout,
                              QMenu, QSizePolicy, QStackedWidget, QTabBar,
                              QToolButton, QVBoxLayout, QWidget)
 
-from . import icons, language, tooltips
+from . import icons, language, toolbars, tooltips
 
 _SETTINGS = ("Kherve", "KherveCAD")
 TAB_KEY = "ribbon/tab"
@@ -104,6 +104,7 @@ def analysis_actions(win):
         act = QAction(icons.icon(glyph, icons.family_color("measure")),
                       language.tr(text), win)
         act.setData(key)
+        toolbars.remember_glyph(act, glyph, "measure")
         tooltips.apply(act, key)
         act.triggered.connect(lambda _=False, k=kind: open_analysis(win, k))
         acts.append(act)

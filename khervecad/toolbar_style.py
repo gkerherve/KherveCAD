@@ -277,6 +277,32 @@ def _style_vertical(win, name):
     bar.setStyleSheet(_qss_vertical(name, colours(name)))
 
 
+def restyle_icons(win, name):
+    """Every action that remembers its glyph (toolbars.remember_glyph)
+    takes the painted icon of style *name* (icons_cad), or its glyph
+    in the style's ink when nothing is painted for it; the classic
+    style puts the original icons back."""
+    from PyQt5.QtWidgets import QAction
+    from . import icons, icons_cad
+    classic = win.__dict__.setdefault("_classic_icons", {})
+    for act in win.findChildren(QAction):
+        glyph = act.property("kc_glyph")
+        if not glyph:
+            continue
+        if act not in classic:
+            classic[act] = act.icon()
+        if name == DEFAULT:
+            act.setIcon(classic[act])
+            continue
+        key = act.data()
+        painted = icons_cad.icon(key, name) if isinstance(key, str) \
+            else None
+        if painted is None:
+            painted = icons.icon(glyph, icons_cad.glyph_color(
+                name, act.property("kc_family") or None))
+        act.setIcon(painted)
+
+
 def restyle(win):
     """Colours again (the theme changed light <-> dark); layout kept."""
     name = current(win)
@@ -299,6 +325,12 @@ def apply(win, name: str = None, remember: bool = True):
     if vibe:
         win.set_vibe_model(False)
     _style_vertical(win, name)
+    # icons BEFORE the ribbon: a changed action makes its buttons take
+    # the action's text again, which drops the ribbon's short names
+    if name != DEFAULT:
+        from .ribbon import analysis_actions
+        analysis_actions(win)
+    restyle_icons(win, name)
     bar = win._options_bar
     _clear(bar)
     ribbon_bar = getattr(win, "_ribbon_bar", None)

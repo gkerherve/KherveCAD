@@ -84,6 +84,24 @@ into a new module and import.
                        `triggered`, not each action: the buttons are
                        rebuilt on a switch and a slot left on a deleted
                        one would abort the app.
+                       **Icons** (same day, the user: "the icon look to be
+                       the same"): `icons_cad.py` / `icons_cad_more.py`
+                       paint ORIGINAL CAD-style icons per style (never the
+                       programs' artwork) — Fusion: light steel-grey bodies,
+                       orange for what a tool makes, blue for what it acts
+                       on; SolidWorks: yellow shaded solids, blue sketch
+                       lines and arrows, red cuts. A unit square with an
+                       iso projection (`D.P`, `box`, `solid`, `cyl`,
+                       `arrow`...), every drawing auto-fitted to the square
+                       (`_fit`, a QPicture's bounds), cached per (key,
+                       style); the 3D solids reuse `icons_solid.paint` in
+                       the palette. `toolbars.remember_glyph` notes each
+                       action's glyph + family; `toolbar_style.
+                       restyle_icons` swaps them (a key nobody painted gets
+                       its glyph in the style's ink) and classic restores
+                       the originals. It runs BEFORE the ribbon is built:
+                       changing an action's icon makes its buttons take
+                       the action's text again, dropping the short names.
   - `icons.py`       — qtawesome MDI icon wrapper with fallback.
   - `model.py`       — **the core**: `CadNode` tree, `NODE_TYPES`
                        registry (params + property schema + icon per

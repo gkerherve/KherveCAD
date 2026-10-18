@@ -271,6 +271,19 @@ KINDS = tuple(DRAWERS)
 _CACHE = {}
 
 
+def paint(painter, kind, size, base=None, edge=None):
+    """Draw solid *kind* *size* pixels square on *painter* in another
+    body / outline colour (the Interface Styles' icons, icons_cad)."""
+    global BASE, EDGE
+    saved = BASE, EDGE
+    BASE = QColor(base) if base is not None else BASE
+    EDGE = QColor(edge) if edge is not None else EDGE
+    try:
+        DRAWERS[kind](float(size))(painter)
+    finally:
+        BASE, EDGE = saved
+
+
 def pixmap(kind, size):
     pix = QPixmap(size, size)
     pix.fill(Qt.transparent)

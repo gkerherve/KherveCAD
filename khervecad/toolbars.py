@@ -150,6 +150,14 @@ class GroupButton(QToolButton):
         painter.end()
 
 
+def remember_glyph(act, glyph, family=None):
+    """Note the glyph an action's icon was made from, so an Interface
+    Style can paint its own icon and the classic one can come back
+    (toolbar_style.restyle_icons)."""
+    act.setProperty("kc_glyph", glyph)
+    act.setProperty("kc_family", family or "")
+
+
 def _action(win, glyph, text, key, slot=None, shortcut="",
             checkable=False, bind=True, family=None):
     """A toolbar action with its rich tooltip. *bind* False shows the
@@ -159,6 +167,7 @@ def _action(win, glyph, text, key, slot=None, shortcut="",
     color = icons.family_color(family) if family else None
     act = QAction(icons.icon(glyph, color), language.tr(text), win)
     act.setData(key)
+    remember_glyph(act, glyph, family)
     act.setCheckable(checkable)
     if shortcut and bind:
         act.setShortcut(shortcut)
@@ -249,6 +258,8 @@ def make_bar_actions(win):
              "redo", "Ctrl+Y")):
         act = make(win)
         act.setIcon(icons.icon(glyph))
+        act.setData(key)
+        remember_glyph(act, glyph)
         act.setText(language.tr(text))
         tooltips.apply(act, key, keys)
         parts["undo"].append(act)

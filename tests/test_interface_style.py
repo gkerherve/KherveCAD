@@ -144,3 +144,33 @@ def test_theme_change_restyles_and_mcp_switches(window):
     assert window._ribbon_bar.styleSheet() == light
     out = ex.execute("set_render_options", {"interface_style": "KherveCAD"})
     assert out["interface_style"] == "KherveCAD" and window.ribbon is None
+
+
+def test_every_bar_tool_has_a_painted_icon_in_both_styles(app):
+    from khervecad import icons_cad
+    keys = ([t[0] for t in toolbars.TOOLS + toolbars.MEASURE_TOOLS]
+            + toolbars.BAR_PRIMITIVES + toolbars.OPERATIONS
+            + ["house_builder", "new", "open", "save", "undo", "redo",
+               "vibe_model", "snap_objects", "edit_mesh", "blueprint",
+               "bom", "pid", "cut_through"] + list(ribbon._TIPS))
+    for style in ("Fusion", "SolidWorks"):
+        for key in keys:
+            ic = icons_cad.icon(key, style)
+            assert ic is not None, (style, key)
+            img = ic.pixmap(32, 32).toImage()
+            inked = sum(1 for x in range(0, 32, 2) for y in range(0, 32, 2)
+                        if img.pixelColor(x, y).alpha() > 40)
+            assert inked > 12, (style, key)        # something is drawn
+    assert icons_cad.icon("no-such-tool", "Fusion") is None
+
+
+def test_styles_swap_the_icons_and_classic_puts_them_back(window, app):
+    act = window._bar_parts["families"][0][1][0]        # Linear extrude
+    classic = act.icon().cacheKey()
+    toolbar_style.apply(window, "SolidWorks")
+    assert act.icon().cacheKey() != classic
+    # the ribbon kept its short names although the icons changed
+    names = {b.text() for b in window.ribbon.findChildren(QToolButton)}
+    assert "Resize" in names and "Resize (absolute size)" not in names
+    toolbar_style.apply(window, "KherveCAD")
+    assert act.icon().cacheKey() == classic
