@@ -430,11 +430,27 @@ _SCAD_RESERVED = {
 }
 
 
+#: symbols that mean something in a part's name, spelled out for an
+#: identifier before accents are stripped
+_IDENT_WORDS = {"Ø": "D", "ø": "D", "°": "deg", "µ": "u", "×": "x",
+                "±": "pm", "²": "2", "³": "3", "ß": "ss", "Æ": "AE",
+                "æ": "ae", "Œ": "OE", "œ": "oe"}
+
+
 def module_name(name: str) -> str:
     """*name* as a valid, non-reserved OpenSCAD module identifier
     (``Object 2`` -> ``Object_2``)."""
     import re
-    ident = re.sub(r"\W", "_", str(name).strip()) or "part"
+    import unicodedata
+    # ASCII only: OpenSCAD refuses a non-ASCII identifier ("Non-ASCII
+    # identifiers are experimental"), and Python's \W keeps letters like
+    # Ø and é, so "Chamber body Ø250" broke the whole program's render
+    text = str(name).strip()
+    for k, v in _IDENT_WORDS.items():
+        text = text.replace(k, v)
+    text = unicodedata.normalize("NFKD", text).encode(
+        "ascii", "ignore").decode("ascii")
+    ident = re.sub(r"[^A-Za-z0-9_]", "_", text) or "part"
     if ident[0].isdigit():
         ident = "_" + ident
     if ident in _SCAD_RESERVED:

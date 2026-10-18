@@ -59,11 +59,18 @@ def test_the_meeting_curve_is_an_edge_on_the_drawing():
     assert Geometry(raw, merge=False).raw == raw      # the model's copy
 
 
-def test_the_drawing_picker_lists_a_wrapping_objects_sheet(qtbot=None):
+@pytest.fixture(scope="session")
+def app():
+    # session-scoped: a QApplication owned by one test was deleted under
+    # every later test (a bus error in the next module)
     import os
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    os.environ.setdefault("KHERVECAD_DISABLE_ENGINE", "1")
     from PyQt5.QtWidgets import QApplication
-    app = QApplication.instance() or QApplication([])
+    return QApplication.instance() or QApplication([])
+
+
+def test_the_drawing_picker_lists_a_wrapping_objects_sheet(app):
     from khervecad import drawing_set
     from khervecad.mainwindow import MainWindow
     from khervecad.blueprint import open_blueprint
@@ -90,3 +97,11 @@ def test_the_drawing_picker_lists_a_wrapping_objects_sheet(qtbot=None):
     finally:
         win._dirty = False
         win.close()
+
+
+def test_an_object_name_with_symbols_gives_an_ascii_module():
+    """'Chamber body Ø250' made `module Chamber_body_Ø250`, which
+    OpenSCAD refuses — the whole chamber lost its exact render."""
+    from khervecad.model import module_name
+    assert module_name("Chamber body Ø250 x 600") == "Chamber_body_D250_x_600"
+    assert module_name("Château 45°").isascii()
