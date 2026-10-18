@@ -209,13 +209,30 @@ class Parser:
                 except Exception:
                     return None
             if isinstance(element, (list, tuple)) and len(element) >= 2:
-                try:
-                    pts.append([float(element[0]), float(element[1])])
-                except (TypeError, ValueError):
+                point = [self._point_component(v) for v in element[:2]]
+                if None in point:
                     return None
+                pts.append(point)
             else:
                 return None
         return pts if len(pts) >= 3 else None
+
+    def _point_component(self, value):
+        """One coordinate of a polygon point: a float, or the source text
+        when it reads a variable the tree defines, so `[pin_r, -1]` keeps
+        following pin_r (the preview resolves each component). None when
+        it cannot be evaluated."""
+        if isinstance(value, bool):
+            return None
+        if isinstance(value, (int, float)):
+            return float(value)
+        if not isinstance(value, str):
+            return None
+        try:
+            number = float(expr.evaluate(value, self.scope))
+        except Exception:
+            return None
+        return value.strip() if self._keeps_link(value) else number
 
     # ------------------------------------------- expression scanning
     def _scan_expr(self, stop=(",", ")", "]", ";", ":")):

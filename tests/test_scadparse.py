@@ -220,6 +220,29 @@ def test_polygon_from_vector_variables(app):
     assert poly.params["points"] == [[0, 0], [0, 30], [35, 0]]
 
 
+def test_polygon_points_written_as_expressions(app):
+    """Points like [pin_r, T / 2 - collar] import as the real shape (they
+    were a placeholder triangle) and keep following the variables: the
+    preview resolves them, and the program writes them back as written."""
+    from khervecad import mesh
+    root, warns = _parse(
+        "pin_r = 3.35; T = 12; collar = 1.2;\n"
+        "polygon([[0, -1], [pin_r, -1], [pin_r, T / 2 - collar], "
+        "[0, T + 1]]);\n"
+        "module half(grow) { polygon([[-1 - grow, 0], [1 + grow, 0], "
+        "[0, 2 * 1.5]]); }\n"
+        "half(0.3);")
+    assert not warns
+    polys = [n for n in root.walk() if n.type == "polygon"]
+    assert polys[0].params["points"][2] == ["pin_r", "T / 2 - collar"]
+    assert polys[0].params["points"][0] == [0.0, -1.0]
+    outline = mesh.node_outlines(polys[0], {"pin_r": 3.35, "T": 12.0,
+                                            "collar": 1.2})[0]
+    assert outline[2] == pytest.approx((3.35, 4.8))
+    assert "[pin_r, T / 2 - collar]" in polys[0]._statement()
+    assert polys[1].params["points"][2] == [0.0, 3.0]
+
+
 def test_module_trailing_comma_and_defaults(app):
     """A module with a trailing comma in its parameter list imports (the
     window-stopper tutorial style)."""
