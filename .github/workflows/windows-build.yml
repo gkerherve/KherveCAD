@@ -24,6 +24,8 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
+    # the suite takes ~35 min; a hang used to burn the 6 h default
+    timeout-minutes: 120
     outputs:
       version: ${{ steps.ver.outputs.version }}
 
@@ -43,7 +45,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pyinstaller pytest
+          pip install pyinstaller pytest pytest-timeout
 
       - name: Install Inno Setup
         # Not guaranteed on the runner image; choco is. build_installer.py
@@ -57,7 +59,7 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
           KHERVECAD_DISABLE_ENGINE: "1"
-        run: python -m pytest tests/ -q
+        run: python -m pytest tests/ -q --timeout=300 --timeout-method=thread
 
       - name: Build the installer and portable zip
         env:

@@ -91,7 +91,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pyinstaller pytest
+          pip install pyinstaller pytest pytest-timeout
 
       - name: Run the test suite
         # Offscreen Qt, and the engine forced off so no background
@@ -99,7 +99,7 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
           KHERVECAD_DISABLE_ENGINE: "1"
-        run: python -m pytest tests/ -q
+        run: python -m pytest tests/ -q --timeout=300 --timeout-method=thread
 
       - name: Build the .app and the DMG
         env:
