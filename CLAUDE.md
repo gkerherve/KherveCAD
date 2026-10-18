@@ -3696,6 +3696,20 @@ into a new module and import.
                        drag symbols and line legs, R/M/Delete/arrows),
                        properties, schedules dock, own undo stack, 3D part
                        link (selects it in the main window). MCP `pid`.
+  - `blueprint_mcp.py` — MCP **`blueprint`** (2026-10-18, the user: "if I
+                       have a blueprint open, it will start changing all my
+                       drawings for me"): state (views with their model
+                       PLANE, bounds, round edges, edge points; notes by
+                       index with what a dimension shows), add / set /
+                       remove notes (a linear dimension may give `side` +
+                       `gap` instead of the raw offset), auto_dimension,
+                       arrange, new_sheet, add/set/remove view, sheet
+                       (size, scale, style, title-block fields),
+                       update_from_model, undo / redo, render, export. Every
+                       edit is `BlueprintWindow.commit` (one undo step,
+                       saved). get_document_info reports `blueprint`, and
+                       the instructions make the drawings follow a model
+                       change BY DEFAULT (ask only when none exists yet).
   - Toolbar (2026-10-16, the user): Edit vertices sits just before the
                        Repeat & logic (For loop) family; Render and Fit 3D
                        left the bar (F5 still renders, the 3D nav bar fits).
@@ -4656,7 +4670,7 @@ into a new module and import.
                        what each SHIPPED .kcad compiles to and pins the
                        files to the generator (`python -m
                        khervecad.tools.print_tests --check`).
-  - `mcp_schema.py`  — the **MCP tool table**: 97 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 98 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -5287,7 +5301,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **97 tools**: the object tree, OpenSCAD in
+client gets the whole app as **98 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

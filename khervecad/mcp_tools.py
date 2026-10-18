@@ -223,6 +223,16 @@ class McpToolExecutor:
                  "visible": bool(c.get("visible", True)),
                  "locked": bool(c.get("locked", False))}
                 for c in model.collections],
+            "blueprint": {
+                "made": bool(model.drawing),
+                "part_drawings": sorted(getattr(model, "part_drawings",
+                                                {}) or {}),
+                "open": bool(getattr(self._w, "_blueprint", None)
+                             and self._w._blueprint.isVisible()),
+                "note": "After changing the 3D model, keep the drawings "
+                        "in step (blueprint action update_from_model, "
+                        "then dimension what is new) unless the user "
+                        "said not to."},
             "editing_object": ({"id": comp.id, "name": comp.name}
                                if comp is not None else None),
             "global_segments": int(model.global_fn),
@@ -1571,6 +1581,13 @@ class McpToolExecutor:
         try:
             return drawing_set.run_tool(self._w, params)
         except (ValueError, KeyError, OSError) as exc:
+            raise ToolError(str(exc))
+
+    def _t_blueprint(self, params) -> dict:
+        from . import blueprint_mcp
+        try:
+            return blueprint_mcp.run(self._w, params)
+        except (blueprint_mcp.BlueprintError, ValueError, OSError) as exc:
             raise ToolError(str(exc))
 
     def _t_pid(self, params) -> dict:

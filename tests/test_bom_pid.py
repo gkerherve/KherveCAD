@@ -527,3 +527,40 @@ def test_drawing_set_and_part_bom_mcp(window, tmp_path):
     assert len(one["rows"]) == 3
     assert call(ex, "bill_of_materials", action="export_parts",
                 path=str(tmp_path / "p.xlsx"))["written"]
+
+
+def test_blueprint_mcp_tool_edits_the_sheet(window, tmp_path):
+    ex = McpToolExecutor(window)
+    st = call(ex, "blueprint")
+    names = {v["name"]: v for v in st["views"]}
+    assert names["Front"]["plane"] == {"u": "x", "v": "z"}
+    top = names["Top"]["id"]
+    before = len(st["notes"])
+    got = call(ex, "blueprint", action="add", notes=[
+        {"view": "Top", "kind": "horizontal", "a": [0, 0], "b": [50, 0],
+         "side": "below", "gap": 12},
+        {"type": "text", "x": 40, "y": 40, "text": "NOTES"}])
+    dim = got["added"][0]
+    assert dim["view"] == top and dim["measured"] == 50.0
+    win = window._blueprint
+    view = win.scene.views[top]
+    item = win.scene.notes()[dim["index"]]
+    # the dimension line sits 12 mm under the view, whatever its points
+    assert abs(item.data["offset"] + view.to_local([0, 0])[1] - 12) < 1e-6
+    call(ex, "blueprint", action="set", index=dim["index"],
+         changes={"text": "50", "tol_plus": "0.1"})
+    assert win.scene.notes()[dim["index"]].label() == "50"
+    assert window.model.drawing["notes"][dim["index"]]["text"] == "50"
+    call(ex, "blueprint", action="sheet",
+         fields={"title": "Pump", "material": "Copper"}, scale="1:2")
+    assert win.scene.fields["title"] == "Pump" and win.scene.scale == 0.5
+    call(ex, "blueprint", action="remove", indices=[dim["index"]])
+    assert len(call(ex, "blueprint")["notes"]) == before + 1
+    call(ex, "blueprint", action="undo")
+    assert len(win.scene.notes()) == before + 2
+    assert "error" in ex.execute("blueprint", {"action": "add", "notes": [
+        {"view": "Nowhere", "kind": "horizontal", "a": [0, 0],
+         "b": [1, 0]}]})
+    assert valid_png_b64(call(ex, "blueprint", action="render")[IMAGE_KEY])
+    info = call(ex, "get_document_info")
+    assert info["blueprint"]["made"] and info["blueprint"]["open"]

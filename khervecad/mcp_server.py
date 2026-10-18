@@ -375,6 +375,34 @@ Object its own Blueprint sheet (views, dimensions, its own parts list and \
 balloons, part number, material, mass, sheet n / N) besides the assembly \
 sheet; export path .pdf = the whole set as one multi-page PDF; render a \
 sheet to check it.
+- blueprint EDITS the Blueprint sheet live (the window opens and changes \
+as you work; one call = one undo step there): action state lists the \
+views (id, plane: Front = (x, z), Top = (x, y), Right = (y, z); model \
+bounds, the round edges with centres and radii, edge end points) and \
+every note by INDEX with what a dimension shows. Dimension a part so it \
+can be MADE: every feature located and sized once (overall sizes, hole \
+positions chained or from one datum, hole sizes 'n× Ø', radii, \
+thicknesses, angles), none repeated, plus a notes text block (material, \
+tolerances, finish). add notes: [{type 'dim', view, kind horizontal | \
+vertical | aligned with a, b = model points in that view's plane and \
+side above/below/left/right + gap mm (stack chains ~7 mm apart), or \
+diameter / radius with centre, r, angle, offset, count; text overrides \
+the number, prefix/suffix ' THRU', tol_plus/tol_minus, decimals}], or \
+{type 'text', x, y sheet mm (y DOWN), text, size}, leader {view, tip, \
+text}, centre_mark, datum, fcf, finish, balloon. set (index or indices + \
+changes), remove (indices, or auto: true), auto_dimension, arrange, \
+add_view / set_view / remove_view, sheet (sheet, scale '1:2', style, \
+hidden_lines, fields = title block: title, number, material, drawn...), \
+drawing = which sheet (a part name, '' = assembly), undo / redo. After \
+edits, action render and LOOK: move what overlaps (set side/gap/offset, \
+or text x/y), keep clear of the title block bottom-right.
+- KEEP DRAWINGS IN STEP: when you build or change a 3D model, the \
+Blueprint follows BY DEFAULT. If the document has one (get_document_info \
+`blueprint.made`, or a part drawing), call blueprint update_from_model \
+when the model is done, then dimension the new or changed features and \
+render to check it, and tell the user you did. If it has none and you \
+built a real part, ASK the user whether a Blueprint should be made too \
+(recommend yes). Skip it only when the user says not to.
 - pid builds the P&ID (process and instrumentation diagram; File > \
 P&ID): action symbols lists ~55 ISO 10628 / ISA symbols with their \
 ports; add symbols at sheet mm (A3 is 420 x 297, keep clear of the title \

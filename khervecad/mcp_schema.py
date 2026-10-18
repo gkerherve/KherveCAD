@@ -1604,6 +1604,68 @@ TOOLS = [
         }),
     },
     {
+        "name": "blueprint",
+        "description": (
+            "EDIT the Blueprint (File > Blueprint) sheet live: views, "
+            "dimensions, notes and title block, one undo step per call. "
+            "action state (default): views with id, plane (Front = (x, "
+            "z), Top = (x, y), Right = (y, z)), model bounds, round edges "
+            "(centres, r) and edge points; notes by index with what each "
+            "dimension shows. add (notes: [{type 'dim' (default), view "
+            "(id or name), kind horizontal | vertical | aligned (a, b "
+            "model points in the view plane; side above / below / left / "
+            "right + gap sheet mm, or offset) | diameter | radius (centre, "
+            "r, angle, offset, count) | angle (vertex, p1, p2); text, "
+            "prefix, suffix, tol_plus, tol_minus, decimals}, {type "
+            "'text', x, y sheet mm y DOWN, text, size, bold}, leader "
+            "{view, tip, at, text}, centre_mark, centre_line, datum, fcf, "
+            "finish, balloon, sketch]), set (index or indices, changes), "
+            "remove (indices, or auto true), auto_dimension, arrange "
+            "(scale), new_sheet, add_view (kind projected name | section "
+            "axis offset | detail parent centre radius factor | shaded; "
+            "x, y), set_view (view + x, y, label, show_label...), "
+            "remove_view, sheet (sheet, scale 0.5 or '1:2', style, "
+            "hidden_lines, fields {title, number, material, drawn, "
+            "company, revision, finish...}), update_from_model, undo, "
+            "redo, render (PNG to look at), export (path .pdf .svg .png "
+            ".dxf). drawing = which sheet first (a part name; '' = "
+            "assembly)."
+        ),
+        "input_schema": _obj({
+            "action": {"type": "string",
+                       "enum": ["state", "add", "set", "remove",
+                                "auto_dimension", "arrange", "new_sheet",
+                                "add_view", "set_view", "remove_view",
+                                "sheet", "update_from_model", "undo",
+                                "redo", "render", "export"]},
+            "drawing": {"type": "string"},
+            "notes": {"type": "array", "items": {"type": "object"}},
+            "index": {"type": "integer"},
+            "indices": {"type": "array", "items": {"type": "integer"}},
+            "changes": {"type": "object"},
+            "auto": {"type": "boolean"},
+            "view": {"type": "string"},
+            "kind": {"type": "string"},
+            "name": {"type": "string"},
+            "axis": {"type": "string", "enum": ["x", "y", "z"]},
+            "parent": {"type": "string"},
+            "centre": {"type": "array", "items": {"type": "number"}},
+            "radius": {"type": "number"},
+            "factor": {"type": "number"},
+            "offset": {"type": "number"},
+            "x": {"type": "number"}, "y": {"type": "number"},
+            "label": {"type": "string"},
+            "show_label": {"type": "boolean"},
+            "sheet": {"type": "string"},
+            "scale": {"type": ["number", "string"]},
+            "style": {"type": "string"},
+            "hidden_lines": {"type": "boolean"},
+            "fields": {"type": "object"},
+            "px_per_mm": {"type": "number"},
+            "path": {"type": "string"},
+        }),
+    },
+    {
         "name": "pid",
         "description": (
             "The document's P&ID — piping and instrumentation diagram "
