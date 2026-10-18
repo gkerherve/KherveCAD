@@ -4476,6 +4476,21 @@ into a new module and import.
                        `tolerance_stackup` (read-only); the instructions
                        run them after building a part and before updating
                        the Blueprint.
+                       **Welds** (same day, the user: parts are welded
+                       and need the weld type, TIG...): `weldcheck.py`
+                       reads touching pairs' joints from their bboxes
+                       (plate = thinnest extent < 0.4 x the next; lap / T
+                       / corner / butt / fillet), seam length, and advises
+                       process by material class + thickness (TIG thin
+                       stainless / aluminium / Ti, MIG steel 1-25, SAW
+                       heavier, brazing brass), filler, fillet leg z and
+                       throat a or butt prep; aluminium-steel, plastics,
+                       wood fail. Recorded welds are `params["welds"]`
+                       [{with, process, joint, size, sides, filler}]
+                       (FORMAT_VERSION 16, skipped by the mesh key) and
+                       judged against the advice. Analyse ▸ Check Welds
+                       (record advised, weld list on the Blueprint), MCP
+                       `check_welds` (read-only) and `set_weld`.
   - `sdf.py`         — **smooth blend** geometry (Qt-free): the
                        primitives under a `blend` (sphere, cube,
                        cylinder, capsule, ellipsoid, rounded box —
@@ -5264,7 +5279,7 @@ where each node dict has `"type"`, `"name"`, `"visible"`, `"params"`
 and nested `"children"`. When a node gains new persisted properties,
 bump `FORMAT_VERSION` in `document.py` and keep loading backward
 compatible. Version 9 adds the top-level `"unit"` (units.py); a file
-without it, or with a unit it does not know, opens as millimetres. Version 12 adds `"real_scale"` — the N of 1 : N the scale bar measures (absent = 1, life size). Version 13 adds `"collections"` (part_collections.py; absent = none). Version 14 adds `"pid"` (pid.py) and `params["bom"]` on nodes (bom.py). Version 15 adds `"part_drawings"` (drawing_set.py).
+without it, or with a unit it does not know, opens as millimetres. Version 12 adds `"real_scale"` — the N of 1 : N the scale bar measures (absent = 1, life size). Version 13 adds `"collections"` (part_collections.py; absent = none). Version 14 adds `"pid"` (pid.py) and `params["bom"]` on nodes (bom.py). Version 15 adds `"part_drawings"` (drawing_set.py). Version 16 adds `params["welds"]` (weldcheck.py).
 
 ## UI conventions
 

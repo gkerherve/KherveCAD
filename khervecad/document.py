@@ -20,7 +20,7 @@ from .meshimport import relative_for_save, resolve_paths
 from .model import NODE_TYPES, CadNode, DocumentModel, retire_masters
 from .units import coerce
 
-FORMAT_VERSION = 15         # 4: "component" (Object) node type
+FORMAT_VERSION = 16         # 4: "component" (Object) node type
                             # 5: instances (reference->component) may
                             #    carry a "mate" record
                             # 6: organic/mesh node types; color nodes
@@ -47,6 +47,8 @@ FORMAT_VERSION = 15         # 4: "component" (Object) node type
                             # 15: "part_drawings" — the drawing set's
                             #    sheet per Object {name: state}; absent =
                             #    none
+                            # 16: params["welds"] — recorded weld specs
+                            #    on a part (weldcheck.py); absent = none
 
 
 def node_to_dict(node: CadNode) -> dict:

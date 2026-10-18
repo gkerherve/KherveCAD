@@ -570,6 +570,9 @@ class MainWindow(QMainWindow):
         analyse_menu.addAction(
             icons.icon("mdi.ruler"), self.tr("Check &fits && tolerances..."),
             lambda: open_check(self, "fit"))
+        analyse_menu.addAction(
+            icons.icon("mdi.fire"), self.tr("Check &welds..."),
+            lambda: open_check(self, "weld"))
         from . import heatmap_ui
         heatmap_ui.add_menu(self, analyse_menu)
 

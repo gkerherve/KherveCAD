@@ -3407,6 +3407,42 @@ TOOLS = [
         }),
     },
     {
+        "name": "check_welds",
+        "description": (
+            "Weld check (Analyse > Check Welds): every pair of the parts "
+            "(default: the scope's visible parts) that touch is a weld "
+            "candidate. Per joint: type from the geometry (lap, T, "
+            "corner, butt, fillet), seam length one side and all round, "
+            "thickness, the parts' materials, and advice — process (TIG / "
+            "MIG / SAW / brazing…) for the material and thickness, "
+            "filler, fillet leg z and throat a, or butt preparation; "
+            "impossible pairs (aluminium to steel, plastic, wood) fail. "
+            "Welds recorded with set_weld are judged pass / warn / fail "
+            "against that advice."
+        ),
+        "input_schema": _obj({"node_ids": _IDS}),
+    },
+    {
+        "name": "set_weld",
+        "description": (
+            "Record the weld joining parts a and b (saved on a as "
+            "params.welds): process (TIG, MIG, MAG, FCAW, SAW, Stick, "
+            "Laser, Spot, Brazing, Plastic welding), joint (fillet, butt, "
+            "lap, T, corner, edge, plug), size mm (fillet leg z, or butt "
+            "depth), sides ('one side', 'both sides', 'all round'), "
+            "filler, note. remove=true deletes it. note=true writes the "
+            "weld list (ISO 2553 words) on the Blueprint. Returns the "
+            "check of that joint."
+        ),
+        "input_schema": _obj({
+            "a": _ID, "b": _ID,
+            "process": {"type": "string"}, "joint": {"type": "string"},
+            "size": {"type": "number"}, "sides": {"type": "string"},
+            "filler": {"type": "string"}, "note": {"type": "boolean"},
+            "remove": {"type": "boolean"},
+        }, ["a", "b"]),
+    },
+    {
         "name": "build_city",
         "description": (
             "The City Builder: villages, towns and cities — optionally ON "

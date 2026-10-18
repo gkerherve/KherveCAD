@@ -3253,6 +3253,20 @@ class McpToolExecutor:
         except engcheck_mcp.CheckError as exc:
             raise ToolError(str(exc))
 
+    def _t_check_welds(self, params) -> dict:
+        from . import engcheck_mcp
+        try:
+            return engcheck_mcp.mcp_welds(self, params)
+        except engcheck_mcp.CheckError as exc:
+            raise ToolError(str(exc))
+
+    def _t_set_weld(self, params) -> dict:
+        from . import engcheck_mcp
+        try:
+            return engcheck_mcp.mcp_set_weld(self, params)
+        except engcheck_mcp.CheckError as exc:
+            raise ToolError(str(exc))
+
     def _t_check_interference(self, params) -> dict:
         from . import analysis, analysis_dialog
         ids = params.get("node_ids")

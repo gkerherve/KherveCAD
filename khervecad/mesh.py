@@ -34,7 +34,7 @@ _TEXT_PARAMS = {"text", "path", "variable", "condition", "update",
                 "layer", "id", "font", "halign", "valign", "direction",
                 "modifier", "options", "description", "group",
                 "collection", "library", "library_part", "cad_source",
-                "bom"}
+                "bom", "welds"}
 
 #: ops the fallback can only approximate (engine renders exactly).
 APPROXIMATED = {"difference", "intersection", "minkowski", "hull",
@@ -1184,7 +1184,7 @@ def _component_key(node, env):
         for key in sorted(n.params):
             if n is node and key in _PLACEMENT_KEYS:
                 continue
-            if key == "bom":
+            if key in ("bom", "welds"):
                 continue        # a supplier typed in the BOM is no shape
             parts.append(f"{key}={n.params[key]!r}")
             _expr_strings(n.params[key], exprs)

@@ -20,7 +20,7 @@ from PyQt5.QtWidgets import (QCheckBox, QDialog, QDialogButtonBox,
                              QLabel, QLineEdit, QPushButton, QTextBrowser,
                              QVBoxLayout)
 
-from . import edgecheck, engcheck_mcp, fitcheck, language
+from . import edgecheck, engcheck_mcp, fitcheck, language, weldcheck
 from .analysis_dialog import _STATUS_COLOR
 
 _WORD = {"pass": "PASS", "warn": "WARN", "fail": "FAIL"}
@@ -226,11 +226,82 @@ class FitDialog(_Base):
         self.browser.setHtml(text)
 
 
+def weld_html(report) -> str:
+    if not report["joints"]:
+        return "<p>" + language.tr("No part touches another.") + "</p>"
+    rows = []
+    for e in report["joints"]:
+        j, adv = e.get("joint") or {}, e.get("advice") or {}
+        s = e["status"]
+        state = (_status(s) if s != "candidate" else
+                 language.tr("not recorded"))
+        size = adv.get("size")
+        what = (f"{j.get('joint', '')}, seam {j.get('seam', 0):g} "
+                f"(all round {j.get('all_round', 0):g}), t "
+                f"{j.get('thickness', 0):g}") if j else ""
+        rec = (f"{adv.get('process', '')} "
+               + (f"z{size:g} a{adv.get('throat'):g}"
+                  if adv.get("throat") else adv.get("preparation", ""))
+               + (f", {adv['filler']}" if adv.get("filler") else ""))
+        rows.append(
+            f"<tr><td>{html.escape(e['a'])} – {html.escape(e['b'])}</td>"
+            f"<td>{state}</td><td>{html.escape(what)}</td>"
+            f"<td>{html.escape(rec)}</td>"
+            f"<td>{html.escape(' '.join(e.get('messages', [])))}</td></tr>")
+    head = (f"<p>{_status(report['summary'])} "
+            f"{report['recorded']} recorded, {report['candidates']} "
+            f"candidate joint(s).</p>")
+    return head + ("<table cellpadding='3'><tr><th>Parts</th><th></th>"
+                   "<th>Joint</th><th>Advice</th><th></th></tr>"
+                   + "".join(rows) + "</table>")
+
+
+class WeldDialog(_Base):
+    def __init__(self, window, nodes):
+        super().__init__(window, nodes, language.tr("Check welds"))
+        self._button("Check again", self.refresh)
+        self._button("Record the advised welds", self.record)
+        self._button("Put the weld list on the Blueprint", self.add_note)
+        self.report = None
+        self.refresh()
+
+    def refresh(self):
+        self.report = engcheck_mcp.weld_report(self.window_, self.nodes)
+        self.browser.setHtml(weld_html(self.report))
+
+    def record(self):
+        by_name = {n.name: n for n in self.nodes}
+        count = 0
+        for e in self.report["joints"]:
+            adv = e.get("advice") or {}
+            if e["status"] != "candidate" or not adv.get("process"):
+                continue
+            engcheck_mcp.set_weld(self.window_, by_name[e["a"]],
+                                  by_name[e["b"]], {
+                                      "process": adv["process"],
+                                      "joint": e["joint"]["joint"],
+                                      "size": adv.get("size"),
+                                      "sides": "both sides",
+                                      "filler": adv.get("filler")})
+            count += 1
+        self.note.setText(language.tr(
+            "{count} weld(s) recorded on the parts.").format(count=count))
+        self.refresh()
+
+    def add_note(self):
+        try:
+            engcheck_mcp.welds_on_blueprint(self.window_, self.report)
+            self.note.setText(language.tr("Weld list added to the "
+                                          "Blueprint."))
+        except engcheck_mcp.CheckError as exc:
+            self.note.setText(str(exc))
+
+
 def open_check(window, kind, nodes=None):
     """kind "sharp" | "fit": for the selection, else the scope's parts."""
     if nodes is None:
         nodes = window.builder.active_tree().selected_nodes()
-    if kind == "fit" and len(nodes) < 2:
+    if kind in ("fit", "weld") and len(nodes) < 2:
         nodes = engcheck_mcp.scope_parts(window)
     if not nodes:
         nodes = engcheck_mcp.scope_parts(window)
@@ -238,7 +309,7 @@ def open_check(window, kind, nodes=None):
         window.statusBar().showMessage(language.tr(
             "Nothing to analyse — select a part, or build one."), 4000)
         return None
-    dialog = (SharpEdgeDialog if kind == "sharp" else FitDialog)(
-        window, nodes)
+    dialog = {"sharp": SharpEdgeDialog, "fit": FitDialog,
+              "weld": WeldDialog}[kind](window, nodes)
     dialog.show()
     return dialog

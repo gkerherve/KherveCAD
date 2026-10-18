@@ -836,6 +836,9 @@ fillet_edges and its fillet_seeds, or add the 'break sharp edges' note \
 to the drawing) and, for parts that fit together, check_fits (gaps, \
 pin-in-bore ISO fit); once the drawing has toleranced dimensions run \
 tolerance_stackup on the chain that matters.
+- WELDED parts: run check_welds on parts that touch; record every weld \
+meant with set_weld (process, joint, size, sides — the advice is a good \
+start) and note=true to put the weld list on the Blueprint.
 
 Working rules:
 - Everything you do is one undoable step per call: the user gets their \

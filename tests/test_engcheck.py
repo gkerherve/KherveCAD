@@ -157,3 +157,49 @@ def test_mcp_stackup_reads_the_saved_sheet(window, ex):
     assert out["worst_max"] == pytest.approx(12.2)
     assert out["status"] == "pass"
     assert out["dimensions"][0]["nominal"] == 12.0
+
+
+# ------------------------------------------------------------- welds
+def test_weld_joint_types_and_advice():
+    from khervecad import weldcheck
+    base = ((0, 0, 0), (100, 50, 5))            # 5 mm plate
+    web = ((40, 0, 5), (45, 50, 60))            # 5 mm upright on it
+    j = weldcheck.joint_of(base, web)
+    assert j["joint"] == "T" and j["seam"] == pytest.approx(50)
+    assert weldcheck.joint_of(base, ((0, 0, 5), (100, 50, 8)))["joint"] \
+        == "lap"
+    assert weldcheck.joint_of(base, ((100, 0, 0), (200, 50, 5)))[
+        "joint"] == "butt"
+    adv = weldcheck.advise("a", "Stainless steel", "b", "Stainless steel",
+                           dict(j, thickness=2.0))
+    assert adv["process"] == "TIG" and adv["size"] == 2.0
+    adv = weldcheck.advise("a", "Steel", "b", "Steel", j)
+    assert adv["process"] == "MIG" and adv["size"] == 3.0
+    assert weldcheck.advise("a", "Aluminium", "b", "Steel", j)[
+        "status"] == "fail"
+
+
+def test_mcp_welds_record_and_judge(window, ex):
+    model = window.model
+    base = model.add_node("cube", dict(width=100.0, depth=50.0,
+                                       height=5.0))
+    web = model.add_node("cube", dict(width=5.0, depth=50.0, height=55.0,
+                                      x=40.0, z=5.0))
+    out = ex.execute("check_welds", {"node_ids": [base.id, web.id]})
+    assert out["candidates"] == 1
+    assert out["joints"][0]["joint"]["joint"] == "T"
+    got = ex.execute("set_weld", {"a": base.id, "b": web.id,
+                                  "process": "MIG", "joint": "T",
+                                  "size": 9.0, "sides": "both sides"})
+    assert got["summary"] == "fail"            # 9 mm leg on 5 mm plate
+    got = ex.execute("set_weld", {"a": base.id, "b": web.id,
+                                  "process": "MIG", "joint": "T",
+                                  "size": 3.0, "note": True})
+    assert got["summary"] == "pass"
+    assert "WELD 1" in got["blueprint_note"]
+    assert base.params["welds"][0]["with"] == web.name
+    window._blueprint.close()
+    from khervecad.engcheck_dialog import open_check
+    dlg = open_check(window, "weld", nodes=[base, web])
+    assert "recorded" in dlg.browser.toPlainText()
+    dlg.close()

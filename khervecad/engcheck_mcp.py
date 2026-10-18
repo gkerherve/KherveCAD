@@ -10,7 +10,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-from . import edgecheck, fitcheck, mesh
+from . import edgecheck, fitcheck, mesh, weldcheck
 
 
 class CheckError(Exception):
@@ -212,3 +212,109 @@ def mcp_stackup(ex, params):
              tol_minus=n.get("tol_minus", ""))
         for i, n in fitcheck.dimensions(notes)]
     return report
+
+
+# ── welds ──────────────────────────────────────────────────────────
+def part_material(node) -> str:
+    from . import bom
+    return bom._material_of(node, node.name, node.name)[0]
+
+
+def recorded_welds(nodes):
+    """{frozenset(a, b): spec} from every node's params["welds"]."""
+    names = {n.name for n in nodes}
+    out = {}
+    for n in nodes:
+        for spec in n.params.get("welds") or []:
+            other = spec.get("with")
+            if other in names:
+                out[frozenset((n.name, other))] = dict(spec)
+    return out
+
+
+def weld_report(window, nodes):
+    from .analysis_dialog import part_tris
+    parts = [(n.name, part_tris(window, [n])[0]) for n in nodes]
+    report = weldcheck.welds(parts, recorded_welds(nodes),
+                             {n.name: part_material(n) for n in nodes})
+    ids = {n.name: n.id for n in nodes}
+    for e in report["joints"]:
+        e["a_id"], e["b_id"] = ids.get(e["a"]), ids.get(e["b"])
+    return report
+
+
+def set_weld(window, a, b, spec):
+    """Record (or with spec None remove) the weld between nodes a and b
+    on a. Returns the stored spec."""
+    welds = [w for w in (a.params.get("welds") or [])
+             if w.get("with") != b.name]
+    for w in list(b.params.get("welds") or []):
+        if w.get("with") == a.name:
+            b.params["welds"] = [x for x in b.params["welds"] if x is not w]
+            window.model.node_changed.emit(b)
+    stored = None
+    if spec is not None:
+        stored = {k: v for k, v in spec.items()
+                  if k in ("process", "joint", "size", "sides", "filler",
+                           "note") and v not in (None, "")}
+        stored["with"] = b.name
+        welds.append(stored)
+    a.params["welds"] = welds
+    window.model.node_changed.emit(a)
+    return stored
+
+
+def welds_on_blueprint(window, report):
+    from . import blueprint_mcp
+    joints = [e for e in report["joints"] if e.get("recorded")] or \
+        [e for e in report["joints"] if e["status"] == "candidate"]
+    if not joints:
+        raise CheckError("No weld to note: no part touches another.")
+    text = "\n".join(weldcheck.symbol_text(i + 1, e)
+                     for i, e in enumerate(joints))
+    st = blueprint_mcp.run(window, {"action": "state"})
+    left, top, _right, _bottom = st["usable_rect_mm"]
+    blueprint_mcp.run(window, {"action": "add", "notes": [
+        {"type": "text", "text": text, "size": 3.0,
+         "x": left + 6.0, "y": top + 10.0}]})
+    return text
+
+
+def mcp_welds(ex, params):
+    nodes = _nodes(ex, params)
+    if len(nodes) < 2:
+        raise CheckError("Welds join parts: give at least two (or have "
+                         "two visible in the scope).")
+    report = weld_report(ex._w, nodes)
+    report["nodes"] = [n.id for n in nodes]
+    if report["candidates"]:
+        report["next"] = ("Record each weld meant with set_weld (a, b, "
+                          "process, joint, size, sides) — then "
+                          "check_welds judges it; set_weld note=true "
+                          "writes the weld list on the Blueprint.")
+    return report
+
+
+def mcp_set_weld(ex, params):
+    a, b = ex._node(params.get("a")), ex._node(params.get("b"))
+    if a is b:
+        raise CheckError("a and b must be two different parts.")
+    spec = None if params.get("remove") else {
+        k: params.get(k) for k in ("process", "joint", "size", "sides",
+                                   "filler", "note")}
+    if spec and spec.get("process") and \
+            spec["process"] not in weldcheck.PROCESSES:
+        raise CheckError(f"process is one of {list(weldcheck.PROCESSES)}")
+    if spec and spec.get("joint") and \
+            spec["joint"] not in weldcheck.JOINTS:
+        raise CheckError(f"joint is one of {list(weldcheck.JOINTS)}")
+    stored = set_weld(ex._w, a, b, spec)
+    pair = [n for n in (a, b)]
+    report = weld_report(ex._w, pair)
+    out = {"stored": stored, "check": report["joints"][:1],
+           "summary": report["summary"]}
+    if params.get("note"):
+        nodes = scope_parts(ex._w)
+        out["blueprint_note"] = welds_on_blueprint(
+            ex._w, weld_report(ex._w, nodes if len(nodes) > 1 else pair))
+    return out
