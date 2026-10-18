@@ -396,13 +396,14 @@ hidden_lines, fields = title block: title, number, material, drawn...), \
 drawing = which sheet (a part name, '' = assembly), undo / redo. After \
 edits, action render and LOOK: move what overlaps (set side/gap/offset, \
 or text x/y), keep clear of the title block bottom-right.
-- KEEP DRAWINGS IN STEP: when you build or change a 3D model, the \
-Blueprint follows BY DEFAULT. If the document has one (get_document_info \
-`blueprint.made`, or a part drawing), call blueprint update_from_model \
-when the model is done, then dimension the new or changed features and \
-render to check it, and tell the user you did. If it has none and you \
-built a real part, ASK the user whether a Blueprint should be made too \
-(recommend yes). Skip it only when the user says not to.
+- DRAWINGS ONLY WHEN ASKED: build the 3D model FIRST, show it, and stop. \
+Never make, update, dimension or annotate a Blueprint, drawing set, BOM \
+or P&ID on your own — a sheet is long work the user may not want yet. \
+When the model is done, ASK in one line whether they want the Blueprint \
+(or, if one exists — get_document_info `blueprint.made` — whether to \
+update it from the model). Only after a yes, call blueprint.
+- Build ONLY what was asked: a chamber is the chamber — no pumps, \
+manipulators or instruments on its ports unless the user names them.
 - pid builds the P&ID (process and instrumentation diagram; File > \
 P&ID): action symbols lists ~55 ISO 10628 / ISA symbols with their \
 ports; add symbols at sheet mm (A3 is 420 x 297, keep clear of the title \
@@ -830,15 +831,15 @@ run check_printability (watertight, overhangs, thin walls, footprint) \
 and fix what it names; after placing or mating parts run \
 check_interference (do they overlap?); mass_properties gives volume, \
 mass and cost when the user asks how heavy or how much.
-- ENGINEERING CHECKS: after building or changing a part, and BEFORE \
-updating its Blueprint, run check_sharp_edges (round what it lists with \
+- ENGINEERING CHECKS: after building or changing a part, run check_sharp_edges (round what it lists with \
 fillet_edges and its fillet_seeds, or add the 'break sharp edges' note \
 to the drawing) and, for parts that fit together, check_fits (gaps, \
 pin-in-bore ISO fit); once the drawing has toleranced dimensions run \
 tolerance_stackup on the chain that matters.
 - WELDED parts: run check_welds on parts that touch; record every weld \
 meant with set_weld (process, joint, size, sides — the advice is a good \
-start) and note=true to put the weld list on the Blueprint.
+start); put the weld list on a Blueprint (set_weld note=true) only when \
+the user has asked for the drawing.
 
 Working rules:
 - Everything you do is one undoable step per call: the user gets their \

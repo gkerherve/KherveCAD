@@ -3730,8 +3730,9 @@ into a new module and import.
                        update_from_model, undo / redo, render, export. Every
                        edit is `BlueprintWindow.commit` (one undo step,
                        saved). get_document_info reports `blueprint`, and
-                       the instructions make the drawings follow a model
-                       change BY DEFAULT (ask only when none exists yet).
+                       the instructions forbid touching a drawing
+                       unasked (2026-10-18, the user: a sheet is long work;
+                       build the 3D model, then ASK about the Blueprint).
   - Toolbar (2026-10-16, the user): Edit vertices sits just before the
                        Repeat & logic (For loop) family; Render and Fit 3D
                        left the bar (F5 still renders, the 3D nav bar fits).
@@ -4474,8 +4475,7 @@ into a new module and import.
                        tol_minus, worst case and RSS vs limits). MCP
                        `check_sharp_edges`, `check_fits`,
                        `tolerance_stackup` (read-only); the instructions
-                       run them after building a part and before updating
-                       the Blueprint.
+                       run them after building a part.
                        **Welds** (same day, the user: parts are welded
                        and need the weld type, TIG...): `weldcheck.py`
                        reads touching pairs' joints from their bboxes

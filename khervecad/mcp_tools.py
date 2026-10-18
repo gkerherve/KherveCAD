@@ -229,10 +229,10 @@ class McpToolExecutor:
                                                 {}) or {}),
                 "open": bool(getattr(self._w, "_blueprint", None)
                              and self._w._blueprint.isVisible()),
-                "note": "After changing the 3D model, keep the drawings "
-                        "in step (blueprint action update_from_model, "
-                        "then dimension what is new) unless the user "
-                        "said not to."},
+                "note": "Do not touch the drawings unprompted: after "
+                        "changing the 3D model, ASK the user whether to "
+                        "make or update the Blueprint, and call blueprint "
+                        "only after a yes."},
             "editing_object": ({"id": comp.id, "name": comp.name}
                                if comp is not None else None),
             "global_segments": int(model.global_fn),
