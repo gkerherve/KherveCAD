@@ -139,7 +139,6 @@ def test_menu_help_closes_by_itself_and_skips_bar_tools(window):
     guide = window.tool_guide
     QSettings("Kherve", "KherveCAD").setValue(toolguide.SETTING, True)
     window.show()
-    guide.hover("dimension")                 # not a vertical-bar key? use
     guide.hover("grid_snap")                 # a menu-only tip
     assert guide.isVisible()
     ev = QMouseEvent(QEvent.MouseMove, QPoint(5, 5), Qt.NoButton,
