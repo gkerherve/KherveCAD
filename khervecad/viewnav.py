@@ -437,5 +437,16 @@ def attach_3d(view):
     stage.setCheckable(True)
     stage.setChecked(bool(getattr(view, "stage", False)))
     view.stage_toggled.connect(stage.setChecked)
+    layout = bar.layout()
+    layout.insertWidget(0, _vline(bar))
+    for face, name, key in reversed((("top", "Top", "nav3d_top"),
+                                     ("front", "Front", "nav3d_front"),
+                                     ("side", "Right", "nav3d_side"))):
+        button = QToolButton(bar)
+        button.setIcon(cube_icon(face))
+        set_tip(button, key)
+        button.clicked.connect(lambda _=False, n=name: view.set_view(n))
+        layout.insertWidget(0, button)
+        bar.buttons["view_" + face] = button
     view.nav_bar = bar
     return bar

@@ -90,6 +90,22 @@ NAV_TIPS = {
          "Pick a finer or coarser grid with the Grid arrow."],
         "Hold the grid at 0.1 mm for fine work, 10 mm for layouts."),
     # ------------------------------------------------------------ 3D bar
+    "nav3d_top": (
+        "Top view",
+        "Looks straight down on the model, as in a plan.",
+        ["Click the cube with the top face lit."],
+        "The 2D sketch's Top button shows the same plane."),
+    "nav3d_front": (
+        "Front view",
+        "Looks at the model from the front (the -Y side), as in an "
+        "elevation.",
+        ["Click the cube with the front face lit."],
+        None),
+    "nav3d_side": (
+        "Side view",
+        "Looks at the model from its right-hand side (the +X side).",
+        ["Click the cube with the right face lit."],
+        "View ▸ 3D View also has Back, Left, Bottom and Isometric."),
     "nav3d_orbit_left": (
         "Turn left",
         "Turns the model to the left about the vertical axis.",

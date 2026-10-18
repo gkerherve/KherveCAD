@@ -239,3 +239,15 @@ def test_view_bar_buttons_have_rich_help(app):
         assert "fit_sketch" not in acts
     finally:
         win.close()
+
+
+def test_3d_bar_view_cubes(app):
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        win.view3d.nav_bar.buttons["view_top"].click()
+        assert win.view3d.pitch > 80
+        win.view3d.nav_bar.buttons["view_front"].click()
+        assert win.view3d.yaw == win.view3d.VIEWS["Front"][0]
+    finally:
+        win.close()
