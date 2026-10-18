@@ -91,7 +91,9 @@ BASE = dict(
     # --- the face (fractions of the face box: u across, v up)
     lights=None, grille=None, tails=None,   # None: the catalogue's
     lamp_u=0.64, lamp_v=0.74, lamp_scale=1.0, lamp_slant=0.04,
-    lamp_view="front", popup_s=0.09,
+    lamp_view="nose", popup_s=0.09,
+    lamp_s=0.045, lamp_tilt=30.0,     # slim lamps: on the nose corner
+    hood_full=0.45,         # how full the bonnet is between the wings
     indicators=True, indicator_v=0.34,
     grille_v=0.50, grille_w=0.9,
     intakes=(),             # (u, v, w, h) extra dark intakes
@@ -111,7 +113,8 @@ FAMILIES = {
         tail_round=230.0, tail_kx=0.80, tail_kz=0.78,
         shoulder_in=[(0.0, 50.0), (0.45, 60.0), (0.75, 120.0),
                      (1.0, 90.0)],
-        arch_cover=30.0, belt_over=10.0, hood_bulge=0.05,
+        arch_cover=30.0, belt_over=10.0, hood_bulge=0.05, hood_full=0.75,
+        nose_round=170.0, nose_kx=0.70, nose_kz=0.62,
         scallop=(0.52, 0.66, 45.0), tuck=85.0),
     "wedge": dict(
         nose_z=0.30, hood_bulge=0.06, cowl=(0.30, 0.56), roof=(0.47, 0.60),
@@ -122,7 +125,7 @@ FAMILIES = {
         nose_round=140.0, nose_kx=0.80, nose_kz=0.60, tail_round=110.0,
         tail_kx=0.88, tail_kz=0.88, roof_crown=25.0,
         tumble=34.0, fenders=(0.0, 10.0), glass_bow=4.0, crest_in=60.0,
-        arch_cover=15.0, belt_over=0.0,
+        arch_cover=15.0, belt_over=0.0, hood_full=0.75,
         shoulder_drop=200.0, shoulder_sq=1.2,
         shoulder_in=[(0.0, 40.0), (0.45, 80.0), (0.8, 120.0), (1.0, 100.0)],
         tuck=60.0),
@@ -156,7 +159,7 @@ FAMILIES = {
         fenders=(70.0, 60.0), crest_in=130.0, tail_chin_z=0.22,
         cabin_to=0.97, roof_crown=45.0, tumble=24.0),
     "sedan": dict(
-        nose_z=0.50, hood_bulge=0.0, cowl=(0.30, 0.66),
+        nose_z=0.50, hood_bulge=0.0, cowl=(0.30, 0.66), lamp_view="front",
         roof=(0.44, 0.72), deck=(0.82, 0.72), tail_z=0.72, back_bow=0.0,
         belt=[(0.0, 0.50), (0.30, 0.64), (1.0, 0.72)],
         plan=[(0.0, 0.88), (0.12, 0.97), (0.5, 0.97), (0.85, 0.98),
@@ -221,7 +224,7 @@ CARS = {
         nose_z=0.30, hood_bulge=0.02, cowl=(0.34, 0.58), roof=(0.45, 0.54),
         deck=(0.72, 0.76), back_bow=0.01, tail_z=0.76,
         belt=[(0.0, 0.32), (0.34, 0.56), (0.7, 0.72), (1.0, 0.74)],
-        fenders=(75.0, 85.0), rear_glass=False, engine_cover=True,
+        fenders=(41.0, 47.0), rear_glass=False, engine_cover=True,
         engine_cover_to=0.90, canopy=0.25, lamp_u=0.66, lamp_v=0.80,
         lamp_scale=0.8, lamp_slant=-0.02, grille="intake", grille_v=0.30,
         grille_w=0.55, intakes=[(0.62, 0.32, 0.36, 0.30)],
@@ -231,7 +234,7 @@ CARS = {
         nose_z=0.30, hood_bulge=0.02, cowl=(0.33, 0.58), roof=(0.44, 0.54),
         deck=(0.80, 0.76), back_bow=0.04, tail_z=0.75,
         belt=[(0.0, 0.32), (0.33, 0.56), (0.7, 0.72), (1.0, 0.74)],
-        fenders=(80.0, 85.0), lamp_u=0.66, lamp_v=0.80, lamp_scale=0.8,
+        fenders=(44.0, 47.0), lamp_u=0.66, lamp_v=0.80, lamp_scale=0.8,
         grille="intake", grille_v=0.30, grille_w=0.55,
         intakes=[(0.62, 0.32, 0.36, 0.30)], lower_intake=0.0,
         plate_v=None, side_intake="scoop", tails="bar", tail_u=0.98,
@@ -303,7 +306,7 @@ CARS = {
         intakes=[(0.74, 0.26, 0.22, 0.22)], plate_v=0.18, tail_v=0.70),
     "mercedes_amg_one": dict(
         nose_z=0.32, cowl=(0.31, 0.58), roof=(0.44, 0.56), deck=(0.84, 0.74),
-        tail_z=0.72, fenders=(80.0, 80.0), lamp_v=0.78, grille="star",
+        tail_z=0.72, fenders=(44.0, 44.0), lamp_v=0.78, grille="star",
         grille_v=0.40, grille_w=0.45, intakes=[(0.66, 0.28, 0.30, 0.30)],
         plate_v=None, side_intake="scoop", wing_h=250.0, tails="bar",
         tail_u=0.95, tail_scale=0.6),
@@ -329,14 +332,14 @@ CARS = {
         exhausts=(0.12, 0.0, -0.12), exhaust_v=0.30),
     "ferrari_enzo": dict(
         nose_z=0.28, cowl=(0.32, 0.56), roof=(0.46, 0.56), deck=(0.82, 0.76),
-        back_bow=0.02, tail_z=0.74, fenders=(85.0, 70.0), lamp_v=0.78,
+        back_bow=0.02, tail_z=0.74, fenders=(47.0, 38.0), lamp_v=0.78,
         lamp_slant=0.08, grille="intake", grille_v=0.20, grille_w=0.4,
         intakes=[(0.55, 0.22, 0.34, 0.24)], lower_intake=0.0, plate_v=None,
         side_intake="scoop", tails="round", tail_v=0.70, tail_u=0.80,
         exhausts=(0.16, -0.16), exhaust_v=0.35),
     "ferrari_laferrari": dict(
         nose_z=0.28, cowl=(0.32, 0.55), roof=(0.45, 0.56), deck=(0.84, 0.76),
-        back_bow=0.03, tail_z=0.74, fenders=(90.0, 75.0), lamp_v=0.78,
+        back_bow=0.03, tail_z=0.74, fenders=(50.0, 41.0), lamp_v=0.78,
         lamp_slant=0.08, grille="intake", grille_v=0.22, grille_w=0.5,
         intakes=[(0.6, 0.24, 0.30, 0.24)], lower_intake=0.0, plate_v=None,
         side_intake="scoop", tails="round", tail_v=0.72, tail_u=0.82,
@@ -383,7 +386,7 @@ CARS = {
         plate_v=None, side_intake="scoop", tails="round", tail_v=0.64),
     "mclaren_p1": dict(
         nose_z=0.30, cowl=(0.31, 0.56), roof=(0.45, 0.58), deck=(0.86, 0.80),
-        tail_z=0.78, canopy=0.25, fenders=(70.0, 60.0), lamp_v=0.78,
+        tail_z=0.78, canopy=0.25, fenders=(38.0, 33.0), lamp_v=0.78,
         lamp_slant=-0.06, grille="intake", grille_v=0.24, grille_w=0.6,
         intakes=[(0.66, 0.26, 0.30, 0.30)], lower_intake=0.0, plate_v=None,
         side_intake="scoop", tails="bar", tail_u=0.98, tail_scale=0.5,
@@ -398,7 +401,7 @@ CARS = {
         exhausts=(0.2, -0.2), exhaust_v=0.40),
     "bugatti_veyron": dict(
         nose_z=0.38, hood_bulge=0.03, cowl=(0.32, 0.60), roof=(0.46, 0.56),
-        deck=(0.80, 0.78), back_bow=0.0, tail_z=0.76, fenders=(70.0, 70.0),
+        deck=(0.80, 0.78), back_bow=0.0, tail_z=0.76, fenders=(38.0, 38.0),
         lamp_v=0.72, lamp_u=0.66, grille_v=0.50, intakes=[
             (0.62, 0.25, 0.30, 0.26)], lower_intake=0.0, plate_v=None,
         side_intake="scoop", engine_cover=True, engine_cover_to=0.92,
@@ -406,7 +409,7 @@ CARS = {
         tail_v=0.70, exhausts=(0.0,), exhaust_v=0.30, exhaust_r=60.0),
     "bugatti_chiron": dict(
         nose_z=0.38, hood_bulge=0.03, cowl=(0.32, 0.60), roof=(0.46, 0.56),
-        deck=(0.82, 0.76), back_bow=0.0, tail_z=0.74, fenders=(70.0, 70.0),
+        deck=(0.82, 0.76), back_bow=0.0, tail_z=0.74, fenders=(38.0, 38.0),
         lamp_v=0.70, lamp_u=0.62, grille_v=0.50, intakes=[
             (0.64, 0.25, 0.30, 0.26)], lower_intake=0.0, plate_v=None,
         side_intake="scoop", tails="bar", tail_u=0.98, tail_scale=0.4,
@@ -430,7 +433,7 @@ CARS = {
         side_intake="scoop", tails="round", tail_v=0.66, wing_h=200.0),
     "ford_gt40": dict(
         nose_z=0.38, hood_bulge=0.04, cowl=(0.37, 0.66), roof=(0.48, 0.60),
-        deck=(0.80, 0.80), back_bow=0.0, tail_z=0.78, fenders=(60.0, 70.0),
+        deck=(0.80, 0.80), back_bow=0.0, tail_z=0.78, fenders=(33.0, 38.0),
         tail_kx=0.95, tail_kz=0.92, tail_round=60.0, lights="round",
         lamp_u=0.66, lamp_v=0.78, grille="oval", grille_v=0.30,
         grille_w=0.55, lower_intake=0.0, plate_v=None, tails="round",
@@ -438,7 +441,7 @@ CARS = {
         exhaust_v=0.30),
     "ford_gt": dict(
         nose_z=0.32, cowl=(0.30, 0.56), roof=(0.44, 0.58), deck=(0.82, 0.76),
-        tail_z=0.74, fenders=(70.0, 75.0), canopy=0.3, lamp_v=0.78,
+        tail_z=0.74, fenders=(38.0, 41.0), canopy=0.3, lamp_v=0.78,
         lamp_slant=0.08, grille="intake", grille_v=0.30, grille_w=0.8,
         lower_intake=0.0, plate_v=None, side_intake="scoop",
         tails="round", tail_v=0.66, exhausts=(0.0,), exhaust_v=0.40,

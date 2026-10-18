@@ -347,7 +347,8 @@ class Body:
         # bonnet: belt -> wing crest -> centre
         crest = (x_belt - d["crest_in"], zbelt + fend + d["crest_up"])
         hood_e = _line((x_belt, zbelt), crest, ne, bow=4.0)
-        hood_g = _bezier(crest, (crest[0] * 0.45, ztop), (0.0, ztop), ng)
+        hood_g = _bezier(crest, (crest[0] * d["hood_full"], ztop),
+                         (0.0, ztop), ng)
         if c > 0:
             wrap = d["screen_wrap"] if s < 0.5 * (d["roof"][0]
                                                   + d["roof"][1]) \
@@ -546,7 +547,7 @@ class Body:
         tri = self.tris
         # keep the triangles whose box overlaps the rays' box across
         # the direction
-        axes = [k for k in range(3) if abs(dvec[k]) < 0.5]
+        axes = [k for k in range(3) if abs(dvec[k]) < 1e-9]
         lo, hi = o.min(axis=0), o.max(axis=0)
         mask = np.ones(len(tri), bool)
         for k in axes:
@@ -577,8 +578,19 @@ class Body:
             out[start:start + 64] = best
         return out
 
+    @staticmethod
+    def oblique(tilt, front=True):
+        """(ray direction, v axis) of a view looking at the nose (or
+        the tail) from *tilt* degrees above the horizon: a lamp on the
+        rounded corner of a nose is drawn from where it is seen."""
+        t = math.radians(tilt)
+        sy = 1.0 if front else -1.0
+        dvec = (0.0, sy * math.cos(t), -math.sin(t))
+        ev = (0.0, sy * math.sin(t), math.cos(t))
+        return dvec, ev
+
     def decal(self, mesh, outline, view, out=3.0, inside=4.0, rings=4,
-              lift=0.0):
+              lift=0.0, shrink=4):
         """A slab whose outline (u, v points, star-shaped about their
         mean) is projected onto the body along *view*: "front" (u = x,
         v = z, looking along +y), "rear", "right" / "left" (u = y, v =
@@ -586,7 +598,11 @@ class Body:
         the surface (a lamp lens over its housing). Returns False if
         any of it misses the body."""
         far = 4 * (self.L + self.W + self.H)
-        if view == "front":
+        if isinstance(view, tuple):
+            dvec, ev = self.oblique(*view)
+            to3 = lambda u, v: (u, ev[1] * v - far * dvec[1],
+                                ev[2] * v - far * dvec[2])
+        elif view == "front":
             to3 = lambda u, v: (u, -far, v)
             dvec = (0.0, 1.0, 0.0)
         elif view == "rear":
@@ -612,6 +628,13 @@ class Body:
         origins = [to3(u, v) for u, v in flat]
         dist = self.cast(origins, dvec)
         if np.isnan(dist).any():
+            # part of it hangs off the body's edge: try it a little
+            # smaller, as the panel it is drawn on would make it
+            if shrink > 0:
+                small = [(cu + (u - cu) * 0.88, cv + (v - cv) * 0.88)
+                         for u, v in outline]
+                return self.decal(mesh, small, view, out, inside, rings,
+                                  lift, shrink - 1)
             return False
         dv = np.array(dvec)
         hits = np.array(origins) + dist[:, None] * dv

@@ -309,16 +309,45 @@ def place(kit, b, items, front=True):
             if item.get("u", 0.0) != 0.0 or item.get("shape") == "poly":
                 flips = [1.0, -1.0]
         for flip in flips:
-            if item.get("view") == "top":
+            if item.get("view") == "nose":
+                ol, v = _nose_outline(item, b, front, flip)
+                if ol is None:
+                    continue
+            elif item.get("view") == "top":
                 ol = _top_outline(item, b, flip)
                 v = "top"
             else:
                 ol = _outline(item, a, zb, zt, flip)
                 v = view
             if v == "rear":
-                ol = [(-u, w) for u, w in ol][::-1]
-                ol = [(-u, w) for u, w in ol]
+                ol = ol[::-1]
             _item(kit, b, item, ol, v)
+
+
+def _nose_outline(item, b, front, flip):
+    """An item on the rounded corner of the nose (or tail), placed by
+    station ``s`` (from its own end) and ``u`` (of the half width there)
+    and seen from ``tilt`` degrees above the horizon."""
+    s = item["s"] if front else 1.0 - item["s"]
+    x = flip * item.get("u", 0.0) * b.half_width(s)
+    far = 4 * (b.L + b.H)
+    hit = b.cast([(x, b.y(s), far)], (0.0, 0.0, -1.0))[0]
+    if hit != hit:
+        return None, None
+    z = far - hit
+    tilt = item.get("tilt", 35.0)
+    _dvec, ev = b.oblique(tilt, front)
+    cu = x
+    cv = ev[1] * b.y(s) + ev[2] * z
+    shape = item.get("shape", "rect")
+    if shape == "round":
+        ol = ellipse(cu, cv, item["r"] * item.get("sx", 1.0), item["r"], 28)
+    else:
+        ol = rounded_rect(cu, cv, item["w"], item["h"], item.get("rad", 20),
+                          slant=flip * item.get("slant", 0.0))
+    if not front:
+        ol = ol[::-1]
+    return ol, (tilt, front)
 
 
 def _item(kit, b, item, ol, view):
@@ -434,13 +463,19 @@ def default_face(car):
             out.append(dict(k="lamp", shape="round", u=u, v=lv, r=r,
                             rim=CHROME, colour=LENS, inner=[0],
                             inner_r=r * 0.45))
+    elif lights == "slim" and d["lamp_view"] == "nose":
+        w, h = 0.36 * a * ls, max(80.0, 0.14 * span) * ls
+        out.append(dict(k="lamp", view="nose", s=d["lamp_s"], u=lu,
+                        tilt=d["lamp_tilt"], w=w, h=h, rad=0.45 * h,
+                        slant=d["lamp_slant"] * a, rim=TRIM, rim_w=8,
+                        colour=LENS, inner=[-0.22 * w, 0.0, 0.22 * w],
+                        inner_r=0.22 * h))
     elif lights == "slim":
-        out.append(dict(k="lamp", shape="rect", u=lu, v=lv,
-                        w=0.42 * a * ls, h=0.13 * span * ls,
-                        rad=0.06 * span * ls, slant=d["lamp_slant"] * a,
-                        rim=TRIM, colour=LENS,
-                        inner=[-0.08 * a * ls, 0.08 * a * ls],
-                        inner_r=0.035 * span * ls, view=d["lamp_view"]))
+        w, h = 0.40 * a * ls, 0.13 * span * ls
+        out.append(dict(k="lamp", shape="rect", u=lu, v=lv, w=w, h=h,
+                        rad=0.3 * h, slant=d["lamp_slant"] * a, rim=TRIM,
+                        rim_w=8, colour=LENS,
+                        inner=[-0.22 * w, 0.0, 0.22 * w], inner_r=0.22 * h))
     elif lights == "popup":
         out.append(dict(k="panel", view="top", u=0.60, v=d["popup_s"],
                         w=0.34 * a, h=0.05 * car.body.L, rad=10,
@@ -524,10 +559,11 @@ def default_tail(car):
                             rim=TRIM, rim_w=8, colour=TAIL, glow=True,
                             inner=[0], inner_r=r * 0.35))
     elif kind == "slim":
+        h = 0.13 * span * ts
         out.append(dict(k="lamp", shape="rect", u=tu, v=tv,
-                        w=0.44 * a * ts, h=0.13 * span * ts,
-                        rad=0.05 * span, slant=-0.04 * a, rim=TRIM,
-                        colour=TAIL, glow=True))
+                        w=0.44 * a * ts, h=h, rad=0.35 * h,
+                        slant=-0.04 * a, rim=TRIM, rim_w=8, colour=TAIL,
+                        glow=True))
     elif kind == "vertical":
         out.append(dict(k="lamp", shape="rect", u=tu, v=tv,
                         w=0.16 * a * ts, h=0.36 * span * ts, rad=20,
@@ -541,8 +577,8 @@ def default_tail(car):
         out.append(dict(k="plate", u=0.0, v=d["rear_plate_v"],
                         w=min(520.0, 0.95 * a), h=110.0, rad=8))
     if d["diffuser"]:
-        out.append(dict(k="panel", u=0.0, v=0.10, w=d["diffuser"] * a,
-                        h=0.14 * span, rad=0.05 * span, colour=MESH,
+        out.append(dict(k="panel", u=0.0, v=0.15, w=d["diffuser"] * a,
+                        h=0.20 * span, rad=0.05 * span, colour=MESH,
                         slats=5, dir="v", slat_colour="#2a2c30"))
     return out + list(d["tail_extra"])
 
