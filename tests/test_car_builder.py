@@ -73,9 +73,7 @@ def test_a_scale_model_is_the_car_divided():
 def test_every_car_is_a_part_library_part():
     for key in car_models.CARS:
         part = library.PARTS[f"car_{key}"]
-        assert part["category"] in (car_build.CATEGORY,
-                                    car_build.MEASURED_CATEGORY)
-        assert part["category"] == car_build.category_of(key)
+        assert part["category"] == car_build.CATEGORY
         assert part["colors"][0] in car_models.PAINTS
     assert "BMW" in library.PARTS["car_bmw_m1"]["label"]
 
@@ -87,58 +85,51 @@ def test_the_paint_choice_reaches_the_body():
     assert car_models.PAINTS["Giallo"] in colours
 
 
-def test_measured_profiles_are_sane_curves():
-    """The blueprint-measured curves (car_profiles) are normalised and
-    the right way round, whether or not the builder follows them yet."""
-    from khervecad import car_profiles
-    assert car_profiles.PROFILES
-    for key, prof in car_profiles.PROFILES.items():
-        assert key in car_models.CARS
-        assert len(prof["roof"]) == len(prof["floor"]) == 60
-        assert 0.9 <= max(prof["roof"]) <= 1.0
-        assert min(prof["floor"]) >= 0.0
-        # the roof line runs above the floor over the car as a whole
-        # (at the very nose a column can have both on one pixel)
-        assert sum(prof["roof"]) > 2 * sum(prof["floor"])
-        if prof["width"]:
-            assert 0.9 <= max(prof["width"]) <= 1.0
+def test_every_car_has_a_design_of_its_own():
+    from khervecad import car_designs
+    assert set(car_designs.CARS) == set(car_models.CARS)
+    for key in car_designs.CARS:
+        unknown = set(car_designs.CARS[key]) - set(car_designs.BASE)
+        assert not unknown, f"{key}: {unknown}"
 
 
-@pytest.mark.parametrize("key", sorted(car_build.car_profiles.PROFILES))
-def test_a_measured_car_follows_its_drawing(key):
-    """A car with a blueprint behind it is built from the drawing's own
-    roof line, floor, plan and end views — not from a shape preset."""
+@pytest.mark.parametrize("key", sorted(car_models.CARS))
+def test_the_wheels_stand_in_their_arches(key):
+    """Each wheel is inside its wing seen from above, and the arch over
+    it clears the tyre: nothing pokes through the bodywork."""
     car = car_build.Car(key)
-    assert car.measured, "the profile should be in use"
-    # the roof line the drawing gave, at the top of the car
-    roof = max(car.top(s) for s in car.stations(0.0, 1.0, 40))
-    assert roof == pytest.approx(car_models.CARS[key]["H"], rel=0.06)
-    # the wheels stand inside their own wings
+    b = car.body
     for i in (0, 1):
-        s = (car.axles[i] + car.L / 2) / car.L
-        assert car.wheel_x(i) + car.wheels[i][0] / 2 <= car.half_width(s) + 1
-    # and the greenhouse sits above the beltline, never under it
-    for s in car.stations(0.2, 0.7, 12):
-        assert car.belt_z(s) >= car.bottom(s)
-        assert car.belt_z(s) <= max(car.top(s), car.bottom(s) + 60) + 1
+        tw, _r, D = car.wheels[i]
+        s = b.s_axle[i]
+        assert b.wheel_x[i] + tw / 2 <= b.half_width(s) + 1
+        top, axle = b.arch(s)
+        assert axle == i and top > D            # the arch clears the tyre
 
 
-def test_a_car_from_a_coloured_drawing_is_built_from_it():
-    """The 930 Turbo comes from its coloured four-view sheet
-    (car_sheets): wheels where the drawing puts them, lamps and glass
-    on the body, every piece a closed polyhedron."""
-    from khervecad import car_sheet_build, car_sheets
-    assert "porsche_930_turbo" in car_sheets.SHEETS
-    node = car_build.build_car("porsche_930_turbo")
-    assert not validate(node)
-    colours = {n.params.get("color") for n in node.walk()
-               if n.type == "color"}
-    for cls in ("glass", "lamp"):
-        assert car_sheet_build.COLOURS[cls][0] in colours
-    w, length, h, floor = _extent(node)
-    car = car_models.CARS["porsche_930_turbo"]
-    assert length == pytest.approx(car["L"], rel=0.03)
-    assert h == pytest.approx(car["H"], rel=0.05)
-    assert floor == pytest.approx(0.0, abs=1.0)
-    front, rear = car_sheets.SHEETS["porsche_930_turbo"]["wheels"]
-    assert rear[0] - front[0] == pytest.approx(car["wb"], rel=0.03)
+def test_a_car_wears_glass_lamps_and_tail_lights():
+    from khervecad import car_dress
+    for key in ("ferrari_f40", "bmw_m3_e30", "porsche_356_speedster"):
+        node = car_build.build_car(key)
+        colours = {n.params.get("color") for n in node.walk()
+                   if n.type == "color"}
+        assert car_dress.TAIL in colours
+        assert car_dress.LENS in colours or car_dress.LAMP in colours
+        assert car_dress.GLASS in colours
+
+
+def test_a_body_section_stays_inside_the_car():
+    """No section of any body strays outside its published box (a low
+    nose once sent one 8 m sideways)."""
+    for key in car_models.CARS:
+        car = car_build.Car(key)
+        r = car.body.rings
+        assert abs(r[:, :, 0]).max() <= car.body.W / 2 + 1
+        assert r[:, :, 2].max() <= car.body.H * 1.02
+        assert r[:, :, 2].min() >= 0.0
+
+
+def test_a_car_stays_light_enough_to_preview():
+    for key in ("bugatti_chiron", "mercedes_300sl", "nissan_gtr"):
+        tris = mesh.tessellate(car_build.build_car(key), fn=16)
+        assert len(tris) < 110000

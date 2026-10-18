@@ -1563,22 +1563,44 @@ into a new module and import.
   - **Car Builder** (2026-09-17): `car_models.py` is the catalogue — 40
                        classic and super cars from their PUBLISHED figures
                        (length, width, height, wheelbase, factory tyre sizes
-                       front and rear) plus a body SHAPE preset (`SHAPES`:
-                       mid, wedge, front, longnose, rear-engine, sedan — the
-                       side profile as fractions of L and H) and the details
-                       that make a marque read (lights, grille, tail lights,
-                       wing, factory rim, paint). No blueprint is traced or
-                       shipped: proportions are hand-fitted to the published
-                       dimensions. `car_build.py` lofts the body through
-                       cross-sections every ~30 mm (`car_wheels.closed_grid`,
-                       which picks the winding by signed volume): the section
-                       rises to the wheel ARCH in the outer band, so a wheel
-                       shows under a fender instead of a slab, and the top
-                       bulges over it where the shape has fenders; a dark tub
-                       closes the wheel wells; the greenhouse is three stacked
-                       slabs (shoulder / window band / roof) so glass and body
-                       meet face to face instead of fighting for one surface.
-                       No booleans anywhere, so the preview is exact.
+                       front and rear) plus the catalogue kinds (shape
+                       family, lights, grille, tail lights, wing, factory
+                       rim, paint). **Rebuilt 2026-10-18** (the user: "the
+                       cars are terrible"): the old preset lofts and the
+                       blueprint-traced bodies (car_profiles, car_sheets,
+                       car_details, tools/carsheet, carblueprint) were
+                       lumpy and noisy and are gone. `car_designs.py` is a
+                       design PER CAR (BASE < FAMILIES[shape] < CARS[key];
+                       a test keeps every key in BASE): centre-line
+                       profile (nose, cowl, roof, deck, tail as bowed
+                       segments), belt, floor, plan, cabin (tumble, wrap,
+                       canopy), side cove (`scallop`), and the face/tail
+                       numbers. `car_body.Body` lofts sections every
+                       ~24 mm, each the SAME chain of segments (`SEGMENTS`:
+                       bottom, well, flank, shoulder, glass, roof), so the
+                       belt, shoulder and roof rail are fixed COLUMNS —
+                       crisp lines, and regions addressable by column. Over
+                       a wheel the well segment climbs the tub wall to the
+                       arch circle and turns out to the lip (a real opening,
+                       no boolean); belt and shoulder lift over each arch
+                       (`belt_z`, `shoulder_z`), which makes the wings; a
+                       low nose keeps 40 % of its flank (a section once
+                       flew 8 m sideways). Ends round off in plan and
+                       profile (`nose_round`, `*_kx`, `*_kz`).
+                       `car_dress.py` lays everything ON it: `Body.patch`
+                       (a slab over a (station, column) region: glass,
+                       frames, wells, underside, shut lines, louvres,
+                       scoops) and `Body.decal` (an outline projected by
+                       numpy ray casts onto the body: lamps, grilles —
+                       kidney, star, horseshoe, oval, Aston, Audi — plates,
+                       intakes, tail lights), chrome bumpers following the
+                       nose, mirrors, airfoil wings / ducktail / whale /
+                       lip, exhausts, an open car's cockpit, seats, wheel
+                       and framed screen. Face items are placed in the FACE
+                       BOX (u across the half width, v up the face). Glass
+                       and decals are thin slabs a few mm proud, so the
+                       painter fallback can stripe them — OpenGL (default)
+                       is exact. ~70-100k triangles a car.
                        `car_wheels.py` builds a wheel axis-up: a revolved
                        tyre (a style changes only the sidewall ratio, so the
                        rolling diameter — and the ride height — never moves),

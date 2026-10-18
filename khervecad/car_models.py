@@ -53,7 +53,7 @@ PAINTS = {
     "Giallo": "#f1c21b", "Arancio": "#ea6a14", "Verde Mantis": "#5bb02c",
     "British racing green": "#1f4a2f", "Estoril blue": "#1f4f9e",
     "Gulf blue": "#8cc4e6", "Silver": "#c3c7cc", "White": "#f1f1ec",
-    "Black": "#18191c", "Grey": "#6d7278", "Cream": "#e8dfc6",
+    "Black": "#232529", "Grey": "#6d7278", "Cream": "#e8dfc6",
     "Midnight blue": "#1d2a4a",
 }
 

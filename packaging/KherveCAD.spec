@@ -91,7 +91,7 @@ if os.path.isdir(_showcase_dir):
 # examples_trees extend examples.EXAMPLES on import, the library_* modules
 # register parts into PARTS), so nothing static would pull them in.
 #
-# khervecad.tools.* are generators run by hand in a checkout (carsheet pulls
+# khervecad.tools.* are generators run by hand in a checkout (some pull
 # in scikit-image, and through it torch, pyarrow, sphinx ... — 1 GB); the
 # app never imports them, so they stay out of the freeze.
 hiddenimports += collect_submodules(
