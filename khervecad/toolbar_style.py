@@ -11,8 +11,10 @@ toolbars look like the CAD program the user knows.
   (Features, Sculpt, Character, Evaluate) underneath; bevelled blue
   hover and pressed buttons on both bars.
 
-The 2026-10-18 request is the toolbars only (the user: the whole program
-should follow later — 2D and 3D views too). The style is a LOOK: every
+The first request (2026-10-18) was the toolbars; the second their icons
+(icons_cad.py); the third "each of the menus ... also the windows": the
+menu bar organised like the program's (interface_menus.py) and every
+window's look plus the views' backgrounds (interface_windows.py). The style is a LOOK: every
 button is the window's own action, so switching styles keeps shortcuts,
 ticks and tooltips. Colours follow the theme's light / dark choice; the
 choice persists in QSettings `interface_style`. MCP:
@@ -308,6 +310,9 @@ def restyle(win):
     name = current(win)
     if name == DEFAULT:
         return
+    from . import interface_windows
+    interface_windows.apply_stylesheet(name, _dark())
+    interface_windows.style_views(win, name, _dark())
     c = colours(name)
     win._tools_bar.setStyleSheet(_qss_vertical(name, c))
     win._options_bar.setStyleSheet(_qss_quick(name, c))
@@ -354,6 +359,16 @@ def apply(win, name: str = None, remember: bool = True):
         ribbon_bar.addWidget(win.ribbon)
         ribbon_bar.setStyleSheet(_qss_ribbon(name, colours(name)))
         ribbon_bar.show()
+    # the rest of the program: menus organised like the program the
+    # style imitates, the windows' look, the views' backgrounds
+    from . import interface_menus, interface_windows
+    if getattr(win, "_classic_menu_actions", None) is not None or \
+            win.menuBar().actions():
+        interface_menus.build(win, name)
+    interface_windows.apply_stylesheet(
+        None if name == DEFAULT else name, _dark())
+    interface_windows.style_panel(win, name)
+    interface_windows.style_views(win, name, _dark())
     if vibe:
         win.set_vibe_model(True)
     for act in getattr(win, "_interface_style_group", None) and \

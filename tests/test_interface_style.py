@@ -174,3 +174,37 @@ def test_styles_swap_the_icons_and_classic_puts_them_back(window, app):
     assert "Resize" in names and "Resize (absolute size)" not in names
     toolbar_style.apply(window, "KherveCAD")
     assert act.icon().cacheKey() == classic
+
+
+@pytest.mark.parametrize("style", ["Fusion", "SolidWorks"])
+def test_the_menu_bar_follows_the_style_and_loses_nothing(window, style):
+    from khervecad import interface_menus
+    assert not interface_menus.unresolved(window,
+                                          interface_menus.LAYOUTS[style])
+    toolbar_style.apply(window, style)
+    titles = [interface_menus.norm(a.text())
+              for a in window.menuBar().actions()]
+    expected = [interface_menus.norm(t)
+                for t, _i in interface_menus.LAYOUTS[style]]
+    assert titles == expected
+    assert not interface_menus.missing(window)
+    toolbar_style.apply(window, "KherveCAD")
+    assert [interface_menus.norm(a.text())
+            for a in window.menuBar().actions()][:3] == \
+        ["file", "edit", "insert"]
+    assert not interface_menus.missing(window)
+
+
+def test_windows_and_views_take_the_style_and_give_it_back(window):
+    app = QApplication.instance()
+    toolbar_style.apply(window, "SolidWorks")
+    assert "QGroupBox::title" in app.styleSheet()
+    assert window.view3d.background == "SolidWorks"
+    assert window.builder.tabText(0) == ""            # icon tabs
+    toolbar_style.apply(window, "Fusion")
+    assert window.builder.tabText(0) == "MAIN"
+    assert window.view3d.background == "Fusion"
+    toolbar_style.apply(window, "KherveCAD")
+    assert window.builder.tabText(0) == "Main"
+    assert window.view3d.background not in ("Fusion", "SolidWorks")
+    assert "QGroupBox::title" not in app.styleSheet()

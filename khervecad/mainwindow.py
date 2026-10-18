@@ -173,16 +173,17 @@ class MainWindow(QMainWindow):
         customizer_panel.attach(self)
         self._build_tool_bar()
         self._build_options_bar()
-        # Fusion / SolidWorks toolbars (View ▸ Interface Style)
-        from . import toolbar_style
-        if toolbar_style.saved() != toolbar_style.DEFAULT:
-            toolbar_style.apply(self, remember=False)
         self._build_menus()
         self._build_status_bar()
         # help you can see while using the menus (macOS menus never show
         # tooltips) and a clear word when an operation needs a selection
         from . import toolguide
         toolguide.install(self)
+        # Fusion / SolidWorks look (View ▸ Interface Style): toolbars,
+        # menus, windows — after the menus and their hover help exist
+        from . import toolbar_style
+        if toolbar_style.saved() != toolbar_style.DEFAULT:
+            toolbar_style.apply(self, remember=False)
         self._update_title()
         self._refresh_preview()
         # an installed build looks for a new release once a day

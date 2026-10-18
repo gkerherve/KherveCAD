@@ -102,6 +102,42 @@ into a new module and import.
                        the originals. It runs BEFORE the ribbon is built:
                        changing an action's icon makes its buttons take
                        the action's text again, dropping the short names.
+                       **Menus and windows** (2026-10-19, the user: "each of
+                       the menus ... how Fusion would have been ... also the
+                       windows"). `interface_menus.py`: a layout per style
+                       (`FUSION`: File, Edit, Create, Modify, Assemble,
+                       Inspect, Insert, Utilities, View, Help, after its
+                       Design panels; `SOLIDWORKS`: File, Edit, View ▸
+                       Display / Modify / Lights and Cameras / Hide-Show,
+                       Insert ▸ Boss/Base / Cut / Features / Pattern-Mirror /
+                       Fastening Feature, Tools ▸ Sketch Entities /
+                       Dimensions / Evaluate / Add-Ins / Options, Window,
+                       Help) written as PATHS of the classic menus' items
+                       (`norm` text, `index`); a classic submenu named comes
+                       along whole (Open Recent, the Library fill
+                       themselves as before). The classic menus are kept
+                       off the bar, never deleted (`_clear` only removes),
+                       and come back for KherveCAD. `missing` /
+                       `unresolved` (tested) keep every classic command
+                       reachable — rename a classic item and the layouts
+                       must follow. The hover help hooks the new menus
+                       (`toolguide` keeps `main._menu_hover`); the style is
+                       applied at the END of the window's __init__, after
+                       the menus. On macOS the menus themselves are native:
+                       their organisation changes, not their look.
+                       `interface_windows.py`: one stylesheet appended to
+                       the theme's for every window and dialog (`qss`;
+                       Fusion: flat grey, blue-underlined capital tabs, blue
+                       default button, thin scroll bars; SolidWorks:
+                       gradients, group boxes with caption bars, yellow
+                       tooltips), the left panel's tabs (`style_panel`:
+                       capitals + a BROWSER corner caption / icon-only tabs,
+                       the texts restored after), and the views'
+                       backgrounds (`style_views`: added to
+                       `view3d.BACKGROUNDS`, set without saving, the user's
+                       own kept in QSettings `render_bg_classic`; the 2D
+                       view's comes from the stylesheet's QGraphicsView
+                       gradient).
   - `icons.py`       — qtawesome MDI icon wrapper with fallback.
   - `model.py`       — **the core**: `CadNode` tree, `NODE_TYPES`
                        registry (params + property schema + icon per

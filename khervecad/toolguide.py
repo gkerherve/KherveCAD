@@ -294,6 +294,7 @@ def install(main):
     guide = ToolGuide(main)
     main.tool_guide = guide
     hover = _MenuHover(guide)
+    main._menu_hover = hover        # menus built later (Interface Style)
     for act in main.menuBar().actions():
         if act.menu() is not None:
             hover.hook(act.menu())
