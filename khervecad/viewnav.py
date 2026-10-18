@@ -252,6 +252,35 @@ def attach_2d(view):
 GRID_STEPS = (0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100)
 
 
+def cube_icon(face, size=20):
+    """A little isometric cube with one face lit: "top", "front" (the
+    left face) or "side" (the right face) — the plane the sketch shows."""
+    from PyQt5.QtGui import QIcon, QPixmap
+    ratio = 2
+    pix = QPixmap(size * ratio, size * ratio)
+    pix.setDevicePixelRatio(ratio)
+    pix.fill(Qt.transparent)
+    painter = QPainter(pix)
+    painter.setRenderHint(QPainter.Antialiasing)
+    c, r = size / 2.0, size * 0.46                 # centre, hex radius
+    import math
+    k = r * math.sin(math.radians(60))
+    top = QPointF(c, c - r)
+    ur, lr = QPointF(c + k, c - r / 2), QPointF(c + k, c + r / 2)
+    bot, ll = QPointF(c, c + r), QPointF(c - k, c + r / 2)
+    ul, mid = QPointF(c - k, c - r / 2), QPointF(c, c)
+    faces = {"top": [top, ur, mid, ul], "front": [ul, mid, bot, ll],
+             "side": [mid, ur, lr, bot]}
+    painter.setPen(QPen(QColor(230, 233, 236, 210), 1.0))
+    for name, pts in faces.items():
+        lit = name == face
+        painter.setBrush(QColor(255, 255, 255, 255) if lit
+                         else QColor(150, 158, 168, 70))
+        painter.drawPolygon(QPolygonF(pts))
+    painter.end()
+    return QIcon(pix)
+
+
 def add_sketch_controls(win, bar):
     """Plane (Top / Front / Side), grid and snap on the 2D view's own
     bar (they used to sit on the main toolbar): the plane buttons are
@@ -272,7 +301,8 @@ def add_sketch_controls(win, bar):
     for plane in reversed(list(PLANES)):
         label, tip = names[plane]
         button = QToolButton(bar)
-        button.setText(label)
+        button.setIcon(cube_icon({"Top": "top", "Front": "front",
+                                  "Side": "side"}[label]))
         set_tip(button, key_of[plane])
         button.setCheckable(True)
         button.setAutoExclusive(True)
