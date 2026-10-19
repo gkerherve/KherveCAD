@@ -94,7 +94,7 @@ FUSION_NAMED = {"builders"}
 FUSION_ALL = {"analyse", "checks", "dimension", "document"}
 FUSION_SHOWN_MANY = 4
 #: icons shown by panels with a count of their own
-PANEL_SHOWN = {"sketch": 10, "sketch_modify": 5}
+PANEL_SHOWN = {"sketch": 11, "sketch_modify": 5}
 #: the sketch MODIFY panel: operations from the families, in this order
 SKETCH_MODIFY = ["translate", "rotate", "scale", "mirror", "pattern"]
 
@@ -174,6 +174,10 @@ def sketch_extra(win):
     return acts
 
 
+def style_of(win):
+    return getattr(win, "_interface_style", "")
+
+
 def self_style(win):
     style = getattr(win, "_interface_style", "Fusion")
     return style if style in ("Fusion", "SolidWorks") else "Fusion"
@@ -191,8 +195,11 @@ def panel_actions(win, key):
         return title, [parts["snap"]]
     from .view2d import MEASURE
     if key == "sketch":
-        return title, [a for a in win._tool_group.actions()
-                       if a.data() != MEASURE]
+        from . import sketch_mode
+        first = [sketch_mode.create_action(win)] \
+            if style_of(win) == "Fusion" else []
+        return title, first + [a for a in win._tool_group.actions()
+                               if a.data() != MEASURE]
     if key in MENU_PANELS:
         from .interface_menus import index
         paths = index(win)

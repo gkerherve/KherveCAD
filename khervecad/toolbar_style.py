@@ -382,6 +382,8 @@ def apply(win, name: str = None, remember: bool = True):
     interface_windows.style_panel(win, name)
     interface_windows.style_views(win, name, _dark())
     interface_windows.style_nav(win, name)
+    from . import sketch_mode
+    sketch_mode.apply(win, name)
     if vibe:
         win.set_vibe_model(True)
     for act in getattr(win, "_interface_style_group", None) and \

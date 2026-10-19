@@ -795,6 +795,8 @@ class MainWindow(QMainWindow):
     # ---------------------------------------------------------- editing
     def _set_tool(self, tool):
         self.view2d.set_tool(tool)
+        from . import sketch_mode         # Fusion: drawing = sketching
+        sketch_mode.tool_chosen(self, tool)
 
     def _add_primitive(self, type: str):
         # while the Object tab edits an Object, new geometry lands
@@ -1600,6 +1602,8 @@ class MainWindow(QMainWindow):
         on = bool(on)
         self._left_column.setVisible(not on)
         self.view2d.setVisible(not on)
+        from . import sketch_mode         # Fusion: one canvas at a time
+        sketch_mode.after_vibe(self)
         self._tools_bar.setVisible(
             not on and getattr(self, "_interface_style", "") != "Fusion")
         for act in self._options_bar.actions():

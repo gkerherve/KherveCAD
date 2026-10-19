@@ -225,3 +225,25 @@ def test_windows_and_views_take_the_style_and_give_it_back(window):
     assert window.builder.tabText(0) == "Main"
     assert window.view3d.background not in ("Fusion", "SolidWorks")
     assert "QGroupBox::title" not in app.styleSheet()
+
+
+def test_fusion_shows_one_canvas_and_sketches_in_place(window, app):
+    from khervecad import sketch_mode
+    from khervecad.view2d import RECT
+    toolbar_style.apply(window, "Fusion")
+    app.processEvents()
+    assert window.view3d.isVisible() and not window.view2d.isVisible()
+    sketch_mode.create_action(window).trigger()
+    app.processEvents()
+    assert window.view2d.isVisible() and not window.view3d.isVisible()
+    assert window._finish_sketch.isVisible()
+    window._finish_sketch.click()
+    app.processEvents()
+    assert window.view3d.isVisible() and not window.view2d.isVisible()
+    window._set_tool(RECT)                     # a drawing tool sketches
+    app.processEvents()
+    assert window.view2d.isVisible()
+    toolbar_style.apply(window, "KherveCAD")   # classic: both, always
+    app.processEvents()
+    assert window.view2d.isVisible() and window.view3d.isVisible()
+    assert not window._finish_sketch.isVisible()
