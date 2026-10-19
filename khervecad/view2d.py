@@ -14,6 +14,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
+from PyQt5 import sip
 from PyQt5.QtCore import QPointF, QRectF, Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import (QBrush, QColor, QFont, QPainter, QPainterPath,
                          QPen, QPolygonF)
@@ -148,6 +149,10 @@ class HandleItem(QGraphicsRectItem):
         pos = event.scenePos()
         if self._snap:
             pos = self.scene().snap(pos)
+        # a shape drawn through its rotate / move (view2d_edit.Frame)
+        # takes the cursor in its own coordinates
+        from .view2d_edit import in_frame_coords
+        pos = in_frame_coords(self.parentItem(), pos)
         self.parentItem().handle_dragged(self.role, pos)
 
     def mouseReleaseEvent(self, event):
@@ -303,11 +308,14 @@ class RectShapeItem(ShapeItem, QGraphicsRectItem):
             right = scene_pos.x()
         else:
             left = scene_pos.x()
-        # note: local "t"op handles are at larger y (Y-up view)
+        # the roles are Qt's rect corners: Qt's "top" is the SMALLER y,
+        # which in this Y-up view is the shape's bottom edge (they were
+        # read the other way round, so a corner moved the opposite edge
+        # and dragging the upper corner collapsed the rectangle)
         if role in ("tr", "tl"):
-            top = scene_pos.y()
-        else:
             bottom = scene_pos.y()
+        else:
+            top = scene_pos.y()
         p["x"], p["y"] = min(left, right), min(bottom, top)
         p["width"] = max(abs(right - left), 0.01)
         p["height"] = max(abs(top - bottom), 0.01)
@@ -691,6 +699,8 @@ class SketchScene(QGraphicsScene):
         self._draft_start = None
         self._poly_points = []
         self._poly_items = []                  # its rubber band + markers
+        self._frames = []                      # view2d_edit: (frame, node)
+        self._gizmos = []                      # view2d_edit: the dial
         #: a line / rectangle / circle started with a CLICK: it follows
         #: the cursor and the next click ends it (Fusion, SolidWorks)
         self._click_mode = False
@@ -895,8 +905,10 @@ class SketchScene(QGraphicsScene):
 
     def _rebuild_items(self):
         from . import part_collections
+        from . import view2d_edit
         with part_collections.hiding(self.model):
             self._rebuild_items_now()
+            view2d_edit.add_gizmos(self)       # a selected rotate's dial
         locked = part_collections.locked_names(self.model)
         if locked:                  # a locked collection: look, not touch
             for item in list(self._items.values()) \
@@ -911,10 +923,15 @@ class SketchScene(QGraphicsScene):
     def _rebuild_items_now(self):
         self.updating = True
         selected = {n.id for n in self.selected_nodes()}
+        from . import view2d_edit
+        view2d_edit.clear(self)                # frames take their shapes
         for item in list(self._items.values()) \
                 + list(self._part_items.values()) \
                 + self._highlight_items:
-            self.removeItem(item)
+            if sip.isdeleted(item):            # went with its frame
+                continue
+            if item.scene() is self:
+                self.removeItem(item)
         self._items.clear()
         self._part_items.clear()
         self._highlight_items = []
@@ -968,9 +985,12 @@ class SketchScene(QGraphicsScene):
                         node.type in _ITEM_CLASSES and \
                         self._branch_visible(node, stop=iso):
                     item = _ITEM_CLASSES[node.type](node, self)
-                    self.addItem(item)
+                    # drawn through its rotate / move / scale, as in 3D
+                    view2d_edit.add_shape(self, item, node)
                     self._items[node.id] = item
-                    if node.id in selected:
+                    # a selected rotate (or group) selects what it holds
+                    if node.id in selected or view2d_edit.selected_under(
+                            self, node, self._highlight_ids):
                         item.setSelected(True)
                         self._apply_point_hl(item, node)
         # assembly mode: every top-level part gets a draggable outline
@@ -1189,7 +1209,8 @@ class SketchScene(QGraphicsScene):
         for a selected primitive, so selecting e.g. a Z-cylinder jumps to
         a side view where its height *and* radius are draggable rather
         than a plane where it is just a bare circle."""
-        if node is None or node.type not in ("cylinder", "cube", "sphere"):
+        if node is None or node.type not in ("cylinder", "cube", "sphere",
+                                             "linear_extrude"):
             return None
         counts = {pl: len(self._dim_handles(node, plane=pl))
                   for pl in PLANES}
@@ -1205,7 +1226,8 @@ class SketchScene(QGraphicsScene):
         changes the right parameter. Handles whose axis points along the
         view direction (invisible here) are dropped."""
         from . import mesh as mesh_mod
-        if node.type not in ("cylinder", "cube", "sphere"):
+        if node.type not in ("cylinder", "cube", "sphere",
+                             "linear_extrude"):
             return []
         (ai, bi), _keys = PLANES[plane or self.plane]
         env = self.env_for(node)
@@ -1240,7 +1262,10 @@ class SketchScene(QGraphicsScene):
                 tip=QPointF(anchor.x() + ax[0] * mag,
                             anchor.y() + ax[1] * mag)))
 
-        if node.type == "cylinder":
+        if node.type == "linear_extrude":
+            from .view2d_edit import extrude_dims
+            extrude_dims(self, node, plane, add, val, direction)
+        elif node.type == "cylinder":
             h = val("height")
             z0 = pz - (h / 2 if center else 0.0)
             z1 = z0 + h
@@ -1449,6 +1474,12 @@ class SketchScene(QGraphicsScene):
         return True
 
     def _node_changed(self, node):
+        if node.is_container() and self.mouseGrabberItem() is not None:
+            # a handle on a rotate / extrude is being dragged: re-place
+            # in place, never rebuild under the cursor
+            from . import view2d_edit
+            view2d_edit.live_update(self)
+            return
         if node.is_container():
             # A group's visibility change affects every descendant.
             self.rebuild()
@@ -2218,6 +2249,20 @@ class SketchView(QGraphicsView):
             return
         lr = self._geometry_rect(item)
         if lr.width() < 1e-6 or lr.height() < 1e-6:
+            return
+        st = item.sceneTransform()
+        if abs(st.m12()) > 1e-9 or abs(st.m21()) > 1e-9:
+            # turned by a rotate above it: dimension along its own
+            # edges, not round the level box that holds it
+            unit = self._unit()
+            self._draw_dim(painter, item.mapToScene(lr.topLeft()),
+                           item.mapToScene(lr.topRight()), color=color,
+                           bg=bg, dots=False, offset=18,
+                           text=_fmt_len(lr.width(), unit))
+            self._draw_dim(painter, item.mapToScene(lr.topRight()),
+                           item.mapToScene(lr.bottomRight()), color=color,
+                           bg=bg, dots=False, offset=18,
+                           text=_fmt_len(lr.height(), unit))
             return
         pts = [QPointF(self.mapFromScene(item.mapToScene(c))) for c in
                (lr.topLeft(), lr.topRight(), lr.bottomLeft(),

@@ -2906,6 +2906,30 @@ into a new module and import.
                        reads in mm: scale bar, live size while
                        drawing, zoom indicator, Fit Sketch / Zoom to
                        Selection. Middle-mouse drag pans; wheel zooms.
+  - `view2d_edit.py` — editing the tree's selection in the 2D view
+                       (2026-10-19, the user: "polygon, linear extrude,
+                       rotate — this is what we should be able to change in
+                       the 2D view"). Sketch shapes hang under a `Frame`
+                       whose transform is their ancestors' matrix
+                       (`_world_matrix`), so a rectangle under rotate(30)
+                       shows turned, as in 3D; the item keeps its params as
+                       coordinates and `HandleItem` maps the cursor into the
+                       frame (`in_frame_coords`). A selected container
+                       selects the shapes it holds. A selected Rotate gets a
+                       `RotateDial` at its pivot (Top edits z, Front -y,
+                       Side x; 5° steps while snapping); a Linear extrude a
+                       height size handle (`extrude_dims`, through
+                       `_dim_handles`; the selection jumps to Front). A
+                       container edited while a handle is held is NOT
+                       rebuilt (that deleted the handle under the cursor):
+                       `live_update` re-places frames and silhouettes, the
+                       rebuild follows the release. Removing a frame deletes
+                       its shapes (`sip.isdeleted` in the rebuild). Rect
+                       corner roles are Qt's (its "top" is the smaller y =
+                       the shape's bottom edge): they were read the other
+                       way round and a corner drag collapsed the rectangle.
+                       Tests drag with the button HELD (`_drag`): offscreen,
+                       QTest.mouseMove never reaches a grabbed handle.
   - `polygon_draw.py` — drawing a polygon in the sketch (2026-10-19, the
                        user: an "end" always shown, close by): a Finish /
                        Undo point / Cancel bar at the bottom of the view
