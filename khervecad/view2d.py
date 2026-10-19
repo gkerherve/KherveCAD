@@ -691,6 +691,10 @@ class SketchScene(QGraphicsScene):
         self._draft_start = None
         self._poly_points = []
         self._poly_items = []                  # its rubber band + markers
+        #: a line / rectangle / circle started with a CLICK: it follows
+        #: the cursor and the next click ends it (Fusion, SolidWorks)
+        self._click_mode = False
+        self._swallow_release = False
         self._part_dirty = False
         self._highlight_ids = set()            # selected nodes
         self._highlight_items = []
@@ -1560,6 +1564,14 @@ class SketchScene(QGraphicsScene):
             event.accept()
             return
         pos = self.snap(event.scenePos())
+        if self._click_mode and self._draft is not None:
+            if event.button() == Qt.LeftButton:
+                self._finish_draft(pos)        # the second click
+                self._swallow_release = True
+            else:
+                self.drop_drafts()             # right-click: never mind
+            event.accept()
+            return
         if self.tool == POLYGON and event.button() == Qt.RightButton:
             if len(self._poly_points) >= 3:
                 self.finish_polygon()             # right-click finishes
@@ -1657,6 +1669,13 @@ class SketchScene(QGraphicsScene):
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
+        if self._swallow_release:              # the click that ended it
+            self._swallow_release = False
+            event.accept()
+            return
+        if self._click_mode:                   # still following the cursor
+            event.accept()
+            return
         if self._draft is None or self._draft_start is None:
             super().mouseReleaseEvent(event)
             if self._part_dirty and self.mouseGrabberItem() is None:
@@ -1664,10 +1683,37 @@ class SketchScene(QGraphicsScene):
                 self.rebuild()
             return
         pos = self.snap(event.scenePos())
+        from .polygon_draw import px_to_scene
+        moved = ((event.scenePos().x() - event.buttonDownScenePos(
+            Qt.LeftButton).x()) ** 2 + (event.scenePos().y()
+                                        - event.buttonDownScenePos(
+                Qt.LeftButton).y()) ** 2) ** 0.5
+        if moved < px_to_scene(self, 4.0):
+            # a click, not a drag: the shape follows the cursor and the
+            # next click ends it, as in Fusion and SolidWorks (dragging
+            # still works). A click used to make a zero-size shape that
+            # was thrown away, so nothing at all appeared.
+            self._click_mode = True
+            self.status.emit(language.tr(
+                "Click again where the {shape} should end — or drag next "
+                "time. Esc or right-click cancels.").format(
+                    shape=language.tr({LINE: "line", RECT: "rectangle",
+                                       CIRCLE: "circle"}.get(self.tool,
+                                                             "shape"))))
+            event.accept()
+            return
+        self._finish_draft(pos)
+        event.accept()
+
+    def _finish_draft(self, pos):
+        """Turn the line / rectangle / circle being drawn from
+        `_draft_start` to *pos* into a node."""
         start = self._draft_start
-        self.removeItem(self._draft)
+        if self._draft is not None and self._draft.scene() is self:
+            self.removeItem(self._draft)
         self._draft = None
         self._draft_start = None
+        self._click_mode = False
         node = None
         if self.tool == LINE and (pos - start).manhattanLength() > 0.5:
             node = self._create("line", dict(
@@ -1686,7 +1732,6 @@ class SketchScene(QGraphicsScene):
                     x=start.x(), y=start.y(), radius=radius))
         if node is not None:
             self.node_created.emit(node)
-        event.accept()
 
     def mouseDoubleClickEvent(self, event):
         if self.tool == POLYGON and len(self._poly_points) >= 3:
@@ -1740,6 +1785,7 @@ class SketchScene(QGraphicsScene):
                 self.removeItem(self._draft)
             self._draft = None
         self._draft_start = None
+        self._click_mode = False
         if had:
             self.polygon_changed.emit(0)
 

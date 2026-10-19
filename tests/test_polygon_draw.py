@@ -107,3 +107,56 @@ def test_changing_tool_leaves_no_dead_line(view):
     assert not [i for i in view.scene().items()
                 if isinstance(i, QGraphicsLineItem)]
     assert not _polygons(view)
+
+
+def test_click_click_draws_a_line_rectangle_and_circle(view):
+    """Fusion and SolidWorks draw by click, move, click; a click used to
+    make a zero-size shape that was thrown away — nothing appeared."""
+    for tool, kind in ((RECT, "rect"), (LINE, "line")):
+        view.set_tool(tool)
+        _click(view, 0, 0)
+        assert view.scene()._click_mode
+        QTest.mouseMove(view.viewport(), view.mapFromScene(QPointF(30, 20)))
+        _click(view, 30, 20)
+        nodes = [n for n in view.scene().model.root.walk()
+                 if n.type == kind]
+        assert len(nodes) == 1, kind
+        assert not view.scene()._click_mode and view.scene()._draft is None
+    rect = [n for n in view.scene().model.root.walk() if n.type == "rect"][0]
+    assert rect.params["width"] == pytest.approx(30, abs=1.5)
+    # dragging still works
+    view.set_tool(RECT)
+    a = view.mapFromScene(QPointF(50, 0))
+    b = view.mapFromScene(QPointF(80, 20))
+    QTest.mousePress(view.viewport(), Qt.LeftButton, Qt.NoModifier, a)
+    QTest.mouseMove(view.viewport(), b)
+    QTest.mouseRelease(view.viewport(), Qt.LeftButton, Qt.NoModifier, b)
+    assert len([n for n in view.scene().model.root.walk()
+                if n.type == "rect"]) == 2
+    # a right-click drops a click-started shape
+    _click(view, 0, 40)
+    _click(view, 10, 50, Qt.RightButton)
+    assert view.scene()._draft is None
+    assert len([n for n in view.scene().model.root.walk()
+                if n.type == "rect"]) == 2
+
+
+def test_drawing_in_an_empty_object_tab_makes_an_object(app):
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    w.resize(1200, 800)
+    w.show()
+    try:
+        w.builder.setCurrentWidget(w.builder.object_tab)
+        assert w.builder.object_tab.active_component() is None
+        next(a for a in w._tool_group.actions() if a.data() == RECT).trigger()
+        v = w.view2d
+        v.centerOn(20, 20)
+        _click(v, 0, 0)
+        _click(v, 30, 20)
+        comp = w.builder.object_tab.active_component()
+        assert comp is not None and comp.children[0].type == "rect"
+        assert w.builder.currentWidget() is w.builder.object_tab
+    finally:
+        w._dirty = False
+        w.close()
