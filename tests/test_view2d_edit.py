@@ -119,8 +119,12 @@ def test_selecting_a_rotate_shows_a_dial_that_turns_it(setup):
     model, scene, view = setup
     rect, rot = _rotated_rect(model, 0.0)
     scene.set_highlight([rot])
-    assert scene._items[rect.id].isSelected()      # its contents light up
-    dial = scene._gizmos[0]
+    # its contents are shown but locked: a Rotate can only rotate
+    item = scene._items[rect.id]
+    assert not item.isSelected() and not (
+        item.flags() & item.ItemIsMovable)
+    dial = next(g for g in scene._gizmos
+                if isinstance(g, view2d_edit.RotateDial))
     assert isinstance(dial, view2d_edit.RotateDial)
     pivot = view.mapFromScene(QPointF(0, 0))
     # the dial is drawn at a fixed screen size: its knob (at 0°) sits
@@ -151,3 +155,157 @@ def test_a_linear_extrude_gets_a_height_handle(setup):
     end = view.mapFromScene(handle.scenePos() + QPointF(0, 15))
     _drag(view, start, end)
     assert ext.params["height"] == pytest.approx(25, abs=1.0)
+
+
+def test_a_rotate_turns_about_its_pivot_and_round_trips(setup):
+    from khervecad import mesh, scadparse
+    model, scene, view = setup
+    rect, rot = _rotated_rect(model, 90.0)
+    rot.params.update(px=10.0, py=0.0, pz=0.0)
+    model.structure_changed.emit()
+    scene.rebuild()
+    # (0, 0) turned 90° about (10, 0) lands at (10, -10)
+    corner = scene._items[rect.id].mapToScene(QPointF(0, 0))
+    assert (round(corner.x(), 6), round(corner.y(), 6)) == (10, -10)
+    m = mesh.node_matrix(rot)
+    assert mesh.transform_point(m, (0, 0, 0)) == pytest.approx((10, -10, 0))
+    code = model.to_scad()
+    assert "kcad_rotate(a = [0, 0, 90], pivot = [10, 0, 0])" in code
+    assert "module kcad_rotate" in code
+    root, _warnings = scadparse.parse_scad(code)
+    back = [n for n in root.walk() if n.type == "rotate"][0]
+    assert (back.params["z"], back.params["px"]) == (90, 10)
+    # a rotate with no pivot stays OpenSCAD's own, byte for byte
+    rot.params.update(px=0.0)
+    assert "kcad_rotate" not in model.to_scad()
+
+
+def _shift_drag(view, start, end, steps=4):
+    from PyQt5.QtCore import QEvent
+    from PyQt5.QtGui import QMouseEvent
+    vp = view.viewport()
+    QTest.mousePress(vp, Qt.LeftButton, Qt.ShiftModifier, start)
+    for i in range(1, steps + 1):
+        p = QPoint(start.x() + (end.x() - start.x()) * i // steps,
+                   start.y() + (end.y() - start.y()) * i // steps)
+        QApplication.sendEvent(vp, QMouseEvent(
+            QEvent.MouseMove, QPointF(p), Qt.NoButton, Qt.LeftButton,
+            Qt.ShiftModifier))
+    QTest.mouseRelease(vp, Qt.LeftButton, Qt.ShiftModifier, end)
+
+
+def test_dragging_the_dial_centre_adds_a_move_above_the_rotate(setup):
+    """The user's picture: moving the rotation point is a translate
+    created ABOVE the rotate, moving part and pivot together."""
+    model, scene, view = setup
+    scene.snap_enabled = False
+    rect, rot = _rotated_rect(model, 30.0)
+    scene.set_highlight([rot])
+    dial = next(g for g in scene._gizmos
+                if isinstance(g, view2d_edit.RotateDial))
+    centre = view.mapFromScene(dial.pos())             # (0, 0)
+    _drag(view, centre, view.mapFromScene(QPointF(12, 8)))
+    QApplication.processEvents()
+    move = rot.parent
+    assert move.type == "translate" and move.children == [rot]
+    assert (round(move.params["x"]), round(move.params["y"])) == (12, 8)
+    assert rot.params["z"] == 30.0 and not rot.params.get("px")
+    # a second drag uses the same Move
+    scene.set_highlight([rot])
+    centre = view.mapFromScene(next(
+        g for g in scene._gizmos
+        if isinstance(g, view2d_edit.RotateDial)).pos())
+    _drag(view, centre, view.mapFromScene(QPointF(20, 8)))
+    QApplication.processEvents()
+    assert rot.parent is move and round(move.params["x"]) == 20
+
+
+def test_shift_dragging_the_dial_centre_moves_the_pivot(setup):
+    model, scene, view = setup
+    scene.snap_enabled = False
+    rect, rot = _rotated_rect(model, 0.0)
+    tr = model.wrap_nodes([rot], "translate")
+    tr.params["x"] = 5.0
+    model.structure_changed.emit()
+    scene.set_highlight([rot])
+    dial = next(g for g in scene._gizmos
+                if isinstance(g, view2d_edit.RotateDial))
+    centre = view.mapFromScene(dial.pos())             # the pivot: (5, 0)
+    target = view.mapFromScene(QPointF(15, 10))
+    _shift_drag(view, centre, target)
+    # the pivot is in the rotate's own frame: the translate's 5 is off it
+    assert rot.params["px"] == pytest.approx(10, abs=0.3)
+    assert rot.params["py"] == pytest.approx(10, abs=0.3)
+
+
+def test_no_rebuild_under_a_drag(setup):
+    """A rebuild while a shape is held deleted the shapes Qt was still
+    moving (a segfault in QGraphicsItem::setPos): it waits for the
+    release now."""
+    model, scene, view = setup
+    rect = model.add_node("rect", dict(x=0.0, y=0.0, width=20.0,
+                                       height=10.0))
+    model.structure_changed.emit()
+    scene.rebuild()
+    item = scene._items[rect.id]
+    item.setSelected(True)
+    start = view.mapFromScene(QPointF(10, 5))
+    QTest.mousePress(view.viewport(), Qt.LeftButton, Qt.NoModifier, start)
+    assert scene.mouseGrabberItem() is item
+    scene.rebuild()                                   # e.g. a re-select
+    assert scene._items[rect.id] is item and scene._rebuild_pending
+    QTest.mouseRelease(view.viewport(), Qt.LeftButton, Qt.NoModifier,
+                       start)
+    QApplication.processEvents()
+    assert not scene._rebuild_pending
+    assert scene._items[rect.id] is not item           # rebuilt after
+
+
+def test_a_selected_move_drags_as_a_whole_and_its_shapes_are_locked(setup):
+    """The user: "translate, we can only translate"."""
+    model, scene, view = setup
+    scene.snap_enabled = False
+    rect, rot = _rotated_rect(model, 30.0)
+    move = model.wrap_nodes([rot], "translate")
+    model.structure_changed.emit()
+    scene.set_highlight([move])
+    area = next(g for g in scene._gizmos
+                if isinstance(g, view2d_edit.ContainerArea))
+    assert area.movable and area.node is move
+    assert not scene._gizmos or not any(
+        isinstance(g, view2d_edit.RotateDial) for g in scene._gizmos)
+    inside = scene._items[rect.id].mapToScene(QPointF(10, 5))
+    _drag(view, view.mapFromScene(inside),
+          view.mapFromScene(inside + QPointF(8, -6)))
+    assert (round(move.params["x"]), round(move.params["y"])) == (8, -6)
+    assert (rect.params["x"], rect.params["y"]) == (0.0, 0.0)
+    assert rot.params["z"] == 30.0
+
+
+def test_a_selected_rotate_cannot_be_dragged(setup):
+    model, scene, view = setup
+    scene.snap_enabled = False
+    rect, rot = _rotated_rect(model, 30.0)
+    scene.set_highlight([rot])
+    inside = scene._items[rect.id].mapToScene(QPointF(10, 5))
+    _drag(view, view.mapFromScene(inside),
+          view.mapFromScene(inside + QPointF(8, -6)))
+    assert (rect.params["x"], rect.params["y"]) == (0.0, 0.0)
+    assert rot.parent.type != "translate" and rot.params["z"] == 30.0
+
+
+def test_only_parts_with_a_position_are_dragged_when_selected(setup):
+    model, scene, view = setup
+    cube = model.add_node("cube", dict(width=10.0, depth=10.0,
+                                       height=10.0))
+    rot = model.wrap_nodes([cube], "rotate")
+    model.structure_changed.emit()
+    scene.set_highlight([rot])
+    item = scene._part_items[rot.id]
+    assert not item.flags() & item.ItemIsMovable    # a rotate only turns
+    scene.set_highlight([cube])
+    cube_item = scene._part_items.get(cube.id) or scene._part_items[rot.id]
+    move = model.wrap_nodes([rot], "translate")
+    model.structure_changed.emit()
+    scene.set_highlight([move])
+    assert scene._part_items[move.id].flags() & item.ItemIsMovable

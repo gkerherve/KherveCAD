@@ -65,7 +65,12 @@ def _fresh_blueprint_settings():
     from PyQt5.QtCore import QSettings
     settings = QSettings("Kherve", "KherveCAD")
     for key in ("blueprint/material", "blueprint/company",
-                "blueprint/drawn", "blueprint/dir"):
+                "blueprint/drawn", "blueprint/dir",
+                # the Interface Style too, per test: the user's own
+                # KherveCAD, running beside a long test run, shares these
+                # settings, and switching it to Fusion mid-run opened
+                # later test windows with Fusion's menus and toolbars
+                "interface_style", "ribbon/tab"):
         settings.remove(key)
     yield
 

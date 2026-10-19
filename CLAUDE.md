@@ -2959,6 +2959,49 @@ into a new module and import.
                        way round and a corner drag collapsed the rectangle.
                        Tests drag with the button HELD (`_drag`): offscreen,
                        QTest.mouseMove never reaches a grabbed handle.
+                       **Pivot** (same day, the user: "I should be able to
+                       translate the rotation point"): a Rotate may turn
+                       about px / py / pz (schema-only, 0 = the origin, so
+                       older files stay byte-identical): codegen writes
+                       `kcad_rotate(a = [...], pivot = [...])` (helper in
+                       organic.HELPERS "rotate_pivot", builder
+                       `_b_rotate_pivot`; scadparse never folds a pivoted
+                       rotate into a mesh's or Object's own rotation), and
+                       every matrix goes through `mesh.transform_mat` (mesh
+                       node_matrix / _tess / 2D outlines, view2d
+                       _world_matrix, cadexchange). The dial's centre is a
+                       `_PivotHandle`. A plain drag MOVES the part: a Move
+                       (translate) is put above the Rotate (or the one
+                       holding just it is reused, `_move_above`) — the
+                       user's expectation — created on the first MOVE, not
+                       the press (only then is the handle the grabber, so
+                       the rebuild waits). Shift+drag moves the pivot
+                       alone, solved into the rotate's frame
+                       (`_scene_to_pivot`).
+                       **No rebuild under a drag**: `SketchScene.rebuild`
+                       waits (`_rebuild_pending`) while anything is grabbed
+                       and runs after the release (`_after_release`). Qt
+                       moves every SELECTED item in turn; moving the first
+                       made the tree re-select and rebuild the scene
+                       synchronously, deleting the rest — a segfault in
+                       QGraphicsItem::setPos (a selected Rotate selects all
+                       its shapes). `refresh_handles` keeps a grabbed handle.
+                       **Only the selection's edit** (same day, the user: "a
+                       rotate can only rotate, a translate only translate,
+                       a rectangle everything a rectangle has"): shapes
+                       inside a SELECTED container are shown but locked
+                       (`lock_contents`: not selectable, movable or
+                       clickable) under one `ContainerArea` — a Move /
+                       Group / Object / instance (`MOVES`) is dragged by it
+                       (its own x / y / z through `_local_move`), anything
+                       else only says what to use (`WHY`). A selected 3D
+                       silhouette drags only if it carries a position
+                       (`MOVABLE_TYPES`) or is a top-level part that is not
+                       an `OWN_EDIT_TYPES` node (rotate, scale, mirror,
+                       resize, multmatrix, the extrudes) — those used to
+                       be wrapped in a new Move by a drag. Tests reset
+                       `interface_style` per test (conftest): the user's own
+                       running KherveCAD shares the settings.
   - `polygon_draw.py` — drawing a polygon in the sketch (2026-10-19, the
                        user: an "end" always shown, close by): a Finish /
                        Undo point / Cancel bar at the bottom of the view

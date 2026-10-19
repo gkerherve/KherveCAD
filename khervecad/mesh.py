@@ -136,7 +136,8 @@ def node_matrix(node, env=None):
     if t == "translate":
         return mat_translate(num("x"), num("y"), num("z"))
     if t == "rotate":
-        return mat_rotate(num("x"), num("y"), num("z"))
+        return transform_mat("rotate", {k: num(k) for k in
+                                        ("x", "y", "z", "px", "py", "pz")})
     if t == "scale":
         return mat_scale(num("x", 1.0), num("y", 1.0), num("z", 1.0))
     if t == "mirror":
@@ -587,6 +588,20 @@ _TRANSFORM_MATS = dict(translate=mat_translate, rotate=mat_rotate,
                        scale=mat_scale, mirror=mat_mirror)
 
 
+def transform_mat(kind, p):
+    """The matrix of a translate / rotate / scale / mirror from its
+    resolved params *p*. A rotate may turn about a pivot (px, py, pz —
+    optional, 0 = the origin): translate(pivot) rotate translate(-pivot),
+    `kcad_rotate` in OpenSCAD."""
+    m = _TRANSFORM_MATS[kind](p["x"], p["y"], p["z"])
+    if kind == "rotate":
+        px, py, pz = (float(p.get(k, 0.0) or 0.0) for k in ("px", "py", "pz"))
+        if px or py or pz:
+            m = mat_mul(mat_translate(px, py, pz),
+                        mat_mul(m, mat_translate(-px, -py, -pz)))
+    return m
+
+
 def _transformed_outlines(node, env):
     """The children's outlines mapped through the transform's 2D part.
 
@@ -605,7 +620,8 @@ def _transformed_outlines(node, env):
     if node.type == "translate":
         m = mat_translate(val("x", 0.0), val("y", 0.0), val("z", 0.0))
     elif node.type == "rotate":
-        m = mat_rotate(val("x", 0.0), val("y", 0.0), val("z", 0.0))
+        m = transform_mat("rotate", {k: val(k, 0.0) for k in
+                                     ("x", "y", "z", "px", "py", "pz")})
     elif node.type == "scale":
         m = mat_scale(val("x", 1.0), val("y", 1.0), val("z", 1.0))
     else:
@@ -1635,7 +1651,7 @@ def _tess(node, env, color, sel, selected):
         matrix = None
         while True:
             p = rp(node, env)
-            step = _TRANSFORM_MATS[node.type](p["x"], p["y"], p["z"])
+            step = transform_mat(node.type, p)
             matrix = step if matrix is None else mat_mul(matrix, step)
             kids = node.children
             if (len(kids) == 1 and kids[0].type in _TRANSFORM_MATS

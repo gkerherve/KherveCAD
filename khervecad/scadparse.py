@@ -1395,8 +1395,10 @@ def _fold_container(node: CadNode):
             node.remove(child)
             child.visible = node.visible and child.visible
             return child
+    from .model import has_pivot
+    pivoted = node.type == "rotate" and has_pivot(node.params)
     if node.type in ("rotate", "scale") and len(node.children) == 1 \
-            and node.children[0].type == "stl_import":
+            and node.children[0].type == "stl_import" and not pivoted:
         # an import is emitted as `translate() rotate() scale() import()`
         # — fold them back in innermost first, and only while what is
         # already folded sits inside (a rotate of a translated mesh is
@@ -1432,7 +1434,7 @@ def _fold_container(node: CadNode):
             for k in ("x", "y", "z"):
                 p[k] = node.params.get(k, 0.0)
             folded = True
-        elif node.type == "rotate" and all(
+        elif node.type == "rotate" and not pivoted and all(
                 _is_zero(p.get(k, 0.0))
                 for k in ("rx", "ry", "rz", "x", "y", "z")):
             # placement params mean translate(rotate(part)): a rotate

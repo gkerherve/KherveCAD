@@ -196,6 +196,9 @@ class ShapeItem:
         return []                                  # [(role, local pos)]
 
     def refresh_handles(self):
+        grabber = self._scene.mouseGrabberItem()
+        if grabber is not None and grabber in self.handles:
+            return          # never delete the handle being dragged
         for handle in self.handles:
             self._scene.removeItem(handle)
         self.handles = []
@@ -470,6 +473,10 @@ _ITEM_CLASSES.update({t: OutlineShapeItem for t in _features.SHAPES_2D})
 #: node types that carry their own move params, so a drag is baked
 #: into the node itself instead of wrapping it in a new translate.
 MOVABLE_TYPES = ("translate", "union", "component", "reference")
+#: selected, these do only their own edit — never a drag that would wrap
+#: them in a new Move (a Rotate turns, an extrude grows)
+OWN_EDIT_TYPES = ("rotate", "scale", "mirror", "resize", "multmatrix",
+                  "linear_extrude", "rotate_extrude")
 
 
 def _invert3(m):
@@ -900,14 +907,33 @@ class SketchScene(QGraphicsScene):
             self.setSceneRect(rect)
 
     def rebuild(self):
+        if self.mouseGrabberItem() is not None:
+            # something is being dragged: a rebuild now would delete it
+            # under the cursor and the next mouse move would touch freed
+            # memory (a segfault dragging a shape inside a Move + Rotate,
+            # 2026-10-19). It runs once the button is released.
+            self._rebuild_pending = True
+            return
+        self._rebuild_pending = False
         self._rebuild_items()
         self.fit_scene_rect()
+
+    def _after_release(self):
+        """Run a rebuild that waited for the drag to end — on the next
+        event-loop turn, never inside the release event itself."""
+        if getattr(self, "_rebuild_pending", False) \
+                and self.mouseGrabberItem() is None:
+            self._rebuild_pending = False
+            QTimer.singleShot(0, self.rebuild)
 
     def _rebuild_items(self):
         from . import part_collections
         from . import view2d_edit
         with part_collections.hiding(self.model):
             self._rebuild_items_now()
+            # what a selected container holds is shown but locked: only
+            # the container's own edit (a Move's drag, a Rotate's dial)
+            view2d_edit.lock_contents(self)
             view2d_edit.add_gizmos(self)       # a selected rotate's dial
         locked = part_collections.locked_names(self.model)
         if locked:                  # a locked collection: look, not touch
@@ -988,9 +1014,7 @@ class SketchScene(QGraphicsScene):
                     # drawn through its rotate / move / scale, as in 3D
                     view2d_edit.add_shape(self, item, node)
                     self._items[node.id] = item
-                    # a selected rotate (or group) selects what it holds
-                    if node.id in selected or view2d_edit.selected_under(
-                            self, node, self._highlight_ids):
+                    if node.id in selected:
                         item.setSelected(True)
                         self._apply_point_hl(item, node)
         # assembly mode: every top-level part gets a draggable outline
@@ -1133,8 +1157,14 @@ class SketchScene(QGraphicsScene):
         # Group, an Object or an instance) takes it directly at any
         # depth — highlight a Move and you can drag it in the plane —
         # and a top-level part gets a translate wrapped round it.
+        # Only what the SELECTED node can do (2026-10-19, the user: "a
+        # rotate can only rotate, a translate only translate"): a node
+        # carrying its own position moves, and so does a solid placed at
+        # the top level; a Rotate, an extrude, a boolean... does not —
+        # dragging one used to wrap it in a new Move.
         movable = (node.type in MOVABLE_TYPES
-                   or node.parent is self.scope_root())
+                   or (node.parent is self.scope_root()
+                       and node.type not in OWN_EDIT_TYPES))
         return PartItem(node, self, path, node.name, movable=movable,
                         dashed=False, dims=dims, blue=editable)
 
@@ -1189,8 +1219,9 @@ class SketchScene(QGraphicsScene):
             if anc.type in builders:
                 default = 1.0 if anc.type == "scale" else 0.0
                 x, y, z = self._placement(anc, ("x", "y", "z"), default)
-                mat = mesh_mod.mat_mul(mat,
-                                       builders[anc.type](x, y, z))
+                px, py, pz = self._placement(anc, ("px", "py", "pz"))
+                mat = mesh_mod.mat_mul(mat, mesh_mod.transform_mat(
+                    anc.type, dict(x=x, y=y, z=z, px=px, py=py, pz=pz)))
             elif anc.type in ("union", "component", "reference"):
                 x, y, z = self._placement(anc, ("x", "y", "z"))
                 rx, ry, rz = self._placement(anc, ("rx", "ry", "rz"))
@@ -1700,6 +1731,12 @@ class SketchScene(QGraphicsScene):
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
+        try:
+            self._release(event)
+        finally:
+            self._after_release()
+
+    def _release(self, event):
         if self._swallow_release:              # the click that ended it
             self._swallow_release = False
             event.accept()

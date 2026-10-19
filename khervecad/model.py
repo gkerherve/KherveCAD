@@ -183,9 +183,15 @@ NODE_TYPES = {
     "rotate": dict(
         label="Rotate", category=OPERATION, icon="mdi.rotate-right",
         params=dict(x=0.0, y=0.0, z=0.0),
+        # the pivot (px, py, pz) is optional, schema only: 0 = about the
+        # origin, OpenSCAD's own rotate(); else kcad_rotate — documents
+        # saved before it stay byte-identical
         schema=[("x", "X (deg)", "float", -360.0, 360.0),
                 ("y", "Y (deg)", "float", -360.0, 360.0),
-                ("z", "Z (deg)", "float", -360.0, 360.0)]),
+                ("z", "Z (deg)", "float", -360.0, 360.0),
+                ("px", "Pivot X", "float", -1e6, 1e6),
+                ("py", "Pivot Y", "float", -1e6, 1e6),
+                ("pz", "Pivot Z", "float", -1e6, 1e6)]),
     "scale": dict(
         label="Scale", category=OPERATION, icon="mdi.resize",
         params=dict(x=1.0, y=1.0, z=1.0),
@@ -647,6 +653,18 @@ def with_tag(name, tag) -> str:
     return f"{base} [{tag}]" if tag else base
 
 
+def has_pivot(params) -> bool:
+    """Does a rotate turn about a point other than the origin?"""
+    for key in ("px", "py", "pz"):
+        value = params.get(key, 0.0)
+        if isinstance(value, str):
+            if value.strip() not in ("", "0", "0.0"):
+                return True
+        elif value:
+            return True
+    return False
+
+
 class CadNode:
     """One object in the tree: a shape, an operation or a boolean."""
 
@@ -1029,6 +1047,10 @@ class CadNode:
                 args.append(f"angle={fmt(p['angle'])}")
             args.append(f"$fn={fmt(_fn(p))}")
             return f"rotate_extrude({', '.join(args)})"
+        if t == "rotate" and has_pivot(p):
+            return (f"kcad_rotate(a = [{fmt(p['x'])}, {fmt(p['y'])}, "
+                    f"{fmt(p['z'])}], pivot = [{fmt(p.get('px', 0.0))}, "
+                    f"{fmt(p.get('py', 0.0))}, {fmt(p.get('pz', 0.0))}])")
         if t in ("translate", "rotate", "scale", "mirror"):
             return (f"{t}([{fmt(p['x'])}, {fmt(p['y'])}, "
                     f"{fmt(p['z'])}])")

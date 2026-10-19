@@ -33,9 +33,9 @@ the Free Software Foundation, either version 3 of the License, or
 import math
 
 from PyQt5.QtCore import QPointF, QRectF, Qt, QTimer
-from PyQt5.QtGui import QBrush, QColor, QPen, QTransform
+from PyQt5.QtGui import QBrush, QColor, QPainterPath, QPen, QTransform
 from PyQt5.QtWidgets import (QGraphicsEllipseItem, QGraphicsItem,
-                             QGraphicsLineItem)
+                             QGraphicsLineItem, QGraphicsPathItem)
 
 #: the dial's radius on screen (pixels) and its knob
 DIAL_PX = 46.0
@@ -101,15 +101,118 @@ def in_frame_coords(item, scene_pos):
     return scene_pos
 
 
-def selected_under(scene, node, selected):
-    """Is *node* selected, or inside a selected container?"""
+# ------------------------------------------- only the selection's edit
+#: containers whose drag moves them: they carry their own x / y / z
+MOVES = ("translate", "union", "component", "reference")
+#: what to say when a locked container's contents are clicked
+WHY = {"rotate": "Rotate selected: turn it with the dial's knob (drag "
+                 "its centre to move it).",
+       "scale": "Scale selected: set its factors in Properties.",
+       "mirror": "Mirror selected: set its plane in Properties.",
+       "linear_extrude": "Linear extrude selected: drag its height "
+                         "handle in the Front or Side view."}
+
+
+def _selected_container(scene, node):
+    """The nearest SELECTED ancestor of *node* (not *node* itself)."""
     stop = scene.scope_root()
-    probe = node
+    probe = node.parent
     while probe is not None and probe is not stop:
-        if probe.id in selected:
-            return True
+        if probe.id in scene._highlight_ids:
+            return probe
         probe = probe.parent
-    return False
+    return None
+
+
+def lock_contents(scene):
+    """Shapes inside a selected container are shown, tinted, but cannot
+    be selected, moved or resized — the container's own edit is the
+    only one (a Move drags, a Rotate turns). One `ContainerArea` per
+    container takes the clicks."""
+    groups = {}
+    for node_id, item in list(scene._items.items()):
+        node = getattr(item, "node", None)
+        if node is None or node.id in scene._highlight_ids:
+            continue
+        container = _selected_container(scene, node)
+        if container is None:
+            continue
+        item.setSelected(False)
+        item.setFlag(QGraphicsItem.ItemIsSelectable, False)
+        item.setFlag(QGraphicsItem.ItemIsMovable, False)
+        item.setAcceptedMouseButtons(Qt.NoButton)
+        groups.setdefault(container.id, (container, []))[1].append(item)
+    for container, items in groups.values():
+        area = ContainerArea(scene, container, items)
+        scene.addItem(area)
+        scene._gizmos.append(area)
+
+
+class ContainerArea(QGraphicsPathItem):
+    """The outline of what a selected container holds. A Move (or a
+    Group / Object with its own position) is dragged by it; anything
+    else only explains what to use."""
+
+    def __init__(self, scene, container, items):
+        super().__init__()
+        self._scene = scene
+        self.node = container
+        self.items = items
+        self.refresh()
+        pen = QPen(QColor(DIAL), 1.4)
+        pen.setCosmetic(True)
+        pen.setStyle(Qt.DashLine)
+        self.setPen(pen)
+        fill = QColor(DIAL)
+        fill.setAlpha(45)
+        self.setBrush(QBrush(fill))
+        self.setZValue(1e4)
+        self.movable = container.type in MOVES
+        self.setAcceptedMouseButtons(Qt.LeftButton)
+        self.setCursor(Qt.SizeAllCursor if self.movable
+                       else Qt.ArrowCursor)
+        self.setToolTip("Drag to move it" if self.movable else
+                        WHY.get(container.type, "Edit it in Properties"))
+        self._grab = None
+
+    def refresh(self):
+        """Outline the contents as they stand now."""
+        path = QPainterPath()
+        path.setFillRule(Qt.WindingFill)
+        for item in self.items:
+            path = path.united(item.sceneTransform().map(item.shape()))
+        self.setPos(0, 0)
+        self.setPath(path)
+
+    def mousePressEvent(self, event):
+        if not self.movable:
+            self._scene.status.emit(WHY.get(
+                self.node.type, f"{self.node.name} selected: edit it in "
+                "Properties — select a shape inside to edit the shape."))
+            event.accept()
+            return
+        self._grab = (self._scene.snap(event.scenePos()),
+                      [float(self.node.params.get(k, 0.0) or 0.0)
+                       for k in ("x", "y", "z")])
+        event.accept()
+
+    def mouseMoveEvent(self, event):
+        if self._grab is None:
+            return
+        start, origin = self._grab
+        delta = self._scene.snap(event.scenePos()) - start
+        local = self._scene._local_move(self.node, delta)
+        values = [round(o + d, 4) for o, d in zip(origin, local)]
+        if [self.node.params.get(k) for k in ("x", "y", "z")] != values:
+            self.node.params.update(x=values[0], y=values[1], z=values[2])
+            self._scene.model.node_changed.emit(self.node)
+        self.setPos(delta)
+        event.accept()
+
+    def mouseReleaseEvent(self, event):
+        self._grab = None
+        end_live_edit(self._scene)
+        event.accept()
 
 
 # --------------------------------------------------------- live edits
@@ -126,9 +229,12 @@ def live_update(scene):
         fresh = scene._make_silhouette(node)
         if fresh is not None:
             item.setPath(fresh.path())
+    grabbed = scene.mouseGrabberItem()
     for gizmo in scene._gizmos:
         if isinstance(gizmo, RotateDial):
             gizmo.place()
+        elif isinstance(gizmo, ContainerArea) and gizmo is not grabbed:
+            gizmo.refresh()                    # the dial turned it
     scene._part_dirty = True
 
 
@@ -154,12 +260,46 @@ def add_gizmos(scene):
     scene._gizmos.append(dial)
 
 
+def _pivot_local(scene, node):
+    from . import expr
+    env = scene.env_for(node)
+    return [expr.resolve(node.params.get(k, 0.0), env, 0.0)
+            for k in ("px", "py", "pz")]
+
+
 def _pivot(scene, node):
+    """Where the rotate turns, on the sketch: its pivot (px, py, pz,
+    the origin by default) through the transforms above it."""
     from . import mesh as mesh_mod
     from .view2d import PLANES
     (ai, bi), _keys = PLANES[scene.plane]
-    w = mesh_mod.transform_point(scene._world_matrix(node), (0, 0, 0))
+    w = mesh_mod.transform_point(scene._world_matrix(node),
+                                 tuple(_pivot_local(scene, node)))
     return QPointF(w[ai], w[bi])
+
+
+def _scene_to_pivot(scene, node, scene_pos):
+    """The pivot (px, py, pz) whose sketch position is *scene_pos*:
+    the plane's two axes solved through the transforms above the rotate,
+    the third kept."""
+    from .view2d import PLANES
+    (ai, bi), _keys = PLANES[scene.plane]
+    m = scene._world_matrix(node)
+    local = _pivot_local(scene, node)
+    # world_a = m[ai] . local + t: solve for local[ai], local[bi]
+    rest_a = sum(m[ai][k] * local[k] for k in range(3)
+                 if k not in (ai, bi)) + m[ai][3]
+    rest_b = sum(m[bi][k] * local[k] for k in range(3)
+                 if k not in (ai, bi)) + m[bi][3]
+    a11, a12 = m[ai][ai], m[ai][bi]
+    a21, a22 = m[bi][ai], m[bi][bi]
+    det = a11 * a22 - a12 * a21
+    if abs(det) < 1e-12:
+        return local
+    u, v = scene_pos.x() - rest_a, scene_pos.y() - rest_b
+    local[ai] = (a22 * u - a12 * v) / det
+    local[bi] = (-a21 * u + a11 * v) / det
+    return local
 
 
 class RotateDial(QGraphicsEllipseItem):
@@ -181,6 +321,7 @@ class RotateDial(QGraphicsEllipseItem):
         self.spoke = QGraphicsLineItem(self)
         self.spoke.setPen(QPen(QColor(DIAL), 1.2))
         self.knob = _Knob(self)
+        self.centre = _PivotHandle(self)
         self.place()
 
     def axis(self):
@@ -203,6 +344,100 @@ class RotateDial(QGraphicsEllipseItem):
         self.spoke.setLine(0, 0, tip.x(), tip.y())
         self.setToolTip(f"Rotate {self.axis()[0].upper()}: "
                         f"{self.value():g}°")
+
+
+class _PivotHandle(QGraphicsEllipseItem):
+    """The dial's centre. Dragged, it MOVES the rotated part: a Move
+    (translate) is put above the Rotate — or the one already there is
+    used — so the part and its rotation point travel together (the
+    user's own picture of it, 2026-10-19). Shift-dragged, it moves the
+    rotation point alone (the rotate's pivot), and the part then turns
+    about the new point."""
+
+    def __init__(self, dial):
+        r = KNOB_PX - 1.0
+        super().__init__(-r, -r, 2 * r, 2 * r, dial)
+        self.dial = dial
+        self.setBrush(QBrush(QColor("#ffffff")))
+        self.setPen(QPen(QColor(DIAL), 2.0))
+        self.setCursor(Qt.SizeAllCursor)
+        self.setAcceptedMouseButtons(Qt.LeftButton)
+        self.setToolTip("Drag to move the rotated part (a Move is added "
+                        "above the Rotate); Shift+drag moves only the "
+                        "rotation point")
+        self._move = None
+
+    def mousePressEvent(self, event):
+        scene = self.dial._scene
+        self._move = None
+        self._moving = not (event.modifiers() & Qt.ShiftModifier)
+        self._start = scene.snap(event.scenePos())
+        event.accept()
+
+    def mouseMoveEvent(self, event):
+        scene = self.dial._scene
+        pos = scene.snap(event.scenePos())
+        if self._moving and self._move is None:
+            # made on the first MOVE, not the press: by now this handle
+            # is the mouse grabber, so the rebuild the new node asks for
+            # waits for the release instead of deleting the handle
+            self._move = _move_above(scene, self.dial.node)
+            self._origin = [float(self._move.params.get(k, 0.0) or 0.0)
+                            for k in ("x", "y", "z")]
+        if self._move is not None:
+            d = pos - self._start
+            dx, dy, dz = _scene_delta_to_local(scene, self._move,
+                                               d.x(), d.y())
+            values = [round(o + v, 4) for o, v in
+                      zip(self._origin, (dx, dy, dz))]
+            if [self._move.params.get(k) for k in ("x", "y", "z")] != values:
+                self._move.params.update(x=values[0], y=values[1],
+                                         z=values[2])
+                scene.model.node_changed.emit(self._move)
+        else:
+            node = self.dial.node
+            px, py, pz = (round(v, 4) for v in
+                          _scene_to_pivot(scene, node, pos))
+            if [node.params.get(k, 0.0) for k in ("px", "py", "pz")] != \
+                    [px, py, pz]:
+                node.params.update(px=px, py=py, pz=pz)
+                scene.model.node_changed.emit(node)
+        self.dial.place()
+        event.accept()
+
+    def mouseReleaseEvent(self, event):
+        self._move = None
+        self._moving = False
+        end_live_edit(self.dial._scene)
+        event.accept()
+
+
+def _move_above(scene, rotate):
+    """The Move (translate) holding just this Rotate — made if there is
+    none, as the tree's own Move & transform ▸ Translate would."""
+    parent = rotate.parent
+    if parent is not None and parent.type == "translate" \
+            and len(parent.children) == 1:
+        return parent
+    return scene.model.wrap_nodes([rotate], "translate")
+
+
+def _scene_delta_to_local(scene, node, dx, dy):
+    """A sketch move (dx, dy) as the change of *node*'s own x / y / z:
+    through the inverse of the transforms ABOVE it (its own offset lives
+    in its parent's frame)."""
+    from .view2d import PLANES
+    (ai, bi), _keys = PLANES[scene.plane]
+    m = scene._world_matrix(node)
+    a11, a12 = m[ai][ai], m[ai][bi]
+    a21, a22 = m[bi][ai], m[bi][bi]
+    det = a11 * a22 - a12 * a21
+    out = [0.0, 0.0, 0.0]
+    if abs(det) < 1e-12:
+        return out
+    out[ai] = (a22 * dx - a12 * dy) / det
+    out[bi] = (-a21 * dx + a11 * dy) / det
+    return out
 
 
 class _Knob(QGraphicsEllipseItem):

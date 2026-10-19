@@ -184,6 +184,11 @@ module kcad_symmetry(n = [1, 0, 0], c = [0, 0, 0]) {
     children();
     translate(c) mirror(n) translate(-c) children();
 }""",
+    # a rotate about a pivot (the rotate node's px / py / pz)
+    "rotate_pivot": """\
+module kcad_rotate(a = [0, 0, 0], pivot = [0, 0, 0]) {
+    translate(pivot) rotate(a) translate(-pivot) children();
+}""",
     "joint": """\
 module kcad_joint(pivot = [0, 0, 0], a = [0, 0, 0], limits = [-180, 180]) {
     translate(pivot) rotate(a) translate(-pivot) children();
@@ -229,6 +234,10 @@ def preamble(root) -> list:
     for t in _ORDER:
         if t in used:
             lines.extend(HELPERS[t].split("\n"))
+    from .model import has_pivot
+    if any(n.type == "rotate" and has_pivot(n.params)
+           for n in root.walk()):
+        lines.extend(HELPERS["rotate_pivot"].split("\n"))
     if any(n.type == "color" and
            str(n.params.get("material") or "Default") != "Default"
            for n in root.walk()):
@@ -383,6 +392,16 @@ def _b_joint(parser, positional, named):
         min_angle=_num(lo, -180.0), max_angle=_num(hi, 180.0)))
 
 
+def _b_rotate_pivot(parser, positional, named):
+    from .model import CadNode
+    a = _vec3(named.get("a", positional[0] if positional else None),
+              (0.0, 0.0, 0.0))
+    pivot = _vec3(named.get("pivot", positional[1] if len(positional) > 1
+                            else None), (0.0, 0.0, 0.0))
+    return CadNode("rotate", "Rotate", dict(
+        x=a[0], y=a[1], z=a[2], px=pivot[0], py=pivot[1], pz=pivot[2]))
+
+
 def _b_paint(parser, positional, named):
     from . import paint as paint_mod
     from .model import CadNode
@@ -417,6 +436,7 @@ BUILDERS = {
     "kcad_capsule": _b_capsule, "kcad_ellipsoid": _b_ellipsoid,
     "kcad_rounded_box": _b_rounded_box, "kcad_symmetry": _b_symmetry,
     "kcad_joint": _b_joint,
+    "kcad_rotate": _b_rotate_pivot,
 }
 BUILDERS.update(bake.BUILDERS)
 BUILDERS.update(pattern.BUILDERS)

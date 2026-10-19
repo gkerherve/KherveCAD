@@ -650,7 +650,7 @@ class Compiler:
                                for c in m._if_branch(node, env)])
         if t in m._TRANSFORM_MATS:
             p = m.rp(node, env)
-            mat = m._TRANSFORM_MATS[t](p["x"], p["y"], p["z"])
+            mat = m.transform_mat(t, p)
             inner = self._children(node, env)
             return self._apply(inner, mat) if inner is not None else None
         if t == "cube":
