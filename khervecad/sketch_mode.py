@@ -17,8 +17,9 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-from PyQt5.QtCore import QEvent, QObject, Qt
-from PyQt5.QtWidgets import QAction, QPushButton
+from PyQt5.QtCore import QEvent, QObject, Qt, QTimer
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QAction, QLabel, QPushButton
 
 from . import icons, language, tooltips
 
@@ -102,8 +103,15 @@ def _show(win, sketch: bool):
     win.view3d.setVisible(not sketch or vibe)
     b = _button(win)
     b.setVisible(sketch)
+    inset = _inset(win)
+    inset.setVisible(sketch and not vibe)
     if sketch:
         b.place()
+        inset.place()
+        inset.redraw()
+        # the splitter sizes a view it just showed on the next turn
+        QTimer.singleShot(0, inset.place)
+        QTimer.singleShot(0, b.place)
 
 
 def enter(win):
@@ -145,9 +153,10 @@ def apply(win, style):
         _show(win, sketching(win))
         return
     win._sketching = False
-    b = getattr(win, "_finish_sketch", None)
-    if b is not None:
-        b.hide()
+    for name in ("_finish_sketch", "_sketch_inset"):
+        b = getattr(win, name, None)
+        if b is not None:
+            b.hide()
     vibe = bool(getattr(win, "_vibe_act", None)
                 and win._vibe_act.isChecked())
     win.view2d.setVisible(not vibe)
@@ -158,3 +167,65 @@ def after_vibe(win):
     """Vibe Model switched: in Fusion the canvas follows the sketch."""
     if active(win):
         _show(win, sketching(win))
+
+
+class Inset(QLabel):
+    """The model in 3D, small, in the sketch's bottom-right corner while
+    sketching (2026-10-19, the user: "in the right bottom corner of the
+    2D, see the 3D still"). A picture from the 3D view's own camera
+    (`View3D.snapshot`), redrawn when the model changes; a click on it
+    finishes the sketch."""
+
+    W, H = 280, 200
+
+    def __init__(self, win):
+        super().__init__(win.view2d)
+        self.win = win
+        self.setObjectName("sketchInset")
+        self.setFixedSize(self.W, self.H)
+        self.setCursor(Qt.PointingHandCursor)
+        self.setToolTip(language.tr("The model in 3D — click to finish "
+                                    "the sketch"))
+        self.setStyleSheet("#sketchInset { border: 1px solid #9aa4ad; "
+                           "border-radius: 3px; background: #e9edf1; }")
+        self._timer = QTimer(self)
+        self._timer.setSingleShot(True)
+        self._timer.setInterval(250)
+        self._timer.timeout.connect(self.redraw)
+        win.model.structure_changed.connect(self.later)
+        win.model.node_changed.connect(self.later)
+        win.view2d.installEventFilter(self)
+
+    def later(self, *args):
+        if self.isVisible():
+            self._timer.start()
+
+    def redraw(self):
+        try:                  # the 3D view's own angle, the whole model
+            img, _state = self.win.view3d.snapshot(
+                self.W - 2, self.H - 2, frame=True, zoom=0.8, clean=True)
+        except Exception:                   # never break the sketch
+            return
+        if img is not None:
+            self.setPixmap(QPixmap.fromImage(img))
+
+    def place(self):
+        area = self.win.view2d.viewport().geometry()
+        self.move(area.right() - self.W - 12, area.bottom() - self.H - 12)
+        self.raise_()
+
+    def eventFilter(self, obj, event):
+        if event.type() in (QEvent.Resize, QEvent.Show,
+                            QEvent.LayoutRequest):
+            QTimer.singleShot(0, self.place)
+        return False
+
+    def mousePressEvent(self, event):
+        finish(self.win)
+
+
+def _inset(win):
+    got = getattr(win, "_sketch_inset", None)
+    if got is None:
+        got = win._sketch_inset = Inset(win)
+    return got

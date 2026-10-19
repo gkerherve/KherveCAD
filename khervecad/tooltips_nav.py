@@ -23,6 +23,13 @@ _PAN_3D = ("Slides the camera sideways or up/down without turning the "
 
 NAV_TIPS = {
     # ------------------------------------------------------------ 2D bar
+    "nav2d_hand": (
+        "Pan (hand)",
+        "Moves the VIEW of the sketch, never the drawing: while the hand "
+        "is on, drag anywhere to slide the sketch.",
+        ["Click the hand.", "Drag in the sketch.",
+         "Click the hand again to draw or select."],
+        "Middle-mouse drag pans at any time."),
     "nav2d_left": ("Scroll left",) + _PAN_2D,
     "nav2d_right": ("Scroll right",) + _PAN_2D,
     "nav2d_up": ("Scroll up",) + _PAN_2D,

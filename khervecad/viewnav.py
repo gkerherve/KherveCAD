@@ -19,7 +19,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-from PyQt5.QtCore import QEvent, QPointF, Qt
+from PyQt5.QtCore import QEvent, QObject, QPointF, Qt
 from PyQt5.QtGui import QColor, QPainter, QPen, QPolygonF
 from PyQt5.QtWidgets import (QAbstractScrollArea, QFrame, QHBoxLayout,
                              QMenu, QToolButton, QWidget)
@@ -223,9 +223,59 @@ def focus_2d(view):
         view.fit_content()
 
 
+class HandPan(QObject):
+    """The sketch bar's hand: while on, a left drag moves the VIEW, never
+    the drawing (2026-10-19, the user: "a moving hand ... moving just the
+    drawing view"). An event filter on the viewport, so no tool sees the
+    press."""
+
+    def __init__(self, view):
+        super().__init__(view)
+        self.view = view
+        self.on = False
+        self._last = None
+        view.viewport().installEventFilter(self)
+
+    def set_on(self, on):
+        self.on = bool(on)
+        self._last = None
+        self.view.viewport().setCursor(Qt.OpenHandCursor if self.on
+                                       else Qt.ArrowCursor)
+
+    def eventFilter(self, obj, event):
+        if not self.on:
+            return False
+        kind = event.type()
+        if kind == QEvent.MouseButtonPress and \
+                event.button() == Qt.LeftButton:
+            self._last = event.pos()
+            obj.setCursor(Qt.ClosedHandCursor)
+            return True
+        if kind == QEvent.MouseMove and self._last is not None:
+            d = event.pos() - self._last
+            self._last = event.pos()
+            h = self.view.horizontalScrollBar()
+            v = self.view.verticalScrollBar()
+            h.setValue(h.value() - d.x())
+            v.setValue(v.value() - d.y())
+            return True
+        if kind == QEvent.MouseButtonRelease and self._last is not None:
+            self._last = None
+            obj.setCursor(Qt.OpenHandCursor)
+            return True
+        if kind == QEvent.MouseButtonDblClick:
+            return True
+        return False
+
+
 def attach_2d(view):
     s = PAN_STEP
+    view.hand_pan = HandPan(view)
     bar = NavBar(view, [
+        ("hand", "mdi.hand-back-right-outline", "✋", "nav2d_hand",
+         lambda: view.hand_pan.set_on(bar.buttons["hand"].isChecked()),
+         False),
+        None,
         ("left", "mdi.chevron-left", "◀", "nav2d_left",
          lambda: pan_2d(view, -s, 0), True),
         ("up", "mdi.chevron-up", "▲", "nav2d_up",
@@ -249,6 +299,7 @@ def attach_2d(view):
          "nav2d_fit",
          view.fit_content, False),
     ])
+    bar.buttons["hand"].setCheckable(True)
     view.nav_bar = bar
     return bar
 

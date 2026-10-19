@@ -247,3 +247,35 @@ def test_fusion_shows_one_canvas_and_sketches_in_place(window, app):
     app.processEvents()
     assert window.view2d.isVisible() and window.view3d.isVisible()
     assert not window._finish_sketch.isVisible()
+
+
+def test_sketch_shows_the_model_in_its_corner(window, app):
+    from khervecad import sketch_mode
+    toolbar_style.apply(window, "Fusion")
+    window.model.add_node("cube")
+    sketch_mode.enter(window)
+    app.processEvents()
+    inset = window._sketch_inset
+    assert inset.isVisible() and inset.pixmap() is not None
+    inset.mousePressEvent(None)                # a click: back to 3D
+    assert window.view3d.isVisible() and not inset.isVisible()
+
+
+def test_the_hand_pans_the_view_not_the_drawing(window, app):
+    from PyQt5.QtCore import QPoint
+    from PyQt5.QtTest import QTest
+    from PyQt5.QtCore import Qt
+    view = window.view2d
+    count = len(window.model.root.children)
+    view.nav_bar.buttons["hand"].click()
+    assert view.hand_pan.on
+    h = view.horizontalScrollBar()
+    before = h.value()
+    port = view.viewport()
+    QTest.mousePress(port, Qt.LeftButton, pos=QPoint(200, 150))
+    view.hand_pan.eventFilter(port, type("E", (), {
+        "type": lambda s: __import__("PyQt5.QtCore").QtCore.QEvent.MouseMove,
+        "pos": lambda s: QPoint(120, 150)})())
+    QTest.mouseRelease(port, Qt.LeftButton, pos=QPoint(120, 150))
+    assert h.value() != before
+    assert len(window.model.root.children) == count
