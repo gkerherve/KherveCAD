@@ -11,7 +11,8 @@ part. Qt-free; numpy.
   `spacing=` / `unit=` and the X/Y resolution tags).
   Reads classic TIFF and BigTIFF, either byte order, strips or tiles,
   uncompressed / Deflate / LZW / PackBits, horizontal predictor,
-  1/8/16/32-bit integers, 32/64-bit floats, grey, RGB(A) (as luminance),
+  1/8/16/32/64-bit integers, 16/32/64-bit floats, grey, RGB(A) (as
+  luminance),
   palette and WhiteIsZero. Thumbnails (pages of another size) are
   skipped.
 - `otsu(values)` the automatic threshold; `auto_step` the down-sampling
@@ -174,9 +175,14 @@ def _page(data, tags, bo):
     if bits == 1:
         dtype = None
     else:
-        dtype = {(1, 8): "u1", (1, 16): "u2", (1, 32): "u4",
-                 (2, 8): "i1", (2, 16): "i2", (2, 32): "i4",
-                 (3, 32): "f4", (3, 64): "f8"}.get((fmt_code, bits))
+        # 64-bit integers too: numpy / tifffile write int64 volumes
+        # (an SEM stack of 192 slices was refused for it)
+        dtype = {(1, 8): "u1", (1, 16): "u2", (1, 32): "u4", (1, 64): "u8",
+                 (2, 8): "i1", (2, 16): "i2", (2, 32): "i4", (2, 64): "i8",
+                 (3, 16): "f2", (3, 32): "f4",
+                 (3, 64): "f8"}.get((4 if fmt_code == 4 else fmt_code, bits))
+        if dtype is None and fmt_code == 4:          # "undefined": as ints
+            dtype = {8: "u1", 16: "u2", 32: "u4", 64: "u8"}.get(bits)
         if dtype is None:
             raise StackError(f"unsupported sample format {fmt_code}/{bits}")
         dtype = np.dtype(bo + dtype)

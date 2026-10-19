@@ -48,7 +48,7 @@ def write_tiff(path, pages, *, compress=False, predictor=False, big=False,
         if len(out) % 2:
             out += b"\0"
         bits = arr.dtype.itemsize * 8
-        fmt = 3 if arr.dtype.kind == "f" else 1
+        fmt = {"f": 3, "i": 2}.get(arr.dtype.kind, 1)
         entries = [(256, 4, 1, w), (257, 4, 1, h),
                    (258, 3, 1, bits), (259, 3, 1, 8 if compress else 1),
                    (262, 3, 1, 2 if rgb else 1), (273, 4, 1, doff),
@@ -123,7 +123,7 @@ def test_a_multipage_16bit_stack_reads_with_its_imagej_spacing(tmp_path):
 
 
 @pytest.mark.parametrize("kind", ["uint8_predictor", "bigtiff", "float",
-                                  "rgb"])
+                                  "rgb", "int64", "float16"])
 def test_other_tiff_flavours_read(tmp_path, kind):
     vol = sphere(n=12, r=4)
     if kind == "uint8_predictor":
@@ -136,6 +136,11 @@ def test_other_tiff_flavours_read(tmp_path, kind):
         want = vol.astype(np.float32)
     elif kind == "float":
         f = write_tiff(tmp_path / "a.tif", list(vol.astype(np.float32)))
+        want = vol.astype(np.float32)
+    elif kind in ("int64", "float16"):
+        # tifffile writes numpy's own types: an SEM stack came as int64
+        dt = np.int64 if kind == "int64" else np.float16
+        f = write_tiff(tmp_path / "a.tif", list(vol.astype(dt)))
         want = vol.astype(np.float32)
     else:
         rgb = np.repeat((vol // 4).astype(np.uint8)[..., None], 3, axis=3)
