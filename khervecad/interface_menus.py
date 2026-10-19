@@ -112,6 +112,7 @@ FUSION = [
         "file/import cad file (step/iges/rhino)",
         "file/import 2d drawing (svg/dxf)",
         "file/import height map (surface)",
+        "file/import image stack (tiff)",
         "file/import animated character (glb)", "-",
         "view/add reference image", "view/clear reference images", "-",
         "insert/part library", "library", "insert/code & files", "-",
@@ -219,6 +220,7 @@ SOLIDWORKS = [
                      "file/import cad file (step/iges/rhino)",
                      "file/import 2d drawing (svg/dxf)",
                      "file/import height map (surface)",
+                     "file/import image stack (tiff)",
                      "file/import animated character (glb)"]),
         "view/add reference image"]),
     ("&Tools", [

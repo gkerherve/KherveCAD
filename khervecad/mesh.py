@@ -34,6 +34,7 @@ _TEXT_PARAMS = {"text", "path", "variable", "condition", "update",
                 "layer", "id", "font", "halign", "valign", "direction",
                 "modifier", "options", "description", "group",
                 "collection", "library", "library_part", "cad_source",
+                "volume",
                 "bom", "welds"}
 
 #: ops the fallback can only approximate (engine renders exactly).

@@ -84,6 +84,7 @@ _NO_SNAPSHOT_TOOLS = _READ_ONLY_TOOLS | {
 #: back until the user raises the access level.
 _FILE_TOOLS = frozenset({
     "open_document", "save_document", "export_document",
+    "import_image_stack",
     "export_drawing", "export_movie", "publish_to_printables", "set_reference_image",
     "mesh_from_photo", "build_city", "import_map", "send_to_planetcraft",
     "build_creature", "list_planetcraft_creatures", "remove_from_planetcraft",

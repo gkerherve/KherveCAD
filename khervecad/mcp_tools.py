@@ -2246,6 +2246,15 @@ class McpToolExecutor:
         self._fresh()
         return self._t_get_document_info({})
 
+    def _t_import_image_stack(self, params) -> dict:
+        from . import tiffstack, tiffstack_ui
+        try:
+            out = tiffstack_ui.mcp_import(self, params)
+        except tiffstack.StackError as exc:
+            raise ToolError(str(exc))
+        self._w._dirty = True
+        return out
+
     def _t_open_document(self, params) -> dict:
         from . import scadparse
         from .engine import MESH_EXTS

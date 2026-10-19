@@ -552,6 +552,9 @@ front faces -Y and rz (0-360) turns it towards its road.
 - build_city REPLACES the city by default. To change one: get_city, \
 edit `current` (move a building, add a road...), send it back whole. \
 To add pieces to what is there, pass mode "add".
+- A TIFF image STACK (microscopy, CT, a .tif of many pages or a folder \
+of slices): import_image_stack makes it a solid by thresholding; tell \
+the user the voxel size used, and ask when the file gives none. \
 - A REAL place (a named street, village, an address): use import_map \
 with center [lat, lon] + radius_m — the app downloads OpenStreetMap \
 outlines and roads, England's LiDAR ground, building heights and trees, \

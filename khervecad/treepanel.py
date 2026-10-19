@@ -950,6 +950,16 @@ class ObjectTree(QTreeWidget):
             units.addAction(
                 language.tr(label), lambda _=False, f=factor:
                     [mi.set_scale(self.model, n, f) for n in meshes])
+        stacks = [n for n in meshes if n.params.get("volume")]
+        if len(stacks) == 1:                   # made from a TIFF stack
+            from . import tiffstack_ui
+            act = sub.addAction(
+                icons.icon("mdi.layers-triple-outline"),
+                language.tr("Image stack: threshold && detail..."),
+                lambda: tiffstack_ui.redo_dialog(self.window(), stacks[0]))
+            act.setStatusTip(language.tr(
+                "Build the solid again from its TIFF stack with another "
+                "threshold, voxel size or detail."))
         menu.addSeparator()
 
         sculpt = roots[0] if len(roots) == 1 and roots[0].type == "sculpt" \

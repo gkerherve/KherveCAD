@@ -465,6 +465,35 @@ into a new module and import.
                        (`group()` = union, multmatrix), `.amf` is a mesh
                        (`engine._parse_amf`), and export_document writes
                        .off/.amf/.csg/.svg/.dxf through OpenSCAD.
+  - `tiffstack.py` / `tiffstack_ui.py` — **TIFF image stacks as solids**
+                       (2026-10-19, the user: "TIFF files made of multiple
+                       images ... a three-dimensional block"). A multi-page
+                       TIFF (microscope, CT, ImageJ; BigTIFF), a folder of
+                       slices or a list of them is a volume (numpy, page 0
+                       at the bottom, image rows flipped so +y is up);
+                       strips / tiles, none / Deflate / LZW / PackBits,
+                       predictor, 1-32-bit ints, floats, RGB, palette,
+                       WhiteIsZero; thumbnails (pages of another size)
+                       skipped; voxel size from ImageJ `unit=` / `spacing=`
+                       and the resolution tags (72/96/300 dpi alone is no
+                       scale). `surface`: block-average by `step`
+                       (`auto_step` under `TARGET_VOXELS`), optional 3³ box
+                       smooth, threshold (Otsu, `otsu`, the MIDDLE of a flat
+                       optimum), a pad voxel MIRRORING the edge so a solid
+                       touching the block closes exactly at its edge (a
+                       fixed pad put it a voxel out), `sdf.mesh_values_np`,
+                       stood on z = 0. File ▸ Import Image Stack (TIFF),
+                       File ▸ Open / drop of .tif: `StackDialog` (slice
+                       viewer with the solid tinted, threshold + Auto, dark
+                       objects, voxel size, down-sample, smooth) -> `build`:
+                       an Object holding an `stl_import` of
+                       "<stem>_volume_<settings hash>.stl" beside the stack
+                       (cache folder if read-only), settings on the node as
+                       `params["volume"]` (in `mesh._TEXT_PARAMS`), right-
+                       click ▸ Imported mesh ▸ Image stack rebuilds it. An
+                       EMPTY mm document with µm voxels switches to µm; the
+                       surface is written in the document unit. MCP
+                       `import_image_stack` (a file tool).
   - `svgdxf.py`      — Qt-free SVG (paths with every command incl. arcs,
                        rect/circle/ellipse/polygon, nested transforms,
                        viewBox + physical size or dpi, y flipped, hidden
@@ -4870,7 +4899,7 @@ into a new module and import.
                        what each SHIPPED .kcad compiles to and pins the
                        files to the generator (`python -m
                        khervecad.tools.print_tests --check`).
-  - `mcp_schema.py`  — the **MCP tool table**: 98 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 104 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -5501,7 +5530,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **98 tools**: the object tree, OpenSCAD in
+client gets the whole app as **104 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.

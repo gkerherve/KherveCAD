@@ -240,6 +240,15 @@ class MainWindow(QMainWindow):
         file_menu.addAction(icons.icon("mdi.image-filter-hdr"),
                             self.tr("Import &Height Map (surface)..."),
                             self.import_surface)
+        # a TIFF stack (microscope, CT, ImageJ) as a solid (tiffstack.py)
+        stack_act = file_menu.addAction(
+            icons.icon("mdi.layers-triple-outline"),
+            self.tr("Import Image &Stack (TIFF)..."),
+            lambda: __import__("khervecad.tiffstack_ui", fromlist=["_"])
+            .import_dialog(self))
+        stack_act.setStatusTip(self.tr(
+            "A multi-page TIFF (or a folder of slices) as a 3D block: what "
+            "is brighter than a threshold becomes a solid."))
         from . import character_ui
         file_menu.addAction(icons.icon("mdi.human-handsup"),
                             self.tr("Import Animated C&haracter (GLB)..."),
@@ -1924,6 +1933,9 @@ class MainWindow(QMainWindow):
             self._import_drawing_path(path)
         elif ext == ".dat":
             self._import_surface_path(path)
+        elif ext in (".tif", ".tiff"):        # an image stack -> a solid
+            from . import tiffstack_ui
+            tiffstack_ui.import_dialog(self, [path])
         elif ext == ".cif":                   # a crystal structure
             from . import crystal_build
             try:
@@ -1941,13 +1953,14 @@ class MainWindow(QMainWindow):
                     "KherveCAD can open .kcad, .scad, .csg, mesh files "
                     "(.stl/.obj/.off/.3mf/.amf/.glb), CAD files "
                     "(.step/.iges/.3dm/.brep), 2D drawings "
-                    "(.svg/.dxf) and height maps (.dat) — not "
-                    "{ext}.").format(ext=ext or language.tr("this type")))
+                    "(.svg/.dxf), height maps (.dat) and TIFF image "
+                    "stacks (.tif) — not {ext}.").format(ext=ext or language.tr("this type")))
 
     # ------------------------------------------------------ drag & drop
     _DROP_EXTS = (".kcad", ".scad", ".csg", ".stl", ".obj", ".off", ".3mf",
                   ".amf", ".svg", ".dxf", ".dat", ".step", ".stp",
-                  ".iges", ".igs", ".3dm", ".brep", ".cif")
+                  ".iges", ".igs", ".3dm", ".brep", ".cif", ".tif",
+                  ".tiff")
 
     def _dropped_file(self, event):
         """The first supported local file in a file drag, or None."""

@@ -2851,6 +2851,45 @@ TOOLS = [
         }),
     },
     {
+        "name": "import_image_stack",
+        "description": (
+            "Import a TIFF IMAGE STACK — a multi-page TIFF (microscope, "
+            "CT / MRI, ImageJ, BigTIFF), a folder of TIFF slices, or a list "
+            "of them in order — as a 3D solid: the pages are slices of a "
+            "block, every voxel brighter than `threshold` (darker with "
+            "invert) is solid, and its closed surface lands as one Object "
+            "holding an imported STL written beside the stack. threshold "
+            "'auto' (default) is Otsu's; voxel_size [x, y, z] mm defaults "
+            "to the file's own (ImageJ spacing / resolution tags) else 1; "
+            "step down-samples (default: under ~3 M voxels); smooth "
+            "(default true) removes speckle. Returns the triangles, the "
+            "size in mm and the node ids; render_view to look at it."
+        ),
+        "input_schema": _obj({
+            "path": {"type": "string",
+                     "description": "A TIFF file or a folder of them."},
+            "paths": {"type": "array", "items": {"type": "string"},
+                      "description": "Single-image TIFFs, one per slice "
+                                     "(sorted by name)."},
+            "threshold": {"description": "A number, or 'auto'.",
+                          "anyOf": [{"type": "number"},
+                                    {"type": "string", "enum": ["auto"]}]},
+            "invert": {"type": "boolean",
+                       "description": "Solid where DARKER than the "
+                                      "threshold."},
+            "voxel_size": {"description": "mm a voxel: one number or "
+                                          "[x, y, z].",
+                           "anyOf": [{"type": "number"},
+                                     {"type": "array",
+                                      "items": {"type": "number"},
+                                      "minItems": 3, "maxItems": 3}]},
+            "step": {"type": "integer", "minimum": 1,
+                     "description": "Down-sampling (average step³ "
+                                    "voxels)."},
+            "smooth": {"type": "boolean"},
+        }),
+    },
+    {
         "name": "open_document",
         "description": (
             "Open a .kcad document, import a .scad (or OpenSCAD .csg) "
