@@ -45,7 +45,8 @@ TABS = [
     ("sketch", "SKETCH", "Sketch", ["sketch", "sketch_modify",
                                     "sketch_insert"]),
     ("features", "SOLID", "Features",
-     ["create", "extrude", "transform", "combine", "finish", "logic", "assemble"]),
+     ["create", "extrude", "transform", "combine", "finish", "logic",
+      "assemble", "document"]),
     ("form", "FORM", "Sculpt", ["deform", "edit"]),
     ("character", "CHARACTER", "Character", ["character"]),
     ("inspect", "INSPECT", "Evaluate",
@@ -56,7 +57,7 @@ TABS = [
 ]
 
 #: panels that are not operation families: key -> title
-EXTRA_PANELS = {"checks": "Evaluate", "dimension": "Dimension",
+EXTRA_PANELS = {"document": "Document", "checks": "Evaluate", "dimension": "Dimension",
                 "builders": "Builders", "sketch": "Create", "create": "Create",
                 "sketch_modify": "Modify", "sketch_insert": "Insert",
                 "assemble": "Assemble", "edit": "Edit mesh",
@@ -81,6 +82,8 @@ MENU_PANELS = {
                ("analyse/check welds", "mdi.fire"),
                ("view/compare to reference image (overlay)",
                 "mdi.image-filter-center-focus")],
+    "document": [("edit/common segments ($fn)", "kc:common_segments"),
+                 ("edit/document units", "mdi.ruler-square")],
     "dimension": [("tools/measure & annotate/add dimension", None),
                   ("view/dimensions on selection", "mdi.ruler"),
                   ("view/clear dimensions", "mdi.eraser")],
@@ -88,7 +91,7 @@ MENU_PANELS = {
 #: panels whose tools all show, names under the icons (few, big tools)
 FUSION_NAMED = {"builders"}
 #: panels whose every tool shows as an icon (the INSPECT tab has room)
-FUSION_ALL = {"analyse", "checks", "dimension"}
+FUSION_ALL = {"analyse", "checks", "dimension", "document"}
 FUSION_SHOWN_MANY = 4
 #: icons shown by panels with a count of their own
 PANEL_SHOWN = {"sketch": 10, "sketch_modify": 5}
@@ -171,6 +174,11 @@ def sketch_extra(win):
     return acts
 
 
+def self_style(win):
+    style = getattr(win, "_interface_style", "Fusion")
+    return style if style in ("Fusion", "SolidWorks") else "Fusion"
+
+
 def panel_actions(win, key):
     """(title, actions) of panel *key*."""
     parts = win._bar_parts
@@ -193,7 +201,15 @@ def panel_actions(win, key):
             act = paths.get(path)
             if act is None:
                 continue
-            if act.icon().isNull() and glyph:
+            if glyph and glyph.startswith("kc:"):
+                from . import icons_cad
+                act.setData(glyph[3:])
+                painted = icons_cad.icon(glyph[3:], self_style(win))
+                if painted is not None:
+                    act.setIcon(painted)
+                toolbars.remember_glyph(act, "mdi.circle-slice-8",
+                                        "measure")
+            elif act.icon().isNull() and glyph:
                 act.setIcon(icons.icon(glyph, icons.family_color("measure")))
                 toolbars.remember_glyph(act, glyph, "measure")
             acts.append(act)

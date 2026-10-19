@@ -81,7 +81,9 @@ _COLOURS = {
 
 
 def saved() -> str:
-    name = QSettings(*_SETTINGS).value(SETTING, DEFAULT)
+    import os
+    name = os.environ.get("KHERVECAD_INTERFACE_STYLE") or \
+        QSettings(*_SETTINGS).value(SETTING, DEFAULT)
     return name if name in STYLES else DEFAULT
 
 

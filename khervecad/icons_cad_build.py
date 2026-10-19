@@ -269,3 +269,25 @@ def _tab_code(d):
                     (0.66, 0.42, d.pal.sketch), (0.80, 0.22, d.pal.edge)):
         d.line(QPointF(0.30 + (0.06 if 0.5 < y < 0.75 else 0), y),
                QPointF(0.30 + w, y), c, 0.055)
+
+
+@draws("common_segments")
+def _segments(d):
+    """Common segments ($fn): a faceted cylinder with its facets lit
+    one by one, an orange polygon ring on top."""
+    n = 8
+    ring = [(0.85 * math.cos(2 * math.pi * (i + 0.5) / n),
+             0.85 * math.sin(2 * math.pi * (i + 0.5) / n)) for i in range(n)]
+    h = 1.2
+    for i in range(n):              # side facets, back ones first
+        a, b = ring[i], ring[(i + 1) % n]
+        mid = (a[0] + b[0]) / 2.0 - (a[1] + b[1]) / 2.0
+        if (a[0] + b[0]) + (a[1] + b[1]) <= 0:
+            continue
+        d.faces([([(a[0], a[1], 0), (b[0], b[1], 0), (b[0], b[1], h),
+                   (a[0], a[1], h)], 1.25 - 0.25 * mid)])
+    top = [d.P(x, y, h) for x, y in ring]
+    d.poly(top, shade(d.pal.body, 1.4))
+    d.poly(top, None, color=d.pal.make, width=0.06)
+    for q in top:
+        d.disc(q, 0.035, d.pal.make)

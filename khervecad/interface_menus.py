@@ -93,7 +93,7 @@ FUSION = [
         "tools/deform & sculpt", "tools/character",
         "tools/edit vertices (edit mode)", "-",
         "view/customizer (sliders)", "edit/document units",
-        "edit/document scale (1 : n)"]),
+        "edit/document scale (1 : n)", "edit/common segments ($fn)"]),
     ("&Assemble", [
         "insert/new object", "tools/snap objects",
         "view/gumball (move / turn handles)", "-", "view/exploded view",
@@ -249,6 +249,7 @@ SOLIDWORKS = [
         "view/customizer (sliders)", "view/animate ($t)", "-",
         ("Add-&Ins", ["ai", "git"]),
         ("&Options", ["edit/document units", "edit/document scale (1 : n)",
+                      "edit/common segments ($fn)",
                       "edit/locate openscad", "edit/language"])]),
     ("&Window", [
         "file/new window", "-", "view/customizer (sliders)",

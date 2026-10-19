@@ -257,6 +257,11 @@ def style_panel(win, style):
     """The left panel's tabs: icons (SolidWorks), capitals under a
     BROWSER caption (Fusion), or as they were."""
     panel = win.builder
+    # the $fn row lives in Edit / Modify ▸ Common Segments there
+    for w in (getattr(panel, "fn_check", None),
+              getattr(panel, "fn_spin", None)):
+        if w is not None:
+            w.setVisible(style not in ("Fusion", "SolidWorks"))
     saved = win.__dict__.setdefault("_tab_texts", [
         (panel.tabText(i), panel.tabIcon(i)) for i in range(panel.count())])
     old = panel.cornerWidget(Qt.TopLeftCorner)

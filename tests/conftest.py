@@ -24,7 +24,13 @@ os.environ["KHERVECAD_USER_LIBRARY"] = tempfile.mkdtemp(
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-import pytest  # noqa: E402
+import pytest
+
+# Fusion is the app's default; the tests were written for the classic
+# bars. Asked through the environment, NOT the settings: those are the
+# user's own, and writing "KherveCAD" there switched their app back to
+# the classic look every time the suite ran
+os.environ.setdefault("KHERVECAD_INTERFACE_STYLE", "KherveCAD")  # noqa: E402
 
 #: persisted view options that change what a fresh View3D paints or how
 #: fit() frames — a platform switched on in the real app made pixel and
@@ -72,9 +78,6 @@ def _fresh_blueprint_settings():
                 # later test windows with Fusion's menus and toolbars
                 "interface_style", "ribbon/tab"):
         settings.remove(key)
-    # Fusion is the app's default now; the tests were written for the
-    # classic bars, so each starts classic unless it switches
-    settings.setValue("interface_style", "KherveCAD")
     yield
 
 

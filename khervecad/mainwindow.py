@@ -356,6 +356,11 @@ class MainWindow(QMainWindow):
                             "Ctrl+Shift+G")
         edit_menu.addSeparator()
         edit_menu.addAction(self.tr("Document &Units..."), self.choose_unit)
+        # the Main tab's $fn row, as a menu item: the Fusion / SolidWorks
+        # browser hides that row (2026-10-19, the user: not a browser
+        # thing), the setting itself still matters
+        edit_menu.addAction(self.tr("Common Se&gments ($fn)..."),
+                            self.choose_segments)
         edit_menu.addAction(self.tr("Document &Scale (1 : N)..."),
                             self.choose_scale)
         edit_menu.addAction(self.tr("&Locate OpenSCAD..."),
@@ -1572,6 +1577,19 @@ class MainWindow(QMainWindow):
         self.view3d.set_projection(name)
         for act in self._proj_group.actions():
             act.setChecked(act.text() == self.view3d.projection)
+
+    def choose_segments(self):
+        """Edit ▸ Common Segments: one $fn for every round object."""
+        from PyQt5.QtWidgets import QInputDialog
+        b = self.builder
+        value, ok = QInputDialog.getInt(
+            self, self.tr("Common segments ($fn)"),
+            self.tr("Segments for every round object (0 = each its own):"),
+            b.fn_spin.value() if b.fn_check.isChecked() else 0, 0, 512)
+        if ok:
+            if value >= 3:
+                b.fn_spin.setValue(value)
+            b.fn_check.setChecked(value >= 3)
 
     def set_vibe_model(self, on: bool):
         """Vibe Model: the object tree, Properties, the 2D sketch, the

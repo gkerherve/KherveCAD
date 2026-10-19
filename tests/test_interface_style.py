@@ -46,7 +46,8 @@ def _menu_actions(win):
     return acts
 
 
-def test_fusion_is_the_default_style(app):
+def test_fusion_is_the_default_style(app, monkeypatch):
+    monkeypatch.delenv("KHERVECAD_INTERFACE_STYLE", raising=False)
     QSettings("Kherve", "KherveCAD").remove(toolbar_style.SETTING)
     assert toolbar_style.saved() == "Fusion"
 
