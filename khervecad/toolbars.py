@@ -519,17 +519,27 @@ def build_tools_menu(win, menu):
         def run(_=False):
             importlib.import_module("khervecad." + module).open_builder(win)
         return run
-    for glyph, label, module in (
-            ("mdi.home-city-outline", "&House Builder...", "house_dialog"),
-            ("mdi.city-variant-outline", "C&ity Builder...", "city_dialog"),
-            ("mdi.human-handsup", "H&uman Builder...", "human_dialog"),
-            ("mdi.car-sports", "Ca&r Builder...", "car_dialog"),
-            ("mdi.toy-brick-outline", "&Lego Builder...", "lego_builder"),
-            ("mdi.atom", "Cr&ystal Builder...", "crystal_dialog"),
-            ("mdi.molecule", "C&ompound Builder...", "molecule_dialog"),
-            ("mdi.flask-outline", "C&hemistry Builder...", "chem_dialog")):
+    for glyph, label, module, key in (
+            ("mdi.home-city-outline", "&House Builder...", "house_dialog",
+             "house_builder"),
+            ("mdi.city-variant-outline", "C&ity Builder...", "city_dialog",
+             "city_builder"),
+            ("mdi.human-handsup", "H&uman Builder...", "human_dialog",
+             "human_builder"),
+            ("mdi.car-sports", "Ca&r Builder...", "car_dialog",
+             "car_builder"),
+            ("mdi.toy-brick-outline", "&Lego Builder...", "lego_builder",
+             "lego_builder"),
+            ("mdi.atom", "Cr&ystal Builder...", "crystal_dialog",
+             "crystal_builder"),
+            ("mdi.molecule", "C&ompound Builder...", "molecule_dialog",
+             "compound_builder"),
+            ("mdi.flask-outline", "C&hemistry Builder...", "chem_dialog",
+             "chemistry_builder")):
         act = menu.addAction(icons.icon(glyph, icons.family_color(
             "build")), language.tr(label), _builder(module))
+        act.setData(key)
+        remember_glyph(act, glyph, "build")
         # the ribbon's BUILD tab shows these same actions
         win.__dict__.setdefault("_builder_actions", []).append(act)
     figures = menu.addMenu(icons.icon("mdi.human", icons.family_color(

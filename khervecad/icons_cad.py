@@ -698,16 +698,7 @@ def _snap(d):
             0.12)
 
 
-@draws("house_builder")
-def _house(d):
-    d.box(-0.7, -0.7, 0, 1.4, 1.4, 0.7, QColor("#e9d9b8"))
-    roof = QColor("#c0533a")
-    d.faces([([(-0.8, 0.8, 0.7), (0.8, 0.8, 0.7), (0.8, 0, 1.4),
-               (-0.8, 0, 1.4)], 1.1),
-             ([(0.8, -0.8, 0.7), (0.8, 0.8, 0.7), (0.8, 0, 1.4)], 0.8)],
-            roof)
-    d.faces([([(0.7, -0.15, 0), (0.7, 0.15, 0), (0.7, 0.15, 0.45),
-               (0.7, -0.15, 0.45)], 0.6)], QColor("#7a5230"))
+# house_builder and the other builders: icons_cad_build.py
 
 
 # ================================================================ render
@@ -768,7 +759,7 @@ def pixmap(key, size, style):
 
 def icon(key, style):
     """The painted *style* icon for toolbar *key*, or None."""
-    from . import icons_cad_more  # noqa: F401  (registers the rest)
+    from . import icons_cad_more, icons_cad_build  # noqa: F401
     if style not in PALETTES or key not in DRAW:
         return None
     got = _CACHE.get((key, style))
