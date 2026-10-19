@@ -42,10 +42,10 @@ TABS = [
     # the vertical bar's tools live on the ribbon too (2026-10-19, the
     # user: Fusion has no tool column — sketching is a tab of its own)
     # grouped like Fusion's SKETCH tab (CREATE / MODIFY / INSERT)
-    ("sketch", "SKETCH", "Sketch", ["sketch", "sketch_modify",
-                                    "sketch_insert"]),
+    ("sketch", "SKETCH", "Sketch", ["sketch", "sketch_shapes",
+                                    "sketch_modify", "sketch_insert"]),
     ("features", "SOLID", "Features",
-     ["create", "extrude", "transform", "combine", "finish", "logic",
+     ["create", "shapes3d", "extrude", "transform", "combine", "finish", "logic",
       "assemble", "document"]),
     ("form", "FORM", "Sculpt", ["deform", "edit"]),
     ("character", "CHARACTER", "Character", ["character"]),
@@ -57,7 +57,8 @@ TABS = [
 ]
 
 #: panels that are not operation families: key -> title
-EXTRA_PANELS = {"document": "Document", "checks": "Evaluate", "dimension": "Dimension",
+EXTRA_PANELS = {"sketch_shapes": "Shapes", "shapes3d": "Shapes",
+                "document": "Document", "checks": "Evaluate", "dimension": "Dimension",
                 "builders": "Builders", "sketch": "Create", "create": "Create",
                 "sketch_modify": "Modify", "sketch_insert": "Insert",
                 "assemble": "Assemble", "edit": "Edit mesh",
@@ -82,6 +83,16 @@ MENU_PANELS = {
                ("analyse/check welds", "mdi.fire"),
                ("view/compare to reference image (overlay)",
                 "mdi.image-filter-center-focus")],
+    # Insert ▸ Shapes & patterns on the ribbon too (the user, same day)
+    "sketch_shapes": [
+        ("insert/shapes & patterns/regular polygon / star", None),
+        ("insert/shapes & patterns/rounded polygon (radius per corner)",
+         "mdi.vector-polygon"),
+        ("insert/shapes & patterns/bézier shape (closed)", None),
+        ("insert/shapes & patterns/svg path shape", None),
+        ("insert/shapes & patterns/honeycomb panel (2d)", None)],
+    "shapes3d": [("insert/shapes & patterns/3d curve", None),
+                 ("insert/shapes & patterns/regular polyhedron", None)],
     "document": [("edit/common segments ($fn)", "kc:common_segments"),
                  ("edit/document units", "mdi.ruler-square")],
     "dimension": [("tools/measure & annotate/add dimension", None),
@@ -91,7 +102,8 @@ MENU_PANELS = {
 #: panels whose tools all show, names under the icons (few, big tools)
 FUSION_NAMED = {"builders"}
 #: panels whose every tool shows as an icon (the INSPECT tab has room)
-FUSION_ALL = {"analyse", "checks", "dimension", "document"}
+FUSION_ALL = {"analyse", "checks", "dimension", "document",
+              "sketch_shapes", "shapes3d"}
 FUSION_SHOWN_MANY = 4
 #: icons shown by panels with a count of their own
 PANEL_SHOWN = {"sketch": 11, "sketch_modify": 5}
@@ -217,8 +229,9 @@ def panel_actions(win, key):
                 toolbars.remember_glyph(act, "mdi.circle-slice-8",
                                         "measure")
             elif act.icon().isNull() and glyph:
-                act.setIcon(icons.icon(glyph, icons.family_color("measure")))
-                toolbars.remember_glyph(act, glyph, "measure")
+                family = "draw" if key.startswith("sketch") else "measure"
+                act.setIcon(icons.icon(glyph, icons.family_color(family)))
+                toolbars.remember_glyph(act, glyph, family)
             acts.append(act)
         return title, acts
     if key == "sketch_modify":

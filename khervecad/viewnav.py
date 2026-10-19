@@ -271,7 +271,7 @@ class HandPan(QObject):
 def attach_2d(view):
     view.hand_pan = HandPan(view)
     bar = NavBar(view, [
-        ("hand", "mdi.hand-back-right-outline", "✋", "nav2d_hand",
+        ("hand", "mdi6.hand-back-right-outline", "✋", "nav2d_hand",
          lambda: view.hand_pan.set_on(bar.buttons["hand"].isChecked()),
          False),
         None,
@@ -500,7 +500,7 @@ def attach_3d(view):
         None,
         # the hand replaces the four pan arrows (2026-10-19, the user:
         # "useless because we can use this hand")
-        ("hand", "mdi.hand-back-right-outline", "✋", "nav3d_hand",
+        ("hand", "mdi6.hand-back-right-outline", "✋", "nav3d_hand",
          lambda: view.hand_pan.set_on(bar.buttons["hand"].isChecked()),
          False),
         None,
