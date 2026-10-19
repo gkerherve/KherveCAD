@@ -273,24 +273,52 @@ class Mini2D(QLabel):
             self._timer.start()
 
     def redraw(self):
-        from PyQt5.QtGui import QColor, QPainter
-        from PyQt5.QtCore import QRectF
+        """The sketch view itself, drawn off screen and shrunk: its grid
+        (when on), axes, colours and selection exactly as it shows (a
+        bare scene render looked nothing like it — the user)."""
+        from PyQt5.QtCore import QSize
+        from PyQt5.QtWidgets import QWidget
+        view = self.win.view2d
         try:
-            scene = self.win.view2d.scene()
-            box = scene.itemsBoundingRect()
-            if box.isEmpty():
-                box = QRectF(-50, -50, 100, 100)
-            m = max(box.width(), box.height()) * 0.08 + 1
-            box = box.adjusted(-m, -m, m, m)
-            pix = QPixmap(self.W - 2, self.H - 2)
-            pix.fill(QColor("#ffffff"))
-            p = QPainter(pix)
-            p.setRenderHint(QPainter.Antialiasing, True)
-            # the scene is Y-up: draw it flipped like the sketch view
-            p.translate(0, pix.height())
-            p.scale(1, -1)
-            scene.render(p, QRectF(pix.rect()), box, Qt.KeepAspectRatio)
-            p.end()
+            if view.isHidden():
+                # a view never shown has no size of its own yet: give it
+                # the canvas's, framed once round the drawing
+                size = self.win.view3d.size()
+                if view.size() != size:
+                    view.resize(size)
+                    if not getattr(view, "_mini_fitted", False):
+                        view._mini_fitted = True
+                        view.fit_content()
+            # the whole view, its floating bars left out
+            bars = [w for w in view.findChildren(QWidget)
+                    if w.parent() is view and w is not view.viewport()
+                    and not w.isHidden()
+                    and w.objectName() not in ("qt_scrollarea_hscrollbar",
+                                               "qt_scrollarea_vscrollbar")]
+            for w in bars:
+                w.hide()
+            try:
+                view.ensurePolished()
+                if view.isHidden():
+                    view.setAttribute(Qt.WA_DontShowOnScreen, True)
+                    view.show()          # lays the viewport out, off screen
+                    view.hide()
+                    view.setAttribute(Qt.WA_DontShowOnScreen, False)
+                port = view.viewport()
+                pix = QPixmap(port.size())
+                pix.fill(Qt.white)
+                port.render(pix, flags=QWidget.RenderFlags(
+                    QWidget.DrawWindowBackground))
+            finally:
+                for w in bars:
+                    w.show()
+            pix = pix.scaled(QSize(self.W - 2, self.H - 2),
+                             Qt.KeepAspectRatioByExpanding,
+                             Qt.SmoothTransformation)
+            # centred crop to the frame
+            x = (pix.width() - (self.W - 2)) // 2
+            y = (pix.height() - (self.H - 2)) // 2
+            pix = pix.copy(x, y, self.W - 2, self.H - 2)
         except Exception:                   # never break the 3D view
             return
         self.setPixmap(pix)
