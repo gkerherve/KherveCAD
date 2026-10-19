@@ -47,14 +47,17 @@ TABS = [
     ("form", "FORM", "Sculpt", ["deform", "edit"]),
     ("character", "CHARACTER", "Character", ["character"]),
     ("inspect", "INSPECT", "Evaluate", ["analyse", "documents"]),
+    # every builder window (2026-10-19, the user: "where are all the
+    # builders?") — the Tools menu's Builders section
+    ("build", "BUILD", "Builders", ["builders"]),
 ]
 
 #: panels that are not operation families: key -> title
-EXTRA_PANELS = {"sketch": "Sketch", "create": "Create",
+EXTRA_PANELS = {"builders": "Builders", "sketch": "Sketch", "create": "Create",
                 "assemble": "Assemble", "edit": "Edit mesh",
                 "analyse": "Analyse", "documents": "Documents"}
 #: SolidWorks panels whose tools are all large buttons
-ALL_LARGE = {"assemble", "edit", "analyse", "documents"}
+ALL_LARGE = {"builders", "assemble", "edit", "analyse", "documents"}
 
 #: icon sizes (px)
 FUSION_ICON = QSize(26, 26)
@@ -63,6 +66,8 @@ SW_SMALL = QSize(18, 18)
 #: icons a Fusion panel shows before the rest wait in its ▾ menu, by
 #: how many panels share the tab (a tab of one panel has room for more)
 FUSION_SHOWN = {1: 12, 2: 7}
+#: panels whose tools all show, names under the icons (few, big tools)
+FUSION_NAMED = {"builders"}
 FUSION_SHOWN_MANY = 4
 
 #: tips for the analysis actions made here (the menu items they copy
@@ -130,11 +135,14 @@ def panel_actions(win, key):
     if key == "sketch":
         return title, [a for a in win._tool_group.actions()
                        if a.data() != MEASURE]
+    if key == "builders":
+        return title, list(getattr(win, "_builder_actions", []))
     if key == "create":
         drawing = set(win._tool_group.actions())
         return title, [a for a in win._tools_bar.actions()
                        if not a.isSeparator() and a not in drawing
-                       and a.text() and a.data() is not None]
+                       and a.text() and a.data() is not None
+                       and a.data() != "house_builder"]
     if key == "edit":
         return title, [win._edit_mesh_act]
     if key == "documents":
@@ -292,22 +300,27 @@ class Ribbon(QWidget):
             if self.fusion:
                 shown = FUSION_SHOWN.get(len(panels), FUSION_SHOWN_MANY)
                 row.addWidget(self._fusion_panel(page, title,
-                                                 actions, shown))
+                                                 actions, shown,
+                                                 key in FUSION_NAMED))
             else:
                 row.addWidget(self._sw_panel(page, key, actions))
         row.addStretch(1)
         return page
 
-    def _fusion_panel(self, page, title, actions, shown):
+    def _fusion_panel(self, page, title, actions, shown, named=False):
         panel = QWidget(page)
         col = QVBoxLayout(panel)
         col.setContentsMargins(2, 0, 2, 0)
         col.setSpacing(0)
         icons_row = QHBoxLayout()
         icons_row.setSpacing(1)
-        for act in actions[:shown]:
-            icons_row.addWidget(_button(act, FUSION_ICON,
-                                        Qt.ToolButtonIconOnly, panel))
+        for act in (actions if named else actions[:shown]):
+            b = _button(act, FUSION_ICON, Qt.ToolButtonTextUnderIcon
+                        if named else Qt.ToolButtonIconOnly, panel)
+            if named:      # "House Builder..." reads "House"
+                b.setText(_plain(re.sub(r"\s*Builder\.*$", "",
+                                        act.text().replace("&", ""))))
+            icons_row.addWidget(b)
         icons_row.addStretch(1)
         col.addLayout(icons_row)
         label = QToolButton(panel)

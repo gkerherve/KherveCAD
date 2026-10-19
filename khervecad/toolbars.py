@@ -528,8 +528,10 @@ def build_tools_menu(win, menu):
             ("mdi.atom", "Cr&ystal Builder...", "crystal_dialog"),
             ("mdi.molecule", "C&ompound Builder...", "molecule_dialog"),
             ("mdi.flask-outline", "C&hemistry Builder...", "chem_dialog")):
-        menu.addAction(icons.icon(glyph, icons.family_color("build")),
-                       language.tr(label), _builder(module))
+        act = menu.addAction(icons.icon(glyph, icons.family_color(
+            "build")), language.tr(label), _builder(module))
+        # the ribbon's BUILD tab shows these same actions
+        win.__dict__.setdefault("_builder_actions", []).append(act)
     figures = menu.addMenu(icons.icon("mdi.human", icons.family_color(
         "character")), language.tr("Add a &figure"))
     figures.setToolTipsVisible(True)
