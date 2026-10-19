@@ -46,14 +46,16 @@ TABS = [
      ["create", "extrude", "transform", "combine", "finish", "logic", "assemble"]),
     ("form", "FORM", "Sculpt", ["deform", "edit"]),
     ("character", "CHARACTER", "Character", ["character"]),
-    ("inspect", "INSPECT", "Evaluate", ["analyse", "documents"]),
+    ("inspect", "INSPECT", "Evaluate",
+     ["analyse", "checks", "dimension", "documents"]),
     # every builder window (2026-10-19, the user: "where are all the
     # builders?") — the Tools menu's Builders section
     ("build", "BUILD", "Builders", ["builders"]),
 ]
 
 #: panels that are not operation families: key -> title
-EXTRA_PANELS = {"builders": "Builders", "sketch": "Sketch", "create": "Create",
+EXTRA_PANELS = {"checks": "Evaluate", "dimension": "Dimension",
+                "builders": "Builders", "sketch": "Sketch", "create": "Create",
                 "assemble": "Assemble", "edit": "Edit mesh",
                 "analyse": "Analyse", "documents": "Documents"}
 #: SolidWorks panels whose tools are all large buttons
@@ -66,8 +68,24 @@ SW_SMALL = QSize(18, 18)
 #: icons a Fusion panel shows before the rest wait in its ▾ menu, by
 #: how many panels share the tab (a tab of one panel has room for more)
 FUSION_SHOWN = {1: 12, 2: 7}
+#: the Inspect menu's other commands on the INSPECT tab (2026-10-19,
+#: the user: the menu had far more than the tab): classic menu path,
+#: glyph for an item that has no icon of its own
+MENU_PANELS = {
+    "checks": [("analyse/heat map", "mdi.thermometer"),
+               ("analyse/check sharp edges", "mdi.angle-acute"),
+               ("analyse/check fits & tolerances", "mdi.arrow-collapse-horizontal"),
+               ("analyse/check welds", "mdi.fire"),
+               ("view/compare to reference image (overlay)",
+                "mdi.image-filter-center-focus")],
+    "dimension": [("tools/measure & annotate/add dimension", None),
+                  ("view/dimensions on selection", "mdi.ruler"),
+                  ("view/clear dimensions", "mdi.eraser")],
+}
 #: panels whose tools all show, names under the icons (few, big tools)
 FUSION_NAMED = {"builders"}
+#: panels whose every tool shows as an icon (the INSPECT tab has room)
+FUSION_ALL = {"analyse", "checks", "dimension"}
 FUSION_SHOWN_MANY = 4
 
 #: tips for the analysis actions made here (the menu items they copy
@@ -135,6 +153,19 @@ def panel_actions(win, key):
     if key == "sketch":
         return title, [a for a in win._tool_group.actions()
                        if a.data() != MEASURE]
+    if key in MENU_PANELS:
+        from .interface_menus import index
+        paths = index(win)
+        acts = []
+        for path, glyph in MENU_PANELS[key]:
+            act = paths.get(path)
+            if act is None:
+                continue
+            if act.icon().isNull() and glyph:
+                act.setIcon(icons.icon(glyph, icons.family_color("measure")))
+                toolbars.remember_glyph(act, glyph, "measure")
+            acts.append(act)
+        return title, acts
     if key == "builders":
         return title, list(getattr(win, "_builder_actions", []))
     if key == "create":
@@ -170,6 +201,9 @@ def _button(action, size, style, parent):
     b.setIconSize(size)
     b.setToolButtonStyle(style)
     b.setAutoRaise(True)
+    if action.menu() is not None:      # a submenu (Heat Map): opens on click
+        b.setPopupMode(QToolButton.InstantPopup)
+        b.setStyleSheet("QToolButton::menu-indicator { image: none; }")
     if style != Qt.ToolButtonIconOnly:
         b.setText(_plain(short_name(action.text())))
     return b
@@ -299,6 +333,8 @@ class Ribbon(QWidget):
             title, actions = panel_actions(self.win, key)
             if self.fusion:
                 shown = FUSION_SHOWN.get(len(panels), FUSION_SHOWN_MANY)
+                if key in FUSION_ALL:
+                    shown = len(actions)
                 row.addWidget(self._fusion_panel(page, title,
                                                  actions, shown,
                                                  key in FUSION_NAMED))
