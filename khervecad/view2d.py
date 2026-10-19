@@ -22,7 +22,7 @@ from PyQt5.QtWidgets import (QGraphicsEllipseItem, QGraphicsItem,
                              QGraphicsPolygonItem, QGraphicsRectItem,
                              QGraphicsScene, QGraphicsView)
 
-from . import expr, units
+from . import expr, language, units
 from .model import SHAPE_2D, SHAPE_3D, CadNode, DocumentModel
 
 SELECT, LINE, RECT, CIRCLE, POLYGON, TEXT, MEASURE, DIMENSION = (
@@ -673,6 +673,7 @@ class SketchScene(QGraphicsScene):
     measure_changed = pyqtSignal(str)         # live mm readout
     plane_changed = pyqtSignal(str)           # view auto-switched plane
     status = pyqtSignal(str)                  # note for the status bar
+    polygon_changed = pyqtSignal(int)         # points placed (0 = none)
 
     def __init__(self, model: DocumentModel, parent=None):
         super().__init__(-2000, -2000, 4000, 4000, parent)
@@ -689,6 +690,7 @@ class SketchScene(QGraphicsScene):
         self._draft = None                     # item being drawn
         self._draft_start = None
         self._poly_points = []
+        self._poly_items = []                  # its rubber band + markers
         self._part_dirty = False
         self._highlight_ids = set()            # selected nodes
         self._highlight_items = []
@@ -713,6 +715,7 @@ class SketchScene(QGraphicsScene):
         if plane in PLANES and plane != self.plane:
             self.plane = plane
             self.clear_measure()               # points belong to a plane
+            self.drop_drafts()
             self.rebuild()
 
     # ------------------------------------------------------------ sync
@@ -1557,6 +1560,15 @@ class SketchScene(QGraphicsScene):
             event.accept()
             return
         pos = self.snap(event.scenePos())
+        if self.tool == POLYGON and event.button() == Qt.RightButton:
+            if len(self._poly_points) >= 3:
+                self.finish_polygon()             # right-click finishes
+            elif self._poly_points:
+                self.status.emit(language.tr(
+                    "A polygon needs at least 3 points — keep clicking, or "
+                    "Esc to cancel."))
+            event.accept()
+            return
         if event.button() != Qt.LeftButton or self.tool == SELECT:
             if (self.tool == SELECT and event.button() == Qt.LeftButton
                     and self._isolated()
@@ -1582,8 +1594,19 @@ class SketchScene(QGraphicsScene):
             self._draft = self.addEllipse(QRectF(pos, pos),
                                           _pen("#2176c7"))
         elif self.tool == POLYGON:
+            from . import polygon_draw
+            if polygon_draw.near_first(self, event.scenePos()):
+                self.finish_polygon()          # back on the first point
+                event.accept()
+                return
+            if not self._poly_points:
+                self.status.emit(language.tr(
+                    "Polygon: click to add points; finish by clicking the "
+                    "first point, right-click, Enter or Finish below. "
+                    "Backspace takes a point back, Esc cancels."))
             self._poly_points.append(pos)
             self._update_poly_draft(pos)
+            self.polygon_changed.emit(len(self._poly_points))
         elif self.tool == TEXT:
             node = self._create("text", dict(x=pos.x(), y=pos.y()))
             self.node_created.emit(node)
@@ -1673,20 +1696,58 @@ class SketchScene(QGraphicsScene):
         super().mouseDoubleClickEvent(event)
 
     def _update_poly_draft(self, cursor):
+        from . import polygon_draw
+        self._clear_poly_items()
+        if not self._poly_points:
+            return
+        for path, pen, fill in polygon_draw.draft_items(self, cursor):
+            item = self.addPath(path, pen)
+            if fill is not None:
+                item.setBrush(fill)
+            item.setZValue(1e6)
+            item.setAcceptedMouseButtons(Qt.NoButton)
+            self._poly_items.append(item)
+
+    def _clear_poly_items(self):
+        for item in self._poly_items:
+            if item.scene() is self:
+                self.removeItem(item)
+        self._poly_items = []
+
+    def undo_polygon_point(self):
+        """Take the last polygon point back (Backspace, the bar)."""
+        if not self._poly_points:
+            return
+        self._poly_points.pop()
+        cursor = self._poly_points[-1] if self._poly_points else None
+        if cursor is None:
+            self._clear_poly_items()
+        else:
+            self._update_poly_draft(cursor)
+        self.polygon_changed.emit(len(self._poly_points))
+
+    def drop_drafts(self):
+        """Throw away whatever is half drawn — a polygon's points and
+        rubber band, a line / rectangle / circle being dragged. Changing
+        tool or plane does this: before, the half-drawn shape's line
+        stayed on the sketch as a dead line nothing could select or
+        delete, and the points came back with the polygon tool."""
+        had = bool(self._poly_points)
+        self._poly_points = []
+        self._clear_poly_items()
         if self._draft is not None:
-            self.removeItem(self._draft)
-        path = QPainterPath(self._poly_points[0])
-        for point in self._poly_points[1:]:
-            path.lineTo(point)
-        path.lineTo(cursor)
-        self._draft = self.addPath(path, _pen("#2176c7"))
+            if self._draft.scene() is self:
+                self.removeItem(self._draft)
+            self._draft = None
+        self._draft_start = None
+        if had:
+            self.polygon_changed.emit(0)
 
     def finish_polygon(self):
         points = self._poly_points
         self._poly_points = []
-        if self._draft is not None:
-            self.removeItem(self._draft)
-            self._draft = None
+        self._clear_poly_items()
+        self.polygon_changed.emit(0)
         if len(points) < 3:
             return
         origin = points[0]
@@ -1697,11 +1758,7 @@ class SketchScene(QGraphicsScene):
         self.node_created.emit(node)
 
     def cancel_tool(self):
-        self._poly_points = []
-        if self._draft is not None:
-            self.removeItem(self._draft)
-            self._draft = None
-        self._draft_start = None
+        self.drop_drafts()
         self.clear_measure()
 
     def delete_selection(self):
@@ -1731,6 +1788,8 @@ class SketchView(QGraphicsView):
         self.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
         self.scale(4, -4)                     # Y up, sensible start zoom
         self.centerOn(30, 20)
+        from . import polygon_draw
+        polygon_draw.attach(self)              # Finish / Undo / Cancel bar
 
     def px_per_mm(self) -> float:
         """Pixels per model unit (a millimetre unless the document says
@@ -1777,6 +1836,8 @@ class SketchView(QGraphicsView):
         scene = self.scene()
         if tool not in (MEASURE, DIMENSION):
             scene.clear_measure()
+        if tool != scene.tool:
+            scene.drop_drafts()                # nothing half drawn left
         scene.tool = tool
         if tool == SELECT:
             self.setDragMode(QGraphicsView.RubberBandDrag)
@@ -2051,6 +2112,9 @@ class SketchView(QGraphicsView):
         return best
 
     def contextMenuEvent(self, event):
+        if self.scene().tool == POLYGON:
+            event.accept()                     # right-click finished it
+            return
         model = self.scene().model
         dims = getattr(model, "dimensions", [])
         if not dims:
@@ -2206,6 +2270,9 @@ class SketchView(QGraphicsView):
         elif event.key() in (Qt.Key_Return, Qt.Key_Enter) and \
                 scene.tool == POLYGON:
             scene.finish_polygon()
+        elif event.key() == Qt.Key_Backspace and scene.tool == POLYGON \
+                and scene._poly_points:
+            scene.undo_polygon_point()
         elif event.key() == Qt.Key_Delete:
             scene.delete_selection()
         else:

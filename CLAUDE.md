@@ -2906,6 +2906,18 @@ into a new module and import.
                        reads in mm: scale bar, live size while
                        drawing, zoom indicator, Fit Sketch / Zoom to
                        Selection. Middle-mouse drag pans; wheel zooms.
+  - `polygon_draw.py` — drawing a polygon in the sketch (2026-10-19, the
+                       user: an "end" always shown, close by): a Finish /
+                       Undo point / Cancel bar at the bottom of the view
+                       while points are placed (`PolygonBar`, attached by
+                       `SketchView`), the first point a ring that turns
+                       green when a click there would close it
+                       (`near_first`, `CLOSE_PX`), right-click finishes,
+                       Backspace takes a point back. The draft lives in
+                       `SketchScene._poly_items`; `drop_drafts` clears any
+                       half-drawn shape whenever the tool or plane changes —
+                       before, a polygon left mid-way stayed on the sketch
+                       as a dead line nothing could select or delete.
   - `bsp.py`         — **BSP tree** for the 3D preview's painter's
                        algorithm: built once per mesh (on a worker
                        thread, see `View3D.set_mesh`), it splits
