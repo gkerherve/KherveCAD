@@ -27,7 +27,7 @@ def window(app):
     win.resize(1500, 900)
     win.show()
     yield win
-    toolbar_style.apply(win, toolbar_style.DEFAULT)
+    toolbar_style.apply(win, toolbar_style.CLASSIC)
     QSettings("Kherve", "KherveCAD").remove(toolbar_style.SETTING)
     win._dirty = False
     win.close()
@@ -46,7 +46,21 @@ def _menu_actions(win):
     return acts
 
 
-def test_classic_is_the_default_and_has_no_ribbon(window):
+def test_fusion_is_the_default_style(app):
+    QSettings("Kherve", "KherveCAD").remove(toolbar_style.SETTING)
+    assert toolbar_style.saved() == "Fusion"
+
+
+def test_fusion_puts_the_3d_nav_bar_bottom_centre(window, app):
+    toolbar_style.apply(window, "Fusion")
+    app.processEvents()
+    bar = window.view3d.nav_bar
+    assert bar.anchor == "bottom-centre"
+    toolbar_style.apply(window, "KherveCAD")
+    assert bar.anchor == "top-right"
+
+
+def test_classic_has_no_ribbon(window):
     assert toolbar_style.current(window) == "KherveCAD"
     assert getattr(window, "ribbon", None) is None
     assert set(window._op_groups) == {k for k, _ops

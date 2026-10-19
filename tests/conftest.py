@@ -72,6 +72,9 @@ def _fresh_blueprint_settings():
                 # later test windows with Fusion's menus and toolbars
                 "interface_style", "ribbon/tab"):
         settings.remove(key)
+    # Fusion is the app's default now; the tests were written for the
+    # classic bars, so each starts classic unless it switches
+    settings.setValue("interface_style", "KherveCAD")
     yield
 
 

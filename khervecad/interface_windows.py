@@ -292,3 +292,13 @@ def style_views(win, style, dark):
         view.background = back if back in view3d.BACKGROUNDS else "Slate"
     view.update()
     win.view2d.viewport().update()
+
+
+def style_nav(win, style):
+    """Fusion keeps its 3D navigation bar centred along the bottom of
+    the canvas; the other styles keep it top-right."""
+    bar = getattr(win.view3d, "nav_bar", None)
+    if bar is None:
+        return
+    bar.anchor = "bottom-centre" if style == "Fusion" else "top-right"
+    bar.place()

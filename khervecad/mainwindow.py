@@ -182,7 +182,7 @@ class MainWindow(QMainWindow):
         # Fusion / SolidWorks look (View ▸ Interface Style): toolbars,
         # menus, windows — after the menus and their hover help exist
         from . import toolbar_style
-        if toolbar_style.saved() != toolbar_style.DEFAULT:
+        if toolbar_style.saved() != toolbar_style.CLASSIC:
             toolbar_style.apply(self, remember=False)
         self._update_title()
         self._refresh_preview()
@@ -1588,6 +1588,8 @@ class MainWindow(QMainWindow):
                 act.setVisible(not on)
         if getattr(self, "ribbon", None) is not None:   # Fusion/SolidWorks
             self._ribbon_bar.setVisible(not on)
+            if getattr(self, "_interface_style", "") == "Fusion":
+                self._options_bar.setVisible(on)
         act = getattr(self, "_vibe_act", None)
         if act is not None and act.isChecked() != on:
             act.blockSignals(True)

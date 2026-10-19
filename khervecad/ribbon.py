@@ -201,9 +201,17 @@ class Ribbon(QWidget):
         tab_row.setContentsMargins(6 if self.fusion else 4, 0, 4, 0)
         tab_row.setSpacing(8)
         if self.fusion:
+            # file and undo on the tabs' own line, like KherveTeX: no
+            # separate quick-access row above the ribbon
+            self.quick = self._quick_buttons(win)
+            for b in self.quick:
+                tab_row.addWidget(b)
             tab_row.addWidget(self._workspace_button())
         tab_row.addWidget(self.tabs)
         tab_row.addStretch(1)
+        if self.fusion and getattr(win, "_vibe_act", None) is not None:
+            tab_row.addWidget(_button(win._vibe_act, QSize(18, 18),
+                                      Qt.ToolButtonIconOnly, self))
         if self.fusion:
             outer.addLayout(tab_row)
             outer.addWidget(self.stack)
@@ -219,6 +227,17 @@ class Ribbon(QWidget):
         self.tabs.setCurrentIndex(index)
         self.stack.setCurrentIndex(index)
         self.tabs.currentChanged.connect(self._tab_changed)
+
+    def _quick_buttons(self, win):
+        parts = getattr(win, "_bar_parts", {})
+        out = []
+        for group in ("file", "undo"):
+            for act in parts.get(group, []):
+                out.append(_button(act, QSize(18, 18),
+                                   Qt.ToolButtonIconOnly, self))
+            if out and group == "file":
+                out.append(_separator(self))
+        return out
 
     # ------------------------------------------------------------ tabs
     def _tab_changed(self, index):

@@ -117,7 +117,12 @@ class NavBar(QWidget):
     def place(self):
         self.adjustSize()
         area = self._area()
-        self.move(area.right() - self.width() - 8, area.top() + 8)
+        if getattr(self, "anchor", "top-right") == "bottom-centre":
+            # Fusion's navigation bar: centred along the canvas' foot
+            self.move(area.left() + (area.width() - self.width()) // 2,
+                      area.bottom() - self.height() - 10)
+        else:
+            self.move(area.right() - self.width() - 8, area.top() + 8)
         self.raise_()
 
 

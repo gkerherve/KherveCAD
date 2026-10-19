@@ -34,7 +34,11 @@ from PyQt5.QtWidgets import QLabel, QSizePolicy, QToolBar, QWidget
 from . import language
 
 STYLES = ("KherveCAD", "Fusion", "SolidWorks")
-DEFAULT = "KherveCAD"
+#: the original KherveCAD toolbars and menus
+CLASSIC = "KherveCAD"
+#: what a new installation starts in (2026-10-19, the user: make the
+#: Fusion look the default)
+DEFAULT = "Fusion"
 #: the menu's words for each style
 LABELS = {"KherveCAD": "KherveCAD (classic)", "Fusion": "Fusion",
           "SolidWorks": "SolidWorks"}
@@ -82,7 +86,7 @@ def saved() -> str:
 
 
 def current(win) -> str:
-    return getattr(win, "_interface_style", DEFAULT)
+    return getattr(win, "_interface_style", CLASSIC)
 
 
 def _dark() -> bool:
@@ -262,7 +266,7 @@ def _style_vertical(win, name):
         bar.removeAction(act)
         act.deleteLater()
     win._tool_captions = []
-    if name == DEFAULT:
+    if name == CLASSIC:
         from .toolbars import ICON_SIZE
         bar.setStyleSheet("")
         bar.setIconSize(ICON_SIZE)
@@ -293,7 +297,7 @@ def restyle_icons(win, name):
             continue
         if act not in classic:
             classic[act] = act.icon()
-        if name == DEFAULT:
+        if name == CLASSIC:
             act.setIcon(classic[act])
             continue
         key = act.data()
@@ -308,7 +312,7 @@ def restyle_icons(win, name):
 def restyle(win):
     """Colours again (the theme changed light <-> dark); layout kept."""
     name = current(win)
-    if name == DEFAULT:
+    if name == CLASSIC:
         return
     from . import interface_windows
     interface_windows.apply_stylesheet(name, _dark())
@@ -332,14 +336,14 @@ def apply(win, name: str = None, remember: bool = True):
     _style_vertical(win, name)
     # icons BEFORE the ribbon: a changed action makes its buttons take
     # the action's text again, which drops the ribbon's short names
-    if name != DEFAULT:
+    if name != CLASSIC:
         from .ribbon import analysis_actions
         analysis_actions(win)
     restyle_icons(win, name)
     bar = win._options_bar
     _clear(bar)
     ribbon_bar = getattr(win, "_ribbon_bar", None)
-    if name == DEFAULT:
+    if name == CLASSIC:
         from .toolbars import ICON_SIZE, fill_classic
         fill_classic(win, bar)
         bar.setStyleSheet("")
@@ -348,6 +352,7 @@ def apply(win, name: str = None, remember: bool = True):
             _clear(ribbon_bar)
             ribbon_bar.hide()
         win.ribbon = None
+        bar.show()
     else:
         from .ribbon import Ribbon
         _fill_quick(win, bar)
@@ -359,6 +364,9 @@ def apply(win, name: str = None, remember: bool = True):
         ribbon_bar.addWidget(win.ribbon)
         ribbon_bar.setStyleSheet(_qss_ribbon(name, colours(name)))
         ribbon_bar.show()
+        # Fusion: file / undo / Vibe sit on the ribbon's tab line; the
+        # quick row only comes back in Vibe Model, when the ribbon hides
+        bar.setVisible(name != "Fusion")
     # the rest of the program: menus organised like the program the
     # style imitates, the windows' look, the views' backgrounds
     from . import interface_menus, interface_windows
@@ -366,9 +374,10 @@ def apply(win, name: str = None, remember: bool = True):
             win.menuBar().actions():
         interface_menus.build(win, name)
     interface_windows.apply_stylesheet(
-        None if name == DEFAULT else name, _dark())
+        None if name == CLASSIC else name, _dark())
     interface_windows.style_panel(win, name)
     interface_windows.style_views(win, name, _dark())
+    interface_windows.style_nav(win, name)
     if vibe:
         win.set_vibe_model(True)
     for act in getattr(win, "_interface_style_group", None) and \
