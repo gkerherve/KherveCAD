@@ -759,7 +759,7 @@ def pixmap(key, size, style):
 
 def icon(key, style):
     """The painted *style* icon for toolbar *key*, or None."""
-    from . import icons_cad_more, icons_cad_build  # noqa: F401
+    from . import icons_cad_more, icons_cad_build, icons_cad_sketch  # noqa
     if style not in PALETTES or key not in DRAW:
         return None
     got = _CACHE.get((key, style))

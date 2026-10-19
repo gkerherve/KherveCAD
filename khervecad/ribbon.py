@@ -41,7 +41,9 @@ TAB_KEY = "ribbon/tab"
 TABS = [
     # the vertical bar's tools live on the ribbon too (2026-10-19, the
     # user: Fusion has no tool column — sketching is a tab of its own)
-    ("sketch", "SKETCH", "Sketch", ["sketch"]),
+    # grouped like Fusion's SKETCH tab (CREATE / MODIFY / INSERT)
+    ("sketch", "SKETCH", "Sketch", ["sketch", "sketch_modify",
+                                    "sketch_insert"]),
     ("features", "SOLID", "Features",
      ["create", "extrude", "transform", "combine", "finish", "logic", "assemble"]),
     ("form", "FORM", "Sculpt", ["deform", "edit"]),
@@ -55,7 +57,8 @@ TABS = [
 
 #: panels that are not operation families: key -> title
 EXTRA_PANELS = {"checks": "Evaluate", "dimension": "Dimension",
-                "builders": "Builders", "sketch": "Sketch", "create": "Create",
+                "builders": "Builders", "sketch": "Create", "create": "Create",
+                "sketch_modify": "Modify", "sketch_insert": "Insert",
                 "assemble": "Assemble", "edit": "Edit mesh",
                 "analyse": "Analyse", "documents": "Documents"}
 #: SolidWorks panels whose tools are all large buttons
@@ -87,6 +90,10 @@ FUSION_NAMED = {"builders"}
 #: panels whose every tool shows as an icon (the INSPECT tab has room)
 FUSION_ALL = {"analyse", "checks", "dimension"}
 FUSION_SHOWN_MANY = 4
+#: icons shown by panels with a count of their own
+PANEL_SHOWN = {"sketch": 10, "sketch_modify": 5}
+#: the sketch MODIFY panel: operations from the families, in this order
+SKETCH_MODIFY = ["translate", "rotate", "scale", "mirror", "pattern"]
 
 #: tips for the analysis actions made here (the menu items they copy
 #: have none of their own)
@@ -139,6 +146,31 @@ def analysis_actions(win):
     return acts
 
 
+def sketch_extra(win):
+    """Offset (the sketch's own MODIFY tool, in no family) and Import
+    2D drawing — made once per window."""
+    acts = getattr(win, "_sketch_actions", None)
+    if acts is not None:
+        return acts
+    from .model import NODE_TYPES
+    spec = NODE_TYPES["offset"]
+    acts = {}
+    for key, glyph, text, slot, family in (
+            ("offset", spec["icon"], spec["label"],
+             lambda: win._apply_operation("offset"), "transform"),
+            ("import_2d", "mdi.svg", "Import 2D drawing",
+             win.import_drawing, "draw")):
+        act = QAction(icons.icon(glyph, icons.family_color(family)),
+                      language.tr(text), win)
+        act.setData(key)
+        toolbars.remember_glyph(act, glyph, family)
+        tooltips.apply(act, key)
+        act.triggered.connect(lambda _=False, f=slot: f())
+        acts[key] = act
+    win._sketch_actions = acts
+    return acts
+
+
 def panel_actions(win, key):
     """(title, actions) of panel *key*."""
     parts = win._bar_parts
@@ -166,6 +198,12 @@ def panel_actions(win, key):
                 toolbars.remember_glyph(act, glyph, "measure")
             acts.append(act)
         return title, acts
+    if key == "sketch_modify":
+        ops = {a.data(): a for _k, fam in parts["families"] for a in fam}
+        return title, [sketch_extra(win)["offset"]] + [
+            ops[k] for k in SKETCH_MODIFY if k in ops]
+    if key == "sketch_insert":
+        return title, [sketch_extra(win)["import_2d"]]
     if key == "builders":
         return title, list(getattr(win, "_builder_actions", []))
     if key == "create":
@@ -332,7 +370,8 @@ class Ribbon(QWidget):
                 row.addWidget(_separator(page))
             title, actions = panel_actions(self.win, key)
             if self.fusion:
-                shown = FUSION_SHOWN.get(len(panels), FUSION_SHOWN_MANY)
+                shown = PANEL_SHOWN.get(
+                    key, FUSION_SHOWN.get(len(panels), FUSION_SHOWN_MANY))
                 if key in FUSION_ALL:
                     shown = len(actions)
                 row.addWidget(self._fusion_panel(page, title,

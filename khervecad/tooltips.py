@@ -61,6 +61,65 @@ TIPS = {
          "Release. In Properties, Angle 180 makes a semicircle, 90 a "
          "quarter; Segments sets how smooth it is."],
         "A circle inside a Difference cuts a round hole."),
+    "rect_center": (
+        "Center rectangle",
+        "Draws a rectangle from its centre out — a plate centred on a "
+        "hole or on the origin.",
+        ["Click (or press) at the centre.",
+         "Click (or release) at a corner; the rectangle is twice that "
+         "far each way.",
+         "Becomes an ordinary rectangle: edit Width/Height in "
+         "Properties."],
+        None),
+    "arc_center": (
+        "Center point arc",
+        "Draws a pie slice of a circle — a sector from a centre, a "
+        "start and an end, counter-clockwise.",
+        ["Click the centre.", "Click where the arc starts (sets the "
+         "radius).", "Click where it ends.",
+         "It is a circle with Start angle and Angle in Properties."],
+        None),
+    "arc_3pt": (
+        "3-point arc",
+        "Draws the area between an arc and its chord through three "
+        "points — a D-shape, a rounded end, a lens.",
+        ["Click the start.", "Click the end.",
+         "Click a point the arc passes through."],
+        "Becomes a polygon; edit its points in Properties."),
+    "ellipse": (
+        "Ellipse",
+        "Draws an ellipse from its centre and a corner of its box.",
+        ["Click the centre.", "Click a corner: the half widths are the "
+         "distances along X and Y."],
+        "It is a circle inside a Scale — change the scale to stretch it."),
+    "slot": (
+        "Slot",
+        "Draws a slot (a stadium shape) centre to centre — for "
+        "adjustable bolt holes and guides.",
+        ["Click the first end's centre.", "Click the other end's centre.",
+         "Click to the side to set the width."],
+        "It is a Line of that width (the hull of two circles): change "
+        "its ends or width in Properties."),
+    "spline": (
+        "Spline",
+        "Draws a smooth closed curve through the points you click — "
+        "organic outlines, cams, logos.",
+        ["Click each point the curve passes through.",
+         "Enter, right-click or double-click finishes (3 points or more).",
+         "Backspace takes a point back, Esc cancels."],
+        "Becomes a polygon of the smoothed curve."),
+    "offset": (
+        "Offset",
+        "Grows or shrinks the selected 2D shapes by a distance, rounding "
+        "or keeping the corners — walls round an outline, clearances.",
+        ["Select 2D shapes.", "Click Offset.",
+         "Set r (round) or delta (sharp) in Properties; negative "
+         "shrinks."],
+        None),
+    "import_2d": (
+        "Import 2D drawing",
+        "Reads an SVG or DXF outline into the document.",
+        ["Click and pick the file."], None),
     "polygon": (
         "Polygon",
         "Draws any straight-sided outline, one corner at a time — "

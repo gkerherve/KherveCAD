@@ -1634,6 +1634,10 @@ class SketchScene(QGraphicsScene):
                 self.drop_drafts()             # right-click: never mind
             event.accept()
             return
+        from . import sketch_tools
+        if sketch_tools.handles(self.tool):
+            sketch_tools.press(self, event)
+            return
         if self.tool == POLYGON and event.button() == Qt.RightButton:
             if len(self._poly_points) >= 3:
                 self.finish_polygon()             # right-click finishes
@@ -1695,6 +1699,10 @@ class SketchScene(QGraphicsScene):
                 self.update()
             event.accept()
             return
+        from . import sketch_tools
+        if sketch_tools.handles(self.tool):
+            sketch_tools.move(self, event)
+            return
         pos = self.snap(event.scenePos())
         if self._draft is not None and self._draft_start is not None:
             start = self._draft_start
@@ -1737,6 +1745,10 @@ class SketchScene(QGraphicsScene):
             self._after_release()
 
     def _release(self, event):
+        from . import sketch_tools
+        if sketch_tools.handles(self.tool):
+            sketch_tools.release(self, event)
+            return
         if self._swallow_release:              # the click that ended it
             self._swallow_release = False
             event.accept()
@@ -1802,6 +1814,10 @@ class SketchScene(QGraphicsScene):
             self.node_created.emit(node)
 
     def mouseDoubleClickEvent(self, event):
+        from . import sketch_tools
+        if sketch_tools.handles(self.tool):
+            sketch_tools.double_click(self, event)
+            return
         if self.tool == POLYGON and len(self._poly_points) >= 3:
             self.finish_polygon()
             event.accept()
@@ -1845,6 +1861,8 @@ class SketchScene(QGraphicsScene):
         tool or plane does this: before, the half-drawn shape's line
         stayed on the sketch as a dead line nothing could select or
         delete, and the points came back with the polygon tool."""
+        from . import sketch_tools
+        sketch_tools.drop(self)
         had = bool(self._poly_points)
         self._poly_points = []
         self._clear_poly_items()
@@ -2226,7 +2244,9 @@ class SketchView(QGraphicsView):
         return best
 
     def contextMenuEvent(self, event):
-        if self.scene().tool == POLYGON:
+        from . import sketch_tools
+        if self.scene().tool == POLYGON or \
+                sketch_tools.handles(self.scene().tool):
             event.accept()                     # right-click finished it
             return
         model = self.scene().model
@@ -2382,6 +2402,7 @@ class SketchView(QGraphicsView):
 
     def keyPressEvent(self, event):
         from PyQt5.QtGui import QKeySequence
+        from . import sketch_tools
         scene = self.scene()
         if event.key() == Qt.Key_Q:
             self.step_object.emit(-1)         # Q: up / previous
@@ -2395,6 +2416,9 @@ class SketchView(QGraphicsView):
             self.clipboard_op.emit("paste")
         elif event.key() == Qt.Key_Escape:
             scene.cancel_tool()
+        elif sketch_tools.handles(scene.tool) and \
+                sketch_tools.key(scene, event):
+            pass
         elif event.key() in (Qt.Key_Return, Qt.Key_Enter) and \
                 scene.tool == POLYGON:
             scene.finish_polygon()

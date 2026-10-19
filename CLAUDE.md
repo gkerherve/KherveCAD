@@ -3002,6 +3002,21 @@ into a new module and import.
                        be wrapped in a new Move by a drag. Tests reset
                        `interface_style` per test (conftest): the user's own
                        running KherveCAD shares the settings.
+  - `sketch_tools.py` — Fusion's other SKETCH ▸ CREATE tools
+                       (2026-10-19): centre rectangle (`rect`), centre-
+                       point arc (`circle` start_angle + angle), 3-point
+                       arc (`polygon` segment), ellipse (`scale` over a
+                       `circle`), slot (a `line` of that width — the
+                       importer reads a hull of two circles back as one)
+                       and spline (closed Catmull-Rom `polygon`; Enter /
+                       right-click / double-click). Clicks, a drag = two;
+                       hooked from SketchScene's mouse / key / drop_drafts.
+                       In the tool group, Insert ▸ 2D Shapes and the
+                       ribbon, not on the classic bar. The ribbon's SKETCH
+                       tab is CREATE / MODIFY (Offset + move, rotate,
+                       scale, mirror, pattern) / INSERT (Import 2D
+                       drawing): `ribbon.sketch_extra`. Icons in
+                       `icons_cad_sketch.py`.
   - `polygon_draw.py` — drawing a polygon in the sketch (2026-10-19, the
                        user: an "end" always shown, close by): a Finish /
                        Undo point / Cancel bar at the bottom of the view
@@ -5635,6 +5650,11 @@ curvature / zebra analysis (`surface_analysis.py`) and Make2D
 the tree, network surfaces with G1/G2 continuity, SubD -> NURBS export,
 object snaps and a construction plane for EVERY tool (today they serve
 curve drawing), push/pull on exact faces, layers in Rhino's sense.
+
+**Fusion SKETCH tab** (2026-10-19): the creation tools landed
+(`sketch_tools.py`); still missing are **sketch constraints** (a 2D
+solver: coincident / parallel / tangent / equal / driven dimensions),
+trim / extend / fillet of sketch corners, and conics.
 
 **SolidWorks gap list** (asked 2026-09-12). Landed the same day: the
 OpenGL viewer (`glrender.py`), the other mates (flush / concentric /

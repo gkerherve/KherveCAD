@@ -200,6 +200,14 @@ def build_tool_bar(win):
             if win._tool_sections[-1][1] is None:
                 win._tool_sections[-1] = (win._tool_sections[-1][0], act)
         bar.addSeparator()
+    # Fusion's other SKETCH ▸ CREATE tools (sketch_tools.py): in the tool
+    # group, the ribbon and Insert ▸ 2D Shapes, not on the classic bar
+    from . import sketch_tools
+    for tool, glyph, label, shortcut in sketch_tools.TOOLS:
+        act = _action(win, glyph, label, tool,
+                      lambda _=False, t=tool: win._set_tool(t),
+                      shortcut, checkable=True, family="draw")
+        win._tool_group.addAction(act)
     win._tool_group.actions()[0].setChecked(True)
     for prim in BAR_PRIMITIVES:
         spec = NODE_TYPES[prim]
@@ -414,7 +422,8 @@ def build_insert_menu(win, menu):
                           language.tr("&2D Shapes"))
     shapes.setToolTipsVisible(True)
     by_key = {a.data(): a for a in win._tool_group.actions()}
-    for tool, _glyph, _label, _key in TOOLS[1:]:          # not Select
+    from . import sketch_tools
+    for tool, _glyph, _label, _key in TOOLS[1:] + sketch_tools.TOOLS:
         shapes.addAction(by_key[tool])
     solids = menu.addMenu(icons.icon("mdi.cube-outline"),
                           language.tr("3D &Solids"))
