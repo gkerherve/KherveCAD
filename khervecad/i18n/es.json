@@ -2401,5 +2401,7 @@
   "Insert ▸ SubD Box, or select a solid and Tools ▸ Convert to SubD.": "Insertar ▸ Caja SubD, o selecciona un sólido y Herramientas ▸ Convertir en SubD.",
   "Press Tab over the 3D view: Edit Mode opens the CAGE. Drag points, E extrudes a face, the surface follows.": "Pulsa Tab sobre la vista 3D: el modo Edición abre la JAULA. Arrastra puntos, E extruye una cara y la superficie la sigue.",
   "Smoothness, crease angle and creased edges are in Properties.": "La suavidad, el ángulo de pliegue y las aristas plegadas están en Propiedades.",
-  "Tick Show the cage too to see it while you work outside Edit Mode.": "Marca Mostrar también la jaula para verla fuera del modo Edición."
+  "Tick Show the cage too to see it while you work outside Edit Mode.": "Marca Mostrar también la jaula para verla fuera del modo Edición.",
+  "Paths": "Rutas",
+  "One outline per row, as point numbers (counted from 0). An outline inside another is a hole. Empty: every point, in order.": "Un contorno por fila, como números de punto (contados desde 0). Un contorno dentro de otro es un agujero. Vacío: todos los puntos, en orden."
 }

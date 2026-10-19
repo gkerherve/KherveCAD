@@ -546,10 +546,19 @@ def test_points_table_sizes_to_rows_up_to_15(app):
     from khervecad.properties import PointsEditor
     small = PointsEditor([[0, 0], [1, 0], [1, 1], [0, 1]], lambda p: None)
     big = PointsEditor([[i, i] for i in range(30)], lambda p: None)
-    header = small.table.horizontalHeader().sizeHint().height()
-    r = PointsEditor._ROW_H
-    assert small.table.height() == header + 4 * r + 6      # all 4 rows
-    assert big.table.height() == header + 15 * r + 6       # capped at 15
+    for ed in (small, big):
+        ed.resize(300, 800)
+        ed.show()
+    app.processEvents()
+    # every row shows with no scroll bar of its own (a guessed 22 px a
+    # row came up short where rows are taller, and 3 points scrolled)
+    assert not small.table.verticalScrollBar().isVisible()
+    rows = sum(small.table.rowHeight(i) for i in range(4))
+    assert small.table.height() >= rows + \
+        small.table.horizontalHeader().height()
+    # capped at 15 rows: thirty points scroll inside the table
+    assert big.table.verticalScrollBar().maximum() > 0
+    assert big.table.height() < 30 * big.table.rowHeight(0)
 
 
 def test_selecting_whole_difference_omits_subtracted_tools(model):

@@ -2401,5 +2401,7 @@
   "Insert ▸ SubD Box, or select a solid and Tools ▸ Convert to SubD.": "Insertion ▸ Boîte SubD, ou sélectionnez un solide puis Outils ▸ Convertir en SubD.",
   "Press Tab over the 3D view: Edit Mode opens the CAGE. Drag points, E extrudes a face, the surface follows.": "Appuyez sur Tab dans la vue 3D : le mode Édition ouvre la CAGE. Faites glisser des points, E extrude une face, la surface suit.",
   "Smoothness, crease angle and creased edges are in Properties.": "Le lissé, l'angle d'arête vive et les arêtes vives sont dans Propriétés.",
-  "Tick Show the cage too to see it while you work outside Edit Mode.": "Cochez Afficher aussi la cage pour la voir hors du mode Édition."
+  "Tick Show the cage too to see it while you work outside Edit Mode.": "Cochez Afficher aussi la cage pour la voir hors du mode Édition.",
+  "Paths": "Chemins",
+  "One outline per row, as point numbers (counted from 0). An outline inside another is a hole. Empty: every point, in order.": "Un contour par ligne, en numéros de points (comptés à partir de 0). Un contour à l'intérieur d'un autre est un trou. Vide : tous les points, dans l'ordre."
 }

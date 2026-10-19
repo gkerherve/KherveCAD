@@ -148,9 +148,8 @@ class PointsEditor(QWidget):
     def _fit_height(self):
         """Size the table to its rows, up to 15, so it shows the points
         without its own scrollbar (the panel scrolls if needed)."""
-        rows = min(max(self.table.rowCount(), 1), 15)
-        header = self.table.horizontalHeader().sizeHint().height()
-        self.table.setFixedHeight(header + rows * self._ROW_H + 6)
+        from .rowsedit import fit_table_height
+        fit_table_height(self.table, 15, self._ROW_H)
 
     def _read_points(self):
         """Current table contents as floats, or None if a cell is
@@ -234,6 +233,16 @@ class PointsEditor(QWidget):
             self._on_change(points)
 
 
+#: editors shown as a table: named above, the full width of the panel
+TABLE_KINDS = ("points", "rows")
+#: what a table holds, when its short name does not say
+TABLE_TIPS = {
+    ("polygon", "paths"): "One outline per row, as point numbers (counted "
+                          "from 0). An outline inside another is a hole. "
+                          "Empty: every point, in order.",
+}
+
+
 class PropertiesPanel(QScrollArea):
     """Bottom-left panel: parameter editors for the selected node."""
 
@@ -286,7 +295,19 @@ class PropertiesPanel(QScrollArea):
             editor = self._make_editor(key, kind, minimum, maximum)
             if editor is not None:
                 self._editors[key] = editor
-                form.addRow(language.tr(label), editor)
+                if kind in TABLE_KINDS:
+                    # a table's name goes ABOVE it, the table takes the
+                    # whole width (beside it, a long name squeezed every
+                    # field of the form into half the panel)
+                    head = QLabel(language.tr(label))
+                    tip = TABLE_TIPS.get((node.type, key))
+                    if tip:
+                        head.setToolTip(language.tr(tip))
+                        editor.setToolTip(language.tr(tip))
+                    form.addRow(head)
+                    form.addRow(editor)
+                else:
+                    form.addRow(language.tr(label), editor)
         self._layout.addLayout(form)
         self._layout.addStretch()
         self._load_values()

@@ -29,6 +29,20 @@ def _cell(value) -> str:
     return f"{value:g}" if isinstance(value, float) else str(value)
 
 
+def fit_table_height(table, cap, row_h):
+    """Make *table* exactly as tall as its rows (up to *cap*), measured
+    from the real row and header heights: a fixed guess per row came up
+    short once a stylesheet padded the rows (an Interface Style), and
+    three points got a scroll bar."""
+    n = table.rowCount()
+    shown = min(max(n, 1), cap)
+    rows = sum(table.rowHeight(r) for r in range(min(n, shown)))
+    rows += (shown - min(n, shown)) * row_h          # the empty slot
+    header = max(table.horizontalHeader().height(),
+                 table.horizontalHeader().sizeHint().height())
+    table.setFixedHeight(header + rows + 2 * table.frameWidth() + 2)
+
+
 class RowsEditor(QWidget):
     """A table of rows that commits the whole list on every edit."""
 
@@ -146,9 +160,7 @@ class RowsEditor(QWidget):
         self._emit()
 
     def _fit_height(self):
-        rows = min(max(self.table.rowCount(), 1), 12)
-        header = self.table.horizontalHeader().sizeHint().height()
-        self.table.setFixedHeight(header + rows * self._ROW_H + 6)
+        fit_table_height(self.table, 12, self._ROW_H)
 
 
 class ChoiceBox(QComboBox):

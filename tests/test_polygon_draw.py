@@ -160,3 +160,33 @@ def test_drawing_in_an_empty_object_tab_makes_an_object(app):
     finally:
         w._dirty = False
         w.close()
+
+
+def test_polygon_properties_are_compact(app):
+    """Tables are named above themselves, full width; the paths table is
+    called just "Paths" (the explanation is its tooltip); three points
+    show without a scroll bar."""
+    from PyQt5.QtWidgets import QFormLayout, QLabel
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    w.resize(1200, 800)
+    w.show()
+    try:
+        node = w.model.add_node("polygon", {})
+        w.model.structure_changed.emit()
+        w.builder.active_tree().select_nodes([node])
+        app.processEvents()
+        form = w.properties.findChild(QFormLayout)
+        spans = [form.itemAt(r, QFormLayout.SpanningRole)
+                 for r in range(form.rowCount())]
+        heads = [s.widget().text() for s in spans
+                 if s is not None and isinstance(s.widget(), QLabel)]
+        assert heads == ["Points", "Paths"]
+        paths_head = [s.widget() for s in spans if s is not None
+                      and isinstance(s.widget(), QLabel)][1]
+        assert "hole" in paths_head.toolTip()
+        table = w.properties._editors["points"].table
+        assert not table.verticalScrollBar().isVisible()
+    finally:
+        w._dirty = False
+        w.close()

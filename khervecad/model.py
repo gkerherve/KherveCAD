@@ -102,9 +102,9 @@ NODE_TYPES = {
                 ("y", "Y", "float", -1e6, 1e6),
                 ("points", "Points", "points", None, None),
                 # OpenSCAD's paths: one outline per row of point indices;
-                # an outline inside another is a hole
-                ("paths", "Paths (point indices; empty = all, in order)",
-                 "rows", None, None)]),
+                # an outline inside another is a hole (the explanation is
+                # the Properties tooltip, properties.TABLE_TIPS)
+                ("paths", "Paths", "rows", None, None)]),
     "text": dict(
         label="Text", category=SHAPE_2D, icon="mdi.format-text",
         # font, halign, valign, spacing and direction are optional
