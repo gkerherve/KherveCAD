@@ -39,15 +39,19 @@ TAB_KEY = "ribbon/tab"
 
 #: (key, Fusion title, SolidWorks title, panel keys)
 TABS = [
+    # the vertical bar's tools live on the ribbon too (2026-10-19, the
+    # user: Fusion has no tool column — sketching is a tab of its own)
+    ("sketch", "SKETCH", "Sketch", ["sketch"]),
     ("features", "SOLID", "Features",
-     ["extrude", "transform", "combine", "finish", "logic", "assemble"]),
+     ["create", "extrude", "transform", "combine", "finish", "logic", "assemble"]),
     ("form", "FORM", "Sculpt", ["deform", "edit"]),
     ("character", "CHARACTER", "Character", ["character"]),
     ("inspect", "INSPECT", "Evaluate", ["analyse", "documents"]),
 ]
 
 #: panels that are not operation families: key -> title
-EXTRA_PANELS = {"assemble": "Assemble", "edit": "Edit mesh",
+EXTRA_PANELS = {"sketch": "Sketch", "create": "Create",
+                "assemble": "Assemble", "edit": "Edit mesh",
                 "analyse": "Analyse", "documents": "Documents"}
 #: SolidWorks panels whose tools are all large buttons
 ALL_LARGE = {"assemble", "edit", "analyse", "documents"}
@@ -122,13 +126,21 @@ def panel_actions(win, key):
     title = language.tr(EXTRA_PANELS[key])
     if key == "assemble":
         return title, [parts["snap"]]
+    from .view2d import MEASURE
+    if key == "sketch":
+        return title, [a for a in win._tool_group.actions()
+                       if a.data() != MEASURE]
+    if key == "create":
+        drawing = set(win._tool_group.actions())
+        return title, [a for a in win._tools_bar.actions()
+                       if not a.isSeparator() and a not in drawing
+                       and a.text() and a.data() is not None]
     if key == "edit":
         return title, [win._edit_mesh_act]
     if key == "documents":
         return title, list(parts["docs"])
     # analyse: the measure tool of the vertical bar, the three checks
     # and a section (Cut Through)
-    from .view2d import MEASURE
     measure = [a for a in win._tool_group.actions() if a.data() == MEASURE]
     return title, measure + analysis_actions(win) + [win._cut_tool_act]
 

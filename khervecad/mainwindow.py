@@ -1582,7 +1582,8 @@ class MainWindow(QMainWindow):
         on = bool(on)
         self._left_column.setVisible(not on)
         self.view2d.setVisible(not on)
-        self._tools_bar.setVisible(not on)
+        self._tools_bar.setVisible(
+            not on and getattr(self, "_interface_style", "") != "Fusion")
         for act in self._options_bar.actions():
             if act not in self._vibe_keep:
                 act.setVisible(not on)

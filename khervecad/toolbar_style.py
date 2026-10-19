@@ -367,6 +367,8 @@ def apply(win, name: str = None, remember: bool = True):
         # Fusion: file / undo / Vibe sit on the ribbon's tab line; the
         # quick row only comes back in Vibe Model, when the ribbon hides
         bar.setVisible(name != "Fusion")
+    # Fusion has no tool column: its tools are on the SKETCH / SOLID tabs
+    win._tools_bar.setVisible(name != "Fusion")
     # the rest of the program: menus organised like the program the
     # style imitates, the windows' look, the views' backgrounds
     from . import interface_menus, interface_windows

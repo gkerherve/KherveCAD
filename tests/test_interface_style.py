@@ -139,7 +139,7 @@ def test_solidworks_drops_small_names_when_narrow(window, app):
     window.ribbon.show_tab("features")
     window.resize(900, 700)
     app.processEvents()
-    small = window.ribbon.small[0]
+    small = window.ribbon.small[window.ribbon.stack.currentIndex()]
     assert small[0].toolButtonStyle() == 0              # icon only
     window.resize(2200, 900)
     app.processEvents()
@@ -216,7 +216,9 @@ def test_windows_and_views_take_the_style_and_give_it_back(window):
     assert window.view3d.background == "SolidWorks"
     assert window.builder.tabText(0) == ""            # icon tabs
     toolbar_style.apply(window, "Fusion")
-    assert window.builder.tabText(0) == "MAIN"
+    assert window.builder.tabText(0) == ""            # icons too
+    assert window.builder.tabToolTip(0)          # named on hover
+    assert window._tools_bar.isHidden()          # tools on the ribbon
     assert window.view3d.background == "Fusion"
     toolbar_style.apply(window, "KherveCAD")
     assert window.builder.tabText(0) == "Main"

@@ -257,12 +257,16 @@ def style_panel(win, style):
             if not panel.tabToolTip(i):
                 panel.setTabToolTip(i, text.replace("&", ""))
         elif style == "Fusion":
-            panel.setTabIcon(i, icon)
-            panel.setTabText(i, text.upper())
+            # icons, the name in the tooltip (the user: tabs as icons)
+            glyph = TAB_ICONS[i] if i < len(TAB_ICONS) else "mdi.circle"
+            panel.setTabIcon(i, icons.icon(glyph, "#0696d7"))
+            panel.setTabText(i, "")
+            if not panel.tabToolTip(i):
+                panel.setTabToolTip(i, text.replace("&", ""))
         else:
             panel.setTabIcon(i, icon)
             panel.setTabText(i, text)
-    if style == "SolidWorks":
+    if style in ("SolidWorks", "Fusion"):
         from PyQt5.QtCore import QSize
         panel.setIconSize(QSize(20, 20))
     if style == "Fusion":
