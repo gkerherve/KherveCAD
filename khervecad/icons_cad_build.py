@@ -194,3 +194,78 @@ def _chemistry(d):
     for x, y, r in ((0.40, 0.76, 0.035), (0.55, 0.70, 0.025),
                     (0.62, 0.80, 0.03)):
         d.disc(QPointF(x, y), r, shade(liquid, 1.7))
+
+
+# ============================================================ browser tabs
+# the left panel's tabs (interface_windows.style_panel): Main, Object,
+# Collections, Variables, Code — small parts and documents, not glyphs
+
+@draws("tab_main")
+def _tab_main(d):
+    """Main: an assembly tree — a box at the root, two parts below."""
+    d.line(QPointF(0.26, 0.30), QPointF(0.26, 0.82), d.pal.edge, 0.04)
+    for y in (0.55, 0.78):
+        d.line(QPointF(0.26, y), QPointF(0.50, y), d.pal.edge, 0.04)
+    d.cx, d.cy, d.k = 0.26, 0.24, 0.17
+    d.box(-0.6, -0.6, -0.4, 1.2, 1.2, 0.8)
+    d.cx, d.cy = 0.68, 0.53
+    d.box(-0.6, -0.6, -0.4, 1.2, 1.2, 0.8, shade(d.pal.select, 1.5))
+    d.cx, d.cy = 0.68, 0.80
+    d.cyl(0, 0, -0.4, 0.6, 0.8, shade(d.pal.make, 1.2))
+
+
+@draws("tab_object")
+def _tab_object(d):
+    """Object: one part, a block with a bore."""
+    d.box(-0.9, -0.9, 0, 1.8, 1.8, 0.9)
+    pts = [d.P(0.45 * math.cos(a), 0.45 * math.sin(a), 0.9)
+           for a in [2 * math.pi * i / 24 for i in range(24)]]
+    d.poly(pts, shade(d.pal.body, 0.55), width=0.035)
+
+
+@draws("tab_collections")
+def _tab_collections(d):
+    """Collections: three stacked folders of parts."""
+    for i, colour in enumerate((d.pal.folder, shade(d.pal.folder, 1.15),
+                                d.pal.select)):
+        x, y = 0.14 + 0.08 * i, 0.22 + 0.13 * i
+        tab = QPainterPath(QPointF(x, y + 0.08))
+        tab.lineTo(x, y)
+        tab.lineTo(x + 0.22, y)
+        tab.lineTo(x + 0.28, y + 0.06)
+        tab.lineTo(x + 0.62, y + 0.06)
+        tab.lineTo(x + 0.62, y + 0.42)
+        tab.lineTo(x, y + 0.42)
+        tab.closeSubpath()
+        d.path(tab, shade(colour, 1.1), width=0.035)
+
+
+@draws("tab_variables")
+def _tab_variables(d):
+    """Variables: a slider sheet — two sliders and an x."""
+    sheet = QPainterPath()
+    sheet.addRoundedRect(QRectF(0.10, 0.14, 0.80, 0.72), 0.08, 0.08)
+    d.path(sheet, d.pal.paper, width=0.04)
+    for y, at in ((0.40, 0.66), (0.66, 0.38)):
+        d.line(QPointF(0.22, y), QPointF(0.78, y), d.pal.body, 0.06)
+        d.line(QPointF(0.22, y), QPointF(at, y), d.pal.select, 0.06)
+        d.ball(QPointF(at, y), 0.065, d.pal.make)
+    d.text(0.24, 0.30, "x", 0.12, d.pal.edge)
+
+
+@draws("tab_code")
+def _tab_code(d):
+    """Code: a .scad page with braces and coloured lines."""
+    page = QPainterPath(QPointF(0.20, 0.08))
+    page.lineTo(0.64, 0.08)
+    page.lineTo(0.82, 0.26)
+    page.lineTo(0.82, 0.92)
+    page.lineTo(0.20, 0.92)
+    page.closeSubpath()
+    d.path(page, d.pal.paper, width=0.04)
+    d.poly([QPointF(0.64, 0.08), QPointF(0.64, 0.26),
+            QPointF(0.82, 0.26)], shade(d.pal.body, 0.9), width=0.03)
+    for y, w, c in ((0.38, 0.38, d.pal.select), (0.52, 0.28, d.pal.make),
+                    (0.66, 0.42, d.pal.sketch), (0.80, 0.22, d.pal.edge)):
+        d.line(QPointF(0.30 + (0.06 if 0.5 < y < 0.75 else 0), y),
+               QPointF(0.30 + w, y), c, 0.055)

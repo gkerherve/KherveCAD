@@ -237,6 +237,22 @@ def apply_stylesheet(style, dark):
 
 
 # ------------------------------------------------------- left panel
+#: painted browser-tab icons (icons_cad_build), in TAB_ICONS' order
+TAB_KEYS = ["tab_main", "tab_object", "tab_collections", "tab_variables",
+            "tab_code"]
+
+
+def _tab_icon(i, style, ink):
+    """Tab *i*'s painted icon in *style*, else its glyph in *ink*."""
+    from . import icons_cad
+    if i < len(TAB_KEYS):
+        painted = icons_cad.icon(TAB_KEYS[i], style)
+        if painted is not None:
+            return painted
+    glyph = TAB_ICONS[i] if i < len(TAB_ICONS) else "mdi.circle"
+    return icons.icon(glyph, ink)
+
+
 def style_panel(win, style):
     """The left panel's tabs: icons (SolidWorks), capitals under a
     BROWSER caption (Fusion), or as they were."""
@@ -251,15 +267,13 @@ def style_panel(win, style):
         if i >= panel.count():
             break
         if style == "SolidWorks":
-            glyph = TAB_ICONS[i] if i < len(TAB_ICONS) else "mdi.circle"
-            panel.setTabIcon(i, icons.icon(glyph, "#2f5f99"))
+            panel.setTabIcon(i, _tab_icon(i, "SolidWorks", "#2f5f99"))
             panel.setTabText(i, "")
             if not panel.tabToolTip(i):
                 panel.setTabToolTip(i, text.replace("&", ""))
         elif style == "Fusion":
             # icons, the name in the tooltip (the user: tabs as icons)
-            glyph = TAB_ICONS[i] if i < len(TAB_ICONS) else "mdi.circle"
-            panel.setTabIcon(i, icons.icon(glyph, "#0696d7"))
+            panel.setTabIcon(i, _tab_icon(i, "Fusion", "#0696d7"))
             panel.setTabText(i, "")
             if not panel.tabToolTip(i):
                 panel.setTabToolTip(i, text.replace("&", ""))
@@ -268,7 +282,7 @@ def style_panel(win, style):
             panel.setTabText(i, text)
     if style in ("SolidWorks", "Fusion"):
         from PyQt5.QtCore import QSize
-        panel.setIconSize(QSize(20, 20))
+        panel.setIconSize(QSize(22, 22))
     if style == "Fusion":
         caption = QLabel(language.tr("BROWSER"), panel)
         caption.setObjectName("browserCaption")
