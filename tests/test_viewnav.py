@@ -43,8 +43,9 @@ def test_3d_bar_zooms_pans_turns_and_focuses(app):
     bar.buttons["zoom_in"].click()
     assert view.distance < dist and view.user_moved
     target = list(view.target)
-    bar.buttons["right"].click()
+    viewnav.pan_3d(view, 1, 0)
     assert view.target != target
+    assert "right" not in bar.buttons and bar.buttons["hand"].isCheckable()
     yaw = view.yaw
     bar.buttons["orbit_left"].click()
     assert view.yaw != yaw
@@ -177,8 +178,9 @@ def test_2d_bar_zooms_and_focuses_an_offset_part(app):
     h = view.horizontalScrollBar()
     before = h.value()
     bar.buttons["zoom_in"].click()
-    bar.buttons["right"].click()
+    viewnav.pan_2d(view, 0.12, 0)
     assert h.value() != before
+    assert "right" not in bar.buttons
     view.close()
 
 
@@ -251,3 +253,34 @@ def test_3d_bar_view_cubes(app):
         assert win.view3d.yaw == win.view3d.VIEWS["Front"][0]
     finally:
         win.close()
+
+
+def test_the_3d_hand_slides_the_camera(app):
+    from PyQt5.QtCore import QEvent, QPoint
+    from khervecad.view3d import View3D
+    view = View3D()
+    view.resize(640, 420)
+    view.set_mesh(_box(0, 0, 0, 10), "test")
+    view.fit()
+    bar = viewnav.attach_3d(view)
+    bar.buttons["hand"].click()
+    yaw, target = view.yaw, list(view.target)
+
+    class _E:
+        def __init__(self, kind, pos):
+            self._k, self._p = kind, pos
+
+        def type(self):
+            return self._k
+
+        def pos(self):
+            return self._p
+
+        def button(self):
+            from PyQt5.QtCore import Qt
+            return Qt.LeftButton
+    hand = view.hand_pan
+    hand.eventFilter(view, _E(QEvent.MouseButtonPress, QPoint(300, 200)))
+    hand.eventFilter(view, _E(QEvent.MouseMove, QPoint(360, 200)))
+    hand.eventFilter(view, _E(QEvent.MouseButtonRelease, QPoint(360, 200)))
+    assert view.target != target and view.yaw == yaw

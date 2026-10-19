@@ -30,6 +30,13 @@ NAV_TIPS = {
         ["Click the hand.", "Drag in the sketch.",
          "Click the hand again to draw or select."],
         "Middle-mouse drag pans at any time."),
+    "nav3d_hand": (
+        "Pan (hand)",
+        "Slides the camera, never the model: while the hand is on, drag "
+        "anywhere to move the view without turning it.",
+        ["Click the hand.", "Drag in the 3D view.",
+         "Click the hand again to orbit with a left drag."],
+        "Right- or middle-drag pans at any time."),
     "nav2d_left": ("Scroll left",) + _PAN_2D,
     "nav2d_right": ("Scroll right",) + _PAN_2D,
     "nav2d_up": ("Scroll up",) + _PAN_2D,

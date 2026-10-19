@@ -269,21 +269,11 @@ class HandPan(QObject):
 
 
 def attach_2d(view):
-    s = PAN_STEP
     view.hand_pan = HandPan(view)
     bar = NavBar(view, [
         ("hand", "mdi.hand-back-right-outline", "✋", "nav2d_hand",
          lambda: view.hand_pan.set_on(bar.buttons["hand"].isChecked()),
          False),
-        None,
-        ("left", "mdi.chevron-left", "◀", "nav2d_left",
-         lambda: pan_2d(view, -s, 0), True),
-        ("up", "mdi.chevron-up", "▲", "nav2d_up",
-         lambda: pan_2d(view, 0, -s), True),
-        ("down", "mdi.chevron-down", "▼", "nav2d_down",
-         lambda: pan_2d(view, 0, s), True),
-        ("right", "mdi.chevron-right", "▶", "nav2d_right",
-         lambda: pan_2d(view, s, 0), True),
         None,
         ("zoom_in", "mdi.magnify-plus-outline", "+",
          "nav2d_zoom_in",
@@ -454,8 +444,53 @@ def focus_3d(view):
     view.update()
 
 
+class HandPan3D(HandPan):
+    """The 3D bar's hand: a left drag slides the camera (no orbit) — the
+    model follows the cursor at the orbit centre."""
+
+    def __init__(self, view):
+        QObject.__init__(self, view)
+        self.view = view
+        self.on = False
+        self._last = None
+        view.installEventFilter(self)
+
+    def set_on(self, on):
+        self.on = bool(on)
+        self._last = None
+        self.view.setCursor(Qt.OpenHandCursor if self.on
+                            else Qt.ArrowCursor)
+
+    def eventFilter(self, obj, event):
+        if not self.on:
+            return False
+        kind = event.type()
+        if kind == QEvent.MouseButtonPress and \
+                event.button() == Qt.LeftButton:
+            self._last = event.pos()
+            obj.setCursor(Qt.ClosedHandCursor)
+            return True
+        if kind == QEvent.MouseMove and self._last is not None:
+            d = event.pos() - self._last
+            self._last = event.pos()
+            view = self.view
+            per_px = view.distance / max(view._focal(), 1e-9)
+            _eye, right, up, _fwd = view._camera()
+            for i in range(3):
+                view.target[i] -= (right[i] * d.x() - up[i] * d.y()) \
+                    * per_px
+            view.user_moved = True
+            view.update()
+            return True
+        if kind == QEvent.MouseButtonRelease and self._last is not None:
+            self._last = None
+            obj.setCursor(Qt.OpenHandCursor)
+            return True
+        return False
+
+
 def attach_3d(view):
-    s = PAN_STEP
+    view.hand_pan = HandPan3D(view)
     bar = NavBar(view, [
         ("orbit_left", "mdi.rotate-left", "↺",
          "nav3d_orbit_left",
@@ -463,14 +498,11 @@ def attach_3d(view):
         ("orbit_right", "mdi.rotate-right", "↻", "nav3d_orbit_right",
          lambda: orbit_3d(view, ORBIT_STEP), True),
         None,
-        ("left", "mdi.chevron-left", "◀",
-         "nav3d_left", lambda: pan_3d(view, -1, 0), True),
-        ("up", "mdi.chevron-up", "▲", "nav3d_up",
-         lambda: pan_3d(view, 0, 1), True),
-        ("down", "mdi.chevron-down", "▼", "nav3d_down",
-         lambda: pan_3d(view, 0, -1), True),
-        ("right", "mdi.chevron-right", "▶", "nav3d_right",
-         lambda: pan_3d(view, 1, 0), True),
+        # the hand replaces the four pan arrows (2026-10-19, the user:
+        # "useless because we can use this hand")
+        ("hand", "mdi.hand-back-right-outline", "✋", "nav3d_hand",
+         lambda: view.hand_pan.set_on(bar.buttons["hand"].isChecked()),
+         False),
         None,
         ("zoom_in", "mdi.magnify-plus-outline", "+",
          "nav3d_zoom_in",
@@ -492,6 +524,7 @@ def attach_3d(view):
     stage = bar.buttons["stage"]
     stage.setCheckable(True)
     stage.setChecked(bool(getattr(view, "stage", False)))
+    bar.buttons["hand"].setCheckable(True)
     view.stage_toggled.connect(stage.setChecked)
     layout = bar.layout()
     layout.insertWidget(0, _vline(bar))
