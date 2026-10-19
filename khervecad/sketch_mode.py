@@ -105,6 +105,12 @@ def _show(win, sketch: bool):
     b.setVisible(sketch)
     inset = _inset(win)
     inset.setVisible(sketch and not vibe)
+    mini = _mini2d(win)
+    mini.setVisible(not sketch and not vibe)
+    if not sketch:
+        mini.place()
+        mini.redraw()
+        QTimer.singleShot(0, mini.place)
     if sketch:
         b.place()
         inset.place()
@@ -153,7 +159,7 @@ def apply(win, style):
         _show(win, sketching(win))
         return
     win._sketching = False
-    for name in ("_finish_sketch", "_sketch_inset"):
+    for name in ("_finish_sketch", "_sketch_inset", "_sketch_mini2d"):
         b = getattr(win, name, None)
         if b is not None:
             b.hide()
@@ -194,6 +200,9 @@ class Inset(QLabel):
         self._timer.timeout.connect(self.redraw)
         win.model.structure_changed.connect(self.later)
         win.model.node_changed.connect(self.later)
+        # the tree's selection reaches the sketch scene: the part picked
+        # is tinted in the corner as in the full 3D view
+        win.view2d.scene().selectionChanged.connect(self.later)
         win.view2d.installEventFilter(self)
 
     def later(self, *args):
@@ -203,7 +212,8 @@ class Inset(QLabel):
     def redraw(self):
         try:                  # the 3D view's own angle, the whole model
             img, _state = self.win.view3d.snapshot(
-                self.W - 2, self.H - 2, frame=True, zoom=0.8, clean=True)
+                self.W - 2, self.H - 2, frame=True, zoom=0.8, clean=True,
+                highlight=True)
         except Exception:                   # never break the sketch
             return
         if img is not None:
@@ -228,4 +238,83 @@ def _inset(win):
     got = getattr(win, "_sketch_inset", None)
     if got is None:
         got = win._sketch_inset = Inset(win)
+    return got
+
+
+class Mini2D(QLabel):
+    """The sketch, small, in the 3D view's corner (the user, same day:
+    "in the 3D view, the same thing, a 2D view on the side"): the 2D
+    scene drawn Y-up round what it holds, the selection showing as the
+    sketch shows it; a click starts sketching."""
+
+    W, H = 240, 170
+
+    def __init__(self, win):
+        super().__init__(win.view3d)
+        self.win = win
+        self.setObjectName("sketchMini")
+        self.setFixedSize(self.W, self.H)
+        self.setAlignment(Qt.AlignCenter)
+        self.setCursor(Qt.PointingHandCursor)
+        self.setToolTip(language.tr("The sketch in 2D — click to sketch"))
+        self.setStyleSheet("#sketchMini { border: 1px solid #9aa4ad; "
+                           "border-radius: 3px; background: #ffffff; }")
+        self._timer = QTimer(self)
+        self._timer.setSingleShot(True)
+        self._timer.setInterval(250)
+        self._timer.timeout.connect(self.redraw)
+        win.model.structure_changed.connect(self.later)
+        win.model.node_changed.connect(self.later)
+        win.view2d.scene().selectionChanged.connect(self.later)
+        win.view3d.installEventFilter(self)
+
+    def later(self, *args):
+        if self.isVisible():
+            self._timer.start()
+
+    def redraw(self):
+        from PyQt5.QtGui import QColor, QPainter
+        from PyQt5.QtCore import QRectF
+        try:
+            scene = self.win.view2d.scene()
+            box = scene.itemsBoundingRect()
+            if box.isEmpty():
+                box = QRectF(-50, -50, 100, 100)
+            m = max(box.width(), box.height()) * 0.08 + 1
+            box = box.adjusted(-m, -m, m, m)
+            pix = QPixmap(self.W - 2, self.H - 2)
+            pix.fill(QColor("#ffffff"))
+            p = QPainter(pix)
+            p.setRenderHint(QPainter.Antialiasing, True)
+            # the scene is Y-up: draw it flipped like the sketch view
+            p.translate(0, pix.height())
+            p.scale(1, -1)
+            scene.render(p, QRectF(pix.rect()), box, Qt.KeepAspectRatio)
+            p.end()
+        except Exception:                   # never break the 3D view
+            return
+        self.setPixmap(pix)
+
+    def place(self):
+        r = self.win.view3d.rect()
+        nav = getattr(self.win.view3d, "nav_bar", None)
+        lift = nav.height() + 18 if nav is not None and \
+            nav.isVisible() and getattr(nav, "anchor", "") == \
+            "bottom-centre" else 12
+        self.move(r.right() - self.W - 12, r.bottom() - self.H - lift)
+        self.raise_()
+
+    def eventFilter(self, obj, event):
+        if event.type() in (QEvent.Resize, QEvent.Show):
+            QTimer.singleShot(0, self.place)
+        return False
+
+    def mousePressEvent(self, event):
+        enter(self.win)
+
+
+def _mini2d(win):
+    got = getattr(win, "_sketch_mini2d", None)
+    if got is None:
+        got = win._sketch_mini2d = Mini2D(win)
     return got

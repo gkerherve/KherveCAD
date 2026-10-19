@@ -279,3 +279,17 @@ def test_the_hand_pans_the_view_not_the_drawing(window, app):
     QTest.mouseRelease(port, Qt.LeftButton, pos=QPoint(120, 150))
     assert h.value() != before
     assert len(window.model.root.children) == count
+
+
+def test_the_3d_view_shows_the_sketch_in_its_corner(window, app):
+    from khervecad import sketch_mode
+    toolbar_style.apply(window, "Fusion")
+    window.model.add_node("rect")
+    sketch_mode.finish(window)
+    app.processEvents()
+    mini = window._sketch_mini2d
+    assert mini.isVisible() and mini.pixmap() is not None
+    mini.mousePressEvent(None)                 # a click: sketch
+    assert window.view2d.isVisible() and not mini.isVisible()
+    toolbar_style.apply(window, "KherveCAD")
+    assert not mini.isVisible()

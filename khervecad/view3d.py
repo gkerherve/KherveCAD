@@ -599,7 +599,8 @@ class View3D(QWidget):
     def snapshot(self, width, height, *, yaw=None, pitch=None,
                  distance=None, target=None, projection=None,
                  frame=None, zoom=1.0, clean=False, transparent=False,
-                 pixel_ratio=1.0, uncut=False, overlay=None):
+                 pixel_ratio=1.0, uncut=False, overlay=None,
+                 highlight=False):
         """Paint the scene from another camera into a QImage, leaving
         this view — the user's camera — exactly where it is.
 
@@ -659,8 +660,9 @@ class View3D(QWidget):
                     twin._mesh_serial
         if not clean or twin.overlay:
             twin.reference_images = list(self.reference_images)
-        if not clean:
+        if not clean or highlight:    # *highlight*: the selection's tint
             twin.set_highlight_mesh(self.highlight_mesh)
+        if not clean:
             twin.set_anchor_markers(list(self.anchor_markers))
         twin.yaw = self.yaw if yaw is None else float(yaw)
         twin.pitch = self.pitch if pitch is None else float(pitch)
