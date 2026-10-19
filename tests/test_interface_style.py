@@ -142,7 +142,7 @@ def test_solidworks_drops_small_names_when_narrow(window, app):
     app.processEvents()
     small = window.ribbon.small[window.ribbon.stack.currentIndex()]
     assert small[0].toolButtonStyle() == 0              # icon only
-    window.resize(2200, 900)
+    window.resize(3200, 900)          # SOLID has two more panels now
     app.processEvents()
     assert small[0].toolButtonStyle() == 2              # beside icon
     assert all("(" not in b.text() for b in small)      # short names
