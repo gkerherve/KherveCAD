@@ -271,64 +271,138 @@ def _skin(d, z0, z1, dy0=0.0, dy1=0.0, color=None, y0=-0.8, y1=0.8):
     d.poly(front + back[::-1], QBrush(g), width=0.03)
 
 
+def _patch(d, f, nu=10, nv=6, body=None):
+    """A shaded parametric surface f(u, v) -> (x, y, z), u, v in 0..1:
+    quads painted far to near, lit like the iso solids (light from the
+    upper left), thin seams in their own colour — a surface, not a
+    ribbon."""
+    # Fusion draws surfaces a steel blue-grey (its bodies are near white
+    # and a light surface vanished); SolidWorks keeps its yellow
+    body = body or (d.pal.body if d.style == "SolidWorks"
+                    else QColor("#8fa9c2"))
+    light = (-0.45, 0.35, 0.82)
+    quads = []
+    for i in range(nu):
+        for j in range(nv):
+            a = f(i / nu, j / nv)
+            b = f((i + 1) / nu, j / nv)
+            c = f((i + 1) / nu, (j + 1) / nv)
+            e = f(i / nu, (j + 1) / nv)
+            ux, uy, uz = (c[k] - a[k] for k in range(3))
+            vx, vy, vz = (e[k] - b[k] for k in range(3))
+            n = (uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx)
+            ln = math.sqrt(sum(x * x for x in n)) or 1.0
+            lit = abs(sum(n[k] * light[k] for k in range(3)) / ln)
+            depth = sum(q[0] + q[1] - 0.3 * q[2] for q in (a, b, c, e))
+            quads.append((depth, (a, b, c, e), 0.62 + 0.55 * lit))
+    for _dep, pts, k in sorted(quads):
+        colour = shade(body, k)
+        d.poly([d.P(*q) for q in pts], colour, color=colour, width=0.012)
+
+
+def _curve3(d, pts, colour, width=0.05):
+    """A smooth curve through 3D points, edged so it reads."""
+    path = QPainterPath(d.P(*pts[0]))
+    for q in pts[1:]:
+        path.lineTo(d.P(*q))
+    d.path(path, None, color=shade(colour, 0.6), width=width + 0.02)
+    d.path(path, None, color=colour, width=width)
+
+
+def _section(x, v, lift=0.0, amp=0.45):
+    """A wave across y at station x (v 0..1 along it)."""
+    y = -0.9 + 1.8 * v
+    return (x, y, lift + amp * math.sin(math.pi * v))
+
+
+def _line_of(f, n=24):
+    return [f(t / n) for t in range(n + 1)]
+
+
 @draws("srf_loft")
 def _srf_loft(d):
-    _skin(d, 0.0, 1.0)
-    _rail(d, 0.0, d.pal.make)
-    _rail(d, 1.0, d.pal.make, y=0.8)
+    """A skin through two different sections (orange)."""
+    def f(u, v):
+        x = -1.0 + 2.0 * u
+        amp = 0.25 + 0.45 * u
+        return _section(x, v, 0.15 * math.sin(math.pi * u), amp)
+    _patch(d, f)
+    _curve3(d, _line_of(lambda t: f(0, t)), d.pal.make)
+    _curve3(d, _line_of(lambda t: f(1, t)), d.pal.make)
 
 
 @draws("srf_sweep")
 def _srf_sweep(d):
-    _skin(d, 0.2, 0.2)
-    path = QPainterPath(d.P(-1, -0.8, _wave(-1, 0.2)))
-    path.lineTo(d.P(-1, 0.8, _wave(-1, 0.2)))
-    d.path(path, None, color=d.pal.select, width=0.08)
-    _rail(d, 0.2, d.pal.make)
+    """A profile (orange) swept along a rail (blue)."""
+    def rail(u):
+        return (-1.0 + 2.0 * u, 0.5 * math.sin(math.pi * u * 1.2) - 0.4,
+                0.0)
+
+    def f(u, v):
+        x, y, z = rail(u)
+        return (x, y + 0.9 * v, z + 0.7 * math.sin(math.pi * v))
+    _patch(d, f)
+    _curve3(d, _line_of(rail), d.pal.select)
+    _curve3(d, _line_of(lambda t: f(0, t)), d.pal.make)
 
 
 @draws("srf_sweep2")
 def _srf_sweep2(d):
-    _skin(d, 0.0, 0.6)
-    _rail(d, 0.0, d.pal.make)
-    _rail(d, 0.6, d.pal.make, y=0.8)
-    path = QPainterPath(d.P(1, -0.8, _wave(1, 0.0)))
-    path.lineTo(d.P(1, 0.8, _wave(1, 0.6)))
-    d.path(path, None, color=d.pal.select, width=0.06)
+    """A profile carried between two rails (blue)."""
+    def f(u, v):
+        x = -1.0 + 2.0 * u
+        y0 = -0.9 + 0.25 * math.sin(math.pi * u)
+        y1 = 0.9 - 0.35 * math.sin(math.pi * u)
+        return (x, y0 + (y1 - y0) * v,
+                0.55 * math.sin(math.pi * v) * (0.6 + 0.4 * u))
+    _patch(d, f)
+    _curve3(d, _line_of(lambda t: f(t, 0)), d.pal.select)
+    _curve3(d, _line_of(lambda t: f(t, 1)), d.pal.select)
+    _curve3(d, _line_of(lambda t: f(0, t)), d.pal.make, 0.04)
 
 
 @draws("srf_patch")
 def _srf_patch(d):
-    ring = [(math.cos(math.radians(a)) * (1 + 0.15 * math.sin(3 * math.radians(a))),
-             math.sin(math.radians(a)), 0.4 + 0.3 * math.sin(2 * math.radians(a)))
-            for a in range(0, 360, 15)]
-    d.poly([d.P(*q) for q in ring], shade(d.pal.body, 1.25),
-           color=d.pal.make, width=0.07)
-    d.ball(d.P(0, 0, 0.9), 0.06, d.pal.select)
+    """A domed patch filling a closed boundary (orange)."""
+    def f(u, v):
+        a = 2 * math.pi * u
+        r = v * (1.0 + 0.12 * math.sin(3 * a))
+        return (r * math.cos(a), r * math.sin(a),
+                0.75 * (1 - v * v) + 0.15 * math.sin(2 * a) * v)
+    _patch(d, f, 24, 5)
+    _curve3(d, _line_of(lambda t: f(t, 1), 40), d.pal.make)
 
 
 @draws("srf_revolve")
 def _srf_revolve(d):
-    d.solid(d.ring(0, 0, 0, 0.9), d.ring(0, 0, 1.6, 0.5))
-    d.line(d.P(0, 0, -0.3), d.P(0, 0, 2.2), d.pal.select, 0.04)
-    d.arc_arrow(d.P(0, 0, 2.0), 0.28, 0.1, 200, 520, d.pal.make, 0.05, 0.1)
+    """A profile turned about its axis: a vase-like surface."""
+    def r_of(v):
+        return 0.55 + 0.35 * math.sin(math.pi * (0.2 + 0.9 * v))
+
+    def f(u, v):
+        a = 2 * math.pi * u
+        r = r_of(v)
+        return (r * math.cos(a), r * math.sin(a), 1.8 * v)
+    _patch(d, f, 24, 6)
+    _curve3(d, _line_of(lambda t: f(0.125, t)), d.pal.make)
+    d.line(d.P(0, 0, -0.2), d.P(0, 0, 2.2), d.pal.select, 0.045)
+    d.arc_arrow(d.P(0, 0, 2.1), 0.32, 0.12, 200, 520, d.pal.make, 0.05,
+                0.1)
 
 
 @draws("srf_extrude")
 def _srf_extrude(d):
-    front = [d.P(-1 + 0.1 * i, 0, _wave(-1 + 0.1 * i, 0.0, 0.3))
-             for i in range(21)]
-    top = [d.P(-1 + 0.1 * i, 0, _wave(-1 + 0.1 * i, 1.3, 0.3))
-           for i in range(21)]
-    g = QLinearGradient(front[0], front[-1])
-    g.setColorAt(0, shade(d.pal.body, 1.35))
-    g.setColorAt(1, shade(d.pal.body, 0.85))
-    d.poly(front + top[::-1], QBrush(g), width=0.03)
-    path = QPainterPath(front[0])
-    for q in front[1:]:
-        path.lineTo(q)
-    d.path(path, None, color=d.pal.select, width=0.07)
-    d.arrow(d.P(1, 0, 0.1), d.P(1, 0, 1.9), d.pal.make, 0.06, 0.12)
+    """A curve (blue) pushed straight up into a surface."""
+    def base(u):
+        x = -1.0 + 2.0 * u
+        return (x, 0.45 * math.sin(math.pi * 1.5 * u), 0.0)
+
+    def f(u, v):
+        x, y, _z = base(u)
+        return (x, y, 1.4 * v)
+    _patch(d, f, 12, 4)
+    _curve3(d, _line_of(base), d.pal.select)
+    d.arrow(d.P(1.15, 0, 0.3), d.P(1.15, 0, 1.9), d.pal.make, 0.07, 0.14)
 
 
 @draws("draw_curve")
