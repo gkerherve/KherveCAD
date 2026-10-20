@@ -401,6 +401,58 @@ COMMANDS = {
         "Builder, this menu lists its floors so you can cut exactly at "
         "one.", [], None),
     # ----------------------------------------------------------- analyse
+    # ribbon buttons that had no card (2026-10-20, the user: every icon
+    # needs its detail help when hovered)
+    "exploded view": (
+        "Exploded view", "Pulls the parts of an assembly apart so you "
+        "can see how they fit; the tree is not changed.",
+        ["Click to switch it on or off.",
+         "The arrow picks the distance and the direction (outwards, X, "
+         "Y or Z)."], "Select a sub-assembly to explode only that."),
+    "code & files": (
+        "Code & files", "Adds things that are not shapes: a variable, an "
+        "echo or assert, an STL file, a block of raw OpenSCAD code, or a "
+        "sheet-metal part.", ["Click and choose from the list."], None),
+    "heat map": (
+        "Heat map", "Paints the part by a measurement: wall thickness, "
+        "overhangs, draft angle, curvature or zebra stripes.",
+        ["Click and choose the map.", "Choose Off to remove it."],
+        "Red is where the part needs attention."),
+    "dimensions on selection": (
+        "Dimensions on selection", "Shows the width, depth and height of "
+        "whatever is selected, in the 3D view and the sketch.",
+        ["Click to switch it on or off.", "Select a part."], None),
+    "connect to claude (simple)": (
+        "Connect to Claude", "Lets an AI assistant (Claude Desktop, Claude "
+        "Code, Cursor…) drive KherveCAD directly: build, edit, render and "
+        "check models.",
+        ["Click, switch the connection on, then connect your assistant "
+         "in one click."], "Only this computer can connect."),
+    "chatbox (requires api key)": (
+        "ChatBox", "A chat panel on the right: describe a part and the "
+        "assistant writes the OpenSCAD program for it.",
+        ["Click to open it.", "Add your API key the first time."], None),
+    "mesh from photo": (
+        "Mesh from photo", "Turns one picture into a 3D surface with an "
+        "image-to-3D service or a local model, and imports it.",
+        ["Choose the picture and the generator.",
+         "Give its key or command, then Generate."],
+        "The far side is guessed: sculpt it afterwards."),
+    "language": (
+        "Language", "The language of the menus, buttons and User Guide.",
+        ["Click and choose a language."], None),
+    "import image stack (tiff)": (
+        "Import image stack", "Turns a stack of TIFF images (microscope, "
+        "CT) into a 3D solid, choosing the threshold on a slice viewer.",
+        ["Choose the .tif file or folder of slices.",
+         "Set the threshold, voxel size and smoothing, then Build."],
+        None),
+    "compare to reference image (overlay)": (
+        "Compare to reference image", "Draws your reference pictures "
+        "over the model, half see-through, so you can see where the "
+        "outline leaves the photo.",
+        ["Add a reference image first (Insert ▸ Add Reference Image).",
+         "Click to switch the overlay on or off."], None),
     "common segments ($fn)": (
         "Common segments ($fn)", "One segment count for every round "
         "object (cylinders, spheres, revolves) — higher is smoother and "

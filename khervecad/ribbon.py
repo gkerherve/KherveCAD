@@ -57,16 +57,22 @@ TABS = [
     ("character", "CHARACTER", "Character", ["figures", "character"]),
     ("inspect", "INSPECT", "Evaluate",
      ["analyse", "checks", "dimension"]),
-    # Fusion's UTILITIES tab: drawings, making, add-ins, settings
+    # everything that turns the model into something handed on —
+    # drawings, files, pictures (2026-10-20, the user: "something called
+    # publish ... the blueprint, the P&ID, publish to Printables, the
+    # export to videos"; the drawings had wandered INSPECT -> UTILITIES)
+    ("publish", "PUBLISH", "Publish",
+     ["documents", "pub_share", "pub_media"]),
     ("utilities", "UTILITIES", "Utilities",
-     ["documents", "util_make", "util_addins", "util_utility"]),
+     ["util_addins", "util_utility"]),
     # every builder window (2026-10-19, the user: "where are all the
     # builders?") — the Tools menu's Builders section
     ("build", "BUILD", "Builders", ["builders"]),
 ]
 
 #: panels that are not operation families: key -> title
-EXTRA_PANELS = {"util_make": "Make", "util_addins": "Add-ins",
+EXTRA_PANELS = {"pub_share": "Share", "pub_media": "Pictures & video",
+                "util_make": "Make", "util_addins": "Add-ins",
                 "util_utility": "Utility", "assemble_more": "Assemble", "mechanical": "Features", "curves": "Curves",
                 "surfaces": "From curves", "form_create": "Create form",
                 "figures": "Figures", "solid_insert": "Insert",
@@ -75,7 +81,7 @@ EXTRA_PANELS = {"util_make": "Make", "util_addins": "Add-ins",
                 "builders": "Builders", "sketch": "Create", "create": "Create",
                 "sketch_modify": "Modify", "sketch_insert": "Insert",
                 "assemble": "Assemble", "edit": "Edit mesh",
-                "analyse": "Analyse", "documents": "Documents"}
+                "analyse": "Analyse", "documents": "Drawings"}
 #: SolidWorks panels whose tools are all large buttons
 ALL_LARGE = {"builders", "edit", "analyse", "documents"}
 
@@ -148,8 +154,15 @@ MENU_PANELS = {
         ("view/gumball (move / turn handles)", None),
         ("view/exploded view", None),
         ("view/animate ($t)", None)],
-    "util_make": [("file/publish to printables", None),
-                  ("file/export stl", None)],
+    "pub_share": [("file/publish to printables", None),
+                  ("file/export stl", None),
+                  ("file/export for other cad (step/iges/rhino)", None),
+                  ("file/export openscad", None),
+                  ("file/export animated character (glb)", None),
+                  ("file/send to planetcraft", None)],
+    "pub_media": [("file/export png", None),
+                  ("file/export turntable movie", None),
+                  ("file/render photo (blender)", None)],
     "util_addins": [("ai/connect to claude (simple)", None),
                     ("ai/chatbox (requires api key)", None),
                     ("ai/mesh from photo", None),
@@ -265,6 +278,13 @@ def self_style(win):
 #: a painted icon for a menu command that has no key of its own, or
 #: shares one (the six surfaces from curves are one node): path -> key
 PAINT = {
+    "file/export for other cad (step/iges/rhino)": "export_cad",
+    "file/export openscad": "export_scad",
+    "file/export animated character (glb)": "export_glb",
+    "file/send to planetcraft": "planetcraft",
+    "file/export png": "export_png",
+    "file/export turntable movie": "export_movie",
+    "file/render photo (blender)": "render_photo",
     "file/make 2d drawing of this view": "make2d",
     "file/publish to printables": "printables",
     "file/export stl": "export_stl",
@@ -344,10 +364,32 @@ def _painted(win, acts):
     return acts
 
 
+def _helped(acts):
+    """Every ribbon button shows its detail help card on hover (the
+    user: the new icons had only their name) — the tool's own tip, else
+    the menu item's help card, else its status line."""
+    from . import menu_help
+    for act in acts:
+        if "<" in (act.toolTip() or ""):
+            continue                       # a rich card already
+        key = act.property("kc_paint") or act.data()
+        if isinstance(key, str) and key in tooltips.TIPS:
+            tooltips.apply(act, key)
+            continue
+        card = menu_help.resolve(act)
+        if card:
+            act.setToolTip(card)
+        elif act.statusTip():
+            act.setToolTip("<b>%s</b><br>%s" % (
+                short_name(act.text()), act.statusTip()))
+    return acts
+
+
 def panel_actions(win, key):
-    """(title, actions) of panel *key*, in the style's painted icons."""
+    """(title, actions) of panel *key*, in the style's painted icons,
+    each with its help card."""
     title, acts = _panel_actions(win, key)
-    return title, _painted(win, acts)
+    return title, _helped(_painted(win, acts))
 
 
 def _panel_actions(win, key):
@@ -517,6 +559,10 @@ class Ribbon(QWidget):
                 tab_row.addWidget(b)
             tab_row.addWidget(self._workspace_button())
         tab_row.addWidget(self.tabs)
+        # the command search, after the last tab (ribbon_search.py)
+        from .ribbon_search import SearchBox
+        self.search = SearchBox(self)
+        tab_row.addWidget(self.search)
         tab_row.addStretch(1)
         if self.fusion and getattr(win, "_vibe_act", None) is not None:
             tab_row.addWidget(_button(win._vibe_act, QSize(18, 18),

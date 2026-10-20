@@ -222,3 +222,29 @@ def test_every_ribbon_button_does_something(window, app, monkeypatch,
             act.trigger()                    # a toggle goes back off
     assert not broken, broken
     assert not silent, silent
+
+
+@pytest.mark.parametrize("style", ["Fusion", "SolidWorks"])
+def test_every_ribbon_button_has_its_detail_help(window, app, style):
+    """Hovering any ribbon icon shows a help card, not just its name."""
+    toolbar_style.apply(window, style)
+    bare = [act.text() for _p, act in _ribbon_actions(window)
+            if "<" not in (act.toolTip() or "")]
+    assert not bare, bare
+
+
+def test_the_search_finds_a_command_and_shows_where_it_is(window, app):
+    from khervecad import ribbon_search
+    toolbar_style.apply(window, "Fusion")
+    box = window.ribbon.search
+    found = ribbon_search.matches(box.items(), "blueprint")
+    assert found[0][0].startswith("Blueprint — PUBLISH")
+    box.setText("blueprint")
+    box._enter()
+    app.processEvents()
+    publish = [t[0] for t in ribbon.TABS].index("publish")
+    assert window.ribbon.tabs.currentIndex() == publish
+    assert "PUBLISH" in window.statusBar().currentMessage()
+    # a word from a command's help finds it too
+    names = [f[0] for f in ribbon_search.matches(box.items(), "drawing")]
+    assert any(n.startswith("Blueprint") for n in names)

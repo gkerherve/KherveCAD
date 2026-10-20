@@ -830,3 +830,73 @@ def _language(d):
     d.line(_q(0.12, 0.5), _q(0.88, 0.5), d.pal.select, 0.04)
     d.line(_q(0.20, 0.32), _q(0.80, 0.32), d.pal.select, 0.03)
     d.line(_q(0.20, 0.68), _q(0.80, 0.68), d.pal.select, 0.03)
+
+
+# =============================================================== publish
+def _out_arrow(d):
+    d.arrow(_q(0.70, 0.62), _q(0.96, 0.36), d.pal.make, 0.07, 0.15)
+
+
+@draws("export_cad")
+def _export_cad(d):
+    d.box(-1.0, -0.6, 0, 1.2, 1.2, 0.8)
+    d.cyl(-0.4, 0.0, 0.8, 0.4, 0.6, d.pal.select)
+    d.text(0.40, 0.95, "STEP", 0.12, d.pal.edge)
+    _out_arrow(d)
+
+
+@draws("export_scad")
+def _export_scad(d):
+    _sheet(d, 0.08, 0.10, 0.68, 0.90)
+    d.text(0.38, 0.56, "{ }", 0.20, d.pal.select)
+    _out_arrow(d)
+
+
+@draws("export_glb")
+def _export_glb(d):
+    _human_fig(d)
+    d.arrow(_q(0.74, 0.70), _q(0.98, 0.46), d.pal.make, 0.06, 0.13)
+
+
+@draws("planetcraft")
+def _planetcraft(d):
+    g = QLinearGradient(_q(0.1, 0.1), _q(0.9, 0.9))
+    g.setColorAt(0, QColor("#7cc576"))
+    g.setColorAt(1, QColor("#2f7f4a"))
+    d.p.setPen(d.pen(d.pal.edge, 0.04))
+    d.p.setBrush(QBrush(g))
+    d.p.drawEllipse(_q(0.46, 0.54), 0.36, 0.36)
+    d.p.setBrush(QColor("#3d8fd6"))
+    d.p.drawEllipse(_q(0.36, 0.62), 0.12, 0.08)
+    d.cx, d.cy, d.k = 0.80, 0.30, 0.09
+    d.box(-0.8, -0.8, 0, 1.6, 1.6, 1.6, d.pal.make)
+
+
+@draws("export_png")
+def _export_png(d):
+    frame = QPainterPath()
+    frame.addRoundedRect(QRectF(0.06, 0.16, 0.66, 0.58), 0.05, 0.05)
+    d.path(frame, d.pal.paper)
+    d.cx, d.cy, d.k = 0.39, 0.52, 0.12
+    d.box(-0.8, -0.8, 0, 1.6, 1.6, 1.2)
+    _out_arrow(d)
+
+
+@draws("export_movie")
+def _export_movie(d):
+    _animate(d)
+
+
+@draws("render_photo")
+def _render_photo(d):
+    d.cx, d.cy, d.k = 0.40, 0.66, 0.16
+    d.p.setPen(d.pen(d.pal.edge, 0.02))
+    d.p.setBrush(shade(d.pal.body, 0.8))
+    d.p.drawEllipse(_q(0.40, 0.84), 0.30, 0.07)          # shadow
+    d.ball(_q(0.40, 0.58), 0.24, d.pal.select)
+    for a in range(0, 360, 45):
+        r = math.radians(a)
+        d.line(_q(0.80 + 0.07 * math.cos(r), 0.20 + 0.07 * math.sin(r)),
+               _q(0.80 + 0.14 * math.cos(r), 0.20 + 0.14 * math.sin(r)),
+               d.pal.make, 0.035)
+    d.disc(_q(0.80, 0.20), 0.055, d.pal.make)
