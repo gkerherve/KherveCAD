@@ -24,6 +24,35 @@ os.environ["KHERVECAD_USER_LIBRARY"] = tempfile.mkdtemp(
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+# The tests' OWN settings file. KherveCAD keeps its options in
+# QSettings("Kherve", "KherveCAD") — on macOS the user's real
+# com.kherve.KherveCAD.plist — and the suite used to write there: the
+# scale bar switched off for the run, every style test leaving
+# "KherveCAD" as the interface style. A KherveCAD opened during a run
+# came up classic, without its scale bar (the user, 2026-10-20). Every
+# QSettings(organisation, application) of the run now opens an INI file
+# in a temporary folder instead, so the user's settings are never read
+# or written by a test.
+from PyQt5 import QtCore  # noqa: E402
+
+_REAL_QSETTINGS = QtCore.QSettings
+_REAL_QSETTINGS.setPath(_REAL_QSETTINGS.IniFormat, _REAL_QSETTINGS.UserScope,
+                        tempfile.mkdtemp(prefix="kcad-test-settings-"))
+
+
+class _TestSettings(_REAL_QSETTINGS):
+    def __init__(self, *args, **kwargs):
+        if len(args) >= 2 and isinstance(args[0], str) \
+                and isinstance(args[1], str):
+            super().__init__(_REAL_QSETTINGS.IniFormat,
+                             _REAL_QSETTINGS.UserScope, args[0], args[1],
+                             *args[2:], **kwargs)
+        else:
+            super().__init__(*args, **kwargs)
+
+
+QtCore.QSettings = _TestSettings
+
 import pytest
 
 # Fusion is the app's default; the tests were written for the classic
