@@ -37,6 +37,12 @@ NAV_TIPS = {
         ["Click the hand.", "Drag in the 3D view.",
          "Click the hand again to orbit with a left drag."],
         "Right- or middle-drag pans at any time."),
+    "nav3d_lighting": (
+        "Lighting panel",
+        "Shows or hides the panel of brightness, contrast, light and "
+        "height sliders in the 3D view's corner.",
+        ["Click to hide the panel; click again to bring it back."],
+        "Your choice is remembered next time."),
     "nav2d_left": ("Scroll left",) + _PAN_2D,
     "nav2d_right": ("Scroll right",) + _PAN_2D,
     "nav2d_up": ("Scroll up",) + _PAN_2D,

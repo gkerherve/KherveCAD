@@ -519,12 +519,18 @@ def attach_3d(view):
         ("stage", "mdi.box-shadow", "◐",
          "nav3d_stage",
          lambda: view.set_stage(not view.stage), False),
+        ("lighting", "mdi.brightness-6", "☀", "nav3d_lighting",
+         lambda: view.set_lighting_bar(
+             bar.buttons["lighting"].isChecked()), False),
     ])
     # the button shows the stage's state, whoever switched it
     stage = bar.buttons["stage"]
     stage.setCheckable(True)
     stage.setChecked(bool(getattr(view, "stage", False)))
     bar.buttons["hand"].setCheckable(True)
+    light = bar.buttons["lighting"]
+    light.setCheckable(True)
+    light.setChecked(bool(getattr(view, "lighting_wanted", True)))
     view.stage_toggled.connect(stage.setChecked)
     layout = bar.layout()
     layout.insertWidget(0, _vline(bar))

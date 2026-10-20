@@ -284,3 +284,19 @@ def test_the_3d_hand_slides_the_camera(app):
     hand.eventFilter(view, _E(QEvent.MouseMove, QPoint(360, 200)))
     hand.eventFilter(view, _E(QEvent.MouseButtonRelease, QPoint(360, 200)))
     assert view.target != target and view.yaw == yaw
+
+
+def test_the_3d_bar_shows_and_hides_the_lighting_panel(app):
+    from khervecad.view3d import View3D
+    view = View3D()
+    view.resize(640, 420)
+    view.show()
+    bar = viewnav.attach_3d(view)
+    button = bar.buttons["lighting"]
+    assert button.isCheckable() and button.isChecked()
+    assert view.lighting_bar.isVisible()
+    button.click()                                  # hide
+    assert not view.lighting_bar.isVisible() and not view.lighting_wanted
+    button.click()                                  # back
+    assert view.lighting_bar.isVisible()
+    view.close()
