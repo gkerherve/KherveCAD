@@ -44,11 +44,17 @@ TABS = [
     # grouped like Fusion's SKETCH tab (CREATE / MODIFY / INSERT)
     ("sketch", "SKETCH", "Sketch", ["sketch", "sketch_shapes",
                                     "sketch_modify", "sketch_insert"]),
+    # (2026-10-20, the user asked for a check that every menu command is
+    # on the ribbon, grouped where Fusion would put it: the mechanical
+    # features, a SURFACE tab, SubD in FORM, figures in CHARACTER, the
+    # assembly tools, imports, Shell in MODIFY)
     ("features", "SOLID", "Features",
-     ["create", "shapes3d", "extrude", "transform", "combine", "finish", "logic",
-      "assemble", "document"]),
-    ("form", "FORM", "Sculpt", ["deform", "edit"]),
-    ("character", "CHARACTER", "Character", ["character"]),
+     ["create", "extrude", "mechanical", "transform",
+      "combine", "finish", "logic", "assemble", "solid_insert",
+      "document"]),
+    ("surface", "SURFACE", "Surfaces", ["curves", "surfaces"]),
+    ("form", "FORM", "Sculpt", ["form_create", "deform", "edit"]),
+    ("character", "CHARACTER", "Character", ["figures", "character"]),
     ("inspect", "INSPECT", "Evaluate",
      ["analyse", "checks", "dimension", "documents"]),
     # every builder window (2026-10-19, the user: "where are all the
@@ -57,7 +63,10 @@ TABS = [
 ]
 
 #: panels that are not operation families: key -> title
-EXTRA_PANELS = {"sketch_shapes": "Shapes", "shapes3d": "Shapes",
+EXTRA_PANELS = {"assemble_more": "Assemble", "mechanical": "Features", "curves": "Curves",
+                "surfaces": "From curves", "form_create": "Create form",
+                "figures": "Figures", "solid_insert": "Insert",
+                "sketch_shapes": "Shapes", "shapes3d": "Shapes",
                 "document": "Document", "checks": "Evaluate", "dimension": "Dimension",
                 "builders": "Builders", "sketch": "Create", "create": "Create",
                 "sketch_modify": "Modify", "sketch_insert": "Insert",
@@ -93,8 +102,52 @@ MENU_PANELS = {
         ("insert/shapes & patterns/honeycomb panel (2d)", None)],
     "shapes3d": [("insert/shapes & patterns/3d curve", None),
                  ("insert/shapes & patterns/regular polyhedron", None)],
+    "mechanical": [
+        ("insert/mechanical features/hole (counterbore, countersink, "
+         "nut trap)", None),
+        ("insert/mechanical features/thread (screw thread)", None),
+        ("insert/mechanical features/gear (involute)", None),
+        ("insert/mechanical features/knurled cylinder", None),
+        ("insert/mechanical features/textured cylinder / panel", None),
+        ("insert/code & files/sheet metal part", None)],
+    "curves": [("insert/draw 3d curve (click points)", None),
+               ("insert/shapes & patterns/3d curve", None)],
+    # six kinds of one node: each its own picture ("!" = always)
+    "surfaces": [("tools/surface from curves/" + t, g) for t, g in (
+        ("loft — a skin through the curves, in order", "!mdi.vector-curve"),
+        ("sweep — first curve is the rail, the rest are profiles",
+         "!mdi.vector-polyline"),
+        ("sweep along two rails — first two curves are rails",
+         "!mdi.vector-line"),
+        ("patch — fill inside the first (closed) curve",
+         "!mdi.texture-box"),
+        ("revolve — turn the curve about the z axis",
+         "!mdi.rotate-3d-variant"),
+        ("extrude — push the curve straight up", "!mdi.arrow-expand-up"))],
+    "form_create": [("insert/subd box (smooth, edit its cage)", None),
+                    ("tools/convert to subd (smooth cage)", None)],
+    "figures": [("tools/add a figure/human figure", None),
+                ("tools/add a figure/skin (body round a skeleton)", None)],
+    "solid_insert": [
+        ("insert/part library", None),
+        ("file/import openscad", "mdi.code-braces-box"),
+        ("file/import mesh (stl/obj/off/3mf)", "mdi.cube-scan"),
+        ("file/import cad file (step/iges/rhino)", None),
+        ("file/import height map (surface)", None),
+        ("file/import image stack (tiff)", None),
+        ("file/import animated character (glb)", None),
+        ("view/add reference image", None),
+        ("view/clear reference images", "mdi.image-remove"),
+        ("insert/code & files", None)],
+    "assemble_more": [
+        ("insert/new object", None),
+        ("view/gumball (move / turn handles)", None),
+        ("view/exploded view", None),
+        ("view/animate ($t)", None)],
     "document": [("edit/common segments ($fn)", "kc:common_segments"),
-                 ("edit/document units", "mdi.ruler-square")],
+                 ("edit/document units", "mdi.ruler-square"),
+                 ("edit/document scale (1 : n)", "mdi.scale-balance"),
+                 ("view/customizer (sliders)", None)],
     "dimension": [("tools/measure & annotate/add dimension", None),
                   ("view/dimensions on selection", "mdi.ruler"),
                   ("view/clear dimensions", "mdi.eraser")],
@@ -102,7 +155,7 @@ MENU_PANELS = {
 #: panels whose tools all show, names under the icons (few, big tools)
 FUSION_NAMED = {"builders"}
 #: panels whose every tool shows as an icon (the INSPECT tab has room)
-FUSION_ALL = {"analyse", "checks", "dimension", "document",
+FUSION_ALL = {"analyse", "checks", "dimension",
               "sketch_shapes", "shapes3d"}
 FUSION_SHOWN_MANY = 4
 #: icons shown by panels with a count of their own
@@ -199,12 +252,19 @@ def panel_actions(win, key):
     """(title, actions) of panel *key*."""
     parts = win._bar_parts
     families = dict(parts["families"])
+    if key == "finish":                # Fusion's MODIFY holds Shell too
+        acts = list(families.get("finish", []))
+        shell = [a for _k, fam in parts["families"] for a in fam
+                 if a.data() == "shell"]
+        return language.tr(tooltips.GROUPS.get("finish", ("Finish", ""))[0]
+                           ), acts + [a for a in shell if a not in acts]
     if key in families:
         title = tooltips.GROUPS.get(key, (key, ""))[0]
         return language.tr(title), families[key]
     title = language.tr(EXTRA_PANELS[key])
     if key == "assemble":
-        return title, [parts["snap"]]
+        return title, [parts["snap"]] + panel_actions(win,
+                                                       "assemble_more")[1]
     from .view2d import MEASURE
     if key == "sketch":
         from . import sketch_mode
@@ -220,7 +280,10 @@ def panel_actions(win, key):
             act = paths.get(path)
             if act is None:
                 continue
-            if glyph and glyph.startswith("kc:"):
+            if glyph and glyph.startswith("!"):
+                act.setIcon(icons.icon(glyph[1:], icons.family_color(
+                    "extrude")))
+            elif glyph and glyph.startswith("kc:"):
                 from . import icons_cad
                 act.setData(glyph[3:])
                 painted = icons_cad.icon(glyph[3:], self_style(win))
@@ -247,7 +310,8 @@ def panel_actions(win, key):
         return title, [a for a in win._tools_bar.actions()
                        if not a.isSeparator() and a not in drawing
                        and a.text() and a.data() is not None
-                       and a.data() != "house_builder"]
+                       and a.data() != "house_builder"] \
+            + panel_actions(win, "shapes3d")[1]   # 3D curve, polyhedron
     if key == "edit":
         return title, [win._edit_mesh_act]
     if key == "documents":
@@ -261,6 +325,8 @@ def panel_actions(win, key):
 def short_name(text):
     """A button's name without its explanation in brackets: "Resize
     (absolute size)" is "Resize" (the tooltip keeps the whole)."""
+    text = text.split("\t")[0]           # a menu item's shortcut
+    text = re.sub(r"(\.\.\.|…)\s*$", "", text)   # and its dots
     return re.sub(r"\s*\(.*\)\s*$", "", text) or text
 
 

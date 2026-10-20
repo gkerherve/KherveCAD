@@ -142,7 +142,8 @@ def test_solidworks_drops_small_names_when_narrow(window, app):
     app.processEvents()
     small = window.ribbon.small[window.ribbon.stack.currentIndex()]
     assert small[0].toolButtonStyle() == 0              # icon only
-    window.resize(3200, 900)          # SOLID has two more panels now
+    index = window.ribbon.stack.currentIndex()       # wide enough
+    window.resize(window.ribbon._full[index] + 400, 900)
     app.processEvents()
     assert small[0].toolButtonStyle() == 2              # beside icon
     assert all("(" not in b.text() for b in small)      # short names
@@ -351,3 +352,51 @@ def test_the_corner_sketch_shows_each_part_picked_in_the_object(
         shares.append(_orange_share(mini.pixmap()))
     # each part fills a good share of the corner, however small or far
     assert all(s > 0.03 for s in shares), shares
+
+
+#: menu commands on the ribbon under another name (the analysis copies)
+_RIBBON_ALIASES = {"check interference": "interference",
+                   # the Library menu: its parts are the Part Library's
+                   "library": "part library",
+                   "check for 3d printing": "print check"}
+
+
+def test_every_fusion_menu_command_is_on_the_ribbon(window, app):
+    """Fusion keeps every Create / Modify / Assemble / Inspect / Insert
+    command on a ribbon tab too (2026-10-20, the user: "does all the
+    menu make sense? are they all together where they should be?").
+    A submenu whose own button is on the ribbon covers its items."""
+    from khervecad.interface_menus import norm
+    toolbar_style.apply(window, "Fusion")
+
+    def keys(act):
+        text = norm(act.text())
+        out = {text, text.split(" (")[0], _RIBBON_ALIASES.get(text, "")}
+        if isinstance(act.data(), str):
+            out.add("d:" + act.data())
+        return out - {""}
+
+    on = set()
+    for _key, _f, _s, panels in ribbon.TABS:
+        for panel in panels:
+            for act in ribbon.panel_actions(window, panel)[1]:
+                on |= keys(act)
+    missing = []
+
+    def walk(menu, path):
+        for act in menu.actions():
+            if act.isSeparator():
+                continue
+            here = path + " ▸ " + act.text().replace("&", "")
+            if keys(act) & on:
+                continue                   # its button (or the submenu's)
+            if act.menu() is not None:
+                walk(act.menu(), here)
+            else:
+                missing.append(here)
+
+    for top in window.menuBar().actions():
+        name = top.text().replace("&", "")
+        if name in ("Create", "Modify", "Assemble", "Inspect", "Insert"):
+            walk(top.menu(), name)
+    assert not missing, missing
