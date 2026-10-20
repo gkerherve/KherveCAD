@@ -306,3 +306,48 @@ def test_picking_in_the_tree_frames_it_in_the_sketch(window, app):
         app.processEvents()
         centre = view.mapToScene(view.viewport().rect().center())
         assert abs(centre.x() - x) < 40, (node.name, centre.x())
+
+
+def _orange_share(pixmap):
+    """How much of a picture is the sketch's selection orange."""
+    img = pixmap.toImage()
+    hits = total = 0
+    for y in range(0, img.height(), 3):
+        for x in range(0, img.width(), 3):
+            c = img.pixelColor(x, y)
+            total += 1
+            if c.red() > 200 and 110 < c.green() < 210 and c.blue() < 150:
+                hits += 1
+    return hits / max(total, 1)
+
+
+def test_the_corner_sketch_shows_each_part_picked_in_the_object(
+        window, app):
+    """Visual: in Fusion's 3D mode, picking a part inside an Object in
+    the tree fills the corner sketch with THAT part (an oak's bark, then
+    its leaves) — it used to frame on a never-shown 100 px view and the
+    corner showed empty grid."""
+    from khervecad.mcp_tools import McpToolExecutor
+    toolbar_style.apply(window, "Fusion")
+    McpToolExecutor(window).execute(
+        "apply_code", {"code": (
+            "module Pair() {\n"
+            "  color(\"brown\") translate([0, 0, 0]) cube([40, 10, 10]);"
+            " // Bark\n"
+            "  color(\"green\") translate([300, 300, 0]) cube(8);"
+            " // Leaf\n"
+            "}\nPair();\n")})
+    app.processEvents()
+    obj = next(n for n in window.model.all_components())
+    window.builder.open_component(obj)
+    app.processEvents()
+    mini = window._sketch_mini2d
+    shares = []
+    for colour in obj.children:
+        window.builder.object_tab.tree.select_nodes([colour])
+        app.processEvents()
+        mini._timer.stop()
+        mini.redraw()
+        shares.append(_orange_share(mini.pixmap()))
+    # each part fills a good share of the corner, however small or far
+    assert all(s > 0.03 for s in shares), shares

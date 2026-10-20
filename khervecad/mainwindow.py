@@ -976,6 +976,8 @@ class MainWindow(QMainWindow):
         self.view3d.set_highlight_mesh(tris)
         self._refresh_anchor_markers()
         self._show_dimensions(tris)
+        from . import sketch_mode         # the corner views follow it
+        sketch_mode.selection_changed(self)
 
     def _show_dimensions(self, tris):
         """Status-bar read-out of the selected object's overall size

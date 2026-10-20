@@ -281,14 +281,30 @@ class Mini2D(QLabel):
         view = self.win.view2d
         try:
             if view.isHidden():
-                # a view never shown has no size of its own yet: give it
-                # the canvas's, framed once round the drawing
+                # a hidden view keeps whatever size it last had (none, if
+                # it was never shown): give it the canvas's and lay its
+                # viewport out off screen, or framing works on a 100 px
+                # view and the corner shows empty grid
                 size = self.win.view3d.size()
                 if view.size() != size:
                     view.resize(size)
-                    if not getattr(view, "_mini_fitted", False):
-                        view._mini_fitted = True
-                        view.fit_content()
+                view.setAttribute(Qt.WA_DontShowOnScreen, True)
+                view.show()
+                view.hide()
+                view.setAttribute(Qt.WA_DontShowOnScreen, False)
+            # a new selection is framed, as the sketch frames it (the
+            # user: pick the oak's bark, the corner shows the bark)
+            picked = frozenset(getattr(self.win, "_selected_ids", ()))
+            if picked != getattr(self, "_framed_for", None):
+                self._framed_for = picked
+                rect = self.win.scene.isolated_bounds()
+                if rect is not None:
+                    view.frame_rect(rect)
+                elif picked and view.scene().selectedItems():
+                    view.zoom_selection()
+                elif not getattr(view, "_mini_fitted", False):
+                    view.fit_content()
+                view._mini_fitted = True
             # the whole view, its floating bars left out
             bars = [w for w in view.findChildren(QWidget)
                     if w.parent() is view and w is not view.viewport()
@@ -298,12 +314,6 @@ class Mini2D(QLabel):
             for w in bars:
                 w.hide()
             try:
-                view.ensurePolished()
-                if view.isHidden():
-                    view.setAttribute(Qt.WA_DontShowOnScreen, True)
-                    view.show()          # lays the viewport out, off screen
-                    view.hide()
-                    view.setAttribute(Qt.WA_DontShowOnScreen, False)
                 port = view.viewport()
                 pix = QPixmap(port.size())
                 pix.fill(Qt.white)
@@ -346,3 +356,11 @@ def _mini2d(win):
     if got is None:
         got = win._sketch_mini2d = Mini2D(win)
     return got
+
+
+def selection_changed(win):
+    """The selection moved (tree or sketch): both corner views follow."""
+    for name in ("_sketch_mini2d", "_sketch_inset"):
+        got = getattr(win, name, None)
+        if got is not None:
+            got.later()
