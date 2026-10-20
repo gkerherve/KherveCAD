@@ -439,3 +439,54 @@ def test_leaving_the_sketch_frames_the_picked_part_in_3d(window, app):
     target = window.view3d.target
     assert abs(target[0] - 304) < 10 and abs(target[1] - 304) < 10
     assert abs(target[2] - 4) < 10                  # on the leaf
+
+
+def _selection_box(pixmap):
+    """(left, right, width) of the selected shape's blue in a picture,
+    or None when there is none."""
+    img = pixmap.toImage()
+    xs = [x for y in range(0, img.height(), 2)
+          for x in range(0, img.width(), 2)
+          if (lambda c: c.blue() > 150 and c.blue() - c.red() > 25
+              and c.green() > 100)(img.pixelColor(x, y))]
+    if not xs:
+        return None
+    return min(xs), max(xs), img.width()
+
+
+def test_the_corner_keeps_the_part_after_a_round_trip(window, app):
+    """The user's door handle: pick the spring cassette's housing
+    cylinder, open the sketch from the corner, come back to 3D — the
+    corner must still show that cylinder, whole. It copied the sketch's
+    own zoom, squashed in its splitter, and showed a cropped patch."""
+    import os
+    from khervecad import sketch_mode
+    path = os.path.join(os.path.dirname(__file__), "..", "khervecad",
+                        "parts", "Detailed parts",
+                        "Golden English lever door handle set.kcad")
+    toolbar_style.apply(window, "Fusion")
+    window.open_any(os.path.abspath(path))
+    for _ in range(10):
+        app.processEvents()
+    obj = next(c for c in window.model.all_components()
+               if "cassette" in c.name.lower())
+    window.builder.open_component(obj)
+    app.processEvents()
+    cyl = next(n for n in obj.walk() if n.type == "cylinder")
+    window.builder.object_tab.tree.select_nodes([cyl])
+    for _ in range(5):
+        app.processEvents()
+    mini = window._sketch_mini2d
+    mini.mousePressEvent(None)                       # open the sketch
+    for _ in range(5):
+        app.processEvents()
+    window._sketch_inset.mousePressEvent(None)       # back to 3D
+    for _ in range(5):
+        app.processEvents()
+    mini._timer.stop()
+    mini.redraw()
+    box = _selection_box(mini.pixmap())
+    assert box is not None                           # the part is there
+    left, right, width = box
+    assert left > 4 and right < width - 4            # whole, not cropped
+    window._dirty = False

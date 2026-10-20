@@ -131,6 +131,7 @@ def enter(win):
         return
     win._sketching = True
     _show(win, True)
+    QTimer.singleShot(0, lambda: _frame_2d(win))
     if getattr(win, "ribbon", None) is not None:
         win.ribbon.show_tab("sketch")
     win.view2d.setFocus()
@@ -156,6 +157,28 @@ def finish(win):
 
 #: how much further back than a tight fit the 3D view comes back
 FRAME_MARGIN = 1.8
+
+
+def _picked_rect(win):
+    """The scene rectangle of what is picked — the part shown alone, the
+    selected shapes — else of the whole drawing; None when empty."""
+    scene = win.view2d.scene()
+    rect = win.scene.isolated_bounds()
+    if rect is None:
+        for item in scene.selectedItems():
+            box = item.sceneBoundingRect()
+            rect = box if rect is None else rect.united(box)
+    if rect is None or rect.isEmpty():
+        rect = scene.itemsBoundingRect()
+    return None if rect.isEmpty() else rect
+
+
+def _frame_2d(win):
+    """Opening the sketch shows what is picked, as leaving it shows it
+    in 3D (the sketch could open zoomed out on empty paper)."""
+    rect = _picked_rect(win)
+    if rect is not None and win.view2d.isVisible():
+        win.view2d.frame_rect(rect)
 
 
 def _frame_3d(win):
@@ -295,65 +318,52 @@ class Mini2D(QLabel):
             self._timer.start()
 
     def redraw(self):
-        """The sketch view itself, drawn off screen and shrunk: its grid
-        (when on), axes, colours and selection exactly as it shows (a
-        bare scene render looked nothing like it — the user)."""
+        """The sketch, drawn by a twin sketch view of the SAME scene
+        (grid when on, axes, colours, selection) framed on what is
+        picked, else the whole drawing, and shrunk into the corner.
+
+        A twin, never the user's own 2D view: borrowing that one showed
+        a cropped, empty patch — hidden in its splitter it is squashed
+        to no height, and its own zoom was whatever the sketch last had
+        (the user's door handle: the cylinder seen in 2D was gone from
+        the corner after going back to 3D)."""
         from PyQt5.QtCore import QSize
         from PyQt5.QtWidgets import QWidget
-        view = self.win.view2d
         try:
-            if view.isHidden():
-                # a hidden view keeps whatever size it last had (none, if
-                # it was never shown): give it the canvas's and lay its
-                # viewport out off screen, or framing works on a 100 px
-                # view and the corner shows empty grid
-                size = self.win.view3d.size()
-                if view.size() != size:
-                    view.resize(size)
-                view.setAttribute(Qt.WA_DontShowOnScreen, True)
-                view.show()
-                view.hide()
-                view.setAttribute(Qt.WA_DontShowOnScreen, False)
-            # a new selection is framed, as the sketch frames it (the
-            # user: pick the oak's bark, the corner shows the bark)
-            picked = frozenset(getattr(self.win, "_selected_ids", ()))
-            if picked != getattr(self, "_framed_for", None):
-                self._framed_for = picked
-                rect = self.win.scene.isolated_bounds()
-                if rect is not None:
-                    view.frame_rect(rect)
-                elif picked and view.scene().selectedItems():
-                    view.zoom_selection()
-                elif not getattr(view, "_mini_fitted", False):
-                    view.fit_content()
-                view._mini_fitted = True
-            # the whole view, its floating bars left out
-            bars = [w for w in view.findChildren(QWidget)
-                    if w.parent() is view and w is not view.viewport()
-                    and not w.isHidden()
-                    and w.objectName() not in ("qt_scrollarea_hscrollbar",
-                                               "qt_scrollarea_vscrollbar")]
-            for w in bars:
-                w.hide()
-            try:
-                port = view.viewport()
-                pix = QPixmap(port.size())
-                pix.fill(Qt.white)
-                port.render(pix, flags=QWidget.RenderFlags(
-                    QWidget.DrawWindowBackground))
-            finally:
-                for w in bars:
-                    w.show()
+            twin = self._twin()
+            rect = _picked_rect(self.win)
+            if rect is not None:
+                twin.frame_rect(rect)
+            port = twin.viewport()
+            pix = QPixmap(port.size())
+            pix.fill(Qt.white)
+            port.render(pix, flags=QWidget.RenderFlags(
+                QWidget.DrawWindowBackground))
             pix = pix.scaled(QSize(self.W - 2, self.H - 2),
-                             Qt.KeepAspectRatioByExpanding,
-                             Qt.SmoothTransformation)
-            # centred crop to the frame
-            x = (pix.width() - (self.W - 2)) // 2
-            y = (pix.height() - (self.H - 2)) // 2
-            pix = pix.copy(x, y, self.W - 2, self.H - 2)
+                             Qt.KeepAspectRatio, Qt.SmoothTransformation)
         except Exception:                   # never break the 3D view
             return
         self.setPixmap(pix)
+
+    def _twin(self):
+        """An off-screen SketchView on the document's scene, the corner's
+        own camera (3x the corner's size, so lines stay fine)."""
+        twin = getattr(self, "_twin_view", None)
+        if twin is None:
+            from PyQt5.QtWidgets import QWidget
+            from .view2d import SketchView
+            twin = SketchView(self.win.view2d.scene())
+            twin.setAttribute(Qt.WA_DontShowOnScreen, True)
+            twin.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            twin.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            twin.resize((self.W - 2) * 3, (self.H - 2) * 3)
+            twin.show()                       # lays it out, off screen
+            for w in twin.findChildren(QWidget):
+                if w.parent() is twin and w is not twin.viewport():
+                    w.hide()                  # its polygon bar & co
+            self._twin_view = twin
+            self.destroyed.connect(twin.deleteLater)
+        return twin
 
     def place(self):
         r = self.win.view3d.rect()
