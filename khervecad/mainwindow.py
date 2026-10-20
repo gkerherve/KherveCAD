@@ -2629,6 +2629,11 @@ class MainWindow(QMainWindow):
             # an OpenSCAD render still running must not outlive the
             # window that asked for it
             self.engine.shutdown()
+            # the corner sketch's off-screen twin view goes too
+            mini = getattr(self, "_sketch_mini2d", None)
+            twin = getattr(mini, "_twin_view", None)
+            if twin is not None:
+                twin.close()
             if self in MainWindow._windows:    # let a closed window GC
                 MainWindow._windows.remove(self)
             event.accept()

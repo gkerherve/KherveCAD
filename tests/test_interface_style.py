@@ -490,3 +490,25 @@ def test_the_corner_keeps_the_part_after_a_round_trip(window, app):
     left, right, width = box
     assert left > 4 and right < width - 4            # whole, not cropped
     window._dirty = False
+
+
+def test_closing_the_window_leaves_nothing_keeping_the_app_alive(app):
+    """The corner sketch's off-screen twin view was a 'shown' top-level
+    window, so KherveCAD kept running after its window closed and could
+    not be opened again (the user, 2026-10-20)."""
+    from PyQt5.QtCore import Qt
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    win.resize(1400, 850)
+    win.show()
+    toolbar_style.apply(win, "Fusion")
+    win.model.add_node("cube")
+    app.processEvents()
+    win._sketch_mini2d.redraw()
+    win._dirty = False
+    win.close()
+    app.processEvents()
+    keeping = [type(w).__name__ for w in app.topLevelWidgets()
+               if w.isVisible() and w.testAttribute(Qt.WA_QuitOnClose)]
+    assert not keeping, keeping
+    toolbar_style.apply(win, toolbar_style.CLASSIC)

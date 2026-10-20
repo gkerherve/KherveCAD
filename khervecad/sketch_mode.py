@@ -354,6 +354,10 @@ class Mini2D(QLabel):
             from .view2d import SketchView
             twin = SketchView(self.win.view2d.scene())
             twin.setAttribute(Qt.WA_DontShowOnScreen, True)
+            # never a window the app waits for: a "shown" twin kept
+            # KherveCAD running after its window closed, and it could
+            # not be opened again (the user, 2026-10-20)
+            twin.setAttribute(Qt.WA_QuitOnClose, False)
             twin.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
             twin.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
             twin.resize((self.W - 2) * 3, (self.H - 2) * 3)
@@ -363,6 +367,7 @@ class Mini2D(QLabel):
                     w.hide()                  # its polygon bar & co
             self._twin_view = twin
             self.destroyed.connect(twin.deleteLater)
+            self.win.destroyed.connect(twin.deleteLater)
         return twin
 
     def place(self):
