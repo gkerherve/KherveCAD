@@ -413,12 +413,20 @@ class MainWindow(QMainWindow):
         self._dims_act.toggled.connect(self._set_show_dims)
         view_menu.addAction(self._dims_act)
         view_menu.addAction(self.tr("Clear &Dimensions"),
-                            self.model.clear_dimensions)
+                            lambda: self._clear_said(
+                                self.model.dimensions,
+                                self.model.clear_dimensions,
+                                self.tr("Dimensions cleared."),
+                                self.tr("No dimensions to clear.")))
         view_menu.addAction(icons.icon("mdi.image-outline"),
                             self.tr("Add &Reference Image…"),
                             self._add_reference_image)
         view_menu.addAction(self.tr("Clear Reference &Images"),
-                            self.model.clear_reference_images)
+                            lambda: self._clear_said(
+                                self.model.reference_images,
+                                self.model.clear_reference_images,
+                                self.tr("Reference images removed."),
+                                self.tr("No reference images to clear.")))
         view_menu.addSeparator()
         view_menu.addAction(self.tr("Zoom &In"),
                             lambda: self.view2d.zoom(1.25), "Ctrl++")
@@ -463,6 +471,11 @@ class MainWindow(QMainWindow):
         for name in BACKGROUNDS:
             act = QAction(self.tr(name), self, checkable=True)
             act.setChecked(name == self.view3d.background)
+            # every entry explains itself — the interface styles add
+            # their own (Fusion, SolidWorks) once used
+            act.setStatusTip(self.tr(
+                "Paint the 3D view's background in the {name} look"
+            ).format(name=name))
             act.triggered.connect(
                 lambda _, n=name: self.view3d.set_background(n))
             bg_group.addAction(act)
@@ -1587,6 +1600,15 @@ class MainWindow(QMainWindow):
         self.view3d.set_projection(name)
         for act in self._proj_group.actions():
             act.setChecked(act.text() == self.view3d.projection)
+
+    def _clear_said(self, items, clear, done, none):
+        """A Clear command says what it did — with nothing to clear it
+        used to do nothing visible at all (the ribbon inspection)."""
+        had = bool(items)
+        clear()
+        text = done if had else none
+        self.statusBar().showMessage(text, 4000)
+        self.view3d.flash(text, 3000)
 
     def choose_segments(self):
         """Edit ▸ Common Segments: one $fn for every round object."""

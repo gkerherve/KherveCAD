@@ -401,6 +401,12 @@ COMMANDS = {
         "Builder, this menu lists its floors so you can cut exactly at "
         "one.", [], None),
     # ----------------------------------------------------------- analyse
+    "common segments ($fn)": (
+        "Common segments ($fn)", "One segment count for every round "
+        "object (cylinders, spheres, revolves) — higher is smoother and "
+        "slower. 0 lets each object keep its own; 8 or fewer sides keep "
+        "intended polygons such as hex heads.",
+        ["Type the number of segments (45 is the default)."], None),
     "mass properties": ("Mass properties", "Volume, surface area, "
                         "centre of mass, bounding box and weight for the "
                         "selection or the whole model.", [], None),
@@ -411,6 +417,25 @@ COMMANDS = {
     "check interference": ("Check interference", "Finds parts that "
                            "overlap, contain or sit inside each "
                            "other.", [], None),
+    "check sharp edges": (
+        "Check sharp edges", "Finds the edges whose faces meet at a "
+        "sharp angle, tints them on the model and can fillet them or "
+        "note \"break sharp edges\" on the Blueprint.",
+        ["Select a part (or nothing for every part).",
+         "Choose the angle, then Fillet these or Note on drawing."], None),
+    "check fits & tolerances": (
+        "Check fits & tolerances", "Measures the gap between touching "
+        "or mated parts, names the ISO fit of a pin in a bore, and adds "
+        "up the Blueprint's toleranced dimensions (worst case and RSS).",
+        ["Select two or more parts (or none for all).",
+         "Read the gaps and fits; set limits for the stack-up."], None),
+    "check welds": (
+        "Check welds", "Finds where parts touch, reads the joint (lap, "
+        "T, corner, butt, fillet) and advises the process (TIG, MIG...), "
+        "filler and weld size — and judges the welds you recorded.",
+        ["Select the welded parts (or none for all).",
+         "Record the advised welds, or place the list on the "
+         "Blueprint."], None),
     "off": ("Heat map off", "Removes the colour overlay.", [], None),
     "wall thickness": ("Wall thickness map", "Paints the part red where "
                        "walls are thinner than your minimum.", [], None),

@@ -321,7 +321,7 @@ def make_bar_actions(win):
         _action(win, "mdi.format-list-numbered", "Bill of materials",
                 "bom", win.open_bom, "Ctrl+Alt+B", bind=False,
                 family="docs"),
-        _action(win, "mdi.pipe", "P&ID (process diagram)", "pid",
+        _action(win, "mdi.pipe", "P&&ID (process diagram)", "pid",
                 win.open_pid, "Ctrl+Alt+I", bind=False, family="docs")]
     win._cut_tool_act = _action(win, "mdi.content-cut", "Cut through",
                                 "cut_through", shortcut="Ctrl+Alt+X",

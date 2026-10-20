@@ -56,14 +56,18 @@ TABS = [
     ("form", "FORM", "Sculpt", ["form_create", "deform", "edit"]),
     ("character", "CHARACTER", "Character", ["figures", "character"]),
     ("inspect", "INSPECT", "Evaluate",
-     ["analyse", "checks", "dimension", "documents"]),
+     ["analyse", "checks", "dimension"]),
+    # Fusion's UTILITIES tab: drawings, making, add-ins, settings
+    ("utilities", "UTILITIES", "Utilities",
+     ["documents", "util_make", "util_addins", "util_utility"]),
     # every builder window (2026-10-19, the user: "where are all the
     # builders?") — the Tools menu's Builders section
     ("build", "BUILD", "Builders", ["builders"]),
 ]
 
 #: panels that are not operation families: key -> title
-EXTRA_PANELS = {"assemble_more": "Assemble", "mechanical": "Features", "curves": "Curves",
+EXTRA_PANELS = {"util_make": "Make", "util_addins": "Add-ins",
+                "util_utility": "Utility", "assemble_more": "Assemble", "mechanical": "Features", "curves": "Curves",
                 "surfaces": "From curves", "form_create": "Create form",
                 "figures": "Figures", "solid_insert": "Insert",
                 "sketch_shapes": "Shapes", "shapes3d": "Shapes",
@@ -144,6 +148,16 @@ MENU_PANELS = {
         ("view/gumball (move / turn handles)", None),
         ("view/exploded view", None),
         ("view/animate ($t)", None)],
+    "util_make": [("file/publish to printables", None),
+                  ("file/export stl", None)],
+    "util_addins": [("ai/connect to claude (simple)", None),
+                    ("ai/chatbox (requires api key)", None),
+                    ("ai/mesh from photo", None),
+                    ("git/commit", None), ("git/push", None),
+                    ("git/pull", None),
+                    ("git/connect to github / gitlab", None)],
+    "util_utility": [("edit/locate openscad", None),
+                     ("edit/language", None)],
     "document": [("edit/common segments ($fn)", "kc:common_segments"),
                  ("edit/document units", "mdi.ruler-square"),
                  ("edit/document scale (1 : n)", "mdi.scale-balance"),
@@ -251,6 +265,18 @@ def self_style(win):
 #: a painted icon for a menu command that has no key of its own, or
 #: shares one (the six surfaces from curves are one node): path -> key
 PAINT = {
+    "file/make 2d drawing of this view": "make2d",
+    "file/publish to printables": "printables",
+    "file/export stl": "export_stl",
+    "ai/connect to claude (simple)": "claude_connect",
+    "ai/chatbox (requires api key)": "chatbox",
+    "ai/mesh from photo": "photo3d",
+    "git/commit": "git_commit",
+    "git/push": "git_push",
+    "git/pull": "git_pull",
+    "git/connect to github / gitlab": "git_remote",
+    "edit/locate openscad": "locate_openscad",
+    "edit/language": "language",
     "insert/new object": "new_object",
     "view/gumball (move / turn handles)": "gumball",
     "view/exploded view": "explode",
@@ -394,7 +420,13 @@ def _panel_actions(win, key):
     if key == "edit":
         return title, [win._edit_mesh_act]
     if key == "documents":
-        return title, list(parts["docs"])
+        from .interface_menus import index
+        make2d = index(win).get("file/make 2d drawing of this view")
+        extra = []
+        if make2d is not None:
+            make2d.setProperty("kc_paint", "make2d")
+            extra.append(make2d)
+        return title, list(parts["docs"]) + extra
     # analyse: the measure tool of the vertical bar, the three checks
     # and a section (Cut Through)
     measure = [a for a in win._tool_group.actions() if a.data() == MEASURE]
@@ -405,10 +437,9 @@ def short_name(text):
     """A button's name without its explanation in brackets: "Resize
     (absolute size)" is "Resize" (the tooltip keeps the whole)."""
     text = text.split("\t")[0]           # a menu item's shortcut
-    # a menu item's mnemonic ("New &Object", "Se&gments"); "&&" is a
-    # real "&", and so is one between capitals ("P&ID")
-    text = text.replace("&&", "\0")
-    text = re.sub(r"(?<![A-Z])&|&(?![A-Z])", "", text).replace("\0", "&")
+    # a menu item's mnemonic ("New &Object", "Export S&TL"); "&&" is a
+    # real "&" ("P&&ID")
+    text = text.replace("&&", "\0").replace("&", "").replace("\0", "&")
     text = text.split(" — ")[0]          # "Loft — a skin through ..."
     text = re.sub(r"(\.\.\.|…)\s*$", "", text)   # and its dots
     return re.sub(r"\s*\(.*\)\s*$", "", text) or text

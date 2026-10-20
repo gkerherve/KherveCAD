@@ -370,7 +370,7 @@ def test_every_fusion_menu_command_is_on_the_ribbon(window, app):
     toolbar_style.apply(window, "Fusion")
 
     def keys(act):
-        text = norm(act.text())
+        text = norm(act.text()).replace("&", "")  # "P&ID" either way
         out = {text, text.split(" (")[0], _RIBBON_ALIASES.get(text, "")}
         if isinstance(act.data(), str):
             out.add("d:" + act.data())

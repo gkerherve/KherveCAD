@@ -623,3 +623,136 @@ def _dims_clear(d):
     d.disc(_q(0.72, 0.72), 0.17, d.pal.cut)
     d.line(_q(0.64, 0.64), _q(0.80, 0.80), d.pal.paper, 0.05)
     d.line(_q(0.80, 0.64), _q(0.64, 0.80), d.pal.paper, 0.05)
+
+
+# ============================================================= utilities
+@draws("make2d")
+def _make2d(d):
+    _sheet(d, 0.30, 0.10, 0.92, 0.80)
+    for a, b in (((0.42, 0.62), (0.80, 0.62)), ((0.42, 0.62), (0.42, 0.30)),
+                 ((0.80, 0.62), (0.80, 0.42)), ((0.42, 0.30), (0.62, 0.30))):
+        d.line(_q(*a), _q(*b), d.pal.edge, 0.035)
+    d.cx, d.cy, d.k = 0.22, 0.78, 0.13
+    d.box(-0.8, -0.8, 0, 1.6, 1.6, 1.0)
+
+
+@draws("printables")
+def _printables(d):
+    d.box(-1, -1, 0, 2, 2, 0.25, shade(d.pal.body, 0.9))
+    d.box(-0.5, -0.5, 0.25, 1.0, 1.0, 0.9, d.pal.make)
+    nozzle = [d.P(0, 0, 2.3), d.P(0.25, -0.25, 2.0), d.P(0, 0, 1.4),
+              d.P(-0.25, 0.25, 2.0)]
+    d.poly(nozzle, shade(d.pal.body, 1.1))
+    d.arrow(_q(0.86, 0.60), _q(0.86, 0.12), d.pal.select, 0.06, 0.14)
+
+
+@draws("export_stl")
+def _export_stl(d):
+    """A triangulated block going out as a file."""
+    d.box(-1, -1, 0, 1.6, 1.6, 1.2)
+    for a, b in (((-1, 0.6, 0), (0.6, 0.6, 1.2)),
+                 ((0.6, -1, 0), (0.6, 0.6, 1.2)),
+                 ((-1, -1, 1.2), (0.6, 0.6, 1.2))):
+        d.line(d.P(*a), d.P(*b), shade(d.pal.body, 0.55), 0.03)
+    d.arrow(d.P(0.9, 0.9, 0.6), d.P(2.0, 2.0, 0.6), d.pal.make, 0.07, 0.15)
+
+
+@draws("claude_connect")
+def _claude_connect(d):
+    d.disc(_q(0.34, 0.50), 0.22, d.pal.make)
+    for i in range(8):
+        a = math.radians(i * 45)
+        d.line(_q(0.34 + 0.08 * math.cos(a), 0.50 + 0.08 * math.sin(a)),
+               _q(0.34 + 0.19 * math.cos(a), 0.50 + 0.19 * math.sin(a)),
+               d.pal.paper, 0.04)
+    d.line(_q(0.56, 0.50), _q(0.72, 0.50), d.pal.edge, 0.05)
+    d.cx, d.cy, d.k = 0.80, 0.56, 0.10
+    d.box(-0.8, -0.8, 0, 1.6, 1.6, 1.2)
+
+
+@draws("chatbox")
+def _chatbox(d):
+    bubble = QPainterPath()
+    bubble.addRoundedRect(QRectF(0.08, 0.14, 0.84, 0.56), 0.14, 0.14)
+    tail = QPainterPath(_q(0.26, 0.66))
+    tail.lineTo(_q(0.20, 0.88))
+    tail.lineTo(_q(0.44, 0.68))
+    d.path(bubble.united(tail), d.pal.paper)
+    for i, c in enumerate((d.pal.make, d.pal.select, d.pal.body)):
+        d.disc(_q(0.32 + i * 0.18, 0.42), 0.05, c)
+
+
+@draws("photo3d")
+def _photo3d(d):
+    cam = QPainterPath()
+    cam.addRoundedRect(QRectF(0.06, 0.30, 0.50, 0.38), 0.06, 0.06)
+    d.path(cam, shade(d.pal.body, 0.9))
+    d.p.setPen(d.pen())
+    d.p.setBrush(d.pal.paper)
+    d.p.drawEllipse(_q(0.31, 0.49), 0.11, 0.11)
+    d.arrow(_q(0.58, 0.49), _q(0.72, 0.49), d.pal.make, 0.045, 0.09)
+    d.cx, d.cy, d.k = 0.84, 0.56, 0.09
+    d.box(-0.8, -0.8, 0, 1.6, 1.6, 1.4, d.pal.select)
+
+
+def _git(d, arrow=None):
+    d.line(_q(0.30, 0.18), _q(0.30, 0.82), d.pal.edge, 0.06)
+    d.line(_q(0.30, 0.55), _q(0.66, 0.34), d.pal.edge, 0.06)
+    for x, y, c in ((0.30, 0.18, d.pal.select), (0.30, 0.82, d.pal.select),
+                    (0.66, 0.30, d.pal.make)):
+        d.p.setPen(d.pen())
+        d.p.setBrush(c)
+        d.p.drawEllipse(_q(x, y), 0.09, 0.09)
+    if arrow == "up":
+        d.arrow(_q(0.84, 0.86), _q(0.84, 0.50), d.pal.make, 0.05, 0.11)
+    elif arrow == "down":
+        d.arrow(_q(0.84, 0.50), _q(0.84, 0.86), d.pal.make, 0.05, 0.11)
+
+
+@draws("git_commit")
+def _git_commit(d):
+    _git(d)
+    d.disc(_q(0.80, 0.78), 0.12, d.pal.make)
+    d.line(_q(0.74, 0.78), _q(0.86, 0.78), d.pal.paper, 0.035)
+    d.line(_q(0.80, 0.72), _q(0.80, 0.84), d.pal.paper, 0.035)
+
+
+@draws("git_push")
+def _git_push(d):
+    _git(d, "up")
+
+
+@draws("git_pull")
+def _git_pull(d):
+    _git(d, "down")
+
+
+@draws("git_remote")
+def _git_remote(d):
+    _git(d)
+    cloud = QPainterPath()
+    for x, y, r in ((0.74, 0.76, 0.10), (0.86, 0.72, 0.09), (0.80, 0.66, 0.09)):
+        cloud.addEllipse(_q(x, y), r, r)
+    d.path(cloud.simplified(), d.pal.paper, color=d.pal.select, width=0.035)
+
+
+@draws("locate_openscad")
+def _locate_openscad(d):
+    d.cx, d.cy, d.k = 0.42, 0.50, 0.20
+    d.box(-0.8, -0.8, 0, 1.6, 1.6, 1.2, QColor("#f5d33b"))
+    d.p.setPen(d.pen(d.pal.edge, 0.06))
+    d.p.setBrush(QBrush())
+    d.p.drawEllipse(_q(0.66, 0.60), 0.17, 0.17)
+    d.line(_q(0.78, 0.72), _q(0.94, 0.90), d.pal.edge, 0.08)
+
+
+@draws("language")
+def _language(d):
+    d.p.setPen(d.pen(d.pal.select, 0.05))
+    d.p.setBrush(shade(d.pal.select, 1.8))
+    d.p.drawEllipse(_q(0.5, 0.5), 0.38, 0.38)
+    d.p.setBrush(QBrush())
+    d.p.drawEllipse(QRectF(0.34, 0.12, 0.32, 0.76))
+    d.line(_q(0.12, 0.5), _q(0.88, 0.5), d.pal.select, 0.04)
+    d.line(_q(0.20, 0.32), _q(0.80, 0.32), d.pal.select, 0.03)
+    d.line(_q(0.20, 0.68), _q(0.80, 0.68), d.pal.select, 0.03)

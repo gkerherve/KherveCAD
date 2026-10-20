@@ -138,6 +138,22 @@ into a new module and import.
                        own kept in QSettings `render_bg_classic`; the 2D
                        view's comes from the stylesheet's QGraphicsView
                        gradient).
+  - Ribbon, full pass (2026-10-19/20, the user: every menu command on
+                       the ribbon, every icon Fusion- / SolidWorks-like,
+                       every button working): tabs SKETCH, SOLID, SURFACE,
+                       FORM, CHARACTER, INSPECT, UTILITIES, BUILD; menu
+                       commands join panels by their classic menu PATH
+                       (`ribbon.MENU_PANELS`), painted by `ribbon.PAINT` /
+                       their data key through `_painted` (drawings in
+                       `icons_cad_ribbon.py`; `kc_paint` / `kc_painted`
+                       properties, honoured by `restyle_icons`).
+                       `tests/test_ribbon_inspection.py` keeps it true:
+                       every Create/Modify/Assemble/Inspect/Insert/
+                       Utilities (Fusion) and Insert/Tools (SolidWorks)
+                       command on a ribbon, every ribbon icon painted in
+                       both styles, and every button clicked on a cube
+                       document raises nothing and visibly does
+                       something (dialogs stubbed, settings put back).
   - `icons.py`       — qtawesome MDI icon wrapper with fallback.
   - `model.py`       — **the core**: `CadNode` tree, `NODE_TYPES`
                        registry (params + property schema + icon per
