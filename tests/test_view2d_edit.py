@@ -309,3 +309,23 @@ def test_only_parts_with_a_position_are_dragged_when_selected(setup):
     model.structure_changed.emit()
     scene.set_highlight([move])
     assert scene._part_items[move.id].flags() & item.ItemIsMovable
+
+
+def test_a_polygon_of_expression_points_draws_with_its_handles(app):
+    """Points written as expressions crashed the sketch's handles."""
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        model = win.model
+        node = model.add_node("polygon")
+        model.set_param(node, "points",
+                        [[0, 0], ["2 * 10", 0], ["2 * 10", "5 + 5"]])
+        app.processEvents()
+        win.scene.select_nodes([node])
+        app.processEvents()
+        item = win.scene._items[node.id]
+        spec = dict(item.handle_spec())
+        assert spec["v1"].x() == 20 and spec["v2"].y() == 10
+    finally:
+        win._dirty = False
+        win.close()

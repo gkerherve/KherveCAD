@@ -388,8 +388,12 @@ class PolygonShapeItem(ShapeItem, QGraphicsPolygonItem):
         self._scene.model.node_changed.emit(self.node)
 
     def handle_spec(self):
-        return [(f"v{i}", QPointF(x, y))
-                for i, (x, y) in enumerate(self.node.params["points"])]
+        # the drawn polygon's corners: a point may be an expression
+        # ("w / 2", a loop variable) — QPointF of the raw text crashed
+        # the sketch (the user, 2026-10-20)
+        poly = self.polygon()
+        return [(f"v{i}", QPointF(poly[i]))
+                for i in range(poly.count())]
 
     def handle_dragged(self, role, scene_pos):
         index = int(role[1:])
