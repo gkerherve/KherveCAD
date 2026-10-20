@@ -538,6 +538,13 @@ class MainWindow(QMainWindow):
             "true at the point the camera orbits (everywhere in "
             "orthographic)"))
         self._scale_bar_act.triggered.connect(self.view3d.set_scale_bar)
+        self._axes_act = QAction(self.tr("3D &Axes (X Y Z)"), self,
+                                 checkable=True)
+        self._axes_act.setChecked(self.view3d.axes)
+        self._axes_act.setStatusTip(self.tr(
+            "Show the red X, green Y and blue Z axis lines at the origin "
+            "of the 3D view"))
+        self._axes_act.triggered.connect(self.view3d.set_axes)
         self._grid3d_act = QAction(self.tr("3D Ground &Grid"), self,
                                    checkable=True)
         self._grid3d_act.setChecked(self.view3d.grid)
@@ -551,11 +558,13 @@ class MainWindow(QMainWindow):
                              "overlay": self._overlay_act,
                              "scale_bar": self._scale_bar_act,
                              "grid": self._grid3d_act,
+                             "axes": self._axes_act,
                              "hardware": self._gl_act}[key].setChecked(on))
         view_menu.addAction(self._cavity_act)
         view_menu.addAction(self._edges_act)
         view_menu.addAction(self._scale_bar_act)
         view_menu.addAction(self._grid3d_act)
+        view_menu.addAction(self._axes_act)
         view_menu.addAction(self._smooth_act)
         view_menu.addAction(self._overlay_act)
         view_menu.addAction(self._gl_act)
@@ -1681,8 +1690,8 @@ class MainWindow(QMainWindow):
             bar, "display", "mdi.eye-settings-outline", "☰",
             "nav3d_display",
             [self._stage_act, self._cavity_act, self._edges_act,
-             self._scale_bar_act, self._smooth_act, self._overlay_act,
-             self._gl_act])
+             self._scale_bar_act, self._axes_act, self._smooth_act,
+             self._overlay_act, self._gl_act])
 
     def _build_cut_menu(self, view_menu):
         """View ▸ Cut Through (cut_ui.py)."""

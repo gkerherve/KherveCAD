@@ -305,6 +305,8 @@ class View3D(QWidget):
         #: the ground grid under the model (off by default: the user did
         #: not want square lines in the 3D view)
         self.grid = settings.value("render_grid", False, type=bool)
+        #: the X / Y / Z axis lines at the origin (View ▸ 3D Axes)
+        self.axes = settings.value("render_axes", True, type=bool)
         self.unit = "mm"
         self.real_scale = 1.0           # 1 : N, what the scale bar measures
         self._info = None               # shading.MeshInfo of self.mesh
@@ -505,6 +507,13 @@ class View3D(QWidget):
         self.look_toggled.emit("grid", self.grid)
         self.update()
 
+    def set_axes(self, on: bool):
+        """Show the X / Y / Z axes at the origin; persisted."""
+        self.axes = bool(on)
+        QSettings(*_SETTINGS).setValue("render_axes", self.axes)
+        self.look_toggled.emit("axes", self.axes)
+        self.update()
+
     def set_scale_bar(self, on: bool):
         """Show the scale bar (scalebar.py); persisted."""
         self.scale_bar = bool(on)
@@ -652,6 +661,7 @@ class View3D(QWidget):
         twin.smooth = self.smooth
         twin.scale_bar, twin.unit = self.scale_bar, self.unit
         twin.grid = self.grid
+        twin.axes = self.axes
         twin.real_scale = self.real_scale
         twin.overlay = self.overlay if overlay is None else bool(overlay)
         twin.hardware = self.hardware
@@ -1444,7 +1454,7 @@ class View3D(QWidget):
         if self._clean:                  # an exported picture: model only
             painter.end()
             return
-        if self.cad_furniture:
+        if self.cad_furniture and self.axes:
             self._draw_axes(painter, t, eye, right, up, forward)
         pair = BACKGROUNDS.get(self.background)
         if pair is None:

@@ -2767,6 +2767,10 @@ TOOLS = [
                                     "the model in the 3D view (off by "
                                     "default; hidden while the platform "
                                     "is shown)."},
+            "axes": {"type": "boolean",
+                     "description": "Show the X / Y / Z axis lines at the "
+                                    "origin of the 3D view (on by "
+                                    "default)."},
             "scale_bar": {"type": "boolean",
                           "description": "Show a scale bar in the "
                                          "document's unit in the 3D view, "

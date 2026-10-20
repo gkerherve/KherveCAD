@@ -142,8 +142,8 @@ def test_3d_bar_carries_the_display_options_menu(app):
         bar = win.view3d.nav_bar
         display = bar.buttons["display"]
         expected = [win._stage_act, win._cavity_act, win._edges_act,
-                   win._scale_bar_act, win._smooth_act, win._overlay_act,
-                   win._gl_act]
+                   win._scale_bar_act, win._axes_act, win._smooth_act,
+                   win._overlay_act, win._gl_act]
         assert display.menu().actions() == expected
         assert win._cavity_act.isChecked()
         win._cavity_act.trigger()               # on by default: switch off
@@ -300,3 +300,39 @@ def test_the_3d_bar_shows_and_hides_the_lighting_panel(app):
     button.click()                                  # back
     assert view.lighting_bar.isVisible()
     view.close()
+
+
+def test_the_xyz_axes_can_be_hidden(app):
+    """View ▸ 3D Axes (and the 3D bar's display menu) hides the red X,
+    green Y and blue Z lines at the origin; the menu tick, the view and
+    the MCP option stay in step."""
+    from PyQt5.QtGui import QColor, QImage
+    from khervecad.mainwindow import MainWindow
+    from khervecad.mcp_tools import McpToolExecutor
+    win = MainWindow()
+    try:
+        view = win.view3d
+        view.resize(400, 300)
+
+        drawn = []
+        real = view._draw_axes
+        view._draw_axes = lambda *a: (drawn.append(1), real(*a))
+
+        def red_pixels():
+            drawn.clear()
+            img = QImage(view.size(), QImage.Format_ARGB32)
+            view.render(img)
+            return len(drawn)
+
+        view.set_axes(True)
+        assert win._axes_act.isChecked()
+        assert red_pixels() > 0
+        win._axes_act.trigger()                 # the menu tick
+        assert not view.axes
+        assert red_pixels() == 0
+        result = McpToolExecutor(win).execute("set_render_options",
+                                              {"axes": True})
+        assert result["axes"] is True and win._axes_act.isChecked()
+    finally:
+        win._dirty = False
+        win.close()
