@@ -104,3 +104,30 @@ def test_a_fillet_preview_cuts_its_convex_edge():
     removed = 40 * 4 * 4 * (1 - math.pi / 4)
     assert _volume(tris) == pytest.approx(24000 - removed, rel=0.01)
     assert not mesh.approximates(doc.root)
+
+
+def test_a_selected_face_shared_with_another_part_stays_selected():
+    """The user's door handle: a housing and its boss both end on the
+    same plane; Manifold kept part of that face from the boss, so the
+    selected housing's tint showed wedges. Every result triangle lying
+    on the selected part's own surface is selected."""
+    from collections import Counter
+    from khervecad.model import CadNode
+    from khervecad import mesh as M
+
+    def node(kind, **params):
+        n = CadNode(kind)
+        n.params.update(params)
+        return n
+    diff = node("difference")
+    group = node("union")
+    housing = node("cylinder", h=4.5, r1=21, r2=21, segments=64)
+    boss = node("cylinder", h=6.5, r1=8, r2=8, segments=64)
+    group.add(housing)
+    group.add(boss)
+    diff.add(group)
+    diff.add(node("cube", x=-4, y=-4, z=-1, w=8, d=8, h=10))
+    rows = M._tess(diff, {}, None, frozenset({housing.id}), False)
+    base = Counter(s for t, _c, s in rows
+                   if all(abs(v[2]) < 1e-6 for v in t))
+    assert base[True] > 0 and base[False] == 0, base

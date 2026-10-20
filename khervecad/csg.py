@@ -176,4 +176,39 @@ def boolean(op, operands):
         return None
     if result.status() != _m.Error.NoError:
         return None
-    return to_rows(result, palette)
+    return _keep_selection(to_rows(result, palette), operands)
+
+
+#: how close (mm) a result triangle's centre must lie to a selected input
+#: face to be that face (Manifold welds at 1e-5; a little more for
+#: the round-off of a cut)
+ON_SURFACE = 1e-3
+
+
+def _keep_selection(rows, operands):
+    """Selected marks on the faces the selection really shows.
+
+    The mark rides on vertex properties, and where a selected part and
+    another share a face (a housing and its boss both ending on y = 0,
+    the user's door handle) Manifold keeps that patch from EITHER — so
+    fan-shaped stretches of a selected face came back unmarked, and the
+    tint showed wedges and rays. A result triangle lying on a selected
+    input face is selected, whichever operand Manifold took it from."""
+    sel = [tri for ops in operands for tri, _c, s in ops if s]
+    if not sel or not rows:
+        return rows
+    todo = [i for i, row in enumerate(rows) if not row[2]]
+    if not todo:
+        return rows
+    from .shrinkwrap import Target
+    target = Target(sel)
+    centres = [tuple(sum(v[k] for v in rows[i][0]) / 3.0 for k in range(3))
+               for i in todo]
+    near, _tri = target.nearest(centres)
+    gap = np.linalg.norm(near - np.asarray(centres), axis=1)
+    out = list(rows)
+    for i, d in zip(todo, gap.tolist()):
+        if d < ON_SURFACE:
+            tri, colour, _s = out[i]
+            out[i] = (tri, colour, True)
+    return out

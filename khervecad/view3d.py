@@ -316,7 +316,11 @@ class View3D(QWidget):
         self.setMinimumHeight(160)
         self.setMouseTracking(False)
         self.lighting_bar = LightingBar(self)
-        self.lighting_bar.show()
+        #: the brightness / contrast / light panel, shown or hidden from
+        #: the 3D bar's sun button (QSettings render_lighting_bar)
+        self.lighting_wanted = settings.value("render_lighting_bar", True,
+                                              type=bool)
+        self.lighting_bar.setVisible(self.lighting_wanted)
         #: View ▸ Cut Through (cutaway.py): None, or {"axis", "position"
         #: 0..1 of the extent, "flip", "offset" mm}. `model_mesh` is the
         #: whole model as handed in; `mesh` what is shown (cut and capped)
@@ -427,6 +431,13 @@ class View3D(QWidget):
         bar.adjustSize()
         bar.move(max(8, (self.width() - bar.width()) // 2),
                  max(8, self.height() - bar.height() - 34))
+
+    def set_lighting_bar(self, on: bool):
+        """Show or hide the lighting panel, remembered."""
+        self.lighting_wanted = bool(on)
+        self.lighting_bar.setVisible(self.lighting_wanted)
+        QSettings("Kherve", "KherveCAD").setValue("render_lighting_bar",
+                                                  self.lighting_wanted)
 
     def _place_lighting_bar(self):
         """Top-left corner: the source badge sits bottom-left and the
@@ -853,7 +864,7 @@ class View3D(QWidget):
         self._hover_timer.stop()
         self.setMouseTracking(False)
         self.unsetCursor()
-        self.lighting_bar.show()
+        self.lighting_bar.setVisible(self.lighting_wanted)
         if getattr(self, "nav_bar", None) is not None:
             self.nav_bar.show()
         self.update()
@@ -1133,9 +1144,14 @@ class View3D(QWidget):
                 else None
             edge_color = QColor(t["border"]).darker(260) if self.edges \
                 else None
+            # the selection is tinted INSIDE the GL pass, depth-tested
+            # (glrender._draw_highlight): the flat mask below tinted a
+            # part's hidden faces through whatever stood in front
+            gl_hi = self.highlight_mesh if self.edit_tool is None else None
             image = glrender.renderer().render(
                 self, self.mesh, self.colors, info, eye, right, up,
-                forward, light, edge_color)
+                forward, light, edge_color, highlight=gl_hi,
+                highlight_color=QColor(self.HIGHLIGHT_COLOR))
             if image is not None:
                 # a snapshot's framebuffer is pixel_ratio times the view
                 painter.drawImage(QRectF(0, 0, self.width(), self.height()),
@@ -1164,6 +1180,8 @@ class View3D(QWidget):
             mesh, colors = self.mesh, self.colors
         hmesh = self._draft_hi if (self._fast and self._draft_hi
                                    is not None) else self.highlight_mesh
+        if self._gl_drew:
+            hmesh = []                   # already tinted by OpenGL
 
         # hoist every projection constant out of the per-vertex hot path
         # (the old _project recomputed focal/width/height for each vertex)

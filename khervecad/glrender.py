@@ -91,6 +91,8 @@ GL_LESS = 0x0201
 GL_SRC_ALPHA = 0x0302
 GL_ONE_MINUS_SRC_ALPHA = 0x0303
 GL_ONE = 1
+GL_ZERO = 0
+GL_DST_COLOR = 0x0306
 GL_COLOR_BUFFER_BIT = 0x4000
 GL_DEPTH_BUFFER_BIT = 0x0100
 GL_POLYGON_OFFSET_FILL = 0x8037
@@ -986,8 +988,11 @@ class GLRenderer:
             "u_scale", float(view._focal() / max(view.distance, 1e-6)))
 
     def render(self, view, mesh, colors, info, eye, right, up, forward,
-               light, edges_color=None):
-        """The faces of *mesh* as the view sees them, or None."""
+               light, edges_color=None, highlight=None,
+               highlight_color=None):
+        """The faces of *mesh* as the view sees them, or None. With
+        *highlight* (world triangles of the selection) the selection is
+        tinted on the surfaces it really shows on (`_draw_highlight`)."""
         if not self.available() or not mesh:
             return None
         from PyQt5.QtGui import QOpenGLFramebufferObject
@@ -1048,6 +1053,9 @@ class GLRenderer:
             for loc in range(6):
                 prog.disableAttributeArray(loc)
             prog.release()
+            if highlight and highlight_color is not None:
+                self._draw_highlight(view, highlight, eye, right, up,
+                                     forward, highlight_color)
             if edges_color is not None and info is not None:
                 self._draw_lines(view, mesh, info, eye, right, up, forward,
                                  edges_color)
@@ -1093,6 +1101,62 @@ class GLRenderer:
         buf.release()
         buf.destroy()
 
+    def _draw_highlight(self, view, tris, eye, right, up, forward, color):
+        """The selection's tint, depth-tested against the model.
+
+        It used to be a flat stencil of the selection's whole outline,
+        multiplied over the finished picture: a part's faces hidden
+        behind another part tinted it too, so a cylinder's hidden cap
+        showed as red rays across the backplate in front of it (the
+        user's door handle, 2026-10-20). Here the selected triangles are
+        drawn with the depth test against what the model wrote, so only
+        where the selection is the surface you see turns red, and with a
+        MULTIPLY blend, so shading, edges and holes underneath survive
+        as before. The selection comes from the built-in tessellator
+        while the model may be OpenSCAD's exact mesh — two tessellations
+        of one surface — so each vertex is pulled toward the eye by
+        `HIGHLIGHT_BIAS` of the viewing distance first: enough to win
+        over its own surface's other tessellation, far too little to
+        show through a wall in front."""
+        from PyQt5.QtGui import QOpenGLBuffer
+        f = self.funcs
+        bias = HIGHLIGHT_BIAS * float(getattr(view, "distance", 1.0) or 1.0)
+        data = array("f")
+        ex, ey, ez = eye
+        for tri in tris:
+            for v in tri:
+                dx, dy, dz = ex - v[0], ey - v[1], ez - v[2]
+                n = math.sqrt(dx * dx + dy * dy + dz * dz) or 1.0
+                k = bias / n
+                data.extend((v[0] + dx * k, v[1] + dy * k, v[2] + dz * k))
+        if not data:
+            return
+        prog = self.line_program
+        prog.bind()
+        self._camera_uniforms(prog, view, eye, right, up, forward)
+        prog.setUniformValue("u_color", color.redF(), color.greenF(),
+                             color.blueF(), 1.0)
+        buf = QOpenGLBuffer(QOpenGLBuffer.VertexBuffer)
+        buf.create()
+        buf.bind()
+        raw = data.tobytes()
+        buf.allocate(raw, len(raw))
+        prog.enableAttributeArray(0)
+        prog.setAttributeBuffer(0, GL_FLOAT, 0, 3, 12)
+        f.glDepthFunc(GL_LEQUAL)
+        f.glDepthMask(False)
+        # multiply: the picture's colour times the tint; alpha untouched
+        f.glBlendFuncSeparate(GL_DST_COLOR, GL_ZERO, GL_ZERO, GL_ONE)
+        f.glDrawArrays(GL_TRIANGLES, 0, len(data) // 3)
+        f.glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+                              GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
+        f.glDepthMask(True)
+        f.glDepthFunc(GL_LESS)
+        prog.disableAttributeArray(0)
+        buf.release()
+        buf.destroy()
+        prog.release()
+
     def _draw_lines(self, view, mesh, info, eye, right, up, forward,
                     color):
         f = self.funcs
@@ -1115,6 +1179,10 @@ class GLRenderer:
         buf.release()
         prog.release()
 
+
+#: how far toward the eye the selection tint is drawn, as a fraction of
+#: the viewing distance (see _draw_highlight)
+HIGHLIGHT_BIAS = 0.004
 
 _RENDERER = None
 
