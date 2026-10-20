@@ -302,9 +302,12 @@ def restyle_icons(win, name):
         if name == CLASSIC:
             act.setIcon(classic[act])
             continue
-        key = act.data()
+        key = act.property("kc_paint") or act.data()
+        act.setProperty("kc_painted", name)
         painted = icons_cad.icon(key, name) if isinstance(key, str) \
             else None
+        if painted is None and glyph == "painted":
+            painted = classic[act]       # drawn for the other style only
         if painted is None:
             painted = icons.icon(glyph, icons_cad.glyph_color(
                 name, act.property("kc_family") or None))

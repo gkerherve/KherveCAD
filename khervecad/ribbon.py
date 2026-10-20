@@ -27,7 +27,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 import re
 
-from PyQt5.QtCore import QSettings, QSize, Qt
+from PyQt5.QtCore import QSettings, QSize, Qt, QTimer
 from PyQt5.QtWidgets import (QAction, QFrame, QGridLayout, QHBoxLayout,
                              QMenu, QSizePolicy, QStackedWidget, QTabBar,
                              QToolButton, QVBoxLayout, QWidget)
@@ -73,7 +73,7 @@ EXTRA_PANELS = {"assemble_more": "Assemble", "mechanical": "Features", "curves":
                 "assemble": "Assemble", "edit": "Edit mesh",
                 "analyse": "Analyse", "documents": "Documents"}
 #: SolidWorks panels whose tools are all large buttons
-ALL_LARGE = {"builders", "assemble", "edit", "analyse", "documents"}
+ALL_LARGE = {"builders", "edit", "analyse", "documents"}
 
 #: icon sizes (px)
 FUSION_ICON = QSize(26, 26)
@@ -248,7 +248,83 @@ def self_style(win):
     return style if style in ("Fusion", "SolidWorks") else "Fusion"
 
 
+#: a painted icon for a menu command that has no key of its own, or
+#: shares one (the six surfaces from curves are one node): path -> key
+PAINT = {
+    "insert/new object": "new_object",
+    "view/gumball (move / turn handles)": "gumball",
+    "view/exploded view": "explode",
+    "view/animate ($t)": "animate",
+    "insert/part library": "part_library",
+    "file/import openscad": "import_scad",
+    "file/import mesh (stl/obj/off/3mf)": "import_mesh",
+    "file/import cad file (step/iges/rhino)": "import_cad",
+    "file/import height map (surface)": "import_heightmap",
+    "file/import image stack (tiff)": "import_stack",
+    "file/import animated character (glb)": "import_glb",
+    "view/add reference image": "ref_add",
+    "view/clear reference images": "ref_clear",
+    "insert/code & files": "code_files",
+    "edit/document units": "doc_units",
+    "edit/document scale (1 : n)": "doc_scale",
+    "view/customizer (sliders)": "customizer",
+    "analyse/heat map": "heatmap",
+    "analyse/check sharp edges": "sharp_edges",
+    "analyse/check fits & tolerances": "fits",
+    "analyse/check welds": "welds",
+    "view/compare to reference image (overlay)": "ref_compare",
+    "view/dimensions on selection": "dims_selection",
+    "view/clear dimensions": "dims_clear",
+    "insert/subd box (smooth, edit its cage)": "subd_box",
+    "tools/convert to subd (smooth cage)": "subd_convert",
+}
+for _t, _k in (("loft — a skin through the curves, in order", "srf_loft"),
+               ("sweep — first curve is the rail, the rest are profiles",
+                "srf_sweep"),
+               ("sweep along two rails — first two curves are rails",
+                "srf_sweep2"),
+               ("patch — fill inside the first (closed) curve", "srf_patch"),
+               ("revolve — turn the curve about the z axis", "srf_revolve"),
+               ("extrude — push the curve straight up", "srf_extrude")):
+    PAINT["tools/surface from curves/" + _t] = _k
+
+
+def _painted(win, acts):
+    """Every action with a drawing in this style (icons_cad*) wears it —
+    the user: all icons remade in Fusion's / SolidWorks' look, never a
+    recoloured glyph. The classic icon is kept for the way back."""
+    from . import icons_cad
+    style = self_style(win)
+    classic = win.__dict__.setdefault("_classic_icons", {})
+    for act in acts:
+        key = act.property("kc_paint") or act.data()
+        if not isinstance(key, str):
+            continue
+        # toolbar_style.restyle_icons already painted a bar action; and
+        # an icon set twice makes every button on the action take its
+        # whole text again (a shared Shell lost its short name)
+        if (act.property("kc_glyph") and not act.property("kc_paint")) \
+                or act.property("kc_painted") == style:
+            continue
+        art = icons_cad.icon(key, style)
+        if art is None:
+            continue
+        classic.setdefault(act, act.icon())
+        if not act.property("kc_glyph"):
+            act.setProperty("kc_glyph", "painted")
+        act.setProperty("kc_paint", key)
+        act.setProperty("kc_painted", style)
+        act.setIcon(art)
+    return acts
+
+
 def panel_actions(win, key):
+    """(title, actions) of panel *key*, in the style's painted icons."""
+    title, acts = _panel_actions(win, key)
+    return title, _painted(win, acts)
+
+
+def _panel_actions(win, key):
     """(title, actions) of panel *key*."""
     parts = win._bar_parts
     families = dict(parts["families"])
@@ -280,6 +356,9 @@ def panel_actions(win, key):
             act = paths.get(path)
             if act is None:
                 continue
+            if path in PAINT and act.property("kc_paint") != PAINT[path]:
+                act.setProperty("kc_paint", PAINT[path])
+                act.setProperty("kc_painted", None)   # paint it afresh
             if glyph and glyph.startswith("!"):
                 act.setIcon(icons.icon(glyph[1:], icons.family_color(
                     "extrude")))
@@ -326,6 +405,11 @@ def short_name(text):
     """A button's name without its explanation in brackets: "Resize
     (absolute size)" is "Resize" (the tooltip keeps the whole)."""
     text = text.split("\t")[0]           # a menu item's shortcut
+    # a menu item's mnemonic ("New &Object", "Se&gments"); "&&" is a
+    # real "&", and so is one between capitals ("P&ID")
+    text = text.replace("&&", "\0")
+    text = re.sub(r"(?<![A-Z])&|&(?![A-Z])", "", text).replace("\0", "&")
+    text = text.split(" — ")[0]          # "Loft — a skin through ..."
     text = re.sub(r"(\.\.\.|…)\s*$", "", text)   # and its dots
     return re.sub(r"\s*\(.*\)\s*$", "", text) or text
 
@@ -438,6 +522,9 @@ class Ribbon(QWidget):
         self.stack.setCurrentIndex(index)
         QSettings(*_SETTINGS).setValue(TAB_KEY, index)
         self._fit()
+        # the page only becomes visible after this returns: measure again
+        # then, or a too-wide page kept its names and squeezed them
+        QTimer.singleShot(0, self._fit)
 
     def show_tab(self, key):
         """Bring the tab *key* ("features", "form"...) to the front."""
@@ -553,6 +640,10 @@ class Ribbon(QWidget):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self._fit()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        QTimer.singleShot(0, self._fit)
 
     def _fit(self):
         """SolidWorks: the small buttons drop their names when the page
