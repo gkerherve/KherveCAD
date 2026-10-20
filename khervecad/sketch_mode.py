@@ -148,6 +148,23 @@ def finish(win):
         _show(win, False)
         if getattr(win, "ribbon", None) is not None:
             win.ribbon.show_tab("features")
+        # the 3D view comes back framed on what was picked (else the
+        # whole model): it kept the camera it had before the sketch and
+        # the picked part could be nowhere on it (2026-10-20, the user)
+        QTimer.singleShot(0, lambda: _frame_3d(win))
+
+
+#: how much further back than a tight fit the 3D view comes back
+FRAME_MARGIN = 1.8
+
+
+def _frame_3d(win):
+    from . import viewnav
+    view = win.view3d
+    if view.isVisible() and (view.highlight_mesh or view.mesh):
+        viewnav.focus_3d(view)
+        view.distance *= FRAME_MARGIN        # room round it, like Fusion
+        view.update()
 
 
 def tool_chosen(win, tool):

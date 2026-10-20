@@ -413,3 +413,29 @@ def test_solidworks_also_shows_one_canvas_with_the_other_small(window, app):
     assert window.view2d.isVisible() and not window.view3d.isVisible()
     assert window._sketch_inset.isVisible()           # 3D in the corner
     sketch_mode.finish(window)
+
+
+def test_leaving_the_sketch_frames_the_picked_part_in_3d(window, app):
+    """The 3D view used to come back with its old camera, the part
+    picked while sketching nowhere on it (the user, 2026-10-20)."""
+    from khervecad import sketch_mode
+    from khervecad.mcp_tools import McpToolExecutor
+    toolbar_style.apply(window, "Fusion")
+    McpToolExecutor(window).execute("apply_code", {"code": (
+        "module Pair() {\n"
+        "  color(\"brown\") cube([40, 10, 10]); // Bark\n"
+        "  color(\"green\") translate([300, 300, 0]) cube(8); // Leaf\n"
+        "}\nPair();\n")})
+    app.processEvents()
+    obj = next(iter(window.model.all_components()))
+    window.builder.open_component(obj)
+    app.processEvents()
+    window.builder.object_tab.tree.select_nodes([obj.children[1]])
+    sketch_mode.enter(window)
+    app.processEvents()
+    window._sketch_inset.mousePressEvent(None)      # back to 3D
+    for _ in range(5):
+        app.processEvents()
+    target = window.view3d.target
+    assert abs(target[0] - 304) < 10 and abs(target[1] - 304) < 10
+    assert abs(target[2] - 4) < 10                  # on the leaf
