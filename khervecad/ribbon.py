@@ -371,7 +371,7 @@ def _panel_actions(win, key):
     if key == "sketch":
         from . import sketch_mode
         first = [sketch_mode.create_action(win)] \
-            if style_of(win) == "Fusion" else []
+            if style_of(win) in ("Fusion", "SolidWorks") else []
         return title, first + [a for a in win._tool_group.actions()
                                if a.data() != MEASURE]
     if key in MENU_PANELS:

@@ -400,3 +400,16 @@ def test_every_fusion_menu_command_is_on_the_ribbon(window, app):
         if name in ("Create", "Modify", "Assemble", "Inspect", "Insert"):
             walk(top.menu(), name)
     assert not missing, missing
+
+
+def test_solidworks_also_shows_one_canvas_with_the_other_small(window, app):
+    from khervecad import sketch_mode
+    toolbar_style.apply(window, "SolidWorks")
+    app.processEvents()
+    assert window.view3d.isVisible() and not window.view2d.isVisible()
+    assert window._sketch_mini2d.isVisible()          # 2D in the corner
+    sketch_mode.enter(window)
+    app.processEvents()
+    assert window.view2d.isVisible() and not window.view3d.isVisible()
+    assert window._sketch_inset.isVisible()           # 3D in the corner
+    sketch_mode.finish(window)

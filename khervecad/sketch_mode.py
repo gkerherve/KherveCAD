@@ -33,9 +33,14 @@ tooltips.TIPS.setdefault("create_sketch", (
      "Click Finish Sketch."], None))
 
 
+#: styles with one canvas and the other view small in its corner
+ONE_CANVAS = ("Fusion", "SolidWorks")
+
+
 def active(win) -> bool:
     """True when the window works Fusion's way (one canvas)."""
-    return getattr(win, "_interface_style", "") == "Fusion"
+    # SolidWorks sketches the same way (2026-10-20, the user)
+    return getattr(win, "_interface_style", "") in ONE_CANVAS
 
 
 def sketching(win) -> bool:
@@ -155,7 +160,7 @@ def tool_chosen(win, tool):
 
 def apply(win, style):
     """The Interface Style changed: one canvas (Fusion) or both."""
-    if style == "Fusion":
+    if style in ONE_CANVAS:
         _show(win, sketching(win))
         return
     win._sketching = False
