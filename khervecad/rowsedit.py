@@ -43,13 +43,25 @@ def fit_table_height(table, cap, row_h):
     table.setFixedHeight(header + rows + 2 * table.frameWidth() + 2)
 
 
+#: row lists that may be empty (nothing = the feature is off): the last
+#: row can be removed from these
+OPTIONAL_ROWS = {"paths", "corners", "within", "region", "fillets",
+                 "chamfers", "edges", "pushes", "strokes", "targets",
+                 "warp", "pose", "garments", "tints", "creases", "pins",
+                 "anchors", "keys", "options"}
+
+
 class RowsEditor(QWidget):
     """A table of rows that commits the whole list on every edit."""
 
     _ROW_H = 22
 
-    def __init__(self, rows, columns, on_change, parent=None):
+    def __init__(self, rows, columns, on_change, parent=None,
+                 allow_empty=False):
         super().__init__(parent)
+        #: an optional list (a polygon's paths, its rounded corners) may
+        #: lose its last row; a required one keeps one
+        self._allow_empty = allow_empty
         self._columns = list(columns) if columns else None
         self._on_change = on_change
         self._loading = False
@@ -153,7 +165,10 @@ class RowsEditor(QWidget):
 
     def _remove_row(self):
         r = self.table.currentRow()
-        if r < 0 or self.table.rowCount() <= 1:
+        if r < 0 and self.table.rowCount() == 1:
+            r = 0                         # the only row: no need to pick
+        if r < 0 or (self.table.rowCount() <= 1
+                     and not self._allow_empty):
             return
         self.table.removeRow(r)
         self._fit_height()

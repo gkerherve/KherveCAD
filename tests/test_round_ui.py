@@ -64,3 +64,36 @@ def test_right_click_offers_the_menu(window, monkeypatch):
     from PyQt5.QtCore import QPoint
     window.view3d.context_requested.emit(QPoint(10, 10))
     assert shown and any("fillet" in t for t in shown[0])
+
+
+def test_a_selected_2d_shape_rounds_its_part(window):
+    """The user had Polygon 2 (inside the extrude) selected: Fillet
+    wrapped the flat polygon and nothing could be rounded."""
+    m = window.model
+    obj = m.add_node("component", {})
+    obj.visible = True
+    d = m.add_node("difference", {}, parent=obj)
+    e = m.add_node("linear_extrude", dict(height=10), parent=d)
+    p = m.add_node("polygon", dict(points=[[0, 0], [20, 0], [20, 5],
+                                           [0, 5]]), parent=e)
+    QApplication.processEvents()
+    window.builder.open_component(obj)
+    QApplication.processEvents()
+    window.builder.active_tree().select_nodes([p])
+    window._apply_operation("fillet")
+    assert d.parent.type == "fillet"           # the part, not the polygon
+    assert p.parent is e
+    assert window.view3d._pick_cb is not None
+    window.view3d.cancel_pick()
+
+
+def test_an_optional_table_can_be_emptied(app):
+    from khervecad.rowsedit import RowsEditor
+    got = []
+    ed = RowsEditor([[0, 1, 2]], None, got.append, allow_empty=True)
+    ed.table.setCurrentCell(0, 0)
+    ed._remove_row()
+    assert got[-1] == []
+    keep = RowsEditor([[0, 1, 2]], None, got.append)
+    keep._remove_row()
+    assert keep.table.rowCount() == 1        # a required list keeps one

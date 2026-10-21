@@ -107,7 +107,8 @@ NODE_TYPES = {
                 ("paths", "Paths", "rows", None, None),
                 # sketch fillets / chamfers: [vertex, size, 0 round /
                 # 1 chamfer] (sketch_modify.expand), schema-only
-                ("corners", "Rounded corners", "rows", None, None)]),
+                ("corners", "Rounded corners", "rows",
+                 ["Corner", "Size", "Chamfer (1)"], None)]),
     "text": dict(
         label="Text", category=SHAPE_2D, icon="mdi.format-text",
         # font, halign, valign, spacing and direction are optional

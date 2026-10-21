@@ -360,8 +360,10 @@ class PropertiesPanel(QScrollArea):
                                    self._pick_color(k, b))
             return button
         if kind == "rows":
+            from .rowsedit import OPTIONAL_ROWS
             return RowsEditor(self.node.params.get(key) or [], minimum,
-                              lambda rows, k=key: self._set_param(k, rows))
+                              lambda rows, k=key: self._set_param(k, rows),
+                              allow_empty=key in OPTIONAL_ROWS)
         if kind == "choice":
             box = ChoiceBox(minimum)
             box.currentTextChanged.connect(

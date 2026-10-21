@@ -56,9 +56,31 @@ def _first_edge(window, wrapper, desc):
         window.model.set_param(wrapper, "edges", [list(s) for s in seeds])
 
 
+def solid_of(window, node):
+    """The part a selection belongs to, for rounding: a 2D shape has no
+    edges (the user had Polygon 2 selected, so Fillet wrapped a flat
+    polygon and nothing happened) — climb to the scope's top-level part
+    holding it (the Difference / extrude that makes the solid)."""
+    from .model import SHAPE_2D
+    scope = window._render_scope()[0]
+    probe = node
+    while probe.parent is not None and probe.parent is not scope and \
+            probe.parent is not window.model.root:
+        probe = probe.parent
+    if node.category == SHAPE_2D or probe is not node:
+        return probe
+    return node
+
+
 def start(window, op="fillet", kind="round"):
     tree = window.builder.active_tree()
     if tree.selected_nodes():
+        picked = []
+        for n in tree.selected_nodes():
+            s = solid_of(window, n)
+            if s not in picked:
+                picked.append(s)
+        tree.select_nodes(picked)
         window._apply_operation(op)
         wrapper = (tree.selected_nodes() or [None])[0]
         if op == "fillet" and kind and wrapper is not None and \

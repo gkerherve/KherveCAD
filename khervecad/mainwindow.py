@@ -877,6 +877,16 @@ class MainWindow(QMainWindow):
     def _apply_operation(self, op: str):
         tree = self.builder.active_tree()
         nodes = tree.selected_nodes()
+        if op in ("fillet", "push_pull") and nodes and \
+                not getattr(self, "_rounding", False):
+            # a 2D shape or a piece inside a part: round the part
+            from . import round_ui
+            self._rounding = True
+            try:
+                round_ui.start(self, op, "round")
+            finally:
+                self._rounding = False
+            return
         if not nodes and op in ("fillet", "push_pull"):
             # nothing selected: click the edge / face in the 3D view
             from . import round_ui
