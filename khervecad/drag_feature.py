@@ -34,6 +34,38 @@ KINDS = ("linear_extrude", "rotate_extrude")
 SIZE_PX = 70
 COLOUR = "#1e88e5"
 MIN_HEIGHT = 0.01
+#: a new extrude's first height, before it is dragged (SolidWorks' 10)
+FIRST_HEIGHT = 10.0
+#: the mark on the mirror([0, 0, 1]) that makes an extrude go DOWN
+REVERSE = "reverse"
+
+
+def reversed_of(ext):
+    """The mirror turning *ext* downwards, if it has one."""
+    p = ext.parent
+    if p is not None and p.type == "mirror" and len(p.children) == 1 \
+            and p.params.get(REVERSE):
+        return p
+    return None
+
+
+def set_direction(model, ext, down):
+    """Extrude up (+Z) or down: down is a mirror([0, 0, 1]) round it —
+    linear_extrude has no negative height."""
+    mir = reversed_of(ext)
+    if down and mir is None:
+        mir = model.wrap_nodes([ext], "mirror")
+        mir.params.update(x=0.0, y=0.0, z=1.0)
+        mir.params[REVERSE] = True
+        model.rename(mir, "Reverse direction")
+        model.node_changed.emit(mir)
+    elif not down and mir is not None:
+        model.ungroup(mir)
+
+
+def signed_height(ext):
+    h = _num(ext.params.get("height", FIRST_HEIGHT), FIRST_HEIGHT)
+    return -h if reversed_of(ext) is not None else h
 
 
 def _num(v, default):
@@ -95,8 +127,10 @@ def revolve_handle(node, m, tris):
 
 # =================================================================== Qt
 
-def start(window, node=None, quiet=False):
-    """Switch the drag handles on (for *node*, else the selection)."""
+def start(window, node=None, quiet=False, created=False):
+    """Switch the drag handles on (for *node*, else the selection; a
+    selected 2D shape is extruded first). *created*: Cancel removes the
+    extrude again."""
     from . import language
     view = window.view3d
     if view.edit_tool is not None and not isinstance(view.edit_tool,
@@ -105,76 +139,98 @@ def start(window, node=None, quiet=False):
             window.statusBar().showMessage(language.tr(
                 "Finish what the 3D view is doing first (Esc)."), 5000)
         return None
-    tool = DragFeature(window, node)
+    if node is None:
+        from .model import SHAPE_2D
+        sel = window.builder.active_tree().selected_nodes()
+        if len(sel) == 1 and sel[0].category == SHAPE_2D and \
+                _extrude_above(sel[0]) is None:
+            node = _new_extrude(window, sel[0])
+            created = True
+    tool = DragFeature(window, node, created)
     if tool.target() is None:
         if quiet:
             return None
         pick(window)                       # like Fillet: click it in 3D
         return None
+    tool.show_buttons()
     view.edit_tool = tool
     view.setMouseTracking(True)
     view.update()
     window.statusBar().showMessage(language.tr(
-        "Drag the blue arrow to set the height (Ctrl snaps) — Esc or "
-        "Select finishes."), 8000)
+        "Drag the blue arrow up or down (Ctrl snaps) — OK keeps it, "
+        "Cancel or Esc takes it back."), 8000)
     return tool
 
 
-def _extrudes(node):
-    return [n for n in node.walk() if n.type in KINDS]
+def _extrude_above(node):
+    probe = node.parent
+    while probe is not None:
+        if probe.type in KINDS:
+            return probe
+        probe = probe.parent
+    return None
 
 
-def nearest_extrude(node, point, scope=None):
-    """The extrude inside *node* whose handle is nearest the clicked
-    *point* (scope coordinates)."""
-    best = None
-    for ext in _extrudes(node):
-        m, tris = frame(ext, scope)
-        got = linear_handle(ext, m, tris) if ext.type == "linear_extrude" \
-            else revolve_handle(ext, m, tris)
-        if got is None:
+def _new_extrude(window, shape):
+    model = window.model
+    ext = model.wrap_nodes([shape], "linear_extrude")
+    model.set_param(ext, "height", FIRST_HEIGHT)
+    window.builder.active_tree().select_nodes([ext])
+    return ext
+
+
+def flat_shapes(window):
+    """[(2D shape, its triangles in the scope's frame)] — what a click in
+    the 3D view can pick to extrude."""
+    from . import mesh
+    from .model import SHAPE_2D
+    scope = window._render_scope()[0] or window.model.root
+    stop = None if scope is window.model.root else scope
+    out = []
+    for n in scope.walk():
+        if n is scope or n.category != SHAPE_2D or not n.visible:
             continue
-        d = math.dist(got[0], point)
-        if best is None or d < best[0]:
-            best = (d, ext)
-    return best[1] if best else None
+        if n.parent is not None and n.parent.category == SHAPE_2D:
+            continue                       # a piece of a 2D boolean
+        try:
+            tris = mesh.tessellate(n)
+        except Exception:
+            continue
+        if not tris:
+            continue
+        m = mesh.ancestor_matrix(n, stop=stop)
+        out.append((n, [tuple(_apply(m, p) for p in t) for t in tris]))
+    return out
 
 
 def pick(window):
-    """Nothing to drag selected: click the shape in the 3D view — a flat
-    sketch profile gets extruded, an extruded part's extrude is taken —
-    then its arrow shows (the user: "like the fillet edge, we select the
-    polygon in the 3D drawing")."""
-    from . import language, meshedit_ui
-    from .model import SHAPE_2D
-    parts = meshedit_ui._parts(window)
-    if not parts:
+    """Nothing to drag selected: click a 2D shape (rectangle, polygon,
+    circle…) in the 3D view — it is extruded and its Z arrow shows (the
+    user: "select the shape you want to extrude in the 3D view ... a Z
+    appears to put it up or down ... and an OK button"). A shape already
+    extruded brings its extrude's arrow back."""
+    from . import language
+    shapes = flat_shapes(window)
+    if not shapes:
         window.statusBar().showMessage(language.tr(
-            "Nothing to extrude in view — draw a shape first."), 6000)
+            "No 2D shape in view — draw a rectangle, polygon or circle "
+            "first."), 6000)
         return
-    scope = window._render_scope()[0]
-    scope = None if scope is None or scope is window.model.root else scope
 
     def picked(desc, node):
         if desc is None or node is None:
             return
-        target = nearest_extrude(node, desc["pos"], scope)
-        if target is None:
-            flat = [n for n in node.walk() if n.category == SHAPE_2D]
-            if not flat:
-                window.statusBar().showMessage(language.tr(
-                    "That part has no extrude or sketch shape to drag."),
-                    6000)
-                return
-            shape = flat[0]
-            target = window.model.wrap_nodes([shape], "linear_extrude")
-        window.builder.active_tree().select_nodes([target])
-        start(window, target)
+        window.view3d.cancel_pick()
+        ext = _extrude_above(node)
+        if ext is not None:
+            window.builder.active_tree().select_nodes([ext])
+            start(window, ext)
+        else:
+            start(window, _new_extrude(window, node), created=True)
 
     window.view3d.start_pick(
-        picked, groups=parts,
-        banner=language.tr("Click the shape or the face to extrude · Esc "
-                           "cancels"),
+        picked, groups=shapes,
+        banner=language.tr("Click the 2D shape to extrude · Esc cancels"),
         labeler=lambda desc, node: getattr(node, "name", ""))
 
 
@@ -186,12 +242,13 @@ def action(window):
     from . import icons, language, toolbars, tooltips
     tooltips.TIPS.setdefault("drag_extrude", (
         "Drag extrude / revolve",
-        "Shows an arrow on the selected Linear extrude (or a curved arrow "
-        "on a Rotate extrude) in the 3D view — drag it to set the height "
-        "or the angle, as in SolidWorks and Fusion.",
-        ["Select an extrude, or the shape inside it.",
-         "Click this, then drag the blue arrow in the 3D view.",
-         "Ctrl snaps; Esc finishes."],
+        "Extrude a 2D shape by dragging, as in SolidWorks and Fusion: "
+        "click the shape in the 3D view, then drag its blue Z arrow up or "
+        "down. A Rotate extrude gets a curved arrow for its angle.",
+        ["Click this, then click a rectangle, polygon or circle in the 3D "
+         "view (or select one first).",
+         "Drag the arrow up or down — Ctrl snaps to the grid.",
+         "OK keeps it; Cancel or Esc takes it back."],
         "Linear extrude and Rotate extrude show the arrow by themselves."))
     act = QAction(icons.icon("mdi.arrow-expand-up"),
                   language.tr("Drag extrude"), window)
@@ -206,12 +263,73 @@ def action(window):
 class DragFeature:
     """View3D.edit_tool: the extrude arrow / revolve arc."""
 
-    def __init__(self, window, node=None):
+    def __init__(self, window, node=None, created=False):
         self.window = window
         self.view = window.view3d
         self.fixed = node
         self.drag = None
         self.hover = False
+        self.created = created
+        self.buttons = []
+        ext = self.target()
+        self.original = None if ext is None else (
+            ext, signed_height(ext) if ext.type == "linear_extrude"
+            else _num(ext.params.get("angle", 360.0), 360.0))
+
+    def show_buttons(self):
+        """OK / Cancel over the 3D view, like Fillet's Done."""
+        from PyQt5.QtCore import Qt
+        from PyQt5.QtWidgets import QPushButton
+        from . import language
+        styles = {"ok": "#2e7d32", "cancel": "#6d6d6d"}
+        for key, text, slot in (("ok", "✓  " + language.tr("OK"), self.ok),
+                                ("cancel", "✕  " + language.tr("Cancel"),
+                                 self.cancel)):
+            b = QPushButton(text, self.view)
+            b.setCursor(Qt.ArrowCursor)
+            b.setStyleSheet(
+                "QPushButton { background: %s; color: white; border-radius:"
+                " 4px; padding: 4px 14px; font-weight: bold; }" % styles[key])
+            b.clicked.connect(slot)
+            b.adjustSize()
+            self.buttons.append(b)
+        total = sum(b.width() for b in self.buttons) + 10
+        x = (self.view.width() - total) // 2
+        for b in self.buttons:
+            b.move(x, 40)
+            b.show()
+            b.raise_()
+            x += b.width() + 10
+
+    def ok(self):
+        from . import language
+        ext = self.target()
+        self.exit()
+        if ext is not None:
+            self.window.statusBar().showMessage(language.tr(
+                "{name} kept.").format(name=ext.name), 4000)
+
+    def cancel(self):
+        """Take it back: a new extrude goes, an old one gets its height
+        and direction back."""
+        model = self.window.model
+        if self.original is not None:
+            ext, value = self.original
+            if ext.type == "linear_extrude":
+                set_direction(model, ext, False)
+                if self.created:
+                    shape = ext.children[0] if ext.children else None
+                    model.ungroup(ext)
+                    if shape is not None:
+                        self.window.builder.active_tree().select_nodes(
+                            [shape])
+                else:
+                    set_direction(model, ext, value < 0)
+                    model.set_param(ext, "height", abs(value))
+            else:
+                model.set_param(ext, "angle", value)
+        self.drag = None
+        self.exit()
 
     def target(self):
         node = self.fixed
@@ -238,23 +356,41 @@ class DragFeature:
         node = self.target()
         if node is None:
             return None
-        m, tris = frame(node, self._scope())
         project = self._project()
         if node.type == "linear_extrude":
+            # the frame BEFORE a reverse mirror, so up stays up
+            from . import mesh
+            holder = reversed_of(node) or node
+            m = mesh.ancestor_matrix(holder, stop=self._scope())
+            try:
+                tris = mesh.tessellate(node)
+            except Exception:
+                tris = []
             got = linear_handle(node, m, tris)
             if got is None:
                 return None
-            base, axis, scale = got
+            _base, axis, scale = got
+            pts = [p for t in tris for p in t]
+            cx = (min(p[0] for p in pts) + max(p[0] for p in pts)) / 2
+            cy = (min(p[1] for p in pts) + max(p[1] for p in pts)) / 2
+            sh = signed_height(node)
+            if node.params.get("center"):
+                sh /= 2.0
+            sign = -1.0 if sh < 0 else 1.0
+            base = _apply(m, (cx, cy, sh))
             bs = project(base)
             if bs is None:
                 return None              # behind the camera
             length = SIZE_PX * max(bs[2], 1e-6) / self.view._focal()
-            tip = project(tuple(base[k] + axis[k] * length
+            up = project(tuple(base[k] + axis[k] * length
+                               for k in range(3)))
+            tip = project(tuple(base[k] + sign * axis[k] * length
                                 for k in range(3)))
-            if tip is None:
+            if tip is None or up is None:
                 return None
-            return dict(node=node, kind="linear", a=bs, b=tip,
+            return dict(node=node, kind="linear", a=bs, b=tip, up=up,
                         length=length, scale=scale)
+        m, tris = frame(node, self._scope())
         got = revolve_handle(node, m, tris)
         if got is None:
             return None
@@ -286,15 +422,18 @@ class DragFeature:
         if event.key() != Qt.Key_Escape:
             return False
         if self.drag is not None:
-            self._set(self.drag["node"], self.drag["param"],
-                      self.drag["start"])
+            self._restore_drag(self.drag)
             self.drag = None
         else:
-            self.exit()
+            self.cancel()
         self.view.update()
         return True
 
     def exit(self):
+        for b in self.buttons:
+            b.hide()
+            b.deleteLater()
+        self.buttons = []
         if self.view.edit_tool is self:
             self.view.edit_tool = None
             self.view.setMouseTracking(False)
@@ -310,9 +449,8 @@ class DragFeature:
             return False
         node = scr["node"]
         param = "height" if scr["kind"] == "linear" else "angle"
-        start = _num(node.params.get(param, 10.0 if param == "height"
-                                     else 360.0),
-                     10.0 if param == "height" else 360.0)
+        start = signed_height(node) if param == "height" else \
+            _num(node.params.get("angle", 360.0), 360.0)
         self.drag = dict(scr, param=param, start=start,
                          press=(event.pos().x(), event.pos().y()),
                          value=start)
@@ -332,7 +470,8 @@ class DragFeature:
         ctrl = bool(event.modifiers() & Qt.ControlModifier)
         dx, dy = x - d["press"][0], y - d["press"][1]
         if d["kind"] == "linear":
-            sx, sy = d["b"][0] - d["a"][0], d["b"][1] - d["a"][1]
+            # along +Z of the sketch, whichever way the arrow points now
+            sx, sy = d["up"][0] - d["a"][0], d["up"][1] - d["a"][1]
             px = math.hypot(sx, sy) or 1.0
             world = (dx * sx + dy * sy) / px / px * d["length"]
             delta = world / d["scale"]
@@ -341,7 +480,8 @@ class DragFeature:
             value = d["start"] + delta
             if ctrl:
                 value = snap(value, self._grid())
-            value = max(MIN_HEIGHT, value)
+            if abs(value) < MIN_HEIGHT:
+                value = MIN_HEIGHT if d["start"] >= 0 else -MIN_HEIGHT
         else:
             per = d["per"]
             n2 = per[0] * per[0] + per[1] * per[1] or 1.0
@@ -351,8 +491,21 @@ class DragFeature:
                 value = snap(value, 15.0)
             value = max(1.0, min(360.0, value))
         d["value"] = round(value, 4)
-        self._set(d["node"], d["param"], d["value"])
+        if d["param"] == "height":
+            self._set_height(d["node"], d["value"])
+        else:
+            self._set(d["node"], d["param"], d["value"])
         return True
+
+    def _set_height(self, ext, signed):
+        set_direction(self.window.model, ext, signed < 0)
+        self._set(ext, "height", round(abs(signed), 4))
+
+    def _restore_drag(self, d):
+        if d["param"] == "height":
+            self._set_height(d["node"], d["start"])
+        else:
+            self._set(d["node"], d["param"], d["start"])
 
     def mouse_release(self, event):
         d, self.drag = self.drag, None
@@ -424,7 +577,7 @@ class DragFeature:
         painter.setBrush(Qt.NoBrush)
         node = scr["node"]
         if scr["kind"] == "linear":
-            text = "%g mm" % round(_num(node.params.get("height"), 0), 3)
+            text = "%g mm" % round(signed_height(node), 3)
         else:
             text = "%g°" % round(_num(node.params.get("angle", 360), 360),
                                  2)

@@ -60,10 +60,14 @@ def test_extrude_shows_an_arrow_that_pulls_the_height(win):
     assert scr["kind"] == "linear"
     _drag(tool, scr, 40)
     assert float(ext.params["height"]) > h0
+    # dragged below the sketch: the extrude turns DOWN
     _drag(tool, tool._screen(), -5000)
-    assert float(ext.params["height"]) == drag_feature.MIN_HEIGHT
+    assert drag_feature.reversed_of(ext) is not None
+    assert drag_feature.signed_height(ext) < 0
+    # Cancel (Esc) takes the new extrude away: the rectangle is back
     tool.key_press(type("K", (), {"key": lambda self: Qt.Key_Escape})())
     assert win.view3d.edit_tool is None
+    assert rect.parent is m.root and ext.parent is None
 
 
 def test_revolve_arc_sets_the_angle(win):
@@ -117,6 +121,24 @@ def test_a_handle_behind_the_camera_never_breaks_the_paint(win):
     assert tool.mouse_press(_ev(QEvent.MouseButtonPress, 5, 5)) is False
 
 
+def test_ok_keeps_it_and_drag_back_up_drops_the_mirror(win):
+    m = win.model
+    rect = m.add_node("rect", dict(width=20, height=10))
+    win.builder.tree.select_nodes([rect])
+    win._apply_operation("linear_extrude")
+    tool = win.view3d.edit_tool
+    ext = tool.target()
+    assert len(tool.buttons) == 2
+    _drag(tool, tool._screen(), -5000)          # down
+    assert drag_feature.reversed_of(ext) is not None
+    _drag(tool, tool._screen(), -10000)         # and back up
+    assert drag_feature.reversed_of(ext) is None
+    assert drag_feature.signed_height(ext) > 0
+    tool.buttons[0].click()                     # OK
+    assert win.view3d.edit_tool is None
+    assert ext.parent is m.root
+
+
 def test_clicking_a_flat_shape_in_3d_extrudes_it(win):
     m = win.model
     rect = m.add_node("rect", dict(width=20, height=10))
@@ -131,16 +153,19 @@ def test_clicking_a_flat_shape_in_3d_extrudes_it(win):
     assert rect.parent is tool.target()
 
 
-def test_clicking_an_extruded_part_takes_its_extrude(win):
+def test_only_2d_shapes_are_picked_and_an_extruded_one_comes_back(win):
     m = win.model
-    grp = m.add_node("union", {})
-    low = m.add_node("linear_extrude", dict(height=5), parent=grp)
-    m.add_node("rect", dict(width=20, height=10), parent=low)
-    high = m.add_node("translate", dict(x=50), parent=grp)
-    tall = m.add_node("linear_extrude", dict(height=30), parent=high)
-    m.add_node("rect", dict(width=10, height=10), parent=tall)
+    m.add_node("cube", dict(width=5, depth=5, height=5))
+    tall = m.add_node("linear_extrude", dict(height=30))
+    inner = m.add_node("rect", dict(width=10, height=10), parent=tall)
+    loose = m.add_node("circle", dict(x=40, radius=4))
+    names = {n.name for n, _t in drag_feature.flat_shapes(win)}
+    assert names == {inner.name, loose.name}         # no cube
     win.builder.tree.select_nodes([])
     drag_feature.pick(win)
-    win.view3d._pick_cb(dict(kind="face", pos=[55, 5, 30], dir=[0, 0, 1]),
-                        grp)
-    assert win.view3d.edit_tool.target() is tall
+    win.view3d._pick_cb(dict(kind="face", pos=[5, 5, 0], dir=[0, 0, 1]),
+                        inner)
+    tool = win.view3d.edit_tool
+    assert tool.target() is tall and not tool.created
+    tool.cancel()                                    # nothing removed
+    assert tall.parent is m.root and inner.parent is tall
