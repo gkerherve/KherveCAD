@@ -3204,6 +3204,29 @@ into a new module and import.
                        "<plane> sketch" rotate (`SketchScene._sketch_group`)
                        and view2d shows every 2D shape lying in the plane
                        on show (`view2d_edit.on_view_plane`).
+  - `tree_menu.py`    — the tree's right-click menu made compact
+                       (2026-10-21): everyday commands on top, the rest in
+                       Clipboard / Position / Modify / Organise submenus,
+                       long labels shortened, Suppress / Delete last.
+  - `tree_history.py` — the tree's **History** view (button above the
+                       Main tree, QSettings `tree/history`, off by
+                       default): the SAME nodes as SolidWorks' feature
+                       list — numbered features in build order, 2D shapes
+                       tucked under the feature using them, the user's
+                       Groups as folders, the rollback bar — plus Origin
+                       (Front / Top / Right planes: double-click sketches
+                       on that plane) and Material (right-click sets it on
+                       every part). Structure stays exactly as built.
+  - `browser_tabs.py` — Variables and Code tabs start hidden (BROWSER
+                       caption, the ⋯ corner button or a right-click on
+                       the tab bar shows them; QSettings `browser/hidden`,
+                       tests set "none"); the Code toolbar's Detach floats
+                       the Code page in its own window that keeps
+                       refreshing live, closing it puts it back.
+  - `sketch_modify.run_mcp` — MCP `sketch_modify` (trim / extend /
+                       fillet / chamfer); MCP `sketch_constraint` add
+                       scales the sketch on its first dimension like the
+                       2D view (`scale_sketch` false keeps the size).
   - `polygon_draw.py` — drawing a polygon in the sketch (2026-10-19, the
                        user: an "end" always shown, close by): a Finish /
                        Undo point / Cancel bar at the bottom of the view
@@ -5169,7 +5192,7 @@ into a new module and import.
                        what each SHIPPED .kcad compiles to and pins the
                        files to the generator (`python -m
                        khervecad.tools.print_tests --check`).
-  - `mcp_schema.py`  — the **MCP tool table**: 108 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 109 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -5800,7 +5823,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **108 tools**: the object tree, OpenSCAD in
+client gets the whole app as **109 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.
