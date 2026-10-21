@@ -794,6 +794,8 @@ class ObjectTree(QTreeWidget):
                            language.tr("Paste\tCtrl+V"),
                            self.paste_clipboard)
         if menu.actions():
+            from . import tree_menu
+            tree_menu.compact(menu)
             menu.exec_(self.viewport().mapToGlobal(pos))
 
     def _insert_object_menu(self, menu):
