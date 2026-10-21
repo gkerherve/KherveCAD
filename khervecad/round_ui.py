@@ -135,9 +135,10 @@ def context_menu(window, pos):
     from PyQt5.QtWidgets import QMenu
     from . import icons
     view = window.view3d
-    if getattr(view, "_pick_cb", None) is not None or \
-            getattr(view, "edit_tool", None) is not None:
+    if getattr(view, "edit_tool", None) is not None:
         return
+    if getattr(view, "_pick_cb", None) is not None:
+        view.cancel_pick()
     menu = QMenu(view)
     for op, kind, label, glyph in ACTIONS:
         menu.addAction(icons.icon(glyph), language.tr(label),

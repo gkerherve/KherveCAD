@@ -839,8 +839,12 @@ class View3D(QWidget):
 
     # ------------------------------------------------------- anchor pick
     def contextMenuEvent(self, event):
-        if getattr(self, "_pick_cb", None) is None and \
-                getattr(self, "edit_tool", None) is None:
+        if getattr(self, "edit_tool", None) is None:
+            # a right-click while picking (a fillet's edges) ends the
+            # pick AND opens the menu — before, it only ended the pick,
+            # so a second fillet seemed impossible from the menu
+            if getattr(self, "_pick_cb", None) is not None:
+                self.cancel_pick()
             self.context_requested.emit(event.pos())
             event.accept()
             return

@@ -119,7 +119,8 @@ def start(window, node) -> bool:
     model = window.model
 
     def count():
-        return len(node.params.get("edges") or [])
+        return len(node.params.get("edges") or []) + \
+            len(node.params.get("faces") or [])
 
     def banner():
         n = count()
@@ -134,7 +135,8 @@ def start(window, node) -> bool:
     def on_pick(desc, _key):
         if desc is None:                     # finished / cancelled
             window.statusBar().showMessage(
-                f"{node.name}: {count()} edge(s) — the exact render "
+                f"{node.name}: {count()} edge(s) / face(s) — the exact "
+                "render "
                 "shows the rounding a moment after each change; "
                 "right-click the fillet ▸ Pick edges to add more.",
                 8000)
