@@ -137,15 +137,79 @@ def auto_anchors(comp, env=None, fn=None):
     return anchors
 
 
-def user_anchors(comp):
-    """The Object's own picked anchors (stored on the node)."""
-    return [dict(a) for a in comp.params.get("anchors", [])]
+def user_anchors(comp, tris=None):
+    """The Object's own picked anchors (stored on the node). A picked
+    FACE (`track`) is re-found on the part as it is NOW and its anchor
+    put at that face's centre — so when the part is resized, whatever
+    is mated to the face's centre follows it (2026-10-21, the user: "the
+    centre of the 2 faces is anchored together ... the other object
+    should change with respect to that")."""
+    out = [dict(a) for a in comp.params.get("anchors", [])]
+    for a in out:
+        if a.get("track") and tris:
+            found = face_centre(tris, a.get("seed", a["pos"]), a["dir"])
+            if found is not None:
+                off = a.get("offset", [0.0, 0.0, 0.0])
+                a["pos"] = [round(found[i] + off[i], 6) for i in range(3)]
+    return out
 
 
 def anchors_of(comp, env=None, fn=None):
     """Every anchor of *comp*: automatic bounding-box ones plus the
     user's picked ones — all in the local frame."""
-    return auto_anchors(comp, env=env, fn=fn) + user_anchors(comp)
+    tracked = any(a.get("track") for a in comp.params.get("anchors", []))
+    tris = local_tris(comp, env=env, fn=fn) if tracked else None
+    return auto_anchors(comp, env=env, fn=fn) + user_anchors(comp, tris)
+
+
+def face_centre(tris, seed, normal, tol=1e-3):
+    """Area centre of the flat face of *tris* facing *normal* nearest
+    *seed*: triangles facing the same way, the one nearest the seed,
+    grown over its coplanar neighbours. None when no face faces so."""
+    n = _norm(normal)
+    cands = []
+    for t in tris:
+        tn = _tri_normal(t)
+        if sum(tn[i] * n[i] for i in range(3)) > 0.999:
+            cands.append(t)
+    if not cands:
+        return None
+
+    def dist(t):
+        c = [(t[0][i] + t[1][i] + t[2][i]) / 3.0 for i in range(3)]
+        off = sum((seed[i] - t[0][i]) * n[i] for i in range(3))
+        return abs(off) * 10.0 + math.dist(c, seed)
+    start = min(cands, key=dist)
+    plane = sum(start[0][i] * n[i] for i in range(3))
+    flat = [t for t in cands
+            if abs(sum(t[0][i] * n[i] for i in range(3)) - plane) < tol]
+    keys = {_vkey(v) for v in start}
+    region, rest = [start], [t for t in flat if t is not start]
+    grew = True
+    while grew:
+        grew = False
+        keep = []
+        for t in rest:
+            if any(_vkey(v) in keys for v in t):
+                region.append(t)
+                keys.update(_vkey(v) for v in t)
+                grew = True
+            else:
+                keep.append(t)
+        rest = keep
+    area, acc = 0.0, [0.0, 0.0, 0.0]
+    for t in region:
+        u = [t[1][i] - t[0][i] for i in range(3)]
+        v = [t[2][i] - t[0][i] for i in range(3)]
+        cr = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2],
+              u[0] * v[1] - u[1] * v[0]]
+        w = math.sqrt(sum(c * c for c in cr)) / 2.0
+        area += w
+        for i in range(3):
+            acc[i] += w * (t[0][i] + t[1][i] + t[2][i]) / 3.0
+    if area <= 0:
+        return None
+    return [c / area for c in acc]
 
 
 # ------------------------------------------------------- world transforms
@@ -221,8 +285,12 @@ def world_markers(comp, env=None, fn=None, definition=None):
 
 # ------------------------------------------------------------- model ops
 
-def add_user_anchor(model, comp, pos, direction, name="", kind="custom"):
-    """Persist a picked anchor on the Object (local coordinates)."""
+def add_user_anchor(model, comp, pos, direction, name="", kind="custom",
+                    track=False, tris=None):
+    """Persist a picked anchor on the Object (local coordinates);
+    *track*: it sits on a face, re-found when the part changes — the
+    point keeps its offset from that face's centre (*tris*: the part's
+    local mesh, measured now when given)."""
     items = [dict(a) for a in comp.params.get("anchors", [])]
     taken = {a.get("name") for a in items}
     base = name or "Anchor"
@@ -233,6 +301,13 @@ def add_user_anchor(model, comp, pos, direction, name="", kind="custom"):
     items.append(dict(name=candidate, kind=kind,
                       pos=[round(float(v), 4) for v in pos],
                       dir=[round(float(v), 6) for v in _norm(direction)]))
+    if track:
+        items[-1]["track"] = True
+        items[-1]["seed"] = list(items[-1]["pos"])
+        centre = face_centre(tris, pos, direction) if tris else None
+        if centre is not None:
+            items[-1]["offset"] = [round(float(pos[i]) - centre[i], 6)
+                                   for i in range(3)]
     comp.params["anchors"] = items
     model.node_changed.emit(comp)
     return items[-1]

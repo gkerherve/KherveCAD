@@ -1290,9 +1290,14 @@ class MainWindow(QMainWindow):
             pos, direction)
         if anchor is not None:
             return anchor
+        # a face is remembered as a FACE: its centre follows the part
         return anchors.add_user_anchor(self.model, definition, pos,
                                        direction,
-                                       name=desc.get("name", "Anchor"))
+                                       name=desc.get("name", "Anchor"),
+                                       track=desc.get("kind") == "face",
+                                       tris=anchors.local_tris(
+                                           definition, env=env,
+                                           fn=self.model.effective_fn()))
 
     def _snap_labeler(self):
         """A hover labeler for the Snap tool: names the anchor a click

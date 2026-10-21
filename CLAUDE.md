@@ -2745,7 +2745,14 @@ into a new module and import.
                        anchor (never litters duplicates) or persists a
                        custom one on the part's **definition** (shared
                        by every instance), and the mate solves
-                       immediately. Assembly anchors mate whole Objects
+                       immediately. A picked FACE is stored as a face, not a point
+                       (2026-10-21, the user: "the most important point"):
+                       `track` + `seed` + `offset` from the face's centre;
+                       `anchors.user_anchors` re-finds the face on the
+                       part as it is now (`face_centre`: same-facing
+                       triangles, nearest the seed, grown over coplanar
+                       neighbours) so a resized part carries whatever is
+                       mated to its face. Assembly anchors mate whole Objects
                        in the **Main tab**; **secondary anchors** in the
                        **Object tab** snap the `union` groups that build
                        an Object to each other (`_snap_scope` =

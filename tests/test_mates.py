@@ -358,3 +358,30 @@ def test_plain_mates_store_no_extras(model):
     mates.attach(model, lid, "Base", "Bottom", "Top")
     assert set(mates.mate_of(lid)) == {"parent", "parent_anchor",
                                        "anchor", "offset", "spin"}
+
+
+def test_a_mate_on_a_picked_face_follows_the_face(model):
+    """The user: two faces snapped centre to centre stay anchored — when
+    the first part is resized and its face centre moves, the mated part
+    moves with it. A picked face that is no bounding-box face (the lower
+    step of an L) must be re-found on the part as it is now."""
+    base = model.new_component("Base")
+    base.params["visible"] = True
+    step = model.add_node("cube", dict(width=40, depth=20, height=5),
+                          parent=base)
+    model.add_node("cube", dict(width=10, depth=20, height=30),
+                   parent=base)
+    # the lower step's top (the preview keeps a union's pieces apart, so
+    # the step's whole top face, x 0..40): centre (20, 10, 5)
+    anchors.add_user_anchor(model, base, [20, 10, 5], [0, 0, 1],
+                            name="Step", track=True,
+                            tris=anchors.local_tris(base))
+    lid = _cube(model, "Lid", size=4.0)
+    mates.attach(model, lid, "Base", "Bottom", "Step")
+    before = _anchor_world(lid, "Bottom")[0]
+    assert before == pytest.approx([20, 10, 5], abs=1e-3)
+    model.set_param(step, "width", 60)          # the step grows longer
+    model.set_param(step, "height", 8)          # and thicker
+    mates.refresh(model)
+    after = _anchor_world(lid, "Bottom")[0]
+    assert after == pytest.approx([30, 10, 8], abs=1e-3)
