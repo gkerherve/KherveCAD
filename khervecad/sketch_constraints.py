@@ -727,3 +727,80 @@ def take(container):
 
 def uses(root):
     return any(n.params.get(KEY) for n in root.walk())
+
+
+# ------------------------------------------- keeping refs right on edits
+def _rewrite(container, fn):
+    """Apply *fn(ref) -> new ref | None* to every row; a row with a ref
+    mapped to None is dropped (what it named is gone)."""
+    rs = rows(container)
+    if not rs:
+        return
+    out = []
+    for row in rs:
+        new = [fn(r) for r in row["refs"]]
+        if all(n is not None for n in new):
+            row = dict(row)
+            row["refs"] = new
+            out.append(row)
+    if out:
+        container.params[KEY] = out
+    else:
+        container.params.pop(KEY, None)
+
+
+def points_replaced(node, index, count):
+    """Vertex *index* of polygon *node* became *count* points (a sketch
+    fillet's arc): renumber the vertices and edges after it, drop rows
+    on the vertex that went (its edges into and out of it stay)."""
+    parent = node.parent
+    if parent is None:
+        return
+    me = str(parent.children.index(node))
+    k = count - 1
+
+    def fn(ref):
+        idx, _, name = ref.partition(".")
+        if idx != me or not name[:1] in "ve" or not name[1:].isdigit():
+            return None if (idx == me and name == "c") else ref
+        i = int(name[1:])
+        if name[0] == "v":
+            if i == index:
+                return None
+            return ref if i < index else f"{idx}.v{i + k}"
+        # edge i runs v_i -> v_{i+1}: the one leaving the corner moves
+        return ref if i < index else f"{idx}.e{i + k}"
+    _rewrite(parent, fn)
+
+
+def child_inserted(parent, at):
+    """A node was inserted at *at* among *parent*'s children."""
+    def fn(ref):
+        idx, _, name = ref.partition(".")
+        i = int(idx)
+        return f"{i + 1}.{name}" if i >= at else ref
+    _rewrite(parent, fn)
+
+
+def child_removed(parent, at):
+    """Child *at* of *parent* was removed: its rows go, later indices
+    move down."""
+    def fn(ref):
+        idx, _, name = ref.partition(".")
+        i = int(idx)
+        if i == at:
+            return None
+        return f"{i - 1}.{name}" if i > at else ref
+    _rewrite(parent, fn)
+
+
+def drop_between(parent, a, b, kinds=("coincident",)):
+    """Remove rows of *kinds* joining nodes *a* and *b*."""
+    ia, ib = (str(parent.children.index(n)) for n in (a, b))
+    rs = [r for r in rows(parent) if not (
+        r["kind"] in kinds and
+        {x.split(".")[0] for x in r["refs"]} == {ia, ib})]
+    if rs:
+        parent.params[KEY] = rs
+    else:
+        parent.params.pop(KEY, None)

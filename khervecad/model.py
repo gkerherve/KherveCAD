@@ -1536,6 +1536,9 @@ class DocumentModel(QObject):
     def remove_node(self, node: CadNode):
         if node.parent is None:
             return
+        from . import sketch_constraints
+        sketch_constraints.child_removed(node.parent,
+                                         node.parent.children.index(node))
         node.parent.remove(node)
         self.structure_changed.emit()
 

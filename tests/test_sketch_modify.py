@@ -106,3 +106,46 @@ def test_click_tools(app):
         assert r.type == "polygon"
     finally:
         view.close()
+
+
+def test_a_fillet_keeps_the_constraints_on_their_edges(app):
+    """The user's L-shape: H / V on its edges, fillet a corner. The
+    constraints named edges by number, the arc's 12 new points shifted
+    them onto arc pieces and the solver made a staircase."""
+    from khervecad import sketch_constraints as sc
+    m = DocumentModel()
+    p = m.add_node("polygon", dict(points=[[0, 0], [20, 0], [20, 5],
+                                           [5, 5], [5, 15], [0, 15]]))
+    r = m.root
+    for e in (0, 2, 4):
+        sc.add(m, r, "horizontal", ["0.e%d" % e])
+    for e in (1, 3, 5):
+        sc.add(m, r, "vertical", ["0.e%d" % e])
+    sm.corner(m, p, 4, 2)                    # round the top-right corner
+    sc.refresh(m)
+    pts = p.params["points"]
+    n = len(pts)
+    assert n == 6 + sm.ARC_STEPS
+    # every remaining constraint still names a straight edge
+    for row in sc.rows(r):
+        a, b = sc._line(p, row["refs"][0].split(".")[1], {})
+        if row["kind"] == "horizontal":
+            assert abs(a[1] - b[1]) < 1e-6
+        else:
+            assert abs(a[0] - b[0]) < 1e-6
+    # and the arc is still round: 2 mm from its centre (3, 13)
+    for x, y in pts[4:4 + sm.ARC_STEPS + 1]:
+        assert math.hypot(x - 3, y - 13) == pytest.approx(2, abs=1e-3)
+
+
+def test_deleting_a_shape_renumbers_the_others(app):
+    from khervecad import sketch_constraints as sc
+    m = DocumentModel()
+    a = m.add_node("line", dict(x1=0, y1=0, x2=10, y2=0))
+    b = m.add_node("line", dict(x1=0, y1=5, x2=10, y2=6))
+    c = m.add_node("line", dict(x1=0, y1=9, x2=10, y2=12))
+    sc.add(m, m.root, "parallel", ["1.l", "2.l"])
+    m.remove_node(a)
+    assert sc.rows(m.root)[0]["refs"] == ["0.l", "1.l"]
+    m.remove_node(b)
+    assert sc.rows(m.root) == []

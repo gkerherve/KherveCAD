@@ -239,6 +239,10 @@ def corner(model, node, index, size, round_=True):
     new = _corner_cut(pts[index - 1], pts[index], pts[(index + 1) % n],
                       float(size), round_)
     pts = pts[:index] + new + pts[index + 1:]
+    # the constraints name vertices and edges by number: renumber them,
+    # or the arc's pieces would be forced horizontal / equal / ...
+    from . import sketch_constraints
+    sketch_constraints.points_replaced(node, index, len(new))
     rel = [[round(x - origin[0], 4), round(y - origin[1], 4)]
            for x, y in pts]
     if node.type == "rect":
@@ -265,6 +269,9 @@ def line_corner(model, a, b, size, round_=True):
         raise ValueError("The two lines do not meet at an end.")
     v = ea[i]
     new = _corner_cut(ea[1 - i], v, eb[1 - j], float(size), round_)
+    # the ends no longer meet: a coincident there would pull them back
+    from . import sketch_constraints
+    sketch_constraints.drop_between(a.parent, a, b)
     for line, k, p in ((a, i, new[0]), (b, j, new[-1])):
         line.params["x%d" % (k + 1)] = round(p[0], 4)
         line.params["y%d" % (k + 1)] = round(p[1], 4)
@@ -290,7 +297,10 @@ def _insert(model, type_, params, after, name=""):
     from .model import CadNode
     node = CadNode(type_, name or model.unique_name(type_), params)
     parent = after.parent
-    parent.add(node, parent.children.index(after) + 1)
+    at = parent.children.index(after) + 1
+    from . import sketch_constraints
+    sketch_constraints.child_inserted(parent, at)
+    parent.add(node, at)
     model.structure_changed.emit()
     return node
 
