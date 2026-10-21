@@ -154,6 +154,16 @@ def enter(win):
         return
     win._sketching = True
     sync_create(win)
+    # a 3D part / extrude picked: the sketch is about its 2D shape —
+    # select that one (the user: "it is the 2D shape that matters")
+    from . import normal_to
+    from .model import SHAPE_2D
+    tree = win.builder.active_tree()
+    picked = tree.selected_nodes()
+    if picked and not any(n.category == SHAPE_2D for n in picked):
+        shape = normal_to.sketch_node(win)
+        if shape is not None:
+            tree.select_nodes([shape])
     _show(win, True)
     QTimer.singleShot(0, lambda: _frame_2d(win))
     if getattr(win, "ribbon", None) is not None:

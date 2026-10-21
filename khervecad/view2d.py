@@ -2121,6 +2121,11 @@ class SketchView(QGraphicsView):
         super().mouseDoubleClickEvent(event)
 
     def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            from . import dim_edit
+            if dim_edit.press(self, event.pos()):
+                event.accept()
+                return
         if event.button() == Qt.MiddleButton:
             self._pan_last = event.pos()
             self.setCursor(Qt.ClosedHandCursor)
@@ -2379,6 +2384,9 @@ class SketchView(QGraphicsView):
         painter.setPen(QPen(color, 1.0))
         painter.setBrush(Qt.NoBrush)
         painter.drawText(chip, Qt.AlignCenter, text)
+        ctx = getattr(self, "_dim_ctx", None)
+        if ctx is not None:               # a value you can click to type
+            self._dim_hits.append((QRectF(chip), ctx))
 
     def _draw_dim(self, painter, a_scene, b_scene, *, color, bg,
                   text=None, offset=0.0, dots=True):
@@ -2479,6 +2487,7 @@ class SketchView(QGraphicsView):
         t = tokens()
         color, bg = QColor(t["gutter"]), QColor(t["card"])
         accent = QColor(t.get("accent", "#2176c7"))
+        self._dim_hits = []                   # (chip rect, what it sizes)
         for item in list(scene.items()):
             if not isinstance(item, (ShapeItem, PartItem)) or \
                     not item.isVisible() or item.scene() is not scene:
@@ -2489,6 +2498,8 @@ class SketchView(QGraphicsView):
                                     bg)
             except Exception:              # never raise out of a paint
                 continue
+            finally:
+                self._dim_ctx = None
 
     def _geometry_rect(self, item):
         """The shape's true local rect (mm) — from its own geometry, not
@@ -2502,7 +2513,9 @@ class SketchView(QGraphicsView):
         return item.boundingRect()
 
     def _auto_dim_item(self, painter, item, color, bg):
+        node = getattr(item, "node", None)
         if isinstance(item, CircleShapeItem):        # ⌀ across the centre
+            self._dim_ctx = (node, "diameter", None)
             c = item.mapToScene(item.rect().center())
             r = abs(item.rect().width()) / 2.0
             self._draw_dim(painter,
@@ -2515,6 +2528,7 @@ class SketchView(QGraphicsView):
             self._polygon_edge_dims(painter, item, color, bg)
             return
         if isinstance(item, LineShapeItem):          # length beside it
+            self._dim_ctx = (node, "length", None)
             ln = item.line()
             self._draw_dim(painter, item.mapToScene(ln.p1()),
                            item.mapToScene(ln.p2()),
@@ -2525,15 +2539,18 @@ class SketchView(QGraphicsView):
             return
         if isinstance(item, PartItem):
             self._cylinder_label(painter, item, color, bg)
+            node = None                    # a part's box is not typed
         st = item.sceneTransform()
         if abs(st.m12()) > 1e-9 or abs(st.m21()) > 1e-9:
             # turned by a rotate above it: dimension along its own
             # edges, not round the level box that holds it
             unit = self._unit()
+            self._dim_ctx = (node, "width", None) if node else None
             self._draw_dim(painter, item.mapToScene(lr.topLeft()),
                            item.mapToScene(lr.topRight()), color=color,
                            bg=bg, dots=False, offset=18,
                            text=_fmt_len(lr.width(), unit))
+            self._dim_ctx = (node, "height", None) if node else None
             self._draw_dim(painter, item.mapToScene(lr.topRight()),
                            item.mapToScene(lr.bottomRight()), color=color,
                            bg=bg, dots=False, offset=18,
@@ -2547,10 +2564,12 @@ class SketchView(QGraphicsView):
         sl, sr, stop, sbot = min(xs), max(xs), min(ys), max(ys)
         # width below the box, height on the right (screen space)
         unit = self._unit()
+        self._dim_ctx = (node, "width", None) if node else None
         self._dim_screen(painter, QPointF(sl, sbot), QPointF(sr, sbot),
                          color=color, bg=bg,
                          text=_fmt_len(lr.width(), unit),
                          offset=22, dots=False)
+        self._dim_ctx = (node, "height", None) if node else None
         self._dim_screen(painter, QPointF(sr, sbot), QPointF(sr, stop),
                          color=color, bg=bg,
                          text=_fmt_len(lr.height(), unit),
@@ -2598,9 +2617,13 @@ class SketchView(QGraphicsView):
         lens = [math.hypot(b.x() - a.x(), b.y() - a.y()) for a, b in sides]
         longest = max(lens) or 1.0
         unit = self._unit()
-        for (a, b), L in zip(sides, lens):
+        node = getattr(item, "node", None)
+        for i, ((a, b), L) in enumerate(zip(sides, lens)):
             if L < max(0.15 * longest, 1e-6) and n > 4:
                 continue
+            # a rounded polygon's drawn sides are not its own sides
+            self._dim_ctx = (node, "edge", i) if node is not None and \
+                not node.params.get("corners") else None
             self._draw_dim(painter, item.mapToScene(a), item.mapToScene(b),
                            color=color, bg=bg, dots=False, offset=14,
                            text=_fmt_len(L, unit))
