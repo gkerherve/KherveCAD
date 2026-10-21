@@ -2272,6 +2272,7 @@ class SketchView(QGraphicsView):
 
     def drawForeground(self, painter, rect):
         super().drawForeground(painter, rect)
+        self._dim_hits = []           # every clickable value, this paint
         from . import sketch_constrain_ui
         try:
             sketch_constrain_ui.paint(self, painter)
@@ -2487,7 +2488,8 @@ class SketchView(QGraphicsView):
         t = tokens()
         color, bg = QColor(t["gutter"]), QColor(t["card"])
         accent = QColor(t.get("accent", "#2176c7"))
-        self._dim_hits = []                   # (chip rect, what it sizes)
+        if not hasattr(self, "_dim_hits"):
+            self._dim_hits = []              # (chip rect, what it sizes)
         for item in list(scene.items()):
             if not isinstance(item, (ShapeItem, PartItem)) or \
                     not item.isVisible() or item.scene() is not scene:

@@ -396,10 +396,89 @@ def glyphs(view):
     return out, font
 
 
+#: dimensions drawn as a real dimension line between what they measure
+LINEAR = ("distance", "hdistance", "vdistance", "length", "point_line")
+
+
+def _view_point(view, items, node, xy):
+    from PyQt5.QtCore import QPointF
+    item = items.get(node.id)
+    q = QPointF(*xy)
+    frame = item.parentItem() if item is not None else None
+    if frame is not None:
+        q = frame.mapToScene(q)
+    return QPointF(view.mapFromScene(q))
+
+
+def linear_ends(view, items, cont, row):
+    """(a, b) in view pixels between which a LINEAR dimension is drawn —
+    the points it belongs to (SolidWorks' smart dimension), or None."""
+    from PyQt5.QtCore import QPointF
+    kind = row["kind"]
+    ents = [sc.entity(cont, r) for r in row["refs"]]
+    if kind == "length":
+        node, name = ents[0]
+        a, b = sc._line(node, name, {})
+        return _view_point(view, items, node, a), \
+            _view_point(view, items, node, b)
+    if kind == "point_line":
+        (pn, pname), (ln, lname) = ents
+        p = sc._point(pn, pname, {})
+        a, b = sc._line(ln, lname, {})
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        d2 = dx * dx + dy * dy or 1.0
+        t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / d2
+        foot = (a[0] + dx * t, a[1] + dy * t)
+        return _view_point(view, items, pn, p), \
+            _view_point(view, items, ln, foot)
+    (an, aname), (bn, bname) = ents
+    pa = _view_point(view, items, an, sc._point(an, aname, {}))
+    pb = _view_point(view, items, bn, sc._point(bn, bname, {}))
+    if kind == "hdistance":
+        pb = QPointF(pb.x(), pa.y())
+    elif kind == "vdistance":
+        pb = QPointF(pa.x(), pb.y())
+    return pa, pb
+
+
+def _paint_dimensions(view, painter):
+    """Driving dimensions as SolidWorks draws them: a dimension line
+    with arrows between the points / line they belong to, its value a
+    chip you click to type (dim_edit). Returns the rows drawn."""
+    from PyQt5.QtGui import QColor
+    scene = view.scene()
+    model = getattr(scene, "model", None)
+    if model is None or not hasattr(view, "_dim_screen"):
+        return set()
+    items = {it.node.id: it for it in _shape_items(scene)}
+    ink, bg = QColor("#1565c0"), QColor(255, 255, 255, 235)
+    drawn = set()
+    for cont in sc.containers(model):
+        for index, row in enumerate(sc.rows(cont)):
+            if row["kind"] not in LINEAR or "value" not in row:
+                continue
+            try:
+                ends = linear_ends(view, items, cont, row)
+            except (KeyError, ValueError, IndexError, TypeError):
+                continue
+            if ends is None:
+                continue
+            view._dim_ctx = (cont, "constraint", index)
+            try:
+                view._dim_screen(painter, ends[0], ends[1], color=ink,
+                                 bg=bg, text=str(row["value"]),
+                                 offset=26, dots=True)
+            finally:
+                view._dim_ctx = None
+            drawn.add((cont.id, index))
+    return drawn
+
+
 def paint(view, painter):
     """The constraints on the sketch: a mark at each constrained entity
-    (side by side where they meet), a dimension's value; the mark under
-    the cursor red while the delete tool is on; picks ringed."""
+    (side by side where they meet), dimensions as dimension lines; the
+    mark under the cursor red while the delete tool is on; picks
+    ringed."""
     from PyQt5.QtCore import Qt
     from PyQt5.QtGui import QColor, QPen
     scene = view.scene()
@@ -407,6 +486,10 @@ def paint(view, painter):
     if not marks:
         return
     marks, font = marks
+    painter.save()
+    painter.resetTransform()
+    drawn = _paint_dimensions(view, painter)
+    painter.restore()
     deleting = getattr(scene, "tool", None) == DELETE
     hot = getattr(scene, "_con_hot", None)
     painter.save()
@@ -415,10 +498,16 @@ def paint(view, painter):
     ink, red = QColor("#c75b12"), QColor("#d32f2f")
     for rect, text, cont, index in marks:
         is_hot = deleting and hot == (cont.id, index)
+        if (cont.id, index) in drawn and not is_hot:
+            continue                     # drawn as a dimension line
         painter.setPen(QPen(red if is_hot else ink, 1.2))
         if is_hot:
             painter.drawRect(rect.adjusted(-1, -1, 1, 1))
         painter.drawText(rect, int(Qt.AlignCenter), text)
+        if "value" in sc.rows(cont)[index] and \
+                hasattr(view, "_dim_hits"):
+            # R / Ø / angle values: click to type too
+            view._dim_hits.append((rect, (cont, "constraint", index)))
     painter.setPen(QPen(QColor("#2176c7"), 2))
     painter.setBrush(Qt.NoBrush)
     items = {it.node.id: it for it in _shape_items(scene)}

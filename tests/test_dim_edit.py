@@ -67,3 +67,41 @@ def test_click_the_label_and_type(monkeypatch):
     finally:
         w._dirty = False
         w.close()
+
+
+def test_a_sketch_dimension_is_a_dimension_line_you_click(monkeypatch):
+    """SolidWorks: a dimension belongs to the points it measures, drawn
+    between them, and its value is clicked to change it (the user)."""
+    from PyQt5.QtCore import QPoint
+    from khervecad import sketch_constraints as sc
+    from khervecad.mainwindow import MainWindow
+    monkeypatch.setattr(sc, "scale_first_enabled", lambda: False)
+    w = MainWindow()
+    w.resize(1200, 800)
+    w.show()
+    try:
+        m = w.model
+        a = m.add_node("line", dict(x1=0, y1=0, x2=10, y2=0))
+        b = m.add_node("circle", dict(x=30, y=0, radius=2))
+        ia, ib = m.root.children.index(a), m.root.children.index(b)
+        sc.add(m, m.root, "distance", ["%d.p2" % ia, "%d.c" % ib], 20)
+        v2 = w.view2d
+        v2.frame_rect(v2.scene().itemsBoundingRect().adjusted(-20, -20,
+                                                              20, 20))
+        for _ in range(3):
+            _APP.processEvents()
+        v2.viewport().grab()
+        chips = [r for r, ctx in v2._dim_hits if ctx[1] == "constraint"]
+        assert chips
+        c = chips[0].center()
+        assert dim_edit.press(v2, QPoint(int(c.x()), int(c.y())))
+        assert v2._dim_editor.text() == "20"
+        v2._dim_editor.setText("25")
+        v2._dim_editor.returnPressed.emit()
+        assert sc.rows(m.root)[0]["value"] == 25
+        assert b.params["x"] - 10 == pytest.approx(25, abs=1e-3) or \
+            abs(b.params["x"] - a.params["x2"]) == pytest.approx(25,
+                                                                 abs=1e-3)
+    finally:
+        w._dirty = False
+        w.close()

@@ -34,6 +34,9 @@ def _num(v, default=0.0):
 
 def current(node, kind, index):
     """The value a dimension label shows."""
+    if kind == "constraint":                  # a sketch's own dimension
+        from . import sketch_constraints as sc
+        return _num(sc.rows(node)[index].get("value"))
     p = node.params
     if kind == "width":
         return _num(p.get("width"))
@@ -54,6 +57,13 @@ def current(node, kind, index):
 def apply(model, node, kind, index, value):
     """Set the size; raises ValueError for a value it cannot take."""
     value = float(value)
+    if kind == "constraint":
+        from . import sketch_constraints as sc
+        row = sc.rows(node)[index]
+        if row["kind"] != "angle" and value <= 0:
+            raise ValueError("A size must be more than zero.")
+        sc.set_value(model, node, index, value)
+        return
     if value <= 0:
         raise ValueError("A size must be more than zero.")
     if kind in ("width", "height"):
