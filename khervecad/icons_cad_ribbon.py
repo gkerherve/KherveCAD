@@ -60,7 +60,7 @@ def _node(d, x, y, r=0.045):
 
 
 # ================================================================ sketch
-@draws("create_sketch", "edit_sketch")
+@draws("create_sketch", "edit_sketch", "face_sketch")
 def _create_sketch(d):
     """A sketch plane with a profile and a pencil."""
     plane = [d.P(-1, -1, 0), d.P(1, -1, 0), d.P(1, 1, 0), d.P(-1, 1, 0)]

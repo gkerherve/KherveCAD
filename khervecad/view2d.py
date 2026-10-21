@@ -2109,14 +2109,13 @@ class SketchView(QGraphicsView):
 
     # ------------------------------------------------ middle-button pan
     def mouseDoubleClickEvent(self, event):
-        """On empty paper with the Select tool: glide to fit everything,
-        and back on the next double-click (view_anim)."""
+        """With the Select tool: zoom in on the spot, and back out on the
+        next double-click (view_anim)."""
         scene = self.scene()
         if event.button() == Qt.LeftButton and \
-                getattr(scene, "tool", SELECT) == SELECT and \
-                self.itemAt(event.pos()) is None:
+                getattr(scene, "tool", SELECT) == SELECT:
             from . import view_anim
-            view_anim.toggle_2d(self)
+            view_anim.toggle_2d(self, self.mapToScene(event.pos()))
             event.accept()
             return
         super().mouseDoubleClickEvent(event)

@@ -139,6 +139,10 @@ def edit(window, node=None):
     node = node or sketch_node(window)
     if node is None:
         return pick(window)                    # click the shape in 3D
+    from . import face_sketch
+    group = face_sketch.group_of(node)
+    if group is not None:                      # drawn on a face
+        return face_sketch.open_sketch(window, group)
     got = shape_frame(window, node)
     if got is None:
         window.statusBar().showMessage(language.tr(
@@ -161,7 +165,7 @@ def create(window):
     return turn_to(window, plane if plane in CAMERA else "Top (XY)")
 
 
-def turn_to(window, plane, node=None):
+def turn_to(window, plane, node=None, camera=None, face=None):
     """Turn the 3D camera square on to *plane* — ONLY the angle: the
     target and distance stay, so nothing zooms or slides (the user: "it
     just changes angle ... the same size as the 2D") — then hand over to
@@ -171,9 +175,15 @@ def turn_to(window, plane, node=None):
     view = window.view3d
     window._normal_to_saved = dict(
         yaw=view.yaw, pitch=view.pitch, projection=view.projection)
-    yaw, pitch = CAMERA[plane]
+    yaw, pitch = camera if camera is not None else CAMERA[plane]
     view.projection = "Orthographic"
     centre = list(view.target)
+    if face is not None:
+        # the sketch is the face Group's own XY: where the camera's
+        # target falls on it is the 2D view's centre
+        from . import face_sketch
+        lx, ly = face_sketch.to_local(face, view.target)
+        centre = [lx, ly, 0.0]
     goal = dict(yaw=yaw, pitch=pitch, target=centre,
                 distance=view.distance)
 
@@ -183,6 +193,9 @@ def turn_to(window, plane, node=None):
         window._set_plane(plane)
         if node is not None:
             window.builder.active_tree().select_nodes([node])
+        if face is not None:
+            window._face_sketch = face        # the scene draws inside it
+            window.view2d.scene().rebuild()
         if not one_canvas:
             # the classic layout shows both: the 3D view stays square on,
             # the sketch beside it shows the same plane
@@ -292,7 +305,21 @@ def back(window):
     view = window.view3d
     v2 = window.view2d
     plane = getattr(v2.scene(), "plane", "Top (XY)")
-    if plane in CAMERA:
+    face = getattr(window, "_face_sketch", None)
+    if face is not None:
+        # leaving a face sketch: start square on to the face, at the
+        # sketch's centre and size
+        from . import face_sketch
+        c = v2.mapToScene(v2.viewport().rect().center())
+        scale = v2.px_per_mm() or 1.0
+        view.projection = "Orthographic"
+        view.yaw, view.pitch = face_sketch.camera_for(
+            face_sketch._normal_of(face))
+        view.target = face_sketch.to_world(face, c.x(), c.y())
+        view.distance = view._focal() / scale
+        face_sketch.close(window)
+        v2.scene().rebuild()
+    elif plane in CAMERA:
         yaw, pitch = CAMERA[plane]
         a, b = AXES[plane]
         c = v2.mapToScene(v2.viewport().rect().center())

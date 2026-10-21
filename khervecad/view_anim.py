@@ -98,7 +98,14 @@ def _set_2d(view, scale, cx, cy):
     view.centerOn(cx, cy)
 
 
-def toggle_2d(view):
+#: how much a double-click zooms the sketch in
+ZOOM_2D = 3.0
+
+
+def toggle_2d(view, at=None):
+    """Double-click: zoom in ZOOM_2D times on *at* (a scene point, else
+    the centre) — or fit the drawing when *at* is None and it is off
+    screen — and back out on the next one (the user)."""
     saved = getattr(view, "_kc_before_fit", None)
     start = _state_2d(view)
     if saved is not None:
@@ -106,9 +113,13 @@ def toggle_2d(view):
         goal = saved
     else:
         view._kc_before_fit = dict(start)
-        view.fit_content()
-        goal = _state_2d(view)
-        _set_2d(view, start["scale"], start["cx"], start["cy"])
+        if at is not None:
+            goal = dict(scale=start["scale"] * ZOOM_2D, cx=at.x(),
+                        cy=at.y())
+        else:
+            view.fit_content()
+            goal = _state_2d(view)
+            _set_2d(view, start["scale"], start["cx"], start["cy"])
 
     def apply(e):
         # zoom in log space so it feels even

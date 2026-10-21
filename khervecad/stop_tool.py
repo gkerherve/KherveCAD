@@ -53,6 +53,13 @@ def stop(window):
         view.edit_tool = None
         view.update()
         stopped = True
+    if getattr(window, "_face_sketch", None) is not None and \
+            not getattr(window, "_sketching", False):
+        # the classic layout's face sketch ends here (no Exit Sketch)
+        from . import face_sketch
+        face_sketch.close(window)
+        window.view2d.scene().rebuild()
+        stopped = True
     scene = window.view2d.scene()
     from .view2d import SELECT
     if getattr(scene, "tool", SELECT) != SELECT:

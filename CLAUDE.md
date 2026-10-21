@@ -3219,8 +3219,21 @@ into a new module and import.
                        `DURATION_MS`, then the 2D sketch takes over at the
                        SAME px/mm and centre; Finish (`back`) starts the 3D
                        view square on at the sketch's scale and turns back
-                       to the saved camera. Step 2 (next): sketch planes on
-                       any face.
+                       to the saved camera. Create Sketch reads Exit Sketch
+                       while sketching; entering and leaving only TURN
+                       (target and distance kept, the 2D at the 3D's px/mm).
+  - `face_sketch.py`  — **Sketch on Face** (step 2, 2026-10-21): click a
+                       flat face; a Group "Sketch on <part>"
+                       (`params["face_sketch"]`) is placed at the point and
+                       turned (`euler_for`: X / Y = the square-on camera's
+                       right / up, Z = the normal); the 3D view turns to it
+                       (`normal_to.turn_to(camera=, face=)`, angle only) and
+                       the sketch opens INSIDE the Group in its own frame
+                       (`window._face_sketch` drives the scene's
+                       `isolation_resolver`, which `scope_frame` zeroes).
+                       Exit turns back from the face; an empty one is
+                       removed; Edit Sketch on a shape in it reopens it;
+                       the classic layout ends it with Select / Esc.
   - `drag_feature.py` — extrude / revolve by DRAGGING in 3D (2026-10-21,
                        SolidWorks / Fusion): a `View3D.edit_tool` that
                        Linear extrude / Rotate extrude start by themselves

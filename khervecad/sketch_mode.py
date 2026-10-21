@@ -172,8 +172,8 @@ def finish(win):
     win.view2d.set_tool(SELECT)
     if active(win):
         _show(win, False)
-        if getattr(win, "ribbon", None) is not None:
-            win.ribbon.show_tab("features")
+        # the ribbon stays on the Sketch tab (the user: Exit Sketch should
+        # not take the tools away)
         # the 3D view comes back framed on what was picked (else the
         # whole model): it kept the camera it had before the sketch and
         # the picked part could be nowhere on it (2026-10-20, the user)

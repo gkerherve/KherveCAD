@@ -119,7 +119,10 @@ class MainWindow(QMainWindow):
         self.builder.object_tab.tree.selection_changed.connect(
             self._tree_selected)
         # the Object tab isolates both viewers to the active Object
-        self.scene.isolation_resolver = self.builder.isolated_component
+        # a face sketch (face_sketch.py) isolates the sketch to its
+        # Group, drawn in the Group's own frame; else the Object tab's
+        self.scene.isolation_resolver = lambda: getattr(
+            self, "_face_sketch", None) or self.builder.isolated_component()
         self.builder.active_component_changed.connect(
             lambda _n: self._isolation_changed())
         self.builder.currentChanged.connect(

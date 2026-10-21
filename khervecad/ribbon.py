@@ -421,8 +421,9 @@ def _panel_actions(win, key):
     if key == "sketch":
         from . import sketch_mode
         from . import normal_to
+        from . import face_sketch
         first = [sketch_mode.create_action(win),
-                 normal_to.action(win)] \
+                 normal_to.action(win), face_sketch.action(win)] \
             if style_of(win) in ("Fusion", "SolidWorks") else []
         return title, first + [a for a in win._tool_group.actions()
                                if a.data() != MEASURE

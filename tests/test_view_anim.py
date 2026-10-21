@@ -52,3 +52,15 @@ def test_2d_fit_and_back(win):
     assert (c.x(), c.y()) == pytest.approx((220, 110), abs=5)
     view_anim.toggle_2d(v2)
     assert v2.px_per_mm() == pytest.approx(0.5)
+
+
+def test_2d_double_click_zooms_in_on_the_spot_and_back(win):
+    from PyQt5.QtCore import QPointF
+    v2 = win.view2d
+    view_anim._set_2d(v2, 2.0, 0.0, 0.0)
+    view_anim.toggle_2d(v2, QPointF(30, 10))
+    assert v2.px_per_mm() == pytest.approx(6.0)
+    c = v2.mapToScene(v2.viewport().rect().center())
+    assert (c.x(), c.y()) == pytest.approx((30, 10), abs=1)
+    view_anim.toggle_2d(v2, QPointF(99, 99))     # back, wherever clicked
+    assert v2.px_per_mm() == pytest.approx(2.0)
