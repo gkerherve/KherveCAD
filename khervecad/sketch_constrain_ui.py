@@ -746,8 +746,15 @@ def run_mcp(win, params):
     action = params.get("action", "list")
     out = {"node_id": cont.id}
     if action == "add":
-        report = sc.add(model, cont, params["kind"], params["refs"],
-                        params.get("value"))
+        if params.get("value") is not None and \
+                params.get("scale_sketch", True):
+            # the first dimension scales the sketch, as in the 2D view
+            report, out["scaled"] = sc.add_dimension(
+                model, cont, params["kind"], params["refs"],
+                params.get("value"))
+        else:
+            report = sc.add(model, cont, params["kind"], params["refs"],
+                            params.get("value"))
         out["status"] = sc.status_text(report)
     elif action == "remove":
         sc.remove(model, cont, int(params["index"]))

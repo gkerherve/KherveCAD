@@ -1635,7 +1635,39 @@ TOOLS = [
             "refs": {"type": "array", "items": {"type": "string"}},
             "value": {"type": ["number", "string"]},
             "index": {"type": "integer", "minimum": 0},
+            "scale_sketch": {"type": "boolean", "description": (
+                "add: false keeps the sketch's size when this is its "
+                "first dimension (default follows the user's 'scale on "
+                "first dimension' option; the reply says scaled)")},
         }),
+    },
+    {
+        "name": "sketch_modify",
+        "description": (
+            "SKETCH MODIFY — the ribbon's Trim / Extend / Sketch fillet / "
+            "Sketch chamfer. Points are in the shape's own sketch "
+            "coordinates (its params' frame). trim: node_id (a line) + "
+            "point on the piece to remove — it is cut where other lines / "
+            "circles of its group cross it (shortened, split in two, or "
+            "deleted). extend: node_id (a line) + point near the end to "
+            "run on to the first line / circle it meets. fillet / "
+            "chamfer: node_id of a polygon or rect + vertex index (a rect "
+            "becomes a polygon; the corner is kept and a corners row "
+            "draws the arc), or node_ids [two lines meeting at an end] "
+            "(both trimmed, an arc / chamfer piece added); size = radius "
+            "or distance."
+        ),
+        "input_schema": _obj({
+            "action": {"type": "string",
+                       "enum": ["trim", "extend", "fillet", "chamfer"]},
+            "node_id": {"type": "integer"},
+            "node_ids": {"type": "array", "items": {"type": "integer"},
+                         "minItems": 2, "maxItems": 2},
+            "point": {"type": "array", "items": {"type": "number"},
+                      "minItems": 2, "maxItems": 2},
+            "vertex": {"type": "integer", "minimum": 0},
+            "size": {"type": "number", "exclusiveMinimum": 0},
+        }, ["action"]),
     },
     # ── Parts and assemblies ───────────────────────────────────────
     {

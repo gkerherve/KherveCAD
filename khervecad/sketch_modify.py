@@ -536,3 +536,58 @@ def fold(node):
     node.remove(poly)
     poly.visible = node.visible and poly.visible
     return poly
+
+
+# ------------------------------------------------------------------ MCP
+def run_mcp(window, params):
+    """The `sketch_modify` MCP tool: trim / extend a line at a point,
+    fillet / chamfer a polygon or rectangle corner or where two lines
+    meet. Points are in the shapes' own sketch coordinates."""
+    model = window.model
+    action = params.get("action")
+
+    def node(nid):
+        n = model.find(int(nid))
+        if n is None:
+            raise ValueError("No node with id %r." % nid)
+        return n
+
+    def point():
+        p = params.get("point")
+        if not (isinstance(p, (list, tuple)) and len(p) >= 2):
+            raise ValueError("Give point [x, y] on the line.")
+        return (float(p[0]), float(p[1]))
+    if action in ("trim", "extend"):
+        line = node(params["node_id"])
+        if line.type != "line":
+            raise ValueError("%s works on a line; %s is a %s."
+                             % (action, line.name, line.type))
+        if action == "trim":
+            done = trim(model, line, point())
+            return {"result": done,
+                    "line": None if done == "deleted"
+                    else dict(line.params)}
+        end = extend(model, line, point())
+        if end is None:
+            raise ValueError("Nothing for that end to reach.")
+        return {"result": "extended", "line": dict(line.params)}
+    if action in ("fillet", "chamfer"):
+        size = float(params.get("size", 0) or 0)
+        if size <= 0:
+            raise ValueError("Give size > 0 (radius or chamfer distance).")
+        round_ = action == "fillet"
+        ids = params.get("node_ids") or []
+        if len(ids) == 2:
+            new = line_corner(model, node(ids[0]), node(ids[1]), size,
+                              round_)
+            return {"result": action, "node_id": getattr(new, "id", None)}
+        shape = node(params["node_id"])
+        if shape.type not in ("polygon", "rect"):
+            raise ValueError("Fillet a polygon / rectangle corner (node_id "
+                             "+ vertex), or two lines (node_ids).")
+        out = corner(model, shape, int(params.get("vertex", 0)), size,
+                     round_)
+        shape = out if hasattr(out, "params") else shape
+        return {"result": action, "node_id": shape.id,
+                "corners": shape.params.get("corners", [])}
+    raise ValueError("action is trim, extend, fillet or chamfer.")

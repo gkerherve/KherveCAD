@@ -1637,6 +1637,13 @@ class McpToolExecutor:
         except (ValueError, KeyError, IndexError) as exc:
             raise ToolError(str(exc))
 
+    def _t_sketch_modify(self, params) -> dict:
+        from . import sketch_modify
+        try:
+            return sketch_modify.run_mcp(self._w, params)
+        except (ValueError, KeyError, IndexError, TypeError) as exc:
+            raise ToolError(str(exc))
+
     def _t_bill_of_materials(self, params) -> dict:
         from . import bom_mcp
         try:

@@ -418,9 +418,18 @@ part with `node`.
 Sketch constraints — a 2D profile whose sizes must stay related \
 (a plate with equal sides, a slot tangent to its arcs): draw the shapes, \
 then sketch_constraint (list shows each shape's entity refs) to add \
-horizontal / parallel / tangent / equal ... and driven dimensions, a value \
-may be a variable's expression. The user can then drag a shape and the rest \
-follows.
+horizontal / parallel / tangent / equal / diagonal (45°) ... and driven \
+dimensions, a value may be a variable's expression. The user can then drag \
+a shape and the rest follows. Sketch like SolidWorks: start with `auto` to \
+capture the H / V / coincident relations the drawing already shows, then \
+dimension it; the FIRST length / radius dimension a sketch gets scales the \
+whole sketch to it when the user's option is on (the reply says `scaled`), \
+so set the overall size first and the details after. Lines drawn in the app \
+chain and carry their own relations already. sketch_modify trims a line \
+where others cross it, extends one to the next, and rounds / chamfers a \
+polygon or rectangle corner (kept sharp underneath, a corners row draws the \
+arc) or the corner two lines make. Shapes on a Front / Side plane sit in \
+one turned "<plane> sketch" group — add them there, in its frame.
 
 Feature history and families, SolidWorks style — suppress switches a \
 feature off without deleting it (or rolls the history back after a node); \
