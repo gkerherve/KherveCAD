@@ -107,7 +107,8 @@ def _fresh_blueprint_settings():
                 # KherveCAD, running beside a long test run, shares these
                 # settings, and switching it to Fusion mid-run opened
                 # later test windows with Fusion's menus and toolbars
-                "interface_style", "ribbon/tab", "tree/history"):
+                "interface_style", "ribbon/tab", "tree/history",
+                "sketch/inset_size", "sketch/mini2d_size"):
         settings.remove(key)
     # every tab shown in tests (users start with Variables / Code hidden)
     settings.setValue("browser/hidden", "none")

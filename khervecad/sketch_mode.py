@@ -221,7 +221,79 @@ def after_vibe(win):
         _show(win, sketching(win))
 
 
-class Inset(QLabel):
+class _Resizable:
+    """A corner view the user can make smaller or larger (2026-10-21,
+    the user: "that small view needs to be resizable to make it even
+    smaller"): a grip in its TOP-LEFT corner — it sits in the
+    bottom-right of its view, so that corner is the free one — drags
+    the size, remembered per view in QSettings `<KEY>`."""
+
+    GRIP = 14
+    MIN_W, MIN_H, MAX_W, MAX_H = 90, 64, 640, 460
+
+    def _init_size(self):
+        from PyQt5.QtCore import QSettings
+        value = QSettings("Kherve", "KherveCAD").value(self.KEY)
+        try:
+            w, h = (int(v) for v in str(value).split("x"))
+        except (TypeError, ValueError):
+            w, h = type(self).W, type(self).H
+        self.W = max(self.MIN_W, min(self.MAX_W, w))
+        self.H = max(self.MIN_H, min(self.MAX_H, h))
+        self.setFixedSize(self.W, self.H)
+        self.setMouseTracking(True)
+        self._grab = None
+
+    def _on_grip(self, pos):
+        return pos.x() < self.GRIP and pos.y() < self.GRIP
+
+    def set_size(self, w, h, save=True):
+        self.W = int(max(self.MIN_W, min(self.MAX_W, w)))
+        self.H = int(max(self.MIN_H, min(self.MAX_H, h)))
+        self.setFixedSize(self.W, self.H)
+        if getattr(self, "_twin_view", None) is not None:
+            self._twin_view.resize((self.W - 2) * 3, (self.H - 2) * 3)
+        self.place()
+        self.redraw()
+        if save:
+            from PyQt5.QtCore import QSettings
+            QSettings("Kherve", "KherveCAD").setValue(
+                self.KEY, "%dx%d" % (self.W, self.H))
+
+    def _grip_press(self, event):
+        if event is not None and event.button() == Qt.LeftButton and \
+                self._on_grip(event.pos()):
+            # the bottom-right corner stays put, the top-left follows
+            self._grab = (event.globalPos(), self.W, self.H)
+            return True
+        return False
+
+    def mouseMoveEvent(self, event):
+        if self._grab is not None:
+            start, w, h = self._grab
+            d = event.globalPos() - start
+            self.set_size(w - d.x(), h - d.y(), save=False)
+            return
+        self.setCursor(Qt.SizeFDiagCursor if self._on_grip(event.pos())
+                       else Qt.PointingHandCursor)
+
+    def mouseReleaseEvent(self, event):
+        if self._grab is not None:
+            self._grab = None
+            self.set_size(self.W, self.H)            # remember it
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        from PyQt5.QtGui import QPainter, QPen, QColor
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        p.setPen(QPen(QColor("#7d8892"), 1.2))
+        for k in (4, 8, 12):                     # three diagonal ridges
+            p.drawLine(2, k, k, 2)
+        p.end()
+
+
+class Inset(_Resizable, QLabel):
     """The model in 3D, small, in the sketch's bottom-right corner while
     sketching (2026-10-19, the user: "in the right bottom corner of the
     2D, see the 3D still"). A picture from the 3D view's own camera
@@ -229,12 +301,13 @@ class Inset(QLabel):
     finishes the sketch."""
 
     W, H = 280, 200
+    KEY = "sketch/inset_size"
 
     def __init__(self, win):
         super().__init__(win.view2d)
         self.win = win
         self.setObjectName("sketchInset")
-        self.setFixedSize(self.W, self.H)
+        self._init_size()
         self.setCursor(Qt.PointingHandCursor)
         self.setToolTip(language.tr("The model in 3D — click to finish "
                                     "the sketch"))
@@ -277,7 +350,8 @@ class Inset(QLabel):
         return False
 
     def mousePressEvent(self, event):
-        finish(self.win)
+        if not self._grip_press(event):
+            finish(self.win)
 
 
 def _inset(win):
@@ -287,19 +361,20 @@ def _inset(win):
     return got
 
 
-class Mini2D(QLabel):
+class Mini2D(_Resizable, QLabel):
     """The sketch, small, in the 3D view's corner (the user, same day:
     "in the 3D view, the same thing, a 2D view on the side"): the 2D
     scene drawn Y-up round what it holds, the selection showing as the
     sketch shows it; a click starts sketching."""
 
     W, H = 240, 170
+    KEY = "sketch/mini2d_size"
 
     def __init__(self, win):
         super().__init__(win.view3d)
         self.win = win
         self.setObjectName("sketchMini")
-        self.setFixedSize(self.W, self.H)
+        self._init_size()
         self.setAlignment(Qt.AlignCenter)
         self.setCursor(Qt.PointingHandCursor)
         self.setToolTip(language.tr("The sketch in 2D — click to sketch"))
@@ -387,7 +462,8 @@ class Mini2D(QLabel):
         return False
 
     def mousePressEvent(self, event):
-        enter(self.win)
+        if not self._grip_press(event):
+            enter(self.win)
 
 
 def _mini2d(win):
