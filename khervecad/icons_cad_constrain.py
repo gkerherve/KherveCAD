@@ -283,3 +283,11 @@ def _con_dimension(d):
     _ln(d, (0.14, 0.8), (0.86, 0.8))
     _dim(d, (0.14, 0.8), (0.86, 0.8), (0, -0.42))
     d.text(0.5, 0.32, "25", 0.2, d.pal.make)
+
+
+@draws("stop_select")
+def _stop_select(d):
+    """The selection arrow: stop whatever runs, back to selecting."""
+    d.poly([P(0.28, 0.1), P(0.28, 0.78), P(0.43, 0.63), P(0.55, 0.9),
+            P(0.66, 0.85), P(0.54, 0.58), P(0.76, 0.58)],
+           d.pal.paper, color=d.pal.edge, width=0.06)

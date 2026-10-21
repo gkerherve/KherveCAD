@@ -1837,7 +1837,13 @@ class View3D(QWidget):
     # ------------------------------------------------------------- mouse
     def event(self, event):
         kind = event.type()
+        if kind == QEvent.ShortcutOverride and \
+                event.key() == Qt.Key_Escape and \
+                getattr(self.edit_tool, "_xform", None) is not None:
+            event.accept()            # Esc cancels the drag, not Edit Mode
+            return True
         if kind == QEvent.ShortcutOverride and self.edit_tool is not None \
+                and hasattr(self.edit_tool, "wants_key") \
                 and self.edit_tool.wants_key(event):
             event.accept()            # Edit Mode's G / E / M beat the menus
             return True

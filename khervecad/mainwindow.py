@@ -151,6 +151,8 @@ class MainWindow(QMainWindow):
         self._edit_session = None          # meshedit_ui.EditSession, if open
         self.view3d.tab_pressed.connect(lambda: self.set_edit_mode(None))
         self.model.node_changed.connect(self._note_sketch_edit)
+        from . import stop_tool
+        stop_tool.install_escape(self)
         from . import round_ui
         self.view3d.context_requested.connect(
             lambda pos: round_ui.context_menu(self, pos))

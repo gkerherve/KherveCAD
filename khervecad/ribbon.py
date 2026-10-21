@@ -648,6 +648,17 @@ class Ribbon(QWidget):
         row = QHBoxLayout(page)
         row.setContentsMargins(6, 3, 6, 2)
         row.setSpacing(4)
+        # the first button of every tab: Select — stops any tool (the
+        # user could not get out of a fillet pick)
+        from . import stop_tool
+        stop = _painted(self.win, [stop_tool.action(self.win)])
+        stop = _helped(stop)
+        if self.fusion:
+            row.addWidget(self._fusion_panel(page, language.tr("Select"),
+                                             stop, 1))
+        else:
+            row.addWidget(self._sw_panel(page, "select", stop))
+        row.addWidget(_separator(page))
         for i, key in enumerate(panels):
             if i:
                 row.addWidget(_separator(page))

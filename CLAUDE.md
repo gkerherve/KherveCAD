@@ -3155,6 +3155,14 @@ into a new module and import.
                        click in the 3D view (`View3D.context_requested`) ▸
                        Round edges / Chamfer edges / Push-pull a face /
                        Edit vertices.
+  - `stop_tool.py`   — **Select (stop)** (2026-10-21, the user could not
+                       leave a fillet pick): `stop` ends the 3D pick, Edit
+                       Mode, the Gumball, any `View3D.edit_tool`, the 2D
+                       view's tools and drafts, and picks Select. The FIRST
+                       button of every ribbon tab (`Ribbon._page`), and Esc
+                       as a window shortcut (`install_escape`; View3D
+                       accepts the ShortcutOverride while an Edit Mode drag
+                       is live, so that Esc still only cancels the drag).
   - `polygon_draw.py` — drawing a polygon in the sketch (2026-10-19, the
                        user: an "end" always shown, close by): a Finish /
                        Undo point / Cancel bar at the bottom of the view
