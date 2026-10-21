@@ -83,6 +83,16 @@ WHAT = {
     "angle": "Drives the angle between two lines.",
 }
 TIPS = {
+    PREFIX + "dimension": (
+        "Sketch dimension",
+        "Fusion's sketch Dimension (D): sets a size that DRIVES the "
+        "shapes — type 25 and the line becomes 25 mm.",
+        ["A circle: click it, type the diameter.",
+         "A line's length: click it, then anywhere empty.",
+         "Two lines: the angle between them. Two points: their "
+         "distance. A point and a line: the distance between them.",
+         "A value may be an expression of the variables (w / 2)."],
+        "Delete constraint removes a dimension like any constraint."),
     PREFIX + "delete": (
         "Delete constraint",
         "Removes one constraint or dimension: click its mark on the "
@@ -121,7 +131,8 @@ def tool_of(kind):
 
 def handles(tool):
     return isinstance(tool, str) and tool.startswith(PREFIX) \
-        and (tool[len(PREFIX):] in sc.KINDS or tool == PREFIX + "delete")
+        and (tool[len(PREFIX):] in sc.KINDS
+             or tool in (PREFIX + "delete", PREFIX + "dimension"))
 
 
 def prompt(kind, n):
@@ -237,6 +248,9 @@ def press(scene, event):
     from PyQt5.QtCore import Qt
     if scene.tool == DELETE:
         delete_press(scene, event)
+        return
+    if scene.tool == DIMENSION:
+        dimension_press(scene, event)
         return
     event.accept()
     if event.button() == Qt.RightButton:
@@ -412,6 +426,91 @@ def paint(view, painter):
         if spot is not None:
             painter.drawEllipse(spot, 6, 6)
     painter.restore()
+
+
+# ---------------------------------------------------- smart dimension
+DIMENSION = PREFIX + "dimension"
+
+
+def _smart(first, second):
+    """(kind, picks) a Fusion-style sketch dimension makes of one or two
+    picks — None when it needs another click."""
+    k1 = first[2]
+    if k1 == "circle":
+        return "diameter", [first]
+    if second is None:
+        return None
+    k2 = second[2]
+    if k1 == "line" and k2 == "line":
+        if second[:2] == first[:2]:
+            return "length", [first]
+        return "angle", [first, second]
+    if k1 == "point" and k2 == "point":
+        return "distance", [first, second]
+    if k1 == "point" and k2 == "line":
+        return "point_line", [first, second]
+    if k1 == "line" and k2 == "point":
+        return "point_line", [second, first]
+    if k2 == "circle":
+        return "diameter", [second]
+    return None
+
+
+def dimension_press(scene, event):
+    """The sketch Dimension tool: a circle gives its diameter at once; a
+    line then a click off the geometry (or on the same line) its length;
+    two lines the angle; two points the distance; a point and a line
+    the distance between them. The value typed DRIVES the shapes."""
+    from PyQt5.QtCore import Qt
+    event.accept()
+    if event.button() != Qt.LeftButton:
+        drop(scene)
+        return
+    picks = _state(scene)
+    hit = pick(scene, event.scenePos())
+    if not picks:
+        if hit is None:
+            scene.status.emit("Dimension: click a line, a circle or a "
+                              "point.")
+            return
+        made = _smart(hit, None)
+        if made is None:
+            picks.append(hit)
+            scene.status.emit("Dimension: click a second line or point — "
+                              "or anywhere empty for this one's length."
+                              if hit[2] == "line" else
+                              "Dimension: click the second point or a "
+                              "line.")
+            scene.update()
+            return
+    else:
+        first = picks[0]
+        if hit is None:
+            hit = first if first[2] == "line" else None
+        if hit is None:
+            scene.status.emit("Dimension: click the second point or line.")
+            return
+        if hit[0].parent is not first[0].parent:
+            scene.status.emit("Dimensions join shapes of one group.")
+            return
+        made = _smart(first, hit)
+    drop(scene)
+    if made is None:
+        scene.status.emit("Those two cannot be dimensioned together.")
+        return
+    kind, chosen = made
+    container = chosen[0][0].parent
+    refs = [sc.ref_of(container, n, name) for n, name, _k in chosen]
+    text = _ask_value(scene, kind, sc.measure(container, kind, refs))
+    if text is None:
+        return
+    try:
+        report = sc.add(scene.model, container, kind, refs, _value(text))
+    except ValueError as exc:
+        scene.status.emit(str(exc))
+        return
+    scene.status.emit("%s %s — %s" % (sc.KINDS[kind][0], text,
+                                      sc.status_text(report)))
 
 
 # --------------------------------------------------- delete constraint
@@ -603,7 +702,15 @@ def panel_actions(win):
     tooltips.apply(act, DELETE)
     act.triggered.connect(lambda _=False: win._set_tool(DELETE))
     win._tool_group.addAction(act)
-    acts = [act] + acts[2:] + acts[:2]
+    dim = QAction(icons.icon("mdi.ruler", icons.family_color("draw")),
+                  language.tr("Sketch dimension"), win)
+    dim.setData(DIMENSION)
+    dim.setCheckable(True)
+    toolbars.remember_glyph(dim, "mdi.ruler", "draw")
+    tooltips.apply(dim, DIMENSION)
+    dim.triggered.connect(lambda _=False: win._set_tool(DIMENSION))
+    win._tool_group.addAction(dim)
+    acts = [dim, act] + acts[2:] + acts[:2]
     win._constrain_actions = acts
     return acts
 

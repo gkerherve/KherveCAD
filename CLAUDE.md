@@ -3111,6 +3111,22 @@ into a new module and import.
                        meet (both trimmed, an arc band polygon or a chamfer
                        line added). "sk_*" scene tools on the ribbon's
                        SKETCH ▸ Modify panel and Tools ▸ Sketch Modify.
+                       A polygon fillet is NOT baked points: the polygon
+                       keeps its sharp corner and gains a `corners` row
+                       [vertex, size, 0 round / 1 chamfer]; `expand` draws
+                       the arc in codegen, mesh outlines and view2d (whose
+                       handles stay on the corners). Baked arcs first
+                       stair-stepped (constraint indices shifted) then left
+                       gaps (the solver moved the edge ends, not the arc).
+                       Codegen writes `kcad_corners(points=, corners=)
+                       polygon(<rounded>)`; the importer folds it back.
+                       Also: the 2D view has no FINISH SKETCH button any
+                       more (2026-10-21, the user) — another ribbon tab or
+                       the 3D inset leaves the sketch; SKETCH ▸ Constraints
+                       starts with Sketch dimension (smart: circle → Ø,
+                       line + empty click → length, two lines → angle, two
+                       points → distance, point + line); a selected
+                       polygon shows every side's length.
   - `equalize.py`    — **equal sizes between parts** (2026-10-21, the
                        user: "choose two surfaces to be the same"): two
                        size params share ONE new / reused document

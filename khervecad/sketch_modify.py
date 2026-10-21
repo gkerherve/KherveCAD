@@ -227,7 +227,12 @@ def _polygon_points(node):
 
 def corner(model, node, index, size, round_=True):
     """Fillet (round_) or chamfer vertex *index* of a polygon or
-    rectangle. A rectangle becomes a polygon. Returns the node."""
+    rectangle. The polygon keeps its SHARP corner point and gains a row
+    in ``params["corners"]`` ([index, size, 0 round / 1 chamfer]); the
+    arc is worked out from the corner whenever the shape is drawn
+    (`expand`), so constraints and drags act on the corner and the arc
+    follows — baked arc points were left behind by the solver. A
+    rectangle becomes a polygon. Returns the node."""
     if node.type not in ("polygon", "rect"):
         raise ValueError("Fillet a polygon or rectangle corner, or where "
                          "two lines meet.")
@@ -236,25 +241,55 @@ def corner(model, node, index, size, round_=True):
                          "points instead.")
     pts, origin = _polygon_points(node)
     n = len(pts)
-    new = _corner_cut(pts[index - 1], pts[index], pts[(index + 1) % n],
-                      float(size), round_)
-    pts = pts[:index] + new + pts[index + 1:]
-    # the constraints name vertices and edges by number: renumber them,
-    # or the arc's pieces would be forced horizontal / equal / ...
-    from . import sketch_constraints
-    sketch_constraints.points_replaced(node, index, len(new))
-    rel = [[round(x - origin[0], 4), round(y - origin[1], 4)]
-           for x, y in pts]
+    index %= n
+    # checks the size fits (raises ValueError when it does not)
+    _corner_cut(pts[index - 1], pts[index], pts[(index + 1) % n],
+                float(size), round_)
     if node.type == "rect":
+        rel = [[round(x - origin[0], 4), round(y - origin[1], 4)]
+               for x, y in pts]
         node.type = "polygon"
         for k in ("width", "height", "center"):
             node.params.pop(k, None)
-        node.params.update(x=0.0, y=0.0)
+        node.params.update(x=0.0, y=0.0, points=rel)
         if node.name.startswith("Rectangle"):
             node.name = "Polygon" + node.name[len("Rectangle"):]
-    node.params["points"] = rel
+    rows = [list(r) for r in node.params.get("corners") or []
+            if int(r[0]) != index]
+    rows.append([index, round(float(size), 4), 0 if round_ else 1])
+    node.params["corners"] = sorted(rows)
     model.structure_changed.emit()
     return node
+
+
+def expand(points, corners):
+    """*points* with each corner row [index, size, kind] replaced by its
+    arc (kind 0) or chamfer (1). A corner that no longer fits (its sides
+    got shorter than the setback) stays sharp."""
+    if not corners:
+        return [tuple(map(float, q)) for q in points]
+    pts = [(float(q[0]), float(q[1])) for q in points]
+    n = len(pts)
+    by_index = {}
+    for row in corners:
+        try:
+            by_index[int(row[0]) % n] = (float(row[1]),
+                                         int(row[2]) if len(row) > 2
+                                         else 0)
+        except (TypeError, ValueError, IndexError):
+            continue
+    out = []
+    for i, v in enumerate(pts):
+        spec = by_index.get(i)
+        if spec is None or spec[0] <= 0:
+            out.append(v)
+            continue
+        try:
+            out.extend(_corner_cut(pts[i - 1], v, pts[(i + 1) % n],
+                                   spec[0], spec[1] == 0))
+        except ValueError:
+            out.append(v)
+    return out
 
 
 def line_corner(model, a, b, size, round_=True):
@@ -457,3 +492,47 @@ def panel_actions(win):
         acts.append(act)
     win._sketch_modify_actions = acts
     return acts
+
+
+# ---------------------------------------- the OpenSCAD program, both ways
+HELPER = """\
+module kcad_corners(points = [], corners = []) {
+    children();
+}"""
+
+
+def uses(root):
+    return any(n.type == "polygon" and n.params.get("corners")
+               for n in root.walk())
+
+
+def _b_corners(parser, positional, named):
+    from .model import CadNode
+    node = CadNode("union", "Group", {})
+    node._kcad_corners = (named.get("points"), named.get("corners"))
+    return node
+
+
+BUILDERS = {"kcad_corners": _b_corners}
+
+
+def fold(node):
+    """kcad_corners(points, corners) polygon(rounded): the polygon back
+    with its sharp corners and its corner rows."""
+    info = getattr(node, "_kcad_corners", None)
+    if info is None:
+        return None
+    if len(node.children) != 1 or node.children[0].type != "polygon":
+        return None
+    poly = node.children[0]
+    pts, rows = info
+    try:
+        poly.params["points"] = [[float(x), float(y)] for x, y in pts]
+        poly.params["corners"] = [[int(r[0]), float(r[1]),
+                                   int(r[2]) if len(r) > 2 else 0]
+                                  for r in rows]
+    except (TypeError, ValueError):
+        return None
+    node.remove(poly)
+    poly.visible = node.visible and poly.visible
+    return poly

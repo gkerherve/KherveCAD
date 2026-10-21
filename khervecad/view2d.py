@@ -377,9 +377,16 @@ class PolygonShapeItem(ShapeItem, QGraphicsPolygonItem):
         p = self.node.params
         env = self._scene.env_for(self.node)
         self.setPos(self.rv("x"), self.rv("y"))
-        self.setPolygon(QPolygonF(
-            [QPointF(expr.resolve(x, env), expr.resolve(y, env))
-             for x, y in p["points"]]))
+        # the corners (handles, constraints) are the points as stored; a
+        # sketch fillet's arc is drawn from them (sketch_modify.expand)
+        self._corners = [QPointF(expr.resolve(x, env), expr.resolve(y, env))
+                         for x, y in p["points"]]
+        drawn = self._corners
+        if p.get("corners"):
+            from . import sketch_modify
+            drawn = [QPointF(x, y) for x, y in sketch_modify.expand(
+                [(q.x(), q.y()) for q in self._corners], p["corners"])]
+        self.setPolygon(QPolygonF(drawn))
         self.reposition_handles()
 
     def push_pos(self):
@@ -391,9 +398,11 @@ class PolygonShapeItem(ShapeItem, QGraphicsPolygonItem):
         # the drawn polygon's corners: a point may be an expression
         # ("w / 2", a loop variable) — QPointF of the raw text crashed
         # the sketch (the user, 2026-10-20)
-        poly = self.polygon()
-        return [(f"v{i}", QPointF(poly[i]))
-                for i in range(poly.count())]
+        corners = getattr(self, "_corners", None)
+        if corners is None:
+            poly = self.polygon()
+            corners = [poly[i] for i in range(poly.count())]
+        return [(f"v{i}", QPointF(c)) for i, c in enumerate(corners)]
 
     def handle_dragged(self, role, scene_pos):
         index = int(role[1:])
@@ -2296,7 +2305,9 @@ class SketchView(QGraphicsView):
         """When shapes are selected, annotate each one's own size — the
         way a part is dimensioned on a 2D drawing."""
         scene = self.scene()
-        if not getattr(scene, "show_dims", True) or scene.tool != SELECT:
+        tool = str(scene.tool)
+        if not getattr(scene, "show_dims", True) or not (
+                tool == SELECT or tool.startswith(("con_", "sk_"))):
             return
         from .style import tokens
         t = tokens()
@@ -2325,6 +2336,9 @@ class SketchView(QGraphicsView):
                            QPointF(c.x() + r, c.y()),
                            color=color, bg=bg, dots=False,
                            text="⌀ " + _fmt_len(2 * r, self._unit()))
+            return
+        if isinstance(item, PolygonShapeItem):       # every side's length
+            self._polygon_edge_dims(painter, item, color, bg)
             return
         if isinstance(item, LineShapeItem):          # length beside it
             ln = item.line()
@@ -2365,6 +2379,25 @@ class SketchView(QGraphicsView):
                          color=color, bg=bg,
                          text=_fmt_len(lr.height(), unit),
                          offset=22, dots=False)
+
+    def _polygon_edge_dims(self, painter, item, color, bg):
+        """Each side of a selected polygon with its length — the arc
+        pieces of a fillet (short sides) are left out."""
+        import math
+        poly = item.polygon()
+        n = poly.count()
+        if n < 3:
+            return
+        sides = [(poly.at(i), poly.at((i + 1) % n)) for i in range(n)]
+        lens = [math.hypot(b.x() - a.x(), b.y() - a.y()) for a, b in sides]
+        longest = max(lens) or 1.0
+        unit = self._unit()
+        for (a, b), L in zip(sides, lens):
+            if L < max(0.15 * longest, 1e-6) and n > 4:
+                continue
+            self._draw_dim(painter, item.mapToScene(a), item.mapToScene(b),
+                           color=color, bg=bg, dots=False, offset=14,
+                           text=_fmt_len(L, unit))
 
     def wheelEvent(self, event):
         factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15

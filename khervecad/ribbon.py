@@ -189,7 +189,7 @@ FUSION_ALL = {"analyse", "checks", "dimension",
               "sketch_shapes", "shapes3d"}
 FUSION_SHOWN_MANY = 4
 #: icons shown by panels with a count of their own
-PANEL_SHOWN = {"sketch": 11, "sketch_modify": 9, "sketch_constrain": 14}
+PANEL_SHOWN = {"sketch": 11, "sketch_modify": 9, "sketch_constrain": 15}
 #: the sketch MODIFY panel: operations from the families, in this order
 SKETCH_MODIFY = ["translate", "rotate", "scale", "mirror", "pattern"]
 
@@ -609,6 +609,12 @@ class Ribbon(QWidget):
     def _tab_changed(self, index):
         self.stack.setCurrentIndex(index)
         QSettings(*_SETTINGS).setValue(TAB_KEY, index)
+        # leaving the SKETCH tab finishes the sketch (there is no Finish
+        # Sketch button any more)
+        from . import sketch_mode
+        if 0 <= index < len(TABS) and TABS[index][0] != "sketch" and \
+                sketch_mode.sketching(self.win):
+            sketch_mode.finish(self.win)
         self._fit()
         # the page only becomes visible after this returns: measure again
         # then, or a too-wide page kept its names and squeezed them

@@ -237,8 +237,9 @@ def test_fusion_shows_one_canvas_and_sketches_in_place(window, app):
     sketch_mode.create_action(window).trigger()
     app.processEvents()
     assert window.view2d.isVisible() and not window.view3d.isVisible()
-    assert window._finish_sketch.isVisible()
-    window._finish_sketch.click()
+    # no FINISH SKETCH button (the user): another tab leaves the sketch
+    assert not window._finish_sketch.isVisible()
+    window.ribbon.show_tab("features")
     app.processEvents()
     assert window.view3d.isVisible() and not window.view2d.isVisible()
     window._set_tool(RECT)                     # a drawing tool sketches

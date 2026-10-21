@@ -242,6 +242,9 @@ def preamble(root) -> list:
            str(n.params.get("material") or "Default") != "Default"
            for n in root.walk()):
         lines.extend(HELPERS["material"].split("\n"))
+    from . import sketch_modify
+    if sketch_modify.uses(root):
+        lines.extend(sketch_modify.HELPER.split("\n"))
     from . import sketch_constraints
     if sketch_constraints.uses(root):
         lines.extend(sketch_constraints.HELPER.split("\n"))

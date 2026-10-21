@@ -194,7 +194,7 @@ def test_ribbon_has_a_constraints_panel(app):
         assert "sketch_constrain" in keys
         _t, acts = ribbon.panel_actions(win, "sketch_constrain")
         data = [a.data() for a in acts]
-        assert data[0] == "con_delete"            # the first icon
+        assert data[:2] == ["con_dimension", "con_delete"]
         assert data[-2:] == ["con_auto", "con_list"]
         # Equal is among the icons the Fusion panel shows (it was 9th
         # of 8 shown, hidden in the drop-down)
@@ -300,3 +300,63 @@ def test_constraints_survive_the_openscad_program(app):
     assert sc.rows(ext) == sc.rows(e)
     assert [c.type for c in ext.children] == ["polygon"]   # no marker
     assert sc.rows(root) == sc.rows(m.root)
+
+
+def test_sketch_dimension_tool(view):
+    m = view.scene().model
+    a, b = _lines(m)
+    c = m.add_node("circle", dict(x=20, y=-15, radius=4))
+    answers = iter(["33", "10", "45"])
+    view.scene().ask_value = lambda kind, measured: next(answers)
+    view.set_tool(ui.DIMENSION)
+    # a line, then empty paper: its length
+    _click(view, 20, 1.5)
+    _click(view, 60, -30)
+    assert abs(_len(a) - 33) < 1e-3
+    # a circle: its diameter at once
+    _click(view, 24, -15)
+    assert c.params["radius"] == pytest.approx(5)
+    kinds = [r["kind"] for r in sc.rows(m.root)]
+    assert kinds == ["length", "diameter"]
+    # and the selection's sizes are drawn while the tool is on
+    view.scene().clearSelection()
+    view.viewport().repaint()
+
+
+def test_polygon_sides_are_dimensioned_when_selected(view):
+    m = view.scene().model
+    p = m.add_node("polygon", dict(points=[[0, 0], [30, 0], [30, 10],
+                                           [0, 10]]))
+    from khervecad.view2d import PolygonShapeItem
+    view.set_tool("select")
+    QApplication.processEvents()
+    for it in view.scene().items():
+        if isinstance(it, PolygonShapeItem) and it.node is p:
+            it.setSelected(True)
+    drawn = []
+    orig = type(view)._draw_dim
+    type(view)._draw_dim = lambda self, painter, a, b, **k: drawn.append(
+        k.get("text"))
+    try:
+        view.viewport().repaint()
+    finally:
+        type(view)._draw_dim = orig
+    assert len([t for t in drawn if t]) == 4      # one per side
+
+
+def test_no_finish_button_and_a_tab_leaves_the_sketch(app):
+    from khervecad import sketch_mode, toolbar_style
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        toolbar_style.apply(win, "Fusion")
+        sketch_mode.enter(win)
+        assert sketch_mode.sketching(win)
+        b = getattr(win, "_finish_sketch", None)
+        assert b is None or not b.isVisible()
+        win.ribbon.show_tab("features")
+        assert not sketch_mode.sketching(win)
+    finally:
+        toolbar_style.apply(win, "KherveCAD")
+        win._dirty = False
+        win.close()

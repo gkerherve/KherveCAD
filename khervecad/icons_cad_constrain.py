@@ -275,3 +275,11 @@ def _con_delete(d):
     d.text(0.42, 0.56, "=", 0.3, d.pal.make)
     d.line(P(0.18, 0.18), P(0.7, 0.66), d.pal.cut, 0.08)
     d.line(P(0.7, 0.18), P(0.18, 0.66), d.pal.cut, 0.08)
+
+
+@draws("con_dimension")
+def _con_dimension(d):
+    """A line with a driving dimension over it."""
+    _ln(d, (0.14, 0.8), (0.86, 0.8))
+    _dim(d, (0.14, 0.8), (0.86, 0.8), (0, -0.42))
+    d.text(0.5, 0.32, "25", 0.2, d.pal.make)

@@ -1358,6 +1358,8 @@ from . import suppress as _suppress                      # noqa: E402
 _BUILDERS.update(_suppress.BUILDERS)
 from . import sketch_constraints as _constraints         # noqa: E402
 _BUILDERS.update(_constraints.BUILDERS)
+from . import sketch_modify as _sketch_modify            # noqa: E402
+_BUILDERS.update(_sketch_modify.BUILDERS)
 
 #: a name in an expression (group 1; a "string" matches with no group)
 #: and whether it is called (group 2)
@@ -1382,6 +1384,9 @@ def _fold_container(node: CadNode):
       KherveCAD compiles lines).
     """
     _constraints.take(node)
+    folded = _sketch_modify.fold(node)
+    if folded is not None:
+        return folded
     folded = _organic.fold_material(node)
     if folded is not None:
         return folded

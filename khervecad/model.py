@@ -104,7 +104,10 @@ NODE_TYPES = {
                 # OpenSCAD's paths: one outline per row of point indices;
                 # an outline inside another is a hole (the explanation is
                 # the Properties tooltip, properties.TABLE_TIPS)
-                ("paths", "Paths", "rows", None, None)]),
+                ("paths", "Paths", "rows", None, None),
+                # sketch fillets / chamfers: [vertex, size, 0 round /
+                # 1 chamfer] (sketch_modify.expand), schema-only
+                ("corners", "Rounded corners", "rows", None, None)]),
     "text": dict(
         label="Text", category=SHAPE_2D, icon="mdi.format-text",
         # font, halign, valign, spacing and direction are optional
@@ -1015,8 +1018,25 @@ class CadNode:
             return (f"translate([{fmt(p['x'])}, {fmt(p['y'])}]) "
                     f"polygon(points=[[0, 0], {pts}])")
         if t == "polygon":
+            raw = p["points"]
+            corner_note = ""
+            if p.get("corners") and not p.get("paths"):
+                # a sketch fillet: the program gets the rounded outline,
+                # and kcad_corners keeps the corners + rows so the import
+                # rebuilds the editable shape (sketch_modify)
+                from . import sketch_modify
+                try:
+                    rounded = sketch_modify.expand(raw, p["corners"])
+                    corner_note = "kcad_corners(points=[%s], corners=[%s]) " \
+                        % (", ".join(f"[{fmt(x)}, {fmt(y)}]"
+                                     for x, y in raw),
+                           ", ".join("[" + ", ".join(fmt(v) for v in r)
+                                     + "]" for r in p["corners"]))
+                    raw = [[round(x, 4), round(y, 4)] for x, y in rounded]
+                except (TypeError, ValueError):
+                    corner_note = ""
             pts = ", ".join(f"[{fmt(x)}, {fmt(y)}]"
-                            for x, y in p["points"])
+                            for x, y in raw)
             paths = [r for r in (p.get("paths") or [])
                      if isinstance(r, list) and r]
             extra = ""
@@ -1025,8 +1045,8 @@ class CadNode:
                     "[" + ", ".join(fmt(int(i)) if isinstance(i, (int, float))
                                     else str(i) for i in r) + "]"
                     for r in paths) + "]"
-            return (f"translate([{fmt(p['x'])}, {fmt(p['y'])}]) "
-                    f"polygon(points=[{pts}]{extra})")
+            return (f"{corner_note}translate([{fmt(p['x'])}, "
+                    f"{fmt(p['y'])}]) polygon(points=[{pts}]{extra})")
         if t == "text":
             extra = ""
             if str(p.get("font") or "").strip():

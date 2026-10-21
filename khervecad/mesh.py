@@ -375,6 +375,9 @@ def node_outlines(node: CadNode, env=None):
         return [[(p["x"], p["y"])] + arc]    # pie slice with centre
     if node.type == "polygon":
         pts = [(p["x"] + x, p["y"] + y) for x, y in p["points"]]
+        if p.get("corners") and not p.get("paths"):
+            from . import sketch_modify
+            pts = sketch_modify.expand(pts, p["corners"])
         paths = polygon_paths(node)
         if paths:
             return [[pts[i] for i in path if 0 <= i < len(pts)]

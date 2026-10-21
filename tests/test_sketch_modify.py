@@ -62,15 +62,49 @@ def test_fillet_and_chamfer_a_rectangle_corner(app):
     r = m.add_node("rect", dict(width=20, height=10))
     sm.corner(m, r, 2, 3)
     assert r.type == "polygon"
-    pts = r.params["points"]
+    # the corner stays a corner; the arc is a row, drawn by expand
+    assert r.params["points"] == [[0, 0], [20, 0], [20, 10], [0, 10]]
+    assert r.params["corners"] == [[2, 3.0, 0]]
+    pts = sm.expand(r.params["points"], r.params["corners"])
     assert len(pts) == 4 + sm.ARC_STEPS
-    # the arc stays 3 mm from its centre (17, 7)
     for x, y in pts[2:2 + sm.ARC_STEPS + 1]:
         assert math.hypot(x - 17, y - 7) == pytest.approx(3, abs=1e-3)
     sm.corner(m, r, 0, 2, round_=False)
-    assert [0, 2] in r.params["points"] and [2, 0] in r.params["points"]
+    pts = sm.expand(r.params["points"], r.params["corners"])
+    assert pts[0] == pytest.approx((0, 2)) and pts[1] == pytest.approx((2, 0))
     with pytest.raises(ValueError):
         sm.corner(m, r, 1, 50)
+
+
+def test_the_arc_follows_a_moved_corner(app):
+    """The user's gaps: baked arc points stayed behind when the solver
+    moved the edges. Now the arc is worked out from the corner."""
+    m = DocumentModel()
+    p = m.add_node("polygon", dict(points=[[0, 0], [20, 0], [20, 10],
+                                           [0, 10]]))
+    sm.corner(m, p, 2, 2)
+    p.params["points"][2] = [30, 15]
+    p.params["points"][1] = [30, 0]
+    p.params["points"][3] = [0, 15]
+    pts = sm.expand(p.params["points"], p.params["corners"])
+    for x, y in pts[2:2 + sm.ARC_STEPS + 1]:
+        assert math.hypot(x - 28, y - 13) == pytest.approx(2, abs=1e-3)
+    assert pts[2] == pytest.approx((30, 13)) and \
+        pts[2 + sm.ARC_STEPS] == pytest.approx((28, 15))
+
+
+def test_corners_survive_the_openscad_program(app):
+    from khervecad import scadparse
+    m = DocumentModel()
+    p = m.add_node("polygon", dict(points=[[0, 0], [20, 0], [20, 10],
+                                           [0, 10]]))
+    sm.corner(m, p, 2, 2)
+    sm.corner(m, p, 0, 1, round_=False)
+    root, warnings = scadparse.parse_scad(m.to_scad())
+    assert not warnings
+    q = next(n for n in root.walk() if n.type == "polygon")
+    assert q.params["points"] == [[0, 0], [20, 0], [20, 10], [0, 10]]
+    assert q.params["corners"] == [[0, 1.0, 1], [2, 2.0, 0]]
 
 
 def test_fillet_two_lines(app):
@@ -109,9 +143,9 @@ def test_click_tools(app):
 
 
 def test_a_fillet_keeps_the_constraints_on_their_edges(app):
-    """The user's L-shape: H / V on its edges, fillet a corner. The
-    constraints named edges by number, the arc's 12 new points shifted
-    them onto arc pieces and the solver made a staircase."""
+    """The user's L-shape: H / V on its edges, fillet a corner, move it:
+    the constraints still hold on the edges and the arc stays round and
+    joined to them (it used to stair-step, then to leave gaps)."""
     from khervecad import sketch_constraints as sc
     m = DocumentModel()
     p = m.add_node("polygon", dict(points=[[0, 0], [20, 0], [20, 5],
@@ -121,21 +155,16 @@ def test_a_fillet_keeps_the_constraints_on_their_edges(app):
         sc.add(m, r, "horizontal", ["0.e%d" % e])
     for e in (1, 3, 5):
         sc.add(m, r, "vertical", ["0.e%d" % e])
-    sm.corner(m, p, 4, 2)                    # round the top-right corner
-    sc.refresh(m)
+    sm.corner(m, p, 4, 2)
+    assert len(sc.rows(r)) == 6                 # nothing dropped
+    p.params["points"][4] = [7, 18]             # drag the rounded corner
+    sc.refresh(m, {p.id})
     pts = p.params["points"]
-    n = len(pts)
-    assert n == 6 + sm.ARC_STEPS
-    # every remaining constraint still names a straight edge
-    for row in sc.rows(r):
-        a, b = sc._line(p, row["refs"][0].split(".")[1], {})
-        if row["kind"] == "horizontal":
-            assert abs(a[1] - b[1]) < 1e-6
-        else:
-            assert abs(a[0] - b[0]) < 1e-6
-    # and the arc is still round: 2 mm from its centre (3, 13)
-    for x, y in pts[4:4 + sm.ARC_STEPS + 1]:
-        assert math.hypot(x - 3, y - 13) == pytest.approx(2, abs=1e-3)
+    assert pts[3][0] == pytest.approx(7, abs=1e-3)       # V followed
+    assert pts[5][1] == pytest.approx(18, abs=1e-3)      # H followed
+    arc = sm.expand(pts, p.params["corners"])[4:4 + sm.ARC_STEPS + 1]
+    for x, y in arc:
+        assert math.hypot(x - 5, y - 16) == pytest.approx(2, abs=1e-2)
 
 
 def test_deleting_a_shape_renumbers_the_others(app):

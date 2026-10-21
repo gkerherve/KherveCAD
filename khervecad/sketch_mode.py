@@ -107,7 +107,9 @@ def _show(win, sketch: bool):
     win.view2d.setVisible(sketch and not vibe)
     win.view3d.setVisible(not sketch or vibe)
     b = _button(win)
-    b.setVisible(sketch)
+    # the green FINISH SKETCH is not drawn (2026-10-21, the user: remove
+    # it from the 2D view); picking a 3D tab or tool leaves the sketch
+    b.setVisible(False)
     inset = _inset(win)
     inset.setVisible(sketch and not vibe)
     mini = _mini2d(win)
@@ -117,12 +119,11 @@ def _show(win, sketch: bool):
         mini.redraw()
         QTimer.singleShot(0, mini.place)
     if sketch:
-        b.place()
         inset.place()
         inset.redraw()
         # the splitter sizes a view it just showed on the next turn
         QTimer.singleShot(0, inset.place)
-        QTimer.singleShot(0, b.place)
+
 
 
 def enter(win):
