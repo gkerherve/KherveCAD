@@ -1172,8 +1172,7 @@ class ObjectTree(QTreeWidget):
                 win.start_fillet_pick(f)
             menu.addAction(
                 icons.icon("mdi.restart"),
-                language.tr("Clear and pick again (click a face to "
-                            "round all its edges)..."), _restart)
+                language.tr("Clear and pick again..."), _restart)
         sculpt = roots[0] if len(roots) == 1 and roots[0].type == "sculpt" \
             else (roots[0].parent if len(roots) == 1 and roots[0].parent
                   is not None and roots[0].parent.type == "sculpt"
