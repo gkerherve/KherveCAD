@@ -1638,9 +1638,12 @@ class SketchScene(QGraphicsScene):
                 self.drop_drafts()             # right-click: never mind
             event.accept()
             return
-        from . import sketch_tools
+        from . import sketch_tools, sketch_constrain_ui
         if sketch_tools.handles(self.tool):
             sketch_tools.press(self, event)
+            return
+        if sketch_constrain_ui.handles(self.tool):
+            sketch_constrain_ui.press(self, event)
             return
         if self.tool == POLYGON and event.button() == Qt.RightButton:
             if len(self._poly_points) >= 3:
@@ -1865,8 +1868,9 @@ class SketchScene(QGraphicsScene):
         tool or plane does this: before, the half-drawn shape's line
         stayed on the sketch as a dead line nothing could select or
         delete, and the points came back with the polygon tool."""
-        from . import sketch_tools
+        from . import sketch_tools, sketch_constrain_ui
         sketch_tools.drop(self)
+        sketch_constrain_ui.drop(self)
         had = bool(self._poly_points)
         self._poly_points = []
         self._clear_poly_items()
@@ -2079,6 +2083,11 @@ class SketchView(QGraphicsView):
 
     def drawForeground(self, painter, rect):
         super().drawForeground(painter, rect)
+        from . import sketch_constrain_ui
+        try:
+            sketch_constrain_ui.paint(self, painter)
+        except Exception:               # never raise out of a paint
+            pass
         from .style import tokens
         t = tokens()
         painter.save()
@@ -2249,8 +2258,10 @@ class SketchView(QGraphicsView):
 
     def contextMenuEvent(self, event):
         from . import sketch_tools
+        from . import sketch_constrain_ui
         if self.scene().tool == POLYGON or \
-                sketch_tools.handles(self.scene().tool):
+                sketch_tools.handles(self.scene().tool) or \
+                sketch_constrain_ui.handles(self.scene().tool):
             event.accept()                     # right-click finished it
             return
         model = self.scene().model
@@ -2406,7 +2417,7 @@ class SketchView(QGraphicsView):
 
     def keyPressEvent(self, event):
         from PyQt5.QtGui import QKeySequence
-        from . import sketch_tools
+        from . import sketch_tools, sketch_constrain_ui
         scene = self.scene()
         if event.key() == Qt.Key_Q:
             self.step_object.emit(-1)         # Q: up / previous
@@ -2422,6 +2433,9 @@ class SketchView(QGraphicsView):
             scene.cancel_tool()
         elif sketch_tools.handles(scene.tool) and \
                 sketch_tools.key(scene, event):
+            pass
+        elif sketch_constrain_ui.handles(scene.tool) and \
+                sketch_constrain_ui.key(scene, event):
             pass
         elif event.key() in (Qt.Key_Return, Qt.Key_Enter) and \
                 scene.tool == POLYGON:

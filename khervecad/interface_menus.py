@@ -66,6 +66,7 @@ FUSION = [
         "edit/ungroup", "edit/move up", "edit/move down"]),
     ("&Create", [
         "insert/new object", ("Create &Sketch", ["insert/2d shapes"]),
+        ("Sketch C&onstraints", ["tools/sketch constraints"]),
         "-", "tools/extrude/linear extrude", "tools/extrude/rotate extrude",
         "tools/extrude/sweep along path",
         "tools/extrude/loft through sections",
@@ -225,6 +226,7 @@ SOLIDWORKS = [
         "view/add reference image"]),
     ("&Tools", [
         ("Sketch &Entities", ["insert/2d shapes"]),
+        ("&Relations", ["tools/sketch constraints"]),
         ("&Dimensions", ["tools/measure & annotate/add dimension",
                          "view/dimensions on selection",
                          "view/clear dimensions"]),

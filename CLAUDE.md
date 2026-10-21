@@ -3033,6 +3033,41 @@ into a new module and import.
                        scale, mirror, pattern) / INSERT (Import 2D
                        drawing): `ribbon.sketch_extra`. Icons in
                        `icons_cad_sketch.py`.
+  - `sketch_constraints.py` / `sketch_constrain_ui.py` /
+    `icons_cad_constrain.py` — **sketch constraints** (2026-10-21, the
+                       user: "take SolidCraft's constraint work" —
+                       solidcraft.io, MIT/Apache Rust CAD; our own Python,
+                       not a port). A damped Gauss-Newton solver
+                       (numeric Jacobian, minimum-weighted-norm steps so
+                       the drawing moves as little as it can, DOF = vars −
+                       rank) over the shapes' OWN numeric params (line
+                       x1..y2, rect x y width height, circle x y radius,
+                       polygon points; an expression param is a given).
+                       Rows live on the CONTAINER as `params["constraints"]`
+                       {kind, refs ["<child index>.<entity>"], value} — child
+                       indices survive undo, node ids do not; codegen ignores
+                       them, so the program is plain OpenSCAD (a .scad round
+                       trip drops them). Entities: line p1 p2 l, rect v0-v3
+                       e0-e3 c, circle c o, polygon v<i> e<i>. SolidCraft's
+                       13 kinds (polygon → point_on) + 8 dimensions
+                       (distance, h/v distance, length, point-line, radius,
+                       diameter, angle; value may be "w / 2"), plus Auto
+                       constrain (H / V / coincident the drawing already
+                       shows). `add` refuses a conflict — and a solution that
+                       shrinks a line or circle to nothing (parallel +
+                       perpendicular "held" by a zero-length line).
+                       `MainWindow._model_edited` calls `refresh` with the
+                       edited ids weighted 50x, so a drag pulls the rest.
+                       Ribbon SKETCH ▸ CONSTRAINTS panel (`sketch_constrain`,
+                       between Modify and Insert), Tools ▸ Sketch
+                       Constraints (Fusion Create ▸ Sketch Constraints,
+                       SolidWorks Tools ▸ Relations); the tools are
+                       "con_<kind>" scene tools in the tool group (kept OUT
+                       of the Create panel): a click picks the nearest point,
+                       else curve, in one container; glyphs painted in
+                       `SketchView.drawForeground`. MCP `sketch_constraint`.
+                       Next: drag a point with the solver live, trim /
+                       extend / sketch fillet, constraints on arcs.
   - `polygon_draw.py` — drawing a polygon in the sketch (2026-10-19, the
                        user: an "end" always shown, close by): a Finish /
                        Undo point / Cancel bar at the bottom of the view
@@ -4973,7 +5008,7 @@ into a new module and import.
                        what each SHIPPED .kcad compiles to and pins the
                        files to the generator (`python -m
                        khervecad.tools.print_tests --check`).
-  - `mcp_schema.py`  — the **MCP tool table**: 104 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 105 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -5604,7 +5639,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **104 tools**: the object tree, OpenSCAD in
+client gets the whole app as **105 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.
@@ -5668,9 +5703,9 @@ object snaps and a construction plane for EVERY tool (today they serve
 curve drawing), push/pull on exact faces, layers in Rhino's sense.
 
 **Fusion SKETCH tab** (2026-10-19): the creation tools landed
-(`sketch_tools.py`); still missing are **sketch constraints** (a 2D
-solver: coincident / parallel / tangent / equal / driven dimensions),
-trim / extend / fillet of sketch corners, and conics.
+(`sketch_tools.py`), sketch constraints on 2026-10-21
+(`sketch_constraints.py`); still missing are trim / extend / fillet of
+sketch corners, and conics.
 
 **SolidWorks gap list** (asked 2026-09-12). Landed the same day: the
 OpenGL viewer (`glrender.py`), the other mates (flush / concentric /

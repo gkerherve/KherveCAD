@@ -415,6 +415,13 @@ crosses, and finish with action state's `problems` empty. Instruments: \
 tag with ISA letters (TE-101, PT-201, FS-101). Link symbols to their 3D \
 part with `node`.
 
+Sketch constraints — a 2D profile whose sizes must stay related \
+(a plate with equal sides, a slot tangent to its arcs): draw the shapes, \
+then sketch_constraint (list shows each shape's entity refs) to add \
+horizontal / parallel / tangent / equal ... and driven dimensions, a value \
+may be a variable's expression. The user can then drag a shape and the rest \
+follows.
+
 Motion — mechanisms, orreries, anything that MOVES:
 - Drive it from ONE annotated document variable, the OpenSCAD \
 Customizer way: `angle = 0;  // [0:5:360]` with a `// description` line \

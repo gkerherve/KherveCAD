@@ -1538,6 +1538,41 @@ TOOLS = [
         }, ["code"]),
     },
 
+    {
+        "name": "sketch_constraint",
+        "description": (
+            "SKETCH CONSTRAINTS and driven dimensions on 2D shapes "
+            "(line, rect, circle, polygon) — the ribbon's SKETCH > "
+            "Constraints panel. Constraints live on the CONTAINER holding "
+            "the shapes (node_id; default the scope's root) and the "
+            "solver writes the shapes' own params, so the program stays "
+            "plain OpenSCAD. refs are '<child index>.<entity>': line p1 "
+            "p2 l, rect v0-v3 (corners CCW from lower left) e0-e3 "
+            "(bottom, right, top, left) c, circle c (centre) o (the "
+            "circle), polygon v<i> e<i>. Kinds: coincident, horizontal "
+            "/ vertical (a line or two points), parallel, perpendicular, "
+            "tangent, equal, concentric, collinear, midpoint (point, "
+            "line), symmetric (point, point, line), fix, point_on; "
+            "dimensions with value (number or expression of variables, "
+            "measured when omitted): distance, hdistance, vdistance, "
+            "length, point_line, radius, diameter, angle (degrees). "
+            "action: list (default: rows, shapes with their entities, "
+            "status + degrees of freedom), add, remove (index), "
+            "set_value (index, value), auto (add the H / V / coincident "
+            "constraints the drawing already looks like), solve. A "
+            "constraint that cannot hold with the others is refused."
+        ),
+        "input_schema": _obj({
+            "action": {"type": "string",
+                       "enum": ["list", "add", "remove", "set_value",
+                                "auto", "solve"]},
+            "node_id": {"type": "integer"},
+            "kind": {"type": "string"},
+            "refs": {"type": "array", "items": {"type": "string"}},
+            "value": {"type": ["number", "string"]},
+            "index": {"type": "integer", "minimum": 0},
+        }),
+    },
     # ── Parts and assemblies ───────────────────────────────────────
     {
         "name": "bill_of_materials",

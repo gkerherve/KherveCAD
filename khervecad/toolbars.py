@@ -513,6 +513,13 @@ def build_tools_menu(win, menu):
     menu.addAction(_action(win, "mdi.magnet-on", "Snap objects",
                            "snap_objects", win._start_snap, "J",
                            bind=False))
+    # the sketch's CONSTRAIN panel (sketch_constrain_ui.py)
+    from . import sketch_constrain_ui
+    cons = menu.addMenu(icons.icon("mdi.vector-link"),
+                        language.tr("Sketch &Constraints"))
+    cons.setToolTipsVisible(True)
+    for act in sketch_constrain_ui.panel_actions(win):
+        cons.addAction(act)
     measure = menu.addMenu(icons.icon("mdi.tape-measure"),
                            language.tr("&Measure && annotate"))
     measure.setToolTipsVisible(True)

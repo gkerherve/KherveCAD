@@ -43,7 +43,8 @@ TABS = [
     # user: Fusion has no tool column — sketching is a tab of its own)
     # grouped like Fusion's SKETCH tab (CREATE / MODIFY / INSERT)
     ("sketch", "SKETCH", "Sketch", ["sketch", "sketch_shapes",
-                                    "sketch_modify", "sketch_insert"]),
+                                    "sketch_modify", "sketch_constrain",
+                                    "sketch_insert"]),
     # (2026-10-20, the user asked for a check that every menu command is
     # on the ribbon, grouped where Fusion would put it: the mechanical
     # features, a SURFACE tab, SubD in FORM, figures in CHARACTER, the
@@ -80,6 +81,7 @@ EXTRA_PANELS = {"pub_share": "Share", "pub_media": "Pictures & video",
                 "document": "Document", "checks": "Evaluate", "dimension": "Dimension",
                 "builders": "Builders", "sketch": "Create", "create": "Create",
                 "sketch_modify": "Modify", "sketch_insert": "Insert",
+                "sketch_constrain": "Constraints",
                 "assemble": "Assemble", "edit": "Edit mesh",
                 "analyse": "Analyse", "documents": "Drawings"}
 #: SolidWorks panels whose tools are all large buttons
@@ -186,7 +188,7 @@ FUSION_ALL = {"analyse", "checks", "dimension",
               "sketch_shapes", "shapes3d"}
 FUSION_SHOWN_MANY = 4
 #: icons shown by panels with a count of their own
-PANEL_SHOWN = {"sketch": 11, "sketch_modify": 5}
+PANEL_SHOWN = {"sketch": 11, "sketch_modify": 5, "sketch_constrain": 8}
 #: the sketch MODIFY panel: operations from the families, in this order
 SKETCH_MODIFY = ["translate", "rotate", "scale", "mirror", "pattern"]
 
@@ -415,7 +417,8 @@ def _panel_actions(win, key):
         first = [sketch_mode.create_action(win)] \
             if style_of(win) in ("Fusion", "SolidWorks") else []
         return title, first + [a for a in win._tool_group.actions()
-                               if a.data() != MEASURE]
+                               if a.data() != MEASURE
+                               and not str(a.data()).startswith("con_")]
     if key in MENU_PANELS:
         from .interface_menus import index
         paths = index(win)
@@ -448,6 +451,9 @@ def _panel_actions(win, key):
         ops = {a.data(): a for _k, fam in parts["families"] for a in fam}
         return title, [sketch_extra(win)["offset"]] + [
             ops[k] for k in SKETCH_MODIFY if k in ops]
+    if key == "sketch_constrain":
+        from . import sketch_constrain_ui
+        return title, list(sketch_constrain_ui.panel_actions(win))
     if key == "sketch_insert":
         return title, [sketch_extra(win)["import_2d"]]
     if key == "builders":

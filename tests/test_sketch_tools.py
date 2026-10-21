@@ -179,7 +179,7 @@ def test_sketch_tab_has_create_modify_insert(window):
     from khervecad import ribbon
     keys = dict((k, panels) for k, _f, _s, panels in ribbon.TABS)["sketch"]
     assert keys == ["sketch", "sketch_shapes", "sketch_modify",
-                    "sketch_insert"]
+                    "sketch_constrain", "sketch_insert"]
     _t, create = ribbon.panel_actions(window, "sketch")
     data = [a.data() for a in create]
     for tool, *_ in st.TOOLS:

@@ -150,6 +150,7 @@ class MainWindow(QMainWindow):
         self.model.structure_changed.connect(self._model_edited)
         self._edit_session = None          # meshedit_ui.EditSession, if open
         self.view3d.tab_pressed.connect(lambda: self.set_edit_mode(None))
+        self.model.node_changed.connect(self._note_sketch_edit)
         self.model.node_changed.connect(lambda _n: self._model_edited())
         self.model.references_changed.connect(self._model_edited)
         self.model.drawing_changed.connect(self._drawing_edited)
@@ -1026,12 +1027,23 @@ class MainWindow(QMainWindow):
     def _model_edited(self):
         # keep attached Objects glued to their (possibly just moved)
         # parents; the guard makes nested refreshes no-ops
-        from . import mates
+        from . import mates, sketch_constraints
         mates.refresh(self.model)
+        edited, self._sketch_edited = getattr(self, "_sketch_edited",
+                                              set()), set()
+        sketch_constraints.refresh(self.model, edited)
         self._dirty = True
         self._update_title()
         self.view3d.set_reference_images(self.model.reference_images)
         self._refresh_preview()
+
+    def _note_sketch_edit(self, node):
+        """The shape just edited weighs most when the sketch's
+        constraints re-solve (sketch_constraints.refresh)."""
+        if not hasattr(self, "_sketch_edited"):
+            self._sketch_edited = set()
+        if node is not None:
+            self._sketch_edited.add(node.id)
 
     def _isolation_changed(self):
         """The Object tab took or released the viewers: re-render both

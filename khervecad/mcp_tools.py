@@ -1569,6 +1569,13 @@ class McpToolExecutor:
         except crystal_build.BuildError as exc:
             raise ToolError(str(exc))
 
+    def _t_sketch_constraint(self, params) -> dict:
+        from . import sketch_constrain_ui
+        try:
+            return sketch_constrain_ui.run_mcp(self._w, params)
+        except (ValueError, KeyError, IndexError) as exc:
+            raise ToolError(str(exc))
+
     def _t_bill_of_materials(self, params) -> dict:
         from . import bom_mcp
         try:
