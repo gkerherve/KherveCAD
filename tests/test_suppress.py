@@ -117,8 +117,8 @@ def test_the_menu_ends_with_suppress_and_the_two_deletes(app, monkeypatch):
         tree._context_menu(tree.visualItemRect(tree.currentItem()).center())
         sup, only, every = shown[0][-3:]
         assert sup.text().startswith("Suppress")
-        assert "only" in only.text() and "keep" in only.text()
-        assert "everything inside" in every.text()
+        assert only.text() == "Delete, keep contents"
+        assert every.text() == "Delete all"
         only.trigger()                         # remove only the knife
         assert cube.parent is m.root and knife.parent is None
     finally:

@@ -1034,40 +1034,42 @@ class ObjectTree(QTreeWidget):
             act.setChecked(current == {mod})
 
     def _step_menu(self, menu, nodes):
-        """The end of the menu: Suppress beside the deletes, and for a
-        step that holds others (a knife, a fillet, a difference…) two
-        clear deletes — only this step, keeping what is inside, or it
-        with everything inside (the user, 2026-10-21)."""
+        """The end of the menu: Suppress beside the deletes; a node that
+        holds others gets two — only it (its contents stay) or all.
+        Short labels (the user), the details in each tooltip."""
         from . import suppress
         nodes = list(nodes)
-        label = (f"“{nodes[0].name}”" if len(nodes) == 1
-                 else language.tr("{n} items").format(n=len(nodes)))
+        menu.setToolTipsVisible(True)
         able = [n for n in nodes if n.type not in suppress.NEVER]
         if able:
             on = all(n.params.get(suppress.KEY) for n in able)
-            menu.addAction(
+            act = menu.addAction(
                 icons.icon("mdi.power-plug" if on else
                            "mdi.power-plug-off-outline"),
-                (language.tr("Unsuppress {what}") if on else
-                 language.tr("Suppress {what} (switch off, keep it)"))
-                .format(what=label),
+                language.tr("Unsuppress") if on else
+                language.tr("Suppress"),
                 lambda: suppress.set_suppressed(self.model, able, not on))
+            act.setToolTip(language.tr(
+                "Switch it off without deleting it (struck through in "
+                "the tree); Unsuppress brings it back."))
         holders = [n for n in nodes if n.is_container() and n.children]
         if holders:
-            menu.addAction(
+            act = menu.addAction(
                 icons.icon("mdi.layers-remove"),
-                language.tr("Delete {what} only — keep what's inside")
-                .format(what=label),
+                language.tr("Delete, keep contents"),
                 lambda: [self.model.ungroup(n) if n in holders
                          else self.model.remove_node(n) for n in nodes])
-            menu.addAction(
+            act.setToolTip(language.tr(
+                "Delete only this step; what is inside it stays."))
+            act = menu.addAction(
                 icons.icon("mdi.delete-outline"),
-                language.tr("Delete {what} and everything inside")
-                .format(what=label),
+                language.tr("Delete all"),
                 lambda: [self.model.remove_node(n) for n in nodes])
+            act.setToolTip(language.tr(
+                "Delete this step and everything inside it."))
         else:
             menu.addAction(icons.icon("mdi.delete-outline"),
-                           language.tr("Delete {what}").format(what=label),
+                           language.tr("Delete"),
                            lambda: self._delete(nodes))
 
     def _delete(self, nodes):
