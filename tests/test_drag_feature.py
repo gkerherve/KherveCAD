@@ -97,3 +97,50 @@ def test_linear_handle_geometry():
     mm, tris = drag_feature.frame(ext)
     base, axis, scale = drag_feature.linear_handle(ext, mm, tris)
     assert base == pytest.approx((10, 5, 12)) and axis == (0, 0, 1)
+
+
+def test_a_handle_behind_the_camera_never_breaks_the_paint(win):
+    """The user's crash: the arrow's point fell behind the camera, the
+    projection was None and the paint raised."""
+    m = win.model
+    rect = m.add_node("rect", dict(width=20, height=10))
+    win.builder.tree.select_nodes([rect])
+    win._apply_operation("linear_extrude")
+    tool = win.view3d.edit_tool
+    tool._project = lambda: (lambda p: None)
+    assert tool._screen() is None
+    from PyQt5.QtGui import QPainter, QPixmap
+    pix = QPixmap(50, 50)
+    p = QPainter(pix)
+    tool.paint(p, None)                         # must not raise
+    p.end()
+    assert tool.mouse_press(_ev(QEvent.MouseButtonPress, 5, 5)) is False
+
+
+def test_clicking_a_flat_shape_in_3d_extrudes_it(win):
+    m = win.model
+    rect = m.add_node("rect", dict(width=20, height=10))
+    win.builder.tree.select_nodes([])
+    drag_feature.action(win).trigger()           # nothing selected: pick
+    cb = win.view3d._pick_cb
+    assert cb is not None
+    cb(dict(kind="face", pos=[10, 5, 0], dir=[0, 0, 1]), rect)
+    tool = win.view3d.edit_tool
+    assert isinstance(tool, drag_feature.DragFeature)
+    assert tool.target().type == "linear_extrude"
+    assert rect.parent is tool.target()
+
+
+def test_clicking_an_extruded_part_takes_its_extrude(win):
+    m = win.model
+    grp = m.add_node("union", {})
+    low = m.add_node("linear_extrude", dict(height=5), parent=grp)
+    m.add_node("rect", dict(width=20, height=10), parent=low)
+    high = m.add_node("translate", dict(x=50), parent=grp)
+    tall = m.add_node("linear_extrude", dict(height=30), parent=high)
+    m.add_node("rect", dict(width=10, height=10), parent=tall)
+    win.builder.tree.select_nodes([])
+    drag_feature.pick(win)
+    win.view3d._pick_cb(dict(kind="face", pos=[55, 5, 30], dir=[0, 0, 1]),
+                        grp)
+    assert win.view3d.edit_tool.target() is tall

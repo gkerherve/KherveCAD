@@ -107,10 +107,9 @@ def start(window, node=None, quiet=False):
         return None
     tool = DragFeature(window, node)
     if tool.target() is None:
-        if not quiet:
-            window.statusBar().showMessage(language.tr(
-                "Select a Linear extrude or Rotate extrude (or the shape "
-                "inside one) to drag it."), 6000)
+        if quiet:
+            return None
+        pick(window)                       # like Fillet: click it in 3D
         return None
     view.edit_tool = tool
     view.setMouseTracking(True)
@@ -119,6 +118,64 @@ def start(window, node=None, quiet=False):
         "Drag the blue arrow to set the height (Ctrl snaps) — Esc or "
         "Select finishes."), 8000)
     return tool
+
+
+def _extrudes(node):
+    return [n for n in node.walk() if n.type in KINDS]
+
+
+def nearest_extrude(node, point, scope=None):
+    """The extrude inside *node* whose handle is nearest the clicked
+    *point* (scope coordinates)."""
+    best = None
+    for ext in _extrudes(node):
+        m, tris = frame(ext, scope)
+        got = linear_handle(ext, m, tris) if ext.type == "linear_extrude" \
+            else revolve_handle(ext, m, tris)
+        if got is None:
+            continue
+        d = math.dist(got[0], point)
+        if best is None or d < best[0]:
+            best = (d, ext)
+    return best[1] if best else None
+
+
+def pick(window):
+    """Nothing to drag selected: click the shape in the 3D view — a flat
+    sketch profile gets extruded, an extruded part's extrude is taken —
+    then its arrow shows (the user: "like the fillet edge, we select the
+    polygon in the 3D drawing")."""
+    from . import language, meshedit_ui
+    from .model import SHAPE_2D
+    parts = meshedit_ui._parts(window)
+    if not parts:
+        window.statusBar().showMessage(language.tr(
+            "Nothing to extrude in view — draw a shape first."), 6000)
+        return
+    scope = window._render_scope()[0]
+    scope = None if scope is None or scope is window.model.root else scope
+
+    def picked(desc, node):
+        if desc is None or node is None:
+            return
+        target = nearest_extrude(node, desc["pos"], scope)
+        if target is None:
+            flat = [n for n in node.walk() if n.category == SHAPE_2D]
+            if not flat:
+                window.statusBar().showMessage(language.tr(
+                    "That part has no extrude or sketch shape to drag."),
+                    6000)
+                return
+            shape = flat[0]
+            target = window.model.wrap_nodes([shape], "linear_extrude")
+        window.builder.active_tree().select_nodes([target])
+        start(window, target)
+
+    window.view3d.start_pick(
+        picked, groups=parts,
+        banner=language.tr("Click the shape or the face to extrude · Esc "
+                           "cancels"),
+        labeler=lambda desc, node: getattr(node, "name", ""))
 
 
 def action(window):
@@ -189,9 +246,13 @@ class DragFeature:
                 return None
             base, axis, scale = got
             bs = project(base)
+            if bs is None:
+                return None              # behind the camera
             length = SIZE_PX * max(bs[2], 1e-6) / self.view._focal()
             tip = project(tuple(base[k] + axis[k] * length
                                 for k in range(3)))
+            if tip is None:
+                return None
             return dict(node=node, kind="linear", a=bs, b=tip,
                         length=length, scale=scale)
         got = revolve_handle(node, m, tris)
@@ -199,9 +260,13 @@ class DragFeature:
             return None
         p, t, _r = got
         ps = project(p)
+        if ps is None:
+            return None
         # the screen tangent per radian, measured over a small step
         step = 0.05
         qs = project(tuple(p[k] + t[k] * step for k in range(3)))
+        if qs is None:
+            return None
         per = ((qs[0] - ps[0]) / step, (qs[1] - ps[1]) / step)
         norm = math.hypot(*per) or 1.0
         tip = (ps[0] + per[0] / norm * 40, ps[1] + per[1] / norm * 40,
@@ -316,6 +381,12 @@ class DragFeature:
 
     # -- drawing -----------------------------------------------------
     def paint(self, painter, project):
+        try:
+            self._paint(painter)
+        except Exception:      # never out of a paint: Qt would abort
+            pass
+
+    def _paint(self, painter):
         from PyQt5.QtCore import QPointF, Qt
         from PyQt5.QtGui import QColor, QFont, QPen, QPolygonF
         scr = self._screen()

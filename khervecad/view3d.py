@@ -1480,8 +1480,14 @@ class View3D(QWidget):
         self._draw_anchors(painter, eye, right, up, forward)
         self._draw_pick_overlays(painter, eye, right, up, forward)
         if self.edit_tool is not None and not self._clean:
-            self.edit_tool.paint(painter, lambda v: self._project(
-                eye, right, up, forward, v))
+            try:
+                self.edit_tool.paint(painter, lambda v: self._project(
+                    eye, right, up, forward, v))
+            except Exception:
+                # a tool's drawing error must not leave the painter open
+                # (Qt then aborted the app — the drag-extrude crash)
+                import traceback
+                traceback.print_exc()
         if not self._clean:
             self._draw_flash(painter)
         if self._clean:                  # an exported picture: model only
