@@ -60,10 +60,10 @@ def test_extrude_shows_an_arrow_that_pulls_the_height(win):
     assert scr["kind"] == "linear"
     _drag(tool, scr, 40)
     assert float(ext.params["height"]) > h0
-    # dragged below the sketch: the extrude turns DOWN
+    # dragged below the sketch: it stops at zero, never goes negative
     _drag(tool, tool._screen(), -5000)
-    assert drag_feature.reversed_of(ext) is not None
-    assert drag_feature.signed_height(ext) < 0
+    assert drag_feature.reversed_of(ext) is None
+    assert float(ext.params["height"]) == drag_feature.MIN_HEIGHT
     # Cancel (Esc) takes the new extrude away: the rectangle is back
     tool.key_press(type("K", (), {"key": lambda self: Qt.Key_Escape})())
     assert win.view3d.edit_tool is None
@@ -130,11 +130,11 @@ def test_no_buttons_and_the_arrow_follows_the_selection(win):
     tool = win.view3d.edit_tool
     ext = tool.target()
     assert tool.buttons == []                   # no OK / Cancel
-    _drag(tool, tool._screen(), -5000)          # down
-    assert drag_feature.reversed_of(ext) is not None
-    _drag(tool, tool._screen(), -10000)         # and back up
+    _drag(tool, tool._screen(), -5000)          # down: stops at zero
+    assert float(ext.params["height"]) == drag_feature.MIN_HEIGHT
+    _drag(tool, tool._screen(), 3000)           # and back up
     assert drag_feature.reversed_of(ext) is None
-    assert drag_feature.signed_height(ext) > 0
+    assert drag_feature.signed_height(ext) > drag_feature.MIN_HEIGHT
     win.builder.tree.select_nodes([other])      # selected away: it goes
     assert win.view3d.edit_tool is None
     assert ext.parent is m.root                 # and the extrude stays
@@ -196,9 +196,9 @@ def test_selecting_an_extrude_shows_its_arrow_and_the_value_types(win):
     box.setText("25")
     box.returnPressed.emit()
     assert float(ext.params["height"]) == 25
-    tool.edit_value().setText("-7.5")            # a minus goes down
+    tool.edit_value().setText("-7.5")            # a minus stops at zero
     tool.editor.returnPressed.emit()
-    assert drag_feature.signed_height(ext) == -7.5
+    assert float(ext.params["height"]) == drag_feature.MIN_HEIGHT
     # something else selected: the arrow goes
     win.builder.tree.select_nodes([other])
     assert win.view3d.edit_tool is None

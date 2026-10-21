@@ -558,8 +558,8 @@ class DragFeature:
             value = d["start"] + delta
             if ctrl:
                 value = snap(value, self._grid())
-            if abs(value) < MIN_HEIGHT:
-                value = MIN_HEIGHT if d["start"] >= 0 else -MIN_HEIGHT
+            # an extrusion only goes UP: it stops at zero (the user)
+            value = max(MIN_HEIGHT, value)
         else:
             per = d["per"]
             n2 = per[0] * per[0] + per[1] * per[1] or 1.0
@@ -575,9 +575,10 @@ class DragFeature:
             self._set(d["node"], d["param"], d["value"])
         return True
 
-    def _set_height(self, ext, signed):
-        set_direction(self.window.model, ext, signed < 0)
-        self._set(ext, "height", round(abs(signed), 4))
+    def _set_height(self, ext, height):
+        """Never below zero: a linear extrusion goes up from its shape
+        (the user) — a dragged or typed value under zero stops there."""
+        self._set(ext, "height", round(max(MIN_HEIGHT, height), 4))
 
     def _restore_drag(self, d):
         if d["param"] == "height":
@@ -631,8 +632,6 @@ class DragFeature:
             except ValueError:
                 return
             if linear:
-                if abs(value) < MIN_HEIGHT:
-                    return
                 self._set_height(node, value)
             else:
                 self._set(node, "angle", max(1.0, min(360.0, value)))
