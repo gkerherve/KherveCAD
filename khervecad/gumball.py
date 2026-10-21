@@ -100,6 +100,12 @@ def toggle(window, on=None):
     from . import language
     view = window.view3d
     current = isinstance(view.edit_tool, Gumball)
+    if current and view.edit_tool.auto:
+        # a triad that came up by itself: switching on keeps it for good
+        if on is None or on:
+            view.edit_tool.auto = False
+            _sync(window, True)
+            return True
     on = (not current) if on is None else bool(on)
     if on and not current:
         from . import drag_feature
@@ -137,11 +143,14 @@ class Gumball:
     """View3D.edit_tool for the handles; declines everything that is not
     a press on a handle, so the view orbits as usual."""
 
-    def __init__(self, window):
+    def __init__(self, window, auto=False):
         self.window = window
         self.view = window.view3d
         self.drag = None             # the running drag
         self.hover = None            # handle under the mouse
+        self.auto = auto             # came up by selecting a part
+        self._chip = None            # the position readout (click to type)
+        self.editor = None
 
     # -- what is selected ----------------------------------------------
     def target(self):
@@ -211,24 +220,37 @@ class Gumball:
 
     def mouse_press(self, event):
         from PyQt5.QtCore import Qt
-        if event.button() != Qt.LeftButton:
-            return False
+        if event.button() != Qt.LeftButton or \
+                getattr(self.view, "_pick_cb", None) is not None:
+            return False                   # a pick (Fillet, Snap…) first
         scr = self._screen()
         if scr is None:
             return False
         c, length, cs, tips, rings = scr
+        if self._chip is not None and self._chip.contains(event.pos()):
+            self.edit_position()
+            return True
         handle = handle_at(event.pos().x(), event.pos().y(), cs[:2],
                            [t[:2] for t in tips],
                            [[p[:2] for p in r] for r in rings])
         if handle is None:
-            return False
+            # SolidWorks' free drag: press ON the part and drag it in the
+            # plane facing you (the user)
+            from . import anchors
+            tris = self.view.highlight_mesh or []
+            index, _pt = anchors.pick(tris, self._project(),
+                                      event.pos().x(), event.pos().y())
+            if index is None:
+                return False
+            handle = ("free", None)
         from . import mates
         node = mates.ensure_part(self.window.model, self.target())
         start = {k: node.params.get(k, 0.0)
                  for k in ("x", "y", "z", "rx", "ry", "rz")}
         self.drag = dict(handle=handle, node=node, start=start, centre=c,
                          length=length, cs=cs[:2],
-                         tip=tips[handle[1]][:2],
+                         tip=tips[handle[1]][:2] if handle[1] is not None
+                         else cs[:2],
                          press=(event.pos().x(), event.pos().y()),
                          value=0.0)
         return True
@@ -250,6 +272,18 @@ class Gumball:
             return False
         kind, axis = d["handle"]
         ctrl = bool(event.modifiers() & Qt.ControlModifier)
+        if kind == "free":
+            _eye, right, up, _fwd = self.view._camera()
+            per_px = d["length"] / float(SIZE_PX)
+            dx, dy = x - d["press"][0], y - d["press"][1]
+            vec = [(dx * right[k] - dy * up[k]) * per_px for k in range(3)]
+            if ctrl:
+                g = self._grid()
+                vec = [snap(v, g) for v in vec]
+            d["vec"] = vec
+            d["value"] = math.sqrt(sum(v * v for v in vec))
+            self._apply(d)
+            return True
         if kind == "move":
             sx, sy = d["tip"][0] - d["cs"][0], d["tip"][1] - d["cs"][1]
             px = math.hypot(sx, sy) or 1.0
@@ -278,6 +312,13 @@ class Gumball:
             return False
         from . import language
         kind, axis = d["handle"]
+        if kind == "free":
+            v = d.get("vec", [0, 0, 0])
+            self.window.statusBar().showMessage(language.tr(
+                "Moved by {x:g}, {y:g}, {z:g}").format(
+                x=round(v[0], 3), y=round(v[1], 3), z=round(v[2], 3)), 5000)
+            self.view.update()
+            return True
         name = "XYZ"[axis]
         self.window.statusBar().showMessage(language.tr(
             "Moved {name} by {value:g}").format(
@@ -314,7 +355,11 @@ class Gumball:
         node = d["node"]
         node.params.update(d["start"])     # measure from where it began
         kind, axis = d["handle"]
-        if kind == "move":
+        if kind == "free":
+            move = dict(rotation=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+                        centre=[0.0, 0.0, 0.0],
+                        move=list(d.get("vec", [0.0, 0.0, 0.0])))
+        elif kind == "move":
             move = dict(rotation=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
                         centre=[0.0, 0.0, 0.0],
                         move=[AXES[axis][k] * d["value"] for k in range(3)])
@@ -335,10 +380,59 @@ class Gumball:
                 model.set_param(node, key, value)
                 first = False
 
+    def edit_position(self):
+        """Type where the part's centre goes ("x, y, z")."""
+        from PyQt5.QtWidgets import QLineEdit
+        c = self.centre()
+        if c is None or self._chip is None:
+            return None
+        box = QLineEdit(", ".join("%g" % round(v, 3) for v in c),
+                        self.view)
+        box.setFixedWidth(max(160, self._chip.width()))
+        box.move(self._chip.topLeft())
+        box.selectAll()
+        self.editor = box
+
+        def done():
+            if self.editor is not box:
+                return
+            self.editor = None
+            box.deleteLater()
+            try:
+                want = [float(v) for v in
+                        box.text().replace(";", ",").split(",")]
+            except ValueError:
+                return
+            if len(want) != 3:
+                return
+            self.move_to(want)
+        box.returnPressed.connect(done)
+        box.editingFinished.connect(done)
+        box.show()
+        box.setFocus()
+        return box
+
+    def move_to(self, point):
+        """Move the selected part so its centre lands on *point*."""
+        from . import mates
+        c = self.centre()
+        target = self.target()
+        if c is None or target is None:
+            return
+        node = mates.ensure_part(self.window.model, target)
+        d = dict(handle=("free", None), node=node,
+                 start={k: node.params.get(k, 0.0)
+                        for k in ("x", "y", "z", "rx", "ry", "rz")},
+                 centre=c, vec=[point[k] - c[k] for k in range(3)])
+        self._apply(d)
+        self.view.update()
+
     # -- drawing -----------------------------------------------------
     def paint(self, painter, project):
         from PyQt5.QtCore import QPointF, Qt
         from PyQt5.QtGui import QColor, QPen, QPolygonF, QFont
+        if getattr(self.view, "_pick_cb", None) is not None:
+            return                         # out of the way of a pick
         scr = self._screen()
         if scr is None:
             return
@@ -376,6 +470,22 @@ class Gumball:
         painter.setBrush(QColor(40, 40, 40, 200))
         painter.drawEllipse(QPointF(cs[0], cs[1]), 5, 5)
         painter.setBrush(Qt.NoBrush)
+        if not self.drag:
+            # where the part is — click to type where it goes
+            from PyQt5.QtCore import QRect
+            text = "X %g  Y %g  Z %g" % tuple(round(v, 2) for v in c)
+            font = QFont(painter.font())
+            painter.setFont(font)
+            fm = painter.fontMetrics()
+            w = fm.horizontalAdvance(text) + 12
+            self._chip = QRect(int(cs[0]) - w // 2, int(cs[1]) + 16, w,
+                               fm.height() + 6)
+            painter.fillRect(self._chip, QColor(255, 255, 255, 225))
+            painter.setPen(QPen(QColor("#1e88e5"), 1))
+            painter.drawRect(self._chip)
+            painter.setPen(QColor("#1b3a57"))
+            painter.drawText(self._chip.x() + 6,
+                             self._chip.y() + 3 + fm.ascent(), text)
         if self.drag:
             kind, axis = self.drag["handle"]
             text = (f"{'XYZ'[axis]}  {self.drag['value']:+.2f}" if
@@ -391,3 +501,33 @@ class Gumball:
             painter.setPen(QColor(COLOURS[axis]).darker(130))
             painter.drawText(int(cs[0]) + 20, int(cs[1]) - 27 + m.ascent(),
                              text)
+
+
+def follow_selection(window, nodes):
+    """Selecting a part shows the move triad by itself (the user: "like
+    SolidWorks"); selecting something else takes a triad that came that
+    way down. An extrude has its own arrow (drag_feature)."""
+    from .model import SHAPE_2D
+    view = window.view3d
+    tool = view.edit_tool
+    node = nodes[0] if len(nodes) == 1 else None
+    probe = Gumball(window, auto=True)
+    eligible = node is not None and node.category != SHAPE_2D and \
+        node.type not in ("linear_extrude", "rotate_extrude") and \
+        probe.target() is not None
+    if isinstance(tool, Gumball):
+        if tool.auto and tool.drag is None and not eligible:
+            view.edit_tool = None
+            view.update()
+        return
+    if eligible and tool is None and \
+            getattr(view, "_pick_cb", None) is None:
+        view.edit_tool = probe
+        view.setMouseTracking(True)
+        view.update()
+
+
+def step_aside(view):
+    tool = view.edit_tool
+    if isinstance(tool, Gumball) and tool.auto and tool.drag is None:
+        view.edit_tool = None

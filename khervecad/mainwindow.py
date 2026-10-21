@@ -1042,7 +1042,8 @@ class MainWindow(QMainWindow):
             self._refresh_preview()
         self.scene.set_highlight(nodes)
         # an extrude selected shows its Z arrow in 3D (drag_feature)
-        from . import drag_feature
+        from . import drag_feature, gumball
+        gumball.follow_selection(self, nodes)      # a part: the triad
         drag_feature.follow_selection(self, nodes)
         # zoom the 2D view to the selected object (a part silhouette or
         # an edited profile) so it is framed and centred, not clipped

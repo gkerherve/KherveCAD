@@ -136,6 +136,8 @@ def start(window, node=None, quiet=False, created=False):
     view = window.view3d
     if isinstance(view.edit_tool, DragFeature):
         view.edit_tool.exit()            # one arrow at a time
+    from . import gumball
+    gumball.step_aside(view)
     if view.edit_tool is not None:
         if not quiet:
             window.statusBar().showMessage(language.tr(
@@ -169,8 +171,10 @@ def start(window, node=None, quiet=False, created=False):
 
 
 def step_aside(view):
-    """An arrow that came up by itself (a selected extrude) makes way
-    for any other 3D tool."""
+    """An arrow (or a move triad) that came up by itself makes way for
+    any other 3D tool."""
+    from . import gumball
+    gumball.step_aside(view)
     tool = view.edit_tool
     if isinstance(tool, DragFeature) and tool.auto and tool.drag is None:
         tool.exit()
@@ -515,8 +519,9 @@ class DragFeature:
 
     def mouse_press(self, event):
         from PyQt5.QtCore import Qt
-        if event.button() != Qt.LeftButton:
-            return False
+        if event.button() != Qt.LeftButton or \
+                getattr(self.view, "_pick_cb", None) is not None:
+            return False                   # a pick (Fillet, Snap…) first
         lab = self._label
         if lab is not None and lab.contains(event.pos()):
             self.edit_value()
