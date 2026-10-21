@@ -1569,6 +1569,27 @@ class McpToolExecutor:
         except crystal_build.BuildError as exc:
             raise ToolError(str(exc))
 
+    def _t_suppress(self, params) -> dict:
+        from . import suppress
+        model = self._w.model
+        action = params.get("action", "list")
+        if action in ("suppress", "unsuppress"):
+            nodes = [self._node(i) for i in params.get("node_ids") or []]
+            bad = [n.name for n in nodes if n.type in suppress.NEVER]
+            if bad:
+                raise ToolError("Cannot suppress %s: hide it instead."
+                                % ", ".join(bad))
+            suppress.set_suppressed(model, nodes, action == "suppress")
+        elif action == "rollback":
+            suppress.roll_back_to(model, self._node(params["node_id"]))
+        elif action == "roll_forward":
+            nid = params.get("node_id")
+            suppress.roll_forward(model, self._node(nid) if nid is not None
+                                  else None)
+        elif action != "list":
+            raise ToolError("Unknown action %r." % action)
+        return suppress.state(model.root)
+
     def _t_sketch_constraint(self, params) -> dict:
         from . import sketch_constrain_ui
         try:

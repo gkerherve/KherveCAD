@@ -1539,6 +1539,28 @@ TOOLS = [
     },
 
     {
+        "name": "suppress",
+        "description": (
+            "FEATURE HISTORY, SolidWorks style: switch features off "
+            "without deleting them, or roll the history back. action: "
+            "suppress / unsuppress (node_ids — a wrapper passes its "
+            "children through, a difference keeps only its body, a "
+            "leaf draws nothing; Objects, instances, ifs and raw code "
+            "cannot be suppressed — hide them instead), rollback "
+            "(node_id: everything AFTER it among its siblings is off), "
+            "roll_forward (node_id = the container, or none for all), "
+            "list (default). Written to the program as kcad_off(...) so "
+            "it survives export and import."
+        ),
+        "input_schema": _obj({
+            "action": {"type": "string",
+                       "enum": ["list", "suppress", "unsuppress",
+                                "rollback", "roll_forward"]},
+            "node_ids": {"type": "array", "items": {"type": "integer"}},
+            "node_id": {"type": "integer"},
+        }),
+    },
+    {
         "name": "sketch_constraint",
         "description": (
             "SKETCH CONSTRAINTS and driven dimensions on 2D shapes "

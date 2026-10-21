@@ -814,6 +814,14 @@ class CadNode:
         pad = "    " * indent
         star = self.modifier_prefix()
 
+        from . import suppress
+        if suppress.is_off(self):
+            # switched off (suppressed or rolled back): kcad_off keeps
+            # the statement as text and renders only what it keeps
+            suppress.emit(self, lines, indent, spans)
+            if spans is not None:
+                spans[self.id] = (start, len(lines))
+            return
         if self.type == "masters":
             # A definitions store: its masters render only through Linked
             # copies, so the group contributes no scene geometry. It is

@@ -3068,6 +3068,20 @@ into a new module and import.
                        `SketchView.drawForeground`. MCP `sketch_constraint`.
                        Next: drag a point with the solver live, trim /
                        extend / sketch fillet, constraints on arcs.
+  - `suppress.py`    — **Suppress / roll back** (2026-10-21, SolidWorks
+                       gap list): `params["suppressed"]` switches a node
+                       off — a wrapper passes its children through, a
+                       difference keeps its body, a leaf draws nothing —
+                       and a container's `params["rollback"] = k` switches
+                       off children k.. (the rollback bar). Codegen writes
+                       `kcad_off("<statement>", keep[, rolled = true])
+                       { children }` (helper renders what it keeps), the
+                       importer rebuilds the node from the quoted statement
+                       (`fold`, `restore_rollbacks`). Hooked in CadNode.emit,
+                       mesh._tess, collect_outlines; tree rows struck
+                       through with a tag; right-click Suppress / Roll back
+                       to here / Roll forward; MCP `suppress`. Objects,
+                       instances, ifs and raw code are `NEVER` (hide them).
   - `polygon_draw.py` — drawing a polygon in the sketch (2026-10-19, the
                        user: an "end" always shown, close by): a Finish /
                        Undo point / Cancel bar at the bottom of the view

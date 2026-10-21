@@ -242,6 +242,9 @@ def preamble(root) -> list:
            str(n.params.get("material") or "Default") != "Default"
            for n in root.walk()):
         lines.extend(HELPERS["material"].split("\n"))
+    from . import suppress
+    if suppress.uses(root):
+        lines.extend(suppress.HELPER.split("\n"))
     lines.extend(bake.preamble(root))
     lines.extend(pattern.preamble(root))
     lines.extend(sheetmetal.preamble(root))

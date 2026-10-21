@@ -1354,6 +1354,8 @@ from . import scadinclude as _scadinclude  # noqa: E402
 from . import scadfiles as _scadfiles  # noqa: E402
 
 _BUILDERS.update(_organic.BUILDERS)
+from . import suppress as _suppress                      # noqa: E402
+_BUILDERS.update(_suppress.BUILDERS)
 
 #: a name in an expression (group 1; a "string" matches with no group)
 #: and whether it is called (group 2)
@@ -1378,6 +1380,9 @@ def _fold_container(node: CadNode):
       KherveCAD compiles lines).
     """
     folded = _organic.fold_material(node)
+    if folded is not None:
+        return folded
+    folded = _suppress.fold(node)
     if folded is not None:
         return folded
     if node.type == "translate" and len(node.children) == 1:
@@ -1517,6 +1522,7 @@ def parse_scad(text: str, base_dir=None):
     the folder `use <...>` / `include <...>` resolve against first."""
     parser = Parser(text, base_dir)
     root = parser.parse_program()
+    _suppress.restore_rollbacks(root)
     _prune_dead(root)
     return root, parser.warnings
 

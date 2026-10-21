@@ -403,8 +403,16 @@ class ObjectTree(QTreeWidget):
         item.setData(0, ROLE_TAG, own_hidden)
         item.setData(0, ROLE_MODIFIER, f"{mod} {language.tr(MODIFIERS[mod])}"
                      if mod in MODIFIERS else "")
+        from . import suppress
+        off = suppress.is_off(node)
+        if off:
+            item.setData(0, ROLE_MODIFIER, language.tr(
+                "(suppressed)") if node.params.get(suppress.KEY)
+                else language.tr("(rolled back)"))
         # dim + italic if hidden by itself OR by an ancestor
         font = item.font(0)
+        font.setStrikeOut(off)
+        eff_hidden = eff_hidden or off
         font.setItalic(eff_hidden)
         item.setFont(0, font)
         error = self.errors.get(node.id)
@@ -1028,6 +1036,30 @@ class ObjectTree(QTreeWidget):
             act.setCheckable(True)
             act.setChecked(current == {mod})
 
+    def _suppress_menu(self, menu, nodes):
+        """SolidWorks' Suppress and rollback bar: switch a feature off
+        without deleting it, or stop the history after a node."""
+        from . import suppress
+        able = [n for n in nodes if n.type not in suppress.NEVER]
+        if able:
+            on = any(n.params.get(suppress.KEY) for n in able)
+            menu.addAction(
+                icons.icon("mdi.power-plug" if on
+                           else "mdi.power-plug-off-outline"),
+                language.tr("Unsuppress") if on else
+                language.tr("Suppress (switch off)"),
+                lambda: suppress.set_suppressed(self.model, able, not on))
+        if len(nodes) == 1 and nodes[0].parent is not None:
+            node = nodes[0]
+            menu.addAction(icons.icon("mdi.timeline-clock-outline"),
+                           language.tr("Roll back to here"),
+                           lambda: suppress.roll_back_to(self.model, node))
+            if isinstance(node.parent.params.get(suppress.ROLLBACK), int):
+                menu.addAction(icons.icon("mdi.fast-forward"),
+                               language.tr("Roll forward to the end"),
+                               lambda: suppress.roll_forward(
+                                   self.model, node.parent))
+
     def _objects_menu(self, menu, nodes, roots):
         from .mates import definition_of
         parts_sel = [n for n in roots
@@ -1047,6 +1079,7 @@ class ObjectTree(QTreeWidget):
             lambda: [self.model.set_visible(n, bool(hidden))
                      for n in nodes])
         self._modifier_menu(menu, nodes)
+        self._suppress_menu(menu, nodes)
         if len(roots) == 1 and hasattr(self.window(), "statusBar"):
             from . import split_ui
             menu.addAction(icons.icon("mdi.box-cutter"),

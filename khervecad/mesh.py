@@ -541,6 +541,11 @@ def collect_outlines(node: CadNode, env=None):
     outlines = []
     if not node.visible:
         return outlines
+    from . import suppress
+    if suppress.is_off(node):
+        for child in suppress.kept_children(node):
+            outlines.extend(collect_outlines(child, env))
+        return outlines
     if node.category == SHAPE_2D:
         outlines.extend(_oriented(node, node_outlines(node, env)))
     if node.type == "offset":
@@ -1473,6 +1478,12 @@ def show_only(root):
 def _tess(node, env, color, sel, selected):
     if not node.visible:
         return []
+    from . import suppress
+    if suppress.is_off(node):
+        out = []
+        for child in suppress.kept_children(node):
+            out.extend(_tess(child, env, color, sel, selected))
+        return out
     mod = node.params.get("modifier")
     if mod in MODIFIER_TINT and node.id not in _MODIFIER_ACTIVE:
         _MODIFIER_ACTIVE.add(node.id)
