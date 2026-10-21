@@ -40,7 +40,7 @@ SIZES = (16, 20, 22, 24, 28, 32, 40, 48, 64)
 
 class Palette:
     def __init__(self, body, edge, make, select, cut, sketch, paper,
-                 folder, disk, ink):
+                 folder, disk, ink, point=None):
         self.body = QColor(body)        # the part
         self.edge = QColor(edge)        # outlines
         self.make = QColor(make)        # what the tool makes / arrows
@@ -51,6 +51,9 @@ class Palette:
         self.folder = QColor(folder)
         self.disk = QColor(disk)
         self.ink = QColor(ink)          # recoloured glyphs
+        #: a sketch's picked points / highlights (SolidWorks: blue on
+        #: dark grey lines; Fusion: its outline colour, as before)
+        self.point = QColor(point or edge)
 
 
 PALETTES = {
@@ -58,10 +61,13 @@ PALETTES = {
                       select="#0696d7", cut="#e2483d", sketch="#2f80c7",
                       paper="#ffffff", folder="#9fb1c2", disk="#5d6f80",
                       ink="#4e5d6b"),
+    # SolidWorks draws sketch tools as dark grey lines with blue only
+    # where it matters (the points you click, relation and dimension
+    # marks) — the user asked for icons drawn like SolidWorks'
     "SolidWorks": Palette(body="#f5c33b", edge="#505050", make="#2c62d0",
-                          select="#18a6dc", cut="#d33a2c", sketch="#2c62d0",
+                          select="#18a6dc", cut="#d33a2c", sketch="#3b4048",
                           paper="#ffffff", folder="#f2c14e",
-                          disk="#2f63b8", ink="#3f4a57"),
+                          disk="#2f63b8", ink="#3f4a57", point="#2c62d0"),
 }
 
 

@@ -111,8 +111,8 @@ def _collinear(d):
 @draws("con_midpoint")
 def _midpoint(d):
     _ln(d, (0.1, 0.7), (0.9, 0.7))
-    d.dot(P(0.1, 0.7), d.pal.edge, 0.05)
-    d.dot(P(0.9, 0.7), d.pal.edge, 0.05)
+    d.dot(P(0.1, 0.7), d.pal.point, 0.05)
+    d.dot(P(0.9, 0.7), d.pal.point, 0.05)
     d.poly([P(0.5, 0.56), P(0.62, 0.7), P(0.5, 0.84), P(0.38, 0.7)],
            d.pal.make, color=d.pal.make, width=0.03)
     d.text(0.5, 0.42, "M", 0.22, d.pal.make)
@@ -129,7 +129,7 @@ def _symmetric(d):
 @draws("con_fix")
 def _fix(d):
     _ln(d, (0.1, 0.84), (0.6, 0.84))
-    d.dot(P(0.6, 0.84), d.pal.edge, 0.06)
+    d.dot(P(0.6, 0.84), d.pal.point, 0.06)
     d.poly([P(0.42, 0.42), P(0.86, 0.42), P(0.86, 0.72), P(0.42, 0.72)],
            d.pal.make, color=d.pal.make, width=0.03)
     d.p.setPen(d.pen(d.pal.make, 0.06))
@@ -186,7 +186,7 @@ def _point_line(d):
 @draws("con_radius")
 def _radius(d):
     _circle(d, (0.44, 0.56), 0.34)
-    d.dot(P(0.44, 0.56), d.pal.edge, 0.05)
+    d.dot(P(0.44, 0.56), d.pal.point, 0.05)
     d.arrow(P(0.44, 0.56), P(0.68, 0.32), d.pal.make, 0.045, 0.12)
     d.text(0.82, 0.24, "R", 0.2, d.pal.make)
 

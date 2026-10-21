@@ -39,8 +39,8 @@ def _rect_center(d):
     d.poly(pts, color=d.pal.sketch, width=0.07)
     c = QPointF(0.5, 0.51)
     d.line(c, pts[1], d.pal.edge, 0.035, [2, 2])
-    d.dot(c, d.pal.edge, 0.06)
-    d.dot(pts[1], d.pal.edge, 0.055)
+    d.dot(c, d.pal.point, 0.06)
+    d.dot(pts[1], d.pal.point, 0.055)
 
 
 @draws("arc_center")
@@ -51,7 +51,7 @@ def _arc_center(d):
     d.line(c, pts[0], d.pal.edge, 0.035, [2, 2])
     d.line(c, pts[-1], d.pal.edge, 0.035, [2, 2])
     for q in (c, pts[0], pts[-1]):
-        d.dot(q, d.pal.edge, 0.055)
+        d.dot(q, d.pal.point, 0.055)
 
 
 @draws("arc_3pt")
@@ -59,7 +59,7 @@ def _arc_3pt(d):
     pts = _arc(0.5, 0.78, 0.4, 10, 160)
     _open(d, pts)
     for q in (pts[0], pts[len(pts) // 2], pts[-1]):
-        d.dot(q, d.pal.edge, 0.055)
+        d.dot(q, d.pal.point, 0.055)
 
 
 @draws("ellipse")
@@ -70,7 +70,7 @@ def _ellipse(d):
     d.p.drawEllipse(c, 0.38, 0.24)
     d.line(c, QPointF(0.88, 0.52), d.pal.edge, 0.035, [2, 2])
     d.line(c, QPointF(0.5, 0.28), d.pal.edge, 0.035, [2, 2])
-    d.dot(c, d.pal.edge, 0.05)
+    d.dot(c, d.pal.point, 0.05)
 
 
 @draws("slot")
@@ -80,8 +80,8 @@ def _slot(d):
     d.path(path, color=d.pal.sketch, width=0.07)
     a, b = QPointF(0.27, 0.51), QPointF(0.73, 0.51)
     d.line(a, b, d.pal.edge, 0.035, [2, 2])
-    d.dot(a, d.pal.edge, 0.05)
-    d.dot(b, d.pal.edge, 0.05)
+    d.dot(a, d.pal.point, 0.05)
+    d.dot(b, d.pal.point, 0.05)
 
 
 @draws("spline")
@@ -91,7 +91,7 @@ def _spline(d):
                  QPointF(0.88, 0.28))
     d.path(path, color=d.pal.sketch, width=0.07)
     for q in ((0.12, 0.72), (0.4, 0.45), (0.65, 0.6), (0.88, 0.28)):
-        d.dot(QPointF(*q), d.pal.edge, 0.05)
+        d.dot(QPointF(*q), d.pal.point, 0.05)
 
 
 @draws("offset")
@@ -126,8 +126,8 @@ def _circ(d, c, r, color=None, width=0.07, dash=None):
 @draws("construction_line")
 def _construction_line(d):
     d.line(QPointF(0.1, 0.8), QPointF(0.9, 0.2), d.pal.edge, 0.06, [3, 2])
-    d.dot(QPointF(0.1, 0.8), d.pal.edge, 0.06)
-    d.dot(QPointF(0.9, 0.2), d.pal.edge, 0.06)
+    d.dot(QPointF(0.1, 0.8), d.pal.point, 0.06)
+    d.dot(QPointF(0.9, 0.2), d.pal.point, 0.06)
 
 
 @draws("construction")
@@ -153,7 +153,7 @@ def _polyline(d):
            QPointF(0.9, 0.18)]
     _open(d, pts)
     for q in pts:
-        d.dot(q, d.pal.edge, 0.05)
+        d.dot(q, d.pal.point, 0.05)
 
 
 @draws("rect_3pt")
@@ -162,7 +162,7 @@ def _rect_3pt(d):
            QPointF(0.42, 0.88)]
     d.poly(pts, color=d.pal.sketch, width=0.07)
     for q in pts[:3]:
-        d.dot(q, d.pal.edge, 0.055)
+        d.dot(q, d.pal.point, 0.055)
 
 
 @draws("circle_2pt")
@@ -170,8 +170,8 @@ def _circle_2pt(d):
     _circ(d, (0.5, 0.5), 0.36)
     a, b = QPointF(0.245, 0.755), QPointF(0.755, 0.245)
     d.line(a, b, d.pal.edge, 0.035, [2, 2])
-    d.dot(a, d.pal.edge, 0.055)
-    d.dot(b, d.pal.edge, 0.055)
+    d.dot(a, d.pal.point, 0.055)
+    d.dot(b, d.pal.point, 0.055)
 
 
 @draws("circle_3pt")
@@ -194,7 +194,7 @@ def _circle_tangent(d):
 def _arc_tangent(d):
     d.line(QPointF(0.08, 0.78), QPointF(0.45, 0.78), d.pal.edge, 0.06)
     _open(d, _arc(0.45, 0.48, 0.3, -90, 180))
-    d.dot(QPointF(0.45, 0.78), d.pal.edge, 0.055)
+    d.dot(QPointF(0.45, 0.78), d.pal.point, 0.055)
 
 
 @draws("poly_reg")
@@ -203,7 +203,7 @@ def _poly_reg(d):
                    0.5 - 0.38 * math.sin(math.radians(30 + 60 * i)))
            for i in range(6)]
     d.poly(pts, color=d.pal.sketch, width=0.07)
-    d.dot(QPointF(0.5, 0.5), d.pal.edge, 0.05)
+    d.dot(QPointF(0.5, 0.5), d.pal.point, 0.05)
 
 
 @draws("bspline")
@@ -217,7 +217,7 @@ def _bspline(d):
                  QPointF(0.87, 0.28))
     d.path(path, color=d.pal.sketch, width=0.07)
     for q in ctrl:
-        d.dot(q, d.pal.edge, 0.05)
+        d.dot(q, d.pal.point, 0.05)
 
 
 @draws("conic")
