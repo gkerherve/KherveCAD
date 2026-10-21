@@ -119,3 +119,22 @@ def test_snaps_square_to_the_last_side_and_under_a_drawn_point(monkeypatch):
     pts.append(QPointF(20, 20))
     pt, info = sl.snap(scene, QPointF(0.3, 5.0), pts[-1])
     assert abs(pt.x()) < 1e-9
+
+
+def test_polygon_relations_come_from_its_real_sides():
+    from khervecad import sketch_constraints as sc
+    from khervecad import sketch_line as sl
+    from khervecad.model import DocumentModel
+    m = DocumentModel()
+    # level, 45°, upright, then square to... back home
+    poly = m.add_node("polygon", dict(points=[[0, 0], [10, 0], [20, 10],
+                                              [20, 20], [0, 20]]))
+    sl.polygon_relations(m, poly, ["h", "h", "v", "h", "v"])  # stale flags
+    kinds = {(r["kind"], r["refs"][-1].split(".")[1])
+             for r in sc.rows(m.root)}
+    assert ("diagonal", "e1") in kinds
+    assert ("horizontal", "e1") not in kinds
+    assert ("horizontal", "e0") in kinds and ("vertical", "e2") in kinds
+    sc.refresh(m, set())
+    p = poly.params["points"]
+    assert abs(abs(p[2][0] - p[1][0]) - abs(p[2][1] - p[1][1])) < 1e-6

@@ -1616,7 +1616,7 @@ TOOLS = [
             "circle), polygon v<i> e<i>. Kinds: coincident, horizontal "
             "/ vertical (a line or two points), parallel, perpendicular, "
             "tangent, equal, concentric, collinear, midpoint (point, "
-            "line), symmetric (point, point, line), fix, point_on; "
+            "line), symmetric (point, point, line), fix, point_on, diagonal (one line at 45°); "
             "dimensions with value (number or expression of variables, "
             "measured when omitted): distance, hdistance, vdistance, "
             "length, point_line, radius, diameter, angle (degrees). "

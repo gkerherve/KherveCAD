@@ -62,6 +62,9 @@ KINDS = {
     "coincident": ("Coincident", ["point", "point"], False),
     "horizontal": ("Horizontal", ["line"], False),
     "vertical": ("Vertical", ["line"], False),
+    # a side at 45° (or 135°) to the horizontal (2026-10-21, the user:
+    # a 45° polygon side was marked H — there was no such relation)
+    "diagonal": ("45°", ["line"], False),
     "parallel": ("Parallel", ["line", "line"], False),
     "perpendicular": ("Perpendicular", ["line", "line"], False),
     "tangent": ("Tangent", ["curve", "circle"], False),
@@ -261,6 +264,11 @@ def residuals(container, row, vals, env=None):
         else:
             a, b = geo[0], geo[1]
         return [b[1] - a[1]] if kind == "horizontal" else [b[0] - a[0]]
+    if kind == "diagonal":
+        a, b = geo[0]
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        length = math.hypot(dx, dy) or 1.0
+        return [(dx * dx - dy * dy) / length]
     if kind in ("parallel", "perpendicular", "angle", "collinear"):
         u = _unit(_sub(geo[0][1], geo[0][0]))
         v = _unit(_sub(geo[1][1], geo[1][0]))

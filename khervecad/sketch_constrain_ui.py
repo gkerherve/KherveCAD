@@ -48,7 +48,7 @@ TOOLS = [
     ("angle", "mdi.angle-acute"),
 ]
 #: glyph letters drawn on the sketch per kind
-MARK = {"coincident": "●", "horizontal": "H", "vertical": "V",
+MARK = {"coincident": "●", "horizontal": "H", "vertical": "V", "diagonal": "45°",
         "parallel": "∥", "perpendicular": "⊥", "tangent": "T",
         "equal": "=", "concentric": "◎", "collinear": "—",
         "midpoint": "M", "symmetric": "⇹", "fix": "🔒", "point_on": "∘"}
@@ -61,6 +61,7 @@ WHAT = {
                   "other.",
     "vertical": "Makes a line upright — or two points one above the "
                 "other.",
+    "diagonal": "Keeps a line at 45° to the horizontal.",
     "parallel": "Keeps two lines (or edges) parallel.",
     "perpendicular": "Keeps two lines at a right angle.",
     "tangent": "Makes a line or circle just touch a circle.",

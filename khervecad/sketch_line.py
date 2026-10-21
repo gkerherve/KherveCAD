@@ -311,6 +311,8 @@ def _relations(scene, node, info, st):
     if kind in ("h", "v"):
         rows.append(("horizontal" if kind == "h" else "vertical",
                      [ref(node, "l")]))
+    elif kind == "45":
+        rows.append(("diagonal", [ref(node, "l")]))
     prev = st.get("prev")
     if prev is not None and prev.parent is parent:
         rows.append(("coincident", [ref(prev, "p2"), ref(node, "p1")]))
@@ -376,18 +378,47 @@ def drop(scene):
 
 
 # -------------------------------------------------------- the polygon
-def polygon_relations(model, node, flags):
-    """H / V on a finished polygon's sides that snapped that way
-    (*flags*: per side, "h" | "v" | None)."""
+def polygon_relations(model, node, flags=None):
+    """Relations on a finished polygon, read from its real sides (the
+    snap flags alone once put H on a 45° side): Horizontal / Vertical,
+    45° and Perpendicular to the side before. *flags* is kept for old
+    callers and ignored."""
     from . import sketch_constraints as sc
     parent = node.parent
     if parent is None:
         return
-    for i, kind in enumerate(flags):
-        if kind in ("h", "v"):
-            try:
-                sc.add(model, parent,
-                       "horizontal" if kind == "h" else "vertical",
-                       [sc.ref_of(parent, node, "e%d" % i)])
-            except ValueError:
-                pass
+    try:
+        pts = [(float(p[0]), float(p[1])) for p in node.params["points"]]
+    except (KeyError, TypeError, ValueError, IndexError):
+        return
+    n = len(pts)
+    sides = [(pts[(i + 1) % n][0] - pts[i][0],
+              pts[(i + 1) % n][1] - pts[i][1]) for i in range(n)]
+    tol = 1e-6
+
+    def add(kind, refs):
+        try:
+            sc.add(model, parent, kind, refs)
+        except ValueError:
+            pass                                # already held / conflict
+    for i, (dx, dy) in enumerate(sides):
+        length = math.hypot(dx, dy)
+        if length < tol:
+            continue
+        e = sc.ref_of(parent, node, "e%d" % i)
+        if abs(dy) < tol * length:
+            add("horizontal", [e])
+        elif abs(dx) < tol * length:
+            add("vertical", [e])
+        elif abs(abs(dx) - abs(dy)) < tol * length:
+            add("diagonal", [e])
+        if i == 0 and n < 3:
+            continue
+        pdx, pdy = sides[i - 1]
+        plen = math.hypot(pdx, pdy)
+        square = plen > tol and abs(dx * pdx + dy * pdy) < tol * length * plen
+        # H next to V is square already; only a slanted pair needs it
+        level = lambda x, y: abs(x) < tol or abs(y) < tol
+        if square and not (level(dx, dy) and level(pdx, pdy)):
+            add("perpendicular", [sc.ref_of(parent, node, "e%d" % (i - 1)
+                                             if i else "e%d" % (n - 1)), e])
