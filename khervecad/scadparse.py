@@ -1356,6 +1356,8 @@ from . import scadfiles as _scadfiles  # noqa: E402
 _BUILDERS.update(_organic.BUILDERS)
 from . import suppress as _suppress                      # noqa: E402
 _BUILDERS.update(_suppress.BUILDERS)
+from . import sketch_constraints as _constraints         # noqa: E402
+_BUILDERS.update(_constraints.BUILDERS)
 
 #: a name in an expression (group 1; a "string" matches with no group)
 #: and whether it is called (group 2)
@@ -1379,6 +1381,7 @@ def _fold_container(node: CadNode):
     - hull of exactly two equal circles -> a line node (that is how
       KherveCAD compiles lines).
     """
+    _constraints.take(node)
     folded = _organic.fold_material(node)
     if folded is not None:
         return folded
@@ -1523,6 +1526,7 @@ def parse_scad(text: str, base_dir=None):
     parser = Parser(text, base_dir)
     root = parser.parse_program()
     _suppress.restore_rollbacks(root)
+    _constraints.take(root)
     _prune_dead(root)
     return root, parser.warnings
 

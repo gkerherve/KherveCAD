@@ -681,3 +681,49 @@ def auto_constrain(model, container, tol_deg=3.0, tol_mm=0.5):
                 except ValueError:
                     pass
     return added
+
+
+# ------------------------------------------------- in the OpenSCAD code
+HELPER = """\
+module kcad_constraints(rows = "") { }"""
+
+
+def code(container):
+    """The container's rows as one OpenSCAD statement (a no-op module
+    call carrying them as JSON text)."""
+    import json
+    text = json.dumps(rows(container), separators=(",", ":"))
+    text = text.replace("\\", "\\\\").replace('"', '\\"')
+    return 'kcad_constraints("%s");' % text
+
+
+def _b_constraints(parser, positional, named):
+    """Parsed back as a marker child; `take` moves its rows onto the
+    container (scadparse._fold_container / parse_scad for the root)."""
+    import json
+    from .model import CadNode
+    text = str(named.get("rows", positional[0] if positional else "[]"))
+    node = CadNode("union", "Group", {})
+    try:
+        node._kcad_constraints = json.loads(text)
+    except ValueError:
+        parser.warn("kcad_constraints: unreadable rows dropped")
+        node._kcad_constraints = []
+    return node
+
+
+BUILDERS = {"kcad_constraints": _b_constraints}
+
+
+def take(container):
+    """Move a parsed kcad_constraints marker's rows onto *container*."""
+    for child in list(container.children):
+        found = getattr(child, "_kcad_constraints", None)
+        if found is not None:
+            container.remove(child)
+            if found:
+                container.params[KEY] = found
+
+
+def uses(root):
+    return any(n.params.get(KEY) for n in root.walk())

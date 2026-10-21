@@ -647,6 +647,16 @@ UNTAGGED_TYPES = frozenset({"root", "variables", "masters", "component",
                             "scad_raw"})
 
 
+def _constraint_line(node, lines, indent):
+    """A container's sketch constraints as a `kcad_constraints(...)`
+    statement first in its block (sketch_constraints.code), so they
+    survive the program — export, import, Apply code."""
+    if node.params.get("constraints"):
+        from . import sketch_constraints
+        lines.append(("    " * indent + sketch_constraints.code(node),
+                      node))
+
+
 def name_tag(name) -> str:
     """The bracketed label of "Cube [Body]" -> "Body", else ""."""
     match = _TAG_RE.match(str(name or ""))
@@ -839,6 +849,8 @@ class CadNode:
             # "variables" is a purely organisational group: its children
             # (assignments) are emitted at the same level, so the code
             # and OpenSCAD scope are exactly as if they were loose.
+            if self.type == "root":
+                _constraint_line(self, lines, indent)
             for child in self.children:
                 child.emit(lines, indent, spans)
         elif self.type == "scad_raw":
@@ -878,6 +890,7 @@ class CadNode:
                 lines.append((head + " { }" + note, self))
             else:
                 lines.append((head + " {" + note, self))
+                _constraint_line(self, lines, indent + 1)
                 for child in self.children:
                     child.emit(lines, indent + 1, spans)
                 lines.append((pad + "}", self))
@@ -942,6 +955,7 @@ class CadNode:
         name = (_MODULE_NAMES or {}).get(self.id) \
             or module_name(self.name)
         lines.append((pad + f"module {name}() {{", self))
+        _constraint_line(self, lines, indent + 1)
         for child in self.children:
             child.emit(lines, indent + 1, spans)
         lines.append((pad + "}", self))

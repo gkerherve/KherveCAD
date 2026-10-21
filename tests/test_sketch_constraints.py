@@ -279,3 +279,24 @@ def test_a_typed_value_holds_and_the_rest_follows(app):
     finally:
         win._dirty = False
         win.close()
+
+
+def test_constraints_survive_the_openscad_program(app):
+    """Export / import / Apply code went through the program, which
+    dropped them (the user: lost when calling the file back)."""
+    from khervecad import scadparse
+    m = DocumentModel()
+    o = m.add_node("component", {})
+    d = m.add_node("difference", {}, parent=o)
+    e = m.add_node("linear_extrude", {}, parent=d)
+    m.add_node("polygon", dict(points=[[0, 0], [40, 3], [20, 30]]),
+               parent=e)
+    sc.add(m, e, "horizontal", ["0.e0"])
+    a, b = _lines(m)
+    sc.add(m, m.root, "parallel", [_ref(m, a, "l"), _ref(m, b, "l")])
+    root, warnings = scadparse.parse_scad(m.to_scad())
+    assert not warnings
+    ext = next(n for n in root.walk() if n.type == "linear_extrude")
+    assert sc.rows(ext) == sc.rows(e)
+    assert [c.type for c in ext.children] == ["polygon"]   # no marker
+    assert sc.rows(root) == sc.rows(m.root)

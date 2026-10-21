@@ -3045,9 +3045,14 @@ into a new module and import.
                        polygon points; an expression param is a given).
                        Rows live on the CONTAINER as `params["constraints"]`
                        {kind, refs ["<child index>.<entity>"], value} — child
-                       indices survive undo, node ids do not; codegen ignores
-                       them, so the program is plain OpenSCAD (a .scad round
-                       trip drops them). Entities: line p1 p2 l, rect v0-v3
+                       indices survive undo, node ids do not. Codegen writes
+                       them first in the container's block as
+                       `kcad_constraints("<json>");` (a no-op helper module;
+                       the root's at top level, an Object's in its module),
+                       and the importer's builder returns a marker that
+                       `take` moves back onto the container — they survive
+                       .scad export / import and Apply code (they were lost
+                       there until 2026-10-21). Entities: line p1 p2 l, rect v0-v3
                        e0-e3 c, circle c o, polygon v<i> e<i>. SolidCraft's
                        13 kinds (polygon → point_on) + 8 dimensions
                        (distance, h/v distance, length, point-line, radius,
