@@ -634,8 +634,7 @@ class ObjectTree(QTreeWidget):
         elif event.matches(QKeySequence.Paste):
             self.paste_clipboard()
         elif event.matches(QKeySequence.Delete):
-            for node in self._top_level_selection():
-                self.model.remove_node(node)
+            self._delete(self._top_level_selection())
         elif event.key() == Qt.Key_Up and \
                 event.modifiers() & Qt.ControlModifier:
             self.shift_selection(-1)
@@ -1019,7 +1018,7 @@ class ObjectTree(QTreeWidget):
         menu.addSeparator()
         menu.addAction(icons.icon("mdi.delete-outline"),
                        language.tr("Delete"),
-                       lambda: [self.model.remove_node(n) for n in roots])
+                       lambda: self._delete(roots))
 
     def _modifier_menu(self, menu, nodes):
         """OpenSCAD's debug modifiers: # highlight, % background (drawn
@@ -1035,6 +1034,11 @@ class ObjectTree(QTreeWidget):
                 self.model.set_modifier(n, m) for n in nodes])
             act.setCheckable(True)
             act.setChecked(current == {mod})
+
+    def _delete(self, nodes):
+        """Delete, asking whether to keep what a container holds."""
+        from . import delete_ui
+        delete_ui.delete_nodes(self, self.model, list(nodes))
 
     def _suppress_menu(self, menu, nodes):
         """SolidWorks' Suppress and rollback bar: switch a feature off

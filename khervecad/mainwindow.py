@@ -930,8 +930,9 @@ class MainWindow(QMainWindow):
             self.model.ungroup(node)
 
     def _delete_selection(self):
-        for node in self.builder.active_tree().selected_nodes():
-            self.model.remove_node(node)
+        from . import delete_ui
+        delete_ui.delete_nodes(
+            self, self.model, self.builder.active_tree().selected_nodes())
 
     def _duplicate_selection(self):
         for node in self.builder.active_tree().selected_nodes():

@@ -3119,6 +3119,12 @@ into a new module and import.
                        (tools + MCP blueprint actions `revision`,
                        `baseline`, `chain`); registered into
                        `blueprint_items.NOTE_CLASSES` from its bottom.
+  - `delete_ui.py`   — deleting a node that HOLDS others asks (2026-10-21,
+                       the user lost an extrude with its Difference): Keep
+                       what's inside (`model.ungroup`) / Delete everything
+                       / Cancel; leaves go without a question. Tree right-
+                       click, Delete key, Edit ▸ Delete. Tests answer
+                       through `ask_hook` (conftest: "all").
   - `polygon_draw.py` — drawing a polygon in the sketch (2026-10-19, the
                        user: an "end" always shown, close by): a Finish /
                        Undo point / Cancel bar at the bottom of the view

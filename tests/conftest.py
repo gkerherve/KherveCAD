@@ -133,3 +133,12 @@ def _neutral_view_settings():
             settings.remove(key)
         else:
             settings.setValue(key, value)
+
+
+@pytest.fixture(autouse=True)
+def _delete_asks_nothing(monkeypatch):
+    """Deleting a container asks keep-or-all in a modal box, which would
+    hang an offscreen test: answer 'delete everything', the old
+    behaviour (tests of the question set their own answer)."""
+    from khervecad import delete_ui
+    monkeypatch.setattr(delete_ui, "ask_hook", lambda nodes: delete_ui.ALL)
