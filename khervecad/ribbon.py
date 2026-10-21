@@ -420,13 +420,13 @@ def _panel_actions(win, key):
     from .view2d import MEASURE
     if key == "sketch":
         from . import sketch_mode
-        from . import normal_to
-        from . import face_sketch
-        first = [sketch_mode.create_action(win),
-                 normal_to.action(win), face_sketch.action(win)] \
+        from .view2d import SELECT
+        # ONE Sketch Mode button does create / edit / on a face (the
+        # user); Select is the tab's first button already
+        first = [sketch_mode.create_action(win)] \
             if style_of(win) in ("Fusion", "SolidWorks") else []
         return title, first + [a for a in win._tool_group.actions()
-                               if a.data() != MEASURE
+                               if a.data() not in (MEASURE, SELECT)
                                and not str(a.data()).startswith(
                                    ("con_", "sk_"))]
     if key == "mechanical":

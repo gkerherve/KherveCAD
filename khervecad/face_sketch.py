@@ -71,6 +71,15 @@ def euler_for(normal):
     return _euler_zyx(m)
 
 
+def _inside(node, outer):
+    probe = node.parent
+    while probe is not None:
+        if probe is outer:
+            return True
+        probe = probe.parent
+    return False
+
+
 def group_of(node):
     probe = node
     while probe is not None:
@@ -82,10 +91,15 @@ def group_of(node):
 
 # =================================================================== Qt
 
-def start(window):
-    """Click a face, then sketch on it."""
+def start(window, only=None):
+    """Click a face, then sketch on it (of the parts *only* holds, when
+    given — the selected part)."""
     from . import language, meshedit_ui
     parts = meshedit_ui._parts(window)
+    if only:
+        keep = [p for p in parts if any(p[0] is n or _inside(n, p[0])
+                                        or _inside(p[0], n) for n in only)]
+        parts = keep or parts
     if not parts:
         window.statusBar().showMessage(language.tr(
             "No part to sketch on yet."), 5000)

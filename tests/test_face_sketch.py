@@ -97,3 +97,27 @@ def test_an_empty_face_sketch_goes_on_exit(win):
     for _ in range(3):
         _APP.processEvents()
     assert group.parent is None
+
+
+def test_sketch_mode_with_a_part_selected_asks_for_its_face(win):
+    from khervecad import normal_to
+    m = win.model
+    cube = m.add_node("cube", dict(width=10, depth=10, height=10))
+    other = m.add_node("cube", dict(x=40))
+    win.builder.tree.select_nodes([cube])
+    sketch_mode.create_action(win).trigger()
+    view = win.view3d
+    assert view._pick_cb is not None
+    assert [n for n, _t in view._pick_groups] == [cube]   # only its faces
+    view._pick_cb(dict(kind="face", pos=[5, 5, 10], dir=[0, 0, 1]), cube)
+    for _ in range(3):
+        _APP.processEvents()
+    assert sketch_mode.sketching(win) and win._face_sketch is not None
+    act = sketch_mode.create_action(win)
+    assert act.text() == "Exit Sketch Mode"
+    act.trigger()                                 # the same button exits
+    for _ in range(3):
+        _APP.processEvents()
+    assert not sketch_mode.sketching(win)
+    assert act.text() == "Sketch Mode"
+    del other, normal_to

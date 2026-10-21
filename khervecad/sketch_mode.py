@@ -24,13 +24,15 @@ from PyQt5.QtWidgets import QAction, QLabel, QPushButton
 from . import icons, language, tooltips
 
 tooltips.TIPS.setdefault("create_sketch", (
-    "Create sketch",
-    "Draw in 2D: the canvas turns into the sketch on the current plane "
-    "(Top XY, Front XZ or Side YZ). Finish Sketch brings the 3D model "
-    "back.",
-    ["Click Create sketch (or any drawing tool).",
-     "Pick the plane in the sketch's own bar, draw.",
-     "Click Finish Sketch."], None))
+    "Sketch Mode",
+    "Sketch in 2D, SolidWorks' way: the 3D view turns to look straight "
+    "at where you sketch and becomes the sketch. What it sketches on "
+    "follows what is selected.",
+    ["A 2D shape (or the extrude holding it) selected: edit that sketch.",
+     "A part selected: click the face of it to sketch on.",
+     "Nothing selected: the current plane (Top, Front or Side).",
+     "Click Exit Sketch Mode (same button) to turn back to 3D."],
+    "Right-click a shape in the tree ▸ Edit Sketch does the same."))
 
 
 #: styles with one canvas and the other view small in its corner
@@ -52,7 +54,7 @@ def create_action(win):
     act = getattr(win, "_create_sketch_act", None)
     if act is None:
         act = QAction(icons.icon("mdi.pencil-box-outline", "#0696d7"),
-                      language.tr("Create Sketch"), win)
+                      language.tr("Sketch Mode"), win)
         act.setData("create_sketch")
         from . import toolbars
         toolbars.remember_glyph(act, "mdi.pencil-box-outline", "draw")
@@ -80,8 +82,8 @@ def sync_create(win):
     """The button reads Exit Sketch while sketching."""
     act = getattr(win, "_create_sketch_act", None)
     if act is not None:
-        act.setText(language.tr("Exit Sketch") if sketching(win)
-                    else language.tr("Create Sketch"))
+        act.setText(language.tr("Exit Sketch Mode") if sketching(win)
+                    else language.tr("Sketch Mode"))
 
 
 class _FinishButton(QPushButton):

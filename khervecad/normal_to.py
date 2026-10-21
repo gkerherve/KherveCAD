@@ -125,11 +125,17 @@ def edit(window, node=None):
 
 
 def create(window):
-    """Create Sketch: on the selected shape's plane, else on the plane
-    the sketch shows — the camera only turns (the user)."""
+    """Sketch Mode, one button for every way in (the user):
+    a 2D shape (or the part holding one) selected — edit that sketch;
+    a solid part selected — click one of its faces to sketch on;
+    nothing — the plane the sketch shows. The camera only turns."""
     node = sketch_node(window)
-    if node is not None and shape_frame(window, node) is not None:
+    if node is not None:
         return edit(window, node)
+    picked = window.builder.active_tree().selected_nodes()
+    if picked:
+        from . import face_sketch
+        return face_sketch.start(window, only=picked)
     plane = getattr(window.view2d.scene(), "plane", "Top (XY)")
     return turn_to(window, plane if plane in CAMERA else "Top (XY)")
 
