@@ -509,6 +509,46 @@ def _invert3(m):
              (a * e - b * d) / det]]
 
 
+def _profile_root(node):
+    """The node a 2D shape's profile hangs from: its nearest extrude (or
+    other 3D maker) — else its topmost 2D ancestor."""
+    probe, top = node.parent, node
+    while probe is not None and probe.parent is not None:
+        if probe.type in ("linear_extrude", "rotate_extrude") or \
+                probe.category == SHAPE_3D:
+            return probe
+        top = probe
+        probe = probe.parent
+    return top
+
+
+def _profile_shapes(focus):
+    """The focused shapes plus every other 2D shape of their profiles,
+    in tree order, once each."""
+    out, seen = [], set()
+    for node in focus:
+        root = _profile_root(node)
+        for n in root.walk():
+            if n.category == SHAPE_2D and n.type in _ITEM_CLASSES and \
+                    n.visible and n.id not in seen:
+                seen.add(n.id)
+                out.append(n)
+    return out
+
+
+def _is_cut(node) -> bool:
+    """Is *node* subtracted by a 2D Difference above it (not its first
+    child's line)?"""
+    child, probe = node, node.parent
+    while probe is not None:
+        if probe.type == "difference":
+            return probe.children and probe.children[0] is not child
+        if probe.type in ("linear_extrude", "rotate_extrude"):
+            return False
+        child, probe = probe, probe.parent
+    return False
+
+
 def _produces_3d(node) -> bool:
     """True if the subtree makes solid geometry (an assemblable part).
     A Linked copy renders its master, so it counts too."""
@@ -982,15 +1022,28 @@ class SketchScene(QGraphicsScene):
             # to move) in its own sketch coordinates, at any plane — so
             # a profile buried in a part can be reshaped from the 2D
             # view without opening the Top plane.
-            for node in focus:
+            # ... with the other shapes of the same profile (a polygon
+            # and the circle a Difference cuts from it): shown with it,
+            # the cut ones dashed — the circle was invisible (2026-10-21)
+            focus_ids = {n.id for n in focus}
+            for node in _profile_shapes(focus):
                 cls = _ITEM_CLASSES.get(node.type)
                 if cls is None:
                     continue
                 item = cls(node, self)
                 self.addItem(item)
                 self._items[node.id] = item
-                item.setSelected(True)
-                self._apply_point_hl(item, node)
+                if _is_cut(node):
+                    pen = QPen(item.pen())
+                    pen.setStyle(Qt.DashLine)
+                    item.setPen(pen)
+                    item.setBrush(QBrush(Qt.NoBrush))
+                    item.setToolTip(language.tr(
+                        "{name} — cut away by the Difference").format(
+                            name=node.name))
+                if node.id in focus_ids:
+                    item.setSelected(True)
+                    self._apply_point_hl(item, node)
             self.updating = False
             return
 

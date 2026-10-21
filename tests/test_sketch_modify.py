@@ -178,3 +178,28 @@ def test_deleting_a_shape_renumbers_the_others(app):
     assert sc.rows(m.root)[0]["refs"] == ["0.l", "1.l"]
     m.remove_node(b)
     assert sc.rows(m.root) == []
+
+
+def test_a_selected_profile_shows_what_it_is_combined_with(app):
+    """Selecting the polygon of polygon-minus-circle showed the polygon
+    alone: the circle cut from it was invisible in 2D."""
+    from PyQt5.QtCore import Qt as _Qt
+    from khervecad.view2d import SketchScene, SketchView
+    m = DocumentModel()
+    scene = SketchScene(m)
+    view = SketchView(scene)
+    view.show()
+    try:
+        e = m.add_node("linear_extrude", dict(height=5))
+        d = m.add_node("difference", {}, parent=e)
+        poly = m.add_node("polygon", dict(points=[[0, 0], [30, 0],
+                                                  [30, 20], [0, 20]]),
+                          parent=d)
+        circ = m.add_node("circle", dict(x=15, y=10, radius=4), parent=d)
+        scene.set_highlight([poly])
+        QApplication.processEvents()
+        assert poly.id in scene._items and circ.id in scene._items
+        assert scene._items[poly.id].isSelected()
+        assert scene._items[circ.id].pen().style() == _Qt.DashLine
+    finally:
+        view.close()
