@@ -100,3 +100,22 @@ def test_a_horizontal_line_still_follows_the_grid(monkeypatch):
     pt, info = sl.snap(scene, QPointF(3.4567, 0.01), QPointF(0, 0))
     assert info["angle"] == "h"
     assert abs(pt.x() - 3.5) < 1e-9 and pt.y() == 0
+
+
+def test_snaps_square_to_the_last_side_and_under_a_drawn_point(monkeypatch):
+    from types import SimpleNamespace
+    from PyQt5.QtCore import QPointF
+    from khervecad import sketch_line as sl
+    monkeypatch.setattr(sl, "sketch_points", lambda s, skip=None: [])
+    monkeypatch.setattr(sl, "_px", lambda s, p: 0.5)
+    pts = [QPointF(0, 0), QPointF(10, 5)]   # a side at ~27°
+    scene = SimpleNamespace(snap_enabled=False, grid_size=1.0,
+                            _poly_points=pts)
+    # square to that side, slightly off
+    pt, info = sl.snap(scene, QPointF(7.2, 10.0), pts[-1])
+    assert info["angle"] == "perp"
+    assert abs((pt.x() - 10) * 10 + (pt.y() - 5) * 5) < 1e-6
+    # lined up under the first point
+    pts.append(QPointF(20, 20))
+    pt, info = sl.snap(scene, QPointF(0.3, 5.0), pts[-1])
+    assert abs(pt.x()) < 1e-9

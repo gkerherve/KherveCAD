@@ -72,6 +72,12 @@ def snap(scene, raw, start=None, skip=None):
     from PyQt5.QtCore import QPointF
     info = dict(point=None, angle=None, guides=[], origin=False)
     pts = sketch_points(scene, skip)
+    draft = _draft(scene)
+    # the points of the shape being drawn count too: line up with them
+    # (the user: the point above was just above, and nothing snapped)
+    pts = pts + [(QPointF(q), None, "draft") for q in draft
+                 if start is None or (q - start).manhattanLength() > 1e-9]
+    prev = draft[-2] if len(draft) >= 2 and start is not None else None
     tol = _px(scene, SNAP_PX)
     best = None
     for q, node, name in pts:
@@ -81,7 +87,7 @@ def snap(scene, raw, start=None, skip=None):
     if best is not None:
         _d, q, node, name = best
         info["point"] = (node, name) if node is not None else None
-        info["origin"] = node is None
+        info["origin"] = node is None and name == "origin"
         if start is not None:
             info["angle"] = _angle_of(start, q)
         return QPointF(q), info
@@ -103,20 +109,34 @@ def snap(scene, raw, start=None, skip=None):
                     info["guides"].append((QPointF(start),
                                            QPointF(x, y)))
                     break
+            if info["angle"] is None and prev is not None:
+                # square to the last side (SolidWorks' perpendicular)
+                px, py = start.x() - prev.x(), start.y() - prev.y()
+                pl = math.hypot(px, py)
+                if pl > 1e-9:
+                    nx, ny = -py / pl, px / pl
+                    t = dx * nx + dy * ny
+                    off = abs(dx * px + dy * py) / pl
+                    if L > 1e-9 and math.degrees(math.asin(
+                            min(1.0, off / L))) < ANGLE_DEG:
+                        x, y = start.x() + t * nx, start.y() + t * ny
+                        info["angle"] = "perp"
+                        info["guides"].append((QPointF(start),
+                                               QPointF(x, y)))
     # line up with an existing point's x or y (the free coordinate)
     atol = _px(scene, ALIGN_PX)
     if info["angle"] != "v":
         bx = min(((abs(q.x() - x), q) for q, _n, _m in pts),
                  key=lambda t: t[0], default=None)
         if bx is not None and bx[0] <= atol and info["angle"] not in \
-                ("45",):
+                ("45", "perp"):
             x = bx[1].x()
             info["guides"].append((QPointF(bx[1]), QPointF(x, y)))
     if info["angle"] != "h":
         by = min(((abs(q.y() - y), q) for q, _n, _m in pts),
                  key=lambda t: t[0], default=None)
         if by is not None and by[0] <= atol and info["angle"] not in \
-                ("45",):
+                ("45", "perp"):
             y = by[1].y()
             info["guides"].append((QPointF(by[1]), QPointF(x, y)))
     if getattr(scene, "snap_enabled", False):
@@ -129,7 +149,9 @@ def snap(scene, raw, start=None, skip=None):
             abs(q.x() - x) < 1e-9 for q, _n, _m in pts) and lined
         fixed_y = info["angle"] == "h" or any(
             abs(q.y() - y) < 1e-9 for q, _n, _m in pts) and lined
-        if info["angle"] == "45" and start is not None:
+        if info["angle"] == "perp":
+            pass
+        elif info["angle"] == "45" and start is not None:
             d = round((x - start.x()) / g) * g
             x = start.x() + d
             y = start.y() + (d if (y - start.y()) * (x - start.x()) >= 0
@@ -140,6 +162,17 @@ def snap(scene, raw, start=None, skip=None):
             if not fixed_y:
                 y = round(y / g) * g
     return QPointF(x, y), info
+
+
+def _draft(scene):
+    """Points of the shape being drawn: the polygon's, or the line
+    chain's."""
+    from PyQt5.QtCore import QPointF
+    poly = getattr(scene, "_poly_points", None)
+    if poly:
+        return [QPointF(q) for q in poly]
+    st = getattr(scene, "_ln", None)
+    return list(st.get("chain", [])) if st else []
 
 
 def _angle_of(a, b):
@@ -210,7 +243,7 @@ def draw_overlay(scene, start, pt, info):
         unit = units.symbol(getattr(scene.model, "unit", "mm")) \
             if hasattr(units, "symbol") else "mm"
         text = readout_text(start, pt, unit)
-        tag = {"h": "  H", "v": "  V", "45": "  45°"}.get(
+        tag = {"h": "  H", "v": "  V", "45": "  45°", "perp": "  ⊥"}.get(
             info.get("angle"), "")
         label = QGraphicsSimpleTextItem(text + tag)
         f = QFont()
@@ -240,6 +273,7 @@ def press(scene, event):
     if st["start"] is None:
         st["start"], st["start_point"] = pt, info.get("point")
         st["start_origin"] = info.get("origin")
+        st["chain"] = [pt]
         draw_overlay(scene, pt, pt, info)
         scene.status.emit("Line: click where it ends — it snaps to "
                           "points, H / V / 45° and lined-up points. "
@@ -256,6 +290,7 @@ def press(scene, event):
     scene.node_created.emit(node)
     _relations(scene, node, info, st)
     st["start"], st["prev"] = pt, node
+    st.setdefault("chain", []).append(pt)
     st["start_point"], st["start_origin"] = None, False
     draw_overlay(scene, pt, pt, info)
 
@@ -279,6 +314,8 @@ def _relations(scene, node, info, st):
     prev = st.get("prev")
     if prev is not None and prev.parent is parent:
         rows.append(("coincident", [ref(prev, "p2"), ref(node, "p1")]))
+        if info.get("angle") == "perp":
+            rows.append(("perpendicular", [ref(prev, "l"), ref(node, "l")]))
     elif st.get("start_point"):
         n, name = st["start_point"]
         r = ref(n, name)
@@ -316,6 +353,7 @@ def move(scene, event):
 def end_chain(scene):
     st = _state(scene)
     st["start"], st["prev"], st["start_point"] = None, None, None
+    st["chain"] = []
     _clear(scene)
 
 
