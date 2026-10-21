@@ -524,3 +524,17 @@ def test_closing_the_window_leaves_nothing_keeping_the_app_alive(app):
                if w.isVisible() and w.testAttribute(Qt.WA_QuitOnClose)]
     assert not keeping, keeping
     toolbar_style.apply(win, toolbar_style.CLASSIC)
+
+
+def test_vibe_model_off_keeps_the_solidworks_tool_column_away(window, app):
+    """Turning Vibe Model off brought the left tool column back in the
+    SolidWorks layout (the user)."""
+    toolbar_style.apply(window, "SolidWorks")
+    assert not window._tools_bar.isVisibleTo(window)
+    window.set_vibe_model(True)
+    window.set_vibe_model(False)
+    assert not window._tools_bar.isVisibleTo(window)
+    toolbar_style.apply(window, "KherveCAD")
+    window.set_vibe_model(True)
+    window.set_vibe_model(False)
+    assert window._tools_bar.isVisibleTo(window)

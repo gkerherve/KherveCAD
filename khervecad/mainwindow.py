@@ -1717,8 +1717,12 @@ class MainWindow(QMainWindow):
         self.view2d.setVisible(not on)
         from . import sketch_mode         # Fusion: one canvas at a time
         sketch_mode.after_vibe(self)
+        # only the classic layout has the tool column (Fusion and
+        # SolidWorks carry every tool on the ribbon): Vibe Model off once
+        # brought it back in SolidWorks (the user)
         self._tools_bar.setVisible(
-            not on and getattr(self, "_interface_style", "") != "Fusion")
+            not on and getattr(self, "_interface_style", "KherveCAD")
+            not in ("Fusion", "SolidWorks"))
         for act in self._options_bar.actions():
             if act not in self._vibe_keep:
                 act.setVisible(not on)
