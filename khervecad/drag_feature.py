@@ -34,8 +34,9 @@ KINDS = ("linear_extrude", "rotate_extrude")
 SIZE_PX = 70
 COLOUR = "#1e88e5"
 MIN_HEIGHT = 0.01
-#: a new extrude's first height, before it is dragged (SolidWorks' 10)
-FIRST_HEIGHT = 10.0
+#: a new extrude starts FLAT on its shape — the arrow sits on the shape
+#: and is pulled up from zero (the user); the smallest valid height
+FIRST_HEIGHT = 0.01
 #: the mark on the mirror([0, 0, 1]) that makes an extrude go DOWN
 REVERSE = "reverse"
 
@@ -133,8 +134,9 @@ def start(window, node=None, quiet=False, created=False):
     extrude again."""
     from . import language
     view = window.view3d
-    if view.edit_tool is not None and not isinstance(view.edit_tool,
-                                                     DragFeature):
+    if isinstance(view.edit_tool, DragFeature):
+        view.edit_tool.exit()            # one arrow at a time
+    if view.edit_tool is not None:
         if not quiet:
             window.statusBar().showMessage(language.tr(
                 "Finish what the 3D view is doing first (Esc)."), 5000)
@@ -146,20 +148,54 @@ def start(window, node=None, quiet=False, created=False):
                 _extrude_above(sel[0]) is None:
             node = _new_extrude(window, sel[0])
             created = True
+    if created and node is not None and node.type == "linear_extrude":
+        window.model.set_param(node, "height", FIRST_HEIGHT)
     tool = DragFeature(window, node, created)
     if tool.target() is None:
         if quiet:
             return None
         pick(window)                       # like Fillet: click it in 3D
         return None
-    tool.show_buttons()
+    # no OK / Cancel (the user): the arrow belongs to the selection —
+    # select something else and it goes, select the extrude and it is back
+    tool.auto = True
     view.edit_tool = tool
     view.setMouseTracking(True)
     view.update()
     window.statusBar().showMessage(language.tr(
-        "Drag the blue arrow up or down (Ctrl snaps) — OK keeps it, "
-        "Cancel or Esc takes it back."), 8000)
+        "Drag the blue arrow up or down (Ctrl snaps); click the value to "
+        "type it. Select something else when done."), 8000)
     return tool
+
+
+def step_aside(view):
+    """An arrow that came up by itself (a selected extrude) makes way
+    for any other 3D tool."""
+    tool = view.edit_tool
+    if isinstance(tool, DragFeature) and tool.auto and tool.drag is None:
+        tool.exit()
+
+
+def follow_selection(window, nodes):
+    """Selecting an extrude shows its arrow (the user: "clicking on the
+    linear extrude should show us this Z"); selecting something else
+    takes an arrow that came that way down again."""
+    view = window.view3d
+    tool = view.edit_tool
+    node = nodes[0] if len(nodes) == 1 else None
+    target = node if node is not None and node.type in KINDS else None
+    if isinstance(tool, DragFeature):
+        if not tool.auto or tool.drag is not None:
+            return
+        if target is not None and tool.target() is target:
+            return
+        tool.exit()
+    if target is None or view.edit_tool is not None or \
+            getattr(view, "_pick_cb", None) is not None:
+        return
+    tool = start(window, target, quiet=True)
+    if tool is not None:
+        tool.auto = True
 
 
 def _extrude_above(node):
@@ -171,10 +207,11 @@ def _extrude_above(node):
     return None
 
 
-def _new_extrude(window, shape):
+def _new_extrude(window, shape, op="linear_extrude"):
     model = window.model
-    ext = model.wrap_nodes([shape], "linear_extrude")
-    model.set_param(ext, "height", FIRST_HEIGHT)
+    ext = model.wrap_nodes([shape], op)
+    if op == "linear_extrude":
+        model.set_param(ext, "height", FIRST_HEIGHT)
     window.builder.active_tree().select_nodes([ext])
     return ext
 
@@ -203,7 +240,7 @@ def flat_shapes(window):
     return out
 
 
-def pick(window):
+def pick(window, op="linear_extrude"):
     """Nothing to drag selected: click a 2D shape (rectangle, polygon,
     circle…) in the 3D view — it is extruded and its Z arrow shows (the
     user: "select the shape you want to extrude in the 3D view ... a Z
@@ -226,11 +263,13 @@ def pick(window):
             window.builder.active_tree().select_nodes([ext])
             start(window, ext)
         else:
-            start(window, _new_extrude(window, node), created=True)
+            start(window, _new_extrude(window, node, op), created=True)
 
     window.view3d.start_pick(
         picked, groups=shapes,
-        banner=language.tr("Click the 2D shape to extrude · Esc cancels"),
+        banner=(language.tr("Click the 2D shape to extrude · Esc cancels")
+                if op == "linear_extrude" else language.tr(
+                    "Click the 2D shape to revolve about Z · Esc cancels")),
         labeler=lambda desc, node: getattr(node, "name", ""))
 
 
@@ -248,7 +287,7 @@ def action(window):
         ["Click this, then click a rectangle, polygon or circle in the 3D "
          "view (or select one first).",
          "Drag the arrow up or down — Ctrl snaps to the grid.",
-         "OK keeps it; Cancel or Esc takes it back."],
+         "Select something else when done (Esc takes a new one back)."],
         "Linear extrude and Rotate extrude show the arrow by themselves."))
     act = QAction(icons.icon("mdi.arrow-expand-up"),
                   language.tr("Drag extrude"), window)
@@ -270,7 +309,10 @@ class DragFeature:
         self.drag = None
         self.hover = False
         self.created = created
+        self.auto = False                 # came up by selecting it
         self.buttons = []
+        self.editor = None                # the typed value's box
+        self._label = None                # where the value is drawn
         ext = self.target()
         self.original = None if ext is None else (
             ext, signed_height(ext) if ext.type == "linear_extrude"
@@ -293,6 +335,12 @@ class DragFeature:
             b.clicked.connect(slot)
             b.adjustSize()
             self.buttons.append(b)
+        from PyQt5.QtCore import QTimer
+        self._watch = QTimer(self.buttons[0])
+        self._watch.setInterval(300)
+        # another tool took the 3D view: these buttons go with this one
+        self._watch.timeout.connect(self._check_still_mine)
+        self._watch.start()
         total = sum(b.width() for b in self.buttons) + 10
         x = (self.view.width() - total) // 2
         for b in self.buttons:
@@ -300,6 +348,14 @@ class DragFeature:
             b.show()
             b.raise_()
             x += b.width() + 10
+
+    def _check_still_mine(self):
+        try:
+            import sip
+        except ImportError:                       # pragma: no cover
+            from PyQt5 import sip
+        if sip.isdeleted(self.view) or self.view.edit_tool is not self:
+            self.exit()
 
     def ok(self):
         from . import language
@@ -430,11 +486,29 @@ class DragFeature:
         return True
 
     def exit(self):
+        watch = getattr(self, "_watch", None)
+        if watch is not None:
+            try:
+                watch.stop()
+            except RuntimeError:                 # already deleted
+                pass
+            self._watch = None
+        if self.editor is not None:
+            self.editor.deleteLater()
+            self.editor = None
         for b in self.buttons:
-            b.hide()
-            b.deleteLater()
+            try:
+                b.hide()
+                b.deleteLater()
+            except RuntimeError:                 # went with its window
+                pass
         self.buttons = []
-        if self.view.edit_tool is self:
+        try:
+            from PyQt5 import sip
+            gone = sip.isdeleted(self.view)
+        except Exception:                        # pragma: no cover
+            gone = False
+        if not gone and self.view.edit_tool is self:
             self.view.edit_tool = None
             self.view.setMouseTracking(False)
             self.view.update()
@@ -443,6 +517,10 @@ class DragFeature:
         from PyQt5.QtCore import Qt
         if event.button() != Qt.LeftButton:
             return False
+        lab = self._label
+        if lab is not None and lab.contains(event.pos()):
+            self.edit_value()
+            return True
         scr = self._screen()
         if scr is None or not self._hit(event.pos().x(), event.pos().y(),
                                         scr):
@@ -529,6 +607,42 @@ class DragFeature:
         except (TypeError, ValueError):
             return 1.0
 
+    def edit_value(self):
+        """Type the height / angle: a box over the value on the model —
+        the same number as in Properties (the user)."""
+        from PyQt5.QtWidgets import QLineEdit
+        node = self.target()
+        if node is None or self._label is None:
+            return None
+        linear = node.type == "linear_extrude"
+        now = signed_height(node) if linear else \
+            _num(node.params.get("angle", 360.0), 360.0)
+        box = self.editor = QLineEdit("%g" % round(now, 4), self.view)
+        box.setFixedWidth(max(70, self._label.width() + 10))
+        box.move(self._label.topLeft())
+        box.selectAll()
+
+        def done():
+            text = box.text().strip().replace(",", ".")
+            self.editor = None
+            box.deleteLater()
+            try:
+                value = float(text)
+            except ValueError:
+                return
+            if linear:
+                if abs(value) < MIN_HEIGHT:
+                    return
+                self._set_height(node, value)
+            else:
+                self._set(node, "angle", max(1.0, min(360.0, value)))
+            self.view.update()
+        box.returnPressed.connect(done)
+        box.editingFinished.connect(lambda: self.editor is box and done())
+        box.show()
+        box.setFocus()
+        return box
+
     def _set(self, node, param, value):
         self.window.model.set_param(node, param, value)
 
@@ -577,7 +691,8 @@ class DragFeature:
         painter.setBrush(Qt.NoBrush)
         node = scr["node"]
         if scr["kind"] == "linear":
-            text = "%g mm" % round(signed_height(node), 3)
+            h = signed_height(node)
+            text = "%g mm" % (0 if abs(h) <= FIRST_HEIGHT else round(h, 3))
         else:
             text = "%g°" % round(_num(node.params.get("angle", 360), 360),
                                  2)
@@ -587,7 +702,11 @@ class DragFeature:
         fm = painter.fontMetrics()
         w = fm.horizontalAdvance(text) + 12
         x0, y0 = int(b[0]) + 16, int(b[1]) - 12
+        from PyQt5.QtCore import QRect
+        self._label = QRect(x0, y0, w, fm.height() + 6)
         painter.fillRect(x0, y0, w, fm.height() + 6,
                          QColor(255, 255, 255, 230))
+        painter.setPen(QPen(col, 1))
+        painter.drawRect(self._label)            # a box: click to type
         painter.setPen(col.darker(140))
         painter.drawText(x0 + 6, y0 + 3 + fm.ascent(), text)

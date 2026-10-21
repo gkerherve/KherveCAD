@@ -322,6 +322,8 @@ def start(window):
     view = window.view3d
     if isinstance(view.edit_tool, CurveTool):
         view.edit_tool.cancel()
+    from . import drag_feature
+    drag_feature.step_aside(view)
     if view.edit_tool is not None:
         QMessageBox.information(window, language.tr("Draw 3D curve"),
                                 language.tr("Finish what the 3D view is "

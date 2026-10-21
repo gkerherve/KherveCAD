@@ -899,6 +899,12 @@ class MainWindow(QMainWindow):
             from . import round_ui
             round_ui.start(self, op, "round")
             return
+        if not nodes and op in ("linear_extrude", "rotate_extrude"):
+            # nothing selected: click the 2D shape in the 3D view, as
+            # Fillet and the Hole Wizard ask for a face (the user)
+            from . import drag_feature
+            drag_feature.pick(self, op)
+            return
         if not nodes:
             if op in ("for_loop", "while_loop", "if_else", "union",
                       "pattern", "intersection_for", "let"):
@@ -1032,6 +1038,9 @@ class MainWindow(QMainWindow):
             # which assembly comes apart follows the selection
             self._refresh_preview()
         self.scene.set_highlight(nodes)
+        # an extrude selected shows its Z arrow in 3D (drag_feature)
+        from . import drag_feature
+        drag_feature.follow_selection(self, nodes)
         # zoom the 2D view to the selected object (a part silhouette or
         # an edited profile) so it is framed and centred, not clipped
         # — but not while drawing: a line just drawn must not pull the

@@ -102,6 +102,8 @@ def toggle(window, on=None):
     current = isinstance(view.edit_tool, Gumball)
     on = (not current) if on is None else bool(on)
     if on and not current:
+        from . import drag_feature
+        drag_feature.step_aside(view)
         if view.edit_tool is not None:
             window.statusBar().showMessage(language.tr(
                 "Finish what the 3D view is doing first (Esc), then "

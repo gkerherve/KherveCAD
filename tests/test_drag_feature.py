@@ -121,22 +121,25 @@ def test_a_handle_behind_the_camera_never_breaks_the_paint(win):
     assert tool.mouse_press(_ev(QEvent.MouseButtonPress, 5, 5)) is False
 
 
-def test_ok_keeps_it_and_drag_back_up_drops_the_mirror(win):
+def test_no_buttons_and_the_arrow_follows_the_selection(win):
     m = win.model
     rect = m.add_node("rect", dict(width=20, height=10))
+    other = m.add_node("cube", dict(x=60))
     win.builder.tree.select_nodes([rect])
     win._apply_operation("linear_extrude")
     tool = win.view3d.edit_tool
     ext = tool.target()
-    assert len(tool.buttons) == 2
+    assert tool.buttons == []                   # no OK / Cancel
     _drag(tool, tool._screen(), -5000)          # down
     assert drag_feature.reversed_of(ext) is not None
     _drag(tool, tool._screen(), -10000)         # and back up
     assert drag_feature.reversed_of(ext) is None
     assert drag_feature.signed_height(ext) > 0
-    tool.buttons[0].click()                     # OK
+    win.builder.tree.select_nodes([other])      # selected away: it goes
     assert win.view3d.edit_tool is None
-    assert ext.parent is m.root
+    assert ext.parent is m.root                 # and the extrude stays
+    win.builder.tree.select_nodes([ext])        # selected again: back
+    assert isinstance(win.view3d.edit_tool, drag_feature.DragFeature)
 
 
 def test_clicking_a_flat_shape_in_3d_extrudes_it(win):
@@ -169,3 +172,65 @@ def test_only_2d_shapes_are_picked_and_an_extruded_one_comes_back(win):
     assert tool.target() is tall and not tool.created
     tool.cancel()                                    # nothing removed
     assert tall.parent is m.root and inner.parent is tall
+
+
+def test_selecting_an_extrude_shows_its_arrow_and_the_value_types(win):
+    m = win.model
+    ext = m.add_node("linear_extrude", dict(height=12))
+    m.add_node("rect", dict(width=20, height=10), parent=ext)
+    other = m.add_node("cube", dict(x=50))
+    win.builder.tree.select_nodes([ext])
+    tool = win.view3d.edit_tool
+    assert isinstance(tool, drag_feature.DragFeature) and tool.auto
+    # the value drawn beside the arrow is a box to type in
+    from PyQt5.QtGui import QPixmap, QPainter
+    pix = QPixmap(win.view3d.size())
+    p = QPainter(pix)
+    tool.paint(p, None)
+    p.end()
+    assert tool._label is not None
+    centre = tool._label.center()
+    assert tool.mouse_press(_ev(QEvent.MouseButtonPress, centre.x(),
+                                centre.y()))
+    box = tool.editor
+    box.setText("25")
+    box.returnPressed.emit()
+    assert float(ext.params["height"]) == 25
+    tool.edit_value().setText("-7.5")            # a minus goes down
+    tool.editor.returnPressed.emit()
+    assert drag_feature.signed_height(ext) == -7.5
+    # something else selected: the arrow goes
+    win.builder.tree.select_nodes([other])
+    assert win.view3d.edit_tool is None
+
+
+def test_an_arrow_from_selection_makes_way_for_the_gumball(win):
+    from khervecad import gumball
+    m = win.model
+    ext = m.add_node("linear_extrude", dict(height=12))
+    m.add_node("rect", dict(width=20, height=10), parent=ext)
+    win.builder.tree.select_nodes([ext])
+    assert isinstance(win.view3d.edit_tool, drag_feature.DragFeature)
+    assert gumball.toggle(win, True)
+    assert isinstance(win.view3d.edit_tool, gumball.Gumball)
+    gumball.toggle(win, False)
+
+
+def test_linear_extrude_with_nothing_selected_asks_for_the_shape(win):
+    m = win.model
+    poly = m.add_node("polygon", dict(points=[[0, 0], [10, 0], [10, 10]]))
+    win.builder.tree.select_nodes([])
+    win._apply_operation("linear_extrude")
+    cb = win.view3d._pick_cb
+    assert cb is not None                       # waiting for a click
+    cb(dict(kind="face", pos=[5, 3, 0], dir=[0, 0, 1]), poly)
+    tool = win.view3d.edit_tool
+    assert tool.target().type == "linear_extrude" and tool.created
+    assert poly.parent is tool.target()
+    win.builder.tree.select_nodes([])
+    tool.exit()
+    win._apply_operation("rotate_extrude")      # revolve the same way
+    circle = m.add_node("circle", dict(x=20, radius=3))
+    win.view3d._pick_cb(dict(kind="face", pos=[20, 0, 0], dir=[0, 0, 1]),
+                        circle)
+    assert circle.parent.type == "rotate_extrude"
