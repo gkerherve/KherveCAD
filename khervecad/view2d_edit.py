@@ -58,11 +58,24 @@ class Frame(QGraphicsItem):
         pass
 
 
-def frame_transform(scene, node):
-    """The Top-plane QTransform of *node*'s ancestors, or None when it
-    is the identity (no frame needed)."""
+def on_view_plane(scene, node) -> bool:
+    """Does 2D shape *node* lie in the plane the view looks at — its
+    flat side square on (a Top sketch in Top, a Front sketch in Front)?"""
+    from .view2d import PLANES
+    (ai, bi), _keys = PLANES.get(scene.plane, PLANES["Top (XY)"])
     m = scene._world_matrix(node)
-    t = QTransform(m[0][0], m[1][0], m[0][1], m[1][1], m[0][3], m[1][3])
+    return abs(m[ai][2]) < 1e-6 and abs(m[bi][2]) < 1e-6 and \
+        abs(m[ai][0] * m[bi][1] - m[ai][1] * m[bi][0]) > 1e-9
+
+
+def frame_transform(scene, node):
+    """The QTransform of *node*'s ancestors onto the view's plane, or
+    None when it is the identity (no frame needed)."""
+    from .view2d import PLANES
+    (ai, bi), _keys = PLANES.get(scene.plane, PLANES["Top (XY)"])
+    m = scene._world_matrix(node)
+    t = QTransform(m[ai][0], m[bi][0], m[ai][1], m[bi][1], m[ai][3],
+                   m[bi][3])
     return None if t.isIdentity() else t
 
 

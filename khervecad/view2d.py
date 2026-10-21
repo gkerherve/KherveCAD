@@ -879,7 +879,30 @@ class SketchScene(QGraphicsScene):
         Object tab has the viewers isolated, else at the top level."""
         iso = self.isolation_resolver() if self.isolation_resolver \
             else None
-        return self.model.add_node(type_, params, parent=iso)
+        parent = self._sketch_group(iso)
+        return self.model.add_node(type_, params, parent=parent)
+
+    #: the turn that lays a sketch's XY onto each view plane
+    SKETCH_TURNS = {"Front (XZ)": (90.0, 0.0, 0.0),
+                    "Side (YZ)": (90.0, 0.0, 90.0)}
+
+    def _sketch_group(self, iso):
+        """Where a shape drawn on this plane goes. Top: the scope itself.
+        Front / Side: ONE "<plane> sketch" rotate in the scope, turned so
+        the shape lies in that plane — a line drawn in Front used to
+        land flat in XY, in 3D only, never shown in 2D (the user)."""
+        turn = self.SKETCH_TURNS.get(self.plane)
+        if turn is None:
+            return iso
+        scope = iso if iso is not None else self.model.root
+        name = self.plane.split()[0] + " sketch"
+        for child in scope.children:
+            if child.type == "rotate" and child.name == name:
+                return child
+        rot = self.model.add_node(
+            "rotate", dict(x=turn[0], y=turn[1], z=turn[2]), parent=scope,
+            name=name)
+        return rot
 
     def snap(self, pos: QPointF) -> QPointF:
         if not self.snap_enabled:
@@ -1091,12 +1114,14 @@ class SketchScene(QGraphicsScene):
         iso = self.isolation_resolver() if self.isolation_resolver \
             else None
         scope = iso if iso is not None else self.model.root
-        if self.plane == "Top (XY)":
-            # sketch mode: individual 2D shapes are editable
+        if True:
+            # sketch mode: individual 2D shapes are editable — every one
+            # lying in the plane on show (a Front sketch in Front)
             for node in scope.walk():
                 if node.category == SHAPE_2D and \
                         node.type in _ITEM_CLASSES and \
-                        self._branch_visible(node, stop=iso):
+                        self._branch_visible(node, stop=iso) and \
+                        view2d_edit.on_view_plane(self, node):
                     item = _ITEM_CLASSES[node.type](node, self)
                     _construction_look(item, node)
                     # drawn through its rotate / move / scale, as in 3D

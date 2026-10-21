@@ -848,7 +848,10 @@ class MainWindow(QMainWindow):
         assembly lists only whole parts, so wrap it in a new visible
         Object and continue in the Object tab — the part is already
         placed in Main as a single row."""
-        comp = self.model.enclose_as_part(node)
+        top = node
+        while top.parent is not None and top.parent is not self.model.root:
+            top = top.parent             # a Front / Side sketch's turn
+        comp = self.model.enclose_as_part(top)
         self.builder.open_component(comp)
         self.builder.object_tab.tree.select_nodes([node])
         self.statusBar().showMessage(
