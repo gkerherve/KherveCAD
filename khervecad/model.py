@@ -1548,7 +1548,20 @@ class DocumentModel(QObject):
     def add_node(self, type: str, params: dict = None,
                  parent: CadNode = None, name: str = "") -> CadNode:
         node = CadNode(type, name or self.unique_name(type), params)
-        (parent or self.root).add(node)
+        target = parent or self.root
+        r = target.params.get("rollback")
+        if isinstance(r, int) and not isinstance(r, bool) and \
+                0 <= r <= len(target.children):
+            # rolled back: a new item goes in AT the rollback bar and is
+            # active, as in SolidWorks — appended after it, it arrived
+            # already rolled back (the user's new cylinder)
+            if r < len(target.children):
+                from . import sketch_constraints
+                sketch_constraints.child_inserted(target, r)
+            target.add(node, r)
+            target.params["rollback"] = r + 1
+        else:
+            target.add(node)
         if type == "if_else":
             node.add(CadNode("union", "Else"))
         self.structure_changed.emit()
@@ -1558,8 +1571,11 @@ class DocumentModel(QObject):
         if node.parent is None:
             return
         from . import sketch_constraints
-        sketch_constraints.child_removed(node.parent,
-                                         node.parent.children.index(node))
+        at = node.parent.children.index(node)
+        sketch_constraints.child_removed(node.parent, at)
+        r = node.parent.params.get("rollback")
+        if isinstance(r, int) and not isinstance(r, bool) and at < r:
+            node.parent.params["rollback"] = r - 1   # the bar stays put
         node.parent.remove(node)
         self.structure_changed.emit()
 

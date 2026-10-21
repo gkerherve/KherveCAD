@@ -124,3 +124,16 @@ def test_the_menu_ends_with_suppress_and_the_two_deletes(app, monkeypatch):
     finally:
         win._dirty = False
         win.close()
+
+
+def test_a_new_item_goes_in_at_the_rollback_bar(app):
+    """The user's cylinder arrived 'rolled back': an earlier Roll back
+    to here was still set and new items were appended after the bar."""
+    m = DocumentModel()
+    d, t = _part(m)
+    suppress.roll_back_to(m, d)                # only d is active
+    cyl = m.add_node("cylinder", {})
+    assert not suppress.is_off(cyl)
+    assert m.root.children.index(cyl) == 1 and suppress.is_off(t)
+    m.remove_node(d)                           # the bar moves with it
+    assert not suppress.is_off(cyl) and suppress.is_off(t)
