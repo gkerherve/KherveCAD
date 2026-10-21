@@ -86,7 +86,8 @@ _NEUTRAL_SETTINGS = ("render_stage", "render_style", "render_bg",
                      # reference chapter staying English
                      "language",
                      # Fusion / SolidWorks toolbars and the ribbon tab
-                     "interface_style", "ribbon/tab")
+                     "interface_style", "ribbon/tab", "tree/history",
+                     "browser/hidden")
 
 #: looks that default to on, held off for the session instead of removed
 _NEUTRAL_OFF = ("render_stage", "render_edges", "render_scale_bar")
@@ -106,8 +107,10 @@ def _fresh_blueprint_settings():
                 # KherveCAD, running beside a long test run, shares these
                 # settings, and switching it to Fusion mid-run opened
                 # later test windows with Fusion's menus and toolbars
-                "interface_style", "ribbon/tab"):
+                "interface_style", "ribbon/tab", "tree/history"):
         settings.remove(key)
+    # every tab shown in tests (users start with Variables / Code hidden)
+    settings.setValue("browser/hidden", "none")
     yield
 
 

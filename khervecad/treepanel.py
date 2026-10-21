@@ -48,6 +48,7 @@ HIDDEN_COLOR_DARK = "#697079"
 # item data role beyond the primary node id (Qt.UserRole)
 ROLE_TAG = Qt.UserRole + 1         # True -> paint a "(hidden)" tag
 ROLE_MODIFIER = Qt.UserRole + 7    # "# highlight" etc. -> painted tag
+from .tree_history import ROLE_FIXED, ROLE_SHOWN  # noqa: E402
 ROLE_PLACEMENT = Qt.UserRole + 2   # True -> synthetic Position/Rotation
 #                                    row under a part (selects the part)
 
@@ -121,6 +122,8 @@ class ObjectTree(QTreeWidget):
     #: start the two-click Snap tool (pick a face on each of two
     #: Objects in the 3D view).
     snap_objects = pyqtSignal()
+    #: a plane row was double-clicked: show that plane in the 2D view
+    plane_picked = pyqtSignal(str)
 
     def __init__(self, model: DocumentModel, parent=None):
         super().__init__(parent)
@@ -156,6 +159,9 @@ class ObjectTree(QTreeWidget):
     def _double_clicked(self, item, _col):
         """Double-click opens an Object for editing (Object tab);
         everything else starts an in-place rename."""
+        from . import tree_history
+        if tree_history.double_clicked(self, item):
+            return
         if item.data(0, ROLE_PLACEMENT):
             return          # placement rows are edited via Properties
         node = self.node_of(item)
@@ -207,18 +213,33 @@ class ObjectTree(QTreeWidget):
         selected = {n.id for n in self.selected_nodes()}
         self._updating = True
         self.clear()
-        for child in self._top_nodes():
-            self._build_node(child, self.invisibleRootItem(), selected)
+        from . import tree_history
+        self.history = tree_history.enabled()
+        if self.history:          # SolidWorks' Origin / planes / Material
+            tree_history.build_fixed(self)
+        # History is another drawing of the same nodes: no drag there
+        self.setDragDropMode(QAbstractItemView.NoDragDrop if self.history
+                             else QAbstractItemView.InternalMove)
+        if self.history:
+            tree_history.build_history(self, selected)
+        else:
+            for child in self._top_nodes():
+                self._build_node(child, self.invisibleRootItem(),
+                                 selected)
         self._updating = False
         self._emit_selection()
 
     def _remember_expanded(self, item):
+        if not self._updating and item.data(0, ROLE_FIXED) == "origin":
+            self._expand_state["__origin__"] = True
         if not self._updating:
             node = self.node_of(item)
             if node is not None:
                 self._expand_state[node.id] = True
 
     def _remember_collapsed(self, item):
+        if not self._updating and item.data(0, ROLE_FIXED) == "origin":
+            self._expand_state["__origin__"] = False
         if not self._updating:
             node = self.node_of(item)
             if node is not None:
@@ -397,7 +418,8 @@ class ObjectTree(QTreeWidget):
         # keep the row text clean (so renaming isn't polluted); the
         # "(hidden)" tag on the explicitly-hidden node is painted by the
         # delegate from ROLE_TAG
-        item.setText(0, node.name)
+        shown = item.data(0, ROLE_SHOWN)
+        item.setText(0, shown if shown is not None else node.name)
         from .model import MODIFIERS
         mod = node.params.get("modifier")
         item.setData(0, ROLE_TAG, own_hidden)
@@ -499,6 +521,11 @@ class ObjectTree(QTreeWidget):
             return
         node = self.node_of(item)
         if node is None:
+            return
+        shown = item.data(0, ROLE_SHOWN)
+        if shown is not None:            # a History row: "Extrude 1 (x)"
+            if item.text(0) and item.text(0) != shown:
+                self.model.rename(node, item.text(0))
             return
         if item.text(0) and item.text(0) != node.name:
             self.model.rename(node, item.text(0))
@@ -783,6 +810,9 @@ class ObjectTree(QTreeWidget):
 
     # --------------------------------------------------- context menu
     def _context_menu(self, pos):
+        from . import tree_history
+        if tree_history.fixed_menu(self, self.itemAt(pos), pos):
+            return
         nodes = self.selected_nodes()          # geometry (hide/colour)
         roots = self._top_level_selection()    # whole parts (structural)
         menu = QMenu(self)
@@ -1916,6 +1946,22 @@ class BuilderPanel(QTabWidget):
         row.addWidget(self.fn_check)
         row.addWidget(self.fn_spin)
         row.addStretch()
+        # Structure / History: two drawings of the same tree
+        from . import tree_history
+        from PyQt5.QtWidgets import QToolButton
+        self.history_btn = QToolButton()
+        self.history_btn.setCheckable(True)
+        self.history_btn.setChecked(tree_history.enabled())
+        self.history_btn.setIcon(icons.icon("mdi.history"))
+        self.history_btn.setText(language.tr("History"))
+        self.history_btn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.history_btn.setAutoRaise(True)
+        self.history_btn.setToolTip(language.tr(
+            "History: the features in the order they were made, like "
+            "SolidWorks' FeatureManager (groups stay as folders). Off: "
+            "the tree as built. Nothing in the document changes."))
+        self.history_btn.toggled.connect(self.set_history)
+        row.addWidget(self.history_btn)
         box.addLayout(row)
         box.addWidget(self.tree)
 
@@ -1975,6 +2021,9 @@ class BuilderPanel(QTabWidget):
             self.setTabToolTip(self.addTab(page, label), tip)
         self._code_page = code_tab
         self._code_dirty = False
+        # Variables / Code hidden until asked for; Code can float
+        from . import browser_tabs
+        browser_tabs.install(self)
         self.tree.open_component.connect(self.open_component)
         self.object_tab.tree.open_component.connect(self.open_component)
         self.object_tab.active_changed.connect(self._active_changed)
@@ -1989,6 +2038,15 @@ class BuilderPanel(QTabWidget):
         """Activate *node* in the Object tab and switch to it."""
         self.object_tab.set_active(node)
         self.setCurrentWidget(self.object_tab)
+
+    def set_history(self, on):
+        """Structure / History for both trees (remembered)."""
+        from . import tree_history
+        tree_history.set_enabled(on)
+        if self.history_btn.isChecked() != bool(on):
+            self.history_btn.setChecked(bool(on))
+        self.tree.rebuild()
+        self.object_tab.tree.rebuild()
 
     def isolated_component(self):
         """The active Object while the Object tab is current — what
@@ -2080,8 +2138,9 @@ class BuilderPanel(QTabWidget):
         nobody could see. *force* rebuilds it anyway, for the rare
         things that change what the program IS rather than its numbers:
         switching the scope between the whole document and one Object."""
-        if not force and self.widget(self.currentIndex()) \
-                is not self._code_page:
+        from . import browser_tabs
+        if not force and not browser_tabs.is_detached(self) and \
+                self.widget(self.currentIndex()) is not self._code_page:
             self._code_dirty = True
             self._refresh_errors()
             return
@@ -2210,6 +2269,13 @@ class BuilderPanel(QTabWidget):
         self.wrap_act.setChecked(c.wrapping())
         self.wrap_act.toggled.connect(c.set_wrapping)
         c.wrap_changed.connect(self.wrap_act.setChecked)
+        tb.addSeparator()
+        # the code in its own window, changing live (browser_tabs)
+        from . import browser_tabs
+        self._detach_act = tb.addAction(
+            icons.icon("mdi.open-in-new"), language.tr("Detach"),
+            lambda: browser_tabs.toggle_detach(self))
+        browser_tabs._sync_button(self)
         return tb
 
     def refresh_theme(self):

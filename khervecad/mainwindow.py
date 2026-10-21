@@ -128,6 +128,8 @@ class MainWindow(QMainWindow):
         self.builder.object_tab.tree.pick_anchor.connect(
             self._start_anchor_pick)
         self.builder.tree.snap_objects.connect(self._start_snap)
+        self.builder.tree.plane_picked.connect(self._set_plane)
+        self.builder.object_tab.tree.plane_picked.connect(self._set_plane)
         self.builder.object_tab.tree.snap_objects.connect(
             self._start_snap)
         self.scene.selection_changed.connect(self._scene_selected)

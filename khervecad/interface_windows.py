@@ -289,8 +289,8 @@ def style_panel(win, style):
         from PyQt5.QtCore import QSize
         panel.setIconSize(QSize(22, 22))
     if style == "Fusion":
-        caption = QLabel(language.tr("BROWSER"), panel)
-        caption.setObjectName("browserCaption")
+        from . import browser_tabs
+        caption = browser_tabs.caption_button(panel)
         panel.setCornerWidget(caption, Qt.TopLeftCorner)
         caption.show()
 
