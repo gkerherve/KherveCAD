@@ -113,6 +113,8 @@ class PointsEditor(QWidget):
         for row, (x, y) in enumerate(points):
             self.table.setItem(row, 0, QTableWidgetItem(f"{x:g}"))
             self.table.setItem(row, 1, QTableWidgetItem(f"{y:g}"))
+        from .rowsedit import fit_columns
+        fit_columns(self.table)
         self.table.itemChanged.connect(lambda _i: self._emit())
         self.table.currentCellChanged.connect(
             lambda cur, _c, _pr, _pc: self.point_selected.emit(cur))
@@ -263,7 +265,10 @@ class PropertiesPanel(QScrollArea):
         self._body = QWidget()
         self.setWidget(self._body)
         self._layout = QVBoxLayout(self._body)
-        self._layout.setContentsMargins(8, 8, 8, 8)
+        self._layout.setContentsMargins(6, 4, 6, 4)
+        self._layout.setSpacing(3)
+        from .rowsedit import COMPACT_QSS
+        self._body.setStyleSheet(COMPACT_QSS)
         self._editors = {}
         model.node_changed.connect(self._node_changed)
         model.structure_changed.connect(self._structure_changed)
@@ -290,6 +295,8 @@ class PropertiesPanel(QScrollArea):
 
         form = QFormLayout()
         form.setLabelAlignment(Qt.AlignRight)
+        form.setVerticalSpacing(3)
+        form.setHorizontalSpacing(6)
         name_edit = QLineEdit(node.name)
         name_edit.editingFinished.connect(
             lambda: self._rename(name_edit.text()))

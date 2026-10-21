@@ -75,6 +75,25 @@ def compact_table(table, row_h=20):
     table.setFont(font)
 
 
+def fit_columns(table, least=54, most=110):
+    """Each column as wide as its numbers (54-110 px): narrow columns
+    cut 0.0001 to '0....' (the user)."""
+    table.resizeColumnsToContents()
+    for c in range(table.columnCount()):
+        table.setColumnWidth(c, max(least, min(most,
+                                               table.columnWidth(c) + 6)))
+
+
+#: the Properties panel, tighter (the user: "make all properties smaller")
+COMPACT_QSS = """
+QLabel, QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox,
+QTableWidget {
+    font-size: 11px; }
+QLineEdit, QComboBox { padding: 1px 4px; min-height: 16px; }
+QSpinBox, QDoubleSpinBox { padding: 1px 18px 1px 4px; min-height: 16px; }
+"""
+
+
 def small_button(glyph, tip, slot):
     """A slim + / − button."""
     from PyQt5.QtCore import QSize
@@ -146,6 +165,8 @@ class RowsEditor(QWidget):
                     text = ", ".join(_cell(v) for v in row)
                     self.table.setItem(r, 0, QTableWidgetItem(text))
             self._fit_height()
+            if self._columns:
+                fit_columns(self.table)
         finally:
             self._loading = False
 
