@@ -27,7 +27,7 @@ GROUPS = [
       "Drop", "Reach", "Set origin"]),
     ("Modify", "mdi.auto-fix",
      ["Apply", "Edit Vertices", "Edit vertices", "Sculpt", "Paint", "Split for print",
-      "Debug modifier", "Imported mesh", "Make Sizes Equal", "Pick edges",
+      "Imported mesh", "Make Sizes Equal", "Pick edges",
       "Unfold", "Export flat pattern", "Convert"]),
     ("Organise", "mdi.file-tree",
      ["Ungroup", "Make Object", "Insert Object", "Move to Collection",
@@ -36,7 +36,7 @@ GROUPS = [
 
 #: kept on top, in this order, before the submenus
 TOP = ["Edit in Object tab", "Hide", "Show", "Color", "Colour", "Rename",
-       "Duplicate", "Group"]
+       "Duplicate", "Group", "OpenSCAD modifier"]
 #: kept last, in this order
 LAST = ["Suppress", "Unsuppress", "Delete, keep contents", "Delete all",
         "Delete"]
@@ -48,7 +48,7 @@ SHORT = {
     "Snap by clicking faces": "Snap by faces",
     "Attach / snap to…": "Attach to…",
     "Attach / snap to...": "Attach to…",
-    "Debug modifier (OpenSCAD)": "Debug modifier",
+    "Debug modifier (OpenSCAD)": "OpenSCAD modifier",
     "Split for printing…": "Split for print…",
     "Split for printing...": "Split for print…",
     "Edit in Object tab": "Edit in Object tab",
