@@ -121,7 +121,9 @@ def _animate(window, view, goal, done):
             done()
     timer.timeout.connect(tick)
     window._normal_to_timer = timer
-    if not view.isVisible() or DURATION_MS <= 0:
+    from PyQt5.QtGui import QGuiApplication
+    if not view.isVisible() or DURATION_MS <= 0 or \
+            QGuiApplication.platformName() == "offscreen":   # no screen
         for k in ("yaw", "pitch", "distance"):
             setattr(view, k, goal[k])
         view.target = list(goal["target"])
@@ -145,14 +147,33 @@ def edit(window, node=None):
         if sketch_mode.active(window):
             sketch_mode.enter(window)
         return False
-    plane, centre = got
+    plane, _centre = got
+    return turn_to(window, plane, node)
+
+
+def create(window):
+    """Create Sketch: on the selected shape's plane, else on the plane
+    the sketch shows — the camera only turns (the user)."""
+    node = sketch_node(window)
+    if node is not None and shape_frame(window, node) is not None:
+        return edit(window, node)
+    plane = getattr(window.view2d.scene(), "plane", "Top (XY)")
+    return turn_to(window, plane if plane in CAMERA else "Top (XY)")
+
+
+def turn_to(window, plane, node=None):
+    """Turn the 3D camera square on to *plane* — ONLY the angle: the
+    target and distance stay, so nothing zooms or slides (the user: "it
+    just changes angle ... the same size as the 2D") — then hand over to
+    the sketch at that same scale and centre."""
+    from . import language, sketch_mode
     one_canvas = sketch_mode.active(window)
     view = window.view3d
     window._normal_to_saved = dict(
-        yaw=view.yaw, pitch=view.pitch, target=list(view.target),
-        distance=view.distance, projection=view.projection)
+        yaw=view.yaw, pitch=view.pitch, projection=view.projection)
     yaw, pitch = CAMERA[plane]
     view.projection = "Orthographic"
+    centre = list(view.target)
     goal = dict(yaw=yaw, pitch=pitch, target=centre,
                 distance=view.distance)
 
@@ -160,13 +181,15 @@ def edit(window, node=None):
         scale = view._focal() / max(view.distance, 1e-6)  # px per mm
         window._normal_to_scale = scale
         window._set_plane(plane)
-        window.builder.active_tree().select_nodes([node])
+        if node is not None:
+            window.builder.active_tree().select_nodes([node])
         if not one_canvas:
             # the classic layout shows both: the 3D view stays square on,
-            # the sketch beside it shows the same plane, framed on it
+            # the sketch beside it shows the same plane
             window._normal_to_saved = None
-            from PyQt5.QtCore import QTimer
-            QTimer.singleShot(0, lambda: _frame_shape(window, node))
+            if node is not None:
+                from PyQt5.QtCore import QTimer
+                QTimer.singleShot(0, lambda: _frame_shape(window, node))
             window.statusBar().showMessage(language.tr(
                 "Sketching on the {plane} plane — draw in the 2D view."
                 ).format(plane=plane.split()[0]), 6000)
@@ -253,13 +276,18 @@ def action(window):
     return act
 
 
+#: where the camera turns back to when the sketch was not opened here
+DEFAULT_ANGLES = (-65.0, 35.0)
+
+
 def back(window):
-    """Leaving the sketch: start square on, at the sketch's scale and
-    centre, and turn back to where the camera was. False when the sketch
-    was not opened by `edit`."""
-    saved = getattr(window, "_normal_to_saved", None)
-    if not saved:
-        return False
+    """Leaving the sketch: the 3D view starts square on, at the sketch's
+    scale and centre, and only TURNS back to the angle it had — no zoom,
+    no slide (the user)."""
+    saved = getattr(window, "_normal_to_saved", None) or dict(
+        yaw=DEFAULT_ANGLES[0], pitch=DEFAULT_ANGLES[1],
+        projection=window.view3d.projection
+        if window.view3d.projection != "Orthographic" else "Perspective")
     window._normal_to_saved = None
     view = window.view3d
     v2 = window.view2d
@@ -276,7 +304,7 @@ def back(window):
         view.target = target
         view.distance = view._focal() / scale
     goal = dict(yaw=saved["yaw"], pitch=saved["pitch"],
-                target=saved["target"], distance=saved["distance"])
+                target=list(view.target), distance=view.distance)
 
     def landed():
         view.projection = saved["projection"]

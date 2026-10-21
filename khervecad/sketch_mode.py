@@ -64,11 +64,24 @@ def create_action(win):
 
 
 def _create_or_edit(win):
+    """Create Sketch / Exit Sketch, one button (the user): sketching, it
+    leaves; else the 3D view turns onto the plane and the sketch opens."""
+    if sketching(win):
+        finish(win)
+        return
     from . import normal_to
-    if normal_to.sketch_node(win) is not None and active(win):
-        normal_to.edit(win)
+    if active(win):
+        normal_to.create(win)
     else:
         enter(win)
+
+
+def sync_create(win):
+    """The button reads Exit Sketch while sketching."""
+    act = getattr(win, "_create_sketch_act", None)
+    if act is not None:
+        act.setText(language.tr("Exit Sketch") if sketching(win)
+                    else language.tr("Create Sketch"))
 
 
 class _FinishButton(QPushButton):
@@ -140,6 +153,7 @@ def enter(win):
     if not active(win):
         return
     win._sketching = True
+    sync_create(win)
     _show(win, True)
     QTimer.singleShot(0, lambda: _frame_2d(win))
     if getattr(win, "ribbon", None) is not None:
@@ -150,6 +164,7 @@ def enter(win):
 def finish(win):
     """Finish Sketch: back to the 3D model, Select tool."""
     win._sketching = False
+    sync_create(win)
     from .view2d import SELECT
     for act in win._tool_group.actions():
         if act.data() == SELECT:
@@ -162,9 +177,9 @@ def finish(win):
         # the 3D view comes back framed on what was picked (else the
         # whole model): it kept the camera it had before the sketch and
         # the picked part could be nowhere on it (2026-10-20, the user)
+        # the 3D view turns back at the sketch's size — no zoom (the user)
         from . import normal_to
-        if not normal_to.back(win):            # turned into it: turn back
-            QTimer.singleShot(0, lambda: _frame_3d(win))
+        QTimer.singleShot(0, lambda: normal_to.back(win))
 
 
 #: how much further back than a tight fit the 3D view comes back

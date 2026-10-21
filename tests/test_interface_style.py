@@ -419,9 +419,10 @@ def test_solidworks_also_shows_one_canvas_with_the_other_small(window, app):
     sketch_mode.finish(window)
 
 
-def test_leaving_the_sketch_frames_the_picked_part_in_3d(window, app):
-    """The 3D view used to come back with its old camera, the part
-    picked while sketching nowhere on it (the user, 2026-10-20)."""
+def test_leaving_the_sketch_keeps_its_size_and_place_in_3d(window, app):
+    """Leaving the sketch, the 3D view shows what the sketch showed, at
+    the sketch's size — it only turns (the user, 2026-10-21; before, it
+    re-framed the picked part, 2026-10-20)."""
     from khervecad import sketch_mode
     from khervecad.mcp_tools import McpToolExecutor
     toolbar_style.apply(window, "Fusion")
@@ -437,12 +438,19 @@ def test_leaving_the_sketch_frames_the_picked_part_in_3d(window, app):
     window.builder.object_tab.tree.select_nodes([obj.children[1]])
     sketch_mode.enter(window)
     app.processEvents()
+    v2 = window.view2d
+    centre = v2.mapToScene(v2.viewport().rect().center())
+    scale = v2.px_per_mm()
     window._sketch_inset.mousePressEvent(None)      # back to 3D
     for _ in range(5):
         app.processEvents()
-    target = window.view3d.target
-    assert abs(target[0] - 304) < 10 and abs(target[1] - 304) < 10
-    assert abs(target[2] - 4) < 10                  # on the leaf
+    view = window.view3d
+    plane = v2.scene().plane
+    from khervecad import normal_to
+    a, b = normal_to.AXES.get(plane, (0, 1))
+    assert view.target[a] == pytest.approx(centre.x(), abs=0.5)
+    assert view.target[b] == pytest.approx(centre.y(), abs=0.5)
+    assert view.distance == pytest.approx(view._focal() / scale, rel=1e-6)
 
 
 def _selection_box(pixmap):

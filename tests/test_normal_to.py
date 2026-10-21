@@ -44,6 +44,7 @@ def test_edit_sketch_turns_to_the_shape_then_sketches_at_its_scale(win,
     rect = m.add_node("rect", dict(x=40, y=10, width=20, height=10))
     view = win.view3d
     view.yaw, view.pitch, view.distance = 30.0, 25.0, 300.0
+    view.target = [50.0, 15.0, 0.0]
     win.builder.tree.select_nodes([rect])
     assert normal_to.edit(win)
     for _ in range(6):
@@ -51,7 +52,9 @@ def test_edit_sketch_turns_to_the_shape_then_sketches_at_its_scale(win,
     assert sketch_mode.sketching(win)
     assert win.view2d.scene().plane == "Top (XY)"
     assert (view.yaw, view.pitch) == normal_to.CAMERA["Top (XY)"]
+    # only the angle turned: the camera kept its target and distance
     assert view.target[:2] == pytest.approx([50, 15])
+    assert view.distance == pytest.approx(300.0)
     want = win._normal_to_scale             # the 3D view's px per mm
     assert win.view2d.px_per_mm() == pytest.approx(want, rel=1e-6)
     centre = win.view2d.mapToScene(win.view2d.viewport().rect().center())
@@ -60,8 +63,10 @@ def test_edit_sketch_turns_to_the_shape_then_sketches_at_its_scale(win,
     sketch_mode.finish(win)
     for _ in range(4):
         _APP.processEvents()
-    assert (view.yaw, view.pitch, view.distance) == pytest.approx(
-        (30.0, 25.0, 300.0))
+    assert (view.yaw, view.pitch) == pytest.approx((30.0, 25.0))
+    # and back at the sketch's own size: no zoom on the way out
+    assert view.distance == pytest.approx(view._focal()
+                                          / win.view2d.px_per_mm())
     assert view.projection != "Orthographic" or True
 
 
