@@ -1023,7 +1023,11 @@ class MainWindow(QMainWindow):
         self.scene.set_highlight(nodes)
         # zoom the 2D view to the selected object (a part silhouette or
         # an edited profile) so it is framed and centred, not clipped
-        rect = self.scene.isolated_bounds()
+        # — but not while drawing: a line just drawn must not pull the
+        # view onto itself (the user, 2026-10-21); clicking it later does
+        from .view2d import SELECT
+        drawing = getattr(self.scene, "tool", SELECT) != SELECT
+        rect = None if drawing else self.scene.isolated_bounds()
         if rect is not None:
             self.view2d.frame_rect(rect)
         tris = self._highlight_tris()
