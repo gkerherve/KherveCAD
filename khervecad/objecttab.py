@@ -146,6 +146,18 @@ class ObjectTab(QWidget):
             button.clicked.connect(slots[attr])
             setattr(self, attr, button)
             row.addWidget(button)
+        # Structure / History, the same switch as above the Main tree
+        from . import tree_history
+        self.history_btn = QToolButton()
+        self.history_btn.setCheckable(True)
+        self.history_btn.setChecked(tree_history.enabled())
+        self.history_btn.setIcon(icons.icon("mdi.history"))
+        self.history_btn.setIconSize(QSize(20, 20))
+        self.history_btn.setAutoRaise(True)
+        self.history_btn.setToolTip(
+            "History: this Object's features in the order they were made "
+            "(groups stay as folders). Off: the tree as built.")
+        row.addWidget(self.history_btn)
         layout.addLayout(row)
 
         self.tree = ComponentTree(model, self.active_component)

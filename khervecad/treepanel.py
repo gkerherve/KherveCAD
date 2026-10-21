@@ -1961,6 +1961,7 @@ class BuilderPanel(QTabWidget):
             "SolidWorks' FeatureManager (groups stay as folders). Off: "
             "the tree as built. Nothing in the document changes."))
         self.history_btn.toggled.connect(self.set_history)
+        self.object_tab.history_btn.toggled.connect(self.set_history)
         row.addWidget(self.history_btn)
         box.addLayout(row)
         box.addWidget(self.tree)
@@ -2043,8 +2044,9 @@ class BuilderPanel(QTabWidget):
         """Structure / History for both trees (remembered)."""
         from . import tree_history
         tree_history.set_enabled(on)
-        if self.history_btn.isChecked() != bool(on):
-            self.history_btn.setChecked(bool(on))
+        for btn in (self.history_btn, self.object_tab.history_btn):
+            if btn.isChecked() != bool(on):
+                btn.setChecked(bool(on))
         self.tree.rebuild()
         self.object_tab.tree.rebuild()
 

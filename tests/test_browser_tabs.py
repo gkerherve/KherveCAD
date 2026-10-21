@@ -45,3 +45,15 @@ def test_detached_code_keeps_changing():
     browser_tabs.attach(panel)
     assert panel.indexOf(panel._code_page) >= 0
     assert not browser_tabs.is_detached(panel)
+
+
+def test_history_switch_in_both_tabs():
+    from khervecad import tree_history
+    panel = _panel()
+    try:
+        panel.object_tab.history_btn.setChecked(True)
+        assert panel.history_btn.isChecked() and tree_history.enabled()
+        panel.history_btn.setChecked(False)
+        assert not panel.object_tab.history_btn.isChecked()
+    finally:
+        tree_history.set_enabled(False)
