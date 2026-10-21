@@ -10,6 +10,11 @@ the Free Software Foundation, either version 3 of the License, or
 
 APP_NAME = "KherveCAD"
 
+# drop-down rows in the theme's colours, set when each combo is made
+# (before any module imports QComboBox) — combo_fix.py
+from . import combo_fix as _combo_fix  # noqa: E402
+_combo_fix.install()
+
 from ._version import get_version  # noqa: E402
 
 __version__ = get_version()
