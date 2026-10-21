@@ -320,8 +320,12 @@ def cube_icon(face, size=20):
     painter.setPen(QPen(QColor(230, 233, 236, 210), 1.0))
     for name, pts in faces.items():
         lit = name == face
-        painter.setBrush(QColor(255, 255, 255, 255) if lit
-                         else QColor(150, 158, 168, 70))
+        if face == "iso":                     # the 3D view: three shades
+            shade = {"top": 255, "front": 215, "side": 175}[name]
+            painter.setBrush(QColor(shade, shade, shade, 255))
+        else:
+            painter.setBrush(QColor(255, 255, 255, 255) if lit
+                             else QColor(150, 158, 168, 70))
         painter.drawPolygon(QPolygonF(pts))
     painter.end()
     return QIcon(pix)
@@ -551,7 +555,8 @@ def attach_3d(view):
     view.stage_toggled.connect(stage.setChecked)
     layout = bar.layout()
     layout.insertWidget(0, _vline(bar))
-    for face, name, key in reversed((("top", "Top", "nav3d_top"),
+    for face, name, key in reversed((("iso", "Isometric", "nav3d_iso"),
+                                     ("top", "Top", "nav3d_top"),
                                      ("front", "Front", "nav3d_front"),
                                      ("side", "Right", "nav3d_side"))):
         button = QToolButton(bar)

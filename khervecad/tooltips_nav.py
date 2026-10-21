@@ -126,6 +126,12 @@ NAV_TIPS = {
         "Looks at the model from its right-hand side (the +X side).",
         ["Click the cube with the right face lit."],
         "View ▸ 3D View also has Back, Left, Bottom and Isometric."),
+    "nav3d_iso": (
+        "Isometric view",
+        "The standard 3D view: the model seen from a front corner, from "
+        "above, all three sides showing.",
+        ["Click the cube with all three faces lit."],
+        "The view glides there; double-click the model to fit it."),
     "nav3d_orbit_left": (
         "Turn left",
         "Turns the model to the left about the vertical axis.",
