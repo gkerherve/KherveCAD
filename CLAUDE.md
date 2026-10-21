@@ -4412,6 +4412,15 @@ into a new module and import.
                        preview never merges a union, so two overlapping
                        boxes have no inside-corner edge (extrude an L
                        profile instead).
+  - Fillet corners (2026-10-21, the user's L plate): `compute` first
+                       gathers every edge to round (picks + tangent runs),
+                       then chains them with `through` where exactly two
+                       chosen edges of one kind meet, so a face's rim is
+                       ONE mitred loop (square-ended strips left points
+                       and notched the inside corner). `strip`'s mitre
+                       bends only the part of each offset in the corner's
+                       plane; the part along the corner axis was summed
+                       and cut twice as deep down the sides.
   - `fillet_pick.py` — the click flow: `start(window, node)` arms
                        `View3D.start_pick` on the fillet's part
                        (groups=[(node, world tris)]) and re-arms after

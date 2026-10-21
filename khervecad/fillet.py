@@ -346,10 +346,27 @@ def strip(run: dict, radius: float, kind: str, detail: int,
         return [_add(_mul(u, x), _mul(v, y)) for x, y in pts]
 
     def mitre(o0, o1, t0, t1):
+        """The corner ring: where the two edges' profiles meet. Only the
+        part of each offset lying in the corner's plane (the plane of
+        t0 and t1) is bent by the mitre; the part along the corner's
+        axis (t0 x t1 — down a box's side, for its top rim) is the same
+        for both and kept as it is. Summing whole offsets doubled that
+        part: a face's rim cut twice as deep down the sides."""
         k = 1.0 + _dot(t0, t1)
         if k < 0.2:                        # a hairpin: just average
             return [_mul(_add(a, b), 0.5) for a, b in zip(o0, o1)]
-        return [_mul(_add(a, b), 1.0 / k) for a, b in zip(o0, o1)]
+        axis = _cross(t0, t1)
+        if _len(axis) < 1e-9:              # straight on
+            return [_mul(_add(a, b), 0.5) for a, b in zip(o0, o1)]
+        axis = _unit(axis)
+        out = []
+        for a, b in zip(o0, o1):
+            ca, cb = _dot(a, axis), _dot(b, axis)
+            ia = _sub(a, _mul(axis, ca))
+            ib = _sub(b, _mul(axis, cb))
+            out.append(_add(_mul(axis, (ca + cb) / 2.0),
+                            _mul(_add(ia, ib), 1.0 / k)))
+        return out
 
     dirs = [e.direction for e in edges]
     offs = [offsets(i) for i in range(len(edges))]
@@ -431,6 +448,9 @@ def compute(tris, seeds, radius: float, kind: str = "round",
     edges = crease_edges(tris, min_angle)
     size = mesh_size(tris)
     cuts, adds, missing, seen = [], [], [], set()
+    # 1. every edge to round: each picked edge with its tangent run (one
+    #    click takes a cylinder's whole rim)
+    chosen = {}
     for seed in seeds:
         try:
             values = [float(v) for v in seed]
@@ -444,7 +464,24 @@ def compute(tris, seeds, radius: float, kind: str = "round",
         if e is None:
             missing.append(seed)
             continue
-        run = chain(e, edges) if False else chain(edges, e)
+        for x in chain(edges, e)["edges"]:
+            key = frozenset((_vkey(x.a), _vkey(x.b)))
+            for y in edges:
+                if frozenset((_vkey(y.a), _vkey(y.b))) == key:
+                    chosen[id(y)] = y
+    picked = list(chosen.values())
+    # 2. join them: where exactly two chosen edges of one kind meet (a
+    #    face's rim turning a corner, the L's inside corner) the run
+    #    turns the corner MITRED — separate strips with square ends left
+    #    a sharp point at every corner and notched the inside one (the
+    #    user, 2026-10-21); where three meet it stops
+    count = {}
+    for x in picked:
+        for key in (_vkey(x.a), _vkey(x.b)):
+            count[(key, x.convex)] = count.get((key, x.convex), 0) + 1
+    for e in picked:
+        run = chain(picked, e, through=lambda key, k=e.convex:
+                    count.get((key, k), 0) == 2)
         key = frozenset(_vkey(p) for p in run["points"])
         if key in seen:
             continue

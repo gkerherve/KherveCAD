@@ -382,3 +382,31 @@ def test_openscad_rounds_the_edge_to_the_analytic_volume(app, tmp_path):
     exact = engine.parse_stl(str(stl))
     assert _volume(exact) == pytest.approx(
         40 * 30 * 20 - (1 - math.pi / 4) * 25 * 40, rel=0.002)
+
+
+def test_a_face_rim_is_one_mitred_loop(app):
+    """The user's L plate, top face filleted: each edge was its own
+    square-ended strip, so every corner kept a point and the inside
+    corner was notched; and the mitre doubled the cut down the sides."""
+    import math
+    from khervecad import analysis, mesh
+    from khervecad.model import DocumentModel
+    m = DocumentModel()
+    m.set_global_fn(False)
+    ext = m.add_node("linear_extrude", dict(height=10))
+    m.add_node("polygon", dict(points=[[0, 0], [40, 0], [40, 10],
+                                       [10, 10], [10, 40], [0, 40]]),
+               parent=ext)
+    f = m.wrap_nodes([ext], "fillet")
+    f.params.update(radius=3, detail=12)
+    world = mesh.tessellate(ext)
+    top = [t for t in world if all(abs(v[2] - 10) < 1e-9 for v in t)]
+    f.params["edges"] = fillet_pick.seeds_from_pick(
+        dict(kind="face", tris=top), world, world)
+    result = fillet.baked(f, {})
+    assert result["chains"] == 1 and len(result["cuts"]) == 1
+    tris = mesh.tessellate(f)
+    removed = 7000 - analysis.mass_properties(tris)["volume"]
+    rim = 160 * 9 * (1 - math.pi / 4)        # the straight runs alone
+    assert rim * 0.9 < removed < rim * 1.05
+    assert analysis.print_check(tris)["checks"][0]["status"] == "pass"
