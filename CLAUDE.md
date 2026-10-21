@@ -3211,6 +3211,16 @@ into a new module and import.
                        "<plane> sketch" rotate (`SketchScene._sketch_group`)
                        and view2d shows every 2D shape lying in the plane
                        on show (`view2d_edit.on_view_plane`).
+  - `normal_to.py`   — SolidWorks' **Edit Sketch / Normal To** (2026-10-21,
+                       step 1): Create Sketch (or the tree's Edit Sketch)
+                       with a 2D shape selected turns the 3D camera square on
+                       to the shape's plane (Top / Front / Right,
+                       `plane_of` from its world normal), orthographic, over
+                       `DURATION_MS`, then the 2D sketch takes over at the
+                       SAME px/mm and centre; Finish (`back`) starts the 3D
+                       view square on at the sketch's scale and turns back
+                       to the saved camera. Step 2 (next): sketch planes on
+                       any face.
   - `drag_feature.py` — extrude / revolve by DRAGGING in 3D (2026-10-21,
                        SolidWorks / Fusion): a `View3D.edit_tool` that
                        Linear extrude / Rotate extrude start by themselves

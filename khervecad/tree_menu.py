@@ -35,7 +35,7 @@ GROUPS = [
 ]
 
 #: kept on top, in this order, before the submenus
-TOP = ["Edit in Object tab", "Hide", "Show", "Color", "Colour", "Rename",
+TOP = ["Edit Sketch", "Edit in Object tab", "Hide", "Show", "Color", "Colour", "Rename",
        "Duplicate", "Group", "OpenSCAD modifier"]
 #: kept last, in this order
 LAST = ["Suppress", "Unsuppress", "Delete, keep contents", "Delete all",

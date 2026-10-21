@@ -1151,6 +1151,14 @@ class ObjectTree(QTreeWidget):
         elif self.ALLOWS_GROUP_MATES and len(roots) == 1 \
                 and roots[0].type == "union":
             self._group_part_menu(menu, roots[0])
+        win = self.window()
+        from . import normal_to, sketch_mode
+        if sketch_mode.active(win) and normal_to.sketch_node(win) \
+                is not None:
+            # SolidWorks' Edit Sketch: turn to the shape, sketch on it
+            menu.addAction(icons.icon("mdi.pencil-box-outline"),
+                           language.tr("Edit Sketch"),
+                           lambda: normal_to.edit(win))
         hidden = [n for n in nodes if not n.visible]
         menu.addAction(
             icons.icon("mdi.eye-outline" if hidden

@@ -57,9 +57,18 @@ def create_action(win):
         from . import toolbars
         toolbars.remember_glyph(act, "mdi.pencil-box-outline", "draw")
         tooltips.apply(act, "create_sketch")
-        act.triggered.connect(lambda: enter(win))
+        # a 2D shape selected: Edit Sketch — turn to it first (normal_to)
+        act.triggered.connect(lambda: _create_or_edit(win))
         win._create_sketch_act = act
     return act
+
+
+def _create_or_edit(win):
+    from . import normal_to
+    if normal_to.sketch_node(win) is not None and active(win):
+        normal_to.edit(win)
+    else:
+        enter(win)
 
 
 class _FinishButton(QPushButton):
@@ -153,7 +162,9 @@ def finish(win):
         # the 3D view comes back framed on what was picked (else the
         # whole model): it kept the camera it had before the sketch and
         # the picked part could be nowhere on it (2026-10-20, the user)
-        QTimer.singleShot(0, lambda: _frame_3d(win))
+        from . import normal_to
+        if not normal_to.back(win):            # turned into it: turn back
+            QTimer.singleShot(0, lambda: _frame_3d(win))
 
 
 #: how much further back than a tight fit the 3D view comes back
