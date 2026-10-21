@@ -194,7 +194,11 @@ def test_ribbon_has_a_constraints_panel(app):
         assert "sketch_constrain" in keys
         _t, acts = ribbon.panel_actions(win, "sketch_constrain")
         data = [a.data() for a in acts]
-        assert data[:2] == ["con_auto", "con_list"]
+        assert data[-2:] == ["con_auto", "con_list"]
+        # Equal is among the icons the Fusion panel shows (it was 9th
+        # of 8 shown, hidden in the drop-down)
+        assert data.index("con_equal") < ribbon.PANEL_SHOWN[
+            "sketch_constrain"]
         for kind, _g in ui.TOOLS:
             assert ui.tool_of(kind) in data
         _t, create = ribbon.panel_actions(win, "sketch")

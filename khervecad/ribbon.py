@@ -188,7 +188,7 @@ FUSION_ALL = {"analyse", "checks", "dimension",
               "sketch_shapes", "shapes3d"}
 FUSION_SHOWN_MANY = 4
 #: icons shown by panels with a count of their own
-PANEL_SHOWN = {"sketch": 11, "sketch_modify": 5, "sketch_constrain": 8}
+PANEL_SHOWN = {"sketch": 11, "sketch_modify": 5, "sketch_constrain": 13}
 #: the sketch MODIFY panel: operations from the families, in this order
 SKETCH_MODIFY = ["translate", "rotate", "scale", "mirror", "pattern"]
 

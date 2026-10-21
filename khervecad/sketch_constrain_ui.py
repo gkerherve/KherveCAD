@@ -28,10 +28,10 @@ TOOLS = [
     ("coincident", "mdi.vector-point"),
     ("horizontal", "mdi.arrow-left-right"),
     ("vertical", "mdi.arrow-up-down"),
+    ("equal", "mdi.equal"),
     ("parallel", "mdi.format-align-justify"),
     ("perpendicular", "mdi.vector-line"),
     ("tangent", "mdi.circle-half-full"),
-    ("equal", "mdi.equal"),
     ("concentric", "mdi.circle-double"),
     ("collinear", "mdi.dots-horizontal"),
     ("midpoint", "mdi.format-horizontal-align-center"),
@@ -64,8 +64,9 @@ WHAT = {
     "parallel": "Keeps two lines (or edges) parallel.",
     "perpendicular": "Keeps two lines at a right angle.",
     "tangent": "Makes a line or circle just touch a circle.",
-    "equal": "Gives two lines the same length, or two circles the same "
-             "radius.",
+    "equal": "Makes two things the SAME SIZE: two lines (or rectangle / "
+             "polygon edges) the same length, two circles the same "
+             "radius. Change one and the other follows.",
     "concentric": "Puts two circles on one centre.",
     "collinear": "Puts two lines on one straight line.",
     "midpoint": "Puts a point at the middle of a line.",
@@ -493,6 +494,8 @@ def panel_actions(win):
         act.triggered.connect(lambda _=False, t=tool: win._set_tool(t))
         win._tool_group.addAction(act)
         acts.append(act)
+    # the constraints first (what the panel shows), Auto / list after
+    acts = acts[2:] + acts[:2]
     win._constrain_actions = acts
     return acts
 
