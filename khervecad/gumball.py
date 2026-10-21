@@ -148,8 +148,15 @@ class Gumball:
         if len(nodes) != 1:
             return None
         node = nodes[0]
+        # never climb past the Object being edited: the Object tab shows
+        # it at its own origin, so moving the Object itself showed
+        # nothing (the user: "unable to move whatever part")
+        scope = self.window.builder.isolated_component()
+        if node is scope:
+            return None
         probe = node
-        while probe is not None and probe.parent is not None:
+        while probe is not None and probe.parent is not None \
+                and probe is not scope:
             if probe.type in MOVABLE:
                 return probe
             probe = probe.parent

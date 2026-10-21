@@ -839,14 +839,8 @@ class View3D(QWidget):
 
     # ------------------------------------------------------- anchor pick
     def contextMenuEvent(self, event):
-        if getattr(self, "_pick_cb", None) is not None:
-            event.accept()               # picking: right-drag pans, no menu
-            return
-        if getattr(self, "edit_tool", None) is None:
-            self.context_requested.emit(event.pos())
-            event.accept()
-            return
-        super().contextMenuEvent(event)
+        # no menu on the 3D view (the user): the right button pans
+        event.accept()
 
     def start_pick(self, callback, groups=None, banner="",
                    labeler=None):
