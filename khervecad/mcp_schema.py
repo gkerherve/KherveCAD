@@ -1650,7 +1650,7 @@ TOOLS = [
             "world [x, y, z] ON one face (probe_surface gives point + "
             "normal), normal = that face's outward normal. type "
             "Clearance / Tapped (drill) / Counterbore / Countersink / Nut "
-            "trap, size M3-M20, fit Close / Normal / Loose (ISO 273), end "
+            "trap, size (ISO 'M1'..'M64', inch '1/4-20 UNC', '#8-32 UNC', '1/4-28 UNF' ...), fit Close / Normal / Loose (ISO 273), end "
             "Through all (default) or Blind + depth mm. The holes are ONE "
             "feature (a Group 'M6 Clearance Hole' cut by a Difference); a "
             "later call with the same settings adds to it. action update "

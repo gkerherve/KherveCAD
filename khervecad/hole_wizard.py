@@ -32,51 +32,43 @@ TYPES = ["Clearance", "Tapped (drill)", "Counterbore", "Countersink",
          "Nut trap"]
 FITS = ["Close", "Normal", "Loose"]
 ENDS = ["Through all", "Blind"]
-#: ISO 273 clearance holes (close, normal, loose)
-CLEARANCE = {"M3": (3.2, 3.4, 3.6), "M4": (4.3, 4.5, 4.8),
-             "M5": (5.3, 5.5, 5.8), "M6": (6.4, 6.6, 7.0),
-             "M8": (8.4, 9.0, 10.0), "M10": (10.5, 11.0, 12.0),
-             "M12": (13.0, 13.5, 14.5), "M16": (17.0, 17.5, 18.5),
-             "M20": (21.0, 22.0, 24.0)}
-#: ISO 4762 socket-head counterbore diameters
-COUNTERBORE = {"M3": 6.5, "M4": 8.0, "M5": 10.0, "M6": 11.0, "M8": 15.0,
-               "M10": 18.0, "M12": 20.0, "M16": 26.0, "M20": 33.0}
-SIZES = list(CLEARANCE)
+from . import hole_sizes
+
+STANDARDS = hole_sizes.STANDARDS
+#: every size of every standard (ISO M1-M64, ANSI #0-1" UNC / UNF)
+SIZES = hole_sizes.sizes()
 DEFAULT = dict(type="Clearance", size="M6", fit="Normal",
                end="Through all", depth=10.0)
 KEY = "hole_wizard"
 
 
-def _bolt(size):
-    from .library import BOLT_SIZES
-    return BOLT_SIZES[size]
-
-
 def spec_params(spec, through=None):
     """The `hole` node params for *spec*; *through* = the depth that
-    goes through the part (Through all)."""
+    goes through the part (Through all). Sizes from `hole_sizes`, in mm
+    whatever the standard."""
     spec = dict(DEFAULT, **(spec or {}))
     size = spec["size"]
-    b = _bolt(size)
+    r = hole_sizes.ROWS[size]
     fit = FITS.index(spec["fit"]) if spec["fit"] in FITS else 1
-    clear = CLEARANCE[size][fit]
     depth = float(through) if spec["end"] == "Through all" and through \
         else float(spec["depth"])
-    p = dict(kind="plain", diameter=clear, depth=round(depth, 4),
+    p = dict(kind="plain", diameter=r["clear"][fit], depth=round(depth, 4),
              extra=1.0)
     kind = spec["type"]
     if kind == "Tapped (drill)":
-        p["diameter"] = round(b["d"] - b["pitch"], 3)
+        p["diameter"] = round(r["d"] - r["pitch"], 3)
     elif kind == "Counterbore":
-        p.update(kind="counterbore", head_diameter=COUNTERBORE[size],
-                 head_depth=round(b["cap_h"] + 0.4, 3))
+        p.update(kind="counterbore",
+                 head_diameter=hole_sizes.counterbore(size),
+                 head_depth=round(r["head_h"] + 0.4, 3))
     elif kind == "Countersink":
-        p.update(kind="countersink", head_diameter=round(2 * b["d"] + 0.4,
+        p.update(kind="countersink", head_diameter=round(2 * r["d"] + 0.4,
                                                          3),
-                 countersink_angle=90.0)
+                 countersink_angle=82.0 if r["standard"] != "ISO metric"
+                 else 90.0)
     elif kind == "Nut trap":
-        p.update(kind="nut_trap", nut_width=round(b["af"] + 0.3, 3),
-                 nut_height=round(b["nut_h"] + 0.2, 3))
+        p.update(kind="nut_trap", nut_width=round(r["nut_af"] + 0.3, 3),
+                 nut_height=round(r["nut_h"] + 0.2, 3))
     return p
 
 
@@ -210,7 +202,7 @@ def update(model, feature, spec):
 # ------------------------------------------------------------------ UI
 TIP = ("Hole Wizard",
        "SolidWorks' Hole Wizard: choose the hole — type (clearance, "
-       "tapped, counterbore, countersink, nut trap), standard size M3-M20, "
+       "tapped, counterbore, countersink, nut trap), standard size (ISO M1-M64, ANSI #0-1\" UNC / UNF), "
        "fit and end condition — then click the faces of a part: every "
        "click drills one hole square to that face. The holes are one "
        "feature in the tree.",
@@ -268,9 +260,28 @@ def _make_panel_class():
             form = QFormLayout()
             self.type = QComboBox()
             self.type.addItems([language.tr(t) for t in TYPES])
+            self.standard = QComboBox()
+            self.standard.addItems([language.tr(t) for t in STANDARDS])
             self.size = QComboBox()
-            self.size.addItems(SIZES)
-            self.size.setCurrentText(DEFAULT["size"])
+            self.size.setMaxVisibleItems(20)
+
+            def fill(index):
+                keep = self.size.currentText()
+                self.size.blockSignals(True)
+                self.size.clear()
+                self.size.addItems(hole_sizes.sizes(STANDARDS[index]))
+                self.size.blockSignals(False)
+                if keep in hole_sizes.sizes(STANDARDS[index]):
+                    self.size.setCurrentText(keep)
+                elif index == 0:
+                    self.size.setCurrentText(DEFAULT["size"])
+                else:                              # 1/4-20 to start
+                    self.size.setCurrentIndex(min(10, self.size.count()
+                                                  - 1))
+                self._describe()
+            self.info = QLabel()
+            fill(0)
+            self.standard.currentIndexChanged.connect(fill)
             self.fit = QComboBox()
             self.fit.addItems([language.tr(f) for f in FITS])
             self.fit.setCurrentIndex(1)
@@ -284,12 +295,12 @@ def _make_panel_class():
             self.end.currentIndexChanged.connect(
                 lambda i: self.depth.setEnabled(i == 1))
             form.addRow(language.tr("Type"), self.type)
+            form.addRow(language.tr("Standard"), self.standard)
             form.addRow(language.tr("Size"), self.size)
             form.addRow(language.tr("Fit"), self.fit)
             form.addRow(language.tr("End"), self.end)
             form.addRow(language.tr("Depth"), self.depth)
             lay.addLayout(form)
-            self.info = QLabel()
             self.info.setWordWrap(True)
             lay.addWidget(self.info)
             row = QHBoxLayout()
@@ -306,6 +317,7 @@ def _make_panel_class():
             for w in (self.type, self.size, self.fit, self.end):
                 w.currentIndexChanged.connect(self._describe)
             self.depth.valueChanged.connect(self._describe)
+            self._ready = True
             self._describe()
 
         def spec(self):
@@ -316,6 +328,9 @@ def _make_panel_class():
                         depth=float(self.depth.value()))
 
         def _describe(self, *_):
+            if not getattr(self, "_ready", False) or \
+                    not self.size.currentText():
+                return                         # still being built
             p = spec_params(self.spec(), through=None)
             text = language.tr("{title}: Ø{d:g} mm").format(
                 title=title(self.spec()), d=p["diameter"])

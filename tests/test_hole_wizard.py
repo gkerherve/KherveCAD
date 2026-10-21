@@ -113,3 +113,40 @@ def test_mcp_hole_wizard():
     finally:
         win._dirty = False
         win.close()
+
+
+def test_every_standard_size():
+    from khervecad import hole_sizes
+    assert hole_sizes.sizes("ISO metric")[0] == "M1"
+    assert hole_sizes.sizes("ISO metric")[-1] == "M64"
+    assert "M1.6" in hw.SIZES and "M2.5" in hw.SIZES
+    unc = hole_sizes.sizes("ANSI inch UNC")
+    assert "1/4-20 UNC" in unc and "#8-32 UNC" in unc
+    assert "#0-80 UNF" in hole_sizes.sizes("ANSI inch UNF")
+    assert "#0" not in " ".join(unc)              # #0 has no coarse thread
+    p = hw.spec_params(dict(type="Clearance", size="M1.6"))
+    assert p["diameter"] == 1.8
+    tap = hw.spec_params(dict(type="Tapped (drill)", size="1/4-20 UNC"))
+    assert tap["diameter"] == pytest.approx(6.35 - 1.27, abs=0.01)
+    cs = hw.spec_params(dict(type="Countersink", size="3/8-16 UNC"))
+    assert cs["countersink_angle"] == 82.0          # inch heads are 82°
+    for size in hw.SIZES:                           # every one builds
+        for kind in hw.TYPES:
+            q = hw.spec_params(dict(type=kind, size=size), 20)
+            assert q["diameter"] > 0
+
+
+def test_the_panel_lists_the_standard_sizes():
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        panel = hw.open_panel(win)
+        assert panel.size.currentText() == "M6"
+        panel.standard.setCurrentIndex(1)           # ANSI inch UNC
+        names = [panel.size.itemText(i) for i in range(panel.size.count())]
+        assert names[0] == "#1-64 UNC" and "1-8 UNC" in names
+        assert panel.spec()["size"] in names
+        panel.close()
+    finally:
+        win._dirty = False
+        win.close()

@@ -433,7 +433,7 @@ one turned "<plane> sketch" group — add them there, in its frame.
 
 Holes — a bolt hole, tapped hole, counterbore or countersink is ONE \
 hole_wizard call: probe_surface for the face's point + normal, then \
-hole_wizard with the points, type, size (M3-M20) and end (Through all / \
+hole_wizard with the points, type, size (ISO M1-M64 or inch UNC / UNF like '1/4-20 UNC') and end (Through all / \
 Blind) — never hand-build a cylinder cut for a standard hole.
 
 Feature history and families, SolidWorks style — suppress switches a \
