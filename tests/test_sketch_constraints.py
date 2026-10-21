@@ -194,6 +194,7 @@ def test_ribbon_has_a_constraints_panel(app):
         assert "sketch_constrain" in keys
         _t, acts = ribbon.panel_actions(win, "sketch_constrain")
         data = [a.data() for a in acts]
+        assert data[0] == "con_delete"            # the first icon
         assert data[-2:] == ["con_auto", "con_list"]
         # Equal is among the icons the Fusion panel shows (it was 9th
         # of 8 shown, hidden in the drop-down)
@@ -231,6 +232,50 @@ def test_mcp_sketch_constraint(app):
         assert "error" in bad
         out = ex.execute("sketch_constraint", dict(action="list"))
         assert len(out["constraints"]) == 1 and out["dof"] == 7
+    finally:
+        win._dirty = False
+        win.close()
+
+
+def test_marks_on_one_spot_sit_side_by_side(view):
+    m = view.scene().model
+    a, b = _lines(m)
+    sc.add(m, m.root, "horizontal", [_ref(m, a, "l")])
+    sc.add(m, m.root, "equal", [_ref(m, a, "l"), _ref(m, b, "l")])
+    marks, _font = ui.glyphs(view)
+    on_a = sorted((r for r, t, _c, i in marks if t in ("H", "=")
+                   and abs(r.center().y() - marks[0][0].center().y()) < 1),
+                  key=lambda r: r.left())
+    assert len(on_a) == 2
+    assert on_a[1].left() >= on_a[0].right()         # no overlap
+    view.viewport().repaint()
+
+
+def test_delete_tool_removes_the_clicked_constraint(view):
+    m = view.scene().model
+    a, b = _lines(m)
+    sc.add(m, m.root, "horizontal", [_ref(m, a, "l")])
+    sc.add(m, m.root, "parallel", [_ref(m, a, "l"), _ref(m, b, "l")])
+    marks, _f = ui.glyphs(view)
+    rect = next(r for r, t, _c, _i in marks if t == "H")
+    view.set_tool(ui.DELETE)
+    QTest.mouseClick(view.viewport(), Qt.LeftButton, Qt.NoModifier,
+                     rect.center().toPoint())
+    assert [r["kind"] for r in sc.rows(m.root)] == ["parallel"]
+
+
+def test_a_typed_value_holds_and_the_rest_follows(app):
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        m = win.model
+        p = m.add_node("polygon", dict(points=[[0, 0], [40, 0], [20, 30]]))
+        sc.add(m, m.root, "horizontal", [_ref(m, p, "e1")])
+        pts = [list(q) for q in p.params["points"]]
+        pts[2] = [25, 35]
+        m.set_param(p, "points", pts)            # as Properties does
+        assert p.params["points"][2] == pytest.approx([25, 35], abs=1e-2)
+        assert p.params["points"][1][1] == pytest.approx(35, abs=1e-2)
     finally:
         win._dirty = False
         win.close()

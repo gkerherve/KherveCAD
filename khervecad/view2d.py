@@ -1711,6 +1711,11 @@ class SketchScene(QGraphicsScene):
             event.accept()
             return
         from . import sketch_tools
+        from . import sketch_constrain_ui as _scu
+        if self.tool == _scu.DELETE:
+            _scu.delete_move(self, event)
+            event.accept()
+            return
         if sketch_tools.handles(self.tool):
             sketch_tools.move(self, event)
             return

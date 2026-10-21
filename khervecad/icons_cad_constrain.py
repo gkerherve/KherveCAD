@@ -266,3 +266,12 @@ def _sk_chamfer(d):
     _ln(d, (0.14, 0.88), (0.14, 0.45))
     _ln(d, (0.55, 0.12), (0.88, 0.12))
     d.line(P(0.14, 0.45), P(0.55, 0.12), d.pal.make, 0.08)
+
+
+@draws("con_delete")
+def _con_delete(d):
+    """A constraint mark (=) struck out in red."""
+    _ln(d, (0.1, 0.78), (0.9, 0.78))
+    d.text(0.42, 0.56, "=", 0.3, d.pal.make)
+    d.line(P(0.18, 0.18), P(0.7, 0.66), d.pal.cut, 0.08)
+    d.line(P(0.7, 0.18), P(0.18, 0.66), d.pal.cut, 0.08)

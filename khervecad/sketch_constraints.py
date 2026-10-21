@@ -370,7 +370,8 @@ def _nodes_of(container, rs):
 
 
 # --------------------------------------------------------------- solver
-def solve(container, rs=None, prefer=(), env=None, write=True, dof=True):
+def solve(container, rs=None, prefer=(), env=None, write=True, dof=True,
+          held=()):
     """Solve *container*'s rows (or *rs*). *prefer* = node ids that
     should move as little as possible (the shape just edited). Returns a
     report: ok, residual, dof, redundant, moved. Writes the params when
@@ -384,7 +385,11 @@ def solve(container, rs=None, prefer=(), env=None, write=True, dof=True):
         for path, v in _vars(node):
             keys.append((node.id, path))
             x0.append(v)
-            w.append(0.02 if node.id in prefer else 1.0)
+            # what the user just typed or dragged is HELD (it barely
+            # moves: the rest follows it), the rest of an edited shape
+            # moves less than the shapes not touched
+            w.append(1e-6 if (node.id, path) in held else
+                     0.05 if node.id in prefer else 1.0)
     x0 = np.array(x0, float)
     W = np.array(w, float)
     by_id = {n.id: n for n in nodes}
@@ -511,6 +516,7 @@ def add(model, container, kind, refs, value=None):
                        "constraints." % KINDS[kind][0])
     report = solve(container, rs, env=env)
     container.params[KEY] = rs
+    _remember(_nodes_of(container, rs))
     for nid in report["moved"]:
         model.node_changed.emit(report["nodes"][nid])
     model.node_changed.emit(container)
@@ -563,6 +569,7 @@ def set_value(model, container, index, value):
                        "constraints.")
     container.params[KEY] = rs
     report = solve(container, rs, env=_env(model))
+    _remember(_nodes_of(container, rs))
     for nid in report["moved"]:
         model.node_changed.emit(report["nodes"][nid])
     model.node_changed.emit(container)
@@ -570,6 +577,25 @@ def set_value(model, container, index, value):
 
 
 _REFRESHING = False
+#: {(node id, param path): value} as the last solve left them — a value
+#: that differs now is what the user changed, and is held
+_SOLVED = {}
+
+
+def _changed_vars(nodes):
+    held = set()
+    for node in nodes:
+        for path, v in _vars(node):
+            old = _SOLVED.get((node.id, path))
+            if old is not None and abs(old - v) > 1e-9:
+                held.add((node.id, path))
+    return held
+
+
+def _remember(nodes):
+    for node in nodes:
+        for path, v in _vars(node):
+            _SOLVED[(node.id, path)] = v
 
 
 def refresh(model, edited=()):
@@ -598,8 +624,10 @@ def refresh(model, edited=()):
                 else:
                     cont.params.pop(KEY, None)
                     continue
+            nodes = _nodes_of(cont, good)
             report = solve(cont, good, prefer=set(edited), env=env,
-                           dof=False)
+                           dof=False, held=_changed_vars(nodes))
+            _remember(nodes)
             out[cont.id] = report
             for nid in report["moved"]:
                 model.node_changed.emit(report["nodes"][nid])

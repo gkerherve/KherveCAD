@@ -83,6 +83,12 @@ WHAT = {
     "angle": "Drives the angle between two lines.",
 }
 TIPS = {
+    PREFIX + "delete": (
+        "Delete constraint",
+        "Removes one constraint or dimension: click its mark on the "
+        "sketch (H, V, =, ∥, a value…). The shapes stay where they are.",
+        ["Pick the tool; the mark under the cursor turns red.",
+         "Click it. Ctrl+Z brings it back."], None),
     "con_auto": ("Auto constrain",
                  "Adds the constraints the sketch already looks like it "
                  "has: nearly level / upright lines, line ends that meet.",
@@ -115,7 +121,7 @@ def tool_of(kind):
 
 def handles(tool):
     return isinstance(tool, str) and tool.startswith(PREFIX) \
-        and tool[len(PREFIX):] in sc.KINDS
+        and (tool[len(PREFIX):] in sc.KINDS or tool == PREFIX + "delete")
 
 
 def prompt(kind, n):
@@ -229,6 +235,9 @@ def _value(text):
 
 def press(scene, event):
     from PyQt5.QtCore import Qt
+    if scene.tool == DELETE:
+        delete_press(scene, event)
+        return
     event.accept()
     if event.button() == Qt.RightButton:
         drop(scene)
@@ -292,52 +301,66 @@ def key(scene, event):
 
 
 # --------------------------------------------------------------- glyphs
-def paint(view, painter):
-    """The constraints of every container on the sketch: a letter at
-    each constrained entity, a dimension's value beside it; picks in
-    progress ringed."""
-    from PyQt5.QtCore import QPointF, Qt
-    from PyQt5.QtGui import QColor, QFont, QPen
+def _anchor(view, items, node, name):
+    """Where an entity's marks start, in VIEW pixels."""
+    from PyQt5.QtCore import QPointF
+    item = items.get(node.id)
+    if item is None:
+        return None
+    k = sc.kind_of(node, name)
+    if k == "point":
+        p = sc._point(node, name, {})
+    elif k == "line":
+        a, b = sc._line(node, name, {})
+        p = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+    else:
+        c, r = sc._circle(node, name, {})
+        p = (c[0] + r * 0.707, c[1] + r * 0.707)
+    frame = item.parentItem()
+    q = QPointF(*p)
+    if frame is not None:
+        q = frame.mapToScene(q)
+    return view.mapFromScene(q)
+
+
+#: px between marks sharing a spot, and the size a mark answers clicks
+MARK_GAP = 4
+MARK_PICK = 9
+
+
+def glyphs(view):
+    """Every constraint mark on the sketch: [(QRectF in view pixels,
+    text, container, row index)]. Marks that would land on the same spot
+    (an H and an = on one line) are laid out side by side."""
+    from PyQt5.QtCore import QPointF, QRectF
+    from PyQt5.QtGui import QFont, QFontMetrics
     scene = view.scene()
     model = getattr(scene, "model", None)
     if model is None:
-        return
+        return []
     items = {it.node.id: it for it in _shape_items(scene)}
-
-    def at(node, name):
-        item = items.get(node.id)
-        if item is None:
-            return None
-        k = sc.kind_of(node, name)
-        if k == "point":
-            p = sc._point(node, name, {})
-        elif k == "line":
-            a, b = sc._line(node, name, {})
-            p = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
-        else:
-            c, r = sc._circle(node, name, {})
-            p = (c[0] + r * 0.707, c[1] + r * 0.707)
-        frame = item.parentItem()
-        q = QPointF(*p)
-        if frame is not None:
-            q = frame.mapToScene(q)
-        return view.mapFromScene(q)
-
-    painter.save()
-    painter.resetTransform()
-    font = QFont(painter.font())
+    font = QFont(view.font())
     font.setPointSize(8)
     font.setBold(True)
-    painter.setFont(font)
-    ink = QColor("#c75b12")
-    painter.setPen(QPen(ink, 1.2))
+    fm = QFontMetrics(font)
+    taken = {}                      # spot key -> x advance used so far
+    out = []
+
+    def place(spot, text, cont, index):
+        key = (round(spot.x() / 6), round(spot.y() / 6))
+        dx = taken.get(key, 0)
+        w = fm.horizontalAdvance(text) + 2
+        taken[key] = dx + w + MARK_GAP
+        x, y = spot.x() + 5 + dx, spot.y() - 5 - fm.ascent()
+        out.append((QRectF(x, y, w, fm.height()), text, cont, index))
+
     for cont in sc.containers(model):
-        for row in sc.rows(cont):
+        for index, row in enumerate(sc.rows(cont)):
             spots = []
             try:
                 for ref in row["refs"]:
                     node, name = sc.entity(cont, ref)
-                    spot = at(node, name)
+                    spot = _anchor(view, items, node, name)
                     if spot is not None:
                         spots.append(spot)
             except (KeyError, ValueError, IndexError):
@@ -345,24 +368,99 @@ def paint(view, painter):
             if not spots:
                 continue
             if "value" in row:
-                x = sum(s.x() for s in spots) / len(spots)
-                y = sum(s.y() for s in spots) / len(spots)
+                c = QPointF(sum(s.x() for s in spots) / len(spots),
+                            sum(s.y() for s in spots) / len(spots))
                 unit = "°" if row["kind"] == "angle" else ""
-                prefix = {"radius": "R", "diameter": "Ø"}.get(row["kind"],
-                                                             "")
-                painter.drawText(QPointF(x + 6, y - 6), "%s%s%s" % (
-                    prefix, row["value"], unit))
+                prefix = {"radius": "R", "diameter": "Ø"}.get(
+                    row["kind"], "")
+                place(c, "%s%s%s" % (prefix, row["value"], unit), cont,
+                      index)
             else:
-                for s in spots:
-                    painter.drawText(QPointF(s.x() + 5, s.y() - 5),
-                                     MARK.get(row["kind"], "?"))
+                for spot in spots:
+                    place(spot, MARK.get(row["kind"], "?"), cont, index)
+    return out, font
+
+
+def paint(view, painter):
+    """The constraints on the sketch: a mark at each constrained entity
+    (side by side where they meet), a dimension's value; the mark under
+    the cursor red while the delete tool is on; picks ringed."""
+    from PyQt5.QtCore import Qt
+    from PyQt5.QtGui import QColor, QPen
+    scene = view.scene()
+    marks = glyphs(view)
+    if not marks:
+        return
+    marks, font = marks
+    deleting = getattr(scene, "tool", None) == DELETE
+    hot = getattr(scene, "_con_hot", None)
+    painter.save()
+    painter.resetTransform()
+    painter.setFont(font)
+    ink, red = QColor("#c75b12"), QColor("#d32f2f")
+    for rect, text, cont, index in marks:
+        is_hot = deleting and hot == (cont.id, index)
+        painter.setPen(QPen(red if is_hot else ink, 1.2))
+        if is_hot:
+            painter.drawRect(rect.adjusted(-1, -1, 1, 1))
+        painter.drawText(rect, int(Qt.AlignCenter), text)
     painter.setPen(QPen(QColor("#2176c7"), 2))
     painter.setBrush(Qt.NoBrush)
+    items = {it.node.id: it for it in _shape_items(scene)}
     for node, name, _ in getattr(scene, "_con_picks", []):
-        spot = at(node, name)
+        spot = _anchor(view, items, node, name)
         if spot is not None:
             painter.drawEllipse(spot, 6, 6)
     painter.restore()
+
+
+# --------------------------------------------------- delete constraint
+DELETE = PREFIX + "delete"
+
+
+def mark_at(view, view_pos):
+    """(container, row index) of the mark under a VIEW pixel, or None."""
+    found = glyphs(view)
+    if not found:
+        return None
+    best = None
+    for rect, _t, cont, index in found[0]:
+        c = rect.center()
+        d = max(abs(c.x() - view_pos.x()) - rect.width() / 2,
+                abs(c.y() - view_pos.y()) - rect.height() / 2, 0)
+        if d <= MARK_PICK and (best is None or d < best[0]):
+            best = (d, cont, index)
+    return best[1:] if best else None
+
+
+def delete_press(scene, event):
+    from PyQt5.QtCore import Qt
+    event.accept()
+    if event.button() != Qt.LeftButton or not scene.views():
+        return
+    view = scene.views()[0]
+    hit = mark_at(view, view.mapFromScene(event.scenePos()))
+    if hit is None:
+        scene.status.emit("Delete constraint: click a constraint's mark "
+                          "(H, V, =, a dimension's value…).")
+        return
+    cont, index = hit
+    row = sc.rows(cont)[index]
+    sc.remove(scene.model, cont, index)
+    scene._con_hot = None
+    scene.status.emit("Removed %s." % sc.describe(cont, row))
+    scene.update()
+
+
+def delete_move(scene, event):
+    if not scene.views():
+        return
+    view = scene.views()[0]
+    hit = mark_at(view, view.mapFromScene(event.scenePos()))
+    hot = (hit[0].id, hit[1]) if hit else None
+    if hot != getattr(scene, "_con_hot", None):
+        scene._con_hot = hot
+        scene.update()
 
 
 # ---------------------------------------------------- window and panel
@@ -494,8 +592,18 @@ def panel_actions(win):
         act.triggered.connect(lambda _=False, t=tool: win._set_tool(t))
         win._tool_group.addAction(act)
         acts.append(act)
-    # the constraints first (what the panel shows), Auto / list after
-    acts = acts[2:] + acts[:2]
+    # Delete first, then the constraints (what the panel shows), Auto /
+    # list after
+    act = QAction(icons.icon("mdi.link-variant-off",
+                             icons.family_color("draw")),
+                  language.tr("Delete constraint"), win)
+    act.setData(DELETE)
+    act.setCheckable(True)
+    toolbars.remember_glyph(act, "mdi.link-variant-off", "draw")
+    tooltips.apply(act, DELETE)
+    act.triggered.connect(lambda _=False: win._set_tool(DELETE))
+    win._tool_group.addAction(act)
+    acts = [act] + acts[2:] + acts[:2]
     win._constrain_actions = acts
     return acts
 
