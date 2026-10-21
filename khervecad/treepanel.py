@@ -1231,31 +1231,36 @@ class ObjectTree(QTreeWidget):
             from . import curve_surface_ui
             menu.addSeparator()
             curve_surface_ui.add_menu(menu, win, roots)
-        if hasattr(win, "view3d") and len(roots) == 1:     # lego_convert
-            from . import lego_convert
-            menu.addSeparator()
-            menu.addAction(
-                icons.icon("mdi.toy-brick-plus-outline"),
-                language.tr("Convert to Lego..."),
-                lambda: lego_convert.convert_to_lego(win, roots[0]))
-            menu.addAction(
-                icons.icon("mdi.cube-outline"),
-                language.tr("Fuse Lego into one solid"),
-                lambda: lego_convert.fuse_lego(win, roots[0]))
+        # the long tail of the menu folded into two submenus (2026-10-21,
+        # the user: "too many things")
         if hasattr(win, "view3d"):              # Analyse (analysis_dialog)
             from .analysis_dialog import open_analysis
             menu.addSeparator()
-            menu.addAction(icons.icon("mdi.scale-balance"),
-                           language.tr("Mass properties..."),
-                           lambda: open_analysis(win, "mass", roots))
-            menu.addAction(icons.icon("mdi.printer-3d-nozzle-outline"),
-                           language.tr("Check for 3D printing..."),
-                           lambda: open_analysis(win, "print", roots))
-            menu.addAction(icons.icon("mdi.set-center"),
-                           language.tr("Check interference..."),
-                           lambda: open_analysis(win, "interference",
-                                                 roots))
-            menu.addSeparator()
+            check = menu.addMenu(icons.icon("mdi.clipboard-check-outline"),
+                                 language.tr("Check"))
+            check.addAction(icons.icon("mdi.scale-balance"),
+                            language.tr("Mass properties..."),
+                            lambda: open_analysis(win, "mass", roots))
+            check.addAction(icons.icon("mdi.printer-3d-nozzle-outline"),
+                            language.tr("Check for 3D printing..."),
+                            lambda: open_analysis(win, "print", roots))
+            check.addAction(icons.icon("mdi.set-center"),
+                            language.tr("Check interference..."),
+                            lambda: open_analysis(win, "interference",
+                                                  roots))
+        if hasattr(win, "view3d") and len(roots) == 1:     # lego_convert
+            from . import lego_convert
+            special = menu.addMenu(icons.icon("mdi.star-four-points-outline"),
+                                   language.tr("Special"))
+            special.addAction(
+                icons.icon("mdi.toy-brick-plus-outline"),
+                language.tr("Convert to Lego..."),
+                lambda: lego_convert.convert_to_lego(win, roots[0]))
+            special.addAction(
+                icons.icon("mdi.cube-outline"),
+                language.tr("Fuse Lego into one solid"),
+                lambda: lego_convert.fuse_lego(win, roots[0]))
+        menu.addSeparator()
         if len(roots) == 1:
             menu.addAction(
                 icons.icon("mdi.link-variant"),
@@ -1271,12 +1276,8 @@ class ObjectTree(QTreeWidget):
                 language.tr("Make Object"),
                 lambda: [self.model.make_component(n)
                          for n in objectable])
-        if len(roots) == 1 and roots[0].type not in ("assign", "variables"):
-            from .user_library_dialog import save_selection
-            menu.addAction(
-                icons.icon("mdi.bookshelf"),
-                language.tr("Save to My Library..."),
-                lambda: save_selection(self.window(), roots[0]))
+        # Save to My Library left this menu (the user): Library ▸ My
+        # Library ▸ Save Selection… still has it
         if promotable and self.SHOWS_INSERT_OBJECT:
             from .collections_panel import fill_move_menu
             fill_move_menu(menu.addMenu(
