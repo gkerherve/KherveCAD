@@ -1158,6 +1158,18 @@ class ObjectTree(QTreeWidget):
                 icons.icon("mdi.rounded-corner"),
                 language.tr("Pick fillet edges..."),
                 lambda: win.start_fillet_pick(fillet))
+
+            def _restart(f=fillet):
+                # old fillets kept the EDGES a face had when it was
+                # clicked; cleared, one click on the face keeps the face
+                # itself, so holes added later are rounded too
+                f.params.pop("faces", None)
+                self.model.set_param(f, "edges", [])
+                win.start_fillet_pick(f)
+            menu.addAction(
+                icons.icon("mdi.restart"),
+                language.tr("Clear and pick again (click a face to "
+                            "round all its edges)..."), _restart)
         sculpt = roots[0] if len(roots) == 1 and roots[0].type == "sculpt" \
             else (roots[0].parent if len(roots) == 1 and roots[0].parent
                   is not None and roots[0].parent.type == "sculpt"

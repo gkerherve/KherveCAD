@@ -97,3 +97,22 @@ def test_an_optional_table_can_be_emptied(app):
     keep = RowsEditor([[0, 1, 2]], None, got.append)
     keep._remove_row()
     assert keep.table.rowCount() == 1        # a required list keeps one
+
+
+def test_clear_and_pick_again(window, monkeypatch):
+    from PyQt5.QtWidgets import QMenu
+    m = window.model
+    cube = m.add_node("cube")
+    f = m.wrap_nodes([cube], "fillet")
+    f.params["edges"] = [[0, 0, 20, 20, 0, 20]]
+    tree = window.builder.active_tree()
+    tree.select_nodes([f])
+    QApplication.processEvents()
+    shown = []
+    monkeypatch.setattr(QMenu, "exec_", lambda self, *a: shown.append(
+        [x for x in self.actions() if x.text()]))
+    tree._context_menu(tree.visualItemRect(tree.currentItem()).center())
+    act = next(a for a in shown[0] if a.text().startswith("Clear and pick"))
+    act.trigger()
+    assert f.params["edges"] == [] and window.view3d._pick_cb is not None
+    window.view3d.cancel_pick()
