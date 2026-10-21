@@ -2141,6 +2141,11 @@ class SketchView(QGraphicsView):
 
     def set_tool(self, tool):
         scene = self.scene()
+        if tool == DIMENSION:
+            # Add dimension IS the sketch dimension: part of the sketch
+            # and driving it, not a loose annotation on every 2D view
+            from . import sketch_constrain_ui
+            tool = sketch_constrain_ui.DIMENSION
         if tool not in (MEASURE, DIMENSION):
             scene.clear_measure()
         if tool != scene.tool:

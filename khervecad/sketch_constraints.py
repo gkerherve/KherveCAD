@@ -823,3 +823,69 @@ def drop_between(parent, a, b, kinds=("coincident",)):
         parent.params[KEY] = rs
     else:
         parent.params.pop(KEY, None)
+
+
+# ------------------------------------------- scale on first dimension
+#: QSettings key: the first dimension of a sketch scales all of it
+SCALE_FIRST = "sketch/scale_on_first_dimension"
+DIMENSION_KINDS = ("distance", "hdistance", "vdistance", "length",
+                   "point_line", "radius", "diameter")
+
+
+def scale_first_enabled():
+    try:
+        from PyQt5.QtCore import QSettings
+        return QSettings("Kherve", "KherveCAD").value(
+            SCALE_FIRST, True, type=bool)
+    except Exception:                       # pragma: no cover
+        return True
+
+
+def has_dimension(container):
+    return any(r["kind"] in DIMENSION_KINDS for r in rows(container))
+
+
+def scale_shapes(model, container, factor):
+    """Scale every 2D shape of *container* about the origin by *factor*
+    (SolidWorks' "scale sketch on first dimension"): positions, sizes
+    and line widths stay in proportion; constraints still hold."""
+    if factor <= 0 or abs(factor - 1.0) < 1e-12:
+        return
+    keys = {"line": ("x1", "y1", "x2", "y2"),
+            "rect": ("x", "y", "width", "height"),
+            "circle": ("x", "y", "radius"),
+            "polygon": ("x", "y")}
+    for node in container.children:
+        if node.type not in keys:
+            continue
+        p = node.params
+        for k in keys[node.type]:
+            if _num(p.get(k)):
+                p[k] = round(float(p[k]) * factor, 6)
+        if node.type == "polygon":
+            p["points"] = [[round(float(v) * factor, 6) if _num(v) else v
+                            for v in pt] for pt in p.get("points") or []]
+            if p.get("corners"):
+                p["corners"] = [[r[0], round(float(r[1]) * factor, 6)]
+                                + list(r[2:]) for r in p["corners"]]
+        model.node_changed.emit(node)
+    _remember(_nodes_of(container, rows(container)))
+
+
+def add_dimension(model, container, kind, refs, value):
+    """A sketch dimension: the FIRST one of a sketch scales the whole
+    sketch to it (when the option is on and it is a length), later ones
+    drive their own shapes. Returns (report, scaled)."""
+    scaled = False
+    if kind in DIMENSION_KINDS and not has_dimension(container) and \
+            scale_first_enabled():
+        try:
+            now = measure(container, kind, refs)
+            target = float(value) if _num(value) else value_of(
+                {"value": value}, _env(model))
+        except (KeyError, ValueError, TypeError):
+            now, target = 0.0, 0.0
+        if now > 1e-9 and target > 0:
+            scale_shapes(model, container, target / now)
+            scaled = True
+    return add(model, container, kind, refs, value), scaled

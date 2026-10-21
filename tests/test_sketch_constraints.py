@@ -302,7 +302,8 @@ def test_constraints_survive_the_openscad_program(app):
     assert sc.rows(root) == sc.rows(m.root)
 
 
-def test_sketch_dimension_tool(view):
+def test_sketch_dimension_tool(view, monkeypatch):
+    monkeypatch.setattr(sc, "scale_first_enabled", lambda: False)
     m = view.scene().model
     a, b = _lines(m)
     c = m.add_node("circle", dict(x=20, y=-15, radius=4))
@@ -410,3 +411,28 @@ def test_every_shape_shows_its_sizes(view):
     finally:
         type(view)._draw_dim = orig
         type(view)._dim_screen = orig_s
+
+
+def test_first_dimension_scales_the_whole_sketch(app, monkeypatch):
+    """SolidWorks' scale-on-first-dimension: dimension one side and the
+    whole sketch follows in proportion; the next dimension drives only
+    its own shape."""
+    monkeypatch.setattr(sc, "scale_first_enabled", lambda: True)
+    m = DocumentModel()
+    a = m.add_node("line", dict(x1=0, y1=0, x2=10, y2=0))
+    c = m.add_node("circle", dict(x=20, y=0, radius=2))
+    report, scaled = sc.add_dimension(m, m.root, "length",
+                                      [_ref(m, a, "l")], 30)
+    assert scaled
+    assert _len(a) == pytest.approx(30)
+    assert c.params["x"] == pytest.approx(60)            # in proportion
+    assert c.params["radius"] == pytest.approx(6)
+    _r, scaled = sc.add_dimension(m, m.root, "radius",
+                                  [_ref(m, c, "o")], 4)
+    assert not scaled and _len(a) == pytest.approx(30)
+    assert c.params["radius"] == pytest.approx(4)
+
+
+def test_add_dimension_is_the_sketch_dimension(view):
+    view.set_tool("dimension")
+    assert view.scene().tool == ui.DIMENSION

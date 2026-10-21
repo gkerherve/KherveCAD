@@ -505,12 +505,15 @@ def dimension_press(scene, event):
     if text is None:
         return
     try:
-        report = sc.add(scene.model, container, kind, refs, _value(text))
+        report, scaled = sc.add_dimension(scene.model, container, kind,
+                                          refs, _value(text))
     except ValueError as exc:
         scene.status.emit(str(exc))
         return
-    scene.status.emit("%s %s — %s" % (sc.KINDS[kind][0], text,
-                                      sc.status_text(report)))
+    scene.status.emit("%s %s — %s%s" % (
+        sc.KINDS[kind][0], text, sc.status_text(report),
+        " The whole sketch was scaled to it (first dimension)."
+        if scaled else ""))
 
 
 # --------------------------------------------------- delete constraint
@@ -602,6 +605,18 @@ def open_window(win):
         dlg.list = QListWidget()
         lay.addWidget(dlg.status)
         lay.addWidget(dlg.list)
+        from PyQt5.QtWidgets import QCheckBox
+        from PyQt5.QtCore import QSettings
+        dlg.scale_first = QCheckBox(language.tr(
+            "Scale the whole sketch on its first dimension"))
+        dlg.scale_first.setToolTip(language.tr(
+            "SolidWorks' option: the first size you give a sketch scales "
+            "every shape in it to match; later dimensions drive only "
+            "their own shapes."))
+        dlg.scale_first.setChecked(sc.scale_first_enabled())
+        dlg.scale_first.toggled.connect(lambda on: QSettings(
+            "Kherve", "KherveCAD").setValue(sc.SCALE_FIRST, bool(on)))
+        lay.addWidget(dlg.scale_first)
         row = QHBoxLayout()
         lay.addLayout(row)
         buttons = {}
