@@ -33,8 +33,6 @@ def meshes(window, node):
     root = window._render_scope()[0]
     iso = root if root is not window.model.root else None
     fn = window.model.effective_fn()
-    with window._isolated_frame(iso):
-        world = mesh.selected_world_tris(root, {node.id}, fn=fn)
     env = bake._codegen_env(node)
     mesh._set_fn(fn)
     try:
@@ -42,9 +40,24 @@ def meshes(window, node):
                  mesh._children_mesh(node, env, None, frozenset(), False)]
     finally:
         mesh._set_fn(None)
-    if not world or len(world) != len(local):
+    if not local:
         return None, None
+    # the world copy is the SAME uncut triangles placed where the view
+    # shows the part: the fillet's own (cut) mesh has other triangles
+    # once a first edge or face is rounded, so a second pick could not
+    # match them up and refused to start
+    with window._isolated_frame(iso):
+        m = mesh.ancestor_matrix(node, env, stop=iso)
+        m = mesh.mat_mul(m, mesh.node_matrix(node, env))
+    world = [tuple(_apply(m, v) for v in t) for t in local]
     return world, local
+
+
+def _apply(m, v):
+    x, y, z = v[0], v[1], v[2]
+    return (m[0][0] * x + m[0][1] * y + m[0][2] * z + m[0][3],
+            m[1][0] * x + m[1][1] * y + m[1][2] * z + m[1][3],
+            m[2][0] * x + m[2][1] * y + m[2][2] * z + m[2][3])
 
 
 def seeds_from_pick(desc, world, local) -> list:
@@ -145,8 +158,17 @@ def start(window, node) -> bool:
         row = face_from_pick(desc, world, local)
         if row is not None:
             faces = [list(r) for r in (node.params.get("faces") or [])]
-            faces.append(row)
-            model.set_param(node, "faces", faces)
+            same = any(all(abs(float(a) - float(b)) < 1e-3
+                           for a, b in zip(row[3:], f[3:])) and
+                       abs(sum((float(row[i]) - float(f[i])) * float(row[3 + i])
+                               for i in range(3))) < 1e-3
+                       for f in faces)       # same plane, same way
+            if same:
+                window.statusBar().showMessage(
+                    "That face is already in the fillet.", 3000)
+            else:
+                faces.append(row)
+                model.set_param(node, "faces", faces)
             arm()
             return
         seeds = seeds_from_pick(desc, world, local)

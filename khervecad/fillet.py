@@ -74,11 +74,9 @@ NODE_TYPES = {
                  0.01, 1e4),
                 ("kind", "Kind", "choice", list(KINDS), None),
                 ("detail", "Segments across the round", "int", 1, 64),
-                ("edges", "Edges (a click adds one; start x y z, "
-                          "end x y z)", "rows",
+                ("edges", "Edges", "rows",
                  ["X1", "Y1", "Z1", "X2", "Y2", "Z2"], None),
-                ("faces", "Faces (every edge round each; a point on "
-                          "it and its normal)", "rows",
+                ("faces", "Faces", "rows",
                  ["X", "Y", "Z", "NX", "NY", "NZ"], None)]),
 }
 

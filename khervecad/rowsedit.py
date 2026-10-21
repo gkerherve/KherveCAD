@@ -57,8 +57,11 @@ class RowsEditor(QWidget):
     _ROW_H = 22
 
     def __init__(self, rows, columns, on_change, parent=None,
-                 allow_empty=False):
+                 allow_empty=False, on_add=None):
         super().__init__(parent)
+        #: + calls this instead of adding a blank row (a fillet's + picks
+        #: edges / faces on the model)
+        self._on_add = on_add
         #: an optional list (a polygon's paths, its rounded corners) may
         #: lose its last row; a required one keeps one
         self._allow_empty = allow_empty
@@ -147,6 +150,9 @@ class RowsEditor(QWidget):
             self._on_change(rows)
 
     def _add_row(self):
+        if self._on_add is not None:
+            self._on_add()
+            return
         r = self.table.currentRow()
         if r < 0:
             r = self.table.rowCount() - 1

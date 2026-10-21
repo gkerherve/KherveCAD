@@ -10,6 +10,8 @@ the Free Software Foundation, either version 3 of the License, or
 """
 
 import pytest
+from PyQt5.QtCore import Qt
+from PyQt5.QtTest import QTest
 from PyQt5.QtWidgets import QApplication, QMenu
 
 from khervecad import round_ui
@@ -115,4 +117,72 @@ def test_clear_and_pick_again(window, monkeypatch):
     act = next(a for a in shown[0] if a.text().startswith("Clear and pick"))
     act.trigger()
     assert f.params["edges"] == [] and window.view3d._pick_cb is not None
+    window.view3d.cancel_pick()
+
+
+def _l_object(window):
+    m = window.model
+    obj = m.add_node("component", {})
+    obj.visible = True
+    e = m.add_node("linear_extrude", dict(height=5), parent=obj)
+    m.add_node("polygon", dict(points=[[0, 0], [40, 0], [40, 10], [10, 10],
+                                       [10, 40], [0, 40]]), parent=e)
+    QApplication.processEvents()
+    window.builder.open_component(obj)
+    QApplication.processEvents()
+    return m, e
+
+
+def test_pick_again_after_a_face_is_rounded(window):
+    """The second Pick edges refused: the shown (cut) mesh no longer
+    matched the fillet's uncut one triangle for triangle."""
+    from khervecad import fillet_pick
+    m, e = _l_object(window)
+    f = m.wrap_nodes([e], "fillet")
+    for n in (1, 2):
+        assert fillet_pick.start(window, f)
+        world, _local = fillet_pick.meshes(window, f)
+        top = [t for t in world if all(abs(v[2] - 5) < 1e-9 for v in t)]
+        side = [t for t in world if all(abs(v[1]) < 1e-9 for v in t)]
+        window.view3d._pick_cb(dict(kind="face",
+                                    tris=top if n == 1 else side), f)
+        window.view3d.cancel_pick()
+    assert len(f.params["faces"]) == 2
+
+
+def test_a_drag_turns_the_view_and_done_stops(window):
+    from PyQt5.QtCore import QPoint
+    from khervecad import fillet_pick
+    m, e = _l_object(window)
+    f = m.wrap_nodes([e], "fillet")
+    view = window.view3d
+    view.resize(600, 400)
+    assert fillet_pick.start(window, f)
+    assert view._pick_done.isVisibleTo(view)
+    yaw = view.yaw
+    QTest.mousePress(view, Qt.LeftButton, Qt.NoModifier, QPoint(300, 200))
+    from PyQt5.QtCore import QEvent, QPointF
+    from PyQt5.QtGui import QMouseEvent
+    # offscreen, QTest.mouseMove carries no held button: send the drag
+    QApplication.sendEvent(view, QMouseEvent(
+        QEvent.MouseMove, QPointF(360, 210), Qt.NoButton, Qt.LeftButton,
+        Qt.NoModifier))
+    QTest.mouseRelease(view, Qt.LeftButton, Qt.NoModifier, QPoint(360, 210))
+    assert view.yaw != yaw                     # turned, not picked
+    assert view._pick_cb is not None           # still picking
+    view._pick_done.click()
+    assert view._pick_cb is None and not view._pick_done.isVisibleTo(view)
+
+
+def test_plus_in_the_fillet_table_picks_on_the_model(window):
+    from khervecad.rowsedit import RowsEditor
+    m, e = _l_object(window)
+    f = m.wrap_nodes([e], "fillet")
+    window.builder.active_tree().select_nodes([f])
+    QApplication.processEvents()
+    eds = [w for w in window.findChildren(RowsEditor)
+           if w.isVisibleTo(window) and w._on_add is not None]
+    assert eds
+    eds[0]._add_row()
+    assert window.view3d._pick_cb is not None
     window.view3d.cancel_pick()

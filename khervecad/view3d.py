@@ -839,12 +839,10 @@ class View3D(QWidget):
 
     # ------------------------------------------------------- anchor pick
     def contextMenuEvent(self, event):
+        if getattr(self, "_pick_cb", None) is not None:
+            event.accept()               # picking: right-drag pans, no menu
+            return
         if getattr(self, "edit_tool", None) is None:
-            # a right-click while picking (a fillet's edges) ends the
-            # pick AND opens the menu — before, it only ended the pick,
-            # so a second fillet seemed impossible from the menu
-            if getattr(self, "_pick_cb", None) is not None:
-                self.cancel_pick()
             self.context_requested.emit(event.pos())
             event.accept()
             return
@@ -875,11 +873,38 @@ class View3D(QWidget):
         if getattr(self, "nav_bar", None) is not None:
             self.nav_bar.hide()
         self.setCursor(Qt.CrossCursor)
+        self._show_pick_done(True)
         self.setMouseTracking(True)          # hover pre-highlight
         self.setFocus(Qt.OtherFocusReason)   # so Esc reaches us
         self.update()
 
+    def _show_pick_done(self, on):
+        """A Done button under the banner while a pick runs: picking
+        keeps going after each click (a fillet takes many edges), so it
+        needs a clear way to stop besides Esc."""
+        b = getattr(self, "_pick_done", None)
+        if b is None:
+            from PyQt5.QtWidgets import QPushButton
+            from . import language
+            b = self._pick_done = QPushButton("✓  " + language.tr("Done"),
+                                              self)
+            b.setCursor(Qt.ArrowCursor)
+            b.setStyleSheet(
+                "QPushButton { background: #2e7d32; color: white; "
+                "border-radius: 4px; padding: 4px 14px; font-weight: "
+                "bold; } QPushButton:hover { background: #388e3c; }")
+            b.setToolTip(language.tr("Stop picking (Esc does the same)"))
+            b.clicked.connect(self.cancel_pick)
+        if on:
+            b.adjustSize()
+            b.move((self.width() - b.width()) // 2, 40)
+            b.show()
+            b.raise_()
+        else:
+            b.hide()
+
     def _end_pick_mode(self):
+        self._show_pick_done(False)
         self._pick_groups = None
         self._pick_banner = ""
         self._pick_labeler = None
@@ -1863,11 +1888,13 @@ class View3D(QWidget):
                 and self.edit_tool.mouse_press(event):
             return
         if self._pick_cb is not None:
-            if event.button() == Qt.LeftButton:
-                self._run_pick(event.pos().x(), event.pos().y())
-            else:                            # right/middle click cancels
-                self.cancel_pick()
-            return
+            # picking: a drag still turns (left) or pans (right / middle)
+            # the view; only a CLICK — released where it was pressed —
+            # picks (the user: rotating lost the pick). Done / Select /
+            # Esc end it.
+            self._pick_down = (event.pos(), event.button())
+        else:
+            self._pick_down = None
         self._last = event.pos()
         self._mode = "orbit" if event.button() == Qt.LeftButton else "pan"
         self._begin_fast()
@@ -1877,6 +1904,16 @@ class View3D(QWidget):
                 and self.edit_tool.mouse_release(event):
             self._last = None
             self._mode = None
+            return
+        down = getattr(self, "_pick_down", None)
+        self._pick_down = None
+        if self._pick_cb is not None and down is not None and \
+                down[1] == Qt.LeftButton and \
+                (event.pos() - down[0]).manhattanLength() <= 4:
+            self._last = None
+            self._mode = None
+            self._fast = False
+            self._run_pick(event.pos().x(), event.pos().y())
             return
         self._last = None
         self._mode = None

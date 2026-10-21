@@ -240,6 +240,15 @@ TABLE_TIPS = {
     ("polygon", "paths"): "One outline per row, as point numbers (counted "
                           "from 0). An outline inside another is a hole. "
                           "Empty: every point, in order.",
+    ("fillet", "edges"): "The edges this fillet rounds, each as its start "
+                         "and end point (x y z). + picks more on the "
+                         "model; − removes the selected row.",
+    ("fillet", "faces"): "The faces whose every edge is rounded — holes "
+                         "included, even ones cut later. Each is a point "
+                         "on the face and its normal. + picks more on the "
+                         "model.",
+    ("polygon", "corners"): "Sketch fillets: the corner's number (from 0), "
+                            "its radius, and 1 for a chamfer.",
 }
 
 
@@ -361,9 +370,17 @@ class PropertiesPanel(QScrollArea):
             return button
         if kind == "rows":
             from .rowsedit import OPTIONAL_ROWS
+            on_add = None
+            win = self.window()
+            if self.node.type == "fillet" and key in ("edges", "faces") \
+                    and hasattr(win, "start_fillet_pick"):
+                # + picks on the model, not a row of zeros to type into
+                node = self.node
+                on_add = lambda n=node, w=win: w.start_fillet_pick(n)
             return RowsEditor(self.node.params.get(key) or [], minimum,
                               lambda rows, k=key: self._set_param(k, rows),
-                              allow_empty=key in OPTIONAL_ROWS)
+                              allow_empty=key in OPTIONAL_ROWS,
+                              on_add=on_add)
         if kind == "choice":
             box = ChoiceBox(minimum)
             box.currentTextChanged.connect(
