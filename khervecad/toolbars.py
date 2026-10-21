@@ -520,6 +520,12 @@ def build_tools_menu(win, menu):
     cons.setToolTipsVisible(True)
     for act in sketch_constrain_ui.panel_actions(win):
         cons.addAction(act)
+    from . import sketch_modify
+    mod = menu.addMenu(icons.icon("mdi.content-cut"),
+                       language.tr("Sketch &Modify"))
+    mod.setToolTipsVisible(True)
+    for act in sketch_modify.panel_actions(win):
+        mod.addAction(act)
     measure = menu.addMenu(icons.icon("mdi.tape-measure"),
                            language.tr("&Measure && annotate"))
     measure.setToolTipsVisible(True)

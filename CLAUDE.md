@@ -3082,6 +3082,43 @@ into a new module and import.
                        through with a tag; right-click Suppress / Roll back
                        to here / Roll forward; MCP `suppress`. Objects,
                        instances, ifs and raw code are `NEVER` (hide them).
+  - `configurations.py` — **Configurations** (2026-10-21): named sets
+                       of global variable values on the root
+                       (`params["configurations"]`, active in
+                       `params["configuration"]`, so saved + undoable with
+                       no format bump); `apply` writes them into the
+                       assigns. Edit ▸ Configurations… (ribbon SOLID ▸
+                       Document), MCP `configurations`.
+  - `extent.py`      — **extrude end conditions** (2026-10-21): a
+                       linear_extrude's schema-only `extent` "through_all"
+                       (through the body of the difference it cuts, else
+                       the scope; centred) or "up_to" + `up_to` (a node
+                       NAME) + `up_to_side` far/near + `up_to_offset`.
+                       `refresh` (from `_model_edited`) WRITES `height` /
+                       `center`, so codegen is untouched and the depth
+                       follows the target. A .scad round trip keeps the
+                       number, not the rule.
+  - `sketch_modify.py` — **Trim / Extend / Sketch fillet / chamfer**
+                       (2026-10-21): trim a line between the lines / circles
+                       crossing it (shorten, split, delete), extend an end
+                       to the next one, round or cut a polygon / rect
+                       corner (a rect becomes a polygon) or where two lines
+                       meet (both trimmed, an arc band polygon or a chamfer
+                       line added). "sk_*" scene tools on the ribbon's
+                       SKETCH ▸ Modify panel and Tools ▸ Sketch Modify.
+  - `equalize.py`    — **equal sizes between parts** (2026-10-21, the
+                       user: "choose two surfaces to be the same"): two
+                       size params share ONE new / reused document
+                       variable (`link`), so it is plain parametric
+                       OpenSCAD; tree right-click Make Sizes Equal… on two
+                       nodes, MCP `make_equal`.
+  - `blueprint_more.py` — Blueprint **revision table** (`RevisionItem`,
+                       `add_revision`: next letter, today, sets the title
+                       block's revision), **ordinate** dimensions
+                       (`OrdinateItem`) and **baseline / chain** runs
+                       (tools + MCP blueprint actions `revision`,
+                       `baseline`, `chain`); registered into
+                       `blueprint_items.NOTE_CLASSES` from its bottom.
   - `polygon_draw.py` — drawing a polygon in the sketch (2026-10-19, the
                        user: an "end" always shown, close by): a Finish /
                        Undo point / Cancel bar at the bottom of the view
@@ -5022,7 +5059,7 @@ into a new module and import.
                        what each SHIPPED .kcad compiles to and pins the
                        files to the generator (`python -m
                        khervecad.tools.print_tests --check`).
-  - `mcp_schema.py`  — the **MCP tool table**: 105 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 108 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -5653,7 +5690,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **105 tools**: the object tree, OpenSCAD in
+client gets the whole app as **108 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.
@@ -5720,6 +5757,13 @@ curve drawing), push/pull on exact faces, layers in Rhino's sense.
 (`sketch_tools.py`), sketch constraints on 2026-10-21
 (`sketch_constraints.py`); still missing are trim / extend / fillet of
 sketch corners, and conics.
+
+**SolidWorks gap list, second round** (2026-10-21, "do them all"):
+suppress / roll back, configurations, extrude through-all / up-to, trim /
+extend / sketch fillet, equal sizes between parts and the Blueprint
+revision table + baseline / ordinate dimensions all landed. Still open:
+up-to a picked FACE (today a named object), constraints on arcs, a live
+solver while dragging a sketch point.
 
 **SolidWorks gap list** (asked 2026-09-12). Landed the same day: the
 OpenGL viewer (`glrender.py`), the other mates (flush / concentric /

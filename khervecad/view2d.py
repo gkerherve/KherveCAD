@@ -1645,6 +1645,10 @@ class SketchScene(QGraphicsScene):
         if sketch_constrain_ui.handles(self.tool):
             sketch_constrain_ui.press(self, event)
             return
+        from . import sketch_modify
+        if sketch_modify.handles(self.tool):
+            sketch_modify.press(self, event)
+            return
         if self.tool == POLYGON and event.button() == Qt.RightButton:
             if len(self._poly_points) >= 3:
                 self.finish_polygon()             # right-click finishes
@@ -1871,6 +1875,8 @@ class SketchScene(QGraphicsScene):
         from . import sketch_tools, sketch_constrain_ui
         sketch_tools.drop(self)
         sketch_constrain_ui.drop(self)
+        from . import sketch_modify
+        sketch_modify.drop(self)
         had = bool(self._poly_points)
         self._poly_points = []
         self._clear_poly_items()
@@ -2261,7 +2267,9 @@ class SketchView(QGraphicsView):
         from . import sketch_constrain_ui
         if self.scene().tool == POLYGON or \
                 sketch_tools.handles(self.scene().tool) or \
-                sketch_constrain_ui.handles(self.scene().tool):
+                sketch_constrain_ui.handles(self.scene().tool) or \
+                self.scene().tool in ("sk_trim", "sk_extend",
+                                      "sk_fillet", "sk_chamfer"):
             event.accept()                     # right-click finished it
             return
         model = self.scene().model

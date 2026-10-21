@@ -748,4 +748,6 @@ def make_tools(win):
               TextTool(win)]
     tools += [SketchTool(win, s) for s in ("line", "rect", "circle")]
     tools += [DetailTool(win)]
+    from . import blueprint_more
+    tools += blueprint_more.make_run_tools(win)
     return {t.key: t for t in tools}

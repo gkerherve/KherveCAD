@@ -24,6 +24,16 @@ _SELECTION = ("Select the object(s) in the tree (Ctrl-click to add "
               "more), or click one in the 2D view.")
 
 TIPS = {
+    "configurations": (
+        "Configurations",
+        "Named sets of the document's variable values — 'M6' and 'M8', "
+        "'Long' and 'Short' — switched in one click, like SolidWorks "
+        "configurations.",
+        ["Make the design parametric: sizes read variables (Variables "
+         "tab).", "Edit ▸ Configurations…, Save current as… a name.",
+         "Change the variables, save another; Apply switches."],
+        "A configuration only remembers values: the model follows its "
+        "variables."),
     # ------------------------------------------------------ drawing tools
     "select": (
         "Select / move",

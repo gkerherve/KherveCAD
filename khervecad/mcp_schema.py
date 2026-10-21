@@ -1539,6 +1539,48 @@ TOOLS = [
     },
 
     {
+        "name": "make_equal",
+        "description": (
+            "EQUAL SIZES between parts (tree right-click > Make Sizes "
+            "Equal): node_b's param_b always equals node_a's param_a, the "
+            "parametric way — one document variable (name, or made from "
+            "node_a's name + param, value = its current size) drives "
+            "both, so editing it resizes both and it survives export. "
+            "Size params only (radius, width, height, thickness...; not "
+            "x/y/z/rotation). action: link (default), unlink (node_a, "
+            "param_a: back to a plain number), list (every shared size "
+            "variable and the params it drives)."
+        ),
+        "input_schema": _obj({
+            "action": {"type": "string",
+                       "enum": ["link", "unlink", "list"]},
+            "node_a": {"type": "integer"},
+            "param_a": {"type": "string"},
+            "node_b": {"type": "integer"},
+            "param_b": {"type": "string"},
+            "name": {"type": "string"},
+        }),
+    },
+    {
+        "name": "configurations",
+        "description": (
+            "CONFIGURATIONS (Edit > Configurations): named sets of the "
+            "document's global variable values — 'M6' / 'M8', 'Long' / "
+            "'Short' — switched in one call. action: list (default: "
+            "active, every configuration, current values, which differ "
+            "from the active one), save (name; values {variable: value} "
+            "or, omitted, every variable as it stands), apply (name: "
+            "writes its values into the variables), remove (name). Make "
+            "the design parametric with assign variables first."
+        ),
+        "input_schema": _obj({
+            "action": {"type": "string",
+                       "enum": ["list", "save", "apply", "remove"]},
+            "name": {"type": "string"},
+            "values": {"type": "object"},
+        }),
+    },
+    {
         "name": "suppress",
         "description": (
             "FEATURE HISTORY, SolidWorks style: switch features off "
@@ -1685,17 +1727,26 @@ TOOLS = [
             "hidden_lines, merge_parts, fields {title, number, material, drawn, "
             "company, revision, finish...}), update_from_model, undo, "
             "redo, render (PNG to look at), export (path .pdf .svg .png "
-            ".dxf). drawing = which sheet first (a part name; '' = "
-            "assembly)."
+            ".dxf), revision (text, by: a row in the revision table, "
+            "next letter, today), baseline / chain (view, points [[u, "
+            "v]...] the first the base, kind horizontal | vertical). "
+            "Note types also 'ordinate' {view, axis, origin, points} and "
+            "'revisions' {x, y, rows}. drawing = which sheet first (a "
+            "part name; '' = assembly)."
         ),
         "input_schema": _obj({
             "action": {"type": "string",
                        "enum": ["state", "add", "set", "remove",
                                 "auto_dimension", "arrange", "new_sheet",
+                                "revision", "baseline", "chain",
                                 "add_view", "set_view", "remove_view",
                                 "sheet", "update_from_model", "undo",
                                 "redo", "render", "export"]},
             "drawing": {"type": "string"},
+            "points": {"type": "array",
+                       "items": {"type": "array",
+                                 "items": {"type": "number"}}},
+            "text": {"type": "string"}, "by": {"type": "string"},
             "notes": {"type": "array", "items": {"type": "object"}},
             "index": {"type": "integer"},
             "indices": {"type": "array", "items": {"type": "integer"}},

@@ -176,7 +176,8 @@ MENU_PANELS = {
     "document": [("edit/common segments ($fn)", "kc:common_segments"),
                  ("edit/document units", "mdi.ruler-square"),
                  ("edit/document scale (1 : n)", "mdi.scale-balance"),
-                 ("view/customizer (sliders)", None)],
+                 ("view/customizer (sliders)", None),
+                 ("edit/configurations", "kc:configurations")],
     "dimension": [("tools/measure & annotate/add dimension", None),
                   ("view/dimensions on selection", "mdi.ruler"),
                   ("view/clear dimensions", "mdi.eraser")],
@@ -188,7 +189,7 @@ FUSION_ALL = {"analyse", "checks", "dimension",
               "sketch_shapes", "shapes3d"}
 FUSION_SHOWN_MANY = 4
 #: icons shown by panels with a count of their own
-PANEL_SHOWN = {"sketch": 11, "sketch_modify": 5, "sketch_constrain": 13}
+PANEL_SHOWN = {"sketch": 11, "sketch_modify": 9, "sketch_constrain": 13}
 #: the sketch MODIFY panel: operations from the families, in this order
 SKETCH_MODIFY = ["translate", "rotate", "scale", "mirror", "pattern"]
 
@@ -314,6 +315,7 @@ PAINT = {
     "view/clear reference images": "ref_clear",
     "insert/code & files": "code_files",
     "edit/document units": "doc_units",
+    "edit/configurations": "configurations",
     "edit/document scale (1 : n)": "doc_scale",
     "view/customizer (sliders)": "customizer",
     "analyse/heat map": "heatmap",
@@ -418,7 +420,8 @@ def _panel_actions(win, key):
             if style_of(win) in ("Fusion", "SolidWorks") else []
         return title, first + [a for a in win._tool_group.actions()
                                if a.data() != MEASURE
-                               and not str(a.data()).startswith("con_")]
+                               and not str(a.data()).startswith(
+                                   ("con_", "sk_"))]
     if key in MENU_PANELS:
         from .interface_menus import index
         paths = index(win)
@@ -449,7 +452,9 @@ def _panel_actions(win, key):
         return title, acts
     if key == "sketch_modify":
         ops = {a.data(): a for _k, fam in parts["families"] for a in fam}
-        return title, [sketch_extra(win)["offset"]] + [
+        from . import sketch_modify
+        return title, list(sketch_modify.panel_actions(win)) + [
+            sketch_extra(win)["offset"]] + [
             ops[k] for k in SKETCH_MODIFY if k in ops]
     if key == "sketch_constrain":
         from . import sketch_constrain_ui

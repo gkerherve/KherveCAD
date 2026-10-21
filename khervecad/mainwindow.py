@@ -357,6 +357,13 @@ class MainWindow(QMainWindow):
                             "Ctrl+Shift+G")
         edit_menu.addSeparator()
         edit_menu.addAction(self.tr("Document &Units..."), self.choose_unit)
+        from . import configurations
+        conf_act = edit_menu.addAction(
+            self.tr("&Configurations..."),
+            lambda: configurations.open_window(self))
+        conf_act.setData("configurations")
+        from . import tooltips as _tips
+        _tips.apply(conf_act, "configurations")
         # the Main tab's $fn row, as a menu item: the Fusion / SolidWorks
         # browser hides that row (2026-10-19, the user: not a browser
         # thing), the setting itself still matters
@@ -1032,6 +1039,8 @@ class MainWindow(QMainWindow):
         edited, self._sketch_edited = getattr(self, "_sketch_edited",
                                               set()), set()
         sketch_constraints.refresh(self.model, edited)
+        from . import extent
+        extent.refresh(self.model)
         self._dirty = True
         self._update_title()
         self.view3d.set_reference_images(self.model.reference_images)

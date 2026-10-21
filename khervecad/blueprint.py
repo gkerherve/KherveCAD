@@ -50,6 +50,7 @@ from PyQt5.QtWidgets import (QAction, QActionGroup, QApplication, QCheckBox,
 
 from . import analysis, blueprint_export, drawing, drawing_set, icons
 from . import blueprint_items as bi
+from . import blueprint_more
 from .blueprint_tools import make_tools
 from .blueprint_scene import (  # noqa: F401 — re-exported
     ALIGN, DEFAULT_SHEET, GAP, LETTERS, PROJECTIONS, SECTION_LOOK,
@@ -478,6 +479,9 @@ ANNOTATE = (
     ("sketch_circle", "mdi.circle-outline", "Circle", "",
      "A circle on the paper.", "Click the centre, then the rim."),
     None,
+    None,
+    *blueprint_more.ANNOTATE,
+    None,
     ("detail", "mdi.magnify-scan", "Detail view", "",
      "An enlarged view (2:1) of a small area, lettered on its parent.",
      "Click the centre of the area, then its edge; drag the detail "
@@ -621,7 +625,13 @@ class BlueprintWindow(QMainWindow):
             self.auto_arrange, "",
             _tip("Auto-arrange", "Put the projected views back in the "
                  "third-angle arrangement at the best scale."))
-        for act in (self.update_act, auto, arrange):
+        revision = self._action(
+            "mdi.history", "Add revision…", self.add_revision, "",
+            _tip("Add revision", "A row in the revision table (made by "
+                 "the title block when there is none): the next letter, "
+                 "today's date, what changed and who. The title block's "
+                 "revision follows."))
+        for act in (self.update_act, auto, arrange, revision):
             tools_menu.addAction(act)
             top.addAction(act)
         tools_menu.addSeparator()
@@ -1377,6 +1387,16 @@ class BlueprintWindow(QMainWindow):
     def auto_dimension(self):
         self.scene.auto_dimension()
         self.commit("Auto-dimension")
+
+    def add_revision(self, description=None, by=""):
+        if description is None:
+            description = self.ask_text("Add revision", "What changed:",
+                                        "", False)
+            if not description:
+                return None
+        rev = blueprint_more.add_revision(self.scene, description, by)
+        self.commit("Revision " + rev)
+        return rev
 
     def auto_arrange(self):
         self.scene.arrange()

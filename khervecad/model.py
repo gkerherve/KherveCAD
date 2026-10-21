@@ -167,7 +167,15 @@ NODE_TYPES = {
                 ("twist", "Twist (deg)", "float", -1e5, 1e5),
                 ("scale", "Scale", "float", 0.0, 1e4),
                 ("center", "Center", "bool", None, None),
-                ("segments", "Slices (0=auto)", "int", 0, 512)]),
+                ("segments", "Slices (0=auto)", "int", 0, 512),
+                # end conditions (extent.py), schema-only
+                ("extent", "End condition", "choice",
+                 ("", "through_all", "up_to"), None),
+                ("up_to", "Up to (object name)", "str", None, None),
+                ("up_to_side", "Up to its", "choice", ("far", "near"),
+                 None),
+                ("up_to_offset", "Offset beyond (mm)", "float", -1e6,
+                 1e6)]),
     "rotate_extrude": dict(
         label="Rotate extrude", category=OPERATION,
         icon="mdi.rotate-3d-variant",

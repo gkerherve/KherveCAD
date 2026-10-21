@@ -422,6 +422,15 @@ horizontal / parallel / tangent / equal ... and driven dimensions, a value \
 may be a variable's expression. The user can then drag a shape and the rest \
 follows.
 
+Feature history and families, SolidWorks style — suppress switches a \
+feature off without deleting it (or rolls the history back after a node); \
+configurations stores named sets of the variables ('M6' / 'M8') and \
+switches them; make_equal ties two parts' sizes through one shared \
+variable. A linear_extrude takes extent 'through_all' (cuts through the \
+body of its difference) or 'up_to' + up_to (an object's name) + \
+up_to_side far / near through set_params — its height then follows the \
+geometry.
+
 Motion — mechanisms, orreries, anything that MOVES:
 - Drive it from ONE annotated document variable, the OpenSCAD \
 Customizer way: `angle = 0;  // [0:5:360]` with a `// description` line \

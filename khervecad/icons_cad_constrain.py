@@ -220,3 +220,49 @@ def _list(d):
     for i, y in enumerate((0.24, 0.5, 0.76)):
         d.text(0.2, y + 0.08, "HV="[i], 0.18, d.pal.make)
         _ln(d, (0.36, y), (0.88, y), 0.055)
+
+
+@draws("configurations")
+def _configurations(d):
+    """Three stacked sheets, the front one a small part: named variants
+    of one design."""
+    for i, k in enumerate((0.0, 0.1, 0.2)):
+        d.poly([P(0.1 + k, 0.5 - k), P(0.62 + k, 0.5 - k),
+                P(0.62 + k, 0.92 - k), P(0.1 + k, 0.92 - k)],
+               d.pal.paper, color=d.pal.edge, width=0.04)
+    d.box(0.42, 0.42, 0.0, 0.28, 0.28, 0.16)
+
+
+@draws("sk_trim")
+def _sk_trim(d):
+    _ln(d, (0.1, 0.5), (0.9, 0.5))
+    _ln(d, (0.32, 0.12), (0.32, 0.88))
+    _ln(d, (0.68, 0.12), (0.68, 0.88))
+    d.line(P(0.36, 0.5), P(0.64, 0.5), d.pal.cut, 0.09)
+    _mark(d, (0.42, 0.36), (0.58, 0.64), 0.05)
+    _mark(d, (0.42, 0.64), (0.58, 0.36), 0.05)
+
+
+@draws("sk_extend")
+def _sk_extend(d):
+    _ln(d, (0.82, 0.1), (0.82, 0.9))
+    _ln(d, (0.1, 0.55), (0.45, 0.55))
+    d.line(P(0.45, 0.55), P(0.78, 0.55), d.pal.make, 0.05, [2, 2])
+    d.arrow(P(0.5, 0.35), P(0.78, 0.35), d.pal.make, 0.05, 0.1)
+
+
+@draws("sk_fillet")
+def _sk_fillet(d):
+    from PyQt5.QtGui import QPainterPath
+    _ln(d, (0.14, 0.88), (0.14, 0.45))
+    _ln(d, (0.55, 0.12), (0.88, 0.12))
+    path = QPainterPath(P(0.14, 0.45))
+    path.quadTo(P(0.14, 0.12), P(0.55, 0.12))
+    d.path(path, color=d.pal.make, width=0.08)
+
+
+@draws("sk_chamfer")
+def _sk_chamfer(d):
+    _ln(d, (0.14, 0.88), (0.14, 0.45))
+    _ln(d, (0.55, 0.12), (0.88, 0.12))
+    d.line(P(0.14, 0.45), P(0.55, 0.12), d.pal.make, 0.08)

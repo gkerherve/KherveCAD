@@ -66,6 +66,11 @@ PLANS = {
     "sketch_rect": [("S", 25, 40), ("S", 60, 55)],
     "sketch_circle": [("S", 40, 50), ("S", 46, 50)],
     "detail": [("F", 45, 20), ("F", 57, 20)],
+    # click the base, the points, then the last one again to finish
+    # (two points make one dimension, what this test counts)
+    "baseline": [("F", 0, 0), ("F", 80, 0), ("F", 80, 0)],
+    "chain": [("F", 0, 0), ("F", 80, 0), ("F", 80, 0)],
+    "ordinate": [("F", 0, 0), ("F", 10, 0), ("F", 80, 0), ("F", 80, 0)],
 }
 
 

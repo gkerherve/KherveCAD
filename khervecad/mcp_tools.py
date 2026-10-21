@@ -1569,6 +1569,46 @@ class McpToolExecutor:
         except crystal_build.BuildError as exc:
             raise ToolError(str(exc))
 
+    def _t_make_equal(self, params) -> dict:
+        from . import equalize
+        model = self._w.model
+        action = params.get("action", "link")
+        out = {}
+        try:
+            if action == "link":
+                out["variable"] = equalize.link(
+                    model, self._node(params["node_a"]), params["param_a"],
+                    self._node(params["node_b"]), params["param_b"],
+                    params.get("name"))
+            elif action == "unlink":
+                out["value"] = equalize.unlink(
+                    model, self._node(params["node_a"]), params["param_a"])
+            elif action != "list":
+                raise ValueError("Unknown action %r." % action)
+        except (ValueError, KeyError) as exc:
+            raise ToolError(str(exc))
+        out["links"] = {k: [dict(id=n.id, name=n.name, param=p)
+                            for n, p in v]
+                        for k, v in equalize.links(model).items()}
+        return out
+
+    def _t_configurations(self, params) -> dict:
+        from . import configurations as cf
+        model = self._w.model
+        action = params.get("action", "list")
+        try:
+            if action == "save":
+                cf.save(model, params.get("name", ""), params.get("values"))
+            elif action == "apply":
+                cf.apply(model, params.get("name", ""))
+            elif action == "remove":
+                cf.remove(model, params.get("name", ""))
+            elif action != "list":
+                raise ValueError("Unknown action %r." % action)
+        except ValueError as exc:
+            raise ToolError(str(exc))
+        return cf.state(model)
+
     def _t_suppress(self, params) -> dict:
         from . import suppress
         model = self._w.model

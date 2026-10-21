@@ -266,6 +266,25 @@ def _apply(win, scene, action, params):
         scene.remove(items)
         _commit(win, "Delete")
         return {"removed": len(items), "notes": len(scene.notes())}
+    if action == "revision":
+        from . import blueprint_more
+        rev = blueprint_more.add_revision(scene, params.get("text", ""),
+                                          params.get("by", ""))
+        _commit(win, "Revision " + rev)
+        return {"revision": rev}
+    if action in ("baseline", "chain"):
+        from . import blueprint_more
+        view = _view_of(scene, params.get("view"))
+        pts = params.get("points") or []
+        if view is None or len(pts) < 2:
+            raise BlueprintError(f"{action} needs a view and 2+ points")
+        kind = params.get("kind") or "horizontal"
+        notes = blueprint_more.baseline(pts[0], pts[1:], kind) \
+            if action == "baseline" else blueprint_more.chain(pts, kind)
+        for data in notes:
+            scene.add_note(data, view)
+        _commit(win, f"Add {action} dimensions")
+        return {"added": len(notes), "notes": len(scene.notes())}
     if action == "auto_dimension":
         scene.auto_dimension()
         _commit(win, "Auto-dimension")

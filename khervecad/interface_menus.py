@@ -67,6 +67,7 @@ FUSION = [
     ("&Create", [
         "insert/new object", ("Create &Sketch", ["insert/2d shapes"]),
         ("Sketch C&onstraints", ["tools/sketch constraints"]),
+        ("Sketch &Modify", ["tools/sketch modify"]),
         "-", "tools/extrude/linear extrude", "tools/extrude/rotate extrude",
         "tools/extrude/sweep along path",
         "tools/extrude/loft through sections",
@@ -93,7 +94,8 @@ FUSION = [
         "tools/finish/hull", "tools/finish/minkowski (round edges)", "-",
         "tools/deform & sculpt", "tools/character",
         "tools/edit vertices (edit mode)", "-",
-        "view/customizer (sliders)", "edit/document units",
+        "view/customizer (sliders)", "edit/configurations",
+        "edit/document units",
         "edit/document scale (1 : n)", "edit/common segments ($fn)"]),
     ("&Assemble", [
         "insert/new object", "tools/snap objects",
@@ -138,7 +140,7 @@ FUSION = [
         "-", "view/3d camera", "view/3d projection", "view/3d render style",
         "view/3d background", "-", "view/3d platform and shadow",
         "view/3d cavity shading", "view/3d edge lines",
-        "view/3d scale bar", "view/3d ground grid",
+        "view/3d scale bar", "view/3d ground grid", "view/3d axes (x y z)",
         "view/3d smooth shading", "view/3d hardware rendering (opengl)",
         "-", "view/theme", "view/interface style"]),
     ("&Help", ["help"]),
@@ -176,7 +178,7 @@ SOLIDWORKS = [
                      "view/gumball (move / turn handles)"]),
         ("&Lights and Cameras", ["view/3d camera", "view/3d projection"]),
         ("&Hide / Show", ["view/grid", "view/snap", "view/3d ground grid",
-                          "view/3d scale bar", "-",
+                          "view/3d scale bar", "view/3d axes (x y z)", "-",
                           "view/dimensions on selection",
                           "view/clear dimensions", "-",
                           "view/add reference image",
@@ -227,6 +229,7 @@ SOLIDWORKS = [
     ("&Tools", [
         ("Sketch &Entities", ["insert/2d shapes"]),
         ("&Relations", ["tools/sketch constraints"]),
+        ("Sketch &Tools", ["tools/sketch modify"]),
         ("&Dimensions", ["tools/measure & annotate/add dimension",
                          "view/dimensions on selection",
                          "view/clear dimensions"]),
@@ -250,7 +253,7 @@ SOLIDWORKS = [
                                     "file/blueprint (2d drawing)"]),
         "view/customizer (sliders)", "view/animate ($t)", "-",
         ("Add-&Ins", ["ai", "git"]),
-        ("&Options", ["edit/document units", "edit/document scale (1 : n)",
+        ("&Options", ["edit/configurations", "edit/document units", "edit/document scale (1 : n)",
                       "edit/common segments ($fn)",
                       "edit/locate openscad", "edit/language"])]),
     ("&Window", [

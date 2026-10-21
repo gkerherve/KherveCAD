@@ -1493,3 +1493,5 @@ class TitleBlockItem(SheetItem):
         fields[key] = value
         self.data["fields"] = fields
         self.rebuild()
+
+from . import blueprint_more  # noqa: E402,F401  (revision table, ordinate)

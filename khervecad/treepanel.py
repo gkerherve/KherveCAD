@@ -1049,6 +1049,13 @@ class ObjectTree(QTreeWidget):
                 language.tr("Unsuppress") if on else
                 language.tr("Suppress (switch off)"),
                 lambda: suppress.set_suppressed(self.model, able, not on))
+        from . import equalize
+        if len(nodes) == 2 and all(equalize.size_params(n) for n in nodes) \
+                and hasattr(self.window(), "statusBar"):
+            menu.addAction(icons.icon("mdi.equal"),
+                           language.tr("Make Sizes Equal..."),
+                           lambda: equalize.open_dialog(
+                               self.window(), nodes[0], nodes[1]))
         if len(nodes) == 1 and nodes[0].parent is not None:
             node = nodes[0]
             menu.addAction(icons.icon("mdi.timeline-clock-outline"),
