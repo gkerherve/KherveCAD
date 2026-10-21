@@ -381,3 +381,32 @@ def test_constraints_never_become_a_difference_body(app):
     diff = next(n for n in root.walk() if n.type == "difference")
     assert [c.type for c in diff.children] == ["polygon", "circle"]
     assert sc.rows(diff) == sc.rows(d)
+
+
+def test_every_shape_shows_its_sizes(view):
+    """Show Dimensions labels every shape, not only the selection."""
+    m = view.scene().model
+    m.add_node("rect", dict(width=30, height=20))
+    m.add_node("circle", dict(x=50, y=10, radius=8))
+    QApplication.processEvents()
+    drawn = []
+    orig = type(view)._draw_dim
+    orig_s = type(view)._dim_screen
+    type(view)._draw_dim = lambda self, p, a, b, **k: drawn.append(
+        k.get("text"))
+    type(view)._dim_screen = lambda self, p, a, b, **k: drawn.append(
+        k.get("text"))
+    try:
+        view.scene().show_dims = True
+        view.viewport().repaint()
+        texts = [t for t in drawn if t]
+        assert any("30" in t for t in texts)
+        assert any("20" in t for t in texts)
+        assert any("16" in t for t in texts)          # the circle's Ø
+        drawn.clear()
+        view.scene().show_dims = False
+        view.viewport().repaint()
+        assert not [t for t in drawn if t]
+    finally:
+        type(view)._draw_dim = orig
+        type(view)._dim_screen = orig_s

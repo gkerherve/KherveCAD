@@ -400,6 +400,23 @@ def add_sketch_controls(win, bar):
     win._snap_act.toggled.connect(snap.setChecked)
     layout.addWidget(snap)
     bar.buttons["grid"], bar.buttons["snap"] = grid, snap
+    # Show Dimensions (the user: "in the toolbar to hide or show
+    # dimensions"): the View menu's own action, so both agree
+    act = getattr(win, "_dims_act", None)
+    if act is not None:
+        dims = QToolButton(bar)
+        art = icons.icon("mdi.ruler-square", "#e6e9ec")
+        if art.isNull():
+            dims.setText("↔")
+        else:
+            dims.setIcon(art)
+        dims.setCheckable(True)
+        dims.setChecked(act.isChecked())
+        set_tip(dims, "dims_bar")
+        dims.clicked.connect(act.setChecked)
+        act.toggled.connect(dims.setChecked)
+        layout.addWidget(dims)
+        bar.buttons["dims"] = dims
     win._sync_grid_step()
     bar.place()
 

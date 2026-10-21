@@ -3179,6 +3179,17 @@ into a new module and import.
                        (`register`, imported from its bottom); variable-
                        click tools in `VARIABLE`, scene-needing builders in
                        `BUILD_SCENE`. Icons in icons_cad_sketch.py.
+  - 2D **Show Dimensions** (2026-10-21, the user: sizes on the drawing
+                       like other programs): View ▸ Show Dimensions (was
+                       "Dimensions on selection", path `view/show
+                       dimensions`, QSettings `show_dims`) and a ruler
+                       button on the 2D view's own bar (`viewnav.
+                       add_sketch_controls`, tip `dims_bar`). On, EVERY
+                       shape is labelled (`SketchView._draw_auto_dims`):
+                       rect W × H, circle Ø, line length, each polygon side,
+                       a part's box (+ a lone cylinder's Ø); the selected
+                       ones in the accent colour. The corner thumbnail twin
+                       sets `no_dims`.
   - `polygon_draw.py` — drawing a polygon in the sketch (2026-10-19, the
                        user: an "end" always shown, close by): a Finish /
                        Undo point / Cancel bar at the bottom of the view

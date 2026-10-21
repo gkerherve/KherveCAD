@@ -2380,16 +2380,26 @@ class SketchView(QGraphicsView):
         """When shapes are selected, annotate each one's own size — the
         way a part is dimensioned on a 2D drawing."""
         scene = self.scene()
-        tool = str(scene.tool)
-        if not getattr(scene, "show_dims", True) or not (
-                tool == SELECT or tool.startswith(("con_", "sk_"))):
+        if not getattr(scene, "show_dims", True) or \
+                getattr(self, "no_dims", False):
             return
+        # every shape's sizes, all the time (the user: "like the other
+        # programs ... a rectangle's X and Y, a circle's radius ... a
+        # polygon several"), the selected ones in the accent colour
         from .style import tokens
         t = tokens()
         color, bg = QColor(t["gutter"]), QColor(t["card"])
-        for item in scene.selectedItems():
-            if isinstance(item, (ShapeItem, PartItem)):
-                self._auto_dim_item(painter, item, color, bg)
+        accent = QColor(t.get("accent", "#2176c7"))
+        for item in list(scene.items()):
+            if not isinstance(item, (ShapeItem, PartItem)) or \
+                    not item.isVisible() or item.scene() is not scene:
+                continue
+            try:
+                self._auto_dim_item(painter, item,
+                                    accent if item.isSelected() else color,
+                                    bg)
+            except Exception:              # never raise out of a paint
+                continue
 
     def _geometry_rect(self, item):
         """The shape's true local rect (mm) — from its own geometry, not
@@ -2424,6 +2434,8 @@ class SketchView(QGraphicsView):
         lr = self._geometry_rect(item)
         if lr.width() < 1e-6 or lr.height() < 1e-6:
             return
+        if isinstance(item, PartItem):
+            self._cylinder_label(painter, item, color, bg)
         st = item.sceneTransform()
         if abs(st.m12()) > 1e-9 or abs(st.m21()) > 1e-9:
             # turned by a rotate above it: dimension along its own
@@ -2454,6 +2466,36 @@ class SketchView(QGraphicsView):
                          color=color, bg=bg,
                          text=_fmt_len(lr.height(), unit),
                          offset=22, dots=False)
+
+    def _cylinder_label(self, painter, item, color, bg):
+        """A part made of one cylinder also says its diameter (its
+        width / height are the box dimensions)."""
+        node = getattr(item, "node", None)
+        cyls = [n for n in node.walk() if n.type == "cylinder"] \
+            if node is not None else []
+        if len(cyls) != 1:
+            return
+        p = cyls[0].params
+        from .expr import resolve
+        try:
+            r1 = float(resolve(p.get("radius_bottom", 10), {}, 10))
+            r2 = float(resolve(p.get("radius_top", r1), {}, r1))
+        except (TypeError, ValueError):
+            return
+        text = "⌀ " + _fmt_len(2 * r1, self._unit()) if abs(r1 - r2) < 1e-9 \
+            else "⌀ %s / %s" % (_fmt_len(2 * r1, self._unit()),
+                                _fmt_len(2 * r2, self._unit()))
+        c = self.mapFromScene(item.sceneBoundingRect().center())
+        fm = painter.fontMetrics()
+        w = fm.horizontalAdvance(text) + 8
+        box = QRectF(c.x() - w / 2, c.y() - fm.height() / 2 - 2, w,
+                     fm.height() + 4)
+        painter.save()
+        painter.setPen(QPen(color, 1))
+        painter.setBrush(QBrush(bg))
+        painter.drawRoundedRect(box, 3, 3)
+        painter.drawText(box, int(Qt.AlignCenter), text)
+        painter.restore()
 
     def _polygon_edge_dims(self, painter, item, color, bg):
         """Each side of a selected polygon with its length — the arc

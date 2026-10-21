@@ -418,10 +418,12 @@ COMMANDS = {
         "overhangs, draft angle, curvature or zebra stripes.",
         ["Click and choose the map.", "Choose Off to remove it."],
         "Red is where the part needs attention."),
-    "dimensions on selection": (
-        "Dimensions on selection", "Shows the width, depth and height of "
-        "whatever is selected, in the 3D view and the sketch.",
-        ["Click to switch it on or off.", "Select a part."], None),
+    "show dimensions": (
+        "Show dimensions", "Shows the sizes of every shape in the 2D "
+        "view: a rectangle's width and height, a circle's diameter, a "
+        "line's length, each side of a polygon, a part's overall sizes.",
+        ["Click to switch it on or off (also on the 2D view's own bar)."],
+        None),
     "connect to claude (simple)": (
         "Connect to Claude", "Lets an AI assistant (Claude Desktop, Claude "
         "Code, Cursor…) drive KherveCAD directly: build, edit, render and "

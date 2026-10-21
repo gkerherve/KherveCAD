@@ -24,6 +24,14 @@ _SELECTION = ("Select the object(s) in the tree (Ctrl-click to add "
               "more), or click one in the 2D view.")
 
 TIPS = {
+    "dims_bar": (
+        "Show dimensions",
+        "Shows the sizes of every shape in the 2D view: a rectangle's "
+        "width and height, a circle's diameter, a line's length, each "
+        "side of a polygon, a part's overall sizes (and a cylinder's Ø).",
+        ["Click to show or hide them (View ▸ Show Dimensions is the "
+         "same switch)."],
+        "The selected shapes' sizes are drawn in the accent colour."),
     "configurations": (
         "Configurations",
         "Named sets of the document's variable values — 'M6' and 'M8', "

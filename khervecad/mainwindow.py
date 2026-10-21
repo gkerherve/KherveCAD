@@ -418,11 +418,11 @@ class MainWindow(QMainWindow):
             "show_dims", True, type=bool)
         self.scene.show_dims = show_dims
         self._dims_act = QAction(icons.icon("mdi.ruler-square"),
-                                 self.tr("Dimensions on selection"), self)
+                                 self.tr("Show Dimensions"), self)
         self._dims_act.setCheckable(True)
         self._dims_act.setChecked(show_dims)
-        self._dims_act.setToolTip(self.tr("Show the size of selected "
-                                          "shapes"))
+        self._dims_act.setToolTip(self.tr(
+            "Show the sizes of every shape in the 2D view"))
         self._dims_act.toggled.connect(self._set_show_dims)
         view_menu.addAction(self._dims_act)
         view_menu.addAction(self.tr("Clear &Dimensions"),

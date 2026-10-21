@@ -354,6 +354,7 @@ class Mini2D(QLabel):
             from PyQt5.QtWidgets import QWidget
             from .view2d import SketchView
             twin = SketchView(self.win.view2d.scene())
+            twin.no_dims = True          # the corner picture: shapes only
             twin.setAttribute(Qt.WA_DontShowOnScreen, True)
             # never a window the app waits for: a "shown" twin kept
             # KherveCAD running after its window closed, and it could

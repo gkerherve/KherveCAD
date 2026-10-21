@@ -179,7 +179,7 @@ MENU_PANELS = {
                  ("view/customizer (sliders)", None),
                  ("edit/configurations", "kc:configurations")],
     "dimension": [("tools/measure & annotate/add dimension", None),
-                  ("view/dimensions on selection", "mdi.ruler"),
+                  ("view/show dimensions", "mdi.ruler"),
                   ("view/clear dimensions", "mdi.eraser")],
 }
 #: panels whose tools all show, names under the icons (few, big tools)
@@ -323,7 +323,7 @@ PAINT = {
     "analyse/check fits & tolerances": "fits",
     "analyse/check welds": "welds",
     "view/compare to reference image (overlay)": "ref_compare",
-    "view/dimensions on selection": "dims_selection",
+    "view/show dimensions": "dims_selection",
     "view/clear dimensions": "dims_clear",
     "insert/subd box (smooth, edit its cage)": "subd_box",
     "tools/convert to subd (smooth cage)": "subd_convert",
