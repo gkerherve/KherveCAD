@@ -119,9 +119,26 @@ def snap(scene, raw, start=None, skip=None):
                 ("45",):
             y = by[1].y()
             info["guides"].append((QPointF(by[1]), QPointF(x, y)))
-    if not info["guides"] and getattr(scene, "snap_enabled", False):
+    if getattr(scene, "snap_enabled", False):
+        # the grid still rules every coordinate nothing else fixed: a
+        # horizontal line's x, a vertical one's y, a 45° line's length
         g = scene.grid_size
-        x, y = round(x / g) * g, round(y / g) * g
+        lined = {(round(b.x(), 9), round(b.y(), 9))
+                 for _a, b in info["guides"]}
+        fixed_x = info["angle"] == "v" or any(
+            abs(q.x() - x) < 1e-9 for q, _n, _m in pts) and lined
+        fixed_y = info["angle"] == "h" or any(
+            abs(q.y() - y) < 1e-9 for q, _n, _m in pts) and lined
+        if info["angle"] == "45" and start is not None:
+            d = round((x - start.x()) / g) * g
+            x = start.x() + d
+            y = start.y() + (d if (y - start.y()) * (x - start.x()) >= 0
+                             else -d)
+        else:
+            if not fixed_x:
+                x = round(x / g) * g
+            if not fixed_y:
+                y = round(y / g) * g
     return QPointF(x, y), info
 
 

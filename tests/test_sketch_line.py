@@ -87,3 +87,16 @@ def test_polygon_snaps_and_gets_relations(view):
     assert pts[1][1] == pytest.approx(0) and pts[2][0] == pytest.approx(30)
     kinds = sorted(r["kind"] for r in sc.rows(view.scene().model.root))
     assert kinds.count("horizontal") >= 2 and kinds.count("vertical") >= 1
+
+
+def test_a_horizontal_line_still_follows_the_grid(monkeypatch):
+    from types import SimpleNamespace
+    from PyQt5.QtCore import QPointF
+    from khervecad import sketch_line as sl
+    scene = SimpleNamespace(snap_enabled=True, grid_size=0.1)
+    monkeypatch.setattr(sl, "sketch_points", lambda s, skip=None: [
+        (QPointF(0, 0), None, "origin")])
+    monkeypatch.setattr(sl, "_px", lambda s, p: 1e-6)
+    pt, info = sl.snap(scene, QPointF(3.4567, 0.01), QPointF(0, 0))
+    assert info["angle"] == "h"
+    assert abs(pt.x() - 3.5) < 1e-9 and pt.y() == 0
