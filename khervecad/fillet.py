@@ -542,6 +542,7 @@ def compute(tris, seeds, radius: float, kind: str = "round",
     for x in picked:
         for key in (_vkey(x.a), _vkey(x.b)):
             count[(key, x.convex)] = count.get((key, x.convex), 0) + 1
+    runs = []
     for e in picked:
         run = chain(picked, e, through=lambda key, k=e.convex:
                     count.get((key, k), 0) == 2)
@@ -549,11 +550,89 @@ def compute(tris, seeds, radius: float, kind: str = "round",
         if key in seen:
             continue
         seen.add(key)
-        body = strip(run, float(radius), kind, int(detail))
+        runs.append(run)
+        body = strip(run, float(radius), kind, int(detail),
+                     section=_chamfer_section(kind, float(radius),
+                                              int(detail)))
         if not body:
             continue
         (cuts if run["convex"] else adds).append(body)
+    # 3. corners where THREE chosen edges of one kind meet (a face's rim
+    #    and the upright edge under it): the strips stop square there and
+    #    left a sliver standing (the user's chamfer). Bevel's corner
+    #    piece — the rolling ball's patch, or a chamfer's triangle — fills
+    #    the gap between them.
+    cuts.extend(_corner_pieces(edges, runs, float(radius), kind,
+                               int(detail), adds))
     return dict(cuts=cuts, adds=adds, missing=missing, chains=len(seen))
+
+
+def _chamfer_section(kind, radius, detail):
+    """A chamfer's strips cut with Bevel's own profile, so the corner
+    piece (bevel.corners, built on the same planes) meets them exactly —
+    the fillet's grown triangle sat a hair off and the boolean left
+    doubled edges. None (the usual profile) for a round."""
+    if kind != "chamfer":
+        return None
+    try:
+        from . import bevel
+    except Exception:                       # pragma: no cover
+        return None
+    e = bevel.exponent(0.25)
+    return lambda edge: bevel.section(edge, radius, max(detail, 1), e)
+
+
+def _weld_slivers(rows, tol=2e-3):
+    """Merge vertices closer than *tol* (mm) in a boolean's coloured
+    rows and drop what collapses: where a corner piece meets the strips
+    beside it the cut leaves edges of a few microns — doubled edges a
+    print check fails and the view draws as a stray line."""
+    cell = {}
+    def snap(v):
+        k = tuple(int(round(c / tol)) for c in v)
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                for dz in (-1, 0, 1):
+                    hit = cell.get((k[0] + dx, k[1] + dy, k[2] + dz))
+                    if hit is not None and max(abs(a - b) for a, b in
+                                               zip(hit, v)) <= tol:
+                        return hit
+        cell[k] = tuple(v)
+        return tuple(v)
+    out, seen = [], set()
+    for row in rows:
+        tri, rest = row[0], row[1:]
+        t = tuple(snap(v) for v in tri)
+        if t[0] == t[1] or t[1] == t[2] or t[0] == t[2]:
+            continue
+        key = frozenset(t)
+        if key in seen:                     # a face and its twin: both go
+            seen.discard(key)
+            out = [r for r in out if frozenset(r[0]) != key]
+            continue
+        seen.add(key)
+        out.append((t,) + tuple(rest))
+    return out
+
+
+def _corner_pieces(edges, runs, radius, kind, detail, adds):
+    """Triangles of the corner cutters (convex corners); concave ones go
+    to *adds*. Nothing without Manifold."""
+    from . import csg
+    if not runs or not csg.available():
+        return []
+    try:
+        from . import bevel
+        e = bevel.exponent(0.25 if kind == "chamfer" else 0.5)
+        pieces = bevel.corners(edges, runs, radius, detail, e)
+    except Exception:                       # pragma: no cover
+        return []
+    out = []
+    for piece, convex in pieces:
+        tris = csg.to_triangles(piece)
+        if tris:
+            (out if convex else adds).append(tris)
+    return out
 
 
 def chains(tris, min_angle: float = MIN_ANGLE) -> list:
@@ -744,7 +823,9 @@ def tess(node, env, color, sel, selected):
             csg.FAILED.add(node.id)
         else:
             csg.FAILED.discard(node.id)
-            out = cut
+            size = abs(float(_num(node.params.get("radius", 2.0), env,
+                                  2.0)))
+            out = _weld_slivers(cut, max(2e-3, size * 0.025))
     for body in result["adds"]:
         out.extend(mesh._emit(body, color, selected))
     return out

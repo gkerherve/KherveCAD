@@ -4436,6 +4436,15 @@ into a new module and import.
                        from the nearest triangle and takes every crease on
                        its rim on each rebuild, so a hole cut later is
                        rounded too. Written as `faces =` in kcad_fillet.
+  - Fillet three-edge corners (2026-10-21, the user's chamfer at a face
+                       rim + upright edge): `_corner_pieces` adds Bevel's
+                       corner piece (`bevel.corners`: ball patch / chamfer
+                       triangle) where three chosen edges of one kind meet;
+                       a chamfer's strips use Bevel's own `section`
+                       (`_chamfer_section`) so they meet the piece on the
+                       same planes, and the preview's cut is cleaned by
+                       `_weld_slivers` (2.5 % of the radius) of the micron
+                       fins the near-coplanar boolean leaves.
   - `fillet_pick.py` — the click flow: `start(window, node)` arms
                        `View3D.start_pick` on the fillet's part
                        (groups=[(node, world tris)]) and re-arms after

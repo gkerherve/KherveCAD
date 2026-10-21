@@ -440,3 +440,26 @@ def test_a_picked_face_rounds_holes_cut_later(app):
     assert not warnings
     g = next(n for n in root.walk() if n.type == "fillet")
     assert g.params["faces"] == [row]
+
+
+@pytest.mark.parametrize("kind", ["chamfer", "round"])
+def test_three_edges_meeting_get_a_corner_piece(app, kind):
+    """The user chamfered a face's rim and the upright edge under one of
+    its corners: the strips stopped square there and a sliver stood up.
+    Bevel's corner piece now fills it, watertight."""
+    from khervecad import analysis, mesh
+    from khervecad.model import DocumentModel
+    m = DocumentModel()
+    m.set_global_fn(False)
+    cube = m.add_node("cube", dict(width=20, depth=20, height=10))
+    f = m.wrap_nodes([cube], "fillet")
+    f.params.update(radius=2, kind=kind, detail=8)
+    world = mesh.tessellate(cube)
+    top = [t for t in world if all(abs(v[2] - 10) < 1e-9 for v in t)]
+    f.params["faces"] = [fillet_pick.face_from_pick(
+        dict(kind="face", tris=top), world, world)]
+    f.params["edges"] = [[20, 0, 0, 20, 0, 10]]
+    result = fillet.baked(f, {})
+    assert len(result["cuts"]) == 3             # 2 runs + the corner
+    tris = mesh.tessellate(f)
+    assert analysis.print_check(tris)["checks"][0]["status"] == "pass"
