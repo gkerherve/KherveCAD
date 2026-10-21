@@ -262,7 +262,8 @@ def _fill_quick(win, bar):
     spacer = QWidget(bar)
     spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
     win._vibe_keep = set(bar.actions())
-    win._vibe_keep.add(bar.addWidget(spacer))
+    win._quick_spacer = bar.addWidget(spacer)
+    win._vibe_keep.add(win._quick_spacer)
     bar.addAction(win._vibe_act)
     win._vibe_keep.add(win._vibe_act)
     win._op_groups = {}
@@ -399,7 +400,12 @@ def apply(win, name: str = None, remember: bool = True):
             tabs = win.ribbon.tabs
             tabs.setShape(QTabBar.RoundedNorth)
             for w in (tabs, search):
-                if before is not None:
+                # the tabs on the left, just after Rebuild (the user)
+                at = getattr(win, "_quick_spacer", None) \
+                    if w is tabs else before
+                if at is not None and at in bar.actions():
+                    win._vibe_keep.add(bar.insertWidget(at, w))
+                elif before is not None:
                     win._vibe_keep.add(bar.insertWidget(before, w))
                 else:
                     win._vibe_keep.add(bar.addWidget(w))
