@@ -3046,11 +3046,12 @@ into a new module and import.
                        Rows live on the CONTAINER as `params["constraints"]`
                        {kind, refs ["<child index>.<entity>"], value} — child
                        indices survive undo, node ids do not. Codegen writes
-                       them first in the container's block as
-                       `kcad_constraints("<json>");` (a no-op helper module;
-                       the root's at top level, an Object's in its module),
-                       and the importer's builder returns a marker that
-                       `take` moves back onto the container — they survive
+                       them first in the container's block as the ASSIGNMENT
+                       `kcad_constraints = "<json>";` — never a module call:
+                       a call is a child, and first in a difference() it was
+                       the empty body, so the part rendered EMPTY in
+                       OpenSCAD (fixed 2026-10-21); `take` moves the assign
+                       (or an old file's marker call) back onto the container — they survive
                        .scad export / import and Apply code (they were lost
                        there until 2026-10-21). Entities: line p1 p2 l, rect v0-v3
                        e0-e3 c, circle c o, polygon v<i> e<i>. SolidCraft's

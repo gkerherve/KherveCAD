@@ -688,13 +688,18 @@ HELPER = """\
 module kcad_constraints(rows = "") { }"""
 
 
+VARIABLE = "kcad_constraints"
+
+
 def code(container):
-    """The container's rows as one OpenSCAD statement (a no-op module
-    call carrying them as JSON text)."""
+    """The container's rows as one OpenSCAD ASSIGNMENT carrying them as
+    JSON text. Not a module call: a call is a CHILD, and first in a
+    difference() it became the (empty) body — the whole part rendered
+    empty in OpenSCAD (2026-10-21). An assignment is no geometry."""
     import json
     text = json.dumps(rows(container), separators=(",", ":"))
     text = text.replace("\\", "\\\\").replace('"', '\\"')
-    return 'kcad_constraints("%s");' % text
+    return '%s = "%s";' % (VARIABLE, text)
 
 
 def _b_constraints(parser, positional, named):
@@ -716,9 +721,22 @@ BUILDERS = {"kcad_constraints": _b_constraints}
 
 
 def take(container):
-    """Move a parsed kcad_constraints marker's rows onto *container*."""
+    """Move parsed constraint rows onto *container*: the assignment
+    `kcad_constraints = "…";` (or an older file's kcad_constraints(…)
+    marker call)."""
+    import json
     for child in list(container.children):
         found = getattr(child, "_kcad_constraints", None)
+        if found is None and child.type == "assign" and \
+                str(child.params.get("variable", "")) == VARIABLE:
+            text = child.params.get("value", "[]")
+            text = str(text).strip()
+            if text.startswith('"') and text.endswith('"'):
+                text = text[1:-1].encode().decode("unicode_escape")
+            try:
+                found = json.loads(text)
+            except ValueError:
+                found = []
         if found is not None:
             container.remove(child)
             if found:
@@ -726,7 +744,8 @@ def take(container):
 
 
 def uses(root):
-    return any(n.params.get(KEY) for n in root.walk())
+    """No helper module is needed any more (an assignment needs none)."""
+    return False
 
 
 # ------------------------------------------- keeping refs right on edits

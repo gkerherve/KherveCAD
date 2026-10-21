@@ -360,3 +360,24 @@ def test_no_finish_button_and_a_tab_leaves_the_sketch(app):
         toolbar_style.apply(win, "KherveCAD")
         win._dirty = False
         win.close()
+
+
+def test_constraints_never_become_a_difference_body(app):
+    """They were a kcad_constraints(...) CALL first in the block: inside
+    a difference() that call was the (empty) body, and the user's whole
+    part rendered empty in OpenSCAD. Now an assignment, no geometry."""
+    from khervecad import scadparse
+    m = DocumentModel()
+    d = m.add_node("difference", {})
+    m.add_node("polygon", dict(points=[[0, 0], [40, 3], [20, 30]]),
+               parent=d)
+    m.add_node("circle", dict(x=20, y=10, radius=3), parent=d)
+    sc.add(m, d, "horizontal", ["0.e0"])
+    code = m.to_scad()
+    line = next(l for l in code.splitlines() if "kcad_constraints" in l)
+    assert line.strip().startswith("kcad_constraints = ")
+    root, warnings = scadparse.parse_scad(code)
+    assert not warnings
+    diff = next(n for n in root.walk() if n.type == "difference")
+    assert [c.type for c in diff.children] == ["polygon", "circle"]
+    assert sc.rows(diff) == sc.rows(d)
