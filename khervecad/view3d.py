@@ -1963,7 +1963,9 @@ class View3D(QWidget):
             if not self.edit_tool.mouse_press(event):
                 self.mousePressEvent(event)
             return
-        self.fit()
+        # glide to the fitted view, and back on the next double-click
+        from . import view_anim
+        view_anim.toggle_3d(self)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape and self._pick_cb is not None:

@@ -1,0 +1,54 @@
+"""Double-click glides to the fitted view and back, in 3D and 2D.
+
+Copyright (C) 2026 Gwilherm Kerherve
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+"""
+
+import pytest
+from PyQt5.QtWidgets import QApplication
+
+from khervecad import view_anim
+
+_APP = QApplication.instance() or QApplication([])
+
+
+@pytest.fixture
+def win():
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    w.resize(1200, 800)
+    w.show()
+    yield w
+    w._dirty = False
+    w.close()
+
+
+def test_3d_fit_and_back(win):
+    win.model.add_node("cube", dict(width=50, depth=50, height=50))
+    _APP.processEvents()
+    view = win.view3d
+    view.target, view.distance = [500.0, 0.0, 0.0], 3000.0
+    view_anim.toggle_3d(view)
+    fitted = (list(view.target), view.distance)
+    assert view.distance < 3000.0
+    view_anim.toggle_3d(view)
+    assert view.target == pytest.approx([500.0, 0.0, 0.0])
+    assert view.distance == pytest.approx(3000.0)
+    view_anim.toggle_3d(view)                  # and fits again
+    assert view.distance == pytest.approx(fitted[1])
+
+
+def test_2d_fit_and_back(win):
+    win.model.add_node("rect", dict(x=200, y=100, width=40, height=20))
+    _APP.processEvents()
+    v2 = win.view2d
+    view_anim._set_2d(v2, 0.5, 0.0, 0.0)
+    view_anim.toggle_2d(v2)
+    c = v2.mapToScene(v2.viewport().rect().center())
+    assert (c.x(), c.y()) == pytest.approx((220, 110), abs=5)
+    view_anim.toggle_2d(v2)
+    assert v2.px_per_mm() == pytest.approx(0.5)
