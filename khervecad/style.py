@@ -137,6 +137,12 @@ QComboBox::drop-down {{ border: none; width: 18px; }}
 QComboBox QAbstractItemView {{ background: {t['card']};
     selection-background-color: {t['hover']};
     selection-color: {t['text']}; }}
+/* the popup's rows: without these, macOS drew the picked row in the
+   system's black highlight (the user) */
+QComboBox QAbstractItemView::item {{ padding: 3px 6px; color: {t['text']}; }}
+QComboBox QAbstractItemView::item:selected,
+QComboBox QAbstractItemView::item:hover {{
+    background: {t['hover']}; color: {t['text']}; }}
 
 QSpinBox, QDoubleSpinBox {{
     background: {t['card']};
