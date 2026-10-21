@@ -253,6 +253,12 @@ def _fill_quick(win, bar):
     bar.addSeparator()
     for act in parts["undo"]:
         bar.addAction(act)
+    if getattr(win, "_interface_style", "") == "SolidWorks":
+        # SolidWorks' quick-access bar also has Select and Rebuild
+        from . import stop_tool
+        bar.addSeparator()
+        bar.addAction(stop_tool.action(win))
+        bar.addAction(_rebuild_action(win))
     spacer = QWidget(bar)
     spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
     win._vibe_keep = set(bar.actions())
@@ -260,6 +266,21 @@ def _fill_quick(win, bar):
     bar.addAction(win._vibe_act)
     win._vibe_keep.add(win._vibe_act)
     win._op_groups = {}
+
+
+def _rebuild_action(win):
+    """SolidWorks' Rebuild (traffic light): redraw both views from the
+    model, dropping the cached meshes (`MainWindow.force_refresh`)."""
+    act = getattr(win, "_rebuild_act", None)
+    if act is None:
+        from PyQt5.QtWidgets import QAction
+        from . import icons, language
+        act = QAction(icons.icon("mdi.refresh"), language.tr("Rebuild"), win)
+        act.setToolTip(language.tr("Rebuild: recompute and redraw the "
+                                   "model"))
+        act.triggered.connect(lambda _=False: win.force_refresh())
+        win._rebuild_act = act
+    return act
 
 
 def _style_vertical(win, name):
@@ -367,6 +388,16 @@ def apply(win, name: str = None, remember: bool = True):
         _clear(ribbon_bar)
         win.ribbon = Ribbon(win, name, ribbon_bar)
         ribbon_bar.addWidget(win.ribbon)
+        if name == "SolidWorks":
+            # SolidWorks' top bar: quick access on the left, the command
+            # search on the right — one row, as in SolidWorks (the user)
+            search = win.ribbon.search
+            vibe_act = getattr(win, "_vibe_act", None)
+            before = vibe_act if vibe_act in bar.actions() else None
+            if before is not None:
+                win._vibe_keep.add(bar.insertWidget(before, search))
+            else:
+                win._vibe_keep.add(bar.addWidget(search))
         ribbon_bar.setStyleSheet(_qss_ribbon(name, colours(name)))
         ribbon_bar.show()
         # Fusion: file / undo / Vibe sit on the ribbon's tab line; the
