@@ -1001,7 +1001,11 @@ class MainWindow(QMainWindow):
         # part is framed by _sync_highlight; a plain 2D shape was only
         # selected in place, often off screen — the user, 2026-10-19).
         # A click in the sketch itself never re-zooms.
-        if nodes and self.scene.isolated_bounds() is None:
+        # Not while drawing: a line just made is selected through the
+        # tree, and that pulled the view onto it (the user, twice)
+        from .view2d import SELECT
+        if nodes and self.scene.isolated_bounds() is None and \
+                getattr(self.scene, "tool", SELECT) == SELECT:
             self.view2d.zoom_selection()
         self._syncing = False
 

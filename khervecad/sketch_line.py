@@ -31,6 +31,9 @@ SNAP_PX = 10.0
 ALIGN_PX = 7.0
 ANGLE_DEG = 4.0
 MIN_LEN = 0.05
+#: a sketch line's stroke (mm): thin like a sketch, still a solid when
+#: extruded — 2 mm drew a 5 mm sketch as a fat bar (the user)
+LINE_WIDTH = 0.2
 
 
 # ---------------------------------------------------------------- points
@@ -286,7 +289,8 @@ def press(scene, event):
     node = scene._create("line", dict(x1=round(start.x(), 4),
                                       y1=round(start.y(), 4),
                                       x2=round(pt.x(), 4),
-                                      y2=round(pt.y(), 4), width=2.0))
+                                      y2=round(pt.y(), 4),
+                                      width=LINE_WIDTH))
     scene.node_created.emit(node)
     _relations(scene, node, info, st)
     st["start"], st["prev"] = pt, node
