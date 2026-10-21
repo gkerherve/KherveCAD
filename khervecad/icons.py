@@ -217,21 +217,126 @@ def _paint_cube(p: QPainter, box: QRectF):
     _stroke(p, inner, _CAD_BLUE, box, weight=0.06)
 
 
+def _iso(x, y, z, scale, ox, oy):
+    """Isometric screen point: x right-down, y left-down, z up."""
+    return (ox + (x - y) * 0.866 * scale,
+            oy + ((x + y) * 0.5 - z) * scale)
+
+
+def _paint_part(p: QPainter, s: float, ox: float, oy: float):
+    """A machined L-bracket in shaded metal with a drilled hole — the
+    mark's centre: what a CAD program makes."""
+    from PyQt5.QtCore import QPointF
+    from PyQt5.QtGui import QLinearGradient, QPolygonF
+    # (x0, y0, z0, x1, y1, z1): a base plate and an upright at the back
+    boxes = [(0.0, 0.0, 0.0, 2.6, 2.0, 0.7),
+             (0.0, 0.0, 0.7, 0.75, 2.0, 2.4)]
+    shade = {"top": ("#f4f5f7", "#c9cdd3"), "x": ("#b4b9c1", "#8a9099"),
+             "y": ("#7c828c", "#565b63")}
+    faces = []
+    for x0, y0, z0, x1, y1, z1 in boxes:
+        faces += [
+            ("top", [(x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1)]),
+            ("x", [(x1, y0, z0), (x1, y1, z0), (x1, y1, z1), (x1, y0, z1)]),
+            ("y", [(x0, y1, z0), (x1, y1, z0), (x1, y1, z1), (x0, y1, z1)])]
+    faces.sort(key=lambda f: sum(a + b + c for a, b, c in f[1]))
+    edge = QPen(QColor("#2b2e33"))
+    edge.setWidthF(max(0.6, s * 0.006))
+    edge.setJoinStyle(Qt.RoundJoin)
+    for kind, pts in faces:
+        poly = QPolygonF([QPointF(*_iso(*pt, s, ox, oy)) for pt in pts])
+        r = poly.boundingRect()
+        g = QLinearGradient(r.topLeft(), r.bottomRight())
+        g.setColorAt(0, QColor(shade[kind][0]))
+        g.setColorAt(1, QColor(shade[kind][1]))
+        p.setPen(edge)
+        p.setBrush(g)
+        p.drawPolygon(poly)
+    # the drilled hole in the base plate's top face
+    import math
+    hole = QPolygonF([QPointF(*_iso(1.75 + 0.42 * math.cos(t),
+                                    1.0 + 0.42 * math.sin(t), 0.7,
+                                    s, ox, oy))
+                      for t in [i * math.pi / 24 for i in range(48)]])
+    hg = QLinearGradient(hole.boundingRect().topLeft(),
+                         hole.boundingRect().bottomLeft())
+    hg.setColorAt(0, QColor("#1d1f23"))
+    hg.setColorAt(1, QColor("#4b5058"))
+    p.setBrush(hg)
+    p.drawPolygon(hole)
+
+
 def _paint_kcad(size: int) -> QPixmap:
-    """Draw the KherveCAD mark on a rounded slate tile: the 'KCAD'
-    wordmark above a small isometric cube, at every size."""
+    """The KherveCAD mark (2026-10-21, the user: "more like SolidWorks,
+    more evolved"): an ORIGINAL design, not SolidWorks' logo — a deep red
+    rounded tile with a soft highlight, a shaded machined bracket in
+    metal, and the KCAD wordmark under it from 48 px up."""
+    from PyQt5.QtGui import QLinearGradient, QRadialGradient
     pm = QPixmap(size, size)
     pm.fill(Qt.transparent)
     p = QPainter(pm)
     p.setRenderHint(QPainter.Antialiasing)
     s = float(size)
-    rect = _paint_slate_tile(p, s)
-    x, y, w, h = rect.x(), rect.y(), rect.width(), rect.height()
-    _paint_wordmark(p, QRectF(x, y + h * 0.06, w, h * 0.40))   # upper half
-    cw, chh = w * 0.42, h * 0.40
-    _paint_cube(p, QRectF(x + (w - cw) / 2.0, y + h * 0.54, cw, chh))
+    m = s * 0.05
+    rect = QRectF(m, m, s - 2 * m, s - 2 * m)
+    radius = s * 0.2
+    g = QLinearGradient(rect.topLeft(), rect.bottomLeft())
+    g.setColorAt(0.0, QColor("#e2343a"))
+    g.setColorAt(1.0, QColor("#8c0f16"))
+    p.setPen(Qt.NoPen)
+    p.setBrush(g)
+    p.drawRoundedRect(rect, radius, radius)
+    glow = QRadialGradient(rect.center().x(), rect.top() + rect.height()
+                           * 0.25, rect.width() * 0.7)
+    glow.setColorAt(0, QColor(255, 255, 255, 70))
+    glow.setColorAt(1, QColor(255, 255, 255, 0))
+    p.setBrush(glow)
+    p.drawRoundedRect(rect, radius, radius)
+    rim = QPen(QColor(90, 0, 6, 180))
+    rim.setWidthF(max(1.0, s * 0.012))
+    p.setPen(rim)
+    p.setBrush(Qt.NoBrush)
+    p.drawRoundedRect(rect, radius, radius)
+    words = size >= 48
+    # the part spans 4.0 x 4.7 iso units (x - y from -2 to 2.6, height
+    # from the upright's top to the plate's front corner)
+    area_top = rect.top() + rect.height() * (0.09 if words else 0.1)
+    area_h = rect.height() * (0.6 if words else 0.8)
+    unit = area_h / 4.7
+    cx = rect.center().x() - 0.26 * unit
+    _paint_part(p, unit, cx, area_top + 2.4 * unit)
+    if words:
+        _paint_wordmark_white(p, QRectF(rect.x(), rect.y() + rect.height()
+                                        * 0.72, rect.width(),
+                                        rect.height() * 0.22))
     p.end()
     return pm
+
+
+def _paint_wordmark_white(p: QPainter, rect: QRectF):
+    """'KCAD' in a bold sans, white, with a faint shadow."""
+    from PyQt5.QtGui import QFont
+    font = QFont("Helvetica Neue")
+    font.setStyleHint(QFont.SansSerif)
+    font.setWeight(QFont.Black)
+    font.setPixelSize(max(6, int(rect.height() * 0.95)))
+    font.setLetterSpacing(QFont.PercentageSpacing, 104)
+    path = QPainterPath()
+    path.addText(0, 0, font, "KCAD")
+    box = path.boundingRect()
+    k = min(rect.width() * 0.78 / box.width(),
+            rect.height() * 0.82 / box.height())
+    from PyQt5.QtGui import QTransform
+    t = QTransform()
+    t.translate(rect.center().x(), rect.center().y())
+    t.scale(k, k)
+    t.translate(-box.center().x(), -box.center().y())
+    path = t.map(path)
+    p.setPen(Qt.NoPen)
+    p.setBrush(QColor(60, 0, 4, 120))
+    p.drawPath(path.translated(0, max(1.0, rect.height() * 0.05)))
+    p.setBrush(QColor("#ffffff"))
+    p.drawPath(path)
 
 
 def app_icon() -> QIcon:
