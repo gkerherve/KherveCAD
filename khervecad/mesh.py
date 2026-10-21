@@ -544,6 +544,8 @@ def collect_outlines(node: CadNode, env=None):
     outlines = []
     if not node.visible:
         return outlines
+    if node.params.get("modifier") == "%":
+        return outlines          # construction: OpenSCAD leaves % out too
     from . import suppress
     if suppress.is_off(node):
         for child in suppress.kept_children(node):

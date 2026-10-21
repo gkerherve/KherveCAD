@@ -60,8 +60,19 @@ SPLINE_STEPS = 8
 ARC_STEPS = 32
 
 
+def _variable():
+    """Tools taking any number of clicks (Enter ends)."""
+    from . import sketch_tools2
+    return {SPLINE} | sketch_tools2.VARIABLE
+
+
+def _min_points(tool):
+    from . import sketch_tools2
+    return 2 if tool == sketch_tools2.POLYLINE else 3
+
+
 def handles(tool):
-    return tool in CLICKS or tool == SPLINE
+    return tool in CLICKS or tool in _variable()
 
 
 def _r(v):
@@ -186,6 +197,10 @@ BUILD = {RECT_CENTER: rect_center, ARC_CENTER: arc_center,
 
 def outline(tool, pts):
     """What to draw while placing: the shape the points make so far."""
+    from . import sketch_tools2
+    more = sketch_tools2.outline(tool, pts)
+    if more is not None:
+        return more
     if tool == SPLINE:
         return spline_points(pts) if len(pts) >= 3 else list(pts)
     if len(pts) < 2:
@@ -314,14 +329,37 @@ def finish(scene):
     pts = list(_state(scene))
     tool = scene.tool
     drop(scene)
-    spec = BUILD[tool](*pts) if pts else None
+    from . import sketch_tools2
+    if not pts:
+        spec = None
+    elif tool in sketch_tools2.BUILD_SCENE:
+        spec = sketch_tools2.BUILD_SCENE[tool](scene, *pts)
+    else:
+        spec = BUILD[tool](*pts)
     if not spec:
         return None
-    node = None
+    node, made = None, []
     for type_, params, kids in spec:
         node = scene._create(type_, params)
+        made.append(node)
         for ktype, kparams, _ in kids or []:
             scene.model.add_node(ktype, kparams, parent=node)
+    if tool == sketch_tools2.POLYLINE and len(made) > 1:
+        # one Polyline group (one row, one Object in Main), each line's
+        # end joined to the next one's start
+        from . import sketch_constraints as sc
+        group = scene.model.wrap_nodes(made, "union")
+        if group is not None:
+            group.name = "Polyline"
+            node = group
+        parent = made[0].parent
+        try:
+            for a, b in zip(made, made[1:]):
+                sc.add(scene.model, parent, "coincident",
+                       [sc.ref_of(parent, a, "p2"),
+                        sc.ref_of(parent, b, "p1")])
+        except (ValueError, KeyError):
+            pass
     scene.node_created.emit(node)
     return node
 
@@ -329,7 +367,8 @@ def finish(scene):
 def press(scene, event):
     from PyQt5.QtCore import Qt
     if event.button() == Qt.RightButton:
-        if scene.tool == SPLINE and len(_state(scene)) >= 3:
+        if scene.tool in _variable() and \
+                len(_state(scene)) >= _min_points(scene.tool):
             finish(scene)
         else:
             drop(scene)
@@ -349,7 +388,7 @@ def release(scene, event):
     from PyQt5.QtCore import Qt
     from .polygon_draw import px_to_scene
     if event.button() == Qt.LeftButton and _state(scene) \
-            and scene.tool != SPLINE:
+            and scene.tool not in _variable():
         down = event.buttonDownScenePos(Qt.LeftButton)
         here = event.scenePos()
         if math.hypot(here.x() - down.x(), here.y() - down.y()) \
@@ -359,11 +398,11 @@ def release(scene, event):
 
 
 def double_click(scene, event):
-    if scene.tool == SPLINE:
+    if scene.tool in _variable():
         pts = _state(scene)
         if len(pts) >= 2 and pts[-1] == pts[-2]:
             pts.pop()                   # the double-click's second press
-        if len(pts) >= 3:
+        if len(pts) >= _min_points(scene.tool):
             finish(scene)
     event.accept()
 
@@ -373,7 +412,8 @@ def key(scene, event):
     the key was used."""
     from PyQt5.QtCore import Qt
     pts = _state(scene)
-    if event.key() in (Qt.Key_Return, Qt.Key_Enter) and scene.tool == SPLINE:
+    if event.key() in (Qt.Key_Return, Qt.Key_Enter) and \
+            scene.tool in _variable():
         finish(scene)
         return True
     if event.key() == Qt.Key_Backspace and pts:
@@ -381,3 +421,7 @@ def key(scene, event):
         _redraw(scene, None)
         return True
     return False
+
+
+# the further CREATE tools join these tables (sketch_tools2.register)
+from . import sketch_tools2  # noqa: E402,F401

@@ -251,9 +251,14 @@ class LineShapeItem(ShapeItem, QGraphicsLineItem):
         x1, y1 = self.rv("x1"), self.rv("y1")
         self.setPos(x1, y1)
         self.setLine(0, 0, self.rv("x2") - x1, self.rv("y2") - y1)
-        pen = _pen("#2e3440", max(self.rv("width", 1.0), 0.5))
-        pen.setCosmetic(False)
-        pen.setCapStyle(Qt.RoundCap)
+        if self.node.params.get("modifier") == "%":
+            # a construction line: a thin dashed reference line
+            pen = _pen("#7a8a99", 1.2)
+            pen.setStyle(Qt.DashLine)
+        else:
+            pen = _pen("#2e3440", max(self.rv("width", 1.0), 0.5))
+            pen.setCosmetic(False)
+            pen.setCapStyle(Qt.RoundCap)
         self.setPen(pen)
         self.reposition_handles()
 
@@ -534,6 +539,21 @@ def _profile_shapes(focus):
                 seen.add(n.id)
                 out.append(n)
     return out
+
+
+def _construction_look(item, node):
+    """Construction geometry (OpenSCAD's % on a sketch shape): dashed,
+    unfilled — a reference, never part of the solid."""
+    if node.params.get("modifier") != "%":
+        return
+    pen = QPen(item.pen())
+    pen.setStyle(Qt.DashLine)
+    pen.setColor(QColor("#7a8a99"))
+    item.setPen(pen)
+    if hasattr(item, "setBrush"):
+        item.setBrush(QBrush(Qt.NoBrush))
+    item.setToolTip(language.tr("{name} — construction (not part of the "
+                                "solid)").format(name=node.name))
 
 
 def _is_cut(node) -> bool:
@@ -1031,6 +1051,7 @@ class SketchScene(QGraphicsScene):
                 if cls is None:
                     continue
                 item = cls(node, self)
+                _construction_look(item, node)
                 self.addItem(item)
                 self._items[node.id] = item
                 if _is_cut(node):
@@ -1077,6 +1098,7 @@ class SketchScene(QGraphicsScene):
                         node.type in _ITEM_CLASSES and \
                         self._branch_visible(node, stop=iso):
                     item = _ITEM_CLASSES[node.type](node, self)
+                    _construction_look(item, node)
                     # drawn through its rotate / move / scale, as in 3D
                     view2d_edit.add_shape(self, item, node)
                     self._items[node.id] = item

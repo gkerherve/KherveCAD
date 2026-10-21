@@ -3164,6 +3164,21 @@ into a new module and import.
                        as a window shortcut (`install_escape`; View3D
                        accepts the ShortcutOverride while an Edit Mode drag
                        is live, so that Esc still only cancels the drag).
+  - `sketch_tools2.py` — SolidCraft's other sketch shapes (2026-10-21,
+                       "add them all"): construction line + the
+                       **Construction** switch (OpenSCAD's `%` on a sketch
+                       shape — OpenSCAD and `mesh.collect_outlines` leave it
+                       out, view2d draws it dashed, constraints use it),
+                       point (0.25 mm construction circle), polyline (lines
+                       in a "Polyline" group with coincident joins),
+                       3-point rectangle, 2- / 3-point and tangent (incircle
+                       of three lines) circles, tangent arc, regular polygon
+                       (sides asked), control-point B-spline, conic
+                       (rational quadratic, rho 0.5). Open curves are line-
+                       wide band polygons. Joins sketch_tools' tables
+                       (`register`, imported from its bottom); variable-
+                       click tools in `VARIABLE`, scene-needing builders in
+                       `BUILD_SCENE`. Icons in icons_cad_sketch.py.
   - `polygon_draw.py` — drawing a polygon in the sketch (2026-10-19, the
                        user: an "end" always shown, close by): a Finish /
                        Undo point / Cancel bar at the bottom of the view

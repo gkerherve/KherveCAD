@@ -114,3 +114,118 @@ def _import_2d(d):
     path.cubicTo(QPointF(0.35, 0.3), QPointF(0.6, 0.85),
                  QPointF(0.7, 0.4))
     d.path(path, color=d.pal.sketch, width=0.06)
+
+
+# ---- the further CREATE tools (sketch_tools2.py, 2026-10-21) ----
+def _circ(d, c, r, color=None, width=0.07, dash=None):
+    d.p.setPen(d.pen(color or d.pal.sketch, width, dash))
+    d.p.setBrush(Qt.NoBrush)
+    d.p.drawEllipse(QPointF(*c), r, r)
+
+
+@draws("construction_line")
+def _construction_line(d):
+    d.line(QPointF(0.1, 0.8), QPointF(0.9, 0.2), d.pal.edge, 0.06, [3, 2])
+    d.dot(QPointF(0.1, 0.8), d.pal.edge, 0.06)
+    d.dot(QPointF(0.9, 0.2), d.pal.edge, 0.06)
+
+
+@draws("construction")
+def _construction(d):
+    d.line(QPointF(0.12, 0.84), QPointF(0.6, 0.36), d.pal.sketch, 0.07)
+    d.line(QPointF(0.4, 0.64), QPointF(0.88, 0.16), d.pal.edge, 0.06,
+           [3, 2])
+    d.text(0.24, 0.32, "%", 0.24, d.pal.make)
+
+
+@draws("point")
+def _point(d):
+    d.line(QPointF(0.5, 0.24), QPointF(0.5, 0.76), d.pal.edge, 0.035,
+           [2, 2])
+    d.line(QPointF(0.24, 0.5), QPointF(0.76, 0.5), d.pal.edge, 0.035,
+           [2, 2])
+    d.dot(QPointF(0.5, 0.5), d.pal.sketch, 0.11)
+
+
+@draws("polyline")
+def _polyline(d):
+    pts = [QPointF(0.1, 0.82), QPointF(0.32, 0.3), QPointF(0.6, 0.66),
+           QPointF(0.9, 0.18)]
+    _open(d, pts)
+    for q in pts:
+        d.dot(q, d.pal.edge, 0.05)
+
+
+@draws("rect_3pt")
+def _rect_3pt(d):
+    pts = [QPointF(0.18, 0.62), QPointF(0.62, 0.2), QPointF(0.86, 0.46),
+           QPointF(0.42, 0.88)]
+    d.poly(pts, color=d.pal.sketch, width=0.07)
+    for q in pts[:3]:
+        d.dot(q, d.pal.edge, 0.055)
+
+
+@draws("circle_2pt")
+def _circle_2pt(d):
+    _circ(d, (0.5, 0.5), 0.36)
+    a, b = QPointF(0.245, 0.755), QPointF(0.755, 0.245)
+    d.line(a, b, d.pal.edge, 0.035, [2, 2])
+    d.dot(a, d.pal.edge, 0.055)
+    d.dot(b, d.pal.edge, 0.055)
+
+
+@draws("circle_3pt")
+def _circle_3pt(d):
+    _circ(d, (0.5, 0.5), 0.36)
+    for t in (100, 220, 340):
+        a = math.radians(t)
+        d.dot(QPointF(0.5 + 0.36 * math.cos(a), 0.5 - 0.36 * math.sin(a)),
+              d.pal.edge, 0.055)
+
+
+@draws("circle_tangent")
+def _circle_tangent(d):
+    tri = [QPointF(0.5, 0.08), QPointF(0.94, 0.86), QPointF(0.06, 0.86)]
+    d.poly(tri, color=d.pal.edge, width=0.04)
+    _circ(d, (0.5, 0.6), 0.26)
+
+
+@draws("arc_tangent")
+def _arc_tangent(d):
+    d.line(QPointF(0.08, 0.78), QPointF(0.45, 0.78), d.pal.edge, 0.06)
+    _open(d, _arc(0.45, 0.48, 0.3, -90, 180))
+    d.dot(QPointF(0.45, 0.78), d.pal.edge, 0.055)
+
+
+@draws("poly_reg")
+def _poly_reg(d):
+    pts = [QPointF(0.5 + 0.38 * math.cos(math.radians(30 + 60 * i)),
+                   0.5 - 0.38 * math.sin(math.radians(30 + 60 * i)))
+           for i in range(6)]
+    d.poly(pts, color=d.pal.sketch, width=0.07)
+    d.dot(QPointF(0.5, 0.5), d.pal.edge, 0.05)
+
+
+@draws("bspline")
+def _bspline(d):
+    ctrl = [QPointF(0.1, 0.8), QPointF(0.3, 0.14), QPointF(0.7, 0.86),
+            QPointF(0.9, 0.2)]
+    for a, b in zip(ctrl, ctrl[1:]):
+        d.line(a, b, d.pal.edge, 0.03, [2, 2])
+    path = QPainterPath(QPointF(0.13, 0.7))
+    path.cubicTo(QPointF(0.32, 0.3), QPointF(0.66, 0.72),
+                 QPointF(0.87, 0.28))
+    d.path(path, color=d.pal.sketch, width=0.07)
+    for q in ctrl:
+        d.dot(q, d.pal.edge, 0.05)
+
+
+@draws("conic")
+def _conic(d):
+    a, b, s = QPointF(0.1, 0.84), QPointF(0.9, 0.84), QPointF(0.5, 0.12)
+    d.line(a, s, d.pal.edge, 0.03, [2, 2])
+    d.line(s, b, d.pal.edge, 0.03, [2, 2])
+    path = QPainterPath(a)
+    path.quadTo(s, b)
+    d.path(path, color=d.pal.sketch, width=0.07)
+    d.dot(s, d.pal.make, 0.06)

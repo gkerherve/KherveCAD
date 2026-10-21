@@ -189,7 +189,7 @@ FUSION_ALL = {"analyse", "checks", "dimension",
               "sketch_shapes", "shapes3d"}
 FUSION_SHOWN_MANY = 4
 #: icons shown by panels with a count of their own
-PANEL_SHOWN = {"sketch": 11, "sketch_modify": 9, "sketch_constrain": 15}
+PANEL_SHOWN = {"sketch": 22, "sketch_modify": 10, "sketch_constrain": 15}
 #: the sketch MODIFY panel: operations from the families, in this order
 SKETCH_MODIFY = ["translate", "rotate", "scale", "mirror", "pattern"]
 
@@ -452,8 +452,9 @@ def _panel_actions(win, key):
         return title, acts
     if key == "sketch_modify":
         ops = {a.data(): a for _k, fam in parts["families"] for a in fam}
-        from . import sketch_modify
-        return title, list(sketch_modify.panel_actions(win)) + [
+        from . import sketch_modify, sketch_tools2
+        return title, [sketch_tools2.construction_action(win)] + \
+            list(sketch_modify.panel_actions(win)) + [
             sketch_extra(win)["offset"]] + [
             ops[k] for k in SKETCH_MODIFY if k in ops]
     if key == "sketch_constrain":
