@@ -96,13 +96,14 @@ def test_changing_tool_leaves_no_dead_line(view):
     view.set_tool(RECT)
     assert not _leftovers(view) and not view.scene()._poly_points
     assert not view.polygon_bar.isVisible()
-    # a line being dragged when the tool changes goes too
+    # a line being drawn when the tool changes goes too (the
+    # SolidWorks-style line: started by a click, sketch_line.py)
     view.set_tool(LINE)
-    QTest.mousePress(view.viewport(), Qt.LeftButton, Qt.NoModifier,
-                     view.mapFromScene(QPointF(0, 0)))
-    assert view.scene()._draft is not None
+    _click(view, 0, 0)
+    assert view.scene()._ln["start"] is not None
     view.set_tool(POLYGON)
-    assert view.scene()._draft is None
+    assert view.scene()._ln["start"] is None and not view.scene()._ln[
+        "items"]
     from PyQt5.QtWidgets import QGraphicsLineItem
     assert not [i for i in view.scene().items()
                 if isinstance(i, QGraphicsLineItem)]
@@ -112,7 +113,8 @@ def test_changing_tool_leaves_no_dead_line(view):
 def test_click_click_draws_a_line_rectangle_and_circle(view):
     """Fusion and SolidWorks draw by click, move, click; a click used to
     make a zero-size shape that was thrown away — nothing appeared."""
-    for tool, kind in ((RECT, "rect"), (LINE, "line")):
+    # (the line chains like SolidWorks': tests/test_sketch_line.py)
+    for tool, kind in ((RECT, "rect"),):
         view.set_tool(tool)
         _click(view, 0, 0)
         assert view.scene()._click_mode
@@ -181,7 +183,7 @@ def test_polygon_properties_are_compact(app):
                  for r in range(form.rowCount())]
         heads = [s.widget().text() for s in spans
                  if s is not None and isinstance(s.widget(), QLabel)]
-        assert heads == ["Points", "Paths"]
+        assert heads == ["Points", "Paths", "Rounded corners"]
         paths_head = [s.widget() for s in spans if s is not None
                       and isinstance(s.widget(), QLabel)][1]
         assert "hole" in paths_head.toolTip()

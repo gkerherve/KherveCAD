@@ -3190,6 +3190,20 @@ into a new module and import.
                        a part's box (+ a lone cylinder's Ø); the selected
                        ones in the accent colour. The corner thumbnail twin
                        sets `no_dims`.
+  - `sketch_line.py` — the **SolidWorks-style Line** (2026-10-21): lines
+                       CHAIN click to click (double-click / right-click /
+                       Enter / Esc ends); `snap` = existing point or origin
+                       (SNAP_PX) > H / V / 45° from the start (ANGLE_DEG) >
+                       the free coordinate lined up with any point's x / y
+                       (dotted guides) > grid; a readout "L … ∠ …" at the
+                       end; relations added: Horizontal / Vertical when it
+                       snapped so, Coincident at joins and on snapped
+                       points. The Polygon tool uses the same snap and
+                       readout, and `polygon_relations` puts H / V on its
+                       sides. Drawing in Front / Side goes into ONE turned
+                       "<plane> sketch" rotate (`SketchScene._sketch_group`)
+                       and view2d shows every 2D shape lying in the plane
+                       on show (`view2d_edit.on_view_plane`).
   - `polygon_draw.py` — drawing a polygon in the sketch (2026-10-19, the
                        user: an "end" always shown, close by): a Finish /
                        Undo point / Cancel bar at the bottom of the view

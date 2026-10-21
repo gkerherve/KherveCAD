@@ -1738,7 +1738,23 @@ class SketchScene(QGraphicsScene):
             self.update()
             event.accept()
             return
+        if self.tool == LINE:
+            from . import sketch_line        # SolidWorks-style, chained
+            sketch_line.press(self, event)
+            return
+        if self.tool == POLYGON and event.button() == Qt.LeftButton:
+            from . import sketch_line
+            start = self._poly_points[-1] if self._poly_points else None
+            pt, info = sketch_line.snap(self, event.scenePos(), start)
+            self._poly_flags = getattr(self, "_poly_flags", [])
+            if start is not None:
+                self._poly_flags.append(info.get("angle"))
+            else:
+                self._poly_flags = []
+            self._poly_snapped = pt
         pos = self.snap(event.scenePos())
+        if self.tool == POLYGON and event.button() == Qt.LeftButton:
+            pos = self._poly_snapped
         if self._click_mode and self._draft is not None:
             if event.button() == Qt.LeftButton:
                 self._finish_draft(pos)        # the second click
@@ -1828,7 +1844,19 @@ class SketchScene(QGraphicsScene):
         if sketch_tools.handles(self.tool):
             sketch_tools.move(self, event)
             return
+        if self.tool == LINE:
+            from . import sketch_line
+            sketch_line.move(self, event)
+            return
         pos = self.snap(event.scenePos())
+        if self.tool == POLYGON and self._poly_points:
+            from . import sketch_line
+            start = self._poly_points[-1]
+            pos, info = sketch_line.snap(self, event.scenePos(), start)
+            self._update_poly_draft(pos)
+            sketch_line.draw_overlay(self, start, pos, info)
+            event.accept()
+            return
         if self._draft is not None and self._draft_start is not None:
             start = self._draft_start
             if self.tool == LINE:
@@ -1940,6 +1968,10 @@ class SketchScene(QGraphicsScene):
 
     def mouseDoubleClickEvent(self, event):
         from . import sketch_tools
+        if self.tool == LINE:
+            from . import sketch_line
+            sketch_line.double_click(self, event)
+            return
         if sketch_tools.handles(self.tool):
             sketch_tools.double_click(self, event)
             return
@@ -1973,6 +2005,9 @@ class SketchScene(QGraphicsScene):
         if not self._poly_points:
             return
         self._poly_points.pop()
+        flags = getattr(self, "_poly_flags", [])
+        if flags:
+            flags.pop()
         cursor = self._poly_points[-1] if self._poly_points else None
         if cursor is None:
             self._clear_poly_items()
@@ -1991,6 +2026,9 @@ class SketchScene(QGraphicsScene):
         sketch_constrain_ui.drop(self)
         from . import sketch_modify
         sketch_modify.drop(self)
+        from . import sketch_line
+        sketch_line.drop(self)
+        self._poly_flags = []
         had = bool(self._poly_points)
         self._poly_points = []
         self._clear_poly_items()
@@ -2016,6 +2054,15 @@ class SketchScene(QGraphicsScene):
             points=[[p.x() - origin.x(), p.y() - origin.y()]
                     for p in points]))
         self.node_created.emit(node)
+        from . import sketch_line
+        flags = list(getattr(self, "_poly_flags", []))
+        # the closing side: H / V if it happens to be exactly so
+        a, b = points[-1], points[0]
+        flags.append("h" if abs(a.y() - b.y()) < 1e-6 else
+                     "v" if abs(a.x() - b.x()) < 1e-6 else None)
+        sketch_line.polygon_relations(self.model, node, flags)
+        self._poly_flags = []
+        sketch_line.end_chain(self)
 
     def cancel_tool(self):
         self.drop_drafts()
@@ -2379,7 +2426,7 @@ class SketchView(QGraphicsView):
     def contextMenuEvent(self, event):
         from . import sketch_tools
         from . import sketch_constrain_ui
-        if self.scene().tool == POLYGON or \
+        if self.scene().tool in (POLYGON, LINE) or \
                 sketch_tools.handles(self.scene().tool) or \
                 sketch_constrain_ui.handles(self.scene().tool) or \
                 self.scene().tool in ("sk_trim", "sk_extend",
@@ -2624,6 +2671,10 @@ class SketchView(QGraphicsView):
             pass
         elif sketch_constrain_ui.handles(scene.tool) and \
                 sketch_constrain_ui.key(scene, event):
+            pass
+        elif scene.tool == LINE and \
+                __import__("khervecad.sketch_line",
+                           fromlist=["key"]).key(scene, event):
             pass
         elif event.key() in (Qt.Key_Return, Qt.Key_Enter) and \
                 scene.tool == POLYGON:
