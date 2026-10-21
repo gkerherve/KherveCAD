@@ -1642,6 +1642,36 @@ TOOLS = [
         }),
     },
     {
+        "name": "hole_wizard",
+        "description": (
+            "SolidWorks' HOLE WIZARD: drill standard holes into a part. "
+            "node_id = the part (a solid, an Object or an instance — an "
+            "Object is drilled inside, every instance follows), points = "
+            "world [x, y, z] ON one face (probe_surface gives point + "
+            "normal), normal = that face's outward normal. type "
+            "Clearance / Tapped (drill) / Counterbore / Countersink / Nut "
+            "trap, size M3-M20, fit Close / Normal / Loose (ISO 273), end "
+            "Through all (default) or Blind + depth mm. The holes are ONE "
+            "feature (a Group 'M6 Clearance Hole' cut by a Difference); a "
+            "later call with the same settings adds to it. action update "
+            "+ node_id inside a feature re-sizes all its holes."
+        ),
+        "input_schema": _obj({
+            "action": {"type": "string", "enum": ["drill", "update"]},
+            "node_id": {"type": "integer"},
+            "points": {"type": "array", "items": {
+                "type": "array", "items": {"type": "number"},
+                "minItems": 3, "maxItems": 3}},
+            "normal": {"type": "array", "items": {"type": "number"},
+                       "minItems": 3, "maxItems": 3},
+            "type": {"type": "string"},
+            "size": {"type": "string"},
+            "fit": {"type": "string"},
+            "end": {"type": "string"},
+            "depth": {"type": "number", "exclusiveMinimum": 0},
+        }, ["node_id"]),
+    },
+    {
         "name": "sketch_modify",
         "description": (
             "SKETCH MODIFY — the ribbon's Trim / Extend / Sketch fillet / "

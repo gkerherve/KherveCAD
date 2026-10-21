@@ -431,6 +431,11 @@ polygon or rectangle corner (kept sharp underneath, a corners row draws the \
 arc) or the corner two lines make. Shapes on a Front / Side plane sit in \
 one turned "<plane> sketch" group — add them there, in its frame.
 
+Holes — a bolt hole, tapped hole, counterbore or countersink is ONE \
+hole_wizard call: probe_surface for the face's point + normal, then \
+hole_wizard with the points, type, size (M3-M20) and end (Through all / \
+Blind) — never hand-build a cylinder cut for a standard hole.
+
 Feature history and families, SolidWorks style — suppress switches a \
 feature off without deleting it (or rolls the history back after a node); \
 configurations stores named sets of the variables ('M6' / 'M8') and \

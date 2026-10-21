@@ -1637,6 +1637,13 @@ class McpToolExecutor:
         except (ValueError, KeyError, IndexError) as exc:
             raise ToolError(str(exc))
 
+    def _t_hole_wizard(self, params) -> dict:
+        from . import hole_wizard
+        try:
+            return hole_wizard.run_mcp(self._w, params)
+        except (ValueError, KeyError, IndexError, TypeError) as exc:
+            raise ToolError(str(exc))
+
     def _t_sketch_modify(self, params) -> dict:
         from . import sketch_modify
         try:

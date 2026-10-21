@@ -74,7 +74,7 @@ TABS = [
 #: panels that are not operation families: key -> title
 EXTRA_PANELS = {"pub_share": "Share", "pub_media": "Pictures & video",
                 "util_make": "Make", "util_addins": "Add-ins",
-                "util_utility": "Utility", "assemble_more": "Assemble", "mechanical": "Features", "curves": "Curves",
+                "util_utility": "Utility", "assemble_more": "Assemble", "mechanical": "Features", "_mechanical_menu": "Features", "curves": "Curves",
                 "surfaces": "From curves", "form_create": "Create form",
                 "figures": "Figures", "solid_insert": "Insert",
                 "sketch_shapes": "Shapes", "shapes3d": "Shapes",
@@ -422,6 +422,13 @@ def _panel_actions(win, key):
                                if a.data() != MEASURE
                                and not str(a.data()).startswith(
                                    ("con_", "sk_"))]
+    if key == "mechanical":
+        # SolidWorks' Hole Wizard leads the features (hole_wizard.py)
+        from . import hole_wizard
+        rest = _panel_actions(win, "_mechanical_menu")[1]
+        return title, [hole_wizard.action(win)] + rest
+    if key == "_mechanical_menu":
+        key = "mechanical"
     if key in MENU_PANELS:
         from .interface_menus import index
         paths = index(win)

@@ -3211,6 +3211,17 @@ into a new module and import.
                        "<plane> sketch" rotate (`SketchScene._sketch_group`)
                        and view2d shows every 2D shape lying in the plane
                        on show (`view2d_edit.on_view_plane`).
+  - `hole_wizard.py` — SolidWorks' **Hole Wizard** (2026-10-21): first
+                       button of the Features panel; a tool window (type
+                       Clearance / Tapped / Counterbore / Countersink / Nut
+                       trap, M3-M20 from `library.BOLT_SIZES`, ISO 273 fit,
+                       Through all / Blind) and every click on a face
+                       drills one `hole` square to it (translate · rotate ·
+                       hole) into ONE feature Group "M6 Clearance Hole"
+                       (`params["hole_wizard"]` = the spec) cut by a
+                       Difference round the part; an Object is drilled
+                       INSIDE in its own frame (`body_of`). Update selected
+                       re-sizes a feature. MCP `hole_wizard`.
   - `tree_menu.py`    — the tree's right-click menu made compact
                        (2026-10-21): everyday commands on top, the rest in
                        Clipboard / Position / Modify / Organise submenus,
@@ -5199,7 +5210,7 @@ into a new module and import.
                        what each SHIPPED .kcad compiles to and pins the
                        files to the generator (`python -m
                        khervecad.tools.print_tests --check`).
-  - `mcp_schema.py`  — the **MCP tool table**: 109 JSON-Schema tool
+  - `mcp_schema.py`  — the **MCP tool table**: 110 JSON-Schema tool
                        definitions. Qt-free and import-free — it is the
                        contract, so it can be inspected and tested
                        without a window, and the stdio server never
@@ -5830,7 +5841,7 @@ both DMGs in one `macos-v<ver>` release with `--latest=false`, so
 KherveCAD is drivable by **any local MCP assistant** — Claude Desktop,
 Claude Code, Cursor, Cline, VS Code, LM Studio — not just the built-in
 chat. The chat answers with a program the user then applies; an MCP
-client gets the whole app as **109 tools**: the object tree, OpenSCAD in
+client gets the whole app as **110 tools**: the object tree, OpenSCAD in
 and out, the part library, Objects/instances/mates, the document, and
 `render_view`, which hands back a **PNG of the 3D preview** from any of
 the seven camera presets.
