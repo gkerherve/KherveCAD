@@ -100,7 +100,7 @@ def test_mcp_suppress(app):
         win.close()
 
 
-def test_the_menu_starts_with_suppress_and_remove_step(app, monkeypatch):
+def test_the_menu_ends_with_suppress_and_the_two_deletes(app, monkeypatch):
     from PyQt5.QtWidgets import QApplication as QA, QMenu
     from khervecad.mainwindow import MainWindow
     win = MainWindow()
@@ -115,10 +115,11 @@ def test_the_menu_starts_with_suppress_and_remove_step(app, monkeypatch):
         monkeypatch.setattr(QMenu, "exec_", lambda self, *a: shown.append(
             [x for x in self.actions() if x.text()]))
         tree._context_menu(tree.visualItemRect(tree.currentItem()).center())
-        first, second = shown[0][0], shown[0][1]
-        assert first.text().startswith("Suppress")
-        assert second.text().startswith("Remove")
-        second.trigger()                       # remove only the knife
+        sup, only, every = shown[0][-3:]
+        assert sup.text().startswith("Suppress")
+        assert "only" in only.text() and "keep" in only.text()
+        assert "everything inside" in every.text()
+        only.trigger()                         # remove only the knife
         assert cube.parent is m.root and knife.parent is None
     finally:
         win._dirty = False
