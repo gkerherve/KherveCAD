@@ -3130,6 +3130,15 @@ into a new module and import.
                        / Cancel; leaves go without a question. Tree right-
                        click, Delete key, Edit ▸ Delete. Tests answer
                        through `ask_hook` (conftest: "all").
+  - `round_ui.py`    — rounding from the 3D view (2026-10-21, the user
+                       could not find it): Fillet / Push-pull with NOTHING
+                       selected arm a pick over the scope's parts
+                       (`meshedit_ui._parts`); the clicked part is wrapped
+                       (a tree item) and the clicked edge is its first
+                       seed, then `start_fillet_pick` stays armed. Right-
+                       click in the 3D view (`View3D.context_requested`) ▸
+                       Round edges / Chamfer edges / Push-pull a face /
+                       Edit vertices.
   - `polygon_draw.py` — drawing a polygon in the sketch (2026-10-19, the
                        user: an "end" always shown, close by): a Finish /
                        Undo point / Cancel bar at the bottom of the view

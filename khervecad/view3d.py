@@ -189,6 +189,8 @@ class View3D(QWidget):
     #: Tab pressed over the view — Blender's Edit Mode toggle
     #: (meshedit_ui.py)
     tab_pressed = pyqtSignal()
+    #: right-click on the view, not picking (round_ui.context_menu)
+    context_requested = pyqtSignal(object)
 
     #: past this many triangles, orbiting/panning/zooming draws a
     #: decimated "draft" mesh for a snappy frame rate, then the full
@@ -836,6 +838,14 @@ class View3D(QWidget):
         self.update()
 
     # ------------------------------------------------------- anchor pick
+    def contextMenuEvent(self, event):
+        if getattr(self, "_pick_cb", None) is None and \
+                getattr(self, "edit_tool", None) is None:
+            self.context_requested.emit(event.pos())
+            event.accept()
+            return
+        super().contextMenuEvent(event)
+
     def start_pick(self, callback, groups=None, banner="",
                    labeler=None):
         """Enter pick mode: the next left click on the model picks a

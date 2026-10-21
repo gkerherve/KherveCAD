@@ -151,6 +151,9 @@ class MainWindow(QMainWindow):
         self._edit_session = None          # meshedit_ui.EditSession, if open
         self.view3d.tab_pressed.connect(lambda: self.set_edit_mode(None))
         self.model.node_changed.connect(self._note_sketch_edit)
+        from . import round_ui
+        self.view3d.context_requested.connect(
+            lambda pos: round_ui.context_menu(self, pos))
         self.model.node_changed.connect(lambda _n: self._model_edited())
         self.model.references_changed.connect(self._model_edited)
         self.model.drawing_changed.connect(self._drawing_edited)
@@ -874,6 +877,11 @@ class MainWindow(QMainWindow):
     def _apply_operation(self, op: str):
         tree = self.builder.active_tree()
         nodes = tree.selected_nodes()
+        if not nodes and op in ("fillet", "push_pull"):
+            # nothing selected: click the edge / face in the 3D view
+            from . import round_ui
+            round_ui.start(self, op, "round")
+            return
         if not nodes:
             if op in ("for_loop", "while_loop", "if_else", "union",
                       "pattern", "intersection_for", "let"):
