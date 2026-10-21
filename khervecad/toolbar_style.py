@@ -29,7 +29,7 @@ the Free Software Foundation, either version 3 of the License, or
 """
 
 from PyQt5.QtCore import QSettings, QSize, Qt
-from PyQt5.QtWidgets import QLabel, QSizePolicy, QToolBar, QWidget
+from PyQt5.QtWidgets import QTabBar, QLabel, QSizePolicy, QToolBar, QWidget
 
 from . import language
 
@@ -394,17 +394,23 @@ def apply(win, name: str = None, remember: bool = True):
             search = win.ribbon.search
             vibe_act = getattr(win, "_vibe_act", None)
             before = vibe_act if vibe_act in bar.actions() else None
-            if before is not None:
-                win._vibe_keep.add(bar.insertWidget(before, search))
-            else:
-                win._vibe_keep.add(bar.addWidget(search))
+            # the tabs (Sketch, Features...) on that row too, beside
+            # open / save / undo (the user, 2026-10-21)
+            tabs = win.ribbon.tabs
+            tabs.setShape(QTabBar.RoundedNorth)
+            for w in (tabs, search):
+                if before is not None:
+                    win._vibe_keep.add(bar.insertWidget(before, w))
+                else:
+                    win._vibe_keep.add(bar.addWidget(w))
         ribbon_bar.setStyleSheet(_qss_ribbon(name, colours(name)))
         ribbon_bar.show()
         # Fusion: file / undo / Vibe sit on the ribbon's tab line; the
         # quick row only comes back in Vibe Model, when the ribbon hides
         bar.setVisible(name != "Fusion")
-    # Fusion has no tool column: its tools are on the SKETCH / SOLID tabs
-    win._tools_bar.setVisible(name != "Fusion")
+    # Fusion and SolidWorks have no tool column: every tool is on the
+    # ribbon's tabs (the user, 2026-10-21, for SolidWorks)
+    win._tools_bar.setVisible(name == CLASSIC)
     # the rest of the program: menus organised like the program the
     # style imitates, the windows' look, the views' backgrounds
     from . import interface_menus, interface_windows
