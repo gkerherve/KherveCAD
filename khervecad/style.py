@@ -64,7 +64,36 @@ _SETTINGS = ("Kherve", "KherveCAD")
 _current = DEFAULT_THEME
 
 
+def _arrow_files(colour: str):
+    """Two small triangle PNGs (up, down) in *colour* for the spin
+    boxes' arrows, written once per colour to the temp folder."""
+    import os
+    import tempfile
+    from PyQt5.QtCore import QPointF, Qt
+    from PyQt5.QtGui import QColor, QImage, QPainter, QPolygonF
+    folder = os.path.join(tempfile.gettempdir(), "khervecad_arrows")
+    os.makedirs(folder, exist_ok=True)
+    out = []
+    for name, pts in (("up", [(1, 9), (8, 2), (15, 9)]),
+                      ("down", [(1, 2), (8, 9), (15, 2)])):
+        path = os.path.join(folder, "%s_%s.png" % (name,
+                                                   colour.strip("#")))
+        if not os.path.exists(path):
+            img = QImage(16, 11, QImage.Format_ARGB32)
+            img.fill(Qt.transparent)
+            p = QPainter(img)
+            p.setRenderHint(QPainter.Antialiasing)
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor(colour))
+            p.drawPolygon(QPolygonF([QPointF(x, y) for x, y in pts]))
+            p.end()
+            img.save(path)
+        out.append(path.replace("\\", "/"))
+    return out
+
+
 def _template(t: dict) -> str:
+    up, down = _arrow_files(t['text'])
     return f"""
 QMainWindow, QDialog {{ background: {t['window']}; }}
 QWidget {{ color: {t['text']}; }}
@@ -116,6 +145,21 @@ QSpinBox, QDoubleSpinBox {{
     padding: 3px 6px;
 }}
 QSpinBox:focus, QDoubleSpinBox:focus {{ border-color: {t['select']}; }}
+/* a styled spin box draws its own buttons: give them room and arrows
+   made of borders (the user saw the arrows cut off) */
+QSpinBox, QDoubleSpinBox {{ padding: 2px 18px 2px 6px; min-height: 18px; }}
+QSpinBox::up-button, QDoubleSpinBox::up-button,
+QSpinBox::down-button, QDoubleSpinBox::down-button {{
+    subcontrol-origin: border; width: 16px; border: none;
+    background: transparent; }}
+QSpinBox::up-button, QDoubleSpinBox::up-button {{
+    subcontrol-position: top right; }}
+QSpinBox::down-button, QDoubleSpinBox::down-button {{
+    subcontrol-position: bottom right; }}
+QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {{
+    image: url({up}); width: 8px; height: 5px; }}
+QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {{
+    image: url({down}); width: 8px; height: 5px; }}
 
 QGraphicsView {{ background: {t['window']}; border: none; }}
 

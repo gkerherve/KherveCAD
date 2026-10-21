@@ -51,10 +51,48 @@ OPTIONAL_ROWS = {"paths", "corners", "within", "region", "fillets",
                  "anchors", "keys", "options"}
 
 
+def compact_table(table, row_h=20):
+    """Narrow columns, a short header and a slim row number column: a
+    table of x / y / z numbers needs ~50 px a column, not a quarter of
+    the panel (the user, 2026-10-21)."""
+    from PyQt5.QtWidgets import QHeaderView
+    head = table.horizontalHeader()
+    head.setDefaultSectionSize(54)
+    head.setMinimumSectionSize(28)
+    head.setSectionResizeMode(QHeaderView.Interactive)
+    head.setStretchLastSection(False)
+    head.setStyleSheet("QHeaderView::section { padding: 0 2px; "
+                       "font-size: 10px; }")
+    head.setFixedHeight(18)
+    side = table.verticalHeader()
+    side.setDefaultSectionSize(row_h)
+    side.setMinimumSectionSize(row_h)
+    side.setStyleSheet("QHeaderView::section { padding: 0 2px; "
+                       "font-size: 10px; }")
+    side.setFixedWidth(20)
+    font = table.font()
+    font.setPointSizeF(max(8.0, font.pointSizeF() - 1))
+    table.setFont(font)
+
+
+def small_button(glyph, tip, slot):
+    """A slim + / − button."""
+    from PyQt5.QtCore import QSize
+    from PyQt5.QtWidgets import QToolButton
+    b = QToolButton()
+    b.setIcon(icons.icon(glyph))
+    b.setIconSize(QSize(14, 14))
+    b.setFixedSize(22, 20)
+    b.setAutoRaise(True)
+    b.setToolTip(tip)
+    b.clicked.connect(slot)
+    return b
+
+
 class RowsEditor(QWidget):
     """A table of rows that commits the whole list on every edit."""
 
-    _ROW_H = 22
+    _ROW_H = 20
 
     def __init__(self, rows, columns, on_change, parent=None,
                  allow_empty=False, on_add=None):
@@ -73,17 +111,18 @@ class RowsEditor(QWidget):
         self.table = QTableWidget(0, len(self._columns or [0]))
         self.table.setHorizontalHeaderLabels(self._columns
                                              or ["Point indices"])
-        self.table.horizontalHeader().setStretchLastSection(True)
-        self.table.verticalHeader().setDefaultSectionSize(self._ROW_H)
+        compact_table(self.table, self._ROW_H)
+        if not self._columns:            # free-length index lists
+            self.table.horizontalHeader().setStretchLastSection(True)
         self.table.itemChanged.connect(lambda _item: self._emit())
+        layout.setSpacing(2)
         layout.addWidget(self.table)
         buttons = QHBoxLayout()
-        add = QPushButton(icons.icon("mdi.plus"), "")
-        add.setToolTip("Add a row after the selected one (a copy of it)")
-        add.clicked.connect(self._add_row)
-        remove = QPushButton(icons.icon("mdi.minus"), "")
-        remove.setToolTip("Remove the selected row")
-        remove.clicked.connect(self._remove_row)
+        buttons.setSpacing(2)
+        add = small_button("mdi.plus", "Add a row after the selected one "
+                           "(a copy of it)", self._add_row)
+        remove = small_button("mdi.minus", "Remove the selected row",
+                              self._remove_row)
         buttons.addWidget(add)
         buttons.addWidget(remove)
         buttons.addStretch()

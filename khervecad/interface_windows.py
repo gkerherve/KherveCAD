@@ -97,7 +97,7 @@ QTabBar::tab {{ background: transparent; border: none;
 QTabBar::tab:selected {{ color: {c['accent']};
     border-bottom: 2px solid {c['accent']}; background: transparent; }}
 QTabBar::tab:hover:!selected {{ color: {c['text']}; background: transparent; }}
-QLabel#browserCaption {{ color: {c['dim']}; font-weight: 700;
+#browserCaption {{ color: {c['dim']}; font-weight: 700;
     font-size: 11px; padding: 0 8px 0 6px; }}
 QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QPlainTextEdit, QTextEdit {{
     background: {c['field']}; border: 1px solid {c['line']};

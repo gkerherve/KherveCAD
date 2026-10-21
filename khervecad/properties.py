@@ -98,7 +98,7 @@ class PointsEditor(QWidget):
     #: the row (= vertex index) the user selected, -1 for none.
     point_selected = pyqtSignal(int)
 
-    _ROW_H = 22
+    _ROW_H = 20
 
     def __init__(self, points, on_change, parent=None):
         super().__init__(parent)
@@ -108,8 +108,8 @@ class PointsEditor(QWidget):
         self.table = QTableWidget(len(points), 2)
         self.table.setHorizontalHeaderLabels(
             [language.tr("X"), language.tr("Y")])
-        self.table.horizontalHeader().setStretchLastSection(True)
-        self.table.verticalHeader().setDefaultSectionSize(self._ROW_H)
+        from .rowsedit import compact_table
+        compact_table(self.table, self._ROW_H)
         for row, (x, y) in enumerate(points):
             self.table.setItem(row, 0, QTableWidgetItem(f"{x:g}"))
             self.table.setItem(row, 1, QTableWidgetItem(f"{y:g}"))
@@ -120,24 +120,19 @@ class PointsEditor(QWidget):
         self._fit_height()
 
         buttons = QHBoxLayout()
-        add = QPushButton(icons.icon("mdi.plus"), "")
-        add.setToolTip(language.tr(
+        from .rowsedit import small_button
+        buttons.setSpacing(2)
+        add = small_button("mdi.plus", language.tr(
             "Insert a point after the selected one, on the midpoint "
-            "of its edge (keeps the outline)"))
-        add.clicked.connect(self._add_row)
-        remove = QPushButton(icons.icon("mdi.minus"), "")
-        remove.setToolTip(language.tr("Remove the selected point"))
-        remove.clicked.connect(self._remove_row)
-        up = QPushButton(icons.icon("mdi.arrow-up"), "")
-        up.setToolTip(language.tr(
+            "of its edge (keeps the outline)"), self._add_row)
+        remove = small_button("mdi.minus", language.tr(
+            "Remove the selected point"), self._remove_row)
+        up = small_button("mdi.arrow-up", language.tr(
             "Move the point one place earlier — it lands midway "
-            "between its new neighbours"))
-        up.clicked.connect(lambda: self._move_row(-1))
-        down = QPushButton(icons.icon("mdi.arrow-down"), "")
-        down.setToolTip(language.tr(
+            "between its new neighbours"), lambda: self._move_row(-1))
+        down = small_button("mdi.arrow-down", language.tr(
             "Move the point one place later — it lands midway "
-            "between its new neighbours"))
-        down.clicked.connect(lambda: self._move_row(1))
+            "between its new neighbours"), lambda: self._move_row(1))
         buttons.addWidget(add)
         buttons.addWidget(remove)
         buttons.addWidget(up)
