@@ -787,6 +787,7 @@ class ObjectTree(QTreeWidget):
         roots = self._top_level_selection()    # whole parts (structural)
         menu = QMenu(self)
         if nodes:
+            self._step_menu(menu, nodes)
             self._objects_menu(menu, nodes, roots)
         else:
             self._insert_object_menu(menu)
@@ -1035,6 +1036,33 @@ class ObjectTree(QTreeWidget):
             act.setCheckable(True)
             act.setChecked(current == {mod})
 
+    def _step_menu(self, menu, nodes):
+        """At the TOP of the menu, for steps of a part's history (a
+        fillet, a knife, a push / pull…): switch it off, or remove just
+        it and keep what it holds (the user could not find either in a
+        long menu)."""
+        from . import suppress
+        steps = [n for n in nodes if n.is_container() and n.children
+                 and n.type not in suppress.NEVER]
+        if not steps:
+            return
+        label = (f"“{steps[0].name}”" if len(steps) == 1
+                 else language.tr("{n} steps").format(n=len(steps)))
+        on = all(n.params.get(suppress.KEY) for n in steps)
+        menu.addAction(
+            icons.icon("mdi.power-plug" if on else
+                       "mdi.power-plug-off-outline"),
+            (language.tr("Unsuppress {what}") if on else
+             language.tr("Suppress {what} (switch off)")).format(
+                what=label),
+            lambda: suppress.set_suppressed(self.model, steps, not on))
+        menu.addAction(
+            icons.icon("mdi.layers-remove"),
+            language.tr("Remove {what} only (keep what's inside)").format(
+                what=label),
+            lambda: [self.model.ungroup(n) for n in steps])
+        menu.addSeparator()
+
     def _delete(self, nodes):
         """Delete, asking whether to keep what a container holds."""
         from . import delete_ui
@@ -1044,7 +1072,8 @@ class ObjectTree(QTreeWidget):
         """SolidWorks' Suppress and rollback bar: switch a feature off
         without deleting it, or stop the history after a node."""
         from . import suppress
-        able = [n for n in nodes if n.type not in suppress.NEVER]
+        able = [n for n in nodes if n.type not in suppress.NEVER
+                and not (n.is_container() and n.children)]
         if able:
             on = any(n.params.get(suppress.KEY) for n in able)
             menu.addAction(
