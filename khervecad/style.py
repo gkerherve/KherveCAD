@@ -271,9 +271,37 @@ def saved_theme() -> str:
     return name if name in THEMES else DEFAULT_THEME
 
 
+_combo_fix = None
+
+
+def _install_combo_fix(app):
+    """Every drop-down draws its rows with QStyledItemDelegate: the
+    default combo delegate ignores the stylesheet's ::item rules, and on
+    macOS the picked row came out BLACK (the user)."""
+    global _combo_fix
+    if _combo_fix is not None:
+        return
+    from PyQt5.QtCore import QEvent, QObject
+    from PyQt5.QtWidgets import QComboBox, QStyledItemDelegate
+
+    class _ComboFix(QObject):
+        def eventFilter(self, obj, event):
+            if event.type() == QEvent.Polish and isinstance(obj, QComboBox) \
+                    and not isinstance(obj.itemDelegate(),
+                                       QStyledItemDelegate):
+                try:
+                    obj.setItemDelegate(QStyledItemDelegate(obj))
+                except Exception:              # pragma: no cover
+                    pass
+            return False
+    _combo_fix = _ComboFix(app)
+    app.installEventFilter(_combo_fix)
+
+
 def apply_style(app, name: str = None):
     """Apply theme *name* (default: the saved one) and persist it."""
     global _current
+    _install_combo_fix(app)
     _current = name or saved_theme()
     t = tokens(_current)
     app.setPalette(_palette(t))

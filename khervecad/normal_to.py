@@ -136,16 +136,17 @@ def edit(window, node=None):
     from . import language, sketch_mode
     node = node or sketch_node(window)
     if node is None:
-        sketch_mode.enter(window)              # nothing picked: as before
-        return False
+        return pick(window)                    # click the shape in 3D
     got = shape_frame(window, node)
     if got is None:
         window.statusBar().showMessage(language.tr(
             "That shape is on a tilted plane — sketching on any face is "
             "the next step; for now Top, Front and Right planes."), 6000)
-        sketch_mode.enter(window)
+        if sketch_mode.active(window):
+            sketch_mode.enter(window)
         return False
     plane, centre = got
+    one_canvas = sketch_mode.active(window)
     view = window.view3d
     window._normal_to_saved = dict(
         yaw=view.yaw, pitch=view.pitch, target=list(view.target),
@@ -159,6 +160,17 @@ def edit(window, node=None):
         scale = view._focal() / max(view.distance, 1e-6)  # px per mm
         window._normal_to_scale = scale
         window._set_plane(plane)
+        window.builder.active_tree().select_nodes([node])
+        if not one_canvas:
+            # the classic layout shows both: the 3D view stays square on,
+            # the sketch beside it shows the same plane, framed on it
+            window._normal_to_saved = None
+            from PyQt5.QtCore import QTimer
+            QTimer.singleShot(0, lambda: _frame_shape(window, node))
+            window.statusBar().showMessage(language.tr(
+                "Sketching on the {plane} plane — draw in the 2D view."
+                ).format(plane=plane.split()[0]), 6000)
+            return
         sketch_mode.enter(window)
         a, b = AXES[plane]
         from PyQt5.QtCore import QTimer
@@ -176,6 +188,69 @@ def edit(window, node=None):
         QTimer.singleShot(0, lambda: QTimer.singleShot(0, match))
     _animate(window, view, goal, arrived)
     return True
+
+
+def _frame_shape(window, node):
+    scene = window.view2d.scene()
+    rect = None
+    for item in scene.items():
+        if getattr(item, "node", None) is node:
+            rect = item.sceneBoundingRect()
+            break
+    if rect is not None and not rect.isEmpty():
+        window.view2d.frame_rect(rect.adjusted(-rect.width(), -rect.height(),
+                                               rect.width(), rect.height()))
+
+
+def pick(window):
+    """Nothing selected: click the 2D shape in the 3D view, then turn to
+    it (the user: "select a 2D shape in 3D, then Edit Sketch")."""
+    from . import drag_feature, language, sketch_mode
+    shapes = drag_feature.flat_shapes(window)
+    if not shapes:
+        if sketch_mode.active(window):
+            sketch_mode.enter(window)          # an empty sketch
+        window.statusBar().showMessage(language.tr(
+            "No 2D shape yet to sketch on — draw one in the sketch."), 5000)
+        return False
+
+    def picked(desc, node):
+        if desc is None or node is None:
+            return
+        window.view3d.cancel_pick()
+        window.builder.active_tree().select_nodes([node])
+        edit(window, node)
+    window.view3d.start_pick(
+        picked, groups=shapes,
+        banner=language.tr("Click the 2D shape to sketch on · Esc cancels"),
+        labeler=lambda desc, node: getattr(node, "name", ""))
+    return True
+
+
+def action(window):
+    """Edit Sketch, for every layout's menus and the ribbon."""
+    act = getattr(window, "_edit_sketch_act", None)
+    if act is not None:
+        return act
+    from PyQt5.QtWidgets import QAction
+    from . import icons, language, toolbars, tooltips
+    tooltips.TIPS.setdefault("edit_sketch", (
+        "Edit Sketch",
+        "SolidWorks' Edit Sketch / Normal To: the 3D view turns to look "
+        "straight at the 2D shape's plane and you sketch on it there.",
+        ["Select a 2D shape (or an extrude), or click this and then the "
+         "shape in the 3D view.",
+         "The view turns square on to its plane and the sketch opens.",
+         "Leave the sketch to turn back."],
+        "Top, Front and Right planes for now."))
+    act = QAction(icons.icon("mdi.pencil-box-multiple-outline"),
+                  language.tr("Edit Sketch"), window)
+    act.setData("edit_sketch")
+    toolbars.remember_glyph(act, "mdi.pencil-box-multiple-outline", "draw")
+    tooltips.apply(act, "edit_sketch")
+    act.triggered.connect(lambda _=False: edit(window))
+    window._edit_sketch_act = act
+    return act
 
 
 def back(window):

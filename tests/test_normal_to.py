@@ -75,3 +75,40 @@ def test_create_sketch_with_a_shape_selected_edits_it(win, monkeypatch):
         _APP.processEvents()
     assert sketch_mode.sketching(win)
     assert win._normal_to_saved is not None
+
+
+def test_classic_layout_turns_and_shows_the_plane(monkeypatch):
+    from khervecad.mainwindow import MainWindow
+    monkeypatch.setattr(normal_to, "DURATION_MS", 0)
+    w = MainWindow()
+    w.resize(1200, 800)
+    w.show()
+    try:
+        m = w.model
+        rect = m.add_node("rect", dict(width=20, height=10))
+        w.builder.tree.select_nodes([])
+        normal_to.action(w).trigger()          # nothing selected: pick
+        assert w.view3d._pick_cb is not None
+        w.view3d._pick_cb(dict(kind="face", pos=[5, 5, 0],
+                               dir=[0, 0, 1]), rect)
+        for _ in range(4):
+            _APP.processEvents()
+        assert (w.view3d.yaw, w.view3d.pitch) == \
+            normal_to.CAMERA["Top (XY)"]
+        assert w.view2d.scene().plane == "Top (XY)"
+        assert not sketch_mode.sketching(w)    # classic: both views
+    finally:
+        w._dirty = False
+        w.close()
+
+
+def test_combo_rows_use_the_styled_delegate():
+    from PyQt5.QtWidgets import QComboBox, QStyledItemDelegate
+    from khervecad import style
+    style.apply_style(_APP)
+    c = QComboBox()
+    c.addItems(["a", "b"])
+    c.show()
+    _APP.processEvents()
+    assert isinstance(c.itemDelegate(), QStyledItemDelegate)
+    c.close()
