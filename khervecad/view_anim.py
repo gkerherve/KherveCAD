@@ -83,6 +83,29 @@ def toggle_3d(view):
     _run(view, apply)
 
 
+def glide_3d(view, goal):
+    """Glide the camera to *goal* {yaw, pitch, target, distance}: the
+    yaw the short way round."""
+    start = dict(yaw=view.yaw, pitch=view.pitch, target=list(view.target),
+                 distance=view.distance)
+    dyaw = (goal["yaw"] - start["yaw"] + 180.0) % 360.0 - 180.0
+
+    def apply(e):
+        view.yaw = start["yaw"] + dyaw * e
+        view.pitch = start["pitch"] + (goal["pitch"] - start["pitch"]) * e
+        view.target = [start["target"][i] + (goal["target"][i]
+                                             - start["target"][i]) * e
+                       for i in range(3)]
+        view.distance = start["distance"] + (goal["distance"]
+                                             - start["distance"]) * e
+        view.update()
+
+    def done():
+        view.yaw = goal["yaw"]               # exactly the preset's angle
+        view.update()
+    _run(view, apply, done)
+
+
 # ------------------------------------------------------------------ 2D
 def _state_2d(view):
     c = view.mapToScene(view.viewport().rect().center())

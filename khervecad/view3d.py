@@ -605,10 +605,24 @@ class View3D(QWidget):
     cad_furniture = True
     _transparent = False
 
-    def set_view(self, name: str):
-        if name in self.VIEWS:
-            self.yaw, self.pitch = self.VIEWS[name]
-            self.fit()
+    def set_view(self, name: str, animate: bool = True):
+        """A standard view (Front, Top, Right…): the camera glides there
+        — turning and framing in one move (the user) — rather than
+        jumping."""
+        if name not in self.VIEWS:
+            return
+        start = dict(yaw=self.yaw, pitch=self.pitch,
+                     target=list(self.target), distance=self.distance)
+        self.yaw, self.pitch = self.VIEWS[name]
+        self.fit()
+        if not animate:
+            return
+        goal = dict(yaw=self.yaw, pitch=self.pitch,
+                    target=list(self.target), distance=self.distance)
+        self.yaw, self.pitch = start["yaw"], start["pitch"]
+        self.target, self.distance = start["target"], start["distance"]
+        from . import view_anim
+        view_anim.glide_3d(self, goal)
 
     def camera_state(self) -> dict:
         """The camera as plain numbers — enough to reproduce a view."""

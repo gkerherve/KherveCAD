@@ -392,7 +392,7 @@ class McpToolExecutor:
                     raise ToolError(
                         f"Unknown orientation {name!r}. Choose one of: "
                         f"{', '.join(ORIENTATIONS)}.")
-                win.view3d.set_view(name)
+                win.view3d.set_view(name, animate=False)
             elif params.get("fit"):
                 win.view3d.fit()
             widget = win.view2d if which == "2d" else win.view3d
@@ -2153,7 +2153,7 @@ class McpToolExecutor:
             name = params["orientation"]
             if name not in ORIENTATIONS:
                 raise ToolError(f"Unknown orientation {name!r}.")
-            win.view3d.set_view(name)
+            win.view3d.set_view(name, animate=False)
         elif params.get("fit"):
             win.view3d.fit()
         if params.get("projection"):

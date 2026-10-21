@@ -64,3 +64,13 @@ def test_2d_double_click_zooms_in_on_the_spot_and_back(win):
     assert (c.x(), c.y()) == pytest.approx((30, 10), abs=1)
     view_anim.toggle_2d(v2, QPointF(99, 99))     # back, wherever clicked
     assert v2.px_per_mm() == pytest.approx(2.0)
+
+
+def test_standard_views_glide_and_land_exactly(win):
+    win.model.add_node("cube", dict(width=30, depth=30, height=30))
+    _APP.processEvents()
+    view = win.view3d
+    view.yaw, view.pitch = 170.0, 40.0
+    for name in ("Front", "Top", "Right", "Isometric"):
+        view.set_view(name)
+        assert (view.yaw, view.pitch) == pytest.approx(view.VIEWS[name])
