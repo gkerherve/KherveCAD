@@ -87,6 +87,25 @@ def seeds_from_pick(desc, world, local) -> list:
     return []
 
 
+def face_from_pick(desc, world, local):
+    """A face click as a fillet `faces` row [x, y, z, nx, ny, nz] in the
+    local frame — the FACE is kept, so its edges (holes cut later
+    included) are found again on every rebuild. None if not a face."""
+    if desc.get("kind") != "face" or not desc.get("tris"):
+        return None
+    w2l = {}
+    for wt, lt in zip(world, local):
+        for wv, lv in zip(wt, lt):
+            w2l[_vkey(wv)] = lv
+    tri = [w2l.get(_vkey(v)) for v in desc["tris"][0]]
+    if any(v is None for v in tri):
+        return None
+    a, b, c = tri
+    n = fillet._unit(fillet._cross(fillet._sub(b, a), fillet._sub(c, a)))
+    centre = [(a[i] + b[i] + c[i]) / 3.0 for i in range(3)]
+    return [round(v, 4) for v in centre] + [round(v, 6) for v in n]
+
+
 def start(window, node) -> bool:
     """Arm the pick for *node* (a fillet). Returns False when the part
     has nothing to pick on."""
@@ -120,6 +139,13 @@ def start(window, node) -> bool:
                 "right-click the fillet ▸ Pick edges to add more.",
                 8000)
             window.builder.active_tree().select_nodes([node])
+            return
+        row = face_from_pick(desc, world, local)
+        if row is not None:
+            faces = [list(r) for r in (node.params.get("faces") or [])]
+            faces.append(row)
+            model.set_param(node, "faces", faces)
+            arm()
             return
         seeds = seeds_from_pick(desc, world, local)
         have = [list(r) for r in (node.params.get("edges") or [])]

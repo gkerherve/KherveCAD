@@ -68,13 +68,18 @@ NODE_TYPES = {
         label="Fillet edges", category=OPERATION,
         icon="mdi.rounded-corner",
         params=dict(radius=2.0, kind="round", detail=6, edges=[]),
+        # "faces" (schema-only): rows [x, y, z, nx, ny, nz] — a picked
+        # FACE, whose every edge is rounded, found again on each rebuild
         schema=[("radius", "Radius (chamfer: setback)", "float",
                  0.01, 1e4),
                 ("kind", "Kind", "choice", list(KINDS), None),
                 ("detail", "Segments across the round", "int", 1, 64),
                 ("edges", "Edges (a click adds one; start x y z, "
                           "end x y z)", "rows",
-                 ["X1", "Y1", "Z1", "X2", "Y2", "Z2"], None)]),
+                 ["X1", "Y1", "Z1", "X2", "Y2", "Z2"], None),
+                ("faces", "Faces (every edge round each; a point on "
+                          "it and its normal)", "rows",
+                 ["X", "Y", "Z", "NX", "NY", "NZ"], None)]),
 }
 
 #: OpenSCAD: the boolean the fillet compiles to. The polyhedra are
@@ -82,7 +87,7 @@ NODE_TYPES = {
 #: node from radius / kind / detail / edges and the children.
 HELPER = """\
 module kcad_fillet(radius = 2, kind = "round", detail = 6, edges = [],
-                   cuts = [], adds = []) {
+                   faces = [], cuts = [], adds = []) {
     union() {
         difference() {
             children();
@@ -441,8 +446,56 @@ def mesh_size(tris) -> float:
                for i in range(3))
 
 
+def face_edges(tris, edges, row, tol=1e-3):
+    """The crease edges round the flat face a [x, y, z, nx, ny, nz] row
+    names, holes included: the coplanar triangles joined to the one
+    nearest the point, and every crease with that region on one side
+    only. Found again on each rebuild, so a hole cut into the face
+    later is rounded too (SolidWorks keeps the FACE, not its edges)."""
+    p, n = row[:3], _unit(row[3:6])
+    normals = [_normal(t) for t in tris]
+    on = [i for i, t in enumerate(tris)
+          if _dot(normals[i], n) > 0.9999 and
+          abs(_dot(_sub(t[0], p), n)) < max(tol, 1e-4)]
+    if not on:
+        return []
+
+    def centre(t):
+        return _mul(_add(_add(t[0], t[1]), t[2]), 1.0 / 3.0)
+    start = min(on, key=lambda i: _len(_sub(centre(tris[i]), p)))
+    by_edge = {}
+    for i in on:
+        keys = [_vkey(v) for v in tris[i]]
+        for k in range(3):
+            by_edge.setdefault(frozenset((keys[k], keys[(k + 1) % 3])),
+                               []).append(i)
+    region, todo = {start}, [start]
+    while todo:
+        i = todo.pop()
+        keys = [_vkey(v) for v in tris[i]]
+        for k in range(3):
+            for j in by_edge.get(frozenset((keys[k], keys[(k + 1) % 3])),
+                                 ()):
+                if j not in region:
+                    region.add(j)
+                    todo.append(j)
+    tri_of = {}
+    for i, t in enumerate(tris):
+        keys = [_vkey(v) for v in t]
+        for k in range(3):
+            tri_of[(keys[k], keys[(k + 1) % 3])] = i
+    out = []
+    for e in edges:
+        ka, kb = _vkey(e.a), _vkey(e.b)
+        sides = (tri_of.get((ka, kb)), tri_of.get((kb, ka)))
+        if sum(1 for x in sides if x in region) == 1:
+            out.append(e)
+    return out
+
+
 def compute(tris, seeds, radius: float, kind: str = "round",
-            detail: int = 6, min_angle: float = MIN_ANGLE) -> dict:
+            detail: int = 6, min_angle: float = MIN_ANGLE,
+            faces=()) -> dict:
     """``{"cuts": [tris...], "adds": [tris...], "missing": [seed...],
     "chains": n}`` for the remembered *seeds* on the mesh *tris*."""
     edges = crease_edges(tris, min_angle)
@@ -469,6 +522,18 @@ def compute(tris, seeds, radius: float, kind: str = "round",
             for y in edges:
                 if frozenset((_vkey(y.a), _vkey(y.b))) == key:
                     chosen[id(y)] = y
+    for row in faces or ():
+        try:
+            values = [float(v) for v in row]
+        except (TypeError, ValueError):
+            missing.append(row)
+            continue
+        found = face_edges(tris, edges, values, size * 1e-5) \
+            if len(values) == 6 else []
+        if not found:
+            missing.append(row)
+        for y in found:
+            chosen[id(y)] = y
     picked = list(chosen.values())
     # 2. join them: where exactly two chosen edges of one kind meet (a
     #    face's rim turning a corner, the L's inside corner) the run
@@ -565,7 +630,8 @@ def baked(node, env) -> dict:
         result = compute(src, p.get("edges") or [],
                          _num(p.get("radius", 2.0), env, 2.0),
                          str(p.get("kind", "round")),
-                         int(_num(p.get("detail", 6), env, 6.0)))
+                         int(_num(p.get("detail", 6), env, 6.0)),
+                         faces=p.get("faces") or [])
         result["cut_polys"] = [bake.to_polyhedron(t) for t in result["cuts"]]
         result["add_polys"] = [bake.to_polyhedron(t) for t in result["adds"]]
         hit = _CACHE[key] = result
@@ -592,7 +658,9 @@ def statement(node, fmt) -> str:
     kind = p.get("kind", "round") if p.get("kind") in KINDS else "round"
     return (f"kcad_fillet(radius = {fmt(p.get('radius', 2.0))}, "
             f'kind = "{kind}", detail = {fmt(p.get("detail", 6))}, '
-            f"edges = {bake._rows(p.get('edges') or [], fmt)},\n"
+            f"edges = {bake._rows(p.get('edges') or [], fmt)},"
+            + (f" faces = {bake._rows(p['faces'], fmt)},"
+               if p.get("faces") else "") + "\n"
             f"    cuts = {polys(cut_polys)},\n"
             f"    adds = {polys(add_polys)})")
 
@@ -611,10 +679,17 @@ def build(parser, positional, named):
         detail = int(num(named.get("detail", 6), 6))
     except (TypeError, ValueError):
         detail = 6
-    return CadNode("fillet", NODE_TYPES["fillet"]["label"], dict(
+    params = dict(
         radius=num(named.get("radius", 2.0), 2.0),
         kind=kind if kind in KINDS else "round", detail=detail,
-        edges=rows))
+        edges=rows)
+    faces = named.get("faces", [])
+    face_rows = [[num(v) for v in row] for row in faces
+                 if isinstance(row, list) and len(row) == 6] \
+        if isinstance(faces, list) else []
+    if face_rows:
+        params["faces"] = face_rows
+    return CadNode("fillet", NODE_TYPES["fillet"]["label"], params)
 
 
 def check(node, env):

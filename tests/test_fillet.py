@@ -410,3 +410,33 @@ def test_a_face_rim_is_one_mitred_loop(app):
     rim = 160 * 9 * (1 - math.pi / 4)        # the straight runs alone
     assert rim * 0.9 < removed < rim * 1.05
     assert analysis.print_check(tris)["checks"][0]["status"] == "pass"
+
+
+def test_a_picked_face_rounds_holes_cut_later(app):
+    """The user filleted the L's top face, then cut two circles into it:
+    the face's edges had been stored, so the holes stayed sharp. The
+    face itself is kept and its edges found again on every rebuild."""
+    from khervecad import mesh, scadparse
+    from khervecad.model import DocumentModel
+    m = DocumentModel()
+    m.set_global_fn(False)
+    ext = m.add_node("linear_extrude", dict(height=10))
+    diff = m.add_node("difference", {}, parent=ext)
+    m.add_node("polygon", dict(points=[[0, 0], [40, 0], [40, 10],
+                                       [10, 10], [10, 40], [0, 40]]),
+               parent=diff)
+    f = m.wrap_nodes([ext], "fillet")
+    f.params["radius"] = 1
+    world = mesh.tessellate(ext)
+    top = [t for t in world if all(abs(v[2] - 10) < 1e-9 for v in t)]
+    row = fillet_pick.face_from_pick(dict(kind="face", tris=top),
+                                     world, world)
+    f.params["faces"] = [row]
+    assert fillet.baked(f, {})["chains"] == 1
+    m.add_node("circle", dict(x=30, y=5, radius=3), parent=diff)
+    m.add_node("circle", dict(x=5, y=30, radius=3), parent=diff)
+    assert fillet.baked(f, {})["chains"] == 3        # both rims too
+    root, warnings = scadparse.parse_scad(m.to_scad())
+    assert not warnings
+    g = next(n for n in root.walk() if n.type == "fillet")
+    assert g.params["faces"] == [row]

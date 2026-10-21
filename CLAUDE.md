@@ -4421,6 +4421,13 @@ into a new module and import.
                        bends only the part of each offset in the corner's
                        plane; the part along the corner axis was summed
                        and cut twice as deep down the sides.
+  - Fillet FACES (2026-10-21, the user cut holes into a filleted face):
+                       a face click stores `params["faces"]` rows [x, y, z,
+                       nx, ny, nz] (`fillet_pick.face_from_pick`), not its
+                       edges; `fillet.face_edges` grows the coplanar region
+                       from the nearest triangle and takes every crease on
+                       its rim on each rebuild, so a hole cut later is
+                       rounded too. Written as `faces =` in kcad_fillet.
   - `fillet_pick.py` — the click flow: `start(window, node)` arms
                        `View3D.start_pick` on the fillet's part
                        (groups=[(node, world tris)]) and re-arms after

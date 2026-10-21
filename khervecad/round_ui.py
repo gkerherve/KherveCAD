@@ -48,11 +48,15 @@ def _first_edge(window, wrapper, desc):
     from . import fillet_pick
     try:
         world, local = fillet_pick.meshes(window, wrapper)
-        seeds = fillet_pick.seeds_from_pick(desc, world, local) \
-            if world else []
+        face = fillet_pick.face_from_pick(desc, world, local) \
+            if world else None
+        seeds = [] if face is not None or not world else \
+            fillet_pick.seeds_from_pick(desc, world, local)
     except Exception:                       # a pick the mesh cannot map
-        seeds = []
-    if seeds:
+        face, seeds = None, []
+    if face is not None:
+        window.model.set_param(wrapper, "faces", [face])
+    elif seeds:
         window.model.set_param(wrapper, "edges", [list(s) for s in seeds])
 
 
