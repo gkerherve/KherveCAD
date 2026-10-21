@@ -95,42 +95,11 @@ def sketch_node(window):
 # =================================================================== Qt
 
 def _animate(window, view, goal, done):
-    """Move the 3D camera to *goal* {yaw, pitch, target, distance}."""
-    from PyQt5.QtCore import QElapsedTimer, QTimer
-    start = dict(yaw=view.yaw, pitch=view.pitch,
-                 target=list(view.target), distance=view.distance)
-    clock = QElapsedTimer()
-    clock.start()
-    timer = QTimer(view)
-    timer.setInterval(STEP_MS)
-
-    def tick():
-        t = min(1.0, clock.elapsed() / float(DURATION_MS))
-        e = _ease(t)
-        view.yaw = _lerp_angle(start["yaw"], goal["yaw"], e)
-        view.pitch = start["pitch"] + (goal["pitch"] - start["pitch"]) * e
-        view.target = [start["target"][i] + (goal["target"][i]
-                                             - start["target"][i]) * e
-                       for i in range(3)]
-        view.distance = start["distance"] + (goal["distance"]
-                                             - start["distance"]) * e
-        view.update()
-        if t >= 1.0:
-            timer.stop()
-            timer.deleteLater()
-            done()
-    timer.timeout.connect(tick)
-    window._normal_to_timer = timer
-    from PyQt5.QtGui import QGuiApplication
-    if not view.isVisible() or DURATION_MS <= 0 or \
-            QGuiApplication.platformName() == "offscreen":   # no screen
-        for k in ("yaw", "pitch", "distance"):
-            setattr(view, k, goal[k])
-        view.target = list(goal["target"])
-        timer.deleteLater()
-        done()
-        return
-    timer.start()
+    """Move the 3D camera to *goal* {yaw, pitch, target, distance} —
+    through view_anim's one-at-a-time channel, so a standard-view click
+    during the turn takes over cleanly."""
+    from . import view_anim
+    view_anim.glide_3d(view, goal, then=done, duration=DURATION_MS)
 
 
 def edit(window, node=None):
@@ -333,8 +302,12 @@ def back(window):
     goal = dict(yaw=saved["yaw"], pitch=saved["pitch"],
                 target=list(view.target), distance=view.distance)
 
+    # a standard-view click may cut the turn short: it restores this
+    view._kc_restore_projection = saved["projection"]
+
     def landed():
         view.projection = saved["projection"]
+        view._kc_restore_projection = None
         view.update()
     _animate(window, view, goal, landed)
     return True

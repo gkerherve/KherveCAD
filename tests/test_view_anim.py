@@ -74,3 +74,33 @@ def test_standard_views_glide_and_land_exactly(win):
     for name in ("Front", "Top", "Right", "Isometric"):
         view.set_view(name)
         assert (view.yaw, view.pitch) == pytest.approx(view.VIEWS[name])
+
+
+def test_a_view_click_during_the_sketch_turn_back_takes_over(win):
+    """The user's Side view showed the part huge: the sketch's turn-back
+    animation kept running under the click and won."""
+    from PyQt5.QtGui import QGuiApplication
+    from khervecad import normal_to
+    import time
+    win.model.add_node("cube", dict(width=10, depth=10, height=10))
+    _APP.processEvents()
+    view = win.view3d
+    real = QGuiApplication.platformName
+    QGuiApplication.platformName = staticmethod(lambda: "cocoa")
+    try:
+        view.projection = "Orthographic"
+        view._kc_restore_projection = "Perspective"
+        normal_to._animate(win, view, dict(yaw=0.0, pitch=89.0,
+                                          target=[500.0, 0.0, 0.0],
+                                          distance=0.5), lambda: None)
+        view.set_view("Right")                 # click during the turn
+        t = time.time()
+        while time.time() - t < 1.0:
+            _APP.processEvents()
+            time.sleep(0.01)
+    finally:
+        QGuiApplication.platformName = real
+    assert view.projection == "Perspective"
+    assert (view.yaw, view.pitch) == pytest.approx(view.VIEWS["Right"])
+    assert view.target[0] == pytest.approx(5.0, abs=1.0)  # on the cube
+    assert view.distance > 5.0

@@ -27,15 +27,17 @@ def _ease(t):
     return t * t * (3 - 2 * t)
 
 
-def _run(widget, apply, done=None):
-    """Call apply(e) for e in 0..1 over DURATION_MS (e eased)."""
+def _run(widget, apply, done=None, duration=None):
+    """Call apply(e) for e in 0..1 over *duration* ms (DURATION_MS), e
+    eased; a running animation on the same widget is stopped first."""
+    duration = DURATION_MS if duration is None else duration
     from PyQt5.QtCore import QElapsedTimer, QTimer
     from PyQt5.QtGui import QGuiApplication
     old = getattr(widget, "_kc_anim", None)
     if old is not None:
         old.stop()
         old.deleteLater()
-    if not widget.isVisible() or DURATION_MS <= 0 or \
+    if not widget.isVisible() or duration <= 0 or \
             QGuiApplication.platformName() == "offscreen":
         apply(1.0)
         if done:
@@ -47,7 +49,7 @@ def _run(widget, apply, done=None):
     timer.setInterval(STEP_MS)
 
     def tick():
-        t = min(1.0, clock.elapsed() / float(DURATION_MS))
+        t = min(1.0, clock.elapsed() / float(duration))
         apply(_ease(t))
         if t >= 1.0:
             timer.stop()
@@ -83,9 +85,11 @@ def toggle_3d(view):
     _run(view, apply)
 
 
-def glide_3d(view, goal):
+def glide_3d(view, goal, then=None, duration=None):
     """Glide the camera to *goal* {yaw, pitch, target, distance}: the
-    yaw the short way round."""
+    yaw the short way round. ONE camera animation at a time per view: a
+    new one stops the old (the sketch's turn-back kept running under a
+    Side click and landed the sketch's zoom on it — the user)."""
     start = dict(yaw=view.yaw, pitch=view.pitch, target=list(view.target),
                  distance=view.distance)
     dyaw = (goal["yaw"] - start["yaw"] + 180.0) % 360.0 - 180.0
@@ -103,7 +107,9 @@ def glide_3d(view, goal):
     def done():
         view.yaw = goal["yaw"]               # exactly the preset's angle
         view.update()
-    _run(view, apply, done)
+        if then is not None:
+            then()
+    _run(view, apply, done, duration)
 
 
 # ------------------------------------------------------------------ 2D

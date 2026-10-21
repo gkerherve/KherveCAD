@@ -611,6 +611,11 @@ class View3D(QWidget):
         jumping."""
         if name not in self.VIEWS:
             return
+        # a sketch's turn-back cut short leaves the flat projection on
+        back = getattr(self, "_kc_restore_projection", None)
+        if back:
+            self.projection = back
+            self._kc_restore_projection = None
         start = dict(yaw=self.yaw, pitch=self.pitch,
                      target=list(self.target), distance=self.distance)
         self.yaw, self.pitch = self.VIEWS[name]
