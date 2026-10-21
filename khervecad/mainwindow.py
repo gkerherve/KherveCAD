@@ -927,6 +927,10 @@ class MainWindow(QMainWindow):
             elif op == "push_pull":           # now: which faces?
                 from . import faceedit_ui
                 faceedit_ui.start(self, wrapper)
+            elif op in ("linear_extrude", "rotate_extrude"):
+                # now: drag its arrow in 3D (SolidWorks / Fusion)
+                from . import drag_feature
+                drag_feature.start(self, wrapper, quiet=True)
 
     def set_edit_mode(self, on=None, node=None):
         """Blender's Edit Mode (Tab over the 3D view): drag the selected

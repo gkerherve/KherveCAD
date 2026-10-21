@@ -457,7 +457,7 @@ for _kind in ("cube", "sphere", "cylinder", "capsule", "ellipsoid",
 
 
 # =============================================================== extrude
-@draws("linear_extrude")
+@draws("linear_extrude", "drag_extrude")
 def _extrude(d):
     d.ground([(-0.9, -0.6), (0.7, -0.6), (0.7, 0.8), (-0.9, 0.8)],
              fill=shade(d.pal.sketch, 1.6))

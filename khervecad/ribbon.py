@@ -408,6 +408,10 @@ def _panel_actions(win, key):
                            ), acts + [a for a in shell if a not in acts]
     if key in families:
         title = tooltips.GROUPS.get(key, (key, ""))[0]
+        if key == "extrude":
+            from . import drag_feature
+            return language.tr(title), list(families[key]) + [
+                drag_feature.action(win)]
         return language.tr(title), families[key]
     title = language.tr(EXTRA_PANELS[key])
     if key == "assemble":

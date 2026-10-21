@@ -3211,6 +3211,15 @@ into a new module and import.
                        "<plane> sketch" rotate (`SketchScene._sketch_group`)
                        and view2d shows every 2D shape lying in the plane
                        on show (`view2d_edit.on_view_plane`).
+  - `drag_feature.py` — extrude / revolve by DRAGGING in 3D (2026-10-21,
+                       SolidWorks / Fusion): a `View3D.edit_tool` that
+                       Linear extrude / Rotate extrude start by themselves
+                       (`_apply_operation`), and Extrude ▸ Drag extrude
+                       for a selected one: a blue arrow on the top face
+                       along the extrude's own +Z sets `height` (both ends
+                       when centred), a curved arrow at the sweep's end
+                       sets `angle`; readout, Ctrl snaps to the grid / 15°,
+                       Esc puts a drag back or ends the tool.
   - `hole_wizard.py` — SolidWorks' **Hole Wizard** (2026-10-21): first
                        button of the Features panel; a tool window (type
                        Clearance / Tapped / Counterbore / Countersink / Nut
