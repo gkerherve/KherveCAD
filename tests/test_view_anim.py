@@ -104,3 +104,19 @@ def test_a_view_click_during_the_sketch_turn_back_takes_over(win):
     assert (view.yaw, view.pitch) == pytest.approx(view.VIEWS["Right"])
     assert view.target[0] == pytest.approx(5.0, abs=1.0)  # on the cube
     assert view.distance > 5.0
+
+
+def test_isometric_button_turns_a_quarter_each_click(win):
+    from khervecad import viewnav
+    win.model.add_node("cube", dict(width=10, depth=10, height=10))
+    _APP.processEvents()
+    view = win.view3d
+    view.set_view("Front", animate=False)
+    viewnav.iso_click(view)
+    yaw0, pitch0 = view.VIEWS["Isometric"]
+    assert (view.yaw, view.pitch) == pytest.approx((yaw0, pitch0))
+    viewnav.iso_click(view)
+    assert view.yaw == pytest.approx(yaw0 - 90)
+    assert view.pitch == pytest.approx(pitch0)
+    viewnav.iso_click(view)
+    assert view.yaw == pytest.approx(yaw0 - 180)
