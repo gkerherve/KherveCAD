@@ -141,6 +141,56 @@ def body_of(model, part):
     return body
 
 
+#: on a hole's translate: {seed, normal, offset} — the face it sits on
+#: and where on it, in the feature's frame
+TRACK = "hole_track"
+
+
+def _body_tris(body):
+    from . import mesh
+    try:
+        return mesh.tessellate(body)
+    except Exception:
+        return []
+
+
+def _track_for(body, point, normal):
+    from . import anchors
+    c = anchors.face_centre(_body_tris(body), point, normal)
+    if c is None:
+        return None
+    return dict(seed=[round(v, 4) for v in point],
+                normal=[round(v, 6) for v in normal],
+                offset=[round(point[i] - c[i], 4) for i in range(3)])
+
+
+def refresh(model):
+    """Move every tracked hole with its face: the face is found again
+    on the body as it is now and the hole keeps its offset from the
+    face's centre. Changes nothing when nothing moved."""
+    from . import anchors
+    for move in list(model.root.walk()):
+        track = move.params.get(TRACK) if move.type == "translate" \
+            else None
+        if not isinstance(track, dict):
+            continue
+        feature = move.parent
+        diff = feature.parent if feature is not None else None
+        if diff is None or diff.type != "difference" or not diff.children:
+            continue
+        c = anchors.face_centre(_body_tris(diff.children[0]),
+                                track["seed"], track["normal"])
+        if c is None:
+            continue
+        new = [round(c[i] + track["offset"][i], 4) for i in range(3)]
+        old = [float(move.params.get(k, 0.0) or 0.0) for k in "xyz"]
+        if max(abs(new[i] - old[i]) for i in range(3)) < 1e-4:
+            continue
+        track["seed"] = new
+        move.params.update(x=new[0], y=new[1])
+        model.set_param(move, "z", new[2])
+
+
 def add_hole(model, part, point, normal, spec, scope=None):
     """One hole on *part* at the scope-frame *point* (on a face whose
     outward normal is *normal*). Returns the feature Group."""
@@ -177,6 +227,12 @@ def add_hole(model, part, point, normal, spec, scope=None):
     move = model.add_node("translate", dict(
         x=round(float(p[0]), 4), y=round(float(p[1]), 4),
         z=round(float(p[2]), 4)), parent=feature)
+    # remember the FACE, not the point: a resized part carries its
+    # holes along (the user: the hole stayed where it was)
+    track = _track_for(part, [float(p[0]), float(p[1]), float(p[2])],
+                       [float(c) for c in n])
+    if track:
+        move.params[TRACK] = track
     turn = model.add_node("rotate", dict(x=0.0, y=ry, z=rz), parent=move)
     hole = model.add_node("hole", spec_params(spec, _through(model, part)),
                           parent=turn)

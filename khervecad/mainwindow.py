@@ -1102,8 +1102,9 @@ class MainWindow(QMainWindow):
         edited, self._sketch_edited = getattr(self, "_sketch_edited",
                                               set()), set()
         sketch_constraints.refresh(self.model, edited)
-        from . import extent
+        from . import extent, hole_wizard
         extent.refresh(self.model)
+        hole_wizard.refresh(self.model)     # holes follow their faces
         self._dirty = True
         self._update_title()
         self.view3d.set_reference_images(self.model.reference_images)

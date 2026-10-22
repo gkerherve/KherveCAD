@@ -150,3 +150,20 @@ def test_the_panel_lists_the_standard_sizes():
     finally:
         win._dirty = False
         win.close()
+
+
+def test_a_hole_follows_its_face_when_the_part_changes():
+    m = DocumentModel()
+    block = m.add_node("cube", dict(width=40, depth=30, height=20))
+    spec = dict(type="Clearance", size="M6", fit="Normal",
+                end="Through all")
+    f = hw.add_hole(m, block, [20, 15, 20], [0, 0, 1], spec)  # top centre
+    move = f.children[0]
+    assert hw.TRACK in move.params
+    m.set_param(block, "width", 60)
+    m.set_param(block, "height", 30)
+    hw.refresh(m)
+    assert [float(move.params[k]) for k in "xyz"] == \
+        pytest.approx([30, 15, 30], abs=1e-3)
+    hw.refresh(m)                        # nothing moved: nothing changes
+    assert float(move.params["x"]) == pytest.approx(30, abs=1e-3)
