@@ -127,6 +127,7 @@ def test_selecting_a_move_shows_the_triad_and_moves_it(win):
     tool = win.view3d.edit_tool
     assert isinstance(tool, gumball.Gumball) and tool.auto
     assert tool.target() is mv
+    assert tool.mode() == "move"                # arrows only
     tool.move_to((20.0, 5.0, 5.0))
     assert float(mv.params["x"]) == pytest.approx(15.0, abs=0.01)
     assert "rx" not in mv.params
@@ -147,6 +148,7 @@ def test_selecting_a_rotate_shows_the_triad_and_turns_it(win):
     _APP.processEvents()
     tool = win.view3d.edit_tool
     assert isinstance(tool, gumball.Gumball) and tool.target() is rot
+    assert tool.mode() == "turn"                # rings only
     d = dict(handle=("turn", 2), node=rot, start=gumball._start(rot),
              centre=tool.centre(), value=30.0)
     tool._apply(d)

@@ -152,6 +152,24 @@ class Gumball:
         self._chip = None            # the position readout (click to type)
         self.editor = None
 
+    def mode(self):
+        """"move" (arrows only), "turn" (rings only) or None (both): a
+        Move / Position row only moves, a Rotate / Rotation row only
+        turns (the user)."""
+        node = self.target()
+        if node is None:
+            return None
+        if node.type == "translate":
+            return "move"
+        if node.type == "rotate":
+            return "turn"
+        row = _row_text(self.window)
+        if row.startswith("Position"):
+            return "move"
+        if row.startswith("Rotation"):
+            return "turn"
+        return None
+
     # -- what is selected ----------------------------------------------
     def target(self):
         tree = self.window.builder.active_tree()
@@ -235,6 +253,11 @@ class Gumball:
         handle = handle_at(event.pos().x(), event.pos().y(), cs[:2],
                            [t[:2] for t in tips],
                            [[p[:2] for p in r] for r in rings])
+        only = self.mode()
+        if handle is not None and only and handle[0] != only:
+            handle = None
+        if handle is None and only == "turn":
+            return False
         if handle is None:
             # SolidWorks' free drag: press ON the part and drag it in the
             # plane facing you (the user)
@@ -463,8 +486,9 @@ class Gumball:
         if cs[2] <= 0:
             return
         live = self.drag["handle"] if self.drag else self.hover
+        only = self.mode()
         painter.setRenderHint(painter.Antialiasing, True)
-        for axis in range(3):
+        for axis in (range(3) if only != "move" else ()):
             col = QColor(COLOURS[axis])
             hot = live == ("turn", axis)
             pen = QPen(col.lighter(130) if hot else col, 3.5 if hot else 2)
@@ -472,7 +496,7 @@ class Gumball:
             pts = [QPointF(p[0], p[1]) for p in rings[axis] if p[2] > 0]
             if len(pts) > 1:
                 painter.drawPolyline(QPolygonF(pts))
-        for axis in range(3):
+        for axis in (range(3) if only != "turn" else ()):
             col = QColor(COLOURS[axis])
             hot = live == ("move", axis)
             tip = tips[axis]
@@ -493,7 +517,8 @@ class Gumball:
         painter.setBrush(QColor(40, 40, 40, 200))
         painter.drawEllipse(QPointF(cs[0], cs[1]), 5, 5)
         painter.setBrush(Qt.NoBrush)
-        if not self.drag:
+        self._chip = None
+        if not self.drag and only != "turn":
             # where the part is — click to type where it goes
             from PyQt5.QtCore import QRect
             text = "X %g  Y %g  Z %g" % tuple(round(v, 2) for v in c)
@@ -559,16 +584,22 @@ def _start(node):
     return {k: node.params.get(k, 0.0) for k in keys}
 
 
+def _row_text(window):
+    """The text of the selected Position / Rotation row, else ""."""
+    try:
+        from .treepanel import ROLE_PLACEMENT
+        item = window.builder.active_tree().currentItem()
+        if item is not None and item.data(0, ROLE_PLACEMENT):
+            return item.text(0)
+    except Exception:
+        pass
+    return ""
+
+
 def _is_position(window, node):
     if node.type in ("translate", "rotate"):
         return True
-    try:                                   # a part's Position row
-        from .treepanel import ROLE_PLACEMENT
-        item = window.builder.active_tree().currentItem()
-        return bool(item is not None and item.data(0, ROLE_PLACEMENT)
-                    and item.text(0).startswith(("Position", "Rotation")))
-    except Exception:
-        return False
+    return _row_text(window).startswith(("Position", "Rotation"))
 
 
 def step_aside(view):

@@ -385,3 +385,21 @@ def test_a_mate_on_a_picked_face_follows_the_face(model):
     mates.refresh(model)
     after = _anchor_world(lid, "Bottom")[0]
     assert after == pytest.approx([30, 10, 8], abs=1e-3)
+
+
+def test_a_mate_on_an_extrude_top_follows_its_height(model):
+    """The user: change a linear extrude's height and what is locked to
+    its top face moves with it."""
+    base = model.new_component("Base")
+    base.params["visible"] = True
+    ext = model.add_node("linear_extrude", dict(height=10), parent=base)
+    model.add_node("rect", dict(width=20, height=20), parent=ext)
+    anchors.add_user_anchor(model, base, [10, 10, 10], [0, 0, 1],
+                            name="Top face", track=True,
+                            tris=anchors.local_tris(base))
+    lid = _cube(model, "Lid", size=4.0)
+    mates.attach(model, lid, "Base", "Bottom", "Top face")
+    model.set_param(ext, "height", 25)
+    mates.refresh(model)
+    after = _anchor_world(lid, "Bottom")[0]
+    assert after[2] == pytest.approx(25, abs=1e-3)
