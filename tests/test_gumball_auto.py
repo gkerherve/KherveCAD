@@ -157,3 +157,16 @@ def test_selecting_a_rotate_shows_the_triad_and_turns_it(win):
     tree.select_nodes([poly])                  # a polygon: gone
     _APP.processEvents()
     assert win.view3d.edit_tool is None
+
+
+def test_the_typed_box_is_the_position_not_the_centre(win):
+    m = win.model
+    g = m.add_node("union", dict(x=7.5, y=10, z=2.5, ry=-90))
+    m.add_node("cylinder", dict(r1=3, r2=3, height=10), parent=g)
+    _APP.processEvents()
+    tool = gumball.Gumball(win)
+    win.builder.active_tree().select_nodes([g])
+    _APP.processEvents()
+    assert tool.position() == pytest.approx((7.5, 10, 2.5))
+    tool.set_position((1, 2, 3))
+    assert [float(g.params[k]) for k in "xyz"] == [1, 2, 3]

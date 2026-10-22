@@ -425,9 +425,11 @@ class Gumball:
                 first = False
 
     def edit_position(self):
-        """Type where the part's centre goes ("x, y, z")."""
+        """Type the part's Position ("x, y, z") — the same numbers as its
+        Position row and Properties (the user: the box showed the
+        centre, 2.5, where the Position said 7.5)."""
         from PyQt5.QtWidgets import QLineEdit
-        c = self.centre()
+        c = self.position()
         if c is None or self._chip is None:
             return None
         box = QLineEdit(", ".join("%g" % round(v, 3) for v in c),
@@ -449,12 +451,40 @@ class Gumball:
                 return
             if len(want) != 3:
                 return
-            self.move_to(want)
+            self.set_position(want)
         box.returnPressed.connect(done)
         box.editingFinished.connect(done)
         box.show()
         box.setFocus()
         return box
+
+    def position(self):
+        """The target's own x, y, z (its Position), or None."""
+        from .expr import resolve
+        node = self.target()
+        if node is None:
+            return None
+        out = []
+        for k in ("x", "y", "z"):
+            try:
+                out.append(float(resolve(node.params.get(k, 0.0), {}, 0.0)))
+            except (TypeError, ValueError):
+                out.append(0.0)
+        return tuple(out)
+
+    def set_position(self, xyz):
+        from . import mates
+        node = self.target()
+        if node is None:
+            return
+        if node.type not in ("translate",) + MOVABLE:
+            node = mates.ensure_part(self.window.model, node)
+        values = {k: round(float(v), 4) + 0.0
+                  for k, v in zip(("x", "y", "z"), xyz)}
+        last = list(values)[-1]
+        node.params.update({k: v for k, v in values.items() if k != last})
+        self.window.model.set_param(node, last, values[last])
+        self.view.update()
 
     def move_to(self, point):
         """Move the selected part so its centre lands on *point*."""
@@ -521,7 +551,8 @@ class Gumball:
         if not self.drag and only != "turn":
             # where the part is — click to type where it goes
             from PyQt5.QtCore import QRect
-            text = "X %g  Y %g  Z %g" % tuple(round(v, 2) for v in c)
+            pos = self.position() or c
+            text = "X %g  Y %g  Z %g" % tuple(round(v, 2) for v in pos)
             font = QFont(painter.font())
             painter.setFont(font)
             fm = painter.fontMetrics()
