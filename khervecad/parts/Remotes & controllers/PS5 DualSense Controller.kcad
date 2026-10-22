@@ -1,0 +1,1440 @@
+{
+ "format": "kcad",
+ "version": 16,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "DualSense controller",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "851129f4ba5f45ae80f11c55644de1f3",
+      "title": "DualSense controller",
+      "area": "General",
+      "named": "DualSense controller"
+     }
+    },
+    "children": [
+     {
+      "type": "color",
+      "name": "Color [Black core]",
+      "visible": true,
+      "params": {
+       "color": "#1c1c20",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "blend",
+        "name": "Smooth blend",
+        "visible": true,
+        "params": {
+         "radius": 8.0,
+         "detail": 90
+        },
+        "children": [
+         {
+          "type": "ellipsoid",
+          "name": "Ellipsoid",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 8.0,
+           "z": 20.0,
+           "rx": 48.0,
+           "ry": 30.0,
+           "rz": 15.0,
+           "segments": 48
+          }
+         },
+         {
+          "type": "for_loop",
+          "name": "For s",
+          "visible": true,
+          "params": {
+           "variable": "s",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-1, 1"
+          },
+          "children": [
+           {
+            "type": "capsule",
+            "name": "Capsule",
+            "visible": true,
+            "params": {
+             "x1": "s * 40",
+             "y1": 10.0,
+             "z1": 18.0,
+             "x2": "s * 60",
+             "y2": -48.0,
+             "z2": 14.0,
+             "radius": 13.0,
+             "segments": 32
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#26262b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "rounded_box",
+        "name": "Rounded box [Touchpad]",
+        "visible": true,
+        "params": {
+         "x": -20.0,
+         "y": 9.0,
+         "z": 32.4,
+         "width": 40.0,
+         "depth": 23.0,
+         "height": 2.6,
+         "radius": 1.2,
+         "center": false,
+         "segments": 32
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#0b0b0d",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For i",
+        "visible": true,
+        "params": {
+         "variable": "i",
+         "start": -3.0,
+         "end": 3.0,
+         "step": 1.0,
+         "values": ""
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For j",
+          "visible": true,
+          "params": {
+           "variable": "j",
+           "start": 0.0,
+           "end": 2.0,
+           "step": 1.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Speaker grille]",
+            "visible": true,
+            "params": {
+             "x": "i * 1.8",
+             "y": "1 + j * 1.8",
+             "z": 31.6,
+             "height": 1.6,
+             "radius_bottom": 0.5,
+             "radius_top": 0.5,
+             "segments": 10,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2e2e33",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [PS button]",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -6.0,
+         "z": 30.6,
+         "height": 2.6,
+         "radius_bottom": 4.6,
+         "radius_top": 4.2,
+         "segments": 32,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#d0d0d6",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": -6.0,
+         "z": 33.2
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 0.3,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "text",
+            "name": "Text [PS logo]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "text": "PS",
+             "size": 2.6,
+             "halign": "center",
+             "valign": "center"
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2e2e33",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "rounded_box",
+        "name": "Rounded box [Mute button]",
+        "visible": true,
+        "params": {
+         "x": -3.5,
+         "y": -16.0,
+         "z": 29.2,
+         "width": 7.0,
+         "depth": 2.6,
+         "height": 1.8,
+         "radius": 0.8,
+         "center": false,
+         "segments": 32
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#ff8a3d",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c8c8c8",
+         "alpha": 1.0,
+         "material": "Emissive"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Mute light]",
+          "visible": true,
+          "params": {
+           "x": -2.5,
+           "y": -14.8,
+           "z": 31.0,
+           "width": 5.0,
+           "depth": 0.4,
+           "height": 0.2,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For s",
+      "visible": true,
+      "params": {
+       "variable": "s",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": "-1, 1"
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#2e2e33",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "s * 27",
+           "y": 26.0,
+           "z": 28.4
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": "s * 20"
+            },
+            "children": [
+             {
+              "type": "rounded_box",
+              "name": "Rounded box [Create and Options]",
+              "visible": true,
+              "params": {
+               "x": -1.4,
+               "y": -3.5,
+               "z": 0.0,
+               "width": 2.8,
+               "depth": 7.0,
+               "height": 2.2,
+               "radius": 1.0,
+               "center": false,
+               "segments": 32
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For x",
+      "visible": true,
+      "params": {
+       "variable": "x",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": "-19, 19"
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#141417",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Stick well]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -10.0,
+           "z": 29.4,
+           "height": 1.2,
+           "radius_bottom": 11.2,
+           "radius_top": 11.2,
+           "segments": 48,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#232327",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Stick post]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -10.0,
+           "z": 30.0,
+           "height": 5.0,
+           "radius_bottom": 4.6,
+           "radius_top": 4.6,
+           "segments": 28,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#2a2a2f",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Stick cap]",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -10.0,
+           "z": 35.0,
+           "height": 3.0,
+           "radius_bottom": 9.6,
+           "radius_top": 9.2,
+           "segments": 48,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1a1a1e",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -10.0,
+           "z": 37.6
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 1.0,
+             "z": 0.12
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [Stick dish]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 7.4,
+               "segments": 40
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#3a3a40",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "x",
+           "y": -10.0,
+           "z": 37.6
+          },
+          "children": [
+           {
+            "type": "rotate_extrude",
+            "name": "Rotate extrude",
+            "visible": true,
+            "params": {
+             "angle": 360.0,
+             "segments": 48
+            },
+            "children": [
+             {
+              "type": "circle",
+              "name": "Circle [Stick rim]",
+              "visible": true,
+              "params": {
+               "x": 8.2,
+               "y": 0.0,
+               "radius": 0.9,
+               "angle": 360.0,
+               "start_angle": 0.0,
+               "segments": 12
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#dedee2",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [D-pad well]",
+        "visible": true,
+        "params": {
+         "x": -48.0,
+         "y": 12.0,
+         "z": 36.4,
+         "height": 1.0,
+         "radius_bottom": 12.0,
+         "radius_top": 12.0,
+         "segments": 48,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For a",
+      "visible": true,
+      "params": {
+       "variable": "a",
+       "start": 0.0,
+       "end": 270.0,
+       "step": 90.0,
+       "values": ""
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#f0f0f2",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -48.0,
+           "y": 12.0,
+           "z": 36.8
+          },
+          "children": [
+           {
+            "type": "rotate",
+            "name": "Rotate",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": "a"
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Linear extrude",
+              "visible": true,
+              "params": {
+               "height": 2.2,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0
+              },
+              "children": [
+               {
+                "type": "polygon",
+                "name": "Polygon [D-pad arrow]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "points": [
+                  [
+                   3.2,
+                   0.0
+                  ],
+                  [
+                   5.0,
+                   -2.9
+                  ],
+                  [
+                   10.5,
+                   -2.9
+                  ],
+                  [
+                   10.5,
+                   2.9
+                  ],
+                  [
+                   5.0,
+                   2.9
+                  ]
+                 ]
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#dedee2",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "cylinder",
+        "name": "Cylinder [Face button well]",
+        "visible": true,
+        "params": {
+         "x": 48.0,
+         "y": 12.0,
+         "z": 36.4,
+         "height": 1.0,
+         "radius_bottom": 13.0,
+         "radius_top": 13.0,
+         "segments": 48,
+         "center": false
+        }
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For p",
+      "visible": true,
+      "params": {
+       "variable": "p",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": "[48, 19.6], [55.6, 12], [48, 4.4], [40.4, 12]"
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#d4d5db",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Face button]",
+          "visible": true,
+          "params": {
+           "x": "p[0]",
+           "y": "p[1]",
+           "z": 36.8,
+           "height": 2.0,
+           "radius_bottom": 4.4,
+           "radius_top": 4.4,
+           "segments": 32,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#d4d5db",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": "p[0]",
+           "y": "p[1]",
+           "z": 38.8
+          },
+          "children": [
+           {
+            "type": "scale",
+            "name": "Scale",
+            "visible": true,
+            "params": {
+             "x": 1.0,
+             "y": 1.0,
+             "z": 0.18
+            },
+            "children": [
+             {
+              "type": "sphere",
+              "name": "Sphere [Face button dome]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "radius": 4.4,
+               "segments": 32
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8f919b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 48.0,
+         "y": 19.6,
+         "z": 39.5
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 0.3,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "circle",
+              "name": "Circle",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "radius": 2.6,
+               "angle": 360.0,
+               "start_angle": 0.0,
+               "segments": 3
+              }
+             },
+             {
+              "type": "circle",
+              "name": "Circle [Triangle mark]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "radius": 1.8,
+               "angle": 360.0,
+               "start_angle": 0.0,
+               "segments": 3
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8f919b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 55.6,
+         "y": 12.0,
+         "z": 39.5
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 0.3,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "circle",
+              "name": "Circle",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "radius": 2.3,
+               "angle": 360.0,
+               "start_angle": 0.0,
+               "segments": 28
+              }
+             },
+             {
+              "type": "circle",
+              "name": "Circle [Circle mark]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "radius": 1.7,
+               "angle": 360.0,
+               "start_angle": 0.0,
+               "segments": 28
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8f919b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 48.0,
+         "y": 4.4,
+         "z": 39.5
+        },
+        "children": [
+         {
+          "type": "rotate",
+          "name": "Rotate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 45.0
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.3,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "union",
+              "name": "Group",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "rx": 0.0,
+               "ry": 0.0,
+               "rz": 0.0,
+               "color": "",
+               "alpha": 1.0
+              },
+              "children": [
+               {
+                "type": "rect",
+                "name": "Rectangle",
+                "visible": true,
+                "params": {
+                 "x": -2.4,
+                 "y": -0.3,
+                 "width": 4.8,
+                 "height": 0.6
+                }
+               },
+               {
+                "type": "rect",
+                "name": "Rectangle [Cross mark]",
+                "visible": true,
+                "params": {
+                 "x": -0.3,
+                 "y": -2.4,
+                 "width": 0.6,
+                 "height": 4.8
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#8f919b",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "translate",
+        "name": "Translate",
+        "visible": true,
+        "params": {
+         "x": 40.4,
+         "y": 12.0,
+         "z": 39.5
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Linear extrude",
+          "visible": true,
+          "params": {
+           "height": 0.3,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": false,
+           "segments": 0
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "rect",
+              "name": "Rectangle",
+              "visible": true,
+              "params": {
+               "x": -2.0,
+               "y": -2.0,
+               "width": 4.0,
+               "height": 4.0
+              }
+             },
+             {
+              "type": "rect",
+              "name": "Rectangle [Square mark]",
+              "visible": true,
+              "params": {
+               "x": -1.6,
+               "y": -1.6,
+               "width": 3.2,
+               "height": 3.2
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For s",
+      "visible": true,
+      "params": {
+       "variable": "s",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": "-1, 1"
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1c1c20",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "capsule",
+          "name": "Capsule [Bumper]",
+          "visible": true,
+          "params": {
+           "x1": "s * 34",
+           "y1": 36.0,
+           "z1": 27.0,
+           "x2": "s * 58",
+           "y2": 30.0,
+           "z2": 27.0,
+           "radius": 4.2,
+           "segments": 32
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "for_loop",
+      "name": "For s [Trigger]",
+      "visible": true,
+      "params": {
+       "variable": "s",
+       "start": 0.0,
+       "end": 4.0,
+       "step": 1.0,
+       "values": "-1, 1"
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1c1c20",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "sphere",
+            "name": "Sphere",
+            "visible": true,
+            "params": {
+             "x": "s * 36",
+             "y": 37.0,
+             "z": 21.0,
+             "radius": 4.5,
+             "segments": 24
+            }
+           },
+           {
+            "type": "sphere",
+            "name": "Sphere",
+            "visible": true,
+            "params": {
+             "x": "s * 56",
+             "y": 31.0,
+             "z": 21.0,
+             "radius": 4.5,
+             "segments": 24
+            }
+           },
+           {
+            "type": "sphere",
+            "name": "Sphere",
+            "visible": true,
+            "params": {
+             "x": "s * 50",
+             "y": 42.0,
+             "z": 9.0,
+             "radius": 4.0,
+             "segments": 24
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#050506",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "rounded_box",
+        "name": "Rounded box [USB-C port]",
+        "visible": true,
+        "params": {
+         "x": -4.5,
+         "y": 37.0,
+         "z": 17.5,
+         "width": 9.0,
+         "depth": 2.5,
+         "height": 3.2,
+         "radius": 1.0,
+         "center": false,
+         "segments": 32
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Left white wing]",
+      "visible": true,
+      "params": {
+       "color": "#f4f4f6",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "blend",
+        "name": "Smooth blend",
+        "visible": true,
+        "params": {
+         "radius": 6.0,
+         "detail": 80
+        },
+        "children": [
+         {
+          "type": "ellipsoid",
+          "name": "Ellipsoid",
+          "visible": true,
+          "params": {
+           "x": -50.0,
+           "y": 14.0,
+           "z": 22.0,
+           "rx": 26.0,
+           "ry": 26.0,
+           "rz": 15.5,
+           "segments": 48
+          }
+         },
+         {
+          "type": "capsule",
+          "name": "Capsule",
+          "visible": true,
+          "params": {
+           "x1": -52.0,
+           "y1": 8.0,
+           "z1": 20.0,
+           "x2": -63.0,
+           "y2": -50.0,
+           "z2": 15.0,
+           "radius": 14.2,
+           "segments": 32
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color [Right white wing]",
+      "visible": true,
+      "params": {
+       "color": "#f4f4f6",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "blend",
+        "name": "Smooth blend",
+        "visible": true,
+        "params": {
+         "radius": 6.0,
+         "detail": 80
+        },
+        "children": [
+         {
+          "type": "ellipsoid",
+          "name": "Ellipsoid",
+          "visible": true,
+          "params": {
+           "x": 50.0,
+           "y": 14.0,
+           "z": 22.0,
+           "rx": 26.0,
+           "ry": 26.0,
+           "rz": 15.5,
+           "segments": 48
+          }
+         },
+         {
+          "type": "capsule",
+          "name": "Capsule",
+          "visible": true,
+          "params": {
+           "x1": 52.0,
+           "y1": 8.0,
+           "z1": 20.0,
+           "x2": 63.0,
+           "y2": -50.0,
+           "z2": 15.0,
+           "radius": 14.2,
+           "segments": 32
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2f7bff",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "capsule",
+        "name": "Capsule [Left light bar]",
+        "visible": true,
+        "params": {
+         "x1": -21.6,
+         "y1": 10.0,
+         "z1": 33.6,
+         "x2": -21.6,
+         "y2": 30.0,
+         "z2": 33.6,
+         "radius": 0.9,
+         "segments": 32
+        }
+       }
+      ]
+     },
+     {
+      "type": "color",
+      "name": "Color",
+      "visible": true,
+      "params": {
+       "color": "#2f7bff",
+       "alpha": 1.0,
+       "material": "Default"
+      },
+      "children": [
+       {
+        "type": "capsule",
+        "name": "Capsule [Right light bar]",
+        "visible": true,
+        "params": {
+         "x1": 21.6,
+         "y1": 10.0,
+         "z1": 33.6,
+         "x2": 21.6,
+         "y2": 30.0,
+         "z2": 33.6,
+         "radius": 0.9,
+         "segments": 32
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "PS5 DualSense-style game controller, 160 x 106 mm",
+  "description": "Detailed PlayStation 5 DualSense-style gamepad, about 160 wide, 106 deep, 40 high, lying flat with the shoulders towards +Y. Smooth two-tone body: a black core (smooth blend of a centre ellipsoid and two grip capsules) under two white wings (one blend each) covering the grips and outer top. Black touchpad with blue light bars on both sides, speaker grille, PS button with logo, mute key with its orange light, angled Create and Options keys, two analogue sticks (well, post, cap, concave dish, rim), a D-pad of four arrow keys in a round well, four domed face buttons in a well with grey triangle / circle / cross / square marks, L1/R1 bumpers, curved L2/R2 triggers and a USB-C port. Blend detail (90 core, 80 wings) sets smoothness vs triangles (~195k). Modelled from published sizes, not Sony's files.",
+  "tags": [
+   "PlayStation",
+   "PS5",
+   "DualSense",
+   "gamepad",
+   "joystick",
+   "manette",
+   "controller"
+  ],
+  "source": "assistant",
+  "uid": "851129f4ba5f45ae80f11c55644de1f3",
+  "created": "2026-10-22T23:22:22"
+ }
+}

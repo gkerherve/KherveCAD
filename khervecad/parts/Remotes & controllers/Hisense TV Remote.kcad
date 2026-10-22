@@ -1,0 +1,2301 @@
+{
+ "format": "kcad",
+ "version": 16,
+ "global_fn": 45,
+ "global_fn_on": true,
+ "unit": "mm",
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "component",
+    "name": "Hisense TV remote with AAA batteries",
+    "visible": true,
+    "params": {
+     "x": 0.0,
+     "y": 0.0,
+     "z": 0.0,
+     "rx": 0.0,
+     "ry": 0.0,
+     "rz": 0.0,
+     "color": "",
+     "alpha": 1.0,
+     "library": {
+      "uid": "4bc94f1a1c99429f82c759b589b39dbc",
+      "title": "Hisense TV remote with AAA batteries",
+      "area": "General",
+      "named": "Hisense TV remote with AAA batteries"
+     }
+    },
+    "children": [
+     {
+      "type": "component",
+      "name": "Remote shell",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "7efe555681244d7eb43ad5953f948a2c",
+        "title": "Remote shell",
+        "area": "General",
+        "named": "Remote shell"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1c1c1e",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "difference",
+          "name": "Difference",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For x",
+              "visible": true,
+              "params": {
+               "variable": "x",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "-12, 12"
+              },
+              "children": [
+               {
+                "type": "for_loop",
+                "name": "For y",
+                "visible": true,
+                "params": {
+                 "variable": "y",
+                 "start": 0.0,
+                 "end": 4.0,
+                 "step": 1.0,
+                 "values": "12, 178"
+                },
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [Body]",
+                  "visible": true,
+                  "params": {
+                   "x": "x",
+                   "y": "y",
+                   "z": 0.0,
+                   "height": 16.0,
+                   "radius_bottom": 10.0,
+                   "radius_top": 10.0,
+                   "segments": 48,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For p",
+            "visible": true,
+            "params": {
+             "variable": "p",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "[-12, 178, 4.0], [12, 178, 3.4], [0, 110, 7.4], [-11, 50, 3.4], [0, 50, 3.4], [11, 50, 3.4], [0, 13, 3.6], [-15, 90, 3.4], [15, 90, 3.4]"
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Round key wells]",
+              "visible": true,
+              "params": {
+               "x": "p[0]",
+               "y": "p[1]",
+               "z": 14.4,
+               "height": 4.0,
+               "radius_bottom": "p[2]",
+               "radius_top": "p[2]",
+               "segments": 40,
+               "center": false
+              }
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For r",
+            "visible": true,
+            "params": {
+             "variable": "r",
+             "start": 0.0,
+             "end": 2.0,
+             "step": 1.0,
+             "values": ""
+            },
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For c",
+              "visible": true,
+              "params": {
+               "variable": "c",
+               "start": -1.0,
+               "end": 1.0,
+               "step": 1.0,
+               "values": ""
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Number wells]",
+                "visible": true,
+                "params": {
+                 "x": "c * 11",
+                 "y": "40 - r * 9",
+                 "z": 14.4,
+                 "height": 4.0,
+                 "radius_bottom": 3.6,
+                 "radius_top": 3.6,
+                 "segments": 40,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [D-pad well]",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 110.0,
+             "z": 14.4,
+             "height": 4.0,
+             "radius_bottom": 15.4,
+             "radius_top": 15.4,
+             "segments": 64,
+             "center": false
+            }
+           },
+           {
+            "type": "for_loop",
+            "name": "For x",
+            "visible": true,
+            "params": {
+             "variable": "x",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "-14, 14"
+            },
+            "children": [
+             {
+              "type": "hull",
+              "name": "Hull",
+              "visible": true,
+              "params": {},
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder",
+                "visible": true,
+                "params": {
+                 "x": "x",
+                 "y": 62.0,
+                 "z": 14.4,
+                 "height": 4.0,
+                 "radius_bottom": 4.0,
+                 "radius_top": 4.0,
+                 "segments": 28,
+                 "center": false
+                }
+               },
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Rocker wells]",
+                "visible": true,
+                "params": {
+                 "x": "x",
+                 "y": 78.0,
+                 "z": 14.4,
+                 "height": 4.0,
+                 "radius_bottom": 4.0,
+                 "radius_top": 4.0,
+                 "segments": 28,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "for_loop",
+            "name": "For x",
+            "visible": true,
+            "params": {
+             "variable": "x",
+             "start": 0.0,
+             "end": 4.0,
+             "step": 1.0,
+             "values": "-10, 10"
+            },
+            "children": [
+             {
+              "type": "for_loop",
+              "name": "For y",
+              "visible": true,
+              "params": {
+               "variable": "y",
+               "start": 0.0,
+               "end": 4.0,
+               "step": 1.0,
+               "values": "166, 157, 148, 139"
+              },
+              "children": [
+               {
+                "type": "hull",
+                "name": "Hull",
+                "visible": true,
+                "params": {},
+                "children": [
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder",
+                  "visible": true,
+                  "params": {
+                   "x": "x - 4",
+                   "y": "y",
+                   "z": 14.4,
+                   "height": 4.0,
+                   "radius_bottom": 3.6,
+                   "radius_top": 3.6,
+                   "segments": 24,
+                   "center": false
+                  }
+                 },
+                 {
+                  "type": "cylinder",
+                  "name": "Cylinder [App key wells]",
+                  "visible": true,
+                  "params": {
+                   "x": "x + 4",
+                   "y": "y",
+                   "z": 14.4,
+                   "height": 4.0,
+                   "radius_bottom": 3.6,
+                   "radius_top": 3.6,
+                   "segments": 24,
+                   "center": false
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Colour key slot]",
+            "visible": true,
+            "params": {
+             "x": -17.4,
+             "y": 128.6,
+             "z": 14.4,
+             "width": 34.8,
+             "depth": 3.8,
+             "height": 4.0,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Battery bay]",
+            "visible": true,
+            "params": {
+             "x": -11.6,
+             "y": 20.0,
+             "z": -1.0,
+             "width": 23.2,
+             "depth": 49.0,
+             "height": 13.5,
+             "center": false
+            }
+           },
+           {
+            "type": "cube",
+            "name": "Cube [Door recess]",
+            "visible": true,
+            "params": {
+             "x": -13.2,
+             "y": 18.4,
+             "z": -1.0,
+             "width": 26.4,
+             "depth": 52.2,
+             "height": 2.6,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#bdbdbd",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 186.0,
+           "z": 15.9
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.4,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "text",
+              "name": "Text [Logo]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "text": "Hisense",
+               "size": 3.2,
+               "halign": "center",
+               "valign": "center"
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#d0d0d0",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -14.0,
+           "y": 56.0,
+           "z": 15.9
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.4,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "text",
+              "name": "Text [VOL label]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "text": "VOL",
+               "size": 2.0,
+               "halign": "center",
+               "valign": "center"
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#d0d0d0",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 14.0,
+           "y": 56.0,
+           "z": 15.9
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.4,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "text",
+              "name": "Text [CH label]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "text": "CH",
+               "size": 2.0,
+               "halign": "center",
+               "valign": "center"
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c0c0c0",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-5.8, 5.8"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Spring contacts]",
+            "visible": true,
+            "params": {
+             "x": "x - 2.5",
+             "y": 68.4,
+             "z": 6.0,
+             "width": 5.0,
+             "depth": 0.6,
+             "height": 4.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#c0c0c0",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-5.8, 5.8"
+          },
+          "children": [
+           {
+            "type": "cube",
+            "name": "Cube [Flat contacts]",
+            "visible": true,
+            "params": {
+             "x": "x - 2.5",
+             "y": 20.0,
+             "z": 6.0,
+             "width": 5.0,
+             "depth": 0.6,
+             "height": 4.0,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "Keys",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "49f9762cdd89448d8aee578ef8f52e6c",
+        "title": "Keys",
+        "area": "General",
+        "named": "Keys"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#d32f2f",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Power]",
+          "visible": true,
+          "params": {
+           "x": -12.0,
+           "y": 178.0,
+           "z": 14.6,
+           "height": 3.0,
+           "radius_bottom": 3.6,
+           "radius_top": 3.2,
+           "segments": 32,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#3a3a3c",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Source]",
+          "visible": true,
+          "params": {
+           "x": 12.0,
+           "y": 178.0,
+           "z": 14.6,
+           "height": 3.0,
+           "radius_bottom": 3.0,
+           "radius_top": 2.6,
+           "segments": 32,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#113ccf",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": -14.0,
+             "y": 166.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.2,
+             "radius_top": 3.2,
+             "segments": 24,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Disney plus]",
+            "visible": true,
+            "params": {
+             "x": -6.0,
+             "y": 166.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.2,
+             "radius_top": 3.2,
+             "segments": 24,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#f5f5f7",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 6.0,
+             "y": 166.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.2,
+             "radius_top": 3.2,
+             "segments": 24,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [YouTube]",
+            "visible": true,
+            "params": {
+             "x": 14.0,
+             "y": 166.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.2,
+             "radius_top": 3.2,
+             "segments": 24,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#00a8e1",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": -14.0,
+             "y": 157.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.2,
+             "radius_top": 3.2,
+             "segments": 24,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Prime Video]",
+            "visible": true,
+            "params": {
+             "x": -6.0,
+             "y": 157.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.2,
+             "radius_top": 3.2,
+             "segments": 24,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#bf0000",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 6.0,
+             "y": 157.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.2,
+             "radius_top": 3.2,
+             "segments": 24,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Rakuten Kids]",
+            "visible": true,
+            "params": {
+             "x": 14.0,
+             "y": 157.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.2,
+             "radius_top": 3.2,
+             "segments": 24,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#6a2fd6",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": -14.0,
+             "y": 148.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.2,
+             "radius_top": 3.2,
+             "segments": 24,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Freely]",
+            "visible": true,
+            "params": {
+             "x": -6.0,
+             "y": 148.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.2,
+             "radius_top": 3.2,
+             "segments": 24,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#e50914",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 6.0,
+             "y": 148.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.2,
+             "radius_top": 3.2,
+             "segments": 24,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Netflix]",
+            "visible": true,
+            "params": {
+             "x": 14.0,
+             "y": 148.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.2,
+             "radius_top": 3.2,
+             "segments": 24,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#111111",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": -14.0,
+             "y": 139.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.2,
+             "radius_top": 3.2,
+             "segments": 24,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [NOW]",
+            "visible": true,
+            "params": {
+             "x": -6.0,
+             "y": 139.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.2,
+             "radius_top": 3.2,
+             "segments": 24,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#e8e8ea",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "hull",
+          "name": "Hull",
+          "visible": true,
+          "params": {},
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder",
+            "visible": true,
+            "params": {
+             "x": 6.0,
+             "y": 139.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.2,
+             "radius_top": 3.2,
+             "segments": 24,
+             "center": false
+            }
+           },
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Apple TV plus]",
+            "visible": true,
+            "params": {
+             "x": 14.0,
+             "y": 139.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.2,
+             "radius_top": 3.2,
+             "segments": 24,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#e53935",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Red key]",
+          "visible": true,
+          "params": {
+           "x": -17.0,
+           "y": 129.0,
+           "z": 14.6,
+           "width": 8.0,
+           "depth": 3.0,
+           "height": 2.8,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#43a047",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Green key]",
+          "visible": true,
+          "params": {
+           "x": -8.2,
+           "y": 129.0,
+           "z": 14.6,
+           "width": 8.0,
+           "depth": 3.0,
+           "height": 2.8,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#fdd835",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Yellow key]",
+          "visible": true,
+          "params": {
+           "x": 0.6,
+           "y": 129.0,
+           "z": 14.6,
+           "width": 8.0,
+           "depth": 3.0,
+           "height": 2.8,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1e88e5",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Blue key]",
+          "visible": true,
+          "params": {
+           "x": 9.0,
+           "y": 129.0,
+           "z": 14.6,
+           "width": 8.0,
+           "depth": 3.0,
+           "height": 2.8,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#3a3a3c",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 110.0,
+           "z": 14.6
+          },
+          "children": [
+           {
+            "type": "difference",
+            "name": "Difference",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": 0.0,
+               "height": 3.2,
+               "radius_bottom": 15.0,
+               "radius_top": 15.0,
+               "segments": 64,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [D-pad ring]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "z": -1.0,
+               "height": 6.0,
+               "radius_bottom": 7.6,
+               "radius_top": 7.6,
+               "segments": 48,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#4a4a4d",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [OK]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 110.0,
+           "z": 14.6,
+           "height": 3.6,
+           "radius_bottom": 7.0,
+           "radius_top": 6.5,
+           "segments": 48,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#3a3a3c",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-15, 15"
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Back and Home]",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": 90.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.0,
+             "radius_top": 2.6,
+             "segments": 32,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#3a3a3c",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-14, 14"
+          },
+          "children": [
+           {
+            "type": "hull",
+            "name": "Hull",
+            "visible": true,
+            "params": {},
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder",
+              "visible": true,
+              "params": {
+               "x": "x",
+               "y": 62.0,
+               "z": 14.6,
+               "height": 3.2,
+               "radius_bottom": 3.6,
+               "radius_top": 3.6,
+               "segments": 28,
+               "center": false
+              }
+             },
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Volume and channel rockers]",
+              "visible": true,
+              "params": {
+               "x": "x",
+               "y": 78.0,
+               "z": 14.6,
+               "height": 3.2,
+               "radius_bottom": 3.6,
+               "radius_top": 3.6,
+               "segments": 28,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#3a3a3c",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For x",
+          "visible": true,
+          "params": {
+           "variable": "x",
+           "start": 0.0,
+           "end": 4.0,
+           "step": 1.0,
+           "values": "-11, 0, 11"
+          },
+          "children": [
+           {
+            "type": "cylinder",
+            "name": "Cylinder [Subtitle Mute Info]",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": 50.0,
+             "z": 14.6,
+             "height": 3.0,
+             "radius_bottom": 3.0,
+             "radius_top": 2.6,
+             "segments": 32,
+             "center": false
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#3a3a3c",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "for_loop",
+          "name": "For r",
+          "visible": true,
+          "params": {
+           "variable": "r",
+           "start": 0.0,
+           "end": 2.0,
+           "step": 1.0,
+           "values": ""
+          },
+          "children": [
+           {
+            "type": "for_loop",
+            "name": "For c",
+            "visible": true,
+            "params": {
+             "variable": "c",
+             "start": -1.0,
+             "end": 1.0,
+             "step": 1.0,
+             "values": ""
+            },
+            "children": [
+             {
+              "type": "cylinder",
+              "name": "Cylinder [Number keys]",
+              "visible": true,
+              "params": {
+               "x": "c * 11",
+               "y": "40 - r * 9",
+               "z": 14.6,
+               "height": 3.0,
+               "radius_bottom": 3.2,
+               "radius_top": 2.8,
+               "segments": 32,
+               "center": false
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#3a3a3c",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cylinder",
+          "name": "Cylinder [Key 0]",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 13.0,
+           "z": 14.6,
+           "height": 3.0,
+           "radius_bottom": 3.2,
+           "radius_top": 2.8,
+           "segments": 32,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#ffffff",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -10.0,
+           "y": 166.0,
+           "z": 17.6
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.3,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "text",
+              "name": "Text [Disney label]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "text": "Disney+",
+               "size": 1.9,
+               "halign": "center",
+               "valign": "center"
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#ff0000",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 10.0,
+           "y": 166.0,
+           "z": 17.6
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.3,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "text",
+              "name": "Text [YouTube label]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "text": "YouTube",
+               "size": 1.8,
+               "halign": "center",
+               "valign": "center"
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#ffffff",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -10.0,
+           "y": 157.0,
+           "z": 17.6
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.3,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "text",
+              "name": "Text [Prime label]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "text": "prime",
+               "size": 2.2,
+               "halign": "center",
+               "valign": "center"
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#ffffff",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 10.0,
+           "y": 157.0,
+           "z": 17.6
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.3,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "text",
+              "name": "Text [Rakuten label]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "text": "Rakuten",
+               "size": 1.7,
+               "halign": "center",
+               "valign": "center"
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#ffffff",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -10.0,
+           "y": 148.0,
+           "z": 17.6
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.3,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "text",
+              "name": "Text [Freely label]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "text": "freely",
+               "size": 2.0,
+               "halign": "center",
+               "valign": "center"
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#ffffff",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 10.0,
+           "y": 148.0,
+           "z": 17.6
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.3,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "text",
+              "name": "Text [Netflix label]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "text": "NETFLIX",
+               "size": 1.8,
+               "halign": "center",
+               "valign": "center"
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#00c8b4",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -10.0,
+           "y": 139.0,
+           "z": 17.6
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.3,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "text",
+              "name": "Text [NOW label]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "text": "NOW",
+               "size": 2.2,
+               "halign": "center",
+               "valign": "center"
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#111111",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 10.0,
+           "y": 139.0,
+           "z": 17.6
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.3,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "text",
+              "name": "Text [Apple TV label]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "text": "tv+",
+               "size": 2.2,
+               "halign": "center",
+               "valign": "center"
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#d0d0d0",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 12.0,
+           "y": 178.0,
+           "z": 17.6
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.3,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "text",
+              "name": "Text [Source mark]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "text": "S",
+               "size": 2.2,
+               "halign": "center",
+               "valign": "center"
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#d0d0d0",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": -11.0,
+           "y": 50.0,
+           "z": 17.6
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.3,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "text",
+              "name": "Text [Subtitle mark]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "text": "SUB",
+               "size": 1.4,
+               "halign": "center",
+               "valign": "center"
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#d0d0d0",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "translate",
+          "name": "Translate",
+          "visible": true,
+          "params": {
+           "x": 11.0,
+           "y": 50.0,
+           "z": 17.6
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Linear extrude",
+            "visible": true,
+            "params": {
+             "height": 0.3,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": false,
+             "segments": 0
+            },
+            "children": [
+             {
+              "type": "text",
+              "name": "Text [Info mark]",
+              "visible": true,
+              "params": {
+               "x": 0.0,
+               "y": 0.0,
+               "text": "i",
+               "size": 2.4,
+               "halign": "center",
+               "valign": "center"
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "AAA batteries",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "9b2289948d7643b1817d1e3e9fea2d96",
+        "title": "AAA batteries",
+        "area": "General",
+        "named": "AAA batteries"
+       }
+      },
+      "children": [
+       {
+        "type": "for_loop",
+        "name": "For x",
+        "visible": true,
+        "params": {
+         "variable": "x",
+         "start": 0.0,
+         "end": 4.0,
+         "step": 1.0,
+         "values": "-5.8, 5.8"
+        },
+        "children": [
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#1565c0",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": 21.0,
+             "z": 6.6
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [AAA cell]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 43.5,
+                 "radius_bottom": 5.25,
+                 "radius_top": 5.25,
+                 "segments": 40,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "color",
+          "name": "Color",
+          "visible": true,
+          "params": {
+           "color": "#9e9e9e",
+           "alpha": 1.0,
+           "material": "Default"
+          },
+          "children": [
+           {
+            "type": "translate",
+            "name": "Translate",
+            "visible": true,
+            "params": {
+             "x": "x",
+             "y": 64.5,
+             "z": 6.6
+            },
+            "children": [
+             {
+              "type": "rotate",
+              "name": "Rotate",
+              "visible": true,
+              "params": {
+               "x": -90.0,
+               "y": 0.0,
+               "z": 0.0
+              },
+              "children": [
+               {
+                "type": "cylinder",
+                "name": "Cylinder [Positive cap]",
+                "visible": true,
+                "params": {
+                 "x": 0.0,
+                 "y": 0.0,
+                 "z": 0.0,
+                 "height": 1.0,
+                 "radius_bottom": 1.9,
+                 "radius_top": 1.9,
+                 "segments": 24,
+                 "center": false
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "component",
+      "name": "Battery door",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": -12.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "library": {
+        "uid": "a0daf2b4ce874e62b880e63c7d674fe9",
+        "title": "Battery door",
+        "area": "House & home",
+        "named": "Battery door"
+       }
+      },
+      "children": [
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#1c1c1e",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Door]",
+          "visible": true,
+          "params": {
+           "x": -13.0,
+           "y": 18.6,
+           "z": 0.0,
+           "width": 26.0,
+           "depth": 51.8,
+           "height": 1.4,
+           "center": false
+          }
+         }
+        ]
+       },
+       {
+        "type": "color",
+        "name": "Color",
+        "visible": true,
+        "params": {
+         "color": "#2c2c2e",
+         "alpha": 1.0,
+         "material": "Default"
+        },
+        "children": [
+         {
+          "type": "cube",
+          "name": "Cube [Thumb grip]",
+          "visible": true,
+          "params": {
+           "x": -8.0,
+           "y": 63.0,
+           "z": -0.4,
+           "width": 16.0,
+           "depth": 4.0,
+           "height": 0.4,
+           "center": false
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "library": {
+  "title": "Hisense TV remote with AAA batteries, 190 x 44 mm",
+  "description": "A Hisense smart-TV remote (UK layout), 190 x 44 x 18 mm, in four Objects: the shell with a well cut for every key (0.4 mm clearance) and an AAA battery bay underneath with contacts; the keys (power + source, eight streaming keys Disney+ / YouTube / Prime Video / Rakuten Kids / Freely / Netflix / NOW / Apple TV+, colour keys, D-pad with OK, back and home, volume and channel rockers, subtitle / mute / info, numbers 1-9 and 0); two AAA cells; and the battery door, drawn 12 mm below the remote (set its Move Z to 0 to close it).",
+  "tags": [
+   "remote control",
+   "TV remote",
+   "Hisense",
+   "AAA",
+   "t\u00e9l\u00e9commande",
+   "Netflix",
+   "Freely"
+  ],
+  "source": "assistant",
+  "uid": "4bc94f1a1c99429f82c759b589b39dbc",
+  "created": "2026-10-22T23:25:18"
+ }
+}
