@@ -749,35 +749,10 @@ class Gumball:
                 if still else self._ghost_matrix(self.drag)
         except Exception:
             return
-        path = QPainterPath()
-        path.setFillRule(Qt.WindingFill)
-        step = max(1, len(tris) // 6000)
-        for t in tris[::step]:
-            pts = []
-            for p in t[:3]:
-                w = [sum(m[i][k] * p[k] for k in range(3)) + m[i][3]
-                     for i in range(3)]
-                s = project(tuple(w))
-                if s is None or s[2] <= 0:
-                    break
-                pts.append(QPointF(s[0], s[1]))
-            else:
-                # every facet wound the same way, so the winding fill is
-                # their union (front and back facets cancelled before)
-                area = ((pts[1].x() - pts[0].x()) * (pts[2].y() - pts[0].y())
-                        - (pts[2].x() - pts[0].x()) * (pts[1].y()
-                                                       - pts[0].y()))
-                if area < 0:
-                    pts.reverse()
-                path.addPolygon(QPolygonF(pts))
-                path.closeSubpath()
-        painter.save()
-        # one winding fill: the overlapping facets never darken
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(QColor(229, 57, 53, 90) if still
-                         else QColor(30, 136, 229, 110))
-        painter.drawPath(path)
-        painter.restore()
+        from .shape_handles import draw_solid
+        draw_solid(painter, self.view, project, tris,
+                   (229, 57, 53) if still else (30, 136, 229), 0.72,
+                   matrix=m)
 
     def paint(self, painter, project):
         from PyQt5.QtCore import QPointF, Qt

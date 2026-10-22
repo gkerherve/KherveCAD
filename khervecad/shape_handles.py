@@ -54,6 +54,58 @@ def _unit(v):
     return tuple(c / n for c in v)
 
 
+def draw_solid(painter, view, project, tris, rgb, opacity, matrix=None):
+    """A ghost that reads as a solid: every facet shaded by how squarely
+    it faces the camera, painted far to near into its own layer (no
+    seams between facets), the layer laid down at *opacity* (the user:
+    the see-through copy looked broken and too faint)."""
+    from PyQt5.QtCore import QPointF, Qt
+    from PyQt5.QtGui import QColor, QImage, QPainter, QPen, QPolygonF
+    if not tris:
+        return
+    _eye, _right, _up, fwd = view._camera()
+    faces = []
+    step = max(1, len(tris) // 20000)
+    for t in tris[::step]:
+        w = [_apply_m(matrix, p) if matrix else tuple(p[:3])
+             for p in t[:3]]
+        ss = [project(p) for p in w]
+        if any(s is None or s[2] <= 0 for s in ss):
+            continue
+        e1 = [w[1][k] - w[0][k] for k in range(3)]
+        e2 = [w[2][k] - w[0][k] for k in range(3)]
+        n = _unit((e1[1] * e2[2] - e1[2] * e2[1],
+                   e1[2] * e2[0] - e1[0] * e2[2],
+                   e1[0] * e2[1] - e1[1] * e2[0]))
+        lit = abs(sum(n[k] * fwd[k] for k in range(3)))
+        depth = sum(s[2] for s in ss) / 3.0
+        faces.append((depth, lit, ss))
+    if not faces:
+        return
+    faces.sort(key=lambda f: -f[0])            # far first
+    dev = painter.device()
+    ratio = dev.devicePixelRatioF() if hasattr(dev, "devicePixelRatioF") \
+        else 1.0
+    img = QImage(int(dev.width() * ratio), int(dev.height() * ratio),
+                 QImage.Format_ARGB32_Premultiplied)
+    img.setDevicePixelRatio(ratio)
+    img.fill(Qt.transparent)
+    layer = QPainter(img)
+    layer.setRenderHint(QPainter.Antialiasing, True)
+    for _d, lit, ss in faces:
+        k = 0.55 + 0.45 * lit
+        col = QColor(int(rgb[0] * k), int(rgb[1] * k), int(rgb[2] * k))
+        layer.setPen(QPen(col, 0.8))           # closes the hairline seams
+        layer.setBrush(col)
+        layer.drawPolygon(QPolygonF([QPointF(s[0], s[1]) for s in ss]))
+    layer.end()
+    painter.save()
+    painter.resetTransform()
+    painter.setOpacity(opacity)
+    painter.drawImage(0, 0, img)
+    painter.restore()
+
+
 class CylinderTool:
     """The cylinder's size handles; declines everything else, so the
     view orbits as usual."""
@@ -209,34 +261,11 @@ class CylinderTool:
 
     # -- drawing -----------------------------------------------------
     def _ghost(self, painter, project, extra, colour):
-        from PyQt5.QtCore import QPointF, Qt
-        from PyQt5.QtGui import QColor, QPainterPath, QPolygonF
         from .mesh import cylinder_mesh
         q = self.params(extra)
-        q["segments"] = 48
-        a = self._frame()
-        path = QPainterPath()
-        path.setFillRule(Qt.WindingFill)
-        for t in cylinder_mesh(q):
-            pts = []
-            for p in t:
-                s = project(_apply_m(a, p))
-                if s is None or s[2] <= 0:
-                    break
-                pts.append(QPointF(s[0], s[1]))
-            else:
-                area = ((pts[1].x() - pts[0].x()) * (pts[2].y() - pts[0].y())
-                        - (pts[2].x() - pts[0].x()) * (pts[1].y()
-                                                       - pts[0].y()))
-                if area < 0:
-                    pts.reverse()
-                path.addPolygon(QPolygonF(pts))
-                path.closeSubpath()
-        painter.save()
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(QColor(*colour))
-        painter.drawPath(path)
-        painter.restore()
+        q["segments"] = 64
+        draw_solid(painter, self.view, project, cylinder_mesh(q),
+                   colour[:3], 0.72, matrix=self._frame())
 
     def paint(self, painter, project):
         from PyQt5.QtCore import QPointF
