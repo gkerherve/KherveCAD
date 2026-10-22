@@ -116,7 +116,22 @@ def test_isometric_button_turns_a_quarter_each_click(win):
     yaw0, pitch0 = view.VIEWS["Isometric"]
     assert (view.yaw, view.pitch) == pytest.approx((yaw0, pitch0))
     viewnav.iso_click(view)
-    assert view.yaw == pytest.approx(yaw0 - 90)
+    assert view.yaw == pytest.approx(yaw0 + 90)
     assert view.pitch == pytest.approx(pitch0)
     viewnav.iso_click(view)
-    assert view.yaw == pytest.approx(yaw0 - 180)
+    assert view.yaw == pytest.approx(yaw0 + 180)
+
+
+def test_top_front_side_buttons_turn_a_quarter_each_click(win):
+    from khervecad import viewnav
+    win.model.add_node("cube", dict(width=10, depth=10, height=10))
+    _APP.processEvents()
+    view = win.view3d
+    for name in ("Top", "Front", "Right"):
+        view.set_view("Isometric", animate=False)
+        viewnav.view_click(view, name)
+        yaw0, pitch0 = view.VIEWS[name]
+        assert (view.yaw, view.pitch) == pytest.approx((yaw0, pitch0))
+        viewnav.view_click(view, name)
+        assert view.yaw == pytest.approx(yaw0 + 90)
+        assert view.pitch == pytest.approx(pitch0)

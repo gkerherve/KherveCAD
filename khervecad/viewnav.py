@@ -563,29 +563,31 @@ def attach_3d(view):
         button = QToolButton(bar)
         button.setIcon(cube_icon(face))
         set_tip(button, key)
-        if name == "Isometric":
-            button.clicked.connect(lambda _=False: iso_click(view))
-        else:
-            button.clicked.connect(lambda _=False, n=name: view.set_view(n))
+        button.clicked.connect(lambda _=False, n=name: view_click(view, n))
         layout.insertWidget(0, button)
         bar.buttons["view_" + face] = button
     view.nav_bar = bar
     return bar
 
 
-def iso_click(view):
-    """The isometric cube: from any other view, the standard isometric;
-    already on an isometric corner, the next one 90° clockwise round the
-    model (the user) — gliding there, framed."""
-    yaw0, pitch0 = view.VIEWS["Isometric"]
-    on_iso = abs(view.pitch - pitch0) < 0.5 and \
+#: a repeated click turns the view this much (positive = clockwise as
+#: the user sees it; -90 read anticlockwise — the user)
+STEP_YAW = 90.0
+
+
+def view_click(view, name):
+    """A view cube (Isometric, Top, Front, Right): from any other view,
+    that standard view; already on it (or one of its quarter turns), the
+    next quarter turn clockwise (the user) — gliding there, framed."""
+    yaw0, pitch0 = view.VIEWS[name]
+    on_it = abs(view.pitch - pitch0) < 0.5 and \
         abs(((view.yaw - yaw0) % 90.0 + 45.0) % 90.0 - 45.0) < 0.5
-    if not on_iso:
-        view.set_view("Isometric")
+    if not on_it:
+        view.set_view(name)
         return
     start = dict(yaw=view.yaw, pitch=view.pitch, target=list(view.target),
                  distance=view.distance)
-    view.yaw = round(view.yaw - 90.0, 6)     # clockwise seen from above
+    view.yaw = round(view.yaw + STEP_YAW, 6)
     view.fit()
     goal = dict(yaw=view.yaw, pitch=view.pitch, target=list(view.target),
                 distance=view.distance)
@@ -593,6 +595,10 @@ def iso_click(view):
     view.target, view.distance = start["target"], start["distance"]
     from . import view_anim
     view_anim.glide_3d(view, goal)
+
+
+def iso_click(view):
+    view_click(view, "Isometric")
 
 
 def _plane_click(win, plane):
