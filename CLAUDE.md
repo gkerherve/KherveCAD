@@ -4455,6 +4455,11 @@ into a new module and import.
                        move goes through `physics.placement` (world move ->
                        the part's own x..rz), `mates.ensure_part` first;
                        one `set_param` per move so a mate is released once.
+  - `shape_handles.py` — a selected **cylinder** shows H / R bottom / R
+                       top handles in 3D (2026-10-22): drag to resize, a
+                       see-through preview while dragging, applied once on
+                       release, 0.1 steps; a cylinder a difference cuts
+                       away is drawn see-through red (`gumball._cut_away`).
   - `make2d.py`      — File ▸ **Make 2D Drawing of This View**: a temporary
                        `drawing.VIEWS["Current view"]` from the camera's
                        right / up / forward, `drawing_dialog.make_layout`

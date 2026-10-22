@@ -1053,7 +1053,8 @@ class MainWindow(QMainWindow):
         # user: a triad on every selected part was too much)
         from . import drag_feature
         drag_feature.follow_selection(self, nodes)
-        from . import gumball
+        from . import gumball, shape_handles
+        shape_handles.follow_selection(self, nodes)  # a cylinder's sizes
         gumball.follow_selection(self, nodes)   # a Move shows its triad
         # zoom the 2D view to the selected object (a part silhouette or
         # an edited profile) so it is framed and centred, not clipped

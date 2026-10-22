@@ -967,5 +967,9 @@ def _is_position(window, node):
 
 def step_aside(view):
     tool = view.edit_tool
+    from .shape_handles import CylinderTool
+    if isinstance(tool, CylinderTool) and tool.drag is None:
+        view.edit_tool = None
+        return
     if isinstance(tool, Gumball) and tool.auto and tool.drag is None:
         view.edit_tool = None
