@@ -194,6 +194,38 @@ class Gumball:
         return node if node.parent is not None else None
 
     def centre(self):
+        """Where the triad stands: the part's own origin — its Position,
+        a Rotate's pivot (the user: the rings were off centre) — moved
+        with the preview while dragging."""
+        c = self._origin()
+        if c is not None and self.drag and self.drag.get("values"):
+            m = self._ghost_matrix(self.drag)
+            c = tuple(sum(m[i][k] * c[k] for k in range(3)) + m[i][3]
+                      for i in range(3))
+        return c
+
+    def _origin(self):
+        from .mesh import ancestor_matrix, mat_mul, node_matrix
+        node = self.target()
+        if node is not None and self.view.highlight_mesh:
+            try:
+                a = ancestor_matrix(
+                    node, stop=self.window.builder.isolated_component())
+                if node.type == "rotate":
+                    from .expr import resolve
+                    p = [float(resolve(node.params.get(k, 0.0), {}, 0.0))
+                         for k in ("px", "py", "pz")]
+                    m = a
+                else:
+                    p = [0.0, 0.0, 0.0]
+                    m = mat_mul(a, node_matrix(node))
+                return tuple(sum(m[i][k] * p[k] for k in range(3))
+                             + m[i][3] for i in range(3))
+            except Exception:
+                pass
+        return self._box_centre()
+
+    def _box_centre(self):
         tris = self.view.highlight_mesh or []
         pts = [v for t in tris for v in t]
         if not pts:
@@ -314,7 +346,8 @@ class Gumball:
                 vec = [snap(v, g) for v in vec]
             d["vec"] = vec
             d["value"] = math.sqrt(sum(v * v for v in vec))
-            self._apply(d)
+            d["values"] = self._values(d)
+            self.view.update()
             return True
         if kind == "move":
             sx, sy = d["tip"][0] - d["cs"][0], d["tip"][1] - d["cs"][1]
@@ -335,13 +368,16 @@ class Gumball:
             if ctrl:
                 value = snap(value, 15.0)
         d["value"] = value
-        self._apply(d)
+        d["values"] = self._values(d)       # shown, applied on release
+        self.view.update()
         return True
 
     def mouse_release(self, event):
         d, self.drag = self.drag, None
         if d is None:
             return False
+        if d.get("values"):
+            self._apply(d)                  # the change lands once
         from . import language
         kind, axis = d["handle"]
         if kind == "free":
@@ -382,47 +418,67 @@ class Gumball:
             if d["node"].params.get(k, 0.0) != v:
                 model.set_param(d["node"], k, v)
 
-    def _apply(self, d):
+    def _values(self, d):
+        """The params the drag would write (nothing is changed): a ring
+        adds its turn to THAT angle only and leaves the position alone
+        (the user: turning Y gave 180, -84, 180 and moved X Y Z)."""
         from . import physics
+        from .expr import resolve
         node = d["node"]
-        node.params.update(d["start"])     # measure from where it began
         kind, axis = d["handle"]
+        if kind == "turn":
+            keys = ("x", "y", "z") if node.type == "rotate" else \
+                ("rx", "ry", "rz")
+            k = keys[axis]
+            try:
+                was = float(resolve(d["start"].get(k, 0.0), {}, 0.0))
+            except (TypeError, ValueError):
+                was = 0.0
+            return {k: round(was + d["value"], 4) + 0.0}
         if kind == "free":
-            move = dict(rotation=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
-                        centre=[0.0, 0.0, 0.0],
-                        move=list(d.get("vec", [0.0, 0.0, 0.0])))
-        elif kind == "move":
-            move = dict(rotation=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
-                        centre=[0.0, 0.0, 0.0],
-                        move=[AXES[axis][k] * d["value"] for k in range(3)])
+            vec = list(d.get("vec", [0.0, 0.0, 0.0]))
         else:
-            move = dict(rotation=rotation(axis, d["value"]),
-                        centre=list(d["centre"]), move=[0.0, 0.0, 0.0])
-        if node.type == "rotate":
-            # turn about the rotate's own pivot, write its angles
-            from .mesh import ancestor_matrix
-            a = ancestor_matrix(node)
-            p = [float(node.params.get(k, 0.0) or 0.0)
-                 for k in ("px", "py", "pz")]
-            move["centre"] = [sum(a[i][k] * p[k] for k in range(3))
-                              + a[i][3] for i in range(3)]
-        x, y, z, rx, ry, rz = physics.placement(node, move)
+            vec = [AXES[axis][k] * d["value"] for k in range(3)]
+        move = dict(rotation=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+                    centre=[0.0, 0.0, 0.0], move=vec)
+        saved = dict(node.params)
+        node.params.update(d["start"])     # measure from where it began
+        try:
+            x, y, z, _rx, _ry, _rz = physics.placement(node, move)
+        finally:
+            node.params.clear()
+            node.params.update(saved)
+        return {k: round(v, 4) + 0.0 for k, v in zip("xyz", (x, y, z))}
+
+    def _apply(self, d):
+        values = d.get("values") or self._values(d)
+        node = d["node"]
         model = self.window.model
-        if node.type == "rotate":
-            x, y, z = rx, ry, rz
-        values = dict(x=x, y=y, z=z, rx=rx, ry=ry, rz=rz)
-        if node.type in ("translate", "rotate"):
-            values = dict(x=x, y=y, z=z)
+        keys = list(values)
         # one change, one redraw: set_param on the first key releases a
         # mate (the user has taken the part), the rest ride along
-        first = True
-        for key, value in values.items():
-            value = round(value, 4) + 0.0
-            if first:
-                node.params.update({k: round(v, 4) + 0.0
-                                    for k, v in values.items()})
-                model.set_param(node, key, value)
-                first = False
+        node.params.update({k: values[k] for k in keys[1:]})
+        model.set_param(node, keys[0], values[keys[0]])
+
+    def _ghost_matrix(self, d):
+        """World matrix taking the part from where it is to where the
+        drag would put it — for the preview, nothing applied yet."""
+        from . import physics
+        from .mesh import ancestor_matrix, mat_mul, node_matrix
+        node = d["node"]
+        values = d.get("values") or {}
+        stop = self.window.builder.isolated_component()
+        saved = dict(node.params)
+        try:
+            node.params.update(d["start"])
+            a = ancestor_matrix(node, stop=stop)
+            old = mat_mul(a, node_matrix(node))
+            node.params.update(values)
+            new = mat_mul(a, node_matrix(node))
+        finally:
+            node.params.clear()
+            node.params.update(saved)
+        return mat_mul(new, physics._invert(old))
 
     def edit_position(self):
         """Type the part's Position ("x, y, z") — the same numbers as its
@@ -534,6 +590,48 @@ class Gumball:
         self.view.update()
 
     # -- drawing -----------------------------------------------------
+    def _paint_ghost(self, painter, project):
+        """The part where the drag would put it: a see-through copy, the
+        model itself untouched until the release (the user: a cut
+        should not be re-made while moving)."""
+        from PyQt5.QtCore import QPointF, Qt
+        from PyQt5.QtGui import QColor, QPainterPath, QPen, QPolygonF
+        tris = self.view.highlight_mesh or []
+        if not tris:
+            return
+        try:
+            m = self._ghost_matrix(self.drag)
+        except Exception:
+            return
+        path = QPainterPath()
+        path.setFillRule(Qt.WindingFill)
+        step = max(1, len(tris) // 6000)
+        for t in tris[::step]:
+            pts = []
+            for p in t[:3]:
+                w = [sum(m[i][k] * p[k] for k in range(3)) + m[i][3]
+                     for i in range(3)]
+                s = project(tuple(w))
+                if s is None or s[2] <= 0:
+                    break
+                pts.append(QPointF(s[0], s[1]))
+            else:
+                # every facet wound the same way, so the winding fill is
+                # their union (front and back facets cancelled before)
+                area = ((pts[1].x() - pts[0].x()) * (pts[2].y() - pts[0].y())
+                        - (pts[2].x() - pts[0].x()) * (pts[1].y()
+                                                       - pts[0].y()))
+                if area < 0:
+                    pts.reverse()
+                path.addPolygon(QPolygonF(pts))
+                path.closeSubpath()
+        painter.save()
+        # one winding fill: the overlapping facets never darken
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor(30, 136, 229, 110))
+        painter.drawPath(path)
+        painter.restore()
+
     def paint(self, painter, project):
         from PyQt5.QtCore import QPointF, Qt
         from PyQt5.QtGui import QColor, QPen, QPolygonF, QFont
@@ -547,6 +645,8 @@ class Gumball:
             return
         live = self.drag["handle"] if self.drag else self.hover
         only = self.mode()
+        if self.drag and self.drag.get("values"):
+            self._paint_ghost(painter, project)
         painter.setRenderHint(painter.Antialiasing, True)
         for axis in (range(3) if only != "move" else ()):
             col = QColor(COLOURS[axis])
@@ -614,16 +714,20 @@ class Gumball:
                              self._chip.y() + 3 + fm.ascent(), text)
         if self.drag:
             kind, axis = self.drag["handle"]
-            now = self.position() if kind != "turn" else self.angles()
+            vals = self.drag.get("values") or {}
             if kind == "move":
-                text = (f"Move {'XYZ'[axis]}  {self.drag['value']:+.2f}"
-                        f"   →  {'XYZ'[axis]} = {now[axis]:g}")
+                now = vals.get("xyz"[axis])
+                text = f"Move {'XYZ'[axis]}  {self.drag['value']:+.2f}" + (
+                    f"   →  {'XYZ'[axis]} = {now:g}" if now is not None
+                    else "")
             elif kind == "turn":
+                now = next(iter(vals.values()), None)
                 text = (f"Rotate about {'XYZ'[axis]}  "
-                        f"{self.drag['value']:+.1f}°")
+                        f"{self.drag['value']:+.1f}°") + (
+                    f"   →  {now:g}°" if now is not None else "")
             else:
-                text = "Move  X %g  Y %g  Z %g" % tuple(
-                    round(v, 2) for v in now)
+                text = "Move to  X %g  Y %g  Z %g" % tuple(
+                    vals.get(k, 0.0) for k in "xyz")
                 axis = 2
             font = QFont(painter.font())
             font.setBold(True)

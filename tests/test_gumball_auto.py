@@ -129,7 +129,7 @@ def test_selecting_a_move_shows_the_triad_and_moves_it(win):
     assert tool.target() is mv
     assert tool.mode() == "move"                # arrows only
     tool.move_to((20.0, 5.0, 5.0))
-    assert float(mv.params["x"]) == pytest.approx(15.0, abs=0.01)
+    assert float(mv.params["x"]) == pytest.approx(20.0, abs=0.01)
     assert "rx" not in mv.params
     assert mv.parent is m.root                  # not wrapped in a Group
     win.builder.active_tree().select_nodes([])
@@ -170,3 +170,25 @@ def test_the_typed_box_is_the_position_not_the_centre(win):
     assert tool.position() == pytest.approx((7.5, 10, 2.5))
     tool.set_position((1, 2, 3))
     assert [float(g.params[k]) for k in "xyz"] == [1, 2, 3]
+
+
+def test_a_ring_changes_only_its_angle_and_lands_on_release(win):
+    m = win.model
+    g = m.add_node("union", dict(x=7.5, y=10, z=2.5, ry=-90))
+    m.add_node("cylinder", dict(r1=3, r2=3, height=10), parent=g)
+    _APP.processEvents()
+    win.view3d.edit_tool = None
+    tool = gumball.Gumball(win)
+    win.builder.active_tree().select_nodes([g])
+    _APP.processEvents()
+    assert tool.centre() == pytest.approx((7.5, 10, 2.5), abs=1e-6)
+    d = dict(handle=("turn", 1), node=g, start=gumball._start(g),
+             centre=tool.centre(), value=6.0)
+    tool.drag = d
+    d["values"] = tool._values(d)
+    assert float(g.params["ry"]) == -90          # nothing applied yet
+    tool._ghost_matrix(d)
+    tool.drag = None
+    tool._apply(d)
+    assert [float(g.params[k]) for k in ("x", "y", "z", "rx", "ry", "rz")] \
+        == pytest.approx([7.5, 10, 2.5, 0, -84, 0])
