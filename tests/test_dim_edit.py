@@ -105,3 +105,18 @@ def test_a_sketch_dimension_is_a_dimension_line_you_click(monkeypatch):
     finally:
         w._dirty = False
         w.close()
+
+
+def test_a_polygon_with_an_expression_point_shows_in_properties():
+    """The user's polygon: a point written as an expression crashed the
+    Points table, which also stopped the 2D view following."""
+    from khervecad.properties import PropertiesPanel
+    m = DocumentModel()
+    p = m.add_node("polygon", dict(points=[[0, 0], ["w / 2", 0],
+                                           [10, "h"]]))
+    panel = PropertiesPanel(m)
+    panel.set_node(p)                          # must not raise
+    from khervecad.properties import PointsEditor
+    ed = panel.findChild(PointsEditor)
+    assert ed.table.item(1, 0).text() == "w / 2"
+    assert ed._read_points()[1] == ["w / 2", 0.0]

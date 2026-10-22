@@ -1007,7 +1007,14 @@ class MainWindow(QMainWindow):
         if self._syncing:
             return
         self._syncing = True
-        self.properties.set_node(nodes[0] if len(nodes) == 1 else None)
+        try:
+            self.properties.set_node(nodes[0] if len(nodes) == 1 else None)
+        except Exception:
+            # a panel that cannot show a node must not stop the views
+            # following the selection (a polygon's expression point once
+            # did, and the 2D view kept the whole part on show)
+            import traceback
+            traceback.print_exc()
         self.scene.select_nodes(nodes)
         self.builder.highlight_nodes(nodes)
         self._sync_highlight(nodes)

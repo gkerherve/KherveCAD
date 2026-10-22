@@ -27,6 +27,28 @@ from .rowsedit import ChoiceBox, RowsEditor
 from .model import NODE_TYPES, DocumentModel, fmt
 
 
+def _cell(v) -> str:
+    """A point coordinate as the table shows it: a number tidily, an
+    expression ("w / 2", "r * cos(a)") as written — the table used to
+    crash on one, which also stopped the 2D view following the
+    selection (the user's polygon)."""
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        return f"{v:g}"
+    return str(v)
+
+
+def _value(text):
+    """A typed cell: a number, else an expression kept as text; blank is
+    an edit still going."""
+    text = text.strip()
+    if not text:
+        raise ValueError("blank")
+    try:
+        return float(text)
+    except ValueError:
+        return text
+
+
 class VarOrValueEdit(QComboBox):
     """Editor for numeric params: type a fixed number or expression, or
     pick one of the document's variables from the dropdown.
@@ -111,8 +133,8 @@ class PointsEditor(QWidget):
         from .rowsedit import compact_table
         compact_table(self.table, self._ROW_H)
         for row, (x, y) in enumerate(points):
-            self.table.setItem(row, 0, QTableWidgetItem(f"{x:g}"))
-            self.table.setItem(row, 1, QTableWidgetItem(f"{y:g}"))
+            self.table.setItem(row, 0, QTableWidgetItem(_cell(x)))
+            self.table.setItem(row, 1, QTableWidgetItem(_cell(y)))
         from .rowsedit import fit_columns
         fit_columns(self.table)
         self.table.itemChanged.connect(lambda _i: self._emit())
@@ -154,8 +176,8 @@ class PointsEditor(QWidget):
         points = []
         for row in range(self.table.rowCount()):
             try:
-                x = float(self.table.item(row, 0).text())
-                y = float(self.table.item(row, 1).text())
+                x = _value(self.table.item(row, 0).text())
+                y = _value(self.table.item(row, 1).text())
             except (TypeError, ValueError, AttributeError):
                 return None
             points.append([x, y])
@@ -166,8 +188,8 @@ class PointsEditor(QWidget):
         self.table.blockSignals(True)
         self.table.setRowCount(len(points))
         for row, (x, y) in enumerate(points):
-            self.table.setItem(row, 0, QTableWidgetItem(f"{x:g}"))
-            self.table.setItem(row, 1, QTableWidgetItem(f"{y:g}"))
+            self.table.setItem(row, 0, QTableWidgetItem(_cell(x)))
+            self.table.setItem(row, 1, QTableWidgetItem(_cell(y)))
         self.table.blockSignals(False)
         self._fit_height()
 
@@ -203,8 +225,10 @@ class PointsEditor(QWidget):
         cur = self.table.currentRow()
         idx = cur if 0 <= cur < count else count - 1
         nxt = (idx + 1) % count
-        mx = round((pts[idx][0] + pts[nxt][0]) / 2, 4)
-        my = round((pts[idx][1] + pts[nxt][1]) / 2, 4)
+        from .expr import resolve
+        num = lambda v: float(resolve(v, {}, 0.0))     # noqa: E731
+        mx = round((num(pts[idx][0]) + num(pts[nxt][0])) / 2, 4)
+        my = round((num(pts[idx][1]) + num(pts[nxt][1])) / 2, 4)
         self.table.blockSignals(True)
         self.table.insertRow(idx + 1)
         self.table.setItem(idx + 1, 0, QTableWidgetItem(f"{mx:g}"))
