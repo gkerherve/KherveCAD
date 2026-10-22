@@ -162,3 +162,43 @@ def toggle_2d(view, at=None):
     def done():
         view.zoom_changed.emit(view.px_per_mm())
     _run(view, apply, done)
+
+
+FADE_MS = 260
+
+
+def crossfade(view, change):
+    """Run *change* (a 2D plane switch, say) and fade the old picture out
+    over the new one — a plane switch redraws everything, so it fades
+    rather than glides (the user: "animate the 2D view buttons too")."""
+    from PyQt5.QtCore import QElapsedTimer, Qt, QTimer
+    from PyQt5.QtGui import QGuiApplication
+    from PyQt5.QtWidgets import QGraphicsOpacityEffect, QLabel
+    port = view.viewport()
+    if not view.isVisible() or FADE_MS <= 0 or \
+            QGuiApplication.platformName() == "offscreen":
+        change()
+        return
+    shot = port.grab()
+    change()
+    cover = QLabel(port)
+    cover.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+    cover.setPixmap(shot)
+    cover.setGeometry(port.rect())
+    effect = QGraphicsOpacityEffect(cover)
+    cover.setGraphicsEffect(effect)
+    cover.show()
+    cover.raise_()
+    clock = QElapsedTimer()
+    clock.start()
+    timer = QTimer(cover)
+    timer.setInterval(STEP_MS)
+
+    def tick():
+        t = min(1.0, clock.elapsed() / float(FADE_MS))
+        effect.setOpacity(1.0 - _ease(t))
+        if t >= 1.0:
+            timer.stop()
+            cover.deleteLater()
+    timer.timeout.connect(tick)
+    timer.start()

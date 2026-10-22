@@ -357,7 +357,8 @@ def add_sketch_controls(win, bar):
         button.setCheckable(True)
         button.setAutoExclusive(True)
         button.setChecked(plane == win.scene.plane)
-        button.clicked.connect(lambda _=False, p=plane: win._set_plane(p))
+        # the switch cross-fades (view_anim) like the 3D views glide
+        button.clicked.connect(lambda _=False, p=plane: _plane_click(win, p))
         bar.layout().insertWidget(0, button)
         win._plane_buttons[plane] = button
     menu = QMenu(bar)
@@ -592,3 +593,10 @@ def iso_click(view):
     view.target, view.distance = start["target"], start["distance"]
     from . import view_anim
     view_anim.glide_3d(view, goal)
+
+
+def _plane_click(win, plane):
+    from . import view_anim
+    if getattr(win.view2d.scene(), "plane", None) == plane:
+        return
+    view_anim.crossfade(win.view2d, lambda: win._set_plane(plane))

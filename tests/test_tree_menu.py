@@ -36,3 +36,28 @@ def test_the_menu_is_short_and_grouped(monkeypatch):
     finally:
         win._dirty = False
         win.close()
+
+
+def test_modify_holds_the_apply_items_directly(monkeypatch):
+    app = QApplication.instance() or QApplication([])
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        m = win.model
+        m.add_node("cube", {})
+        app.processEvents()
+        tree = win.builder.active_tree()
+        tree.select_nodes([m.root.children[-1]])
+        app.processEvents()
+        menus = []
+        monkeypatch.setattr(QMenu, "exec_", lambda self, *a: menus.append(
+            self))
+        tree._context_menu(tree.visualItemRect(tree.currentItem()).center())
+        modify = next(a.menu() for a in menus[0].actions()
+                      if a.menu() is not None and a.text() == "Modify")
+        texts = [a.text().split("\\t")[0] for a in modify.actions()]
+        assert "Apply" not in texts
+        assert "Linear extrude" in texts and "Difference" in texts
+    finally:
+        win._dirty = False
+        win.close()

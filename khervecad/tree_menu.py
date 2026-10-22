@@ -119,6 +119,14 @@ def compact(menu):
         sub = QMenu(language.tr(title), menu)
         sub.setIcon(icons.icon(glyph))
         for a in items:
+            inner = a.menu()
+            if title == "Modify" and inner is not None and \
+                    _starts(_plain(a.text()), ["Apply"]):
+                # Apply's operations straight in Modify (the user): one
+                # level less to open
+                for b in list(inner.actions()):
+                    sub.addAction(b)
+                continue
             sub.addAction(a)
         menu.addMenu(sub)
     if rest:
