@@ -29,6 +29,7 @@ from . import organic
 
 #: params that stay strings (never resolved to numbers).
 _TEXT_PARAMS = {"text", "path", "variable", "condition", "update",
+                "fillet_places",
                 "values", "value", "caps", "axis", "toward",
                 "material", "bindings", "args", "message", "file",
                 "layer", "id", "font", "halign", "valign", "direction",

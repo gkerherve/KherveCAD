@@ -52,6 +52,8 @@ MAX_TURN = 35.0
 HAIRPIN = 150.0
 #: how far (mm, plus this fraction of the part's size) a remembered
 #: edge may drift from a crease and still be the same edge
+#: params key of the picks' places in the part (fraction)
+PLACES = "fillet_places"
 FIND_TOL = 0.5
 FIND_FRAC = 0.01
 
@@ -415,6 +417,23 @@ def _seg_dist(p, a, b) -> float:
     return _len(_sub(p, _add(a, _mul(ab, t))))
 
 
+def _edge_by_fraction(edges, seed, box):
+    """The crease parallel to the remembered one at the same place IN
+    THE PART (box fractions) — the seed's own spot is gone after an
+    edit."""
+    d = _unit(_sub(tuple(seed[3:6]), tuple(seed[:3])))
+    want = seed[6:9]
+    best = None
+    for e in edges:
+        if abs(_dot(e.direction, d)) < 0.9:
+            continue
+        mid = _mul(_add(e.a, e.b), 0.5)
+        dist = _fdist(fraction(mid, box), want)
+        if best is None or dist < best[0]:
+            best = (dist, e)
+    return best[1] if best is not None and best[0] < 0.25 else None
+
+
 def find_edge(edges, seed, size: float):
     """The crease nearest the remembered segment *seed* (6 numbers),
     or None: the seed's midpoint must lie within tolerance of the
@@ -444,7 +463,27 @@ def mesh_size(tris) -> float:
                for i in range(3))
 
 
-def face_edges(tris, edges, row, tol=1e-3):
+def _box(tris):
+    pts = [v for t in tris for v in t]
+    lo = [min(p[i] for p in pts) for i in range(3)]
+    hi = [max(p[i] for p in pts) for i in range(3)]
+    return lo, hi
+
+
+def fraction(point, box):
+    """Where *point* sits in the part's box, 0..1 per axis — a top edge
+    stays at z = 1 however tall the part grows (the user: a fillet must
+    follow the face when the extrusion's height changes)."""
+    lo, hi = box
+    return [((point[i] - lo[i]) / (hi[i] - lo[i])) if hi[i] - lo[i] > 1e-9
+            else 0.5 for i in range(3)]
+
+
+def _fdist(a, b):
+    return math.sqrt(sum((a[i] - b[i]) ** 2 for i in range(3)))
+
+
+def face_edges(tris, edges, row, tol=1e-3, box=None):
     """The crease edges round the flat face a [x, y, z, nx, ny, nz] row
     names, holes included: the coplanar triangles joined to the one
     nearest the point, and every crease with that region on one side
@@ -452,15 +491,25 @@ def face_edges(tris, edges, row, tol=1e-3):
     later is rounded too (SolidWorks keeps the FACE, not its edges)."""
     p, n = row[:3], _unit(row[3:6])
     normals = [_normal(t) for t in tris]
-    on = [i for i, t in enumerate(tris)
-          if _dot(normals[i], n) > 0.9999 and
-          abs(_dot(_sub(t[0], p), n)) < max(tol, 1e-4)]
-    if not on:
-        return []
+    facing = [i for i, t in enumerate(tris) if _dot(normals[i], n) > 0.9999]
+    on = [i for i in facing
+          if abs(_dot(_sub(tris[i][0], p), n)) < max(tol, 1e-4)]
 
     def centre(t):
         return _mul(_add(_add(t[0], t[1]), t[2]), 1.0 / 3.0)
-    start = min(on, key=lambda i: _len(_sub(centre(tris[i]), p)))
+    if on:
+        start = min(on, key=lambda i: _len(_sub(centre(tris[i]), p)))
+    elif len(row) >= 9 and facing and box is not None:
+        # the face moved (a taller extrusion): the face facing the same
+        # way at the same place IN THE PART — by its box fractions
+        want = row[6:9]
+        start = min(facing, key=lambda i: _fdist(
+            fraction(centre(tris[i]), box), want))
+        plane = _dot(tris[start][0], n)
+        on = [i for i in facing
+              if abs(_dot(tris[i][0], n) - plane) < max(tol, 1e-4)]
+    else:
+        return []
     by_edge = {}
     for i in on:
         keys = [_vkey(v) for v in tris[i]]
@@ -491,13 +540,18 @@ def face_edges(tris, edges, row, tol=1e-3):
     return out
 
 
+def _place_key(values):
+    return ",".join("%g" % round(v, 4) for v in values[:6])
+
+
 def compute(tris, seeds, radius: float, kind: str = "round",
             detail: int = 6, min_angle: float = MIN_ANGLE,
-            faces=()) -> dict:
+            faces=(), places=None) -> dict:
     """``{"cuts": [tris...], "adds": [tris...], "missing": [seed...],
     "chains": n}`` for the remembered *seeds* on the mesh *tris*."""
     edges = crease_edges(tris, min_angle)
     size = mesh_size(tris)
+    box = _box(tris) if tris else None
     cuts, adds, missing, seen = [], [], [], set()
     # 1. every edge to round: each picked edge with its tangent run (one
     #    click takes a cylinder's whole rim)
@@ -508,13 +562,22 @@ def compute(tris, seeds, radius: float, kind: str = "round",
         except (TypeError, ValueError):
             missing.append(seed)
             continue
-        if len(values) != 6:
+        if len(values) not in (6, 9):
             missing.append(seed)
             continue
-        e = find_edge(edges, values, size)
+        key = _place_key(values)
+        known = values[6:9] if len(values) == 9 else \
+            (places or {}).get(key)
+        e = find_edge(edges, values[:6], size)
+        if e is None and known and box is not None:
+            e = _edge_by_fraction(edges, values[:6] + list(known), box)
         if e is None:
             missing.append(seed)
             continue
+        if places is not None and key not in places and box is not None:
+            # remember where it sits in the part, for when it moves
+            mid = _mul(_add(e.a, e.b), 0.5)
+            places[key] = [round(v, 6) for v in fraction(mid, box)]
         for x in chain(edges, e)["edges"]:
             key = frozenset((_vkey(x.a), _vkey(x.b)))
             for y in edges:
@@ -526,10 +589,16 @@ def compute(tris, seeds, radius: float, kind: str = "round",
         except (TypeError, ValueError):
             missing.append(row)
             continue
-        found = face_edges(tris, edges, values, size * 1e-5) \
-            if len(values) == 6 else []
+        key = _place_key(values)
+        known = (places or {}).get(key)
+        probe = values[:6] + list(known) if known and len(values) == 6 \
+            else values
+        found = face_edges(tris, edges, probe, size * 1e-5, box) \
+            if len(values) in (6, 9) else []
         if not found:
             missing.append(row)
+        elif places is not None and key not in places and box is not None:
+            places[key] = [round(v, 6) for v in fraction(values[:3], box)]
         for y in found:
             chosen[id(y)] = y
     picked = list(chosen.values())
@@ -704,11 +773,17 @@ def baked(node, env) -> dict:
         finally:
             mesh._set_fn(saved)
             mesh._DETAIL = saved_detail
+        # where each picked edge / face sits in the part (box fractions),
+        # kept beside the picks so they follow the part when it changes
+        # (the user); never written into the program
+        places = p.get(PLACES)
+        if not isinstance(places, dict):
+            places = p[PLACES] = {}
         result = compute(src, p.get("edges") or [],
                          _num(p.get("radius", 2.0), env, 2.0),
                          str(p.get("kind", "round")),
                          int(_num(p.get("detail", 6), env, 6.0)),
-                         faces=p.get("faces") or [])
+                         faces=p.get("faces") or [], places=places)
         result["cut_polys"] = [bake.to_polyhedron(t) for t in result["cuts"]]
         result["add_polys"] = [bake.to_polyhedron(t) for t in result["adds"]]
         hit = _CACHE[key] = result
@@ -789,7 +864,7 @@ def check(node, env):
     if not isinstance(rows, list):
         return "edges: give rows of start x, y, z, end x, y, z"
     for number, row in enumerate(rows):
-        if not isinstance(row, list) or len(row) != 6:
+        if not isinstance(row, list) or len(row) not in (6, 9):
             return f"edge {number} needs 6 values: start x y z, end x y z"
     if not rows:
         return None                          # nothing picked yet: fine

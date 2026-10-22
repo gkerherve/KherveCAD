@@ -2706,7 +2706,7 @@ class McpToolExecutor:
                 seed = [float(v) for v in row]
             except (TypeError, ValueError):
                 seed = []
-            if len(seed) != 6:
+            if len(seed) not in (6, 9):
                 raise ToolError("Each edge is 6 numbers: x1 y1 z1 x2 y2 z2.")
             seeds.append([round(v, 4) for v in seed])
         indices = params.get("chains") or []

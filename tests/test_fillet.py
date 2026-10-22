@@ -463,3 +463,32 @@ def test_three_edges_meeting_get_a_corner_piece(app, kind):
     assert len(result["cuts"]) == 3             # 2 runs + the corner
     tris = mesh.tessellate(f)
     assert analysis.print_check(tris)["checks"][0]["status"] == "pass"
+
+
+def test_a_filleted_face_and_edge_follow_a_taller_extrusion():
+    """The user: changing the extrusion's height left the fillet behind
+    (it stayed at the old height); the face / edge picked must follow."""
+    from khervecad import fillet, mesh
+    from khervecad.model import DocumentModel
+    for which in ("faces", "edges"):
+        m = DocumentModel()
+        ext = m.add_node("linear_extrude", dict(height=10))
+        m.add_node("rect", dict(width=20, height=20), parent=ext)
+        f = m.wrap_nodes([ext], "fillet")
+        m.set_param(f, "radius", 2)
+        if which == "faces":
+            m.set_param(f, "faces", [[10, 10, 10, 0, 0, 1]])   # the top
+        else:
+            m.set_param(f, "edges", [[0, 0, 10, 20, 0, 10]])   # a top edge
+        env = {}
+        first = fillet.baked(f, env)
+        assert first["cuts"] and not first["missing"]
+        assert len(f.params[which][0]) == 6       # the picks unchanged
+        assert f.params[fillet.PLACES]            # their place kept
+        m.set_param(ext, "height", 30)
+        again = fillet.baked(f, env)
+        assert not again["missing"], which
+        # the cut sits at the NEW top
+        zs = [p[2] for tri in again["cuts"][0] for p in tri]
+        assert max(zs) == pytest.approx(30, abs=0.6), which
+
