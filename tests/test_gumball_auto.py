@@ -192,3 +192,10 @@ def test_a_ring_changes_only_its_angle_and_lands_on_release(win):
     tool._apply(d)
     assert [float(g.params[k]) for k in ("x", "y", "z", "rx", "ry", "rz")] \
         == pytest.approx([7.5, 10, 2.5, 0, -84, 0])
+
+
+def test_angles_lock_and_tenths():
+    assert gumball.lock_angle(-87.6) == -90
+    assert gumball.lock_angle(44.0) == 45
+    assert gumball.lock_angle(31.9) == 30
+    assert gumball.lock_angle(36.234) == 36.2

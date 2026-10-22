@@ -79,6 +79,23 @@ def handle_at(x, y, centre_s, tips_s, rings_s):
     return best[1] if best else None
 
 
+#: angles a ring locks onto (every 10°, plus 45 and the 15° family) and
+#: how close it must come; anything else lands on a tenth of a degree,
+#: positions on a tenth of a unit (the user)
+LOCK_STEPS = (10.0, 15.0)
+LOCK_DEG = 2.5
+
+
+def lock_angle(angle):
+    best = None
+    for step in LOCK_STEPS:
+        near = round(angle / step) * step
+        if abs(near - angle) <= LOCK_DEG and (
+                best is None or abs(near - angle) < abs(best - angle)):
+            best = near
+    return round(best if best is not None else angle, 1) + 0.0
+
+
 def snap(value, step):
     return round(value / step) * step if step > 0 else value
 
@@ -434,7 +451,7 @@ class Gumball:
                 was = float(resolve(d["start"].get(k, 0.0), {}, 0.0))
             except (TypeError, ValueError):
                 was = 0.0
-            return {k: round(was + d["value"], 4) + 0.0}
+            return {k: lock_angle(was + d["value"])}
         if kind == "free":
             vec = list(d.get("vec", [0.0, 0.0, 0.0]))
         else:
@@ -448,7 +465,7 @@ class Gumball:
         finally:
             node.params.clear()
             node.params.update(saved)
-        return {k: round(v, 4) + 0.0 for k, v in zip("xyz", (x, y, z))}
+        return {k: round(v, 1) + 0.0 for k, v in zip("xyz", (x, y, z))}
 
     def _apply(self, d):
         values = d.get("values") or self._values(d)
@@ -553,7 +570,7 @@ class Gumball:
             return
         keys = ("x", "y", "z") if node.type == "rotate" else \
             ("rx", "ry", "rz")
-        values = {k: round(float(v), 4) + 0.0 for k, v in zip(keys, abc)}
+        values = {k: round(float(v), 1) + 0.0 for k, v in zip(keys, abc)}
         node.params.update({k: v for k, v in list(values.items())[:-1]})
         self.window.model.set_param(node, keys[-1], values[keys[-1]])
         self.view.update()
@@ -565,7 +582,7 @@ class Gumball:
             return
         if node.type not in ("translate",) + MOVABLE:
             node = mates.ensure_part(self.window.model, node)
-        values = {k: round(float(v), 4) + 0.0
+        values = {k: round(float(v), 1) + 0.0
                   for k, v in zip(("x", "y", "z"), xyz)}
         last = list(values)[-1]
         node.params.update({k: v for k, v in values.items() if k != last})
