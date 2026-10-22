@@ -429,7 +429,8 @@ class Gumball:
         Position row and Properties (the user: the box showed the
         centre, 2.5, where the Position said 7.5)."""
         from PyQt5.QtWidgets import QLineEdit
-        c = self.position()
+        turn = self.mode() == "turn"
+        c = self.angles() if turn else self.position()
         if c is None or self._chip is None:
             return None
         box = QLineEdit(", ".join("%g" % round(v, 3) for v in c),
@@ -451,7 +452,10 @@ class Gumball:
                 return
             if len(want) != 3:
                 return
-            self.set_position(want)
+            if turn:
+                self.set_angles(want)
+            else:
+                self.set_position(want)
         box.returnPressed.connect(done)
         box.editingFinished.connect(done)
         box.show()
@@ -471,6 +475,32 @@ class Gumball:
             except (TypeError, ValueError):
                 out.append(0.0)
         return tuple(out)
+
+    def angles(self):
+        """The target's rotation (rx, ry, rz — a Rotate's x, y, z)."""
+        from .expr import resolve
+        node = self.target()
+        keys = ("x", "y", "z") if node is not None and \
+            node.type == "rotate" else ("rx", "ry", "rz")
+        out = []
+        for k in keys:
+            try:
+                out.append(round(float(resolve(
+                    node.params.get(k, 0.0), {}, 0.0)), 1) + 0.0)
+            except (TypeError, ValueError, AttributeError):
+                out.append(0.0)
+        return tuple(out)
+
+    def set_angles(self, abc):
+        node = self.target()
+        if node is None:
+            return
+        keys = ("x", "y", "z") if node.type == "rotate" else \
+            ("rx", "ry", "rz")
+        values = {k: round(float(v), 4) + 0.0 for k, v in zip(keys, abc)}
+        node.params.update({k: v for k, v in list(values.items())[:-1]})
+        self.window.model.set_param(node, keys[-1], values[keys[-1]])
+        self.view.update()
 
     def set_position(self, xyz):
         from . import mates
@@ -526,6 +556,13 @@ class Gumball:
             pts = [QPointF(p[0], p[1]) for p in rings[axis] if p[2] > 0]
             if len(pts) > 1:
                 painter.drawPolyline(QPolygonF(pts))
+                # name the ring where it is furthest right on screen
+                # each ring named on its own side so the tags never
+                # stack: X right, Y top, Z bottom-left
+                ddx, ddy = ((1, 0), (0.2, -1), (-0.6, 1))[axis]
+                spot = max(pts, key=lambda q: q.x() * ddx + q.y() * ddy)
+                _tag(painter, spot.x() + ddx * 16, spot.y() + ddy * 12,
+                     "Rot " + "XYZ"[axis], col, centred=True)
         for axis in (range(3) if only != "turn" else ()):
             col = QColor(COLOURS[axis])
             hot = live == ("move", axis)
@@ -543,21 +580,31 @@ class Gumball:
             painter.setBrush(col)
             painter.drawPolygon(head)
             painter.setBrush(Qt.NoBrush)
+            _tag(painter, tip[0] + ux * 26, tip[1] + uy * 26, "XYZ"[axis],
+                 col, centred=True)
         painter.setPen(QPen(QColor("#ffffff"), 1.5))
         painter.setBrush(QColor(40, 40, 40, 200))
         painter.drawEllipse(QPointF(cs[0], cs[1]), 5, 5)
         painter.setBrush(Qt.NoBrush)
         self._chip = None
-        if not self.drag and only != "turn":
+        if not self.drag:
             # where the part is — click to type where it goes
             from PyQt5.QtCore import QRect
             pos = self.position() or c
-            text = "X %g  Y %g  Z %g" % tuple(round(v, 2) for v in pos)
+            if only == "turn":
+                text = "Rotate  X %g°  Y %g°  Z %g°" % self.angles()
+            else:
+                text = "Position  X %g  Y %g  Z %g" % tuple(
+                    round(v, 2) for v in pos)
             font = QFont(painter.font())
             painter.setFont(font)
             fm = painter.fontMetrics()
             w = fm.horizontalAdvance(text) + 12
-            self._chip = QRect(int(cs[0]) - w // 2, int(cs[1]) + 16, w,
+            below = max(cs[1], max(t[1] for t in tips) if only != "turn"
+                        else cs[1] + length * 0)
+            if only == "turn":
+                below = max(p[1] for r in rings for p in r)
+            self._chip = QRect(int(cs[0]) - w // 2, int(below) + 22, w,
                                fm.height() + 6)
             painter.fillRect(self._chip, QColor(255, 255, 255, 225))
             painter.setPen(QPen(QColor("#1e88e5"), 1))
@@ -567,9 +614,17 @@ class Gumball:
                              self._chip.y() + 3 + fm.ascent(), text)
         if self.drag:
             kind, axis = self.drag["handle"]
-            text = (f"{'XYZ'[axis]}  {self.drag['value']:+.2f}" if
-                    kind == "move" else
-                    f"{'XYZ'[axis]}  {self.drag['value']:+.1f}°")
+            now = self.position() if kind != "turn" else self.angles()
+            if kind == "move":
+                text = (f"Move {'XYZ'[axis]}  {self.drag['value']:+.2f}"
+                        f"   →  {'XYZ'[axis]} = {now[axis]:g}")
+            elif kind == "turn":
+                text = (f"Rotate about {'XYZ'[axis]}  "
+                        f"{self.drag['value']:+.1f}°")
+            else:
+                text = "Move  X %g  Y %g  Z %g" % tuple(
+                    round(v, 2) for v in now)
+                axis = 2
             font = QFont(painter.font())
             font.setBold(True)
             painter.setFont(font)
@@ -580,6 +635,26 @@ class Gumball:
             painter.setPen(QColor(COLOURS[axis]).darker(130))
             painter.drawText(int(cs[0]) + 20, int(cs[1]) - 27 + m.ascent(),
                              text)
+
+
+def _tag(painter, x, y, text, colour, centred=False):
+    """A small white label with a coloured edge naming a handle."""
+    from PyQt5.QtCore import QRectF, Qt
+    from PyQt5.QtGui import QColor, QFont, QPen
+    font = QFont(painter.font())
+    font.setBold(True)
+    painter.setFont(font)
+    m = painter.fontMetrics()
+    w = m.horizontalAdvance(text) + 10
+    h = m.height() + 2
+    left = x - w / 2 if centred else x
+    box = QRectF(left, y - h / 2, w, h)
+    painter.setPen(QPen(QColor(colour), 1.5))
+    painter.setBrush(QColor(255, 255, 255, 235))
+    painter.drawRoundedRect(box, 4, 4)
+    painter.setPen(QColor(colour).darker(140))
+    painter.drawText(box, Qt.AlignCenter, text)
+    painter.setBrush(Qt.NoBrush)
 
 
 def follow_selection(window, nodes):
