@@ -222,3 +222,35 @@ def test_the_tree_rows_follow_the_drag(win):
             if item.child(i).data(0, ROLE_PLACEMENT)]
     assert any(r.startswith("Rotation (0, -84, 0)") for r in rows), rows
     assert float(g.params["ry"]) == -90          # model untouched
+
+
+def test_turning_about_the_centre_keeps_the_centre(win):
+    m = win.model
+    g = m.add_node("union", dict(x=7.5, y=10, z=2.5, ry=-90))
+    m.add_node("cylinder", dict(r1=3, r2=3, height=10), parent=g)
+    _APP.processEvents()
+    win.builder.active_tree().select_nodes([g])
+    _APP.processEvents()
+    tool = gumball.Gumball(win)
+    tool.pivot = "centre"
+    before = tool.pivot_point()
+    assert before == pytest.approx((2.5, 10, 2.5), abs=1e-6)
+    d = dict(handle=("turn", 1), node=g, start=gumball._start(g),
+             centre=before, value=90.0)
+    d["values"] = tool._values(d)
+    tool._apply(d)
+    _APP.processEvents()
+    assert float(g.params["ry"]) == 0
+    assert tool.pivot_point() == pytest.approx(before, abs=0.1)
+    tool.pivot = "end -"
+    assert tool.next_pivot() == "end +"
+
+
+def test_a_cut_away_part_is_known():
+    from khervecad.model import DocumentModel
+    m = DocumentModel()
+    diff = m.add_node("difference", {})
+    body = m.add_node("cube", dict(width=10), parent=diff)
+    hole = m.add_node("cylinder", dict(r1=2, r2=2, height=20), parent=diff)
+    assert not gumball._cut_away(body)
+    assert gumball._cut_away(hole)

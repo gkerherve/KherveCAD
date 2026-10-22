@@ -86,6 +86,25 @@ LOCK_STEPS = (10.0, 15.0)
 LOCK_DEG = 2.5
 
 
+#: where a ring turns about — click the triad's centre dot to step on
+PIVOTS = ("origin", "centre", "end -", "end +")
+PIVOT_NAMES = {"origin": "its origin", "centre": "its centre",
+               "end -": "one end", "end +": "the other end"}
+
+
+def _cut_away(node):
+    """True when *node* sits in what a difference cuts away (not its
+    first child, the body)."""
+    probe = node
+    while probe is not None and probe.parent is not None:
+        parent = probe.parent
+        if parent.type == "difference" and parent.children and \
+                parent.children[0] is not probe:
+            return True
+        probe = parent
+    return False
+
+
 def lock_angle(angle):
     best = None
     for step in LOCK_STEPS:
@@ -214,12 +233,41 @@ class Gumball:
         """Where the triad stands: the part's own origin — its Position,
         a Rotate's pivot (the user: the rings were off centre) — moved
         with the preview while dragging."""
-        c = self._origin()
+        c = self.pivot_point()
         if c is not None and self.drag and self.drag.get("values"):
             m = self._ghost_matrix(self.drag)
             c = tuple(sum(m[i][k] * c[k] for k in range(3)) + m[i][3]
                       for i in range(3))
         return c
+
+    def pivot_point(self, which=None):
+        """The point the triad stands on and a ring turns about: the
+        part's origin, its centre, or either END along its longest side
+        (the user: "one extreme of the cylinder to the other")."""
+        which = which or getattr(self, "pivot", "origin")
+        if which == "origin":
+            return self._origin()
+        tris = self.view.highlight_mesh or []
+        pts = [v for t in tris for v in t]
+        if not pts:
+            return self._origin()
+        lo = [min(p[k] for p in pts) for k in range(3)]
+        hi = [max(p[k] for p in pts) for k in range(3)]
+        mid = [(lo[k] + hi[k]) / 2 for k in range(3)]
+        if which == "centre":
+            return tuple(mid)
+        axis = max(range(3), key=lambda k: hi[k] - lo[k])
+        mid[axis] = lo[axis] if which == "end -" else hi[axis]
+        return tuple(mid)
+
+    def next_pivot(self):
+        order = PIVOTS if self.target() is None or \
+            self.target().type != "rotate" else ("origin",)
+        now = getattr(self, "pivot", "origin")
+        self.pivot = order[(order.index(now) + 1) % len(order)] \
+            if now in order else order[0]
+        self.view.update()
+        return self.pivot
 
     def _origin(self):
         from .mesh import ancestor_matrix, mat_mul, node_matrix
@@ -296,6 +344,15 @@ class Gumball:
         if scr is None:
             return False
         c, length, cs, tips, rings = scr
+        if math.hypot(event.pos().x() - cs[0],
+                      event.pos().y() - cs[1]) <= 9:
+            # the centre dot: the triad's point moves on — origin,
+            # centre, one end, the other end
+            from . import language
+            self.window.statusBar().showMessage(language.tr(
+                "Turn about: {where}").format(
+                    where=PIVOT_NAMES[self.next_pivot()]), 4000)
+            return True
         if self._chip is not None and self._chip.contains(event.pos()):
             self.edit_position()
             return True
@@ -453,7 +510,11 @@ class Gumball:
                 was = float(resolve(d["start"].get(k, 0.0), {}, 0.0))
             except (TypeError, ValueError):
                 was = 0.0
-            return {k: lock_angle(was + d["value"])}
+            out = {k: lock_angle(was + d["value"])}
+            where = getattr(self, "pivot", "origin")
+            if node.type != "rotate" and where != "origin":
+                out.update(self._keep_pivot(d, out))
+            return out
         if kind == "free":
             vec = list(d.get("vec", [0.0, 0.0, 0.0]))
         else:
@@ -468,6 +529,37 @@ class Gumball:
             node.params.clear()
             node.params.update(saved)
         return {k: round(v, 1) + 0.0 for k, v in zip("xyz", (x, y, z))}
+
+    def _keep_pivot(self, d, angles):
+        """x, y, z that keep the pivot where it is while the angles
+        change — a turn about the centre or an end, not the origin."""
+        from . import physics
+        from .mesh import ancestor_matrix, node_matrix
+        node = d["node"]
+        stop = self.window.builder.isolated_component()
+        pw = self.pivot_point()
+        saved = dict(node.params)
+        try:
+            node.params.update(d["start"])
+            a = ancestor_matrix(node, stop=stop)
+            ai = physics._invert(a)
+            p = [sum(ai[i][k] * pw[k] for k in range(3)) + ai[i][3]
+                 for i in range(3)]               # in the parent frame
+            old = node_matrix(node)
+            oi = physics._invert(old)
+            q = [sum(oi[i][k] * p[k] for k in range(3)) + oi[i][3]
+                 for i in range(3)]               # in the part's frame
+            node.params.update(angles)
+            new = node_matrix(node)
+            t = [new[i][3] for i in range(3)]
+            rq = [sum(new[i][k] * q[k] for k in range(3)) for i in range(3)]
+            cur = [float(node.params.get(k, 0.0) or 0.0) for k in "xyz"]
+            # node_matrix's translation is the position itself
+            pos = [p[i] - rq[i] - (t[i] - cur[i]) for i in range(3)]
+        finally:
+            node.params.clear()
+            node.params.update(saved)
+        return {k: round(pos[i], 1) + 0.0 for i, k in enumerate("xyz")}
 
     def _apply(self, d):
         values = d.get("values") or self._values(d)
@@ -643,7 +735,7 @@ class Gumball:
         self.view.update()
 
     # -- drawing -----------------------------------------------------
-    def _paint_ghost(self, painter, project):
+    def _paint_ghost(self, painter, project, still=False):
         """The part where the drag would put it: a see-through copy, the
         model itself untouched until the release (the user: a cut
         should not be re-made while moving)."""
@@ -653,7 +745,8 @@ class Gumball:
         if not tris:
             return
         try:
-            m = self._ghost_matrix(self.drag)
+            m = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]] \
+                if still else self._ghost_matrix(self.drag)
         except Exception:
             return
         path = QPainterPath()
@@ -681,7 +774,8 @@ class Gumball:
         painter.save()
         # one winding fill: the overlapping facets never darken
         painter.setPen(Qt.NoPen)
-        painter.setBrush(QColor(30, 136, 229, 110))
+        painter.setBrush(QColor(229, 57, 53, 90) if still
+                         else QColor(30, 136, 229, 110))
         painter.drawPath(path)
         painter.restore()
 
@@ -700,6 +794,10 @@ class Gumball:
         only = self.mode()
         if self.drag and self.drag.get("values"):
             self._paint_ghost(painter, project)
+        elif _cut_away(self.target()):
+            # a part a difference cuts away is invisible: show it, a
+            # little see-through (the user)
+            self._paint_ghost(painter, project, still=True)
         painter.setRenderHint(painter.Antialiasing, True)
         for axis in (range(3) if only != "move" else ()):
             col = QColor(COLOURS[axis])
@@ -746,6 +844,8 @@ class Gumball:
             pos = self.position() or c
             if only == "turn":
                 text = "Rotate  X %g°  Y %g°  Z %g°" % self.angles()
+                if getattr(self, "pivot", "origin") != "origin":
+                    text += "   about " + PIVOT_NAMES[self.pivot]
             else:
                 text = "Position  X %g  Y %g  Z %g" % tuple(
                     round(v, 1) + 0.0 for v in pos)
