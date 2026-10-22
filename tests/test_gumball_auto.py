@@ -115,3 +115,43 @@ def test_drag_the_part_itself(win):
     # seen from the front, moving right is +X
     assert float(g.params.get("x", 0)) > 1.0
     assert abs(float(g.params.get("y", 0))) < 1e-6
+
+
+def test_selecting_a_move_shows_the_triad_and_moves_it(win):
+    m = win.model
+    mv = m.add_node("translate", dict(x=0, y=0, z=0))
+    m.add_node("cube", dict(width=10, depth=10, height=10), parent=mv)
+    _APP.processEvents()
+    win.builder.active_tree().select_nodes([mv])
+    _APP.processEvents()
+    tool = win.view3d.edit_tool
+    assert isinstance(tool, gumball.Gumball) and tool.auto
+    assert tool.target() is mv
+    tool.move_to((20.0, 5.0, 5.0))
+    assert float(mv.params["x"]) == pytest.approx(15.0, abs=0.01)
+    assert "rx" not in mv.params
+    assert mv.parent is m.root                  # not wrapped in a Group
+    win.builder.active_tree().select_nodes([])
+    _APP.processEvents()
+    assert win.view3d.edit_tool is None
+
+
+def test_selecting_a_rotate_shows_the_triad_and_turns_it(win):
+    m = win.model
+    rot = m.add_node("rotate", dict(x=0, y=0, z=0))
+    poly = m.add_node("polygon", dict(points=[[0, 0], [10, 0], [0, 10]]))
+    m.add_node("cube", dict(width=10, depth=10, height=10), parent=rot)
+    _APP.processEvents()
+    tree = win.builder.active_tree()
+    tree.select_nodes([rot])
+    _APP.processEvents()
+    tool = win.view3d.edit_tool
+    assert isinstance(tool, gumball.Gumball) and tool.target() is rot
+    d = dict(handle=("turn", 2), node=rot, start=gumball._start(rot),
+             centre=tool.centre(), value=30.0)
+    tool._apply(d)
+    assert float(rot.params["z"]) == pytest.approx(30.0, abs=0.01)
+    assert "rx" not in rot.params
+    tree.select_nodes([poly])                  # a polygon: gone
+    _APP.processEvents()
+    assert win.view3d.edit_tool is None

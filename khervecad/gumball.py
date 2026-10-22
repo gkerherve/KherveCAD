@@ -159,6 +159,8 @@ class Gumball:
         if len(nodes) != 1:
             return None
         node = nodes[0]
+        if node.type in ("translate", "rotate"):  # its own x/y/z
+            return node
         # never climb past the Object being edited: the Object tab shows
         # it at its own origin, so moving the Object itself showed
         # nothing (the user: "unable to move whatever part")
@@ -244,9 +246,16 @@ class Gumball:
                 return False
             handle = ("free", None)
         from . import mates
-        node = mates.ensure_part(self.window.model, self.target())
-        start = {k: node.params.get(k, 0.0)
-                 for k in ("x", "y", "z", "rx", "ry", "rz")}
+        node = self.target()
+        if node.type == "translate":
+            if handle[0] not in ("move", "free"):
+                return False               # a Move has no turn
+        elif node.type == "rotate":
+            if handle[0] != "turn":
+                return False               # a Rotate only turns
+        else:
+            node = mates.ensure_part(self.window.model, node)
+        start = _start(node)
         self.drag = dict(handle=handle, node=node, start=start, centre=c,
                          length=length, cs=cs[:2],
                          tip=tips[handle[1]][:2] if handle[1] is not None
@@ -366,9 +375,21 @@ class Gumball:
         else:
             move = dict(rotation=rotation(axis, d["value"]),
                         centre=list(d["centre"]), move=[0.0, 0.0, 0.0])
+        if node.type == "rotate":
+            # turn about the rotate's own pivot, write its angles
+            from .mesh import ancestor_matrix
+            a = ancestor_matrix(node)
+            p = [float(node.params.get(k, 0.0) or 0.0)
+                 for k in ("px", "py", "pz")]
+            move["centre"] = [sum(a[i][k] * p[k] for k in range(3))
+                              + a[i][3] for i in range(3)]
         x, y, z, rx, ry, rz = physics.placement(node, move)
         model = self.window.model
+        if node.type == "rotate":
+            x, y, z = rx, ry, rz
         values = dict(x=x, y=y, z=z, rx=rx, ry=ry, rz=rz)
+        if node.type in ("translate", "rotate"):
+            values = dict(x=x, y=y, z=z)
         # one change, one redraw: set_param on the first key releases a
         # mate (the user has taken the part), the rest ride along
         first = True
@@ -419,10 +440,12 @@ class Gumball:
         target = self.target()
         if c is None or target is None:
             return
-        node = mates.ensure_part(self.window.model, target)
+        if target.type == "rotate":
+            return                         # a Rotate does not move
+        node = target if target.type == "translate" else \
+            mates.ensure_part(self.window.model, target)
         d = dict(handle=("free", None), node=node,
-                 start={k: node.params.get(k, 0.0)
-                        for k in ("x", "y", "z", "rx", "ry", "rz")},
+                 start=_start(node),
                  centre=c, vec=[point[k] - c[k] for k in range(3)])
         self._apply(d)
         self.view.update()
@@ -512,8 +535,11 @@ def follow_selection(window, nodes):
     tool = view.edit_tool
     node = nodes[0] if len(nodes) == 1 else None
     probe = Gumball(window, auto=True)
-    eligible = node is not None and node.category != SHAPE_2D and \
-        node.type not in ("linear_extrude", "rotate_extrude") and \
+    # only a Move / Position shows it by itself (the user: "if we
+    # highlight translate we should see the XYZ"); other parts need the
+    # Gumball switched on
+    del SHAPE_2D
+    eligible = node is not None and _is_position(window, node) and \
         probe.target() is not None
     if isinstance(tool, Gumball):
         if tool.auto and tool.drag is None and not eligible:
@@ -525,6 +551,24 @@ def follow_selection(window, nodes):
         view.edit_tool = probe
         view.setMouseTracking(True)
         view.update()
+
+
+def _start(node):
+    keys = ("x", "y", "z") if node.type in ("translate", "rotate") else \
+        ("x", "y", "z", "rx", "ry", "rz")
+    return {k: node.params.get(k, 0.0) for k in keys}
+
+
+def _is_position(window, node):
+    if node.type in ("translate", "rotate"):
+        return True
+    try:                                   # a part's Position row
+        from .treepanel import ROLE_PLACEMENT
+        item = window.builder.active_tree().currentItem()
+        return bool(item is not None and item.data(0, ROLE_PLACEMENT)
+                    and item.text(0).startswith(("Position", "Rotation")))
+    except Exception:
+        return False
 
 
 def step_aside(view):
