@@ -199,3 +199,26 @@ def test_angles_lock_and_tenths():
     assert gumball.lock_angle(44.0) == 45
     assert gumball.lock_angle(31.9) == 30
     assert gumball.lock_angle(36.234) == 36.2
+
+
+def test_the_tree_rows_follow_the_drag(win):
+    from khervecad.treepanel import ROLE_PLACEMENT
+    m = win.model
+    g = m.new_component("Pin")
+    g.visible = True
+    g.params.update(x=7.5, y=10, z=2.5, ry=-90)
+    m.add_node("cylinder", dict(r1=3, r2=3, height=10), parent=g)
+    _APP.processEvents()
+    tree = win.builder.active_tree()
+    tree.select_nodes([g])
+    _APP.processEvents()
+    tool = gumball.Gumball(win)
+    d = dict(handle=("turn", 1), node=g, start=gumball._start(g),
+             centre=tool.centre(), value=6.0)
+    d["values"] = tool._values(d)
+    tool._live_tree(d)
+    item = tree._item_of(g)
+    rows = [item.child(i).text(0) for i in range(item.childCount())
+            if item.child(i).data(0, ROLE_PLACEMENT)]
+    assert any(r.startswith("Rotation (0, -84, 0)") for r in rows), rows
+    assert float(g.params["ry"]) == -90          # model untouched

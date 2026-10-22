@@ -364,6 +364,7 @@ class Gumball:
             d["vec"] = vec
             d["value"] = math.sqrt(sum(v * v for v in vec))
             d["values"] = self._values(d)
+            self._live_tree(d)
             self.view.update()
             return True
         if kind == "move":
@@ -386,6 +387,7 @@ class Gumball:
                 value = snap(value, 15.0)
         d["value"] = value
         d["values"] = self._values(d)       # shown, applied on release
+        self._live_tree(d)
         self.view.update()
         return True
 
@@ -401,13 +403,13 @@ class Gumball:
             v = d.get("vec", [0, 0, 0])
             self.window.statusBar().showMessage(language.tr(
                 "Moved by {x:g}, {y:g}, {z:g}").format(
-                x=round(v[0], 3), y=round(v[1], 3), z=round(v[2], 3)), 5000)
+                x=round(v[0], 1), y=round(v[1], 1), z=round(v[2], 1)), 5000)
             self.view.update()
             return True
         name = "XYZ"[axis]
         self.window.statusBar().showMessage(language.tr(
             "Moved {name} by {value:g}").format(
-            name=name, value=round(d["value"], 3)) if kind == "move" else
+            name=name, value=round(d["value"], 1)) if kind == "move" else
             language.tr("Turned about {name} by {value:g}°").format(
                 name=name, value=round(d["value"], 2)), 5000)
         self.view.update()
@@ -477,6 +479,40 @@ class Gumball:
         node.params.update({k: values[k] for k in keys[1:]})
         model.set_param(node, keys[0], values[keys[0]])
 
+    def _live_tree(self, d):
+        """The tree's Position / Rotation rows read the value being
+        dragged to, while dragging (the user) — text only: the model
+        changes on release."""
+        try:
+            from .treepanel import ROLE_PLACEMENT
+            tree = self.window.builder.active_tree()
+            node = d["node"]
+            item = tree._item_of(node)
+            if item is None:
+                return
+            saved = dict(node.params)
+            try:
+                node.params.update(d.get("values") or {})
+                texts = [t for t, _i, kind in tree._placement_texts(node)
+                         if kind == "placement"]
+            finally:
+                node.params.clear()
+                node.params.update(saved)
+            rows = [item.child(i) for i in range(item.childCount())
+                    if item.child(i).data(0, ROLE_PLACEMENT)]
+            # quietly: an itemChanged would read as a rename and redo
+            # the rows from the (unchanged) model
+            blocked = tree.blockSignals(True)
+            try:
+                for row, text in zip(rows, texts):
+                    if row.text(0).split(" (")[0] == text.split(" (")[0]:
+                        row.setText(0, text)
+            finally:
+                tree.blockSignals(blocked)
+            tree.viewport().update()
+        except Exception:
+            pass
+
     def _ghost_matrix(self, d):
         """World matrix taking the part from where it is to where the
         drag would put it — for the preview, nothing applied yet."""
@@ -506,7 +542,7 @@ class Gumball:
         c = self.angles() if turn else self.position()
         if c is None or self._chip is None:
             return None
-        box = QLineEdit(", ".join("%g" % round(v, 3) for v in c),
+        box = QLineEdit(", ".join("%g" % (round(v, 1) + 0.0) for v in c),
                         self.view)
         box.setFixedWidth(max(160, self._chip.width()))
         box.move(self._chip.topLeft())
@@ -712,7 +748,7 @@ class Gumball:
                 text = "Rotate  X %g°  Y %g°  Z %g°" % self.angles()
             else:
                 text = "Position  X %g  Y %g  Z %g" % tuple(
-                    round(v, 2) for v in pos)
+                    round(v, 1) + 0.0 for v in pos)
             font = QFont(painter.font())
             painter.setFont(font)
             fm = painter.fontMetrics()
@@ -734,7 +770,7 @@ class Gumball:
             vals = self.drag.get("values") or {}
             if kind == "move":
                 now = vals.get("xyz"[axis])
-                text = f"Move {'XYZ'[axis]}  {self.drag['value']:+.2f}" + (
+                text = f"Move {'XYZ'[axis]}  {self.drag['value']:+.1f}" + (
                     f"   →  {'XYZ'[axis]} = {now:g}" if now is not None
                     else "")
             elif kind == "turn":
