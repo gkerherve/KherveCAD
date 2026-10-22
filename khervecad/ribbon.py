@@ -74,7 +74,7 @@ TABS = [
 #: panels that are not operation families: key -> title
 EXTRA_PANELS = {"pub_share": "Share", "pub_media": "Pictures & video",
                 "util_make": "Make", "util_addins": "Add-ins",
-                "util_utility": "Utility", "assemble_more": "Assemble", "mechanical": "Features", "_mechanical_menu": "Features", "curves": "Curves",
+                "util_utility": "Utility", "assemble_more": "Assemble", "mechanical": "Features", "_mechanical_menu": "Features", "_move_tools": "Move", "curves": "Curves",
                 "surfaces": "From curves", "form_create": "Create form",
                 "figures": "Figures", "solid_insert": "Insert",
                 "sketch_shapes": "Shapes", "shapes3d": "Shapes",
@@ -153,9 +153,10 @@ MENU_PANELS = {
         ("insert/code & files", None)],
     "assemble_more": [
         ("insert/new object", None),
-        ("view/gumball (move / turn handles)", None),
         ("view/exploded view", None),
         ("view/animate ($t)", None)],
+    # Snap and the Gumball beside Translate: they move parts too (the user)
+    "_move_tools": [("view/gumball (move / turn handles)", None)],
     "pub_share": [("file/publish to printables", None),
                   ("file/export stl", None),
                   ("file/export for other cad (step/iges/rhino)", None),
@@ -412,11 +413,14 @@ def _panel_actions(win, key):
             from . import drag_feature
             return language.tr(title), list(families[key]) + [
                 drag_feature.action(win)]
+        if key == "transform":
+            # Translate's neighbours: the Gumball and Snap move parts too
+            return language.tr(title), list(families[key]) + \
+                _panel_actions(win, "_move_tools")[1] + [parts["snap"]]
         return language.tr(title), families[key]
     title = language.tr(EXTRA_PANELS[key])
     if key == "assemble":
-        return title, [parts["snap"]] + panel_actions(win,
-                                                       "assemble_more")[1]
+        return title, panel_actions(win, "assemble_more")[1]
     from .view2d import MEASURE
     if key == "sketch":
         from . import sketch_mode

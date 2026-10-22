@@ -43,22 +43,35 @@ def _part(win):
     return g
 
 
-def test_selecting_a_part_shows_the_triad_and_away_hides_it(win):
+def test_selecting_a_part_shows_no_triad_until_the_gumball_is_on(win):
+    """The user changed their mind: the triad only with the Gumball."""
     g = _part(win)
-    ext = win.model.add_node("linear_extrude", dict(height=5, x=50))
-    win.model.add_node("rect", dict(width=5, height=5), parent=ext)
     win.builder.tree.select_nodes([g])
-    tool = win.view3d.edit_tool
-    assert isinstance(tool, gumball.Gumball) and tool.auto
-    win.builder.tree.select_nodes([ext])       # an extrude: its arrow
-    assert isinstance(win.view3d.edit_tool, drag_feature.DragFeature)
-    win.builder.tree.select_nodes([])
     assert win.view3d.edit_tool is None
+    assert gumball.toggle(win, True)
+    assert isinstance(win.view3d.edit_tool, gumball.Gumball)
+    gumball.toggle(win, False)
+    assert win.view3d.edit_tool is None
+
+
+def test_snap_and_gumball_sit_beside_translate(win):
+    from khervecad import ribbon, toolbar_style
+    toolbar_style.apply(win, "SolidWorks", remember=False)
+    try:
+        _t, acts = ribbon.panel_actions(win, "transform")
+        data = [a.data() for a in acts]
+        assert "translate" in data and win._gumball_act in acts
+        assert win._bar_parts["snap"] in acts
+        _t, assemble = ribbon.panel_actions(win, "assemble")
+        assert win._gumball_act not in assemble
+    finally:
+        toolbar_style.apply(win, "KherveCAD", remember=False)
 
 
 def test_type_where_the_part_goes(win):
     g = _part(win)
     win.builder.tree.select_nodes([g])
+    gumball.toggle(win, True)
     tool = win.view3d.edit_tool
     _APP.processEvents()
     c = tool.centre()
@@ -73,6 +86,7 @@ def test_drag_the_part_itself(win):
     view = win.view3d
     view.set_view("Front", animate=False)
     win.builder.tree.select_nodes([g])
+    gumball.toggle(win, True)
     tool = view.edit_tool
     _APP.processEvents()
     # press on the part (its projected centre), away from the handles
