@@ -234,3 +234,26 @@ def test_linear_extrude_with_nothing_selected_asks_for_the_shape(win):
     win.view3d._pick_cb(dict(kind="face", pos=[20, 0, 0], dir=[0, 0, 1]),
                         circle)
     assert circle.parent.type == "rotate_extrude"
+
+
+def test_the_model_changes_only_on_release(win):
+    m = win.model
+    rect = m.add_node("rect", dict(width=20, height=10))
+    win.builder.tree.select_nodes([rect])
+    win._apply_operation("linear_extrude")
+    tool = win.view3d.edit_tool
+    ext = tool.target()
+    _drag(tool, tool._screen(), 0)          # settle the first height
+    changed = []
+    m.node_changed.connect(lambda *a: changed.append(a))
+    scr = tool._screen()
+    import math
+    a, b = scr["a"], scr["b"]
+    n = math.hypot(b[0] - a[0], b[1] - a[1])
+    mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+    tool.mouse_press(_ev(QEvent.MouseButtonPress, *mid))
+    tool.mouse_move(_ev(QEvent.MouseMove, mid[0] + (b[0] - a[0]) / n * 60,
+                        mid[1] + (b[1] - a[1]) / n * 60))
+    assert not changed                       # only the preview grew
+    tool.mouse_release(None)
+    assert changed and float(ext.params["height"]) > 1

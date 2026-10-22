@@ -536,7 +536,7 @@ class DragFeature:
             _num(node.params.get("angle", 360.0), 360.0)
         self.drag = dict(scr, param=param, start=start,
                          press=(event.pos().x(), event.pos().y()),
-                         value=start)
+                         value=start, raw=node.params.get(param))
         return True
 
     def mouse_move(self, event):
@@ -573,11 +573,15 @@ class DragFeature:
             if ctrl:
                 value = snap(value, 15.0)
             value = max(1.0, min(360.0, value))
-        d["value"] = round(value, 4)
+        d["value"] = round(value, 1) + 0.0
+        # only the extrusion grows on screen: the model (and every cut,
+        # fillet … on top of it) changes once, on release (the user)
+        node = d["node"]
         if d["param"] == "height":
-            self._set_height(d["node"], d["value"])
+            node.params["height"] = round(max(MIN_HEIGHT, d["value"]), 4)
         else:
-            self._set(d["node"], d["param"], d["value"])
+            node.params[d["param"]] = d["value"]
+        self.view.update()
         return True
 
     def _set_height(self, ext, height):
@@ -586,6 +590,10 @@ class DragFeature:
         self._set(ext, "height", round(max(MIN_HEIGHT, height), 4))
 
     def _restore_drag(self, d):
+        if "raw" in d:                       # a drag only previewed it
+            d["node"].params[d["param"]] = d["raw"]
+            self.view.update()
+            return
         if d["param"] == "height":
             self._set_height(d["node"], d["start"])
         else:
@@ -595,6 +603,14 @@ class DragFeature:
         d, self.drag = self.drag, None
         if d is None:
             return False
+        if "raw" in d and d["value"] != d["start"]:
+            d["node"].params[d["param"]] = d["raw"]
+            if d["param"] == "height":
+                self._set_height(d["node"], d["value"])
+            else:
+                self._set(d["node"], d["param"], d["value"])
+        elif "raw" in d:
+            d["node"].params[d["param"]] = d["raw"]
         from . import language
         self.window.statusBar().showMessage(
             language.tr("Height {v:g} mm").format(v=d["value"])
@@ -664,6 +680,12 @@ class DragFeature:
         if scr is None or scr["a"][2] <= 0:
             return
         hot = self.hover or self.drag is not None
+        if self.drag is not None:
+            # the extrusion as it grows, a shaded see-through solid
+            from .shape_handles import draw_solid
+            m, tris = frame(scr["node"], self._scope())
+            draw_solid(painter, self.view, self._project(), tris,
+                       (30, 136, 229), 0.72, matrix=m)
         col = QColor(COLOUR)
         painter.setRenderHint(painter.Antialiasing, True)
         a, b = scr["a"], scr["b"]
