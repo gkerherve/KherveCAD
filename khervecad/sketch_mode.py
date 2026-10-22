@@ -82,8 +82,9 @@ def sync_create(win):
     """The button reads Exit Sketch while sketching."""
     act = getattr(win, "_create_sketch_act", None)
     if act is not None:
-        act.setText(language.tr("Exit Sketch Mode") if sketching(win)
-                    else language.tr("Sketch Mode"))
+        # on two lines: one was too long for the ribbon's big button
+        act.setText(language.tr("Exit Sketch") + "\n" + language.tr("Mode")
+                    if sketching(win) else language.tr("Sketch Mode"))
 
 
 class _FinishButton(QPushButton):

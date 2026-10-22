@@ -1153,7 +1153,12 @@ class ObjectTree(QTreeWidget):
             self._group_part_menu(menu, roots[0])
         win = self.window()
         from . import normal_to, sketch_mode
-        if normal_to.sketch_node(win) is not None:
+        if sketch_mode.sketching(win):
+            # sketching: the same place ends it (the user)
+            menu.addAction(icons.icon("mdi.pencil-box-outline"),
+                           language.tr("End Sketch"),
+                           lambda: sketch_mode.finish(win))
+        elif normal_to.sketch_node(win) is not None:
             # SolidWorks' Edit Sketch: turn to the shape, sketch on it
             menu.addAction(icons.icon("mdi.pencil-box-outline"),
                            language.tr("Edit Sketch"),

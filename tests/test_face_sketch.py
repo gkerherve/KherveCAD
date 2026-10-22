@@ -114,7 +114,7 @@ def test_sketch_mode_with_a_part_selected_asks_for_its_face(win):
         _APP.processEvents()
     assert sketch_mode.sketching(win) and win._face_sketch is not None
     act = sketch_mode.create_action(win)
-    assert act.text() == "Exit Sketch Mode"
+    assert act.text().replace("\n", " ") == "Exit Sketch Mode"
     act.trigger()                                 # the same button exits
     for _ in range(3):
         _APP.processEvents()
