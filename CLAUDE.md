@@ -3264,9 +3264,10 @@ into a new module and import.
                        list — numbered features in build order, 2D shapes
                        tucked under the feature using them, the user's
                        Groups as folders, the rollback bar — plus Origin
-                       (Front / Top / Right planes: double-click sketches
-                       on that plane) and Material (right-click sets it on
-                       every part). Structure stays exactly as built.
+                       (Front / Top / Right planes: double-click turns the
+                       3D view to it and sketches there; a click on Origin
+                       shows / hides the origin axes) and Material (click
+                       sets it on every part). Structure stays exactly as built.
   - `browser_tabs.py` — Variables and Code tabs start hidden (BROWSER
                        caption, the ⋯ corner button or a right-click on
                        the tab bar shows them; QSettings `browser/hidden`,

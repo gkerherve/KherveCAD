@@ -14,7 +14,9 @@ Two ways of drawing the SAME nodes — nothing in the document changes:
 History starts with the fixed rows SolidWorks has (Structure stays
 exactly the tree as built): **Origin** (Front /
 Top / Right planes — a double-click shows that plane in the 2D view) and
-**Material** (right-click to set it on every part in view).
+**Material** (click to set it on every part in view); a click on
+Origin shows / hides the origin axes, a double-click on a plane turns
+the 3D view to it and opens a sketch there.
 
 Rows carry the node id, so selection, Properties, the right-click menu
 and renaming work as in Structure; only drag and drop is off in History.
@@ -131,7 +133,15 @@ def fixed_menu(tree, item, pos):
                            lambda _=False, m=m: set_material(tree, m))
     elif role.startswith("plane:"):
         menu.addAction(language.tr("Sketch on this plane"),
-                       lambda: tree.plane_picked.emit(role[6:]))
+                       lambda: sketch_on(tree, role[6:]))
+    elif role == "origin":
+        view = getattr(tree.window(), "view3d", None)
+        if view is None:
+            return True
+        act = menu.addAction(language.tr("Show origin axes in 3D"))
+        act.setCheckable(True)
+        act.setChecked(bool(view.axes))
+        act.toggled.connect(lambda on: _axes(tree, on))
     else:
         return True
     menu.exec_(tree.viewport().mapToGlobal(pos))
@@ -156,7 +166,51 @@ def double_clicked(tree, item):
     if not role:
         return False
     if role.startswith("plane:"):
-        tree.plane_picked.emit(role[6:])
+        sketch_on(tree, role[6:])
+    return True
+
+
+def sketch_on(tree, plane):
+    """Sketch on a main plane: the 3D view turns square on to it and the
+    sketch opens there, as Sketch Mode does (the user: the Origin rows
+    "did nothing" — switching the hidden 2D view's plane showed nothing
+    in the SolidWorks layout)."""
+    win = tree.window()
+    tree.plane_picked.emit(plane)
+    try:
+        from . import normal_to
+        normal_to.turn_to(win, plane)
+    except Exception:
+        pass
+
+
+def _axes(tree, on):
+    view = getattr(tree.window(), "view3d", None)
+    if view is not None:
+        view.set_axes(on)
+        view.update()
+
+
+def clicked(tree, item):
+    """A single click on a fixed row: Origin shows / hides the origin
+    axes in 3D, Material opens its list, a plane says what it does."""
+    role = item.data(0, ROLE_FIXED) if item is not None else None
+    if not role:
+        return False
+    win = tree.window()
+    if role == "origin":
+        view = getattr(win, "view3d", None)
+        if view is not None:
+            _axes(tree, not view.axes)
+            if hasattr(win, "statusBar"):
+                win.statusBar().showMessage(language.tr(
+                    "Origin axes shown in 3D" if view.axes else
+                    "Origin axes hidden"), 3000)
+    elif role == "material":
+        fixed_menu(tree, item, tree.visualItemRect(item).bottomLeft())
+    elif role.startswith("plane:") and hasattr(win, "statusBar"):
+        win.statusBar().showMessage(language.tr(
+            "Double-click (or right-click) to sketch on this plane"), 4000)
     return True
 
 

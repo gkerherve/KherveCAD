@@ -152,9 +152,14 @@ class ObjectTree(QTreeWidget):
         self.itemExpanded.connect(self._remember_expanded)
         self.itemCollapsed.connect(self._remember_collapsed)
         self.itemDoubleClicked.connect(self._double_clicked)
+        self.itemClicked.connect(self._fixed_clicked)
         model.structure_changed.connect(self.rebuild)
         model.node_changed.connect(self._refresh_node)
         self.rebuild()
+
+    def _fixed_clicked(self, item, _col):
+        from . import tree_history
+        tree_history.clicked(self, item)
 
     def _double_clicked(self, item, _col):
         """Double-click opens an Object for editing (Object tab);

@@ -95,3 +95,27 @@ def test_material_row_sets_every_part(app):
         assert "Metal" in tree.topLevelItem(1).text(0)
     finally:
         tree_history.set_enabled(False)
+
+
+def test_origin_and_plane_rows_act_in_the_window():
+    from khervecad.mainwindow import MainWindow
+    QApplication.instance() or QApplication([])
+    w = MainWindow()
+    w.show()
+    tree_history.set_enabled(True)
+    try:
+        w.model.add_node("cube", {})
+        tree = w.builder.tree
+        tree.rebuild()
+        origin = tree.topLevelItem(0)
+        view = w.view3d
+        before = view.axes
+        tree_history.clicked(tree, origin)
+        assert view.axes != before                   # axes toggled
+        tree_history.double_clicked(tree, origin.child(0))
+        assert w.scene.plane == "Front (XZ)"
+        assert (view.yaw, view.pitch) == pytest.approx((-90.0, 0.0))
+    finally:
+        tree_history.set_enabled(False)
+        w._dirty = False
+        w.close()
