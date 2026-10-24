@@ -189,7 +189,8 @@ def test_styles_swap_the_icons_and_classic_puts_them_back(window, app):
     toolbar_style.apply(window, "SolidWorks")
     assert act.icon().cacheKey() != classic
     # the ribbon kept its short names although the icons changed
-    names = {b.text() for b in window.ribbon.findChildren(QToolButton)}
+    names = {b.text().replace("\n", " ")
+             for b in window.ribbon.findChildren(QToolButton)}
     assert "Resize" in names and "Resize (absolute size)" not in names
     toolbar_style.apply(window, "KherveCAD")
     assert act.icon().cacheKey() == classic
@@ -545,16 +546,34 @@ def test_styles_use_the_programs_own_command_names(window):
     style keeps KherveCAD's names, and every menu path still resolves."""
     from khervecad import interface_menus
     toolbar_style.apply(window, "SolidWorks", remember=False)
-    names = {b.text() for b in window.ribbon.findChildren(QToolButton)}
+    names = {b.text().replace("\n", " ")
+             for b in window.ribbon.findChildren(QToolButton)}
     for name in ("Extruded Boss/Base", "Revolved Boss/Base",
                  "Swept Boss/Base", "Lofted Boss/Base", "Trim Entities"):
         assert name in names
     assert interface_menus.unresolved(
         window, interface_menus.SOLIDWORKS) == []
     toolbar_style.apply(window, "Fusion", remember=False)
-    names = {b.text() for b in window.ribbon.findChildren(QToolButton)}
+    names = {b.text().replace("\n", " ")
+             for b in window.ribbon.findChildren(QToolButton)}
     assert {"Extrude", "Revolve", "Sweep", "Loft"} <= names
     toolbar_style.apply(window, "KherveCAD", remember=False)
     acts = [a for a in window.findChildren(QAction)
             if a.data() == "rotate_extrude"]
     assert acts and all(a.text() == "Rotate extrude" for a in acts)
+
+
+def test_large_names_wrap_and_help_follows_the_style(window):
+    """A long name under a large icon takes two lines, and the help
+    speaks the style's name ("Click Extruded Boss/Base")."""
+    from khervecad import ribbon, tooltips
+    assert ribbon.two_lines("Extruded Boss/Base") == "Extruded\nBoss/Base"
+    assert ribbon.two_lines("Shell") == "Shell"
+    toolbar_style.apply(window, "SolidWorks", remember=False)
+    tip = tooltips.rich("linear_extrude")
+    assert "Extruded Boss/Base" in tip and "Click Linear extrude" not in tip
+    act = next(a for a in window.findChildren(QAction)
+               if a.data() == "linear_extrude")
+    assert "Extruded Boss/Base" in act.toolTip()
+    toolbar_style.apply(window, "KherveCAD", remember=False)
+    assert "Click Linear extrude" in tooltips.rich("linear_extrude")

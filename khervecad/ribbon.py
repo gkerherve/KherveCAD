@@ -532,8 +532,22 @@ def _button(action, size, style, parent):
         b.setPopupMode(QToolButton.InstantPopup)
         b.setStyleSheet("QToolButton::menu-indicator { image: none; }")
     if style != Qt.ToolButtonIconOnly:
-        b.setText(_plain(short_name(action.text())))
+        text = short_name(action.text())
+        if style == Qt.ToolButtonTextUnderIcon:
+            text = two_lines(text)
+        b.setText(_plain(text))
     return b
+
+
+def two_lines(text, width=10):
+    """A long name under an icon on two lines, broken at the space
+    nearest its middle ("Extruded Boss/Base" -> "Extruded\nBoss/Base"),
+    so a large button stays narrow."""
+    if len(text) <= width or " " not in text:
+        return text
+    spaces = [i for i, c in enumerate(text) if c == " "]
+    cut = min(spaces, key=lambda i: abs(i - len(text) / 2))
+    return text[:cut] + "\n" + text[cut + 1:]
 
 
 def _separator(parent):

@@ -14,6 +14,8 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
+import re
+
 from . import language
 
 #: tooltip width in pixels — QToolTip otherwise lays a long paragraph
@@ -1214,8 +1216,22 @@ def entry(key):
             label,
             language.tr("Adds or applies {label}.").format(label=label),
             [], None)
-    return (language.tr(title), language.tr(what),
-            [language.tr(s) for s in steps],
+    from .interface_names import name_for
+    styled = name_for(key)
+    what = language.tr(what)
+    steps = [language.tr(s) for s in steps]
+    if styled:
+        # the style's own name everywhere ("Click Extruded Boss/Base"),
+        # KherveCAD's in brackets after the title: it is the OpenSCAD
+        # operation the tree and the code show
+        base = re.sub(r"\s*\(.*\)\s*$", "", title)
+        swap = re.compile(r"\b" + re.escape(base) + r"\b", re.IGNORECASE)
+        what = swap.sub(styled, what)
+        steps = [swap.sub(styled, s) for s in steps]
+        title = f"{styled} ({language.tr(title)})"
+    else:
+        title = language.tr(title)
+    return (title, what, steps,
             language.tr(tip) if tip else None)
 
 

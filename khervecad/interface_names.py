@@ -91,6 +91,14 @@ FUSION = {
 
 NAMES = {"SolidWorks": SOLIDWORKS, "Fusion": FUSION}
 
+#: the style whose names are in use (the help reads it)
+CURRENT = None
+
+
+def name_for(key):
+    """*key*'s name in the style in use, or None in the classic style."""
+    return NAMES.get(CURRENT, {}).get(key)
+
 
 def classic_text(act):
     """The text the action had before any style renamed it."""
@@ -101,6 +109,8 @@ def classic_text(act):
 def apply(win, style):
     """Every action named as *style* names it (classic: as built)."""
     from PyQt5.QtWidgets import QAction
+    global CURRENT
+    CURRENT = style
     names = NAMES.get(style, {})
     for act in win.findChildren(QAction):
         key = act.data()
@@ -115,3 +125,10 @@ def apply(win, style):
         if old is None:
             act.setProperty("kc_classic_text", act.text())
         act.setText(name)
+    # the help follows: tooltip, status tip (tooltips.entry reads CURRENT)
+    from . import tooltips
+    keys = set().union(*NAMES.values())
+    for act in win.findChildren(QAction):
+        key = act.data()
+        if isinstance(key, str) and key in keys:
+            tooltips.apply(act, key, act.shortcut().toString())
