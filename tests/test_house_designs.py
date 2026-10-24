@@ -160,3 +160,11 @@ def test_the_porches_are_in_the_house_builder_catalogue():
     for pid in porches:
         assert library.PARTS[pid]["category"] == "Porches"
         assert not validate(library.build_part(pid, {}))
+
+
+def test_a_pool_void_is_outdoors_not_a_walled_room():
+    from khervecad import house
+    pool = house.Room("Pool", 0, 0, 10000, 4000, surface="void")
+    stairs = house.Room("Stairwell", 0, 0, 1200, 3700, surface="void")
+    assert not pool.indoor
+    assert stairs.indoor

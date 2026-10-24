@@ -97,6 +97,11 @@ ARCHED = ("arch window", "arch door")
 SURFACES = ("indoor", "garden", "paving", "void")
 SURFACE_COLORS = {"garden": GRASS_COLOR, "paving": PAVING_COLOR}
 
+#: a "void" room with one of these words in its name is an open-air hole
+#: in the ground (a swimming pool sunk in its deck), not a stairwell: no
+#: walls round it and no roof over it
+OUTDOOR_VOID_WORDS = ("pool", "pond")
+
 FLOOR_NAMES = ("Ground floor", "First floor", "Second floor",
                "Third floor", "Fourth floor", "Fifth floor")
 
@@ -337,6 +342,9 @@ class Room:
 
     @property
     def indoor(self) -> bool:
+        if self.surface == "void":
+            low = (self.name or "").lower()
+            return not any(w in low for w in OUTDOOR_VOID_WORDS)
         return self.surface not in SURFACE_COLORS
 
     def edges(self) -> dict:
