@@ -10,7 +10,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 import pytest
 from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QApplication, QLabel, QToolButton
+from PyQt5.QtWidgets import QAction, QApplication, QLabel, QToolButton
 
 from khervecad import ribbon, toolbar_style, toolbars
 
@@ -538,3 +538,23 @@ def test_vibe_model_off_keeps_the_solidworks_tool_column_away(window, app):
     window.set_vibe_model(True)
     window.set_vibe_model(False)
     assert window._tools_bar.isVisibleTo(window)
+
+
+def test_styles_use_the_programs_own_command_names(window):
+    """SolidWorks says Extruded Boss/Base, Fusion Extrude; the classic
+    style keeps KherveCAD's names, and every menu path still resolves."""
+    from khervecad import interface_menus
+    toolbar_style.apply(window, "SolidWorks", remember=False)
+    names = {b.text() for b in window.ribbon.findChildren(QToolButton)}
+    for name in ("Extruded Boss/Base", "Revolved Boss/Base",
+                 "Swept Boss/Base", "Lofted Boss/Base", "Trim Entities"):
+        assert name in names
+    assert interface_menus.unresolved(
+        window, interface_menus.SOLIDWORKS) == []
+    toolbar_style.apply(window, "Fusion", remember=False)
+    names = {b.text() for b in window.ribbon.findChildren(QToolButton)}
+    assert {"Extrude", "Revolve", "Sweep", "Loft"} <= names
+    toolbar_style.apply(window, "KherveCAD", remember=False)
+    acts = [a for a in window.findChildren(QAction)
+            if a.data() == "rotate_extrude"]
+    assert acts and all(a.text() == "Rotate extrude" for a in acts)

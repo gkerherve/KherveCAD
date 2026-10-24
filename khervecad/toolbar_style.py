@@ -367,6 +367,8 @@ def apply(win, name: str = None, remember: bool = True):
         from .ribbon import analysis_actions
         analysis_actions(win)
     restyle_icons(win, name)
+    from . import interface_names
+    interface_names.apply(win, name)
     bar = win._options_bar
     _clear(bar)
     ribbon_bar = getattr(win, "_ribbon_bar", None)

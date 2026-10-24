@@ -33,6 +33,7 @@ import re
 from PyQt5.QtWidgets import QMenu
 
 from . import language
+from .interface_names import classic_text
 
 
 def norm(text):
@@ -284,7 +285,7 @@ def index(win):
         for act in menu.actions():
             if act.isSeparator():
                 continue
-            path = prefix + "/" + norm(act.text())
+            path = prefix + "/" + norm(classic_text(act))
             paths.setdefault(path, act)
             if act.menu() is not None and prefix != "library":
                 walk(act.menu(), path)

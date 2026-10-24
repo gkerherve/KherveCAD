@@ -138,6 +138,14 @@ into a new module and import.
                        own kept in QSettings `render_bg_classic`; the 2D
                        view's comes from the stylesheet's QGraphicsView
                        gradient).
+  - `interface_names.py` — the commands under the imitated program's
+                       names (2026-10-24, the user): SolidWorks Extruded /
+                       Revolved / Swept / Lofted Boss/Base, Combine,
+                       Trim / Extend Entities, Smart Dimension...; Fusion
+                       Extrude, Revolve, Press Pull... Keyed by action
+                       `data()`, classic text kept in `kc_classic_text`
+                       (which `interface_menus.index` reads, so paths still
+                       resolve), applied before the ribbon is built.
   - Ribbon, full pass (2026-10-19/20, the user: every menu command on
                        the ribbon, every icon Fusion- / SolidWorks-like,
                        every button working): tabs SKETCH, SOLID, SURFACE,
