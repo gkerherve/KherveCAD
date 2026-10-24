@@ -605,6 +605,33 @@ class Gumball:
         except Exception:
             pass
 
+    def _own_tris(self):
+        """The target's own surface in the view's frame, cached by its
+        params (the ghost repaints every mouse move)."""
+        from . import mesh
+        node = self.target()
+        if node is None:
+            return []
+        try:
+            key = (node.id, repr(sorted(
+                (k, str(v)) for n in node.walk()
+                for k, v in n.params.items())))
+        except Exception:
+            key = None
+        cached = getattr(self, "_own_cache", None)
+        if key is not None and cached and cached[0] == key:
+            return cached[1]
+        try:
+            a = mesh.ancestor_matrix(
+                node, stop=self.window.builder.isolated_component())
+            tris = [tuple(tuple(sum(a[i][k] * p[k] for k in range(3))
+                                + a[i][3] for i in range(3))
+                          for p in t[:3]) for t in mesh.tessellate(node)]
+        except Exception:
+            tris = list(self.view.highlight_mesh or [])
+        self._own_cache = (key, tris)
+        return tris
+
     def _ghost_matrix(self, d):
         """World matrix taking the part from where it is to where the
         drag would put it — for the preview, nothing applied yet."""
@@ -741,7 +768,10 @@ class Gumball:
         should not be re-made while moving)."""
         from PyQt5.QtCore import QPointF, Qt
         from PyQt5.QtGui import QColor, QPainterPath, QPen, QPolygonF
-        tris = self.view.highlight_mesh or []
+        # the part ITSELF, tessellated alone: the selection outline of a
+        # part a difference cuts is the boolean's leftover pieces, and
+        # drawn as a ghost it came out in stripes (the user)
+        tris = self._own_tris()
         if not tris:
             return
         try:
