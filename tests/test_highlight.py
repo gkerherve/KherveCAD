@@ -287,7 +287,9 @@ def test_selecting_bore_shows_it_in_both_views(window):
                 if n.name == "Bore" and n.type == "cylinder")
     assert any(a.type == "difference" for a in _walk_ancestors(bore))
     window.builder.tree.select_nodes([bore])
-    assert window.view3d.highlight_mesh           # 3D glow
+    # 3D: a cut's tool shows as the see-through red cut (cut_ghost), not
+    # the solid glow, which painted removed material as a block
+    assert window.view3d.highlight_mesh or window._cut_ghost
     assert bore.id in window.scene._part_items     # 2D silhouette
 
 
