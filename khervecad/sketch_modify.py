@@ -34,7 +34,8 @@ TRIM, EXTEND, FILLET, CHAMFER = ("sk_trim", "sk_extend", "sk_fillet",
 TOOLS = [(TRIM, "mdi.content-cut", "Trim"),
          (EXTEND, "mdi.arrow-expand-right", "Extend"),
          (FILLET, "mdi.vector-curve", "Sketch fillet"),
-         (CHAMFER, "mdi.vector-polyline", "Sketch chamfer")]
+         (CHAMFER, "mdi.vector-polyline", "Sketch chamfer"),
+         ("regions", "mdi.texture-box", "Extrude regions")]
 EPS = 1e-6
 ARC_STEPS = 12
 
@@ -356,7 +357,7 @@ def _band(pts, width):
 
 # ------------------------------------------------------- the 2D view
 def handles(tool):
-    return tool in (TRIM, EXTEND, FILLET, CHAMFER)
+    return tool in (TRIM, EXTEND, FILLET, CHAMFER, "regions")
 
 
 PROMPTS = {TRIM: "Trim: click the piece of a line to remove.",
@@ -364,18 +365,28 @@ PROMPTS = {TRIM: "Trim: click the piece of a line to remove.",
            FILLET: "Sketch fillet: click a polygon / rectangle corner, "
                    "or two lines that meet.",
            CHAMFER: "Sketch chamfer: click a polygon / rectangle corner, "
-                    "or two lines that meet."}
+                    "or two lines that meet.",
+    "regions": "Extrude regions: click inside the regions to keep, then "
+               "Enter or right-click."}
 
 
 def press(scene, event):
     from PyQt5.QtCore import Qt
     from . import sketch_constrain_ui as scu
     event.accept()
+    if scene.tool == "regions" and event.button() == Qt.RightButton:
+        from . import sketch_regions
+        sketch_regions.finish(scene)
+        return
     if event.button() != Qt.LeftButton:
         scene._sk_first = None
         return
     pos = event.scenePos()
     tool = scene.tool
+    if tool == "regions":
+        from . import sketch_regions
+        sketch_regions.press(scene, event)
+        return
     if tool in (TRIM, EXTEND):
         hit = scu.pick(scene, pos, "line")
         if hit is None or hit[0].type != "line":
@@ -453,6 +464,9 @@ def _ask(scene, tool):
 
 def drop(scene):
     scene._sk_first = None
+    if getattr(scene, "_regions", None) is not None:
+        from . import sketch_regions
+        sketch_regions.drop(scene)
 
 
 TIPS = {
@@ -469,6 +483,18 @@ TIPS = {
     CHAMFER: ("Sketch chamfer", "Cuts a corner off at 45° by a distance.",
               ["Click the corner (or one line, then the other).",
                "Type the distance."], None),
+    "regions": ("Extrude regions",
+                "Overlapping sketch shapes split into regions; the ones "
+                "you click are extruded as one solid (SolidWorks' "
+                "selected contours).",
+                ["Draw overlapping shapes — a rectangle and a perimeter "
+                 "circle at one end make three regions.",
+                 "Click inside each region to keep (click again to drop "
+                 "it); they turn blue.",
+                 "Press Enter or right-click: one Linear extrude of "
+                 "those regions is made and the sketch shapes are "
+                 "hidden."],
+                "Set the height in Properties, or drag the arrow in 3D."),
 }
 
 

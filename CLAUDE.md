@@ -3179,6 +3179,18 @@ into a new module and import.
                        as a window shortcut (`install_escape`; View3D
                        accepts the ShortcutOverride while an Edit Mode drag
                        is live, so that Esc still only cancels the drag).
+  - `sketch_regions.py` — **Extrude regions** (2026-10-25, the user's
+                       SolidWorks video): overlapping 2D shapes of one
+                       container split into faces (every in/out combination,
+                       Manifold CrossSection, pieces touching only at a
+                       point kept apart — a perimeter circle's tangent
+                       points); the "regions" tool (SKETCH ▸ Modify) toggles
+                       faces by click, Enter / right-click makes one polygon
+                       (paths) under a Linear extrude and hides the shapes.
+                       Baked: editing the sketch later does not regrow it.
+                       Perimeter circle (`sketch_tools2.build_perimeter`):
+                       three clicks on lines / sides -> tangent circle +
+                       Tangent relations (`tangent_to_lines`).
   - `sketch_tools2.py` — SolidCraft's other sketch shapes (2026-10-21,
                        "add them all"): construction line + the
                        **Construction** switch (OpenSCAD's `%` on a sketch

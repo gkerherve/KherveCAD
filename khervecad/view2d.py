@@ -2456,7 +2456,8 @@ class SketchView(QGraphicsView):
                 sketch_tools.handles(self.scene().tool) or \
                 sketch_constrain_ui.handles(self.scene().tool) or \
                 self.scene().tool in ("sk_trim", "sk_extend",
-                                      "sk_fillet", "sk_chamfer"):
+                                      "sk_fillet", "sk_chamfer",
+                                      "regions"):
             event.accept()                     # right-click finished it
             return
         model = self.scene().model
@@ -2694,7 +2695,7 @@ class SketchView(QGraphicsView):
 
     def keyPressEvent(self, event):
         from PyQt5.QtGui import QKeySequence
-        from . import sketch_tools, sketch_constrain_ui
+        from . import sketch_tools, sketch_constrain_ui, sketch_regions
         scene = self.scene()
         if event.key() == Qt.Key_Q:
             self.step_object.emit(-1)         # Q: up / previous
@@ -2710,6 +2711,9 @@ class SketchView(QGraphicsView):
             scene.cancel_tool()
         elif sketch_tools.handles(scene.tool) and \
                 sketch_tools.key(scene, event):
+            pass
+        elif scene.tool == "regions" and \
+                sketch_regions.key(scene, event):
             pass
         elif sketch_constrain_ui.handles(scene.tool) and \
                 sketch_constrain_ui.key(scene, event):

@@ -185,9 +185,9 @@ def test_sketch_tab_has_create_modify_insert(window):
     for tool, *_ in st.TOOLS:
         assert tool in data
     _t, modify = ribbon.panel_actions(window, "sketch_modify")
-    assert [a.data() for a in modify][:6] == [
+    assert [a.data() for a in modify][:7] == [
         "construction", "sk_trim", "sk_extend", "sk_fillet", "sk_chamfer",
-        "offset"]
+        "regions", "offset"]
     assert {"mirror", "pattern"} <= {a.data() for a in modify}
     _t, insert = ribbon.panel_actions(window, "sketch_insert")
     assert [a.data() for a in insert] == ["import_2d"]
@@ -231,3 +231,32 @@ def test_perimeter_circle_clicked_on_rectangle_sides_is_tangent(view):
     assert _near(p["radius"], 10) and _near(p["y"], 20) and _near(p["x"], 40)
     kinds = [r["kind"] for r in sc.rows(circle.parent)]
     assert kinds.count("tangent") == 3
+
+
+def test_extrude_regions_of_a_rectangle_and_perimeter_circle(view):
+    """The user's video: a rectangle with a perimeter circle at its end
+    is three regions; the long part and the circle extrude into a plate
+    with a round end, the far corners left out."""
+    from khervecad import sketch_tools2 as st2, sketch_regions as sr
+    _draw(view, st.RECT_CENTER, [(20, 20), (50, 30)])  # x -10..50, y 10..30
+    view.set_tool(st2.CIRCLE_3PT)
+    _click(view, 35, 30)
+    _click(view, 35, 10)
+    _click(view, 50, 22)
+    view.set_tool(sr.REGIONS)
+    scene = view.scene()
+    rect = [n for n in _nodes(view) if n.type == "rect"][0]
+    faces = sr.faces(sr.shapes_of(rect.parent))
+    assert len(faces) == 4      # long part, circle, two far corners
+    _click(view, 10, 20)        # the long part
+    _click(view, 42, 20)        # the circle
+    QTest.keyClick(view.viewport(), Qt.Key_Return)
+    ext = [n for n in _nodes(view) if n.type == "linear_extrude"]
+    assert len(ext) == 1
+    poly = ext[0].children[0]
+    xs = [p[0] for p in poly.params["points"]]
+    assert _near(max(xs), 50) and _near(min(xs), -10)
+    # the far corners are left out: no point at the rectangle's corner
+    assert not any(_near(p[0], 50) and _near(p[1], 30)
+                   for p in poly.params["points"])
+    assert not rect.visible

@@ -243,6 +243,25 @@ def _sk_trim(d):
     _mark(d, (0.42, 0.64), (0.58, 0.36), 0.05)
 
 
+@draws("regions")
+def _regions(d):
+    """A rectangle and a circle at its end, the long part and the circle
+    filled in the make colour (the regions picked), the far corners
+    left empty."""
+    from PyQt5.QtGui import QPainterPath
+    keep = QPainterPath()
+    keep.moveTo(P(0.08, 0.32))
+    keep.lineTo(P(0.66, 0.32))
+    keep.arcTo(QRectF(P(0.48, 0.32), P(0.84, 0.68)), 90, -180)
+    keep.lineTo(P(0.08, 0.68))
+    keep.closeSubpath()
+    d.p.fillPath(keep, d.pal.make)
+    _ln(d, (0.08, 0.32), (0.92, 0.32))
+    _ln(d, (0.08, 0.68), (0.92, 0.68))
+    _ln(d, (0.08, 0.32), (0.08, 0.68))
+    _ln(d, (0.92, 0.32), (0.92, 0.68))
+
+
 @draws("sk_extend")
 def _sk_extend(d):
     _ln(d, (0.82, 0.1), (0.82, 0.9))
