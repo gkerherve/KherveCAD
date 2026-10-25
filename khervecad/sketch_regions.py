@@ -236,3 +236,85 @@ def key(scene, event):
         drop(scene)
         return True
     return False
+
+
+# ------------------------------------------------------- in the 3D view
+def _slab_tris(cs, matrix):
+    """A face as thin triangles placed in the world (pick + highlight)."""
+    import manifold3d as m
+    from .fillet_pick import _apply
+    mesh_ = m.Manifold.extrude(cs, 0.02).to_mesh()
+    verts = [tuple(float(c) for c in v[:3]) for v in mesh_.vert_properties]
+    return [tuple(_apply(matrix, verts[i]) for i in tri)
+            for tri in mesh_.tri_verts]
+
+
+def sketch_container(window):
+    """The group whose sketch shapes overlap into regions: the selected
+    shape's, else the first in the scope with two or more."""
+    from .model import SHAPE_2D
+    scope = window._render_scope()[0]
+    sel = [n for n in window.builder.active_tree().selected_nodes()] \
+        if hasattr(window.builder.active_tree(), "selected_nodes") else []
+    for n in sel:
+        if n.category == SHAPE_2D and n.parent is not None:
+            return n.parent
+        if len(shapes_of(n)) >= 2:
+            return n
+    for n in scope.walk():
+        if len(shapes_of(n)) >= 2:
+            return n
+    return None
+
+
+def start_3d(window, container=None):
+    """Pick regions on the 3D view: the region under the mouse lights
+    up, a click keeps it (again drops it), Esc or right-click extrudes
+    what was picked. False when no sketch has regions."""
+    from . import mesh
+    container = container or sketch_container(window)
+    if container is None:
+        window.statusBar().showMessage(
+            "Extrude regions: draw overlapping 2D shapes first (a "
+            "rectangle and a circle on it).", 6000)
+        return False
+    shapes = shapes_of(container)
+    face_list = faces(shapes)
+    if not face_list:
+        return False
+    scope = window._render_scope()[0]
+    iso = scope if scope is not window.model.root else None
+    with window._isolated_frame(iso):
+        mat = mesh.ancestor_matrix(container, {}, stop=iso)
+        mat = mesh.mat_mul(mat, mesh.node_matrix(container, {}))
+    groups = [(i, _slab_tris(cs, mat)) for i, (cs, _l) in
+              enumerate(face_list)]
+    tris = dict(groups)
+    picked = set()
+    view = window.view3d
+
+    def banner():
+        return ("Extrude regions: click the regions to keep (%d picked) "
+                "· Esc or right-click extrudes them" % len(picked))
+
+    def on_pick(desc, key):
+        if desc is None:                       # done
+            view.set_highlight_mesh([])
+            ext = extrude(window.model, container, face_list, picked,
+                          hide=shapes) if picked else None
+            if ext is not None:
+                window.statusBar().showMessage(
+                    "Extruded %d region(s) — set the height in "
+                    "Properties." % len(picked), 6000)
+            return
+        picked.symmetric_difference_update({key})
+        view.set_highlight_mesh([t for i in sorted(picked)
+                                 for t in tris[i]])
+        arm()
+
+    def arm():
+        view.start_pick(on_pick, groups=groups, banner=banner(),
+                        labeler=lambda _d, k: "Region — click to %s" % (
+                            "drop" if k in picked else "keep"))
+    arm()
+    return True

@@ -513,11 +513,25 @@ def panel_actions(win):
         act.setCheckable(True)
         toolbars.remember_glyph(act, glyph, "draw")
         tooltips.apply(act, tool)
-        act.triggered.connect(lambda _=False, t=tool: win._set_tool(t))
+        if tool == "regions":
+            act.triggered.connect(lambda _=False: _regions(win))
+        else:
+            act.triggered.connect(lambda _=False, t=tool: win._set_tool(t))
         win._tool_group.addAction(act)
         acts.append(act)
     win._sketch_modify_actions = acts
     return acts
+
+
+def _regions(win):
+    """Extrude regions: in the sketch (Fusion / SolidWorks sketch mode)
+    the 2D tool; otherwise straight on the 3D view, where the user sees
+    the part (2026-10-25)."""
+    from . import sketch_mode, sketch_regions
+    if sketch_mode.sketching(win):
+        win._set_tool("regions")
+    elif not sketch_regions.start_3d(win):
+        win._set_tool("regions")
 
 
 # ---------------------------------------- the OpenSCAD program, both ways

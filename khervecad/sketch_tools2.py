@@ -419,13 +419,10 @@ def outline(tool, pts):
         return [(c[0] + r * math.cos(2 * math.pi * i / 48),
                  c[1] + r * math.sin(2 * math.pi * i / 48))
                 for i in range(48)]
-    if tool == CIRCLE_3PT and len(pts) >= 3:
-        o = st.circumcentre(*pts[:3])
-        if o is not None:
-            r = math.dist(pts[0], o)
-            return [(o[0] + r * math.cos(2 * math.pi * i / 48),
-                     o[1] + r * math.sin(2 * math.pi * i / 48))
-                    for i in range(48)]
+    if tool == CIRCLE_3PT:
+        # no circle until the third click (the user): picked on lines it
+        # is the TANGENT circle, which a through-the-points preview is not
+        return []
     if tool == POLY_REG:
         return regular_points(pts[0], pts[1], 6)
     if tool == CONIC and len(pts) >= 3:

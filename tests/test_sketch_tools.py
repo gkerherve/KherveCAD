@@ -273,3 +273,34 @@ def test_perimeter_circle_lights_the_sides_it_picks(view):
     assert len(scene._line_marks) == 2
     _click(view, 50, 22)
     assert scene._line_marks == []
+
+
+def test_perimeter_circle_shows_no_circle_before_the_third_click():
+    from khervecad import sketch_tools2 as st2
+    assert st2.outline(st2.CIRCLE_3PT, [(0, 0), (10, 0), (5, 5)]) == []
+
+
+def test_extrude_regions_picked_on_the_3d_view(window):
+    """The 3D view: each region under a click is kept, Esc extrudes."""
+    from khervecad import sketch_regions as sr
+    m = window.model
+    obj = m.add_node("union", {}, name="Plate sketch")
+    m.add_node("rect", dict(x=-10, y=10, width=60, height=20), parent=obj)
+    m.add_node("circle", dict(x=40, y=20, radius=10), parent=obj)
+    QApplication.processEvents()
+    calls = []
+    window.view3d.start_pick = lambda cb, **k: calls.append((cb, k))
+    assert sr.start_3d(window, obj)
+    cb, k = calls[-1]
+    keys = [key for key, _t in k["groups"]]
+    assert len(keys) == 4
+    faces = sr.faces(sr.shapes_of(obj))
+    long_part = sr.face_at(faces, (0, 20))
+    circle = sr.face_at(faces, (42, 20))
+    cb({"kind": "face"}, long_part)
+    cb({"kind": "face"}, circle)
+    cb(None, None)
+    ext = [n for n in obj.children if n.type == "linear_extrude"]
+    assert len(ext) == 1
+    assert not any(n.visible for n in obj.children
+                   if n.type in ("rect", "circle"))
