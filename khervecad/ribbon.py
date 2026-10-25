@@ -430,9 +430,9 @@ def _panel_actions(win, key):
         first = [sketch_mode.create_action(win)] \
             if style_of(win) in ("Fusion", "SolidWorks") else []
         if style_of(win) == "SolidWorks":
-            # Smart Dimension, a large button left of Sketch (the user)
-            first = [a for a in win._tool_group.actions()
-                     if a.data() == "con_dimension"][:1] + first
+            # Smart Dimension, a large button RIGHT of Sketch (the user)
+            first = first + [a for a in win._tool_group.actions()
+                             if a.data() == "con_dimension"][:1]
         return title, first + [a for a in win._tool_group.actions()
                                if a.data() not in (MEASURE, SELECT)
                                and not str(a.data()).startswith(
@@ -481,7 +481,12 @@ def _panel_actions(win, key):
             ops[k] for k in SKETCH_MODIFY if k in ops]
     if key == "sketch_constrain":
         from . import sketch_constrain_ui
-        return title, list(sketch_constrain_ui.panel_actions(win))
+        acts = list(sketch_constrain_ui.panel_actions(win))
+        if style_of(win) == "SolidWorks":
+            # Smart Dimension sits beside Sketch, not here (the user)
+            acts = [a for a in acts
+                    if a.data() != sketch_constrain_ui.DIMENSION]
+        return title, acts
     if key == "sketch_insert":
         return title, [sketch_extra(win)["import_2d"]]
     if key == "builders":
@@ -750,8 +755,8 @@ class Ribbon(QWidget):
         row.setSpacing(1)
         large = actions if key in ALL_LARGE else actions[:1]
         if key == "sketch" and len(actions) > 1 and \
-                actions[0].data() == "con_dimension":
-            large = actions[:2]          # Smart Dimension and Sketch
+                actions[1].data() == "con_dimension":
+            large = actions[:2]          # Sketch and Smart Dimension
         for act in large:
             b = _button(act, SW_LARGE, Qt.ToolButtonTextUnderIcon, panel)
             b.setObjectName("large")

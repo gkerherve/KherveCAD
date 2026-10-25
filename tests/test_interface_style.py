@@ -593,7 +593,10 @@ def test_tree_rows_and_sketch_panel_follow_solidworks(window):
     node.name = "Plate"
     assert interface_names.tree_text(node) == "Plate"
     keys = [a.data() for a in ribbon.panel_actions(window, "sketch")[1]]
-    assert keys[:2] == ["con_dimension", "create_sketch"]
+    assert keys[:2] == ["create_sketch", "con_dimension"]
+    cons = [a.data() for a in ribbon.panel_actions(window,
+                                                   "sketch_constrain")[1]]
+    assert "con_dimension" not in cons
     large = [b.defaultAction().data()
              for b in window.ribbon.findChildren(QToolButton)
              if b.objectName() == "large" and b.defaultAction()]
