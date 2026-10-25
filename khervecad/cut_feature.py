@@ -38,6 +38,11 @@ KINDS = {
     "boundary_cut": ("Boundary Cut", "section_loft",
                      "mdi.vector-square-remove"),
 }
+#: Extruded Boss/Base on a face (not on the Cut panel): the same flow,
+#: the sketch pulled OUT of the face and joined to the part
+BOSS = {"extruded_boss": ("Extruded Boss/Base", "linear_extrude",
+                          "mdi.arrow-expand-up")}
+ALL = dict(KINDS, **BOSS)
 DEPTH = 10.0
 KEY = "cut"                  # on the face sketch Group: the cut it makes
 
@@ -54,11 +59,19 @@ def apply(model, group, part, kind):
     if not shapes or part is None or group.parent is None or \
             not _inside(part, group.parent):
         return None
-    label, op, _g = KINDS[kind]
+    label, op, _g = ALL[kind]
     tool = model.wrap_nodes(shapes, op)
     if tool is None:
         return None
     tool.name = label
+    if kind in BOSS:
+        # out of the face (+Z), beside the part in the same Object: the
+        # Object's union joins them — no Difference
+        tool.params["height"] = DEPTH
+        group.params.pop(KEY, None)
+        group.name = "Boss sketch"
+        model.node_changed.emit(tool)
+        return tool
     if op == "linear_extrude":
         # blind, DEPTH into the face (Reverse Direction: down -Z); one
         # node, no mirror (a simpler tree). Its depth is the user's to
@@ -121,15 +134,24 @@ def finish(window, group):
     if not kind or group.parent is None:
         return None
     part = getattr(window, "_cut_parts", {}).pop(id(group), None)
+    if part is None:                     # (after a restart: the face's part)
+        from . import face_sketch
+        part = face_sketch.part_of(group)
     diff = apply(window.model, group, part, kind)
+    label = ALL[kind][0]
     if diff is None:
         window.statusBar().showMessage(
-            "%s: nothing to cut — draw a shape on the face." %
-            KINDS[kind][0], 6000)
+            "%s: nothing made — draw a shape on the face." % label, 6000)
     else:
         window.statusBar().showMessage(
-            "%s made — its sketch keeps its dimensions; set the depth "
-            "in Properties." % KINDS[kind][0], 6000)
+            "%s made — its sketch keeps its dimensions; drag the arrow or "
+            "set the depth in Properties." % label, 6000)
+        if kind in BOSS:
+            try:
+                from . import drag_feature
+                drag_feature.start(window, diff, quiet=True)  # 10 mm kept
+            except Exception:
+                pass
     return diff
 
 
@@ -149,7 +171,9 @@ def start(window, kind):
     if not parts:
         window.statusBar().showMessage("Nothing to cut yet.", 5000)
         return None
-    label = KINDS[kind][0]
+    label = ALL[kind][0]
+    verb = "extrude from" if kind in BOSS else "cut into"
+    end = "to extrude it" if kind in BOSS else "to cut"
 
     def picked(desc, node):
         if desc is None or node is None:
@@ -157,7 +181,7 @@ def start(window, kind):
         window.view3d.cancel_pick()
         if desc.get("kind") != "face":
             window.statusBar().showMessage(
-                "%s: click a flat FACE to sketch the cut on." % label, 5000)
+                "%s: click a flat FACE to sketch on." % label, 5000)
             start(window, kind)
             return
         group = face_sketch.make(window, node, desc["pos"], desc["dir"])
@@ -165,12 +189,12 @@ def start(window, kind):
         window.__dict__.setdefault("_cut_parts", {})[id(group)] = node
         window.statusBar().showMessage(
             "%s: draw the shape (circle, slot, rectangle…), dimension "
-            "it, then leave the sketch to cut." % label, 10000)
+            "it, then leave the sketch %s." % (label, end), 10000)
     window.statusBar().showMessage(
-        "%s: click the face of the part to cut into." % label, 10000)
+        "%s: click the face of the part to %s." % (label, verb), 10000)
     window.view3d.start_pick(
         picked, groups=parts,
-        banner="%s: click the face to cut into · Esc cancels" % label,
+        banner="%s: click the face to %s · Esc cancels" % (label, verb),
         labeler=lambda desc, node: getattr(node, "name", ""))
     return None
 

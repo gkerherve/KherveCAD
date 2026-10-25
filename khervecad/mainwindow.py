@@ -924,6 +924,14 @@ class MainWindow(QMainWindow):
             if container is not None and \
                     sketch_regions.start_3d(self, container):
                 return
+        if not nodes and op == "linear_extrude":
+            # nothing to extrude yet (every sketch is used): click a FACE,
+            # sketch on it, leave the sketch — the boss comes out of it
+            # (SolidWorks; the user could not reach the plate's side)
+            from . import sketch_regions, cut_feature
+            if not sketch_regions.free_shapes(self):
+                cut_feature.start(self, "extruded_boss")
+                return
         if not nodes and op in ("linear_extrude", "rotate_extrude"):
             # nothing selected: click the 2D shape in the 3D view, as
             # Fillet and the Hole Wizard ask for a face (the user)

@@ -911,3 +911,41 @@ def test_extruded_cut_sketch_snaps_to_centres_origin_and_edges(window):
         assert scene._snap_hint[1] == kind
     window.view2d.viewport().repaint()          # the marker draws
     face_sketch.close(window)
+
+
+def test_extruded_boss_on_the_side_face_of_a_used_sketch(window):
+    """The user's plate: its Regions sketch is used by the extrude, so
+    Extruded Boss/Base must not pick its regions again — it asks for a
+    FACE; sketching on the plate's side and leaving makes a boss out of
+    it, the Object joining them."""
+    from khervecad import sketch_regions as sr, face_sketch, cut_feature
+    m = window.model
+    obj = m.add_node("component", {}, name="Object 1")
+    rect = m.add_node("rect", dict(x=-59, y=-22, width=118, height=44),
+                      parent=obj)
+    c = m.add_node("circle", dict(x=37, y=0, radius=22), parent=obj)
+    f = sr.faces(sr.shapes_of(obj))
+    ext = sr.extrude(m, obj, f, [sr.face_at(f, (0, 0)),
+                                 sr.face_at(f, (45, 0))], hide=[rect, c])
+    ext.params["height"] = 16
+    window.builder.open_component(obj)
+    QApplication.processEvents()
+    assert not sr.free_shapes(window)
+    assert sr.overlap_container(window, []) is None
+    calls = []
+    window.view3d.start_pick = lambda cb, **k: calls.append((cb, k))
+    window._apply_operation("linear_extrude")
+    cb, k = calls[-1]
+    assert "click the face" in k["banner"]
+    # the user clicks the side (x = -59, facing -X) and draws on it
+    window.view3d.cancel_pick = lambda: None
+    cb({"kind": "face", "pos": (-59.0, 0.0, 8.0),
+        "dir": (-1.0, 0.0, 0.0)}, ext)
+    group = window._face_sketch
+    m.add_node("rect", dict(x=-20, y=-8, width=40, height=30),
+               parent=group)
+    face_sketch.close(window)
+    boss = [n for n in group.walk() if n.type == "linear_extrude"]
+    assert boss and boss[0].params["height"] == cut_feature.DEPTH
+    assert not boss[0].params.get("reverse")
+    assert group.name == "Boss sketch" and group.parent is obj

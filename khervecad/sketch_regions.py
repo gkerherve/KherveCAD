@@ -485,6 +485,31 @@ def _slab_tris(cs, matrix, height=0.02):
             for tri in mesh_.tri_verts]
 
 
+#: what a sketch already made something of sits under
+USED_BY = ("linear_extrude", "rotate_extrude", "regions", "sweep",
+           "section_loft", "loft", "difference", "intersection")
+
+
+def used(node):
+    """True when *node* (a sketch or its container) is already part of
+    a feature — an extruded Regions' rectangle is not a free sketch to
+    pick regions of again (the user's side-face boss picked it)."""
+    probe = node
+    while probe is not None:
+        if probe.type in USED_BY:
+            return True
+        probe = probe.parent
+    return False
+
+
+def free_shapes(window):
+    """2D shapes in the scope that no feature uses yet."""
+    from .model import SHAPE_2D
+    scope = window._render_scope()[0]
+    return [n for n in scope.walk() if n.category == SHAPE_2D
+            and n.visible and not used(n)]
+
+
 def sketch_container(window):
     """The group whose sketch shapes overlap into regions: the selected
     shape's, else the first in the scope with two or more."""
@@ -498,7 +523,7 @@ def sketch_container(window):
         if len(shapes_of(n)) >= 2:
             return n
     for n in scope.walk():
-        if len(shapes_of(n)) >= 2:
+        if len(shapes_of(n)) >= 2 and not used(n):
             return n
     return None
 
@@ -525,6 +550,8 @@ def overlap_container(window, nodes):
         c = sketch_container(window)
         cands = [c] if c is not None else []
     for c in cands:
+        if used(c):
+            continue
         try:
             if overlapping(c):
                 return c
