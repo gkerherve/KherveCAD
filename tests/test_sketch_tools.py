@@ -448,3 +448,26 @@ def test_construction_with_nothing_selected_is_a_click_tool(view):
     assert rect.params.get("modifier") == "%"
     _click(view, 20, 30)
     assert rect.params.get("modifier", "") == ""
+
+
+def test_extruded_cut_cuts_a_face_sketch_into_its_part(window):
+    """Extruded Cut: a circle sketched on a block's top face (Sketch on
+    Face's Group) is cut into the block, its dimension kept."""
+    from khervecad import cut_feature, face_sketch
+    from khervecad import sketch_constraints as sc
+    m = window.model
+    block = m.add_node("cube", dict(x=40, y=40, z=20))
+    group = m.add_node("union", dict(x=20, y=20, z=20))
+    group.params[face_sketch.KEY] = True
+    circle = m.add_node("circle", dict(x=0, y=0, radius=5), parent=group)
+    sc.add(m, group, "diameter", [sc.ref_of(group, circle, "o")], 10)
+    group.params[cut_feature.KEY] = "extruded_cut"
+    window._cut_parts = {id(group): block}
+    diff = cut_feature.finish(window, group)
+    assert diff is not None and diff.type == "difference"
+    assert diff.children[0] is block and diff.children[1] is group
+    ext = [n for n in group.walk() if n.type == "linear_extrude"][0]
+    assert ext.parent.type == "mirror"
+    # the dimension went into the extrude with the circle, still driving
+    sc.set_value(m, ext, 0, 16)
+    assert circle.params["radius"] == pytest.approx(8, abs=1e-3)

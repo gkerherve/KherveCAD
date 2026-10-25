@@ -11,6 +11,8 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
+import math
+
 from PyQt5.QtCore import QPointF, QRectF, Qt
 
 from .icons_cad import draws
@@ -319,3 +321,68 @@ def _stop_select(d):
     d.poly([P(0.28, 0.1), P(0.28, 0.78), P(0.43, 0.63), P(0.55, 0.9),
             P(0.66, 0.85), P(0.54, 0.58), P(0.76, 0.58)],
            d.pal.paper, color=d.pal.edge, width=0.06)
+
+
+# ------------------------------------------------ the Cut features
+def _block(d):
+    d.box(-0.75, -0.75, 0.0, 1.5, 1.5, 0.6)
+
+
+@draws("extruded_cut")
+def _extruded_cut(d):
+    """A block with a round pocket pushed down into its top."""
+    _block(d)
+    d.poly([d.P(-0.1 + 0.35 * math.cos(a), 0.1 + 0.35 * math.sin(a), 0.6)
+            for a in [i * math.pi / 8 for i in range(16)]],
+           d.pal.cut, color=d.pal.edge, width=0.04)
+    d.arrow(d.P(0.6, -0.6, 1.4), d.P(0.6, -0.6, 0.7), d.pal.cut)
+
+
+@draws("revolved_cut")
+def _revolved_cut(d):
+    """A block with a groove turned round its top."""
+    _block(d)
+    d.poly([d.P(0.55 * math.cos(a), 0.55 * math.sin(a), 0.6)
+            for a in [i * math.pi / 10 for i in range(20)]],
+           None, color=d.pal.cut, width=0.09)
+    d.arrow(d.P(0.7, -0.5, 0.95), d.P(0.2, 0.6, 0.95), d.pal.cut, 0.05)
+
+
+@draws("swept_cut")
+def _swept_cut(d):
+    """A block with a curving channel along its top."""
+    from PyQt5.QtGui import QPainterPath
+    _block(d)
+    path = QPainterPath(d.P(-0.7, -0.4, 0.6))
+    path.cubicTo(d.P(-0.2, 0.4, 0.6), d.P(0.2, -0.5, 0.6),
+                 d.P(0.7, 0.3, 0.6))
+    pen = d.pen(d.pal.cut, 0.14)
+    d.p.setPen(pen)
+    d.p.setBrush(Qt.NoBrush)
+    d.p.drawPath(path)
+
+
+@draws("lofted_cut")
+def _lofted_cut(d):
+    """A block cut by a pocket narrowing from a square to a small one."""
+    _block(d)
+    big = [d.P(x, y, 0.6) for x, y in ((-0.45, -0.45), (0.45, -0.45),
+                                      (0.45, 0.45), (-0.45, 0.45))]
+    d.poly(big, d.pal.cut, color=d.pal.edge, width=0.04)
+    small = [d.P(x, y, 0.6) for x, y in ((-0.15, -0.15), (0.15, -0.15),
+                                        (0.15, 0.15), (-0.15, 0.15))]
+    d.poly(small, d.pal.paper, color=d.pal.edge, width=0.03)
+
+
+@draws("boundary_cut")
+def _boundary_cut(d):
+    """A block whose top corner is carved by a curved boundary."""
+    from PyQt5.QtGui import QPainterPath
+    _block(d)
+    path = QPainterPath(d.P(0.75, -0.75, 0.6))
+    path.lineTo(d.P(0.75, 0.2, 0.6))
+    path.quadTo(d.P(0.1, 0.1, 0.6), d.P(-0.2, -0.75, 0.6))
+    path.closeSubpath()
+    d.p.setPen(d.pen(d.pal.edge, 0.04))
+    d.p.setBrush(d.pal.cut)
+    d.p.drawPath(path)

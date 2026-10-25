@@ -3205,6 +3205,15 @@ into a new module and import.
                        Perimeter circle (`sketch_tools2.build_perimeter`):
                        three clicks on lines / sides -> tangent circle +
                        Tangent relations (`tangent_to_lines`).
+  - `cut_feature.py` — SolidWorks' **Cut** panel (2026-10-25): Extruded /
+                       Revolved / Swept / Lofted / Boundary Cut. Click a
+                       face (a face sketch Group marked `params["cut"]`),
+                       sketch with Smart Dimensions, leave the sketch
+                       (`face_sketch.close` -> `finish`): the shapes are
+                       wrapped in the tool (extrude mirrored into the face,
+                       revolve about the sketch's Y, sweep, section loft)
+                       and part + sketch in a Difference. A selected face
+                       sketch is cut at once. SOLID tab panel "cuts".
   - `sketch_tools2.py` — SolidCraft's other sketch shapes (2026-10-21,
                        "add them all"): construction line + the
                        **Construction** switch (OpenSCAD's `%` on a sketch

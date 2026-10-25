@@ -200,6 +200,9 @@ def close(window):
     if group is not None and group.parent is not None and \
             not group.children:
         window.model.remove_node(group)
+    elif group is not None and group.params.get("cut"):
+        from . import cut_feature          # a cut's sketch: cut it now
+        cut_feature.finish(window, group)
     return group
 
 

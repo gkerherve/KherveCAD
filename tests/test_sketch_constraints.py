@@ -493,6 +493,8 @@ def test_diameter_value_drags_out_of_the_way(view, monkeypatch):
     QApplication.processEvents()
     rect2, _ = next(h for h in view._dim_hits if h[1][1] == "constraint")
     assert abs(rect2.center().x() - end.x()) < 3
+    # and a leader line runs back to the circle it sizes
+    assert len(view._dim_leaders) == 1
 
 
 def test_each_object_shows_only_its_own_dimensions(view):

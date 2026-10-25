@@ -396,6 +396,7 @@ def glyphs(view):
     fm = QFontMetrics(font)
     taken = {}                      # spot key -> x advance used so far
     out = []
+    view._dim_leaders = []          # (where it belongs, the moved label)
 
     def place(spot, text, cont, index):
         key = (round(spot.x() / 6), round(spot.y() / 6))
@@ -429,7 +430,12 @@ def glyphs(view):
                     # dragged out of the way (dim_edit), in model units
                     from .dim_edit import scale
                     k = scale(view)
+                    home = QPointF(c)
                     c = QPointF(c.x() + moved[0] * k, c.y() + moved[1] * k)
+                    place(c, "%s%s%s" % (prefix, row["value"], unit), cont,
+                          index)
+                    view._dim_leaders.append((home, out[-1][0]))
+                    continue
                 place(c, "%s%s%s" % (prefix, row["value"], unit), cont,
                       index)
             else:
@@ -525,7 +531,7 @@ def paint(view, painter):
     (side by side where they meet), dimensions as dimension lines; the
     mark under the cursor red while the delete tool is on; picks
     ringed."""
-    from PyQt5.QtCore import Qt
+    from PyQt5.QtCore import QPointF, Qt
     from PyQt5.QtGui import QColor, QPen
     scene = view.scene()
     marks = glyphs(view)
@@ -554,6 +560,15 @@ def paint(view, painter):
                 hasattr(view, "_dim_hits"):
             # R / Ø / angle values: click to type too
             view._dim_hits.append((rect, (cont, "constraint", index)))
+    # a dragged-away Ø / R / angle points back at what it sizes
+    lead = QPen(QColor("#c75b12"), 1.0)
+    lead.setCosmetic(True)
+    painter.setPen(lead)
+    for home, rect in getattr(view, "_dim_leaders", []):
+        x = min(max(home.x(), rect.left()), rect.right())
+        y = min(max(home.y(), rect.top()), rect.bottom())
+        painter.drawLine(home, QPointF(x, y))
+        painter.drawEllipse(home, 2.0, 2.0)
     painter.setPen(QPen(QColor("#2176c7"), 2))
     painter.setBrush(Qt.NoBrush)
     items = {it.node.id: it for it in _shape_items(scene)}

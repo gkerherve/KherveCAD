@@ -50,7 +50,7 @@ TABS = [
     # features, a SURFACE tab, SubD in FORM, figures in CHARACTER, the
     # assembly tools, imports, Shell in MODIFY)
     ("features", "SOLID", "Features",
-     ["create", "extrude", "mechanical", "transform",
+     ["create", "extrude", "cuts", "mechanical", "transform",
       "combine", "finish", "logic", "assemble", "solid_insert",
       "document"]),
     ("surface", "SURFACE", "Surfaces", ["curves", "surfaces"]),
@@ -72,7 +72,7 @@ TABS = [
 ]
 
 #: panels that are not operation families: key -> title
-EXTRA_PANELS = {"pub_share": "Share", "pub_media": "Pictures & video",
+EXTRA_PANELS = {"cuts": "Cut", "pub_share": "Share", "pub_media": "Pictures & video",
                 "util_make": "Make", "util_addins": "Add-ins",
                 "util_utility": "Utility", "assemble_more": "Assemble", "mechanical": "Features", "_mechanical_menu": "Features", "_move_tools": "Move", "curves": "Curves",
                 "surfaces": "From curves", "form_create": "Create form",
@@ -437,6 +437,10 @@ def _panel_actions(win, key):
                                if a.data() not in (MEASURE, SELECT)
                                and not str(a.data()).startswith(
                                    ("con_", "sk_"))]
+    if key == "cuts":
+        # SolidWorks' Extruded / Revolved / Swept / Lofted / Boundary Cut
+        from . import cut_feature
+        return title, list(cut_feature.actions(win))
     if key == "mechanical":
         # SolidWorks' Hole Wizard leads the features (hole_wizard.py)
         from . import hole_wizard
