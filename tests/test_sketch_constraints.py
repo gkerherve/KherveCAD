@@ -511,3 +511,17 @@ def test_each_object_shows_only_its_own_dimensions(view):
     assert ui.shown_containers(view.scene()) == parts
     view.scene().isolation_resolver = lambda: parts[0]
     assert ui.shown_containers(view.scene()) == [parts[0]]
+
+
+def test_an_objects_hidden_definition_keeps_its_dimensions(view):
+    """An Object's definition is hidden by design; edited in the Object
+    tab, its sketch dimensions still show (they had vanished)."""
+    m = view.scene().model
+    obj = m.add_node("component", {}, name="Object 1")
+    obj.visible = False
+    line = m.add_node("line", dict(x1=0, y1=0, x2=30, y2=0), parent=obj)
+    sc.add(m, obj, "length", [sc.ref_of(obj, line, "l")], 30)
+    view.scene().isolation_resolver = lambda: obj
+    view.scene().rebuild()
+    QApplication.processEvents()
+    assert ui.shown_containers(view.scene()) == [obj]

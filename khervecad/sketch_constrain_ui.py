@@ -356,14 +356,16 @@ def shown_containers(scene):
     """The sketches whose dimensions and relations are drawn: each
     sketch's own, wherever its shapes are on the view — they belong to
     their Object and move with it (the user, 2026-10-25). In the Object
-    tab only the active Object's; hidden sketches show none."""
+    tab only the active Object's."""
     model = scene.model
     resolver = getattr(scene, "isolation_resolver", None)
     scope = resolver() if resolver else None
     drawn = {id(it.node.parent) for it in _shape_items(scene)}
     out = []
     for c in sc.containers(model):
-        if not c.visible or id(c) not in drawn:
+        if id(c) not in drawn:
+            # (only what is drawn: an Object's definition is HIDDEN by
+            # design — "visible" would drop every Object's dimensions)
             continue
         if scope is not None and scope is not model.root and \
                 not _under(c, scope):
