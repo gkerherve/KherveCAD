@@ -270,6 +270,12 @@ def press(scene, event):
     else:
         want = wants[len(picks)]
     hit = pick(scene, event.scenePos(), want)
+    if hit is None:
+        from . import face_outline         # a relation to the face's edge
+        try:
+            hit = face_outline.reference(scene, event.scenePos(), want)
+        except Exception:
+            hit = None
     if hit is None or (kind in sc.TWO_POINT and not picks
                        and hit[2] == "circle"):
         scene.status.emit(prompt(kind, len(picks)))
@@ -650,6 +656,29 @@ def paint(view, painter):
 DIMENSION = PREFIX + "dimension"
 
 
+def _parallel_point(first, second):
+    """When the two picked lines are parallel: a pick of a point on the
+    first (its start), else None."""
+    import math
+    try:
+        a1, b1 = sc._line(first[0], first[1], {})
+        a2, b2 = sc._line(second[0], second[1], {})
+    except (KeyError, ValueError, IndexError):
+        return None
+    u = (b1[0] - a1[0], b1[1] - a1[1])
+    v = (b2[0] - a2[0], b2[1] - a2[1])
+    lu, lv = math.hypot(*u), math.hypot(*v)
+    if lu < 1e-9 or lv < 1e-9 or \
+            abs(u[0] * v[1] - u[1] * v[0]) / (lu * lv) > 1e-6:
+        return None
+    node, name = first[0], first[1]
+    if node.type == "line":
+        return node, "p1", "point"
+    if name.startswith("e"):
+        return node, "v" + name[1:], "point"
+    return None
+
+
 def _smart(first, second):
     """(kind, picks) a Fusion-style sketch dimension makes of one or two
     picks — None when it needs another click."""
@@ -664,6 +693,11 @@ def _smart(first, second):
     if k1 == "line" and k2 == "line":
         if second[:2] == first[:2]:
             return "length", [first]
+        para = _parallel_point(first, second)
+        if para is not None:
+            # parallel lines: the distance between them (SolidWorks),
+            # not an angle of 0
+            return "point_line", [para, second]
         return "angle", [first, second]
     if k1 == "point" and k2 == "point":
         return "distance", [first, second]
@@ -689,6 +723,13 @@ def dimension_press(scene, event):
         return
     picks = _state(scene)
     hit = pick(scene, event.scenePos())
+    if hit is None:
+        # on the face's own edge or corner: dimension to it (SolidWorks)
+        from . import face_outline
+        try:
+            hit = face_outline.reference(scene, event.scenePos())
+        except Exception:
+            hit = None
     if not picks:
         if hit is None:
             scene.status.emit("Dimension: click a line, a circle or a "

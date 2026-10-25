@@ -605,3 +605,56 @@ def test_a_slot_radius_drags_and_retypes_under_smart_dimension(view,
     box.setText("6")
     box.editingFinished.emit()
     assert slot.params["width"] == pytest.approx(12, abs=1e-3)
+
+
+@pytest.fixture
+def window(app):
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    yield win
+    win._dirty = False
+    win.close()
+
+
+def test_smart_dimension_to_the_face_edge(window, monkeypatch):
+    """The user's sketch on a face: a new rectangle dimensioned to the
+    face's bottom edge — which is not a sketch shape. The edge becomes a
+    fixed construction reference and the distance between the two
+    parallel edges drives the rectangle."""
+    from khervecad import face_sketch
+    from PyQt5.QtCore import QPointF
+    monkeypatch.setattr(sc, "scale_first_enabled", lambda: False)
+    m = window.model
+    block = m.add_node("cube", dict(width=80, depth=40, height=10))
+    for _ in range(3):
+        QApplication.processEvents()
+    group = face_sketch.make(window, block, (40.0, 20.0, 10.0),
+                             (0.0, 0.0, 1.0))
+    rect = m.add_node("rect", dict(x=-30, y=-5, width=20, height=15),
+                      parent=group)
+    scene = window.view2d.scene()
+    scene.rebuild()
+    QApplication.processEvents()
+    scene.ask_value = lambda kind, measured: "8"
+    window.view2d.set_tool(ui.DIMENSION)
+
+    class Ev:
+        def __init__(self, x, y):
+            self._p = QPointF(x, y)
+
+        def scenePos(self):
+            return self._p
+
+        def button(self):
+            return Qt.LeftButton
+
+        def accept(self):
+            pass
+    ui.dimension_press(scene, Ev(-20.0, -5.0))       # rect bottom edge
+    ui.dimension_press(scene, Ev(0.0, -20.0))        # the face's edge
+    kinds = [r["kind"] for r in sc.rows(group)]
+    assert "point_line" in kinds
+    ref = [n for n in group.children if n.name == "Reference edge"]
+    assert ref and ref[0].params.get("modifier") == "%"
+    assert rect.params["y"] == pytest.approx(-12, abs=1e-3)   # 8 above
+    face_sketch.close(window)

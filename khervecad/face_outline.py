@@ -424,3 +424,77 @@ def paint_hint(view, painter):
                      int(Qt.AlignLeft | Qt.AlignVCenter),
                      LABELS.get(kind, "Point"))
     painter.restore()
+
+
+def reference(scene, pos, want=None):
+    """The face under a constraint / dimension click when no sketch shape
+    is: SolidWorks lets you dimension to the model's edges. A fixed
+    CONSTRUCTION copy is added to the sketch — a line along the edge, or
+    a point on a corner / centre — and returned as a pick
+    (node, entity, kind). None when the click is on nothing."""
+    from . import sketch_constraints as sc
+    info = getattr(scene, "face_outline", None)
+    resolver = getattr(scene, "isolation_resolver", None)
+    group = resolver() if resolver else None
+    if not info or group is None:
+        return None
+    views = scene.views()
+    k = abs(views[0].transform().m11()) if views else 1.0
+    model = scene.model
+    best = None
+    if want in (None, "point"):
+        for x, y, kind in info["points"] + [(0.0, 0.0, "origin")]:
+            if kind == "middle":
+                continue               # mid-edge: the EDGE is meant
+            d = math.hypot(pos.x() - x, pos.y() - y) * k
+            if d <= SNAP_PX and (best is None or d < best[0]):
+                best = (d, "point", (x, y))
+    if best is None and want in (None, "line", "curve"):
+        for a, b in info["segments"]:
+            x, y = _on_segment(pos.x(), pos.y(), a, b)
+            d = math.hypot(pos.x() - x, pos.y() - y) * k
+            if d <= SNAP_PX and math.hypot(b[0] - a[0], b[1] - a[1]) > 1e-6 \
+                    and (best is None or d < best[0]):
+                best = (d, "line", (a, b))
+    if best is None:
+        return None
+    if best[1] == "point":
+        x, y = best[2]
+        node = model.add_node("circle", dict(x=round(x, 6), y=round(y, 6),
+                                             radius=0.25), parent=group,
+                              name="Reference point")
+        model.set_modifier(node, "%")
+        sc.add(model, group, "fix", [sc.ref_of(group, node, "c")])
+        return node, "c", "point"
+    (a, b) = best[2]
+    # the whole straight edge: join collinear outline pieces into one
+    a, b = _whole_edge(info["segments"], a, b)
+    node = model.add_node("line", dict(x1=round(a[0], 6), y1=round(a[1], 6),
+                                       x2=round(b[0], 6), y2=round(b[1], 6),
+                                       width=0.2), parent=group,
+                          name="Reference edge")
+    model.set_modifier(node, "%")
+    for end in ("p1", "p2"):
+        sc.add(model, group, "fix", [sc.ref_of(group, node, end)])
+    return node, "l", "line"
+
+
+def _whole_edge(segs, a, b):
+    """*a*-*b* grown along every outline piece lying on the same line."""
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    L = math.hypot(dx, dy) or 1.0
+    ux, uy = dx / L, dy / L
+    lo, hi = 0.0, L
+    for p, q in segs:
+        ok = True
+        for r in (p, q):
+            # on the line through a along u?
+            if abs((r[0] - a[0]) * uy - (r[1] - a[1]) * ux) > 1e-4:
+                ok = False
+        if not ok:
+            continue
+        for r in (p, q):
+            t = (r[0] - a[0]) * ux + (r[1] - a[1]) * uy
+            lo, hi = min(lo, t), max(hi, t)
+    return ((a[0] + ux * lo, a[1] + uy * lo),
+            (a[0] + ux * hi, a[1] + uy * hi))
