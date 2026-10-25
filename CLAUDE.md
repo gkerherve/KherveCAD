@@ -3184,7 +3184,7 @@ into a new module and import.
                        container split into faces (every in/out combination,
                        Manifold CrossSection, pieces touching only at a
                        point kept apart — a perimeter circle's tangent
-                       points); the "regions" tool (SKETCH ▸ Modify) toggles
+                       points); Extruded Boss on overlapping shapes (no separate button since 2026-10-25) toggles
                        faces by click, Enter / right-click makes one polygon
                        (paths) under a Linear extrude and hides the shapes.
                        Baked: editing the sketch later does not regrow it.

@@ -35,7 +35,8 @@ TOOLS = [(TRIM, "mdi.content-cut", "Trim"),
          (EXTEND, "mdi.arrow-expand-right", "Extend"),
          (FILLET, "mdi.vector-curve", "Sketch fillet"),
          (CHAMFER, "mdi.vector-polyline", "Sketch chamfer"),
-         ("regions", "mdi.texture-box", "Extrude regions"),
+         # (no Extrude regions button: Extruded Boss/Base on overlapping
+         # shapes picks the regions itself — the user, 2026-10-25)
          ("make_region", "mdi.vector-union", "Create region")]
 EPS = 1e-6
 ARC_STEPS = 12

@@ -185,9 +185,10 @@ def test_sketch_tab_has_create_modify_insert(window):
     for tool, *_ in st.TOOLS:
         assert tool in data
     _t, modify = ribbon.panel_actions(window, "sketch_modify")
-    assert [a.data() for a in modify][:8] == [
+    assert [a.data() for a in modify][:7] == [
         "construction", "sk_trim", "sk_extend", "sk_fillet", "sk_chamfer",
-        "regions", "make_region", "offset"]
+        "make_region", "offset"]
+    assert "regions" not in data
     assert "make_region" in data            # among the drawing tools too
     assert {"mirror", "pattern"} <= {a.data() for a in modify}
     _t, insert = ribbon.panel_actions(window, "sketch_insert")
