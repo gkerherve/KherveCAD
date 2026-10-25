@@ -354,8 +354,10 @@ def _painted(win, acts):
         # toolbar_style.restyle_icons already painted a bar action; and
         # an icon set twice makes every button on the action take its
         # whole text again (a shared Shell lost its short name)
-        if (act.property("kc_glyph") and not act.property("kc_paint")) \
-                or act.property("kc_painted") == style:
+        # (only skip what is painted in THIS style already: an action made
+        # while the ribbon is built — the Cut panel's — came after
+        # restyle_icons and kept its red glyph, 2026-10-25)
+        if act.property("kc_painted") == style:
             continue
         art = icons_cad.icon(key, style)
         if art is None:
@@ -442,7 +444,9 @@ def _panel_actions(win, key):
     if key == "cuts":
         # SolidWorks' Extruded / Revolved / Swept / Lofted / Boundary Cut
         from . import cut_feature, hole_wizard
-        acts = list(cut_feature.actions(win))
+        acts = _painted(win, list(cut_feature.actions(win)) +
+                        [hole_wizard.action(win)])
+        acts = acts[:-1]
         # the Hole Wizard sits with the cuts, after Extruded Cut, as on
         # SolidWorks' ribbon (the user)
         return title, acts[:1] + [hole_wizard.action(win)] + acts[1:]

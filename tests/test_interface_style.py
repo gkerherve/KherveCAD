@@ -609,3 +609,22 @@ def test_tree_rows_and_sketch_panel_follow_solidworks(window):
     node.name = ""
     node.name = "Linear extrude"
     assert interface_names.tree_text(node) == "Linear extrude"
+
+
+def test_cut_icons_are_painted_when_the_style_is_applied_once(app):
+    """The user saw red glyphs: actions made while the ribbon is built
+    (the Cut panel) came after the icons were restyled. A fresh window,
+    the style applied once, has them painted."""
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        toolbar_style.apply(win, "SolidWorks", remember=False)
+        acts = [a for a in win.findChildren(QAction)
+                if a.data() in ("extruded_cut", "revolved_cut",
+                                "swept_cut", "lofted_cut", "boundary_cut",
+                                "hole_wizard")]
+        assert len(acts) == 6
+        assert all(a.property("kc_painted") == "SolidWorks" for a in acts)
+    finally:
+        win._dirty = False
+        win.close()
