@@ -692,3 +692,51 @@ def test_3d_dimensions_drag_out_of_the_sketch(window):
         assert d3.release(window, end)
         assert key in sc.rows(g)[hits[kind][2]]
     assert slot.params["width"] == pytest.approx(16)       # values kept
+
+
+def test_a_cuts_drag_arrow_points_into_the_part(window):
+    """The user's picture: an Extruded Cut's arrow points DOWN into the
+    part, and pulling it further down makes the cut deeper."""
+    from khervecad import cut_feature, face_sketch, drag_feature
+    from PyQt5.QtCore import QPoint, Qt
+    m = window.model
+    window.resize(1000, 700)
+    window.show()
+    block = m.add_node("cube", dict(width=40, depth=40, height=20))
+    g = m.add_node("union", dict(x=20, y=20, z=20))
+    g.params[face_sketch.KEY] = True
+    m.add_node("circle", dict(x=0, y=0, radius=5), parent=g)
+    g.params[cut_feature.KEY] = "extruded_cut"
+    window._cut_parts = {id(g): block}
+    diff = cut_feature.finish(window, g)
+    ext = [n for n in diff.walk() if n.type == "linear_extrude"][0]
+    for _ in range(5):
+        QApplication.processEvents()
+    v = window.view3d
+    v.pitch = 30.0
+    v.fit()
+    drag_feature.start(window, ext, quiet=True)
+    tool = v.edit_tool
+    scr = tool._screen()
+    assert scr is not None
+    assert scr["b"][1] > scr["a"][1]            # the tip is BELOW: down
+
+    class Ev:
+        def __init__(self, x, y):
+            self._p = QPoint(int(x), int(y))
+
+        def pos(self):
+            return self._p
+
+        def button(self):
+            return Qt.LeftButton
+
+        def modifiers(self):
+            return Qt.NoModifier
+    a, b = scr["a"], scr["b"]
+    tip = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+    assert tool.mouse_press(Ev(*tip))
+    before = ext.params["height"]
+    tool.mouse_move(Ev(tip[0] + (b[0] - a[0]), tip[1] + (b[1] - a[1])))
+    tool.mouse_release(Ev(tip[0] + (b[0] - a[0]), tip[1] + (b[1] - a[1])))
+    assert ext.params["height"] > before          # deeper

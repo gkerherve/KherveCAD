@@ -66,7 +66,14 @@ def set_direction(model, ext, down):
 
 def signed_height(ext):
     h = _num(ext.params.get("height", FIRST_HEIGHT), FIRST_HEIGHT)
-    return -h if reversed_of(ext) is not None else h
+    down = reversed_of(ext) is not None or bool(ext.params.get(REVERSE))
+    return -h if down else h
+
+
+def _goes_down(ext):
+    """A cut (the extrude's own Reverse direction): its arrow points
+    INTO the part and pulling it that way deepens the cut (the user)."""
+    return ext.type == "linear_extrude" and bool(ext.params.get(REVERSE))
 
 
 def _num(v, default):
@@ -534,6 +541,8 @@ class DragFeature:
         param = "height" if scr["kind"] == "linear" else "angle"
         start = signed_height(node) if param == "height" else \
             _num(node.params.get("angle", 360.0), 360.0)
+        if param == "height" and _goes_down(node):
+            start = abs(start)          # the depth, dragged downwards
         self.drag = dict(scr, param=param, start=start,
                          press=(event.pos().x(), event.pos().y()),
                          value=start, raw=node.params.get(param))
@@ -554,7 +563,9 @@ class DragFeature:
         dx, dy = x - d["press"][0], y - d["press"][1]
         if d["kind"] == "linear":
             # along +Z of the sketch, whichever way the arrow points now
-            sx, sy = d["up"][0] - d["a"][0], d["up"][1] - d["a"][1]
+            # — a cut's along the arrow, INTO the part
+            ref = d["b"] if _goes_down(d["node"]) else d["up"]
+            sx, sy = ref[0] - d["a"][0], ref[1] - d["a"][1]
             px = math.hypot(sx, sy) or 1.0
             world = (dx * sx + dy * sy) / px / px * d["length"]
             delta = world / d["scale"]
@@ -637,7 +648,8 @@ class DragFeature:
         if node is None or self._label is None:
             return None
         linear = node.type == "linear_extrude"
-        now = signed_height(node) if linear else \
+        now = (abs(signed_height(node)) if _goes_down(node) else
+               signed_height(node)) if linear else \
             _num(node.params.get("angle", 360.0), 360.0)
         box = self.editor = QLineEdit("%g" % round(now, 4), self.view)
         box.setFixedWidth(max(70, self._label.width() + 10))
@@ -718,6 +730,8 @@ class DragFeature:
         node = scr["node"]
         if scr["kind"] == "linear":
             h = signed_height(node)
+            if _goes_down(node):
+                h = abs(h)                  # a cut's depth
             text = "%g mm" % (0 if abs(h) <= FIRST_HEIGHT else round(h, 3))
         else:
             text = "%g°" % round(_num(node.params.get("angle", 360), 360),
